@@ -1,10 +1,12 @@
 """
 How torun : 
-    python example_recsys_runner.py --output_dir ./tmp/ --do_train --do_eval
+    python example_recsys_runner.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset/ecommerce_preproc_2019-10/ecommerce_preproc.parquet/
+
 """
 import os
-import logging
+import math
 import glob
+import logging
 import itertools
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, NewType, Tuple, Optional
@@ -20,25 +22,17 @@ from petastorm.unischema import UnischemaField
 from petastorm.unischema import Unischema
 from petastorm.codecs import NdarrayCodec
 
-from transformers import (
-    CONFIG_MAPPING,
-    MODEL_WITH_LM_HEAD_MAPPING,
-    AutoConfig,
-    AutoModelWithLMHead,
-    AutoTokenizer,
-    DataCollatorForLanguageModeling,
-    HfArgumentParser,
-    LineByLineTextDataset,
-    PreTrainedTokenizer,
-    TextDataset,
-    Trainer,
-    TrainingArguments,
-    set_seed,
-)
-
 from custom_trainer import RecSysTrainer
 from custom_xlnet_config import XLNetConfig
 from custom_modeling_xlnet import RecSysXLNetLMHeadModel as XLNetLMHeadModel
+
+from transformers import (
+    CONFIG_MAPPING,
+    MODEL_WITH_LM_HEAD_MAPPING,
+    HfArgumentParser,
+    TrainingArguments,
+    set_seed,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -49,6 +43,77 @@ TRAIN_DATA_LEN = 10000
 EVAL_DATA_LEN = 10000
 
 
+def f_feature_extract(inputs):
+    """
+    This function will be used inside of trainer.py (_training_step) right before being 
+    passed inputs to a model. 
+    """
+    product_seq = inputs["sess_pid_seq"][:-1].long()
+    category_seq = inputs["sess_dtime_seq"][:-1].long()
+    time_delta_seq = inputs["sess_ccid_seq"][:-1].long()
+    labels = inputs["sess_pid_seq"][1:].long()
+    
+    return product_seq, category_seq, time_delta_seq, labels
+
+
+# A schema that we use to read specific columns from parquet data file
+recsys_schema_small = [
+    UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
+    UnischemaField('sess_dtime_seq', np.int64, (None,), None, True),
+    UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
+]
+
+# Full Schema
+# recsys_schema_full = [
+#     UnischemaField('user_idx', np.int, (), None, True),
+#     #   UnischemaField('user_session', str_, (), None, True),
+#     UnischemaField('sess_seq_len', np.int, (), None, False),
+#     UnischemaField('session_start_ts', np.int64, (), None, True),
+#     UnischemaField('user_seq_length_bef_sess', np.int, (), None, False),
+#     UnischemaField('user_elapsed_days_bef_sess', np.float, (), None, True),
+#     UnischemaField('user_elapsed_days_log_bef_sess_norm', np.double, (), None, True),
+#     UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
+#     UnischemaField('sess_etime_seq', np.int64, (None,), None, True),
+#     UnischemaField('sess_etype_seq', np.int, (None,), None, True),
+#     UnischemaField('sess_csid_seq', np.int, (None,), None, True),
+#     UnischemaField('sess_ccid_seq', np.int, (None,), None, True),
+#     UnischemaField('sess_bid_seq', np.int, (None,), None, True),
+#     UnischemaField('sess_price_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_dtime_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_product_recency_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_relative_price_to_avg_category_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_hour_sin_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_hour_cos_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_month_sin_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_month_cos_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_dayofweek_sin_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_dayofweek_cos_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_dayofmonth_sin_seq', np.float, (None,), None, True),
+#     UnischemaField('sess_et_dayofmonth_cos_seq', np.float, (None,), None, True),
+#     UnischemaField('user_pid_seq_bef_sess', np.int64, (None,), None, True),
+#     UnischemaField('user_etime_seq_bef_sess', np.int64, (None,), None, True),
+#     UnischemaField('user_etype_seq_bef_sess', np.int, (None,), None, True),
+#     UnischemaField('user_csid_seq_bef_sess', np.int, (None,), None, True),
+#     UnischemaField('user_ccid_seq_bef_sess', np.int, (None,), None, True),
+#     UnischemaField('user_bid_seq_bef_sess', np.int, (None,), None, True),
+#     UnischemaField('user_price_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_dtime_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_product_recency_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_relative_price_to_avg_category_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_hour_sin_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_hour_cos_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_month_sin_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_month_cos_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_dayofweek_sin_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_dayofweek_cos_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_dayofmonth_sin_seq_bef_sess', np.float, (None,), None, True),
+#     UnischemaField('user_et_dayofmonth_cos_seq_bef_sess', np.float, (None,), None, True),
+# ]
+
+MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
+MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
+
+
 class DataLoaderWithLen(DataLoader):
     def __init__(self, *args, **kwargs):
         self.len = kwargs.pop('len')
@@ -57,8 +122,23 @@ class DataLoaderWithLen(DataLoader):
         return self.len
 
 
-MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
-MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
+def get_filenames(data_paths):
+    paths = [['file://' + p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
+    return list(itertools.chain.from_iterable(paths))
+
+
+@dataclass
+class DataArguments:
+    """
+    Arguments pertaining to which model/config/tokenizer we are going to fine-tune, or train from scratch.
+    """
+
+    data_path: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Path to dataset."
+        },
+    )
 
 
 @dataclass
@@ -80,19 +160,15 @@ class ModelArguments:
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
     )
-    tokenizer_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
-    )
     cache_dir: Optional[str] = field(
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
 
 
-
 def main():
 
-    parser = HfArgumentParser((ModelArguments, TrainingArguments))
-    model_args, training_args = parser.parse_args_into_dataclasses()
+    parser = HfArgumentParser((DataArguments, ModelArguments, TrainingArguments))
+    data_args, model_args, training_args = parser.parse_args_into_dataclasses()
 
     if (
         os.path.exists(training_args.output_dir)
@@ -121,81 +197,17 @@ def main():
     logger.info("Training/evaluation parameters %s", training_args)
     set_seed(training_args.seed)
 
-    # data A
-    d_path = "~/dataset/ecommerce_preproc_Oct_01-10_2019.parquet/"
     train_data_path = [
-        d_path + "session_start_date=2019-10-01",
-        d_path + "session_start_date=2019-10-02",
+        data_args.data_path + "session_start_date=2019-10-01",
+        data_args.data_path + "session_start_date=2019-10-02",
     ]
-
-    # data B
-    train_data_path = ["~/dataset/20200617044630-appid-local-1592357472062-5618370f-419b-4421-be76-1ef1bc3df293/"]
 
     eval_data_path = [
-        d_path + "session_start_date=2019-10-04",
+        data_args.data_path + "session_start_date=2019-10-03",
     ]
 
-    def get_files(data_paths):
-        paths = [['file://' + p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
-        return list(itertools.chain.from_iterable(paths))
-
-    train_data_path = get_files(train_data_path)
-    eval_data_path = get_files(eval_data_path)
-
-    # data B
-    recsys_schema_small = [
-        UnischemaField('pid_seq_zpd', np.int64, (), None, True),
-        UnischemaField('cid_seq_zpd', np.int64, (), None, True),
-        UnischemaField('dtime_seq_zpd', np.float, (), None, True),
-    ]
-
-    # data A
-    recsys_schema_full = [
-        UnischemaField('user_idx', np.int, (), None, True),
-        #   UnischemaField('user_session', str_, (), None, True),
-        UnischemaField('sess_seq_len', np.int, (), None, False),
-        UnischemaField('session_start_ts', np.int64, (), None, True),
-        UnischemaField('user_seq_length_bef_sess', np.int, (), None, False),
-        UnischemaField('user_elapsed_days_bef_sess', np.float, (), None, True),
-        UnischemaField('user_elapsed_days_log_bef_sess_norm', np.double, (), None, True),
-        UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
-        UnischemaField('sess_etime_seq', np.int64, (None,), None, True),
-        UnischemaField('sess_etype_seq', np.int, (None,), None, True),
-        UnischemaField('sess_csid_seq', np.int, (None,), None, True),
-        UnischemaField('sess_ccid_seq', np.int, (None,), None, True),
-        UnischemaField('sess_bid_seq', np.int, (None,), None, True),
-        UnischemaField('sess_price_seq', np.float, (None,), None, True),
-        UnischemaField('sess_dtime_seq', np.float, (None,), None, True),
-        UnischemaField('sess_product_recency_seq', np.float, (None,), None, True),
-        UnischemaField('sess_relative_price_to_avg_category_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_hour_sin_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_hour_cos_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_month_sin_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_month_cos_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_dayofweek_sin_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_dayofweek_cos_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_dayofmonth_sin_seq', np.float, (None,), None, True),
-        UnischemaField('sess_et_dayofmonth_cos_seq', np.float, (None,), None, True),
-        UnischemaField('user_pid_seq_bef_sess', np.int64, (None,), None, True),
-        UnischemaField('user_etime_seq_bef_sess', np.int64, (None,), None, True),
-        UnischemaField('user_etype_seq_bef_sess', np.int, (None,), None, True),
-        UnischemaField('user_csid_seq_bef_sess', np.int, (None,), None, True),
-        UnischemaField('user_ccid_seq_bef_sess', np.int, (None,), None, True),
-        UnischemaField('user_bid_seq_bef_sess', np.int, (None,), None, True),
-        UnischemaField('user_price_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_dtime_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_product_recency_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_relative_price_to_avg_category_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_hour_sin_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_hour_cos_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_month_sin_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_month_cos_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_dayofweek_sin_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_dayofweek_cos_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_dayofmonth_sin_seq_bef_sess', np.float, (None,), None, True),
-        UnischemaField('user_et_dayofmonth_cos_seq_bef_sess', np.float, (None,), None, True),
-    ]
-
+    train_data_path = get_filenames(train_data_path)
+    eval_data_path = get_filenames(eval_data_path)
 
     train_loader = DataLoaderWithLen(
         make_batch_reader(train_data_path, 
@@ -209,10 +221,9 @@ def main():
     eval_loader = DataLoaderWithLen(
         make_batch_reader(eval_data_path, 
             num_epochs=None,
-            schema_fields=recsys_schema_full,
+            schema_fields=recsys_schema_small,
         ), 
         batch_size=training_args.per_device_eval_batch_size,
-
         len=EVAL_DATA_LEN,
     )
 
@@ -247,7 +258,8 @@ def main():
         train_loader=train_loader, 
         eval_loader=eval_loader,        
         model=model,
-        args=training_args,)
+        args=training_args,
+        f_feature_extract=f_feature_extract)
 
     # Training
     if training_args.do_train:
@@ -287,4 +299,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()  
+    main()      

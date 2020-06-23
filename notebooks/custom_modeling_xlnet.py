@@ -612,8 +612,8 @@ class XLNetModel(XLNetPreTrainedModel):
     def forward(
         self,
         product_seq=None,
-        time_delta_seq=None,
         category_seq=None,
+        time_delta_seq=None,
         attention_mask=None,
         mems=None,
         perm_mask=None,
@@ -901,8 +901,8 @@ class RecSysXLNetLMHeadModel(XLNetPreTrainedModel):
     def forward(
         self,
         product_seq,
-        time_delta_seq,
         category_seq,
+        time_delta_seq,
         labels,
         attention_mask=None,
         mems=None,
@@ -979,8 +979,8 @@ class RecSysXLNetLMHeadModel(XLNetPreTrainedModel):
         """
         transformer_outputs = self.transformer(
             product_seq=product_seq,
-            time_delta_seq=time_delta_seq,
             category_seq=category_seq,
+            time_delta_seq=time_delta_seq,
             attention_mask=attention_mask,
             mems=mems,
             perm_mask=perm_mask,

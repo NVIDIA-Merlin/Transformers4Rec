@@ -54,6 +54,11 @@ class RecSysTrainer(Trainer):
         else:
             self.test_dataloader = kwargs.pop('test_loader')
 
+        if 'f_feature_extract' not in kwargs: 
+            self.f_feature_extract = lambda x: x
+        else:
+            self.f_feature_extract = kwargs.pop('f_feature_extract')
+
         super(RecSysTrainer, self).__init__(*args, **kwargs)
 
     def get_rec_train_dataloader(self) -> DataLoader:
@@ -273,7 +278,7 @@ class RecSysTrainer(Trainer):
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss / self.global_step)
+        return TrainOutput(self.global_step, tr_loss / self.global_step)        
 
     def _training_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
@@ -282,13 +287,8 @@ class RecSysTrainer(Trainer):
         _inputs = {}
         for k, v in inputs.items():
             inputs[k] = v.to(self.args.device)
-                
-        outputs = model(
-            product_seq=inputs["pid_seq_zpd"][:-1].long(), 
-            category_seq=inputs["cid_seq_zpd"][:-1].long(),
-            time_delta_seq=inputs["dtime_seq_zpd"][:-1],
-            labels=inputs["pid_seq_zpd"][1:].long()
-        )
+        
+        outputs = model(*self.f_feature_extract(inputs))
         
         loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
 
