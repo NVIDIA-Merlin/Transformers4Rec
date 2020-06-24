@@ -22,6 +22,7 @@ from petastorm.unischema import UnischemaField
 from petastorm.unischema import Unischema
 from petastorm.codecs import NdarrayCodec
 from petastorm.reader_impl.shuffling_buffer import RandomShufflingBuffer, NoopShufflingBuffer
+from petastorm.pytorch import _sanitize_pytorch_types
 
 from custom_trainer import RecSysTrainer
 from custom_xlnet_config import XLNetConfig
@@ -193,6 +194,7 @@ class DataLoaderWithLen(DataLoader):
         # Yield the last and partial batch
         if self._batch_acc and not self.drop_last:
             yield self.collate_fn(self._batch_acc)
+
 
 def get_filenames(data_paths):
     paths = [['file://' + p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
