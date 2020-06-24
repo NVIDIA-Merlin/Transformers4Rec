@@ -1,18 +1,17 @@
 """
 How torun : 
-    python example_recsys_runner.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset/ecommerce_preproc_2019-10/ecommerce_preproc.parquet/
+    CUDA_VISIBLE_DEVICES=0 python example_recsys_runner.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset/ecommerce_preproc_2019-10/ecommerce_preproc.parquet/
 
 """
 import os
 import math
-import glob
 import logging
-import itertools
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, NewType, Tuple, Optional
 
 import numpy as np
 import torch
+from utils import wc, get_filenames, get_dataset_len
 
 from torch.nn.utils.rnn import pad_sequence
 
@@ -21,8 +20,6 @@ from petastorm.pytorch import DataLoader
 from petastorm.unischema import UnischemaField
 from petastorm.unischema import Unischema
 from petastorm.codecs import NdarrayCodec
-from petastorm.reader_impl.shuffling_buffer import RandomShufflingBuffer, NoopShufflingBuffer
-from petastorm.pytorch import _sanitize_pytorch_types
 
 from custom_trainer import RecSysTrainer
 from custom_xlnet_config import XLNetConfig
@@ -38,11 +35,6 @@ from transformers import (
 
 
 logger = logging.getLogger(__name__)
-
-# TODO: they are used for training progress tracking
-# currently these are arbitrary number. It needs to be pre-computed 
-TRAIN_DATA_LEN = 10000
-EVAL_DATA_LEN = 10000
 
 
 def f_feature_extract(inputs):
@@ -118,11 +110,6 @@ MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
 class DataLoaderWithLen(DataLoader):
     def __init__(self, *args, **kwargs):
-        if 'drop_last' not in kwargs:
-            self.drop_last = False
-        else:
-            self.drop_last = kwargs.pop('drop_last')
-
         if 'len' not in kwargs:
             self.len = 0
         else:
@@ -132,73 +119,6 @@ class DataLoaderWithLen(DataLoader):
 
     def __len__(self):
         return self.len
-
-    def _iter_impl(self):
-        """
-        Override original method at DataLoader class to enable drop_last option. 
-        Without drop_last, we have an error that caused by different batch-sizes in multi-gpu pipeline
-        similar issue: https://github.com/huggingface/transformers/issues/1220
-        """
-        # As we iterate over incoming samples, we are going to store them in `self._batch_acc`, until we have a batch of
-        # the requested batch_size ready.
-
-        keys = None
-        if self.shuffling_queue_capacity > 0:
-            # We can not know what is the reasonable number to use for the extra capacity, so we set a huge number
-            # and give up on the unbound growth protection mechanism.
-            min_after_dequeue = self.shuffling_queue_capacity - 1
-            self._shuffling_buffer = RandomShufflingBuffer(self.shuffling_queue_capacity,
-                                                           min_after_retrieve=min_after_dequeue,
-                                                           extra_capacity=100000000)
-        else:
-            self._shuffling_buffer = NoopShufflingBuffer()
-
-        for row in self.reader:
-            # Default collate does not work nicely on namedtuples and treat them as lists
-            # Using dict will result in the yielded structures being dicts as well
-            row_as_dict = row._asdict()
-
-            keys = row_as_dict.keys()
-
-            # Promote some types that are incompatible with pytorch to be pytorch friendly.
-            _sanitize_pytorch_types(row_as_dict)
-
-            # Add rows to shuffling buffer
-            if not self.reader.is_batched_reader:
-                self._shuffling_buffer.add_many([row_as_dict])
-            else:
-                # Transposition:
-                #   row_as_dict:        {'a': [1,2,3], 'b':[4,5,6]}
-                #   row_group_as_tuple: [(1, 4), (2, 5), (3, 6)]
-                # The order within a tuple is defined by key order in 'keys'
-                row_group_as_tuple = list(zip(*(row_as_dict[k] for k in keys)))
-
-                # Adding data as 'row-by-row' into a shuffling buffer. This is a pretty
-                # slow implementation though. Probably can comeup with a faster way to shuffle,
-                # perhaps at the expense of a larger memory consumption...
-                self._shuffling_buffer.add_many(row_group_as_tuple)
-
-            # _yield_batches will emit as much batches as are allowed by the shuffling_buffer (RandomShufflingBuffer
-            # will avoid underflowing below a certain number of samples to guarantee some samples decorrelation)
-            for batch in self._yield_batches(keys):
-                yield batch
-
-        # Once reader can not read new rows, we might still have a bunch of rows waiting in the shuffling buffer.
-        # Telling shuffling buffer that we are finished allows to deplete the buffer completely, regardless its
-        # min_after_dequeue setting.
-        self._shuffling_buffer.finish()
-
-        for batch in self._yield_batches(keys):
-            yield batch
-
-        # Yield the last and partial batch
-        if self._batch_acc and not self.drop_last:
-            yield self.collate_fn(self._batch_acc)
-
-
-def get_filenames(data_paths):
-    paths = [['file://' + p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
-    return list(itertools.chain.from_iterable(paths))
 
 
 @dataclass
@@ -239,6 +159,7 @@ class ModelArguments:
     )
 
 
+
 def main():
 
     parser = HfArgumentParser((DataArguments, ModelArguments, TrainingArguments))
@@ -271,17 +192,21 @@ def main():
     logger.info("Training/evaluation parameters %s", training_args)
     set_seed(training_args.seed)
 
+    d_path = data_args.data_path if data_args.data_path else ''
     train_data_path = [
-        data_args.data_path + "session_start_date=2019-10-01",
-        data_args.data_path + "session_start_date=2019-10-02",
+        d_path + "session_start_date=2019-10-01",
+        d_path + "session_start_date=2019-10-02",
     ]
 
     eval_data_path = [
-        data_args.data_path + "session_start_date=2019-10-03",
+        d_path + "session_start_date=2019-10-03",
     ]
 
     train_data_path = get_filenames(train_data_path)
     eval_data_path = get_filenames(eval_data_path)
+
+    train_data_len = get_dataset_len(train_data_path)
+    eval_data_len = get_dataset_len(eval_data_path)
 
     train_loader = DataLoaderWithLen(
         make_batch_reader(train_data_path, 
@@ -289,8 +214,7 @@ def main():
             schema_fields=recsys_schema_small,
         ), 
         batch_size=training_args.per_device_train_batch_size,
-        len=TRAIN_DATA_LEN,
-        drop_last=True,
+        len=train_data_len,
     )
 
     eval_loader = DataLoaderWithLen(
@@ -299,8 +223,7 @@ def main():
             schema_fields=recsys_schema_small,
         ), 
         batch_size=training_args.per_device_eval_batch_size,
-        len=EVAL_DATA_LEN,
-        drop_last=True,
+        len=eval_data_len,
     )
 
     config = XLNetConfig(

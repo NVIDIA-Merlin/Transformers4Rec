@@ -305,6 +305,46 @@ class RecSysTrainer(Trainer):
 
         return loss.item()
 
+    def evaluate(
+        self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+    ) -> Dict[str, float]:
+        """
+        Run evaluation and return metrics.
+
+        The calling script will be responsible for providing a method to compute metrics, as they are
+        task-dependent.
+
+        Args:
+            eval_dataset: (Optional) Pass a dataset if you wish to override
+            the one on the instance.
+        Returns:
+            A dict containing:
+                - the eval loss
+                - the potential metrics computed from the predictions
+        """
+        eval_dataloader = self.get_rec_eval_dataloader()
+
+        output = self._prediction_loop(eval_dataloader, description="Evaluation")
+
+        self._log(output.metrics)
+
+        if self.args.tpu_metrics_debug:
+            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+            xm.master_print(met.metrics_report())
+
+        return output.metrics
+
+    def predict(self, test_dataset: Dataset) -> PredictionOutput:
+        """
+        Run prediction and return predictions and potential metrics.
+
+        Depending on the dataset and your use case, your test dataset may contain labels.
+        In that case, this method will also return metrics, like in evaluate().
+        """
+        test_dataloader = self.get_test_dataloader(test_dataset)
+
+        return self._prediction_loop(test_dataloader, description="Prediction")
+
     def _prediction_loop(
         self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
     ) -> PredictionOutput:
@@ -344,18 +384,24 @@ class RecSysTrainer(Trainer):
                 inputs[k] = v.to(self.args.device)
 
             with torch.no_grad():
-                outputs = model(**inputs)
+                outputs = model(*self.f_feature_extract(inputs))
+
                 if has_labels:
                     step_eval_loss, logits = outputs[:2]
                     eval_losses += [step_eval_loss.mean().item()]
                 else:
                     logits = outputs[0]
-
+            
             if not prediction_loss_only:
                 if preds is None:
                     preds = logits.detach()
+                    if preds.dim() == 0:
+                        preds = preds.unsqueeze(0)
                 else:
-                    preds = torch.cat((preds, logits.detach()), dim=0)
+                    new_pred = logits.detach()
+                    if new_pred.dim() == 0:
+                        new_pred = new_pred.unsqueeze(0)
+                    preds = torch.cat((preds, new_pred), dim=0)
                 if inputs.get("labels") is not None:
                     if label_ids is None:
                         label_ids = inputs["labels"].detach()
