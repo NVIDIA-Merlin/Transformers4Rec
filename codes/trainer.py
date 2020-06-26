@@ -24,7 +24,6 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
 
-
 from transformers.data.data_collator import DataCollator, default_data_collator
 from transformers.modeling_utils import PreTrainedModel
 from transformers.optimization import AdamW, get_linear_schedule_with_warmup
@@ -32,6 +31,7 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalPrediction, Pr
 from transformers.training_args import TrainingArguments, is_torch_tpu_available
 from transformers import Trainer
 
+from metrics import EvalPredictionTensor
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,11 @@ class RecSysTrainer(Trainer):
             self.f_feature_extract = lambda x: x
         else:
             self.f_feature_extract = kwargs.pop('f_feature_extract')
+
+        if 'fast_test' not in kwargs:
+            self.fast_test = False
+        else:
+            self.fast_test = kwargs.pop('fast_test')
 
         super(RecSysTrainer, self).__init__(*args, **kwargs)
 
@@ -264,7 +269,7 @@ class RecSysTrainer(Trainer):
                                 torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                                 torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
-                    if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
+                    if (self.args.max_steps > 0 and self.global_step > self.args.max_steps) or (self.fast_test and step > 4):
                         epoch_iterator.close()
                         break
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
@@ -372,41 +377,40 @@ class RecSysTrainer(Trainer):
         eval_losses: List[float] = []
         preds: torch.Tensor = None
         label_ids: torch.Tensor = None
+        cnt = 0
         model.eval()
 
         if is_torch_tpu_available():
             dataloader = pl.ParallelLoader(dataloader, [self.args.device]).per_device_loader(self.args.device)
 
         for inputs in tqdm(dataloader, desc=description):
-            has_labels = any(inputs.get(k) is not None for k in ["labels", "lm_labels", "masked_lm_labels"])
 
             for k, v in inputs.items():
                 inputs[k] = v.to(self.args.device)
 
             with torch.no_grad():
-                outputs = model(*self.f_feature_extract(inputs))
+                _inputs = self.f_feature_extract(inputs)
+                
+                outputs = model(*_inputs)
+                labels = _inputs[-1]
 
-                if has_labels:
-                    step_eval_loss, logits = outputs[:2]
-                    eval_losses += [step_eval_loss.mean().item()]
-                else:
-                    logits = outputs[0]
+                step_eval_loss, logits = outputs[:2]
+                eval_losses += [step_eval_loss.mean().item()]
             
             if not prediction_loss_only:
+                _preds = logits.detach().unsqueeze(0)
                 if preds is None:
-                    preds = logits.detach()
-                    if preds.dim() == 0:
-                        preds = preds.unsqueeze(0)
+                    preds = _preds
                 else:
-                    new_pred = logits.detach()
-                    if new_pred.dim() == 0:
-                        new_pred = new_pred.unsqueeze(0)
-                    preds = torch.cat((preds, new_pred), dim=0)
-                if inputs.get("labels") is not None:
-                    if label_ids is None:
-                        label_ids = inputs["labels"].detach()
-                    else:
-                        label_ids = torch.cat((label_ids, inputs["labels"].detach()), dim=0)
+                    preds = torch.cat((preds, _preds), dim=0)
+                if label_ids is None:
+                    label_ids = labels.detach()
+                else:
+                    label_ids = torch.cat((label_ids, labels.detach()), dim=0)
+
+            if self.fast_test and cnt > 4:
+                break
+            cnt += 1 
 
         if self.args.local_rank != -1:
             # In distributed mode, concatenate all results from all nodes:
@@ -421,14 +425,9 @@ class RecSysTrainer(Trainer):
             if label_ids is not None:
                 label_ids = xm.mesh_reduce("eval_label_ids", label_ids, torch.cat)
 
-        # Finally, turn the aggregated tensors into numpy arrays.
-        if preds is not None:
-            preds = preds.cpu().numpy()
-        if label_ids is not None:
-            label_ids = label_ids.cpu().numpy()
-
         if self.compute_metrics is not None and preds is not None and label_ids is not None:
-            metrics = self.compute_metrics(EvalPrediction(predictions=preds, label_ids=label_ids))
+            preds = preds.transpose(1,2).reshape(-1, preds.size(-3), preds.size(-1))
+            metrics = self.compute_metrics(EvalPredictionTensor(predictions=preds, label_ids=label_ids))
         else:
             metrics = {}
         if len(eval_losses) > 0:

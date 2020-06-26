@@ -1,7 +1,6 @@
 """
 How torun : 
-    CUDA_VISIBLE_DEVICES=0 python example_recsys_runner.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset/ecommerce_preproc_2019-10/ecommerce_preproc.parquet/
-
+    CUDA_VISIBLE_DEVICES=0 python main_runner.py --output_dir ./tmp/ --do_eval --data_path ~/dataset/ecommerce_preproc_2019-10/ecommerce_preproc.parquet/ --per_device_train_batch_size 128
 """
 import os
 import math
@@ -21,9 +20,9 @@ from petastorm.unischema import UnischemaField
 from petastorm.unischema import Unischema
 from petastorm.codecs import NdarrayCodec
 
-from custom_trainer import RecSysTrainer
-from custom_xlnet_config import XLNetConfig
-from custom_modeling_xlnet import RecSysXLNetLMHeadModel as XLNetLMHeadModel
+from trainer import RecSysTrainer
+from xlnet_config import XLNetConfig
+from modeling_xlnet import RecSysXLNetLMHeadModel as XLNetLMHeadModel
 
 from transformers import (
     CONFIG_MAPPING,
@@ -33,6 +32,7 @@ from transformers import (
     set_seed,
 )
 
+from metrics import compute_recsys_metrics
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ def f_feature_extract(inputs):
     time_delta_seq = inputs["sess_ccid_seq"][:-1].long()
     labels = inputs["sess_pid_seq"][1:].long()
     
+    # NOTE: last one should always be labels
     return product_seq, category_seq, time_delta_seq, labels
 
 
@@ -123,10 +124,6 @@ class DataLoaderWithLen(DataLoader):
 
 @dataclass
 class DataArguments:
-    """
-    Arguments pertaining to which model/config/tokenizer we are going to fine-tune, or train from scratch.
-    """
-
     data_path: Optional[str] = field(
         default=None,
         metadata={
@@ -134,11 +131,10 @@ class DataArguments:
         },
     )
 
-
 @dataclass
 class ModelArguments:
     """
-    Arguments pertaining to which model/config/tokenizer we are going to fine-tune, or train from scratch.
+    Arguments pertaining to which model/config we are going to fine-tune, or train from scratch.
     """
 
     model_name_or_path: Optional[str] = field(
@@ -157,7 +153,7 @@ class ModelArguments:
     cache_dir: Optional[str] = field(
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
-
+    fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
 
 
 def main():
@@ -230,10 +226,10 @@ def main():
         product_vocab_size=300000, 
         category_vocab_size=1000, 
         brand_vocab_size=500,         
-        d_model=1024,
-        n_layer=24,
-        n_head=16,
-        d_inner=4096,
+        d_model=512,
+        n_layer=12,
+        n_head=8,
+        d_inner=2048,
         ff_activation="gelu",
         untie_r=True,
         attn_type="bi",
@@ -258,7 +254,9 @@ def main():
         eval_loader=eval_loader,        
         model=model,
         args=training_args,
-        f_feature_extract=f_feature_extract)
+        f_feature_extract=f_feature_extract,
+        compute_metrics=compute_recsys_metrics,
+        fast_test=model_args.fast_test)
 
     # Training
     if training_args.do_train:
@@ -272,6 +270,7 @@ def main():
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model easily on huggingface.co/models =)
         if trainer.is_world_master():
+            # TODO: instead of tokenizer, let's save our dataprocessor's category id <--> string name
             tokenizer.save_pretrained(training_args.output_dir)
 
     # Evaluation

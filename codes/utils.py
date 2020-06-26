@@ -1,7 +1,9 @@
 import glob
 import itertools
+from typing import NamedTuple
 from subprocess import check_output
 
+import torch
 
 def get_filenames(data_paths):
     paths = [['file://' + p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
