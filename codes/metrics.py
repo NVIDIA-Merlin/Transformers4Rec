@@ -7,6 +7,8 @@ from ranking_metrics_torch_karlhigley.precision_recall import precision_at, reca
 from ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
 from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
 
+# TODO: use this metrics
+# https://github.com/gabrielspmoreira/chameleon_recsys/blob/master/nar_module/nar/metrics.py
 
 
 class EvalPredictionTensor(NamedTuple):
