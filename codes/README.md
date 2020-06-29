@@ -8,15 +8,21 @@ Current code uses following ingredients to implement RecSys-Transformer models:
 
 ## Installation guide
 
-Step 1. Install PyTorch
+Step 1. Get this repo (e.g., git clone ..)
+
+Step 2. Install PyTorch
 Visit https://pytorch.org and follow their guideline.
 
-Step 2. Install Huggingface and Petastorm
+Step 3. Install Huggingface and Petastorm
 ```
 pip install -r requirements.txt
 ```
+or
+```
+pip install transformers==3.0.0
+pip install petastorm==0.9.2
+```
 
-Step 3. Get this repo (e.g., git clone ..)
 
 
 ## How to Run?
