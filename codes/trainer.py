@@ -35,6 +35,7 @@ from metrics import EvalPredictionTensor
 
 logger = logging.getLogger(__name__)
 
+softmax = nn.Softmax(dim=-1)
 
 class RecSysTrainer(Trainer):
     """
@@ -94,6 +95,7 @@ class RecSysTrainer(Trainer):
                 (Optional) Local path to model if model to train has been instantiated from a local path
                 If present, we will try reloading the optimizer/scheduler states from there.
         """
+        # NOTE: RecSys
         train_dataloader = self.get_rec_train_dataloader()
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
@@ -186,6 +188,8 @@ class RecSysTrainer(Trainer):
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
+        
+        # NOTE: RecSys
         with train_dataloader:
             for epoch in train_iterator:
                 if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
@@ -293,6 +297,7 @@ class RecSysTrainer(Trainer):
         for k, v in inputs.items():
             inputs[k] = v.to(self.args.device)
         
+        # NOTE: RecSys
         outputs = model(*self.f_feature_extract(inputs))
         
         loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
@@ -327,6 +332,8 @@ class RecSysTrainer(Trainer):
                 - the eval loss
                 - the potential metrics computed from the predictions
         """
+
+        # NOTE: RecSys
         eval_dataloader = self.get_rec_eval_dataloader()
 
         output = self._prediction_loop(eval_dataloader, description="Evaluation")
@@ -389,6 +396,8 @@ class RecSysTrainer(Trainer):
                 inputs[k] = v.to(self.args.device)
 
             with torch.no_grad():
+
+                #NOTE: RecSys
                 _inputs = self.f_feature_extract(inputs)
                 
                 outputs = model(*_inputs)
@@ -398,7 +407,10 @@ class RecSysTrainer(Trainer):
                 eval_losses += [step_eval_loss.mean().item()]
             
             if not prediction_loss_only:
+                # _preds.size(): N_BATCH x SEQLEN x ITEM_SIZE (=300000)
                 _preds = logits.detach().unsqueeze(0)
+                _preds = softmax(_preds)
+
                 if preds is None:
                     preds = _preds
                 else:
