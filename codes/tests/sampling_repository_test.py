@@ -4,34 +4,44 @@ from pytest_mock import mocker
 
 from ..candidate_sampling.sampling_repository import ItemsSamplingRepository, PandasItemsSamplingRepository
 
-from ..config.features_config import InputDataConfig, FeaturesConfig, FeaturesType, FeaturesDataType, FeatureInfo
+from ..config.features_config import InputDataConfig, FeaturesDataType, FeatureTypes, FeatureGroups
 
+def get_input_data_config():
+    features_schema = {'user_idx': FeaturesDataType.LONG,
+                    'sess_pid_seq': FeaturesDataType.LONG,
+                    'user_session': FeaturesDataType.STR,
+                    'sess_csid_seq': FeaturesDataType.INT,
+                    'sess_price_seq': FeaturesDataType.FLOAT,
+                    'user_seq_length_bef_sess': FeaturesDataType.INT,
+                    'sess_etime_seq': FeaturesDataType.LONG,
+                    }
 
+    feature_groups = FeatureGroups(
+        user_id = 'user_idx',
+        item_id = 'sess_pid_seq',
+        session_id = 'user_session',
+        implicit_feedback = None,
+        event_timestamp = 'sess_etime_seq',
+        item_metadata = ['sess_csid_seq', 'sess_price_seq'],
+        user_metadata = ['user_seq_length_bef_sess'],
+        event_metadata = [],
+        sequential_features=['sess_pid_seq', 'sess_csid_seq',  'sess_price_seq', 'sess_etime_seq'],
+    )
 
+    feature_types = FeatureTypes(
+        categorical = ['user_idx', 'user_session', 'sess_pid_seq', 'sess_csid_seq'],
+        numerical = ['sess_etime_seq', 'sess_price_seq', 'user_seq_length_bef_sess']
+    )
 
-features_config = FeaturesConfig(user_id=FeatureInfo('user_idx', ftype=FeaturesType.CATEGORICAL, dtype=FeaturesDataType.LONG),
-                                 item_id=FeatureInfo('sess_pid_seq', ftype=FeaturesType.CATEGORICAL, dtype=FeaturesDataType.LONG),
-                                 session_id=FeatureInfo('user_session', ftype=FeaturesType.CATEGORICAL, dtype=FeaturesDataType.STR),
-                                 event_timestamp=FeatureInfo('session_start_ts', ftype=FeaturesType.NUMERICAL, dtype=FeaturesDataType.LONG),
-                                 implicit_feedback=None,
-                                 item_metadata=[    
-                                                FeatureInfo('sess_csid_seq', ftype=FeaturesType.CATEGORICAL, dtype=FeaturesDataType.INT),                                            
-                                                FeatureInfo('sess_price_seq', ftype=FeaturesType.NUMERICAL, dtype=FeaturesDataType.FLOAT),
-                                 ],
-                                 user_metadata=[
-                                                FeatureInfo('user_seq_length_bef_sess', ftype=FeaturesType.NUMERICAL, dtype=FeaturesDataType.INT)
-                                 ],
-                                 event_metadata=[                                                
-                                                FeatureInfo('sess_etime_seq', ftype=FeaturesType.NUMERICAL, dtype=FeaturesDataType.INT),
-                                 ],
-                                 sequential_features=['sess_pid_seq', 'sess_csid_seq',  'sess_price_seq', 'sess_etime_seq'],
-                                 )
+    input_data_config = InputDataConfig(schema=features_schema,
+                                        feature_groups=feature_groups,
+                                        feature_types=feature_types,
+                                        positive_interactions_only=True,
+                                        instance_info_level='session',
+                                        session_padded_items_value=0,
+                                        )
 
-input_data_config = InputDataConfig(features_config=features_config,
-                                    positive_interactions_only=True,
-                                    instance_info_level='session',
-                                    session_padded_items_value=0,
-                                    )
+    return input_data_config
 
 # Only to implement abstract methods, that will be mocked
 class ItemsSamplingRepositoryInstantiable(ItemsSamplingRepository):
@@ -56,22 +66,25 @@ class TestItemsSamplingRepository:
         mocker.patch.object(self.repository, 'update_item') 
         self.repository.update_item.return_value = None
 
-    def setup_method(self, mocker):
+    def setup_method(self):
         pass
 
     def teardown_method(self):
         pass
     '''
 
+    def setup_method(self):
+        self.input_data_config = get_input_data_config()
+
     def test_update_item_metadata_insert(self, mocker):        
-        repository = ItemsSamplingRepositoryInstantiable(input_data_config)
+        repository = ItemsSamplingRepositoryInstantiable(self.input_data_config)
 
         mocker.patch.object(repository, 'item_exists') 
         repository.item_exists.return_value = False
 
         mocker.patch.object(repository, 'update_item') 
 
-        item_interaction = {'session_start_ts': 1594130629, 
+        item_interaction = {'sess_etime_seq': 1594130629, 
                          'sess_pid_seq': 1,
                          'sess_csid_seq': 10,
                          'sess_price_seq': 55.97
@@ -86,14 +99,14 @@ class TestItemsSamplingRepository:
 
 
     def test_update_item_metadata_not_insert_padded_item(self, mocker):        
-        repository = ItemsSamplingRepositoryInstantiable(input_data_config)
+        repository = ItemsSamplingRepositoryInstantiable(self.input_data_config)
 
         mocker.patch.object(repository, 'item_exists') 
         repository.item_exists.return_value = False
 
         mocker.patch.object(repository, 'update_item') 
 
-        item_interaction = {'session_start_ts': 1594130629, 
+        item_interaction = {'sess_etime_seq': 1594130629, 
                             'sess_pid_seq': 0,
                             'sess_csid_seq': 0,
                             'sess_price_seq': 55.97,
@@ -102,7 +115,7 @@ class TestItemsSamplingRepository:
         repository.update_item.assert_not_called()
 
     def test_update_item_metadata_update(self, mocker):
-        repository = ItemsSamplingRepositoryInstantiable(input_data_config)
+        repository = ItemsSamplingRepositoryInstantiable(self.input_data_config)
 
         mocker.patch.object(repository, 'update_item') 
         repository.update_item.return_value = None
@@ -117,7 +130,7 @@ class TestItemsSamplingRepository:
                                             'sess_price_seq': 55.97,
                                             }
 
-        item_interaction = {'session_start_ts': 1594130629, 
+        item_interaction = {'sess_etime_seq': 1594130629, 
                             'sess_pid_seq': 1,
                             'sess_csid_seq': 10,
                             'sess_price_seq': 58.20,
@@ -136,8 +149,11 @@ class TestItemsSamplingRepository:
 
 class TestPandasItemsSamplingRepository:
 
+    def setup_method(self):
+        self.input_data_config = get_input_data_config()
+
     def test_insert_item_metadata(self):        
-        repository = PandasItemsSamplingRepository(input_data_config)
+        repository = PandasItemsSamplingRepository(self.input_data_config)
 
         item_id = 10
         item_features_dict = {
@@ -154,4 +170,5 @@ class TestPandasItemsSamplingRepository:
         assert repository.item_exists(item_id)
         
         item = repository.get_item(item_id)
-        #assert item == item_features_dict
+        #TODO: Fix the problem that after adding a new row using .loc[] in the DataFrame all columns are changed to float
+        assert item == item_features_dict
