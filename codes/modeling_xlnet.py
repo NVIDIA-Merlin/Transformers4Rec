@@ -977,6 +977,11 @@ class RecSysXLNetLMHeadModel(XLNetPreTrainedModel):
         loss, next_token_logits = outputs[:2]  # Output has shape [target_mapping.size(0), target_mapping.size(1), config.vocab_size]
 
         """
+
+        # compute features
+
+        
+
         transformer_outputs = self.transformer(
             product_seq=product_seq,
             category_seq=category_seq,
