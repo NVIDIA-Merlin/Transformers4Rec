@@ -399,9 +399,9 @@ class RecSysTrainer(Trainer):
 
                 #NOTE: RecSys
                 _inputs = self.f_feature_extract(inputs)
+                labels = _inputs[0][:, 1:]
                 
                 outputs = model(*_inputs)
-                labels = _inputs[-1]
 
                 step_eval_loss, logits = outputs[:2]
                 eval_losses += [step_eval_loss.mean().item()]

@@ -25,7 +25,7 @@ class EvalPredictionTensor(NamedTuple):
     label_ids: torch.Tensor
 
 
-def compute_recsys_metrics(p: EvalPredictionTensor, ks=[5, 10, 20, 50, 100, 10000]) -> Dict:
+def compute_recsys_metrics(p: EvalPredictionTensor, ks=[5, 10, 20, 50]) -> Dict:
     
     # NOTE: currently under construction 
 
@@ -37,7 +37,7 @@ def compute_recsys_metrics(p: EvalPredictionTensor, ks=[5, 10, 20, 50, 100, 1000
     labels = p.label_ids.reshape(-1)
     labels = torch.nn.functional.one_hot(labels, event_size).to(device)
 
-    # metrics by Karl Higley's codde
+    # metrics by Karl Higley's code
     with Timing('gpu (Karl Higley) eval metrics computation'):
         rec_k = recall_at(_ks, predictions, labels)
         prec_k = precision_at(_ks, predictions, labels)
