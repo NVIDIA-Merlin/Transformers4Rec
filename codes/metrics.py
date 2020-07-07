@@ -6,7 +6,7 @@ import torch
 from ranking_metrics_torch_karlhigley.precision_recall import precision_at, recall_at
 from ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
 from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
-from sklearn.metrics import ndcg_score, average_precision_score, roc_auc_score
+from sklearn.metrics import ndcg_score, average_precision_score
 from chameleon_metrics import NDCG, HitRate
 
 from utils import Timing
@@ -54,7 +54,6 @@ def compute_recsys_metrics(p: EvalPredictionTensor, ks=[5, 10, 20, 50, 100, 1000
     # metrics by Scikit-learn
     with Timing('cpu (scikit-learn) eval metrics computation'):
         ndcg_sci_k ={"ndcg_s_{}".format(k): ndcg_score(labels_cpu, predictions_cpu, k=k) for k in ks}
-        average_precision_score = {"avgp_s": average_precision_score(labels_cpu, predictions_cpu)}
-        roc_auc_score = {"rocauc": roc_auc_score(labels_cpu, predictions_cpu)}
-    return {**rec_k, **prec_k, **avgp_k, **ndcg_k, **ndcg_sci_k, **average_precision_score, **roc_auc_score}
+        ap_score_sci = {"avgp_s": average_precision_score(labels_cpu, predictions_cpu)}
+    return {**rec_k, **prec_k, **avgp_k, **ndcg_k, **ndcg_sci_k, **ap_score_sci}
 
