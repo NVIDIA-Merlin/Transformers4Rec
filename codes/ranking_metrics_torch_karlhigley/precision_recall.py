@@ -3,6 +3,9 @@ import torch
 from ranking_metrics_torch_karlhigley.common import _check_inputs
 from ranking_metrics_torch_karlhigley.common import _extract_topk
 from ranking_metrics_torch_karlhigley.common import _create_output_placeholder
+# from common import _check_inputs
+# from common import _extract_topk
+# from common import _create_output_placeholder
 
 
 def precision_at(
@@ -48,7 +51,7 @@ def recall_at(
     recalls = _create_output_placeholder(scores, ks)
 
     # Compute recalls at K
-    num_relevant = torch.sum(labels, dim=1)
+    num_relevant = torch.sum(labels, dim=-1)
     rel_indices = (num_relevant != 0).nonzero()
     rel_count = num_relevant[rel_indices].squeeze()
 
@@ -57,10 +60,38 @@ def recall_at(
             rel_labels = topk_labels[rel_indices, : int(k)].squeeze()
             
             recalls[rel_indices, index] = torch.div(
-                torch.sum(rel_labels, dim=1), rel_count
+                torch.sum(rel_labels, dim=-1), rel_count
             ).reshape(len(rel_indices), 1)
 
     return recalls
 
+def _test_at():
+    scores = torch.arange(0,1,step=0.1).expand((1,10))
+    ks = torch.LongTensor([1,2,3,10])
+    print('scores:{}'.format(scores))
+    print('ks:{}'.format(ks))
+
+    print('-'*10+'\ntest1')
+    labels = torch.LongTensor([1,0,0,0,0,0,0,0,0,1]).expand((1,10))
+    print('label: {}'.format(labels))
+
+    result = recall_at(ks, scores, labels)
+    print('recall:{}'.format(result))
+    
+    result = precision_at(ks, scores, labels)
+    print('precision:{}'.format(result))
+
+    print('-'*10+'\ntest2')
+    
+    labels = torch.LongTensor([0,0,0,0,0,0,0,0,1,0]).expand((1,10))
+    print('label: {}'.format(labels))
+
+    result = recall_at(ks, scores, labels)
+    print('recall:{}'.format(result))
+    
+    result = precision_at(ks, scores, labels)
+    print('precision:{}'.format(result))
 
 
+if __name__ == "__main__":
+    _test_at()
