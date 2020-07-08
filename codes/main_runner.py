@@ -79,12 +79,12 @@ def fetch_data_loaders(data_args, training_args):
     return train_loader, eval_loader
 
 
-def create_model(model_args):
+def create_model(model_args, d_model=512, max_seq_len=2048):
 
     if model_args.model_type == 'xlnet':
         model_cls = XLNetModel
         config = XLNetConfig(
-            d_model=512,
+            d_model=d_model,
             n_layer=12,
             n_head=8,
             d_inner=2048,
@@ -101,7 +101,7 @@ def create_model(model_args):
     elif model_args.model_type == 'gpt2':
         model_cls = GPT2Model
         config = GPT2Config(
-            d_model=512,
+            n_embd=d_model,
             n_layer=12,
             n_head=8,
             d_inner=2048,
@@ -111,21 +111,20 @@ def create_model(model_args):
             initializer_range=0.02,
             layer_norm_eps=1e-12,
             dropout=0.1,
+            n_positions=max_seq_len,
         )
 
     elif model_args.model_type == 'longformer':
         model_cls = LongformerModel
         config = LongformerConfig(
-            d_model=512,
-            n_layer=12,
-            n_head=8,
-            d_inner=2048,
-            ff_activation="gelu",
-            untie_r=True,
-            attn_type="bi",
+            hidden_size=d_model,
+            num_hidden_layers=12,
+            num_attention_heads=8,
+            hidden_act="gelu",
             initializer_range=0.02,
             layer_norm_eps=1e-12,
             dropout=0.1,
+            max_position_embedding=max_seq_len,
         )
 
     else:
@@ -142,7 +141,7 @@ def create_model(model_args):
         logger.info("Training new model from scratch")
         transformer_model = model_cls(config)
     
-    model = RecSysMetaModel(transformer_model, vocab_sizes, d_model=config.d_model)
+    model = RecSysMetaModel(transformer_model, vocab_sizes, d_model=d_model)
 
     return model
 
@@ -228,7 +227,11 @@ def main():
 
     train_loader, eval_loader = fetch_data_loaders(data_args, training_args)
 
-    model = create_model(model_args)
+    # embedding size
+    d_model = 512 
+    max_seq_len = 2048
+
+    model = create_model(model_args, d_model, max_seq_len)
 
     trainer = RecSysTrainer(
         train_loader=train_loader, 

@@ -117,10 +117,8 @@ class RecSysMetaModel(nn.Module):
 
         # compute margin (hinge) loss.
         # NOTE: simply taking average here.
-        loss = - (pos_sim_seq.sum(-1) - self.margin_loss - neg_sim_seq.sum(-1)).mean()
+        loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
         
         outputs = (loss,) + outputs
 
         return outputs  # return (loss), logits, (mems), (hidden states), (attentions)
-
-
