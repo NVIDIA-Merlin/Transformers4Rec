@@ -170,5 +170,4 @@ class TestPandasItemsSamplingRepository:
         assert repository.item_exists(item_id)
         
         item = repository.get_item(item_id)
-        #TODO: Fix the problem that after adding a new row using .loc[] in the DataFrame all columns are changed to float
         assert item == item_features_dict

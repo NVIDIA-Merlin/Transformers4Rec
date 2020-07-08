@@ -64,6 +64,9 @@ class ItemsSamplingRepository(ABC):
 
 class PandasItemsSamplingRepository(ItemsSamplingRepository):
 
+    #Dummy string col to avoid Pandas converting all features to float when using .loc[] for querying, inserting or updating
+    DUMMY_STR_COL = 'dummy'
+
     def __init__(self, input_data_config):        
         super().__init__(input_data_config)
 
@@ -71,10 +74,13 @@ class PandasItemsSamplingRepository(ItemsSamplingRepository):
         columns[self.ITEM_ID_COL] = self.dconf.get_feature_numpy_dtype(self.dconf.get_feature_group('item_id'))
         columns[self.FIRST_TS_COL] = self.dconf.get_feature_numpy_dtype(self.dconf.get_feature_group('event_timestamp'))
         columns[self.LAST_TS_COL] = columns[self.FIRST_TS_COL]
+        columns[self.DUMMY_STR_COL] = np.str
 
         self.items_df = self._df_empty(columns, self.ITEM_ID_COL)
 
     def update_item(self, item_id, item_dict):
+        item_dict = {**item_dict,
+                     self.DUMMY_STR_COL: ''}
         #Including or updating the item metadata
         self.items_df.loc[item_id] = pd.Series(item_dict)
 
@@ -82,7 +88,10 @@ class PandasItemsSamplingRepository(ItemsSamplingRepository):
         return item_id in self.items_df.index
 
     def get_item(self, item_id):
-        return self.items_df.loc[item_id]
+        item = self.items_df.loc[item_id].to_dict()
+        del(item[self.DUMMY_STR_COL])
+        return item
+
 
     def _df_empty(self, column_dtype_mapping, index=None):    
         df = pd.DataFrame()
