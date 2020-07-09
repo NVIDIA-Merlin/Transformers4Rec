@@ -6,6 +6,7 @@ from typing import Sequence, Mapping, Dict, Union, Optional, Any, List, Tuple
 from itertools import permutations 
 
 
+
 def df_empty(columns: Mapping[str,np.dtype], index=None) -> pd.DataFrame:    
         df = pd.DataFrame()
         for c in columns:
@@ -14,9 +15,10 @@ def df_empty(columns: Mapping[str,np.dtype], index=None) -> pd.DataFrame:
 
 class ItemsMetadataRepository(ABC):
 
+    #Internal columns
     ITEM_ID_COL = "item_id"
-    FIRST_TS_COL = "first_ts"
-    LAST_TS_COL = "last_ts"
+    INTERNAL_FIRST_TS_COL = "first_ts"
+    INTERNAL_LAST_TS_COL = "last_ts"
 
     dconf: InputDataConfig
     item_features_names: List[str]
@@ -25,17 +27,20 @@ class ItemsMetadataRepository(ABC):
         self.dconf = input_data_config
         self.item_features_names = self.dconf.get_item_feature_names()
 
+        self.item_id_col = self.dconf.get_feature_group(FeatureGroupType.ITEM_ID)
+        self.event_ts_col = self.dconf.get_feature_group(FeatureGroupType.EVENT_TS)
+
     def update_item_metadata(self, item_features_dict: Dict[str,Any]) -> None:
         item_features_dict = item_features_dict.copy()
-        item_id = item_features_dict.pop(self.dconf.get_feature_group(FeatureGroupType.ITEM_ID))
+        item_id = item_features_dict.pop( self.item_id_col)
 
-        event_ts = item_features_dict.pop(self.dconf.get_feature_group(FeatureGroupType.EVENT_TS))
+        event_ts = item_features_dict.pop(self.event_ts_col)
 
         #Keeps a registry of the first and last interactions of an item
         if self.item_exists(item_id):
             item_row = self.get_item(item_id)
-            first_ts = item_row[self.FIRST_TS_COL]
-            last_ts = item_row[self.LAST_TS_COL]
+            first_ts = item_row[self.INTERNAL_FIRST_TS_COL]
+            last_ts = item_row[self.INTERNAL_LAST_TS_COL]
             if event_ts > last_ts:
                 last_ts = event_ts
         else:
@@ -43,8 +48,8 @@ class ItemsMetadataRepository(ABC):
             last_ts = event_ts
 
         item_metadata = {**item_features_dict,
-                        self.FIRST_TS_COL: first_ts,
-                        self.LAST_TS_COL: last_ts,}
+                        self.INTERNAL_FIRST_TS_COL: first_ts,
+                        self.INTERNAL_LAST_TS_COL: last_ts,}
         #Including or updating the item metadata
         self.update_item(item_id, item_metadata)
 
@@ -55,7 +60,7 @@ class ItemsMetadataRepository(ABC):
         for session_item_features in zip(*[session[fname] for fname in features_to_retrieve]):
             item_features_dict = dict(zip(features_to_retrieve, session_item_features))  
             #Ignoring padded items 
-            if item_features_dict[self.dconf.get_feature_group(FeatureGroupType.ITEM_ID)] != self.dconf.session_padded_items_value:
+            if item_features_dict[self.item_id_col] != self.dconf.session_padded_items_value:
                 self.update_item_metadata(item_features_dict)
 
     @abstractmethod
@@ -70,10 +75,18 @@ class ItemsMetadataRepository(ABC):
     def get_item(self, item_id) -> Mapping[str,Any]:
         raise NotImplementedError("Not implemented")
 
+    @abstractmethod
+    def get_item_ids(self) -> np.array:
+        raise NotImplementedError("Not implemented")
+
+    @abstractmethod
+    def get_items_first_interaction_ts(self) -> Tuple[np.array,Sequencenp.array]:
+        raise NotImplementedError("Not implemented")
 
 
 class PandasItemsMetadataRepository(ItemsMetadataRepository):
 
+    items_df: pd.DataFrame
     #Dummy string col to avoid Pandas converting all features to float when using .loc[] for querying, inserting or updating
     DUMMY_STR_COL = 'dummy'
 
@@ -81,18 +94,20 @@ class PandasItemsMetadataRepository(ItemsMetadataRepository):
         super().__init__(input_data_config)
 
         columns = { fname: self.dconf.get_feature_numpy_dtype(fname) for fname in self.dconf.get_feature_group(FeatureGroupType.ITEM_METADATA) }
-        columns[self.ITEM_ID_COL] = self.dconf.get_feature_numpy_dtype(self.dconf.get_feature_group(FeatureGroupType.ITEM_ID))
-        columns[self.FIRST_TS_COL] = self.dconf.get_feature_numpy_dtype(self.dconf.get_feature_group(FeatureGroupType.EVENT_TS))
-        columns[self.LAST_TS_COL] = columns[self.FIRST_TS_COL]
+        columns[self.ITEM_ID_COL] = self.dconf.get_feature_numpy_dtype(self.item_id_col)
+        columns[self.INTERNAL_FIRST_TS_COL] = self.dconf.get_feature_numpy_dtype(self.event_ts_col)
+        columns[self.INTERNAL_LAST_TS_COL] = columns[self.INTERNAL_FIRST_TS_COL]
         columns[self.DUMMY_STR_COL] = np.str
 
         self.items_df = df_empty(columns, self.ITEM_ID_COL)
+    
 
     def update_item(self, item_id: ItemId, item_dict: Mapping[str,Any]) -> None:
         item_dict = {**item_dict,
                      self.DUMMY_STR_COL: ''}
         #Including or updating the item metadata
         self.items_df.loc[item_id] = pd.Series(item_dict)
+        
 
     def item_exists(self, item_id: ItemId) -> bool:
         return item_id in self.items_df.index
@@ -101,6 +116,12 @@ class PandasItemsMetadataRepository(ItemsMetadataRepository):
         item = self.items_df.loc[item_id].to_dict()
         del(item[self.DUMMY_STR_COL])
         return item
+
+    def get_item_ids(self) -> np.array:
+        return items_df.index.values
+
+    def get_items_first_interaction_ts(self) -> Tuple[np.array, np.array]:
+        return (self.items_df.index.values, self.items_df[self.INTERNAL_FIRST_TS_COL].values)
 
 
     
@@ -111,20 +132,32 @@ class ItemsRecentPopularityRepository(ABC):
     dconf: InputDataConfig
     keep_last_days: float
 
+    item_id_feature: str
+    event_ts_feature: str
+
     def __init__(self, input_data_config: InputDataConfig, keep_last_days: float) -> None:        
         self.dconf = input_data_config  
-        self.keep_last_days = keep_last_days      
+        self.keep_last_days = keep_last_days    
 
-    @abstractmethod
-    def append_interaction(self, item_id: ItemId, timestamp: int) -> None:
-        raise NotImplementedError("Not implemented") 
+        self.item_id_feature = self.dconf.get_feature_group(FeatureGroupType.ITEM_ID)  
+        self.event_ts_feature = self.dconf.get_feature_group(FeatureGroupType.EVENT_TS)  
+
+    def append_interaction(self, item_features_dict):
+        item_id = item_features_dict[self.item_id_feature]
+        event_ts = item_features_dict[self.event_ts_feature]
+        self._append_interaction(item_id, event_ts)
     
     def append_session(self, session: Mapping[str,List[Any]]) -> None:
-        for item_id, ts in zip(session[self.dconf.get_feature_group(FeatureGroupType.ITEM_ID)],
-                               session[self.dconf.get_feature_group(FeatureGroupType.EVENT_TS)]):
+        for item_id, ts in zip(session[self.item_id_feature],
+                               session[self.event_ts_feature]):
             #Ignoring padded items 
             if item_id != self.dconf.session_padded_items_value:
-                self.append_interaction(item_id, ts)
+                self._append_interaction(item_id, ts)
+
+
+    @abstractmethod
+    def _append_interaction(self, item_id: ItemId, timestamp: int) -> None:
+        raise NotImplementedError("Not implemented") 
 
     @abstractmethod
     def update_stats(self) -> None:
@@ -139,7 +172,7 @@ class ItemsRecentPopularityRepository(ABC):
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def get_candidate_items_probs(self) -> Tuple[Sequence[np.dtype],Sequence[np.dtype]]:
+    def get_candidate_items_probs(self) -> Tuple[np.array,np.array]:
         raise NotImplementedError("Not implemented")
 
 
@@ -159,18 +192,18 @@ class PandasItemsRecentPopularityRepository(ItemsRecentPopularityRepository):
     def __init__(self, input_data_config: InputDataConfig, keep_last_days: float) -> None:   
         super().__init__(input_data_config, keep_last_days)  
         columns = {
-             self.ITEM_ID_COL: self.dconf.get_feature_numpy_dtype(self.dconf.get_feature_group(FeatureGroupType.ITEM_ID)),
+             self.ITEM_ID_COL: self.dconf.get_feature_numpy_dtype(self.item_id_feature),
              self.TS_COL: np.int32,
              self.DUMMY_STR_COL: np.str
         }   
-        self.item_interactions_df = df_empty(columns=columns, index='item_id')
+        self.item_interactions_df = df_empty(columns=columns, index=self.ITEM_ID_COL)
         self.item_pop_df = None
         self._reset_log_buffer()
 
     def _reset_log_buffer(self):
         self.item_interactions_buffer = []
 
-    def append_interaction(self, item_id: ItemId, timestamp: int) -> None:
+    def _append_interaction(self, item_id: ItemId, timestamp: int) -> None:
         row_dict = {self.ITEM_ID_COL: item_id,
                     self.TS_COL: timestamp,
                     self.DUMMY_STR_COL: ''
@@ -199,7 +232,7 @@ class PandasItemsRecentPopularityRepository(ItemsRecentPopularityRepository):
     def log_count(self) -> int:
         return len(self.item_interactions_df)
 
-    def get_candidate_items_probs(self) -> Tuple[Sequence[np.dtype],Sequence[np.dtype]]:
+    def get_candidate_items_probs(self) -> Tuple[np.array, np.array]:
         return (self.item_pop_df[self.ITEM_ID_COL].values,
                 self.item_pop_df[self.PROB_COL].values)  
 
@@ -234,7 +267,7 @@ class ItemsSessionCoOccurrencesRepository(ABC):
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def get_candidate_items_probs(self, item_id: ItemId) -> Tuple[Sequence[np.dtype],Sequence[np.dtype]]:
+    def get_candidate_items_probs(self, item_id: ItemId) -> Tuple[np.array,np.array]:
         raise NotImplementedError("Not implemented")
 
 
