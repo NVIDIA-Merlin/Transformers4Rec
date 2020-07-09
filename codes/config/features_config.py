@@ -1,7 +1,9 @@
 from dataclasses import dataclass, field
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Sequence, Mapping, Union, Optional, NewType, Any, TypeVar
 from enum import Enum
 import numpy as np
+
+ItemId = TypeVar('ItemId', str,int)
 
 class InstanceInfoLevel(Enum):
     INTERACTION = "interaction"
@@ -16,7 +18,7 @@ class FeaturesDataType(Enum):
     BOOL = "bool"
 
     @classmethod
-    def to_numpy_dtype(cls, data_type):
+    def to_numpy_dtype(cls, data_type) -> np.dtype:
         switcher ={
             cls.INT: np.int32,
             cls.LONG: np.int64,
@@ -31,6 +33,17 @@ class FeaturesDataType(Enum):
 
         return switcher[data_type]
 
+class FeatureGroupType(Enum):
+    ITEM_ID = "item_id"
+    EVENT_TS = "event_timestamp"
+    USER_ID = "user_id"
+    SESSION_ID = "session_id"
+    IMPLICIT_FEEDBACK = "implicit_feedback"
+    ITEM_METADATA = "item_metadata"
+    USER_METADATA = "user_metadata"
+    EVENT_METADATA = "event_metadata"
+    SEQUENTIAL_FEATURES = "sequential_features"
+
 @dataclass
 class FeatureGroups:    
     item_id: str
@@ -43,36 +56,33 @@ class FeatureGroups:
     event_metadata: List[str] = field(default_factory=list)    
     sequential_features: List[str] = field(default_factory=list)
 
-    def get_feature_group(self, group):
-        if not hasattr(self, group):
-            raise Exception('Invalid feature group: {}'.format(group))
-        return getattr(self, group)
+    def get_feature_group(self, group_type: FeatureGroupType) -> Union[str,List[str]]:
+        if not hasattr(self, group_type.value):
+            raise Exception('Invalid feature group: {}'.format(group_type.value))
+        return getattr(self, group_type.value)
 
 @dataclass 
 class FeatureTypes:
-    categorical: List[str] = field(default_factory=list) 
-    numerical: List[str] = field(default_factory=list) 
+    categorical: Sequence[str] = field(default_factory=list) 
+    numerical: Sequence[str] = field(default_factory=list) 
 
 @dataclass
 class InputDataConfig:
-    schema: Dict[str,FeaturesDataType]
+    schema: Mapping[str,FeaturesDataType]
     feature_groups: FeatureGroups    
     feature_types: FeatureTypes
     instance_info_level: InstanceInfoLevel  
     session_padded_items_value: int = field(default=0) 
     positive_interactions_only: bool = field(default=False) 
 
-    def get_item_feature_names(self):
+    def get_item_feature_names(self) -> List[str]:
         return self.feature_groups.item_metadata+[self.feature_groups.item_id]
 
-    def get_feature_dtype(self, fname):
+    def get_feature_dtype(self, fname: str) -> FeaturesDataType:
         return self.schema[fname]
 
-    def get_feature_numpy_dtype(self, fname):
+    def get_feature_numpy_dtype(self, fname: str) -> np.dtype:
         return FeaturesDataType.to_numpy_dtype(self.schema[fname])
 
-    def get_feature_group(self, group):
-        return self.feature_groups.get_feature_group(group)
-
-    def get_feature_group_dtype(self, group):
-        return self.feature_groups.get_feature_group(group)
+    def get_feature_group(self, group_type: FeatureGroupType) -> Union[str,List[str]]:
+        return self.feature_groups.get_feature_group(group_type)
