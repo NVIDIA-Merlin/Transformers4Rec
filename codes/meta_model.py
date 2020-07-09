@@ -18,11 +18,16 @@ class RecSysMetaModel(nn.Module):
     vocab_sizes : sizes of vocab for each discrete inputs
         e.g., [product_id_vocabs, category_vocabs, etc.]
     """
-    def __init__(self, transformer, vocab_sizes, d_model, 
+    def __init__(self, model, vocab_sizes, d_model, 
                  merge_inputs='add', similarity_type='cos', margin_loss=1.0, embed_pad_token=0):
         super(RecSysMetaModel, self).__init__()
         
-        self.transformer = transformer 
+        self.model = model 
+
+        if self.model.__class__ in [nn.GRU, nn.LSTM, nn.RNN]:
+            self.is_rnn = True
+        else:
+            self.is_rnn = False
 
         # set embedding tables
         self.embedding_product = nn.Embedding(vocab_sizes[0], d_model, padding_idx=embed_pad_token)
@@ -77,8 +82,8 @@ class RecSysMetaModel(nn.Module):
             neg_emb_seq = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'mlp':
-            pos_emb_seq = F.tanh(self.mlp_merge(pos_prd_emb, pos_cat_emb))
-            neg_emb_seq = F.tanh(self.mlp_merge(neg_prd_emb, neg_cat_emb))
+            pos_emb_seq = F.tanh(self.mlp_merge(torch.cat(pos_prd_emb, pos_cat_emb)))
+            neg_emb_seq = F.tanh(self.mlp_merge(torch.cat(neg_prd_emb, neg_cat_emb)))
 
         else:
             raise NotImplementedError
@@ -90,12 +95,19 @@ class RecSysMetaModel(nn.Module):
         neg_emb_seq_inp = neg_emb_seq[:, :, :-1]
         neg_emb_seq_trg = neg_emb_seq[:, :, 1:]
 
-        # compute output through transformer
-        transformer_outputs = self.transformer(
-            inputs_embeds=pos_emb_seq_inp,
-        )
-        
-        pos_emb_seq_pred = transformer_outputs[0]
+        if self.is_rnn:
+            # compute output through RNNs
+            model_outputs = self.model(
+                input=pos_emb_seq_inp
+            )
+            
+        else:
+            # compute output through transformer
+            model_outputs = self.model(
+                inputs_embeds=pos_emb_seq_inp,
+            )
+            
+        pos_emb_seq_pred = model_outputs[0]
 
         # compute similarity 
         if self.similarity_type == 'cos':
@@ -113,14 +125,12 @@ class RecSysMetaModel(nn.Module):
 
         # compute logits (predicted probability of item ids)
         logits = self.output_layer(pos_emb_seq_pred)
-        outputs = (logits,) + transformer_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
+        outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
 
         # compute margin (hinge) loss.
         # NOTE: simply taking average here.
-        loss = - (pos_sim_seq.sum(-1) - self.margin_loss - neg_sim_seq.sum(-1)).mean()
+        loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
         
         outputs = (loss,) + outputs
 
         return outputs  # return (loss), logits, (mems), (hidden states), (attentions)
-
-
