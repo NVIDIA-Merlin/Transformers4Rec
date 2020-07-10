@@ -100,7 +100,7 @@ class CandidateSamplingManager():
         if self.sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
             self.items_session_cooccurrences_repo.update_stats()
 
-    def get_candidate_samples(self, n_samples: int, item_id: Optional[ItemId] = None, ignore_items: Optional[List[ItemId]] = []) -> Sequence[ItemId]:
+    def get_candidate_samples(self, n_samples: int, item_id: Optional[ItemId] = None, return_item_features: bool = False, ignore_items: Optional[List[ItemId]] = []) -> Union[Sequence[ItemId], Mapping[ItemId, Mapping[str, Any]]]:
         #To ensure that after removing sessions from the current session we have the required number of samples
         SAMPLES_MULITPLIER = 2
 
@@ -132,7 +132,14 @@ class CandidateSamplingManager():
         #Shuffles the list inplace
         random.shuffle(sampled_item_ids)
 
-        return sampled_item_ids[:n_samples]
+        #Limiting the number of negative samples
+        sampled_item_ids = sampled_item_ids[:n_samples]
+
+        if return_item_features:
+            sampled_items = {i: self.items_metadata_repo.get_item(i) for i in sampled_item_ids}
+            return sampled_items
+        else:
+            return sampled_item_ids
 
     def _get_neg_samples_uniform(self, n_samples: int):
         ts_start_sliding_window = self._get_start_sliding_window()

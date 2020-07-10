@@ -80,6 +80,7 @@ class TestCandidateSamplingManager():
         }
 
         manager.append_session_interactions(session)
+        
 
 
     def test_get_candidate_samples_uniform(self):
@@ -100,6 +101,22 @@ class TestCandidateSamplingManager():
         gini = gini_index(counts)
         #A resonable gini index for a close to uniform distribution
         assert gini < 0.20
+
+
+    def test_get_candidate_samples_uniform_items_with_side_information(self):
+        manager = build_sampling_manager(SamplingStrategy.UNIFORM)
+
+        self._append_interactions_popularity_biased(manager, 
+                    num_sessions=10, session_len=10, max_item_id=100)
+
+        sampled_items = manager.get_candidate_samples(10, return_item_features=True)
+        assert len(sampled_items) == 10
+        assert type(sampled_items) is dict
+
+        expected_features = ['sess_csid_seq', 'sess_price_seq']
+        for item_id, item_features in sampled_items.items():        
+            assert len(set(item_features.keys()).intersection(set(expected_features))) == len(expected_features)
+
 
 
     def test_get_candidate_samples_popularity(self):
