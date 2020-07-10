@@ -4,9 +4,6 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Sequence, Mapping, Union, Optional, NewType, Any, TypeVar
 
-import dependency_injector.containers as containers
-import dependency_injector.providers as providers
-
 from ..config.features_config import (ItemId, FeatureGroupType, 
                                       InstanceInfoLevel, InputDataConfig)
 
