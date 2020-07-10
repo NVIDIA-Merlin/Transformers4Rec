@@ -76,11 +76,15 @@ class ItemsMetadataRepository(ABC):
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def get_item_ids(self) -> np.array:
+    def get_item_ids(self, only_interacted_since_ts: Optional[int] = None) -> np.array:
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def get_items_first_interaction_ts(self) -> Tuple[np.array,Sequencenp.array]:
+    def get_items_first_interaction_ts(self, only_interacted_since_ts: Optional[int] = None) -> Tuple[np.array,np.array]:
+        raise NotImplementedError("Not implemented")
+
+    @abstractmethod
+    def get_last_interaction_ts(self) -> int:
         raise NotImplementedError("Not implemented")
 
 
@@ -117,11 +121,23 @@ class PandasItemsMetadataRepository(ItemsMetadataRepository):
         del(item[self.DUMMY_STR_COL])
         return item
 
-    def get_item_ids(self) -> np.array:
-        return items_df.index.values
+    def get_item_ids(self, only_interacted_since_ts: Optional[int] = None) -> np.array:
+        df = self._get_recently_interacted_items_df(only_interacted_since_ts)
+        return df.index.values
 
-    def get_items_first_interaction_ts(self) -> Tuple[np.array, np.array]:
-        return (self.items_df.index.values, self.items_df[self.INTERNAL_FIRST_TS_COL].values)
+    def get_items_first_interaction_ts(self, only_interacted_since_ts: Optional[int] = None) -> Tuple[np.array, np.array]:
+        df = self._get_recently_interacted_items_df(only_interacted_since_ts)
+        return (df.index.values, df[self.INTERNAL_FIRST_TS_COL].values)
+
+    def get_last_interaction_ts(self) -> int:
+        return self.items_df[self.INTERNAL_LAST_TS_COL].max()
+
+    def _get_recently_interacted_items_df(self, only_interacted_since_ts: Optional[int] = None):
+        if only_interacted_since_ts:
+            df = self.items_df[self.items_df[self.INTERNAL_LAST_TS_COL] >= only_interacted_since_ts]
+        else:
+            df = self.items_df
+        return df
 
 
     
@@ -222,6 +238,7 @@ class PandasItemsRecentPopularityRepository(ItemsRecentPopularityRepository):
         self.item_pop_df = self.item_interactions_df.groupby(self.ITEM_ID_COL).size() \
                                 .to_frame(self.COUNT_COL).reset_index()
         self.item_pop_df[self.PROB_COL] = self.item_pop_df[self.COUNT_COL] / self.item_pop_df[self.COUNT_COL].sum()
+        pass
 
     def purge_old_interactions(self) -> None:
         self._flush_log_buffer_to_dataframe()

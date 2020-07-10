@@ -25,9 +25,10 @@ class SamplingStrategy(Enum):
 @dataclass
 class CandidateSamplingConfig:
     recommendable_items_strategy: RecommendableItemSetStrategy
-    sampling_strategy: SamplingStrategy
+    sampling_strategy: SamplingStrategy    
     recency_keep_interactions_last_n_days: float
     recent_temporal_decay_exp_factor: float
+    remove_repeated_sampled_items: bool = field(default=True)
     
 
 
@@ -47,8 +48,8 @@ class CandidateSamplingManager():
     def _check_config(self) -> None:
         if self.sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE and \
            self.input_data_config.instance_info_level != InstanceInfoLevel.SESSION:
-           raise Exception('The "{}" strategy is only available the the instance info level is {}' \
-                            .format(SamplingStrategy.ITEM_COOCURRENCE, self.input_data_config.InstanceInfoLevel.SESSION))  
+           raise ValueError('The "{}" strategy is only available the the instance info level is {}' \
+                            .format(SamplingStrategy.ITEM_COOCURRENCE, InstanceInfoLevel.SESSION))  
 
 
     def _create_item_metadata_repo(self) -> None:
@@ -90,13 +91,20 @@ class CandidateSamplingManager():
 
         if self.sampling_config.sampling_strategy in [SamplingStrategy.RECENT_POPULARITY,
                                                                 SamplingStrategy.ITEM_COOCURRENCE]:
-            self.items_metadata_repo.append_session(session)
+            self.items_recent_popularity_repo.append_session(session)
 
         if self.sampling_config.sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
             self.items_session_cooccurrences_repo.append_session(session)
 
+    def update_stats(self) -> None:
+        if self.sampling_strategy == SamplingStrategy.RECENT_POPULARITY or \
+           self.sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE: 
+            self.items_recent_popularity_repo.update_stats()
 
-    def get_candidate_samples(self, item_id: ItemId, n_samples: int, ignore_items: Optional[List[ItemId]]) -> Sequence[ItemId]:
+        if self.sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
+            self.items_session_cooccurrences_repo.update_stats()
+
+    def get_candidate_samples(self, n_samples: int, item_id: Optional[ItemId] = None, ignore_items: Optional[List[ItemId]] = []) -> Sequence[ItemId]:
         #To ensure that after removing sessions from the current session we have the required number of samples
         SAMPLES_MULITPLIER = 2
 
@@ -110,15 +118,16 @@ class CandidateSamplingManager():
             sampled_item_ids = self._get_neg_samples_recent_popularity(n_samples*SAMPLES_MULITPLIER)
 
         elif self.sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
-            sampled_item_ids = self._get_neg_samples_cooccurrence(item_id*SAMPLES_MULITPLIER)
+            sampled_item_ids = self._get_neg_samples_cooccurrence(item_id, n_samples*SAMPLES_MULITPLIER)
 
             #If there is not enough co-occurring items, complete the number of 
             # neg. samples with global popularity-biased sampling
             if len(sampled_item_ids) < n_samples:
-                sampled_item_ids += self._get_neg_samples_recent_popularity(n_samples)
+                sampled_item_ids += self._get_neg_samples_recent_popularity(n_samples*SAMPLES_MULITPLIER)
 
         #Removing repeated entries
-        sampled_item_ids = list(set(sampled_item_ids))
+        if self.sampling_config.remove_repeated_sampled_items:
+            sampled_item_ids = list(set(sampled_item_ids))
 
         #Removing samples from the ignore list
         if ignore_items is not None:
@@ -130,17 +139,22 @@ class CandidateSamplingManager():
         return sampled_item_ids[:n_samples]
 
     def _get_neg_samples_uniform(self, n_samples: int):
-        item_ids = self.items_metadata_repo.get_item_ids()
-        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids,item_probs= None, 
+        ts_start_sliding_window = self._get_start_sliding_window()
+        item_ids = self.items_metadata_repo.get_item_ids(only_interacted_since_ts=ts_start_sliding_window)
+        
+        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids=item_ids,
+                                                                    item_probs= None, 
                                                                     n_samples=n_samples)
         return sampled_item_ids
 
     def _prod_relevance_decay(self, days_age : int):
-        return np.exp(-days_age * self.recent_temporal_decay_exp_factor)
+        return np.exp(-days_age * self.sampling_config.recent_temporal_decay_exp_factor)
 
     def _get_neg_samples_recency(self, n_samples: int):
-
-        item_ids, first_interaction_ts = self.items_metadata_repo.get_items_first_interaction_ts()
+        ts_start_sliding_window = self._get_start_sliding_window()
+        
+        item_ids, first_interaction_ts = self.items_metadata_repo \
+                    .get_items_first_interaction_ts(only_interacted_since_ts=ts_start_sliding_window)
         
         last_global_ts = first_interaction_ts.max()
         item_days_age = (last_global_ts - first_interaction_ts) / (60 * 60 * 24)
@@ -148,17 +162,21 @@ class CandidateSamplingManager():
 
         items_relevance_time_decayed_norm = items_relevance_time_decayed / items_relevance_time_decayed.sum()
         
-        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids,
+        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids=item_ids,
                                                                     item_probs= items_relevance_time_decayed_norm, 
                                                                     n_samples=n_samples)
         return sampled_item_ids
 
+    def _get_start_sliding_window(self):
+        last_interaction_ts = self.items_metadata_repo.get_last_interaction_ts()
+        ts_start_sliding_window = last_interaction_ts - int(self.sampling_config.recency_keep_interactions_last_n_days * 24 * 60 * 60)
+        return ts_start_sliding_window
 
     def _get_neg_samples_recent_popularity(self, n_samples: int):
         item_ids, item_probs = self.items_recent_popularity_repo \
                                 .get_candidate_items_probs()
 
-        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids,
+        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids=item_ids,
                                                                     item_probs=item_probs, 
                                                                     n_samples=n_samples)
         return sampled_item_ids
@@ -168,14 +186,15 @@ class CandidateSamplingManager():
         item_ids, item_probs = self.items_session_cooccurrences_repo \
                                 .get_candidate_items_probs(item_id)
 
-        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids,
+        sampled_item_ids = self._get_samples_from_prob_distribution(item_ids=item_ids,
                                                                     item_probs=item_probs, 
                                                                     n_samples=n_samples)
         return sampled_item_ids
 
 
-    def _get_samples_from_prob_distribution(item_ids: np.array, item_probs: Optional[np.array], 
-                                            n_samples: int) -> List[ItemId]:
+    def _get_samples_from_prob_distribution(self, item_ids: np.array,
+                                            n_samples: int,
+                                            item_probs: Optional[np.array]) -> List[ItemId]:
         sampled_item_ids = np.random.choice(item_ids, min(n_samples, len(item_ids)), 
                                             replace=False, p=item_probs).tolist()
         return sampled_item_ids

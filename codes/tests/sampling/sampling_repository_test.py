@@ -24,10 +24,13 @@ class ItemsMetadataRepositoryInstantiable(ItemsMetadataRepository):
     def get_item(self, item_id):
         raise NotImplementedError("Not implemented")
 
-    def get_item_ids(self):
+    def get_item_ids(self, only_interacted_since_ts):
         raise NotImplementedError("Not implemented")
 
-    def get_items_first_interaction_ts(self):
+    def get_items_first_interaction_ts(self, only_interacted_since_ts):
+        raise NotImplementedError("Not implemented")
+
+    def get_last_interaction_ts(self) -> int:
         raise NotImplementedError("Not implemented")
 
 
@@ -149,6 +152,32 @@ class TestPandasItemsMetadataRepository:
         item = repository.get_item(item_id)
         assert item['sess_csid_seq'] == item_features_dict['sess_csid_seq']
         assert item['sess_price_seq'] == item_features_dict['sess_price_seq']
+
+    def test_get_items_last_interacted_recently(self):
+
+        repository = PandasItemsMetadataRepository(self.input_data_config)
+
+        item_features_dict = {
+                                'sess_pid_seq': 10,
+                                'sess_csid_seq': 100,
+                                'sess_price_seq': 270.90,
+                                'sess_etime_seq': 1594100000, 
+                             }
+        repository.update_item_metadata(item_features_dict)
+
+        item_features_dict = {
+                                'sess_pid_seq': 20,
+                                'sess_csid_seq': 120,
+                                'sess_price_seq': 605.75,
+                                'sess_etime_seq': 1594200000
+                             }
+        repository.update_item_metadata(item_features_dict)
+
+        item_ids = repository.get_item_ids(only_interacted_since_ts=1594200000)
+        
+        #Ensures that the id from the first interaction is not returned, as its last interaction was before the reference date
+        assert len(item_ids) == 1
+        assert np.all(item_ids == np.array([20]))
 
 
     def test_get_items_first_interaction_ts(self):
