@@ -4,14 +4,14 @@ from abc import ABC, abstractmethod
 from ..config.features_config import InputDataConfig, ItemId, FeatureGroupType
 from typing import Sequence, Mapping, Dict, Union, Optional, Any, List, Tuple
 from itertools import permutations 
+from enum import Enum
+import dependency_injector.containers as containers
+import dependency_injector.providers as providers
 
 
+class PersistanceType(Enum):
+    PANDAS = "pandas"
 
-def df_empty(columns: Mapping[str,np.dtype], index=None) -> pd.DataFrame:    
-        df = pd.DataFrame()
-        for c in columns:
-            df[c] = pd.Series(dtype=columns[c])
-        return df.set_index(index)
 
 class ItemsMetadataRepository(ABC):
 
@@ -354,10 +354,31 @@ class PandasItemsSessionCoOccurrencesRepository(ItemsSessionCoOccurrencesReposit
         return candidate_items_probs
 
 
-    
+def df_empty(columns: Mapping[str,np.dtype], index=None) -> pd.DataFrame:    
+        df = pd.DataFrame()
+        for c in columns:
+            df[c] = pd.Series(dtype=columns[c])
+        return df.set_index(index)
 
 
-    
 
+class ItemsMetadataRepositoryFactory:
+    @staticmethod
+    def build(persistance_type: PersistanceType, **kwargs) -> ItemsMetadataRepository:
+        if persistance_type == PersistanceType.PANDAS:
+            return PandasItemsMetadataRepository(**kwargs)        
+        raise ValueError('Invalid persistance type!')
 
-    
+class ItemsRecentPopularityRepositoryFactory:
+    @staticmethod
+    def build(persistance_type: PersistanceType, **kwargs) -> ItemsRecentPopularityRepository:
+        if persistance_type == PersistanceType.PANDAS:
+            return PandasItemsRecentPopularityRepository(**kwargs)        
+        raise ValueError('Invalid persistance type!')
+
+class ItemsSessionCoOccurrencesRepositoryFactory:
+    @staticmethod
+    def build(persistance_type: PersistanceType, **kwargs):
+        if persistance_type == PersistanceType.PANDAS:
+            return PandasItemsSessionCoOccurrencesRepository(**kwargs)        
+        raise ValueError('Invalid persistance type!')            

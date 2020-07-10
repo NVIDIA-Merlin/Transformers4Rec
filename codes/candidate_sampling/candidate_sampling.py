@@ -4,12 +4,13 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Dict, Sequence, Mapping, Union, Optional, NewType, Any, TypeVar
 
+import dependency_injector.containers as containers
+import dependency_injector.providers as providers
+
 from ..config.features_config import (ItemId, FeatureGroupType, 
                                       InstanceInfoLevel, InputDataConfig)
 
-from .sampling_repository import (ItemsMetadataRepository, PandasItemsMetadataRepository,  
-                                                      PandasItemsSessionCoOccurrencesRepository, ItemsRecentPopularityRepository, 
-                                                      PandasItemsRecentPopularityRepository)
+from .sampling_repository import PersistanceType, ItemsMetadataRepositoryFactory, ItemsRecentPopularityRepositoryFactory, ItemsSessionCoOccurrencesRepositoryFactory
 
 
 class RecommendableItemSetStrategy(Enum):
@@ -26,10 +27,13 @@ class SamplingStrategy(Enum):
 class CandidateSamplingConfig:
     recommendable_items_strategy: RecommendableItemSetStrategy
     sampling_strategy: SamplingStrategy    
+    persistance_type: PersistanceType
     recency_keep_interactions_last_n_days: float
     recent_temporal_decay_exp_factor: float
     remove_repeated_sampled_items: bool = field(default=True)
-    
+
+
+ 
 
 
 class CandidateSamplingManager():
@@ -39,6 +43,7 @@ class CandidateSamplingManager():
         self.input_data_config = input_data_config
         self.sampling_config = candidate_sampling_config
         self.sampling_strategy = self.sampling_config.sampling_strategy      
+        self.persistance_type = self.sampling_config.persistance_type
         self._check_config()  
     
         self._create_repositories()
@@ -52,28 +57,22 @@ class CandidateSamplingManager():
                             .format(SamplingStrategy.ITEM_COOCURRENCE, InstanceInfoLevel.SESSION))  
 
 
-    def _create_item_metadata_repo(self) -> None:
-        self.items_metadata_repo = PandasItemsMetadataRepository(self.input_data_config)
-
-    def _create_items_recent_popularity_repo(self) -> None:
-        self.items_recent_popularity_repo = PandasItemsRecentPopularityRepository(
-                        self.input_data_config, self.sampling_config.recency_keep_interactions_last_n_days
-                )
-
-    def _create_items_session_cooccurrences_repo(self) -> None:
-        self.items_session_cooccurrences_repo = PandasItemsSessionCoOccurrencesRepository(
-                        self.input_data_config, self.sampling_config.recency_keep_interactions_last_n_days
-                )
-
     def _create_repositories(self) -> None:
-        self._create_item_metadata_repo()
+        self.items_metadata_repo = ItemsMetadataRepositoryFactory.build(self.persistance_type, 
+                                                                        input_data_config=self.input_data_config)
 
         if self.sampling_config.sampling_strategy in [SamplingStrategy.RECENT_POPULARITY,
                                                                 SamplingStrategy.ITEM_COOCURRENCE]:
-            self._create_items_recent_popularity_repo()
+            self.items_recent_popularity_repo = ItemsRecentPopularityRepositoryFactory.build(self.persistance_type,
+                        input_data_config=self.input_data_config, 
+                        keep_last_days=self.sampling_config.recency_keep_interactions_last_n_days
+                )
 
         if self.sampling_config.sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
-            self._create_items_session_cooccurrences_repo()
+            self.items_session_cooccurrences_repo = ItemsSessionCoOccurrencesRepositoryFactory.build(self.persistance_type, 
+                        input_data_config=self.input_data_config, 
+                        keep_last_days=self.sampling_config.recency_keep_interactions_last_n_days
+                )
         
 
     def append_item_interaction(self, item_features_dict: Dict[str,Any]) -> None:

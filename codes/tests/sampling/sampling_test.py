@@ -8,6 +8,7 @@ from unittest.mock import call
 
 from ..tests_utils import get_input_data_config, gini_index, power_law_distribution
 from ...candidate_sampling.candidate_sampling import CandidateSamplingManager, CandidateSamplingConfig, SamplingStrategy, RecommendableItemSetStrategy
+from ...candidate_sampling.sampling_repository import PersistanceType
 from ...config.features_config import InstanceInfoLevel
 
 def build_sampling_manager(
@@ -22,7 +23,8 @@ def build_sampling_manager(
     sampling_config = CandidateSamplingConfig(
         recommendable_items_strategy = RecommendableItemSetStrategy.RECENT_INTERACTIONS,
         sampling_strategy = sampling_strategy,
-        recency_keep_interactions_last_n_days =recency_keep_interactions_last_n_days,
+        persistance_type = PersistanceType.PANDAS,
+        recency_keep_interactions_last_n_days = recency_keep_interactions_last_n_days,
         recent_temporal_decay_exp_factor = recent_temporal_decay_exp_factor,
         remove_repeated_sampled_items=remove_repeated_sampled_items
     )
@@ -198,10 +200,8 @@ class TestCandidateSamplingManager():
             sampled_item_ids = np.random.choice(item_ids, session_len, replace=False, 
                                                 p=item_probs_fixed).tolist()
 
-            #Every 3 sessions we artificially include 2 interactions 
-            # to generate a co-occurrence pattern
-            if i % 3 == 0:
-                sampled_item_ids += [1,2]
+            #Enforces a co-ocurrence pattern
+            sampled_item_ids += [1,2]
 
             session_start = INITIAL_TS + (i*SECS_ELAPSED_BETWEEN_SESSIONS)
             interactions_ts = list([session_start + (t*SECS_BETWEEN_INTERACTIONS) \
