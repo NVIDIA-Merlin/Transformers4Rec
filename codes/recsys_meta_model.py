@@ -19,7 +19,8 @@ class RecSysMetaModel(nn.Module):
         e.g., [product_id_vocabs, category_vocabs, etc.]
     """
     def __init__(self, model, vocab_sizes, d_model, 
-                 merge_inputs='add', similarity_type='cos', margin_loss=1.0, embed_pad_token=0):
+                 merge_inputs='add', similarity_type='cos', margin_loss=1.0, embed_pad_token=0,
+                 loss_type='cross_entropy'):
         super(RecSysMetaModel, self).__init__()
         
         self.model = model 
@@ -42,6 +43,8 @@ class RecSysMetaModel(nn.Module):
         self.similarity_type = similarity_type
         self.margin_loss = margin_loss
         self.output_layer = nn.Linear(d_model, vocab_sizes[0])
+        self.loss_type = loss_type
+        self.cross_entropy = nn.CrossEntropyLoss(ignore_index=embed_pad_token)
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -63,37 +66,61 @@ class RecSysMetaModel(nn.Module):
         neg_product_seq,
         neg_category_seq,
     ):
-        # unflatten negative sample
-        max_seq_len = product_seq.size(1)
-        neg_product_seq = self._unflatten_neg_seq(neg_product_seq, max_seq_len)
-        neg_category_seq = self._unflatten_neg_seq(neg_category_seq, max_seq_len)
+        """
+        For cross entropy loss, we split input and target BEFORE embedding layer.
+        For margin hinge loss, we split input and target AFTER embedding layer.
+        """
+        
+        # Step1. Obtain Embedding
 
-        # obtain embeddings
-        # NOTE: padding elements are automatically removed through padded_idx option
+        if self.loss_type == 'cross_entropy':
+            product_seq_trg = product_seq[:, 1:] 
+            product_seq = product_seq[:, :-1]
+            category_seq = category_seq[:, :-1]
+
         pos_prd_emb = self.embedding_product(product_seq)
         pos_cat_emb = self.embedding_category(category_seq)
+        
+        if self.loss_type == 'margin_hinge':
 
-        neg_prd_emb = self.embedding_product(neg_product_seq)
-        neg_cat_emb = self.embedding_category(neg_category_seq)
+            # unflatten negative sample
+            max_seq_len = product_seq.size(1)
+            neg_product_seq = self._unflatten_neg_seq(neg_product_seq, max_seq_len)
+            neg_category_seq = self._unflatten_neg_seq(neg_category_seq, max_seq_len)
+            
+            # obtain embeddings
+            neg_prd_emb = self.embedding_product(neg_product_seq)
+            neg_cat_emb = self.embedding_category(neg_category_seq)
 
-        # merge different features
+        # Step 2. Merge features
+
         if self.merge == 'add':
             pos_emb_seq = pos_prd_emb + pos_cat_emb
-            neg_emb_seq = neg_prd_emb + neg_cat_emb
+            
+            if self.loss_type == 'margin_hinge':
+                neg_emb_seq = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'mlp':
-            pos_emb_seq = F.tanh(self.mlp_merge(torch.cat(pos_prd_emb, pos_cat_emb)))
-            neg_emb_seq = F.tanh(self.mlp_merge(torch.cat(neg_prd_emb, neg_cat_emb)))
+            pos_emb_seq = F.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb))))
+
+            if self.loss_type == 'margin_hinge':
+                neg_emb_seq = F.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb))))
 
         else:
             raise NotImplementedError
 
-        # set input and target from emb_seq
-        pos_emb_seq_inp = pos_emb_seq[:, :-1]
-        pos_emb_seq_trg = pos_emb_seq[:, 1:]
+        if self.loss_type == 'margin_hinge':
+            # set input and target from emb_seq
+            pos_emb_seq_inp = pos_emb_seq[:, :-1]
+            pos_emb_seq_trg = pos_emb_seq[:, 1:]
 
-        neg_emb_seq_inp = neg_emb_seq[:, :, :-1]
-        neg_emb_seq_trg = neg_emb_seq[:, :, 1:]
+            neg_emb_seq_inp = neg_emb_seq[:, :, :-1]
+            neg_emb_seq_trg = neg_emb_seq[:, :, 1:]
+
+        elif self.loss_type == 'cross_entropy':
+            pos_emb_seq_inp = pos_emb_seq
+
+        # Step3. Run forward pass on model architecture
 
         if self.is_rnn:
             # compute output through RNNs
@@ -109,28 +136,38 @@ class RecSysMetaModel(nn.Module):
             
         pos_emb_seq_pred = model_outputs[0]
 
-        # compute similarity 
-        if self.similarity_type == 'cos':
-            pos_emb_seq_pred_expanded = pos_emb_seq_pred.unsqueeze(1).expand_as(neg_emb_seq_trg)
-            pos_sim_seq = F.cosine_similarity(pos_emb_seq_trg, pos_emb_seq_pred, dim=2)
-            pos_sim_seq = pos_sim_seq.unsqueeze(1)
-            neg_sim_seq = F.cosine_similarity(neg_emb_seq_trg, pos_emb_seq_pred_expanded, dim=3)
+        # Step4. Compute loss
 
-        elif self.similarity_type == 'softmax':
-            # TODO: ref. https://github.com/gabrielspmoreira/chameleon_recsys/blob/master/nar_module/nar/nar_model.py#L508
-            raise NotImplementedError
+        if self.loss_type == 'margin_hinge':
+            # compute similarity 
+            if self.similarity_type == 'cos':
+                pos_emb_seq_pred_expanded = pos_emb_seq_pred.unsqueeze(1).expand_as(neg_emb_seq_trg)
+                pos_sim_seq = F.cosine_similarity(pos_emb_seq_trg, pos_emb_seq_pred, dim=2)
+                pos_sim_seq = pos_sim_seq.unsqueeze(1)
+                neg_sim_seq = F.cosine_similarity(neg_emb_seq_trg, pos_emb_seq_pred_expanded, dim=3)
 
-        else:
-            raise NotImplementedError
+            elif self.similarity_type == 'softmax':
+                # TODO: ref. https://github.com/gabrielspmoreira/chameleon_recsys/blob/master/nar_module/nar/nar_model.py#L508
+                raise NotImplementedError
+
+            else:
+                raise NotImplementedError
 
         # compute logits (predicted probability of item ids)
         logits = self.output_layer(pos_emb_seq_pred)
         outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
-
-        # compute margin (hinge) loss.
-        # NOTE: simply taking average here.
-        loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
         
+        if self.loss_type == 'margin_hinge':
+            # compute margin (hinge) loss.
+            # NOTE: simply taking average here.
+
+            loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
+
+        elif self.loss_type == 'cross_entropy':
+            loss = self.cross_entropy(logits, product_seq_trg)
+        else:
+            raise NotImplementedError
+
         outputs = (loss,) + outputs
 
         return outputs  # return (loss), logits, (mems), (hidden states), (attentions)

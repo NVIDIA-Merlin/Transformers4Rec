@@ -67,7 +67,7 @@ def main():
     max_seq_len = 2048
 
     _model = get_recsys_model(model_args, d_model, max_seq_len)
-    model = RecSysMetaModel(_model, vocab_sizes, d_model=d_model)
+    model = RecSysMetaModel(_model, vocab_sizes, d_model=d_model, loss_type=model_args.loss_type)
 
     trainer = RecSysTrainer(
         train_loader=train_loader, 

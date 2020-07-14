@@ -40,6 +40,6 @@ class ModelArguments:
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
     loss_type: Optional[str] = field(
-        default="cross_entropy", metadata={"help": "Type of Loss function: either cross_entropy OR margin_hinge"}
+        default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy' OR 'margin_hinge'"}
     )
     fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
