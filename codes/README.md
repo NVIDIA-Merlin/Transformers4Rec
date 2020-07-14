@@ -8,14 +8,19 @@ Current code uses following ingredients to implement RecSys-Transformer models:
 
 ## Installation guide
 
-Step 1. Get this repo (e.g., git clone ..)
+Step 1. Get this repo (e.g., `git clone https://github.com/rapidsai/recsys.git`)
 
 Step 2. Install PyTorch
-Visit https://pytorch.org and follow their guideline.
-```e.g., For Linux with cuda=10.2 use this:
+
+Visit https://pytorch.org and follow their guideline. 
+
+E.g., For Linux with cuda=10.2 use this:
+```
 conda install pytorch torchvision cudatoolkit=10.2 -c pytorch
 ```
+
 Step 3. Install Huggingface and Petastorm
+
 ```
 pip install -r requirements.txt
 ```
@@ -29,13 +34,14 @@ pip install petastorm==0.9.2
 
 ## How to Run?
 
-Step 1. Get preprocessed e-commerce dataset 
+**Step 1. Get preprocessed e-commerce dataset **
+
 We prepared the sample preprocessed dataset and uploaded at Google drive. You can get it by running following script:
 ```
 bash scripts/get_dataset.bash
 ```
 
-Step 2. Run the training & evaluation code:
+**Step 2. Run the training & evaluation code:**
 ```
 bash scripts/run_transformer.bash
 ```
