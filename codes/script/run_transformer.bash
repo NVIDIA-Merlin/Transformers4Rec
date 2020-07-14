@@ -1,7 +1,8 @@
 mkdir -p ./tmp/
 
 # for multiple GPU, use 0,1 not fully supported yet
-CUDA_VISIBLE_DEVICES=0 python recsys_main.py \
+
+TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0 python recsys_main.py \
     --output_dir "./tmp/" \
     --overwrite_output_dir \
     --do_train \
