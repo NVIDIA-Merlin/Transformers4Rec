@@ -16,8 +16,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0 python recsys_main.py \
     --d_model 256 \
     --n_layer 6 \
     --n_head 4 \
-    --dropout 0.2 \
-    --fast_test
+    --dropout 0.2 
 
 # model_type: xlnet, gpt2, longformer
 # loss_type: cross_entropy, hinge_loss
