@@ -5,6 +5,8 @@ How torun :
 import os
 import math
 import logging
+import numpy as np
+import pandas as pd
 
 from transformers import (
     HfArgumentParser,
@@ -62,11 +64,11 @@ def main():
     set_seed(training_args.seed)
 
     # embedding size
-    _model = get_recsys_model(model_args)
-    model = RecSysMetaModel(_model, model_args, data_args, vocab_sizes)
+    seq_model, config = get_recsys_model(model_args)
+    rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, vocab_sizes)
 
     trainer = RecSysTrainer(
-        model=model,
+        model=rec_model,
         args=training_args,
         f_feature_extract=f_feature_extract,
         compute_metrics=compute_recsys_metrics,
@@ -101,21 +103,32 @@ def main():
 
             eval_output = trainer.evaluate()
 
-            perplexity = math.exp(eval_output["eval_loss"])
-            result = {"perplexity": perplexity}
-
-            output_eval_file = os.path.join(training_args.output_dir, "eval_results.txt")
+            output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")
             if trainer.is_world_master():
                 with open(output_eval_file, "w") as writer:
                     logger.info("***** Eval results (date:{})*****".format(eval_date))
-                    for key in sorted(result.keys()):
-                        logger.info("  %s = %s", key, str(result[key]))
-                        writer.write("%s = %s\n" % (key, str(result[key])))
+                    writer.write("***** Eval results (date:{})*****".format(eval_date))
+                    for key in sorted(eval_output.keys()):
+                        logger.info("  %s = %s", key, str(eval_output[key]))
+                        writer.write("%s = %s\n" % (key, str(eval_output[key])))
 
-            results_dates[eval_date] = result
+            results_dates[eval_date] = eval_output
         
     logger.info("train and eval for all dates are done")
     trainer.save_model()
+
+    if training_args.do_eval and trainer.is_world_master():
+        
+        eval_df = pd.DataFrame.from_dict(results_dates, orient='index')
+        np.save(os.path.join(training_args.output_dir, "eval_results_dates.npy"), eval_df)
+        eval_avg_days = dict(eval_df.mean())
+        output_eval_file = os.path.join(training_args.output_dir, "eval_results_avg.txt")
+        with open(output_eval_file, "w") as writer:
+            logger.info("***** Eval results (avg over dates)*****")
+            for key in sorted(eval_avg_days.keys()):
+                logger.info("  %s = %s", key, str(eval_avg_days[key]))
+                writer.write("%s = %s\n" % (key, str(eval_avg_days[key])))
+
     return results_dates
 
 

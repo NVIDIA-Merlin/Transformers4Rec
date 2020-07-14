@@ -10,6 +10,7 @@ from transformers.modeling_gpt2 import GPT2Model
 from transformers.configuration_gpt2 import GPT2Config
 from transformers.modeling_longformer import LongformerModel
 from transformers.configuration_longformer import LongformerConfig
+from transformers.configuration_utils import PretrainedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +67,7 @@ def get_recsys_model(model_args):
             hidden_size=model_args.d_model,
             dropout=model_args.dropout,
         )
+        config = PretrainedConfig()  # dummy config
 
     elif model_args.model_type == 'lstm':
         model_cls = nn.LSTM(
@@ -74,6 +76,8 @@ def get_recsys_model(model_args):
             hidden_size=model_args.d_model,
             dropout=model_args.dropout,
         )
+        config = PretrainedConfig()
+
     elif model_args.model_type == 'rnn':
         model_cls = nn.RNN(
             input_size=model_args.d_model,
@@ -81,6 +85,7 @@ def get_recsys_model(model_args):
             hidden_size=model_args.d_model,
             dropout=model_args.dropout,
         )
+        config = PretrainedConfig()
 
     else:
         raise NotImplementedError
@@ -98,5 +103,5 @@ def get_recsys_model(model_args):
     else:
         logger.info("Training new model from scratch")
         model = model_cls(config)
-    
-    return model
+        
+    return model, config

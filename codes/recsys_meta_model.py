@@ -9,17 +9,18 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+from transformers.modeling_utils import PreTrainedModel
 
 logger = logging.getLogger(__name__)
 
 
-class RecSysMetaModel(nn.Module):
+class RecSysMetaModel(PreTrainedModel):
     """
     vocab_sizes : sizes of vocab for each discrete inputs
         e.g., [product_id_vocabs, category_vocabs, etc.]
     """
-    def __init__(self, model, model_args, data_args, vocab_sizes):
-        super(RecSysMetaModel, self).__init__()
+    def __init__(self, model, config, model_args, data_args, vocab_sizes):
+        super(RecSysMetaModel, self).__init__(config)
         
         self.model = model 
 
