@@ -7,7 +7,7 @@ from petastorm import make_batch_reader
 from petastorm.pytorch import DataLoader
 from petastorm.unischema import UnischemaField
 
-from utils import get_filenames, get_dataset_len
+from recsys_utils import get_filenames, get_dataset_len
 
 
 # set vocabulary sizes for discrete input seqs. 

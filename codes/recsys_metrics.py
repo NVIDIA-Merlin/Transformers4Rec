@@ -9,7 +9,7 @@ from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
 from sklearn.metrics import ndcg_score, average_precision_score
 from chameleon_metrics import NDCG, HitRate
 
-from utils import Timing
+from recsys_utils import Timing
 
 # TODO: use this metrics
 # https://github.com/gabrielspmoreira/chameleon_recsys/blob/master/nar_module/nar/metrics.py
