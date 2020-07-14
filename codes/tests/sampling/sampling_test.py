@@ -6,63 +6,100 @@ import pytest
 from pytest_mock import mocker
 
 from ...candidate_sampling.candidate_sampling import (
-    CandidateSamplingConfig,
-    CandidateSamplingManager,
-    RecommendableItemSetStrategy,
+    ItemCooccurrenceCandidateSamplingManager,
+    ItemCooccurrenceSamplingConfig,
+    RecencyCandidateSamplingConfig,
+    RecencyCandidateSamplingManager,
+    RecentPopularityCandidateSamplingManager,
+    RecentPopularitySamplingConfig,
     SamplingStrategy,
+    UniformCandidateSamplingConfig,
+    UniformCandidateSamplingManager,
 )
 from ...candidate_sampling.sampling_repository import PersistanceType
 from ...config.features_config import InstanceInfoLevel
 from ..tests_utils import get_input_data_config, gini_index, power_law_distribution
 
 
-def build_sampling_manager(
-    sampling_strategy: SamplingStrategy,
-    recommendable_items_strategy: RecommendableItemSetStrategy = RecommendableItemSetStrategy.RECENT_INTERACTIONS,
-    recency_keep_interactions_last_n_days: float = 1.0,
-    recent_temporal_decay_exp_factor: float = 0.002,
-    instance_info_level: InstanceInfoLevel = InstanceInfoLevel.SESSION,
-    remove_repeated_sampled_items: bool = True,
-):
+class SamplingManagerFactory:
+    @classmethod
+    def build(
+        self,
+        sampling_strategy: SamplingStrategy,
+        recency_keep_interactions_last_n_days: float = 1.0,
+        recent_temporal_decay_exp_factor: float = 0.002,
+        instance_info_level: InstanceInfoLevel = InstanceInfoLevel.SESSION,
+        remove_repeated_sampled_items: bool = True,
+    ):
+        sampling_manager_class = None
+        sampling_config = None
 
-    sampling_config = CandidateSamplingConfig(
-        recommendable_items_strategy=RecommendableItemSetStrategy.RECENT_INTERACTIONS,
-        sampling_strategy=sampling_strategy,
-        persistance_type=PersistanceType.PANDAS,
-        recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
-        recent_temporal_decay_exp_factor=recent_temporal_decay_exp_factor,
-        remove_repeated_sampled_items=remove_repeated_sampled_items,
-    )
+        if sampling_strategy == SamplingStrategy.UNIFORM:
+            sampling_manager_class = UniformCandidateSamplingManager
+            sampling_config = UniformCandidateSamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=PersistanceType.PANDAS,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
 
-    input_data_config = get_input_data_config(instance_info_level)
+        elif sampling_strategy == SamplingStrategy.RECENCY:
+            sampling_manager_class = RecencyCandidateSamplingManager
+            sampling_config = RecencyCandidateSamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=PersistanceType.PANDAS,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                recent_temporal_decay_exp_factor=recent_temporal_decay_exp_factor,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
 
-    sampling_manager = CandidateSamplingManager(input_data_config, sampling_config)
+        elif sampling_strategy == SamplingStrategy.RECENT_POPULARITY:
+            sampling_manager_class = RecentPopularityCandidateSamplingManager
+            sampling_config = RecentPopularitySamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=PersistanceType.PANDAS,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
 
-    return sampling_manager
+        elif sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
+            sampling_manager_class = ItemCooccurrenceCandidateSamplingManager
+            sampling_config = ItemCooccurrenceSamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=PersistanceType.PANDAS,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
+
+        input_data_config = get_input_data_config(instance_info_level)
+
+        sampling_manager = sampling_manager_class(input_data_config, sampling_config)
+
+        return sampling_manager
 
 
 class TestCandidateSamplingManager:
     def test_sampling_manager_uniform_constructor(self):
-        build_sampling_manager(SamplingStrategy.UNIFORM)
+        SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
 
     def test_sampling_manager_recency_constructor(self):
-        build_sampling_manager(SamplingStrategy.RECENCY)
+        SamplingManagerFactory.build(SamplingStrategy.RECENCY)
 
     def test_sampling_manager_popularity_constructor(self):
-        build_sampling_manager(SamplingStrategy.RECENT_POPULARITY)
+        SamplingManagerFactory.build(SamplingStrategy.RECENT_POPULARITY)
 
     def test_sampling_manager_cooccurrence_constructor(self):
-        build_sampling_manager(SamplingStrategy.ITEM_COOCURRENCE)
+        SamplingManagerFactory.build(SamplingStrategy.ITEM_COOCURRENCE)
 
     def test_sampling_manager_cooccurrence_without_session_constructor(self):
         with pytest.raises(ValueError):
-            build_sampling_manager(
+            SamplingManagerFactory.build(
                 SamplingStrategy.ITEM_COOCURRENCE,
                 instance_info_level=InstanceInfoLevel.INTERACTION,
             )
 
     def test_append_item_interaction(self):
-        manager = build_sampling_manager(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
 
         item_interaction = {
             "sess_etime_seq": 1594130629,
@@ -73,7 +110,7 @@ class TestCandidateSamplingManager:
         manager.append_item_interaction(item_interaction)
 
     def test_session_interactions(self):
-        manager = build_sampling_manager(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
 
         session = {
             "sess_etime_seq": [1594133000, 1594134000, 0],
@@ -85,7 +122,7 @@ class TestCandidateSamplingManager:
         manager.append_session_interactions(session)
 
     def test_get_candidate_samples_uniform(self):
-        manager = build_sampling_manager(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
 
         self._append_interactions_popularity_biased(
             manager, num_sessions=100, session_len=10, max_item_id=100
@@ -105,7 +142,7 @@ class TestCandidateSamplingManager:
         assert gini < 0.20
 
     def test_get_candidate_samples_uniform_items_with_side_information(self):
-        manager = build_sampling_manager(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
 
         self._append_interactions_popularity_biased(
             manager, num_sessions=10, session_len=10, max_item_id=100
@@ -122,7 +159,7 @@ class TestCandidateSamplingManager:
             )
 
     def test_get_candidate_samples_popularity(self):
-        manager = build_sampling_manager(
+        manager = SamplingManagerFactory.build(
             SamplingStrategy.RECENT_POPULARITY, remove_repeated_sampled_items=False
         )
 
@@ -146,7 +183,7 @@ class TestCandidateSamplingManager:
         assert gini > 0.30
 
     def test_get_candidate_samples_recency(self):
-        manager = build_sampling_manager(
+        manager = SamplingManagerFactory.build(
             SamplingStrategy.RECENCY,
             remove_repeated_sampled_items=False,
             recency_keep_interactions_last_n_days=2.0,
@@ -172,7 +209,7 @@ class TestCandidateSamplingManager:
         assert odd_ids_count > (even_ids_count * 2)
 
     def test_get_candidate_samples_cooccurrence(self):
-        manager = build_sampling_manager(
+        manager = SamplingManagerFactory.build(
             SamplingStrategy.ITEM_COOCURRENCE,
             remove_repeated_sampled_items=False,
             recency_keep_interactions_last_n_days=1.0,
