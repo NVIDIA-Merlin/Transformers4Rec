@@ -64,7 +64,7 @@ def main():
     set_seed(training_args.seed)
 
     # embedding size
-    seq_model, config = get_recsys_model(model_args)
+    seq_model, config = get_recsys_model(model_args, data_args)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, vocab_sizes)
 
     trainer = RecSysTrainer(

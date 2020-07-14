@@ -31,6 +31,9 @@ class DataArguments:
     pad_token: Optional[int] = field(
         default=0, metadata={"help": "pad token"}
     )
+    max_seq_len: Optional[int] = field(
+        default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
+    )
 
 
 @dataclass

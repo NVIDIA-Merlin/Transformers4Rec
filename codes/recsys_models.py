@@ -15,7 +15,7 @@ from transformers.configuration_utils import PretrainedConfig
 logger = logging.getLogger(__name__)
 
 
-def get_recsys_model(model_args):
+def get_recsys_model(model_args, data_args):
 
     if model_args.model_type == 'xlnet':
         model_cls = XLNetModel
@@ -44,7 +44,7 @@ def get_recsys_model(model_args):
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
-            n_positions=model_args.max_seq_len,
+            n_positions=data_args.max_seq_len,
         )
 
     elif model_args.model_type == 'longformer':
@@ -57,7 +57,7 @@ def get_recsys_model(model_args):
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
-            max_position_embedding=model_args.max_seq_len,
+            max_position_embedding=data_args.max_seq_len,
         )
 
     elif model_args.model_type == 'gru':
