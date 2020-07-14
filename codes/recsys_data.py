@@ -2,9 +2,12 @@
 Set data-specific schema, vocab sizes, and feature extract function.
 """
 
-
 import numpy as np
+from petastorm import make_batch_reader
+from petastorm.pytorch import DataLoader
 from petastorm.unischema import UnischemaField
+
+from utils import get_filenames, get_dataset_len
 
 
 # set vocabulary sizes for discrete input seqs. 
@@ -12,6 +15,59 @@ from petastorm.unischema import UnischemaField
 product_vocab_size = 300000
 category_vocab_size = 60000
 vocab_sizes = [product_vocab_size, category_vocab_size]
+
+
+def fetch_data_loaders(data_args, training_args):
+    d_path = data_args.data_path if data_args.data_path else ''
+    
+    # TODO: make this at outer-loop for making evaluation based on days-data-partition
+    train_data_path = [
+        d_path + "session_start_date=2019-10-01",
+        d_path + "session_start_date=2019-10-01",
+    ]
+
+    eval_data_path = [
+        d_path + "session_start_date=2019-10-01",
+    ]
+
+    train_data_path = get_filenames(train_data_path)
+    eval_data_path = get_filenames(eval_data_path)
+
+    train_data_len = get_dataset_len(train_data_path)
+    eval_data_len = get_dataset_len(eval_data_path)
+
+    train_loader = DataLoaderWithLen(
+        make_batch_reader(train_data_path, 
+            num_epochs=None,
+            schema_fields=recsys_schema_small,
+        ), 
+        batch_size=training_args.per_device_train_batch_size,
+        len=train_data_len,
+    )
+
+    eval_loader = DataLoaderWithLen(
+        make_batch_reader(eval_data_path, 
+            num_epochs=None,
+            schema_fields=recsys_schema_small,
+        ), 
+        batch_size=training_args.per_device_eval_batch_size,
+        len=eval_data_len,
+    )
+    return train_loader, eval_loader
+
+
+class DataLoaderWithLen(DataLoader):
+    def __init__(self, *args, **kwargs):
+        if 'len' not in kwargs:
+            self.len = 0
+        else:
+            self.len = kwargs.pop('len')
+
+        super(DataLoaderWithLen, self).__init__(*args, **kwargs)
+
+    def __len__(self):
+        return self.len
+
 
 def f_feature_extract(inputs):
     """

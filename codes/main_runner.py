@@ -5,217 +5,27 @@ How torun :
 import os
 import math
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, NewType, Tuple, Optional
-
-from petastorm import make_batch_reader
-from petastorm.pytorch import DataLoader
 
 from transformers import (
-    MODEL_WITH_LM_HEAD_MAPPING,
     HfArgumentParser,
     TrainingArguments,
     set_seed,
 )
 
-# load transformer model and its configuration classes
-from transformers.modeling_xlnet import XLNetModel
-from transformers.configuration_xlnet import XLNetConfig
-from transformers.modeling_gpt2 import GPT2Model
-from transformers.configuration_gpt2 import GPT2Config
-from transformers.modeling_longformer import LongformerModel
-from transformers.configuration_longformer import LongformerConfig
+from recsys_models import get_recsys_model
+from recsys_meta_model import RecSysMetaModel
+from recsys_trainer import RecSysTrainer
+from recsys_metrics import compute_recsys_metrics
+from recsys_args import DataArguments, ModelArguments
+from recsys_data import (
+    recsys_schema_small, 
+    f_feature_extract, 
+    vocab_sizes, 
+    fetch_data_loaders
+)
 
-from trainer import RecSysTrainer
-from meta_model import RecSysMetaModel
-from utils import wc, get_filenames, get_dataset_len
-from metrics import compute_recsys_metrics
-
-from recsys_data_schema import recsys_schema_small, f_feature_extract, vocab_sizes
-
-import torch
-import torch.nn as nn
 
 logger = logging.getLogger(__name__)
-
-MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
-MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
-
-
-def fetch_data_loaders(data_args, training_args):
-    d_path = data_args.data_path if data_args.data_path else ''
-    
-    # TODO: make this at outer-loop for making evaluation based on days-data-partition
-    train_data_path = [
-        d_path + "session_start_date=2019-10-01",
-        d_path + "session_start_date=2019-10-01",
-    ]
-
-    eval_data_path = [
-        d_path + "session_start_date=2019-10-01",
-    ]
-
-    train_data_path = get_filenames(train_data_path)
-    eval_data_path = get_filenames(eval_data_path)
-
-    train_data_len = get_dataset_len(train_data_path)
-    eval_data_len = get_dataset_len(eval_data_path)
-
-    train_loader = DataLoaderWithLen(
-        make_batch_reader(train_data_path, 
-            num_epochs=None,
-            schema_fields=recsys_schema_small,
-        ), 
-        batch_size=training_args.per_device_train_batch_size,
-        len=train_data_len,
-    )
-
-    eval_loader = DataLoaderWithLen(
-        make_batch_reader(eval_data_path, 
-            num_epochs=None,
-            schema_fields=recsys_schema_small,
-        ), 
-        batch_size=training_args.per_device_eval_batch_size,
-        len=eval_data_len,
-    )
-    return train_loader, eval_loader
-
-
-def create_model(model_args, d_model=512, n_layer=12, n_head=8, dropout=0.1, layer_norm_eps=1e-12, max_seq_len=2048):
-
-    if model_args.model_type == 'xlnet':
-        model_cls = XLNetModel
-        config = XLNetConfig(
-            d_model=d_model,
-            n_layer=n_layer,
-            n_head=n_head,
-            d_inner=d_model * 4,
-            ff_activation="gelu",
-            untie_r=True,
-            attn_type="bi",
-            initializer_range=0.02,
-            layer_norm_eps=layer_norm_eps,
-            dropout=dropout,
-        )
-
-    #NOTE: gpt2 and longformer are not fully tested supported yet.
-
-    elif model_args.model_type == 'gpt2':
-        model_cls = GPT2Model
-        config = GPT2Config(
-            n_embd=d_model,
-            n_layer=n_layer,
-            n_head=n_head,
-            activation_function="gelu",
-            initializer_range=0.02,
-            layer_norm_eps=layer_norm_eps,
-            dropout=dropout,
-            n_positions=max_seq_len,
-        )
-
-    elif model_args.model_type == 'longformer':
-        model_cls = LongformerModel
-        config = LongformerConfig(
-            hidden_size=d_model,
-            num_hidden_layers=n_layer,
-            num_attention_heads=n_head,
-            hidden_act="gelu",
-            initializer_range=0.02,
-            layer_norm_eps=layer_norm_eps,
-            dropout=dropout,
-            max_position_embedding=max_seq_len,
-        )
-
-    elif model_args.model_type == 'gru':
-        model_cls = nn.GRU(
-            input_size=d_model,
-            num_layers=n_layer,
-            hidden_size=d_model,
-            dropout=dropout,
-        )
-
-    elif model_args.model_type == 'lstm':
-        model_cls = nn.LSTM(
-            input_size=d_model,
-            num_layers=n_layer,
-            hidden_size=d_model,
-            dropout=dropout,
-        )
-    elif model_args.model_type == 'rnn':
-        model_cls = nn.RNN(
-            input_size=d_model,
-            num_layers=n_layer,
-            hidden_size=d_model,
-            dropout=dropout,
-        )
-
-    else:
-        raise NotImplementedError
-
-    if model_args.model_type in ['gru', 'lstm']:
-        model = model_cls
-
-    elif model_args.model_name_or_path:
-        transformer_model = model_cls.from_pretrained(
-            model_args.model_name_or_path,
-            from_tf=bool(".ckpt" in model_args.model_name_or_path),
-            config=config,
-            cache_dir=model_args.cache_dir,
-        )
-    else:
-        logger.info("Training new model from scratch")
-        model = model_cls(config)
-    
-    model = RecSysMetaModel(model, vocab_sizes, d_model=d_model)
-
-    return model
-
-
-class DataLoaderWithLen(DataLoader):
-    def __init__(self, *args, **kwargs):
-        if 'len' not in kwargs:
-            self.len = 0
-        else:
-            self.len = kwargs.pop('len')
-
-        super(DataLoaderWithLen, self).__init__(*args, **kwargs)
-
-    def __len__(self):
-        return self.len
-
-
-@dataclass
-class DataArguments:
-    data_path: Optional[str] = field(
-        default=None,
-        metadata={
-            "help": "Path to dataset."
-        },
-    )
-
-@dataclass
-class ModelArguments:
-    """
-    Arguments pertaining to which model/config we are going to fine-tune, or train from scratch.
-    """
-
-    model_name_or_path: Optional[str] = field(
-        default=None,
-        metadata={
-            "help": "The model checkpoint for weights initialization. Leave None if you want to train a model from scratch."
-        },
-    )
-    model_type: Optional[str] = field(
-        default='xlnet',
-        metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
-    )
-    config_name: Optional[str] = field(
-        default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
-    )
-    cache_dir: Optional[str] = field(
-        default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
-    )
-    fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
 
 
 def main():
@@ -256,7 +66,8 @@ def main():
     d_model = 512 
     max_seq_len = 2048
 
-    model = create_model(model_args, d_model, max_seq_len)
+    _model = get_recsys_model(model_args, d_model, max_seq_len)
+    model = RecSysMetaModel(_model, vocab_sizes, d_model=d_model)
 
     trainer = RecSysTrainer(
         train_loader=train_loader, 

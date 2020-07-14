@@ -31,7 +31,7 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalPrediction, Pr
 from transformers.training_args import TrainingArguments, is_torch_tpu_available
 from transformers import Trainer
 
-from metrics import EvalPredictionTensor
+from recsys_metrics import EvalPredictionTensor
 
 logger = logging.getLogger(__name__)
 
