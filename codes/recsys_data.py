@@ -1,6 +1,9 @@
 """
 Set data-specific schema, vocab sizes, and feature extract function.
 """
+ 
+from datetime import datetime
+from datetime import date, timedelta
 
 import numpy as np
 from petastorm import make_batch_reader
@@ -17,21 +20,46 @@ category_vocab_size = 60000
 vocab_sizes = [product_vocab_size, category_vocab_size]
 
 
-def fetch_data_loaders(data_args, training_args):
+def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
+    start_date, end_date = data_args.start_date, data_args.end_date
+    end_date = datetime.strptime(end_date, date_format)
+    start_date = datetime.strptime(start_date, date_format)
+
+    delta = end_date - start_date
+
+    avail_dates = []
+    for i in range(delta.days + 1):
+        day = start_date + timedelta(days=i)
+        avail_dates.append(day)
+
+    return avail_dates
+
+
+
+def fetch_data_loaders(data_args, training_args, train_date, eval_date, 
+                       date_format="%Y-%m-%d", load_from_path=False):
+    """
+    load_from_path: when a path is given, it automatically determines 
+                    list of available parquet files in the path.
+                    otherwise, the path should be a direct path to the parquet file 
+    """
     d_path = data_args.data_path if data_args.data_path else ''
     
     # TODO: make this at outer-loop for making evaluation based on days-data-partition
     train_data_path = [
-        d_path + "session_start_date=2019-10-01",
-        d_path + "session_start_date=2019-10-01",
+        d_path + "session_start_date={}.parquet".format(train_date.strftime(date_format)),
     ]
 
     eval_data_path = [
-        d_path + "session_start_date=2019-10-01",
+        d_path + "session_start_date={}.parquet".format(eval_date.strftime(date_format)),
     ]
 
-    train_data_path = get_filenames(train_data_path)
-    eval_data_path = get_filenames(eval_data_path)
+    if load_from_path:
+        train_data_path = get_filenames(train_data_path)
+        eval_data_path = get_filenames(eval_data_path)
+    else:
+        train_data_path = ['file://' + p for p in train_data_path]
+        eval_data_path = ['file://' + p for p in eval_data_path]
 
     train_data_len = get_dataset_len(train_data_path)
     eval_data_len = get_dataset_len(eval_data_path)

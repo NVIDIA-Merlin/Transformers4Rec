@@ -16,6 +16,18 @@ class DataArguments:
             "help": "Path to dataset."
         },
     )
+    start_date: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "start date of the data."
+        },
+    )
+    end_date: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "end date of the data."
+        },
+    )
 
 @dataclass
 class ModelArguments:

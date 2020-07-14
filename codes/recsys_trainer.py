@@ -43,18 +43,7 @@ class RecSysTrainer(Trainer):
     optimized for Transformers.
     """
     def __init__(self, *args, **kwargs):
-        self.train_dataloader = kwargs.pop('train_loader')
         
-        if 'eval_loader' not in kwargs:
-            self.eval_dataloader = None
-        else:
-            self.eval_dataloader = kwargs.pop('eval_loader')
-        
-        if 'test_loader' not in kwargs:
-            self.test_dataloader = None
-        else:
-            self.test_dataloader = kwargs.pop('test_loader')
-
         if 'f_feature_extract' not in kwargs: 
             self.f_feature_extract = lambda x: x
         else:
@@ -82,6 +71,15 @@ class RecSysTrainer(Trainer):
         if self.test_dataloader is not None:
             return self.test_dataloader
         return self.get_test_dataloader(test_dataset)
+
+    def set_rec_train_dataloader(self, dataloader):
+        self.train_dataloader = dataloader
+        
+    def set_rec_eval_dataloader(self, dataloader):
+        self.eval_dataloader = dataloader
+
+    def set_rec_test_dataloader(self, dataloader):
+        self.test_dataloader = dataloader
 
     def num_examples(self, dataloader):
         return len(dataloader)

@@ -21,7 +21,8 @@ from recsys_data import (
     recsys_schema_small, 
     f_feature_extract, 
     vocab_sizes, 
-    fetch_data_loaders
+    fetch_data_loaders,
+    get_avail_data_dates
 )
 
 
@@ -60,8 +61,6 @@ def main():
     logger.info("Training/evaluation parameters %s", training_args)
     set_seed(training_args.seed)
 
-    train_loader, eval_loader = fetch_data_loaders(data_args, training_args)
-
     # embedding size
     d_model = 512 
     max_seq_len = 2048
@@ -70,45 +69,57 @@ def main():
     model = RecSysMetaModel(_model, vocab_sizes, d_model=d_model, loss_type=model_args.loss_type)
 
     trainer = RecSysTrainer(
-        train_loader=train_loader, 
-        eval_loader=eval_loader,        
         model=model,
         args=training_args,
         f_feature_extract=f_feature_extract,
         compute_metrics=compute_recsys_metrics,
         fast_test=model_args.fast_test)
 
-    # Training
-    if training_args.do_train:
-        model_path = (
-            model_args.model_name_or_path
-            if model_args.model_name_or_path is not None and os.path.isdir(model_args.model_name_or_path)
-            else None
-        )
-        trainer.train(model_path=model_path)
-        trainer.save_model()
+    data_dates = get_avail_data_dates(data_args)
+    results_dates = {}
 
-    # Evaluation
-    results = {}
-    if training_args.do_eval:
-        logger.info("*** Evaluate ***")
+    for date_idx in range(1, len(data_dates)):
+        train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
+        train_loader, eval_loader \
+            = fetch_data_loaders(data_args, training_args, train_date, eval_date)
 
-        eval_output = trainer.evaluate()
+        trainer.set_rec_train_dataloader(train_loader)
+        trainer.set_rec_eval_dataloader(eval_loader)
 
-        perplexity = math.exp(eval_output["eval_loss"])
-        result = {"perplexity": perplexity}
+        # Training
+        if training_args.do_train:
+            logger.info("*** Train (date:{})***".format(train_date))
 
-        output_eval_file = os.path.join(training_args.output_dir, "eval_results_lm.txt")
-        if trainer.is_world_master():
-            with open(output_eval_file, "w") as writer:
-                logger.info("***** Eval results *****")
-                for key in sorted(result.keys()):
-                    logger.info("  %s = %s", key, str(result[key]))
-                    writer.write("%s = %s\n" % (key, str(result[key])))
+            model_path = (
+                model_args.model_name_or_path
+                if model_args.model_name_or_path is not None \
+                    and os.path.isdir(model_args.model_name_or_path)
+                else None
+            )
+            trainer.train(model_path=model_path)
 
-        results.update(result)
+        # Evaluation
+        if training_args.do_eval:
+            logger.info("*** Evaluate (date:{})***".format(eval_date))
 
-    return results
+            eval_output = trainer.evaluate()
+
+            perplexity = math.exp(eval_output["eval_loss"])
+            result = {"perplexity": perplexity}
+
+            output_eval_file = os.path.join(training_args.output_dir, "eval_results.txt")
+            if trainer.is_world_master():
+                with open(output_eval_file, "w") as writer:
+                    logger.info("***** Eval results (date:{})*****".format(eval_date))
+                    for key in sorted(result.keys()):
+                        logger.info("  %s = %s", key, str(result[key]))
+                        writer.write("%s = %s\n" % (key, str(result[key])))
+
+            results_dates[eval_date] = result
+        
+    logger.info("train and eval for all dates are done")
+    trainer.save_model()
+    return results_dates
 
 
 if __name__ == "__main__":
