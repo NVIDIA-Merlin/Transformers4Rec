@@ -46,10 +46,10 @@ bash scripts/run_transformer.bash
 - Evaluation metrics part is still under-construction. 
 
 ## CODE
-`recsys_main.py`: main experiment-running (train+eval) code
-`recsys_models.py`: definition of various sequence models (Huggingface Transformers and PyTorch GRU,RNN,LSTMs)
-`recsys_meta_model.py`: RecSys wrapper model that gets embeddings for discrete input tokens and merges multiple sequences of product id, category id, etc. Then, it runs forward function of defined sequence model and computes loss.
-`recsys_trainer.py`: Extends Huggingface's trainer.py code to enable customized dataset in training and evaluation loops.
-`recsys_data.py`: setup for dataloader and necessaties to read Parquet file (currently use Petastorm)
-`recsys_metrics.py`: defines various evaluation metric computation function (e.g. Recall@k, Precision@k, NDCG, etc.) Any additional metric computation functions can be added and executed here.
-`recsys_args.py`: defines input args for the code.
+- `recsys_main.py`: main experiment-running (train+eval) code
+- `recsys_models.py`: definition of various sequence models (Huggingface Transformers and PyTorch GRU,RNN,LSTMs)
+- `recsys_meta_model.py`: RecSys wrapper model that gets embeddings for discrete input tokens and merges multiple sequences of product id, category id, etc. Then, it runs forward function of defined sequence model and computes loss.
+- `recsys_trainer.py`: Extends Huggingface's trainer.py code to enable customized dataset in training and evaluation loops.
+- `recsys_data.py`: setup for dataloader and necessaties to read Parquet file (currently use Petastorm)
+- `recsys_metrics.py`: defines various evaluation metric computation function (e.g. Recall@k, Precision@k, NDCG, etc.) Any additional metric computation functions can be added and executed here.
+- `recsys_args.py`: defines input args for the code.
