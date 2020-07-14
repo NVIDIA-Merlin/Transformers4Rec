@@ -30,9 +30,10 @@ pip install petastorm==0.9.2
 ## How to Run?
 
 Step 1. Get preprocessed e-commerce dataset 
-We prepared the sample preprocessed dataset and uploaded at Google drive. You can get it with the instruction on this notebook:
-https://github.com/rapidsai/recsys/blob/master/transformers4recsys/notebooks/fetch_preprocessed_dataset_google_drive.ipynb
-
+We prepared the sample preprocessed dataset and uploaded at Google drive. You can get it by running following script:
+```
+bash scripts/get_dataset.bash
+```
 
 Step 2. Run the training & evaluation code:
 ```
