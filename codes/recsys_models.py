@@ -26,7 +26,7 @@ def get_recsys_model(model_args, data_args):
             d_inner=model_args.d_model * 4,
             ff_activation=model_args.hidden_act,
             untie_r=True,
-            attn_type="bi",
+            attn_type="uni",
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,

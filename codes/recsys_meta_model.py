@@ -100,10 +100,10 @@ class RecSysMetaModel(PreTrainedModel):
                 neg_emb_seq = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'concat_mlp':
-            pos_emb_seq = F.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb))))
+            pos_emb_seq = F.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
 
             if self.loss_type == 'margin_hinge':
-                neg_emb_seq = F.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb))))
+                neg_emb_seq = F.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
 
         else:
             raise NotImplementedError
@@ -163,7 +163,7 @@ class RecSysMetaModel(PreTrainedModel):
             loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
 
         elif self.loss_type == 'cross_entropy':
-            loss = self.cross_entropy(logits, product_seq_trg)
+            loss = self.cross_entropy(logits.flatten(end_dim=1), product_seq_trg.flatten())
         else:
             raise NotImplementedError
 
