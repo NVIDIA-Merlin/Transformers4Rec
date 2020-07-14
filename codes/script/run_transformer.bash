@@ -6,7 +6,7 @@ CUDA_VISIBLE_DEVICES=0 python recsys_main.py \
     --overwrite_output_dir \
     --do_train \
     --do_eval \
-    --data_path "~/dataset/ecommerce_preproc_neg_samples_50_strategy_cooccurrence_19_days_first_10k_sessions.parquet/" \
+    --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_cooccurrence_19_days_first_10k_sessions.parquet/" \
     --start_date 2019-10-01 \
     --end_date 2019-10-19 \
     --per_device_train_batch_size 128 \
