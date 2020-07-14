@@ -14,22 +14,21 @@ from transformers.configuration_longformer import LongformerConfig
 logger = logging.getLogger(__name__)
 
 
-def get_recsys_model(model_args, d_model=512, n_layer=12, n_head=8, 
-                     dropout=0.1, layer_norm_eps=1e-12, max_seq_len=2048):
+def get_recsys_model(model_args):
 
     if model_args.model_type == 'xlnet':
         model_cls = XLNetModel
         config = XLNetConfig(
-            d_model=d_model,
-            n_layer=n_layer,
-            n_head=n_head,
-            d_inner=d_model * 4,
-            ff_activation="gelu",
+            d_model=model_args.d_model,
+            n_layer=model_args.n_layer,
+            n_head=model_args.n_head,
+            d_inner=model_args.d_model * 4,
+            ff_activation=model_args.hidden_act,
             untie_r=True,
             attn_type="bi",
-            initializer_range=0.02,
-            layer_norm_eps=layer_norm_eps,
-            dropout=dropout,
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            dropout=model_args.dropout,
         )
 
     #NOTE: gpt2 and longformer are not fully tested supported yet.
@@ -37,50 +36,50 @@ def get_recsys_model(model_args, d_model=512, n_layer=12, n_head=8,
     elif model_args.model_type == 'gpt2':
         model_cls = GPT2Model
         config = GPT2Config(
-            n_embd=d_model,
-            n_layer=n_layer,
-            n_head=n_head,
-            activation_function="gelu",
-            initializer_range=0.02,
-            layer_norm_eps=layer_norm_eps,
-            dropout=dropout,
-            n_positions=max_seq_len,
+            n_embd=model_args.d_model,
+            n_layer=model_args.n_layer,
+            n_head=model_args.n_head,
+            activation_function=model_args.hidden_act,
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            dropout=model_args.dropout,
+            n_positions=model_args.max_seq_len,
         )
 
     elif model_args.model_type == 'longformer':
         model_cls = LongformerModel
         config = LongformerConfig(
-            hidden_size=d_model,
-            num_hidden_layers=n_layer,
-            num_attention_heads=n_head,
-            hidden_act="gelu",
-            initializer_range=0.02,
-            layer_norm_eps=layer_norm_eps,
-            dropout=dropout,
-            max_position_embedding=max_seq_len,
+            hidden_size=model_args.d_model,
+            num_hidden_layers=model_args.n_layer,
+            num_attention_heads=model_args.n_head,
+            hidden_act=model_args.hidden_act,
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            dropout=model_args.dropout,
+            max_position_embedding=model_args.max_seq_len,
         )
 
     elif model_args.model_type == 'gru':
         model_cls = nn.GRU(
-            input_size=d_model,
-            num_layers=n_layer,
-            hidden_size=d_model,
-            dropout=dropout,
+            input_size=model_args.d_model,
+            num_layers=model_args.n_layer,
+            hidden_size=model_args.d_model,
+            dropout=model_args.dropout,
         )
 
     elif model_args.model_type == 'lstm':
         model_cls = nn.LSTM(
-            input_size=d_model,
-            num_layers=n_layer,
-            hidden_size=d_model,
-            dropout=dropout,
+            input_size=model_args.d_model,
+            num_layers=model_args.n_layer,
+            hidden_size=model_args.d_model,
+            dropout=model_args.dropout,
         )
     elif model_args.model_type == 'rnn':
         model_cls = nn.RNN(
-            input_size=d_model,
-            num_layers=n_layer,
-            hidden_size=d_model,
-            dropout=dropout,
+            input_size=model_args.d_model,
+            num_layers=model_args.n_layer,
+            hidden_size=model_args.d_model,
+            dropout=model_args.dropout,
         )
 
     else:
@@ -90,7 +89,7 @@ def get_recsys_model(model_args, d_model=512, n_layer=12, n_head=8,
         model = model_cls
 
     elif model_args.model_name_or_path:
-        transformer_model = model_cls.from_pretrained(
+        model = model_cls.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,

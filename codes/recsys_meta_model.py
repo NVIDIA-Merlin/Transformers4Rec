@@ -18,9 +18,7 @@ class RecSysMetaModel(nn.Module):
     vocab_sizes : sizes of vocab for each discrete inputs
         e.g., [product_id_vocabs, category_vocabs, etc.]
     """
-    def __init__(self, model, vocab_sizes, d_model, 
-                 merge_inputs='add', similarity_type='cos', margin_loss=1.0, embed_pad_token=0,
-                 loss_type='cross_entropy'):
+    def __init__(self, model, model_args, data_args, vocab_sizes):
         super(RecSysMetaModel, self).__init__()
         
         self.model = model 
@@ -31,20 +29,20 @@ class RecSysMetaModel(nn.Module):
             self.is_rnn = False
 
         # set embedding tables
-        self.embedding_product = nn.Embedding(vocab_sizes[0], d_model, padding_idx=embed_pad_token)
-        self.embedding_category = nn.Embedding(vocab_sizes[1], d_model, padding_idx=embed_pad_token)
+        self.embedding_product = nn.Embedding(vocab_sizes[0], model_args.d_model, padding_idx=data_args.pad_token)
+        self.embedding_category = nn.Embedding(vocab_sizes[1], model_args.d_model, padding_idx=data_args.pad_token)
 
-        self.merge = merge_inputs
+        self.merge = model_args.merge_inputs
         
-        if self.merge == 'mlp':
+        if self.merge == 'concat_mlp':
             n_embeddings = len(vocab_sizes)
-            self.mlp_merge = nn.Linear(d_model * n_embeddings, d_model)
+            self.mlp_merge = nn.Linear(model_args.d_model * n_embeddings, model_args.d_model)
         
-        self.similarity_type = similarity_type
-        self.margin_loss = margin_loss
-        self.output_layer = nn.Linear(d_model, vocab_sizes[0])
-        self.loss_type = loss_type
-        self.cross_entropy = nn.CrossEntropyLoss(ignore_index=embed_pad_token)
+        self.similarity_type = model_args.similarity_type
+        self.margin_loss = model_args.margin_loss
+        self.output_layer = nn.Linear(model_args.d_model, vocab_sizes[0])
+        self.loss_type = model_args.loss_type
+        self.cross_entropy = nn.CrossEntropyLoss(ignore_index=data_args.pad_token)
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -94,13 +92,13 @@ class RecSysMetaModel(nn.Module):
 
         # Step 2. Merge features
 
-        if self.merge == 'add':
+        if self.merge == 'elem_add':
             pos_emb_seq = pos_prd_emb + pos_cat_emb
             
             if self.loss_type == 'margin_hinge':
                 neg_emb_seq = neg_prd_emb + neg_cat_emb
 
-        elif self.merge == 'mlp':
+        elif self.merge == 'concat_mlp':
             pos_emb_seq = F.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb))))
 
             if self.loss_type == 'margin_hinge':

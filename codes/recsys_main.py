@@ -62,11 +62,8 @@ def main():
     set_seed(training_args.seed)
 
     # embedding size
-    d_model = 512 
-    max_seq_len = 2048
-
-    _model = get_recsys_model(model_args, d_model, max_seq_len)
-    model = RecSysMetaModel(_model, vocab_sizes, d_model=d_model, loss_type=model_args.loss_type)
+    _model = get_recsys_model(model_args)
+    model = RecSysMetaModel(_model, model_args, data_args, vocab_sizes)
 
     trainer = RecSysTrainer(
         model=model,
