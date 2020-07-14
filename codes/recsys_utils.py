@@ -2,10 +2,11 @@ import sys
 import glob
 import time
 import itertools
+import subprocess
 from typing import NamedTuple
-from subprocess import check_output
 
 import torch
+
 
 def get_filenames(data_paths):
     paths = [['file://' + p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
@@ -13,7 +14,11 @@ def get_filenames(data_paths):
 
 
 def wc(filename):
-    return int(check_output(["wc", "-l", filename]).split()[0])
+    try:
+        num_lines = int(subprocess.check_output(["wc", "-l", filename], stderr=subprocess.STDOUT).split()[0])
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
+    return num_lines
 
 
 def get_dataset_len(data_paths):
