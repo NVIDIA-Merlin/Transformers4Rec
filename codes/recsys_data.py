@@ -60,8 +60,7 @@ def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
 
 
 def fetch_data_loaders(data_args, training_args, train_date, eval_date, 
-                       neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False,
-                       engine="pyarrow"):
+                       neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False):
     """
     load_from_path: when a path is given, it automatically determines 
                     list of available parquet files in the path.
@@ -85,7 +84,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
     train_data_len = get_dataset_len(train_data_path)
     eval_data_len = get_dataset_len(eval_data_path)
 
-    if engine == "petastorm":
+    if data_args.engine == "petastorm":
         parquet_schema = parquet_schema_posneg if neg_sampling else parquet_schema_pos
         
         train_data_path = ['file://' + p for p in train_data_path]
@@ -113,7 +112,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
             len=eval_data_len,
         )
 
-    elif engine == "pyarrow":
+    elif data_args.engine == "pyarrow":
         cols_to_read = parquet_col_posneg if neg_sampling else parquet_col_pos
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)

@@ -10,11 +10,13 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_cooccurrence_19_days_first_10k_sessions.parquet/" \
     --start_date "2019-10-01" \
     --end_date "2019-10-19" \
+    --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
     --per_device_train_batch_size 512 \
+    --per_device_eval_batch_size 512 \
     --model_type "xlnet" \
-    --loss_type "margin_hinge" \
+    --loss_type "cross_entropy" \
     --logging_steps 20 \
     --d_model 64 \
     --n_layer 4 \
@@ -29,6 +31,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
 # n_head: number of attention heads for Transformers
 # hidden_act: non-linear activation function (function or string) in Transformers. 'gelu', 'relu' and 'swish' are supported
 # dropout: dropout probability for all fully connected layers
+# engine: select which parquet data loader to use either 'pyarrow' or 'petastorm' (default: pyarrow)
 # reader_pool_type: petastorm reader arg: process or thread (default: thread)
 # workers_count: petastorm reader arg: number of workers (default: 10)
 # logging_steps: how often do logging (every n examples)

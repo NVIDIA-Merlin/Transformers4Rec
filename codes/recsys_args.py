@@ -43,6 +43,12 @@ class DataArguments:
     num_categorical_features: Optional[int] = field(
         default=2, metadata={"help": "number of categorical features of dataset (= number of embedding tables)"}
     )
+    # args for selecting which engine to use
+    engine: Optional[str] = field(
+        default='pyarrow', metadata={"help": "Parquet data loader engine. "
+            "'pyarrow': read whole parquet into memory. 'petastorm': read chunck by chunck"
+        }
+    )
     # args for petastorm
     reader_pool_type: Optional[str] = field(
         default='thread', metadata={"help": "A string denoting the reader pool type. \
