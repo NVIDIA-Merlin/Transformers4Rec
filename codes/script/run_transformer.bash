@@ -12,9 +12,9 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --end_date "2019-10-19" \
     --reader_pool_type "process" \
     --workers_count 10 \
-    --per_device_train_batch_size 256 \
+    --per_device_train_batch_size 512 \
     --model_type "xlnet" \
-    --loss_type "cross_entropy" \
+    --loss_type "margin_hinge" \
     --logging_steps 20 \
     --d_model 64 \
     --n_layer 4 \
