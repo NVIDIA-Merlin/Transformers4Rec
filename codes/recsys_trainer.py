@@ -432,6 +432,10 @@ class RecSysTrainer(Trainer):
                 _preds = logits.detach().unsqueeze(0)
                 _preds = softmax(_preds)
 
+                if self.args.eval_on_cpu:
+                    _preds = _preds.cpu()
+                    labels = labels.cpu()
+                    
                 if preds is None:
                     preds = _preds
                 else:

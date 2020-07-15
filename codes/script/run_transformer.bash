@@ -24,6 +24,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --dropout 0.2 \
     --learning_rate 1e-04 \
     --validate_every 10 \
+    --eval_on_cpu \
     --num_train_epochs 100
 
 # model_type: xlnet, gpt2, longformer
