@@ -74,9 +74,9 @@ class RecSysMetaModel(PreTrainedModel):
         """
         
         # Step1. Obtain Embedding
-
-        if self.loss_type == 'cross_entropy':
-            product_seq_trg = product_seq[:, 1:] 
+        product_seq_trg = product_seq[:, 1:] 
+        
+        if self.loss_type == 'cross_entropy':    
             product_seq = product_seq[:, :-1]
             category_seq = category_seq[:, :-1]
 
