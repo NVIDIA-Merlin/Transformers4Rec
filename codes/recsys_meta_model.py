@@ -75,7 +75,6 @@ class RecSysMetaModel(PreTrainedModel):
         
         # Step1. Obtain Embedding
         product_seq_trg = product_seq[:, 1:] 
-        
         if self.loss_type == 'cross_entropy':    
             product_seq = product_seq[:, :-1]
             category_seq = category_seq[:, :-1]
@@ -103,10 +102,10 @@ class RecSysMetaModel(PreTrainedModel):
                 neg_emb_seq = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'concat_mlp':
-            pos_emb_seq = F.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
+            pos_emb_seq = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
 
             if self.loss_type == 'margin_hinge':
-                neg_emb_seq = F.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
+                neg_emb_seq = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
 
         else:
             raise NotImplementedError
@@ -180,6 +179,6 @@ class RecSysMetaModel(PreTrainedModel):
         denom = max_idx.size(0) - total_pad_tokens
         train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / denom
         
-        outputs = outputs + (train_acc,)
+        outputs = (train_acc,) + outputs
 
-        return outputs  # return (loss), logits, (mems), (hidden states), (attentions), (train_acc)
+        return outputs  # return (train_acc), (loss), logits, (mems), (hidden states), (attentions)

@@ -304,11 +304,12 @@ class RecSysTrainer(Trainer):
         # NOTE: RecSys
         outputs = model(*self.f_feature_extract(inputs))
         
-        loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
-        acc = outputs[-1] # accuracy
-
+        acc = outputs[0] # accuracy
+        loss = outputs[1]  # model outputs are always tuple in transformers (see doc)
+        
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            acc = acc.mean()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
