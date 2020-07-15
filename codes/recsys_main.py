@@ -20,8 +20,8 @@ from recsys_trainer import RecSysTrainer
 from recsys_metrics import compute_recsys_metrics
 from recsys_args import DataArguments, ModelArguments
 from recsys_data import (
-    recsys_schema_small, 
-    f_feature_extract, 
+    f_feature_extract_pos,
+    f_feature_extract_posneg, 
     fetch_data_loaders,
     get_avail_data_dates
 )
@@ -66,6 +66,9 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args)
 
+    f_feature_extract = f_feature_extract_posneg \
+        if model_args.loss_type == 'margin_hinge' else f_feature_extract_pos
+
     trainer = RecSysTrainer(
         model=rec_model,
         args=training_args,
@@ -79,7 +82,8 @@ def main():
     for date_idx in range(1, len(data_dates)):
         train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
         train_loader, eval_loader \
-            = fetch_data_loaders(data_args, training_args, train_date, eval_date)
+            = fetch_data_loaders(data_args, training_args, train_date, eval_date, 
+                                 neg_sampling=(model_args.loss_type=='margin_hinge'))
 
         trainer.set_rec_train_dataloader(train_loader)
         trainer.set_rec_eval_dataloader(eval_loader)

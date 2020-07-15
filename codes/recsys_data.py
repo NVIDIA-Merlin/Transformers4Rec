@@ -34,7 +34,7 @@ def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
 
 
 def fetch_data_loaders(data_args, training_args, train_date, eval_date, 
-                       date_format="%Y-%m-%d", load_from_path=False):
+                       neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False):
     """
     load_from_path: when a path is given, it automatically determines 
                     list of available parquet files in the path.
@@ -61,10 +61,12 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
     train_data_len = get_dataset_len(train_data_path)
     eval_data_len = get_dataset_len(eval_data_path)
 
+    recsys_schema = recsys_schema_posneg if neg_sampling else recsys_schema_pos
+
     train_loader = DataLoaderWithLen(
         make_batch_reader(train_data_path, 
             num_epochs=None,
-            schema_fields=recsys_schema_small,
+            schema_fields=recsys_schema,
             reader_pool_type=data_args.reader_pool_type,
             workers_count=data_args.workers_count,
         ), 
@@ -75,7 +77,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
     eval_loader = DataLoaderWithLen(
         make_batch_reader(eval_data_path, 
             num_epochs=None,
-            schema_fields=recsys_schema_small,
+            schema_fields=recsys_schema,
             reader_pool_type=data_args.reader_pool_type,
             workers_count=data_args.workers_count,
         ), 
@@ -98,7 +100,7 @@ class DataLoaderWithLen(DataLoader):
         return self.len
 
 
-def f_feature_extract(inputs):
+def f_feature_extract_posneg(inputs):
     """
     This function will be used inside of trainer.py (_training_step) right before being 
     passed inputs to a model. 
@@ -111,13 +113,33 @@ def f_feature_extract(inputs):
     
     return product_seq, category_seq, neg_prod_seq, neg_category_seq
 
+
+def f_feature_extract_pos(inputs):
+    """
+    This function will be used inside of trainer.py (_training_step) right before being 
+    passed inputs to a model. 
+    For negative sampling (NS) approach
+    """
+    product_seq = inputs["sess_pid_seq"].long()
+    category_seq = inputs["sess_ccid_seq"].long()
+    
+    return product_seq, category_seq
+
+
 # A schema that we use to read specific columns from parquet data file
-recsys_schema_small = [
+recsys_schema_posneg = [
     UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_neg_pids', np.int64, (None,), None, True),
     UnischemaField('sess_neg_ccid', np.int64, (None,), None, True),
 ]
+
+recsys_schema_pos = [
+    UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
+    UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
+]
+
+
 
 # Full Schema
 # recsys_schema_full = [

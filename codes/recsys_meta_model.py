@@ -62,8 +62,8 @@ class RecSysMetaModel(PreTrainedModel):
         self,
         product_seq,
         category_seq,
-        neg_product_seq,
-        neg_category_seq,
+        neg_product_seq=None,
+        neg_category_seq=None,
     ):
         """
         For cross entropy loss, we split input and target BEFORE embedding layer.
