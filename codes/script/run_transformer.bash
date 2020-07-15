@@ -15,6 +15,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --per_device_train_batch_size 256 \
     --model_type "xlnet" \
     --loss_type "cross_entropy" \
+    --logging_steps 20 \
     --d_model 64 \
     --n_layer 4 \
     --n_head 2 \
@@ -30,3 +31,4 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
 # dropout: dropout probability for all fully connected layers
 # reader_pool_type: petastorm reader arg: process or thread (default: thread)
 # workers_count: petastorm reader arg: number of workers (default: 10)
+# logging_steps: how often do logging (every n examples)
