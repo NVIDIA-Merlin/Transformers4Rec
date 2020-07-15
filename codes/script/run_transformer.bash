@@ -8,8 +8,10 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --do_train \
     --do_eval \
     --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_cooccurrence_19_days_first_10k_sessions.parquet/" \
-    --start_date 2019-10-01 \
-    --end_date 2019-10-19 \
+    --start_date "2019-10-01" \
+    --end_date "2019-10-19" \
+    --reader_pool_type "process" \
+    --workers_count 20 \
     --per_device_train_batch_size 512 \
     --model_type "longformer" \
     --loss_type "cross_entropy" \
@@ -26,3 +28,5 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
 # n_head: number of attention heads for Transformers
 # hidden_act: non-linear activation function (function or string) in Transformers. 'gelu', 'relu' and 'swish' are supported
 # dropout: dropout probability for all fully connected layers
+# reader_pool_type: petastorm reader arg: process or thread (default: thread)
+# workers_count: petastorm reader arg: number of workers (default: 10)

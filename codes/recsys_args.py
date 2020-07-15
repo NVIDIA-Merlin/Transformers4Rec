@@ -43,10 +43,16 @@ class DataArguments:
     num_categorical_features: Optional[int] = field(
         default=2, metadata={"help": "number of categorical features of dataset (= number of embedding tables)"}
     )
-
-
-
-    
+    # args for petastorm
+    reader_pool_type: Optional[str] = field(
+        default='thread', metadata={"help": "A string denoting the reader pool type. \
+            Should be one of ['thread', 'process', 'dummy'] denoting a thread pool, \
+                process pool, or running everything in the master thread. Defaults to 'thread'"}
+    )
+    workers_count: Optional[int] = field(
+        default=10, metadata={"help": "An int for the number of workers to use in the reader pool. \
+            This only is used for the thread or process pool"}
+    )    
 
 
 @dataclass
