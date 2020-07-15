@@ -2,10 +2,21 @@
 from typing import Any, Callable, Dict, List, NewType, Tuple, Optional
 from dataclasses import dataclass, field
 
-from transformers import MODEL_WITH_LM_HEAD_MAPPING
+from transformers import (
+    MODEL_WITH_LM_HEAD_MAPPING,
+    TrainingArguments as HfTrainingArguments
+)
 
 MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
+
+
+@dataclass
+class TrainingArguments(HfTrainingArguments):
+    validate_every: int = field(default=-1, 
+        metadata={"help": "Run validation set every this epoch. "
+            "-1 means no validation is used (default: -1)"}
+    )
 
 
 @dataclass

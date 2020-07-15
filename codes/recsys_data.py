@@ -2,17 +2,18 @@
 Set data-specific schema, vocab sizes, and feature extract function.
 """
  
+import math
 from datetime import datetime
 from datetime import date, timedelta
 
 import numpy as np
 from petastorm import make_batch_reader
-from petastorm.pytorch import DataLoader
+from petastorm.pytorch import DataLoader as PetaStormDataLoader
 from petastorm.unischema import UnischemaField
 import pyarrow.parquet as pq
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader as PyTorchDataLoader
 
-from recsys_utils import get_filenames, get_dataset_len
+from recsys_utils import get_filenames
 
 
 # set vocabulary sizes for discrete input seqs. 
@@ -32,7 +33,7 @@ class ParquetDataset(Dataset):
         return {col: df[col] for col in df.index}
 
 
-class DataLoaderWrapper(DataLoader):
+class DataLoaderWrapper(PyTorchDataLoader):
     def __init__(self, *args, **kwargs):
         super(DataLoaderWrapper, self).__init__(*args, **kwargs)
 
@@ -58,8 +59,11 @@ def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
     return avail_dates
 
 
+def get_dataset_len(data_paths):
+    return sum([pq.ParquetFile(d_path).metadata.num_rows for d_path in data_paths])
 
-def fetch_data_loaders(data_args, training_args, train_date, eval_date, 
+
+def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date=None,
                        neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False):
     """
     load_from_path: when a path is given, it automatically determines 
@@ -77,19 +81,26 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
         d_path + "session_start_date={}.parquet".format(eval_date.strftime(date_format)),
     ]
 
+    if test_date is not None:
+        test_data_path = [
+            d_path + "session_start_date={}.parquet".format(test_date.strftime(date_format)),
+        ]
+
     if load_from_path:
         train_data_path = get_filenames(train_data_path)
         eval_data_path = get_filenames(eval_data_path)
 
-    train_data_len = get_dataset_len(train_data_path)
-    eval_data_len = get_dataset_len(eval_data_path)
-
     if data_args.engine == "petastorm":
         parquet_schema = parquet_schema_posneg if neg_sampling else parquet_schema_pos
-        
+
+        train_data_len = get_dataset_len(train_data_path)
+        eval_data_len = get_dataset_len(eval_data_path)
+
         train_data_path = ['file://' + p for p in train_data_path]
         eval_data_path = ['file://' + p for p in eval_data_path]
-        
+        if test_date is not None:
+            test_data_path = ['file://' + p for p in test_data_path]
+
         train_loader = DataLoaderWithLen(
             make_batch_reader(train_data_path, 
                 num_epochs=None,
@@ -98,7 +109,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
                 workers_count=data_args.workers_count,
             ), 
             batch_size=training_args.per_device_train_batch_size,
-            len=train_data_len,
+            len=math.ceil(train_data_len / training_args.per_device_train_batch_size),
         )
 
         eval_loader = DataLoaderWithLen(
@@ -109,21 +120,40 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
                 workers_count=data_args.workers_count,
             ), 
             batch_size=training_args.per_device_eval_batch_size,
-            len=eval_data_len,
+            len=math.ceil(eval_data_len / training_args.per_device_eval_batch_size),
         )
+
+        if test_date is not None:
+            test_loader = DataLoaderWithLen(
+                make_batch_reader(test_data_path, 
+                    num_epochs=None,
+                    schema_fields=parquet_schema,
+                    reader_pool_type=data_args.reader_pool_type,
+                    workers_count=data_args.workers_count,
+                ), 
+                batch_size=training_args.per_device_eval_batch_size,
+                len=math.ceil(eval_data_len / training_args.per_device_eval_batch_size),
+            )
 
     elif data_args.engine == "pyarrow":
         cols_to_read = parquet_col_posneg if neg_sampling else parquet_col_pos
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
-        eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
         train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size)
+        eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
         eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size)
 
-    return train_loader, eval_loader
+        if test_date is not None:
+            test_dataset = ParquetDataset(test_data_path, cols_to_read)
+            test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size)
+    
+    if test_date is None:
+        test_loader = None
+
+    return train_loader, eval_loader, test_loader
 
 
-class DataLoaderWithLen(DataLoader):
+class DataLoaderWithLen(PetaStormDataLoader):
     def __init__(self, *args, **kwargs):
         if 'len' not in kwargs:
             self.len = 0

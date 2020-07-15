@@ -7,10 +7,10 @@ import math
 import logging
 import numpy as np
 import pandas as pd
+from dataclasses import dataclass, field
 
 from transformers import (
     HfArgumentParser,
-    TrainingArguments,
     set_seed,
 )
 
@@ -18,7 +18,7 @@ from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
 from recsys_trainer import RecSysTrainer
 from recsys_metrics import compute_recsys_metrics
-from recsys_args import DataArguments, ModelArguments
+from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     f_feature_extract_pos,
     f_feature_extract_posneg, 
@@ -28,7 +28,6 @@ from recsys_data import (
 
 
 logger = logging.getLogger(__name__)
-
 
 def main():
 
@@ -81,12 +80,15 @@ def main():
 
     for date_idx in range(1, len(data_dates)):
         train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
-        train_loader, eval_loader \
-            = fetch_data_loaders(data_args, training_args, train_date, eval_date, 
+        test_date = None
+
+        train_loader, eval_loader, test_loader \
+            = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date,
                                  neg_sampling=(model_args.loss_type=='margin_hinge'))
 
         trainer.set_rec_train_dataloader(train_loader)
         trainer.set_rec_eval_dataloader(eval_loader)
+        trainer.set_rec_test_dataloader(test_loader)
 
         # Training
         if training_args.do_train:
@@ -100,22 +102,23 @@ def main():
             )
             trainer.train(model_path=model_path)
 
-        # Evaluation
+        # Evaluation (on testset)
         if training_args.do_eval:
             logger.info("*** Evaluate (date:{})***".format(eval_date))
 
-            eval_output = trainer.evaluate()
+            eval_output = trainer.predict()
+            eval_metrics = eval_output.metrics
 
             output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")
             if trainer.is_world_master():
                 with open(output_eval_file, "w") as writer:
                     logger.info("***** Eval results (date:{})*****".format(eval_date))
                     writer.write("***** Eval results (date:{})*****".format(eval_date))
-                    for key in sorted(eval_output.keys()):
-                        logger.info("  %s = %s", key, str(eval_output[key]))
-                        writer.write("%s = %s\n" % (key, str(eval_output[key])))
+                    for key in sorted(eval_metrics.keys()):
+                        logger.info("  %s = %s", key, str(eval_metrics[key]))
+                        writer.write("%s = %s\n" % (key, str(eval_metrics[key])))
 
-            results_dates[eval_date] = eval_output
+            results_dates[eval_date] = eval_metrics
         
     logger.info("train and eval for all dates are done")
     trainer.save_model()

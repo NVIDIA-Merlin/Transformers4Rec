@@ -5,30 +5,20 @@ for sequential dataset packed with different format in multiple sequences
 """
 
 import logging
-import math
 import os
-import random
-import re
-import shutil
-from contextlib import contextmanager
-from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple, NamedTuple
+
+from typing import Dict, List, Optional, NamedTuple
 
 import numpy as np
 import torch
 from packaging import version
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
 
-from transformers.data.data_collator import DataCollator, default_data_collator
-from transformers.modeling_utils import PreTrainedModel
-from transformers.optimization import AdamW, get_linear_schedule_with_warmup
-from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalPrediction, PredictionOutput, TrainOutput, is_wandb_available
-from transformers.training_args import TrainingArguments, is_torch_tpu_available
+from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, PredictionOutput, is_wandb_available
+from transformers.training_args import is_torch_tpu_available
 from transformers import Trainer
 
 from recsys_metrics import EvalPredictionTensor
@@ -68,16 +58,11 @@ class RecSysTrainer(Trainer):
             return self.train_dataloader
         return self.get_train_dataloader()            
         
-    def get_rec_eval_dataloader(self, eval_dataset: Optional[Dataset] = None) -> DataLoader:
-        if self.eval_dataloader is not None:
-            return self.eval_dataloader
-        return self.get_eval_dataloader(eval_dataset)
+    def get_rec_eval_dataloader(self) -> DataLoader:
+        return self.eval_dataloader
 
-    def get_rec_test_dataloader(self, test_dataset: Dataset) -> DataLoader:
-        # We use the same batch_size as for eval.
-        if self.test_dataloader is not None:
-            return self.test_dataloader
-        return self.get_test_dataloader(test_dataset)
+    def get_rec_test_dataloader(self) -> DataLoader:
+        return self.test_dataloader
 
     def set_rec_train_dataloader(self, dataloader):
         self.train_dataloader = dataloader
@@ -206,9 +191,9 @@ class RecSysTrainer(Trainer):
                     parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                         self.args.device
                     )
-                    epoch_iterator = tqdm(parallel_loader, desc="Iteration", disable=not self.is_local_master())
+                    epoch_iterator = tqdm(parallel_loader, desc="In-Epoch Iteration", disable=not self.is_local_master())
                 else:
-                    epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
+                    epoch_iterator = tqdm(train_dataloader, desc="In-Epoch Iteration", disable=not self.is_local_master())
 
                 for step, inputs in enumerate(epoch_iterator):
                     
@@ -293,12 +278,25 @@ class RecSysTrainer(Trainer):
                 if self.args.tpu_metrics_debug:
                     # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
                     xm.master_print(met.metrics_report())
-
+                if self.args.validate_every > 0 and self.args.validate_every % self.epoch == 0:
+                    self._run_validation()
         if self.tb_writer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
+
+    def _run_validation(self):
+        valid_output = self.evaluate()
+
+        output_eval_file = os.path.join(self.args.output_dir, "valid_results.txt")
+        if self.is_world_master():
+            with open(output_eval_file, "w") as writer:
+                logger.info(f"*** Validation results (epoch: {self.epoch})***")
+                writer.write(f"*** Validation results (epoch: {self.epoch})***")
+                for key in sorted(valid_output.keys()):
+                    logger.info("  %s = %s", key, str(valid_output[key]))
+                    writer.write("%s = %s\n" % (key, str(valid_output[key])))
 
     def _training_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
@@ -329,7 +327,7 @@ class RecSysTrainer(Trainer):
         return loss.item(), acc.item()
 
     def evaluate(
-        self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+        self, eval_dataloader: Optional[DataLoader] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -338,7 +336,7 @@ class RecSysTrainer(Trainer):
         task-dependent.
 
         Args:
-            eval_dataset: (Optional) Pass a dataset if you wish to override
+            eval_dataloader: (Optional) Pass a data loader if you wish to override
             the one on the instance.
         Returns:
             A dict containing:
@@ -347,9 +345,12 @@ class RecSysTrainer(Trainer):
         """
 
         # NOTE: RecSys
-        eval_dataloader = self.get_rec_eval_dataloader()
 
-        output = self._prediction_loop(eval_dataloader, description="Evaluation")
+        if eval_dataloader is None:
+            eval_dataloader = self.get_rec_eval_dataloader()
+
+        output = self._prediction_loop(eval_dataloader, 
+            prediction_loss_only=prediction_loss_only, description="Validation")
 
         self._log(output.metrics)
 
@@ -359,16 +360,21 @@ class RecSysTrainer(Trainer):
 
         return output.metrics
 
-    def predict(self, test_dataset: Dataset) -> PredictionOutput:
+    def predict(self, test_dataloader: Optional[DataLoader] = None) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
 
         Depending on the dataset and your use case, your test dataset may contain labels.
         In that case, this method will also return metrics, like in evaluate().
         """
-        test_dataloader = self.get_test_dataloader(test_dataset)
+        if test_dataloader is None:
+            test_dataloader = self.get_rec_test_dataloader()
 
-        return self._prediction_loop(test_dataloader, description="Prediction")
+        output = self._prediction_loop(test_dataloader, description="Prediction")
+
+        self._log(output.metrics)
+
+        return output
 
     def _prediction_loop(
         self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
@@ -448,9 +454,9 @@ class RecSysTrainer(Trainer):
         elif is_torch_tpu_available():
             # tpu-comment: Get all predictions and labels from all worker shards of eval dataset
             if preds is not None:
-                preds = xm.mesh_reduce("eval_preds", preds, torch.cat)
+                preds = xm.mesh_reduce(f"{description}_preds", preds, torch.cat)
             if label_ids is not None:
-                label_ids = xm.mesh_reduce("eval_label_ids", label_ids, torch.cat)
+                label_ids = xm.mesh_reduce(f"{description}_label_ids", label_ids, torch.cat)
 
         if self.compute_metrics is not None and preds is not None and label_ids is not None:
             preds = preds.transpose(1,2).reshape(-1, preds.size(-3), preds.size(-1))
@@ -458,13 +464,13 @@ class RecSysTrainer(Trainer):
         else:
             metrics = {}
         if len(eval_losses) > 0:
-            metrics["eval_loss"] = np.mean(eval_losses)
+            metrics[f"{description}_loss"] = np.mean(eval_losses)
         if len(eval_accs) > 0:
-            metrics["eval_accuracy"] = np.mean(eval_accs)
+            metrics[f"{description}_accuracy"] = np.mean(eval_accs)
 
         # Prefix all keys with eval_
         for key in list(metrics.keys()):
-            if not key.startswith("eval_"):
-                metrics[f"eval_{key}"] = metrics.pop(key)
+            if not key.startswith(f"{description}_"):
+                metrics[f"{description}_{key}"] = metrics.pop(key)
 
         return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
