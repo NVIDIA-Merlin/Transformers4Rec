@@ -181,7 +181,9 @@ class RecSysTrainer(Trainer):
                 logger.info("  Starting fine-tuning.")
 
         tr_loss = 0.0
+        tr_acc = 0.0
         logging_loss = 0.0
+        logging_acc = 0.0
         model.zero_grad()
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
@@ -208,7 +210,9 @@ class RecSysTrainer(Trainer):
                         steps_trained_in_current_epoch -= 1
                         continue
 
-                    tr_loss += self._training_step(model, inputs, optimizer)
+                    step_loss, step_acc = self._training_step(model, inputs, optimizer)
+                    tr_loss += step_loss
+                    tr_acc += step_acc
 
                     if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                         # last step in epoch but step is always smaller than gradient_accumulation_steps
@@ -235,6 +239,7 @@ class RecSysTrainer(Trainer):
                         ):
                             logs: Dict[str, float] = {}
                             logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
+                            logs["accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
                             # backward compatibility for pytorch schedulers
                             logs["learning_rate"] = (
                                 scheduler.get_last_lr()[0]
@@ -242,6 +247,7 @@ class RecSysTrainer(Trainer):
                                 else scheduler.get_lr()[0]
                             )
                             logging_loss = tr_loss
+                            logging_acc = tr_acc
 
                             self._log(logs)
 
@@ -285,7 +291,7 @@ class RecSysTrainer(Trainer):
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss / self.global_step)        
+        return TrainOutput(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
 
     def _training_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
@@ -299,6 +305,7 @@ class RecSysTrainer(Trainer):
         outputs = model(*self.f_feature_extract(inputs))
         
         loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+        acc = outputs[-1] # accuracy
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
@@ -311,7 +318,7 @@ class RecSysTrainer(Trainer):
         else:
             loss.backward()
 
-        return loss.item()
+        return loss.item(), acc.item()
 
     def evaluate(
         self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,

@@ -29,9 +29,11 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             self.is_rnn = False
 
+        self.pad_token = data_args.pad_token
+
         # set embedding tables
-        self.embedding_product = nn.Embedding(data_args.num_product, model_args.d_model, padding_idx=data_args.pad_token)
-        self.embedding_category = nn.Embedding(data_args.num_category, model_args.d_model, padding_idx=data_args.pad_token)
+        self.embedding_product = nn.Embedding(data_args.num_product, model_args.d_model, padding_idx=self.pad_token)
+        self.embedding_category = nn.Embedding(data_args.num_category, model_args.d_model, padding_idx=self.pad_token)
 
         self.merge = model_args.merge_inputs
         
@@ -43,7 +45,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.margin_loss = model_args.margin_loss
         self.output_layer = nn.Linear(model_args.d_model, data_args.num_product)
         self.loss_type = model_args.loss_type
-        self.cross_entropy = nn.CrossEntropyLoss(ignore_index=data_args.pad_token)
+        self.neg_log_likelihood = nn.NLLLoss(ignore_index=self.pad_token)
+        self.log_softmax = nn.LogSoftmax(dim=-1)
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -156,6 +159,8 @@ class RecSysMetaModel(PreTrainedModel):
         logits = self.output_layer(pos_emb_seq_pred)
         outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
         
+        pred_flat = self.log_softmax(logits).flatten(end_dim=1)
+        trg_flat = product_seq_trg.flatten()
         if self.loss_type == 'margin_hinge':
             # compute margin (hinge) loss.
             # NOTE: simply taking average here.
@@ -163,10 +168,18 @@ class RecSysMetaModel(PreTrainedModel):
             loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
 
         elif self.loss_type == 'cross_entropy':
-            loss = self.cross_entropy(logits.flatten(end_dim=1), product_seq_trg.flatten())
+            loss = self.neg_log_likelihood(pred_flat, trg_flat)
         else:
             raise NotImplementedError
 
         outputs = (loss,) + outputs
 
-        return outputs  # return (loss), logits, (mems), (hidden states), (attentions)
+        # Step 5. Compute accuracy
+        _, max_idx = torch.max(pred_flat, 1)
+        total_pad_tokens = (trg_flat == self.pad_token).sum()
+        denom = max_idx.size(0) - total_pad_tokens
+        train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / denom
+        
+        outputs = outputs + (train_acc,)
+
+        return outputs  # return (loss), logits, (mems), (hidden states), (attentions), (train_acc)
