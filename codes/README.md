@@ -47,16 +47,16 @@ Follow instruction to insert API key
 
 ## How to Run?
 
-**Step 1. Get preprocessed e-commerce dataset **
+**Step 1. Get preprocessed e-commerce dataset**
 
-We prepared the sample preprocessed dataset and uploaded at Google drive. You can get it by running following script:
+We prepared the sample preprocessed dataset and uploaded at Google drive. You can get it by running following scripts:
 ```
-bash scripts/get_dataset.bash
+bash script/get_dataset.bash
 ```
 
-**Step 2. Run the training & evaluation code:**
+**Step 2. Run the training & evaluation code**
 ```
-bash scripts/run_transformer.bash
+bash script/run_transformer.bash
 ```
 
 ## NOTE
