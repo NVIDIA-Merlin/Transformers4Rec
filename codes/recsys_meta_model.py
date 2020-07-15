@@ -47,6 +47,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.loss_type = model_args.loss_type
         self.neg_log_likelihood = nn.NLLLoss(ignore_index=self.pad_token)
         self.log_softmax = nn.LogSoftmax(dim=-1)
+
+        # NOTE: https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
         self.cosine_emb_loss = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):

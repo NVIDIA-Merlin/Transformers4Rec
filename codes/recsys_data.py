@@ -9,12 +9,38 @@ import numpy as np
 from petastorm import make_batch_reader
 from petastorm.pytorch import DataLoader
 from petastorm.unischema import UnischemaField
+import pyarrow.parquet as pq
+from torch.utils.data import Dataset, DataLoader
 
 from recsys_utils import get_filenames, get_dataset_len
 
 
 # set vocabulary sizes for discrete input seqs. 
 # NOTE: First one is the output (target) size
+
+
+class ParquetDataset(Dataset):
+    def __init__(self, parquet_file, cols_to_read):
+        self.cols_to_read = cols_to_read
+        self.data = pq.ParquetDataset(parquet_file).read(columns=self.cols_to_read).to_pandas()
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, index):
+        df = self.data.loc[index]
+        return {col: df[col] for col in df.index}
+
+
+class DataLoaderWrapper(DataLoader):
+    def __init__(self, *args, **kwargs):
+        super(DataLoaderWrapper, self).__init__(*args, **kwargs)
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, type, value, traceback):
+        return None
 
 
 def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
@@ -34,7 +60,8 @@ def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
 
 
 def fetch_data_loaders(data_args, training_args, train_date, eval_date, 
-                       neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False):
+                       neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False,
+                       engine="pyarrow"):
     """
     load_from_path: when a path is given, it automatically determines 
                     list of available parquet files in the path.
@@ -54,36 +81,46 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date,
     if load_from_path:
         train_data_path = get_filenames(train_data_path)
         eval_data_path = get_filenames(eval_data_path)
-    else:
-        train_data_path = ['file://' + p for p in train_data_path]
-        eval_data_path = ['file://' + p for p in eval_data_path]
 
     train_data_len = get_dataset_len(train_data_path)
     eval_data_len = get_dataset_len(eval_data_path)
 
-    recsys_schema = recsys_schema_posneg if neg_sampling else recsys_schema_pos
+    if engine == "petastorm":
+        parquet_schema = parquet_schema_posneg if neg_sampling else parquet_schema_pos
+        
+        train_data_path = ['file://' + p for p in train_data_path]
+        eval_data_path = ['file://' + p for p in eval_data_path]
+        
+        train_loader = DataLoaderWithLen(
+            make_batch_reader(train_data_path, 
+                num_epochs=None,
+                schema_fields=parquet_schema,
+                reader_pool_type=data_args.reader_pool_type,
+                workers_count=data_args.workers_count,
+            ), 
+            batch_size=training_args.per_device_train_batch_size,
+            len=train_data_len,
+        )
 
-    train_loader = DataLoaderWithLen(
-        make_batch_reader(train_data_path, 
-            num_epochs=None,
-            schema_fields=recsys_schema,
-            reader_pool_type=data_args.reader_pool_type,
-            workers_count=data_args.workers_count,
-        ), 
-        batch_size=training_args.per_device_train_batch_size,
-        len=train_data_len,
-    )
+        eval_loader = DataLoaderWithLen(
+            make_batch_reader(eval_data_path, 
+                num_epochs=None,
+                schema_fields=parquet_schema,
+                reader_pool_type=data_args.reader_pool_type,
+                workers_count=data_args.workers_count,
+            ), 
+            batch_size=training_args.per_device_eval_batch_size,
+            len=eval_data_len,
+        )
 
-    eval_loader = DataLoaderWithLen(
-        make_batch_reader(eval_data_path, 
-            num_epochs=None,
-            schema_fields=recsys_schema,
-            reader_pool_type=data_args.reader_pool_type,
-            workers_count=data_args.workers_count,
-        ), 
-        batch_size=training_args.per_device_eval_batch_size,
-        len=eval_data_len,
-    )
+    elif engine == "pyarrow":
+        cols_to_read = parquet_col_posneg if neg_sampling else parquet_col_pos
+
+        train_dataset = ParquetDataset(train_data_path, cols_to_read)
+        eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
+        train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size)
+        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size)
+
     return train_loader, eval_loader
 
 
@@ -126,15 +163,20 @@ def f_feature_extract_pos(inputs):
     return product_seq, category_seq
 
 
-# A schema that we use to read specific columns from parquet data file
-recsys_schema_posneg = [
+# (PyArrow) Columns to read 
+parquet_col_posneg = ['sess_pid_seq', 'sess_ccid_seq', 'sess_neg_pids', 'sess_neg_ccid']
+parquet_col_pos = ['sess_pid_seq', 'sess_ccid_seq']
+
+
+# (Petastorm) A schema that we use to read specific columns from parquet data file
+parquet_schema_posneg = [
     UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_neg_pids', np.int64, (None,), None, True),
     UnischemaField('sess_neg_ccid', np.int64, (None,), None, True),
 ]
 
-recsys_schema_pos = [
+parquet_schema_pos = [
     UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
 ]
@@ -142,7 +184,7 @@ recsys_schema_pos = [
 
 
 # Full Schema
-# recsys_schema_full = [
+# parquet_schema_full = [
 #     UnischemaField('user_idx', np.int, (), None, True),
 #     #   UnischemaField('user_session', str_, (), None, True),
 #     UnischemaField('sess_seq_len', np.int, (), None, False),
