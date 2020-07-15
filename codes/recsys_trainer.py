@@ -395,6 +395,7 @@ class RecSysTrainer(Trainer):
         logger.info("  Num examples = %d", self.num_examples(dataloader))
         logger.info("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
+        eval_accs: List[float] = []
         preds: torch.Tensor = None
         label_ids: torch.Tensor = None
         cnt = 0
@@ -416,9 +417,10 @@ class RecSysTrainer(Trainer):
                 
                 outputs = model(*_inputs)
 
-                step_eval_loss, logits = outputs[:2]
+                step_eval_acc, step_eval_loss, logits = outputs
                 eval_losses += [step_eval_loss.mean().item()]
-            
+                eval_accs += [step_eval_acc.mean().item()]
+
             if not prediction_loss_only:
                 # _preds.size(): N_BATCH x SEQLEN x ITEM_SIZE (=300000)
                 _preds = logits.detach().unsqueeze(0)
@@ -457,6 +459,8 @@ class RecSysTrainer(Trainer):
             metrics = {}
         if len(eval_losses) > 0:
             metrics["eval_loss"] = np.mean(eval_losses)
+        if len(eval_accs) > 0:
+            metrics["eval_accuracy"] = np.mean(eval_accs)
 
         # Prefix all keys with eval_
         for key in list(metrics.keys()):
