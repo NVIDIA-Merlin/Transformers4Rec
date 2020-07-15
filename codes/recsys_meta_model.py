@@ -47,6 +47,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.loss_type = model_args.loss_type
         self.neg_log_likelihood = nn.NLLLoss(ignore_index=self.pad_token)
         self.log_softmax = nn.LogSoftmax(dim=-1)
+        self.cosine_emb_loss = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -137,34 +138,28 @@ class RecSysMetaModel(PreTrainedModel):
             
         pos_emb_seq_pred = model_outputs[0]
 
-        # Step4. Compute loss
-
-        if self.loss_type == 'margin_hinge':
-            # compute similarity 
-            if self.similarity_type == 'cos':
-                pos_emb_seq_pred_expanded = pos_emb_seq_pred.unsqueeze(1).expand_as(neg_emb_seq_trg)
-                pos_sim_seq = F.cosine_similarity(pos_emb_seq_trg, pos_emb_seq_pred, dim=2)
-                pos_sim_seq = pos_sim_seq.unsqueeze(1)
-                neg_sim_seq = F.cosine_similarity(neg_emb_seq_trg, pos_emb_seq_pred_expanded, dim=3)
-
-            elif self.similarity_type == 'softmax':
-                # TODO: ref. https://github.com/gabrielspmoreira/chameleon_recsys/blob/master/nar_module/nar/nar_model.py#L508
-                raise NotImplementedError
-
-            else:
-                raise NotImplementedError
-
         # compute logits (predicted probability of item ids)
         logits = self.output_layer(pos_emb_seq_pred)
         outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
         
         pred_flat = self.log_softmax(logits).flatten(end_dim=1)
         trg_flat = product_seq_trg.flatten()
-        if self.loss_type == 'margin_hinge':
-            # compute margin (hinge) loss.
-            # NOTE: simply taking average here.
 
-            loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
+        # Step4. Compute loss
+
+        if self.loss_type == 'margin_hinge':
+
+            # compute margin (hinge) loss.
+            pred_emb_flat = torch.cat((pos_emb_seq_pred.unsqueeze(1), pos_emb_seq_pred_expanded), dim=1).flatten(end_dim=2)
+            trg_emb_flat = torch.cat((pos_emb_seq_trg.unsqueeze(1), neg_emb_seq_trg), dim=1).flatten(end_dim=2)
+
+            n_pos_ex = pos_emb_seq_trg.size(0) * pos_emb_seq_trg.size(1)
+            n_neg_ex = neg_emb_seq_trg.size(0) * neg_emb_seq_trg.size(1) * neg_emb_seq_trg.size(2)
+            _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
+
+            loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
+            num_elem = (product_seq_trg.flatten() != self.pad_token).sum()
+            loss = loss_sum / num_elem
 
         elif self.loss_type == 'cross_entropy':
             loss = self.neg_log_likelihood(pred_flat, trg_flat)
