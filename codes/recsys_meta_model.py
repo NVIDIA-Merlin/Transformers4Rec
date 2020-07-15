@@ -97,68 +97,68 @@ class RecSysMetaModel(PreTrainedModel):
         # Step 2. Merge features
 
         if self.merge == 'elem_add':
-            pos_emb_seq = pos_prd_emb + pos_cat_emb
+            pos_emb = pos_prd_emb + pos_cat_emb
             
             if self.loss_type == 'margin_hinge':
-                neg_emb_seq = neg_prd_emb + neg_cat_emb
+                neg_emb = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'concat_mlp':
-            pos_emb_seq = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
+            pos_emb = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
 
             if self.loss_type == 'margin_hinge':
-                neg_emb_seq = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
+                neg_emb = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
 
         else:
             raise NotImplementedError
 
         if self.loss_type == 'margin_hinge':
-            # set input and target from emb_seq
-            pos_emb_seq_inp = pos_emb_seq[:, :-1]
-            pos_emb_seq_trg = pos_emb_seq[:, 1:]
+            # set input and target from emb
+            pos_emb_inp = pos_emb[:, :-1]
+            pos_emb_trg = pos_emb[:, 1:]
 
-            neg_emb_seq_inp = neg_emb_seq[:, :, :-1]
-            neg_emb_seq_trg = neg_emb_seq[:, :, 1:]
+            neg_emb_inp = neg_emb[:, :, :-1]
+            neg_emb_trg = neg_emb[:, :, 1:]
 
         elif self.loss_type == 'cross_entropy':
-            pos_emb_seq_inp = pos_emb_seq
+            pos_emb_inp = pos_emb
 
         # Step3. Run forward pass on model architecture
 
         if self.is_rnn:
             # compute output through RNNs
             model_outputs = self.model(
-                input=pos_emb_seq_inp
+                input=pos_emb_inp
             )
             
         else:
             # compute output through transformer
             model_outputs = self.model(
-                inputs_embeds=pos_emb_seq_inp,
+                inputs_embeds=pos_emb_inp,
             )
             
-        pos_emb_seq_pred = model_outputs[0]
+        pos_emb_pred = model_outputs[0]
 
         # compute logits (predicted probability of item ids)
-        logits = self.output_layer(pos_emb_seq_pred)
+        logits = self.output_layer(pos_emb_pred)
         outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
         
         pred_flat = self.log_softmax(logits).flatten(end_dim=1)
         trg_flat = product_seq_trg.flatten()
+        num_elem = (product_seq_trg.flatten() != self.pad_token).sum()
 
         # Step4. Compute loss
 
         if self.loss_type == 'margin_hinge':
 
-            # compute margin (hinge) loss.
-            pred_emb_flat = torch.cat((pos_emb_seq_pred.unsqueeze(1), pos_emb_seq_pred_expanded), dim=1).flatten(end_dim=2)
-            trg_emb_flat = torch.cat((pos_emb_seq_trg.unsqueeze(1), neg_emb_seq_trg), dim=1).flatten(end_dim=2)
+            pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
+            pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=2)
+            trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_trg), dim=1).flatten(end_dim=2)
 
-            n_pos_ex = pos_emb_seq_trg.size(0) * pos_emb_seq_trg.size(1)
-            n_neg_ex = neg_emb_seq_trg.size(0) * neg_emb_seq_trg.size(1) * neg_emb_seq_trg.size(2)
+            n_pos_ex = pos_emb_trg.size(0) * pos_emb_trg.size(1)
+            n_neg_ex = neg_emb_trg.size(0) * neg_emb_trg.size(1) * neg_emb_trg.size(2)
             _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
 
             loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
-            num_elem = (product_seq_trg.flatten() != self.pad_token).sum()
             loss = loss_sum / num_elem
 
         elif self.loss_type == 'cross_entropy':
@@ -170,9 +170,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Step 5. Compute accuracy
         _, max_idx = torch.max(pred_flat, 1)
-        total_pad_tokens = (trg_flat == self.pad_token).sum()
-        denom = max_idx.size(0) - total_pad_tokens
-        train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / denom
+        train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / num_elem
         
         outputs = (train_acc,) + outputs
 
