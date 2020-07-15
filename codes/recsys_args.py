@@ -34,6 +34,19 @@ class DataArguments:
     max_seq_len: Optional[int] = field(
         default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
     )
+    num_product: Optional[int] = field(
+        default=300000, metadata={"help": "number of products (target)"}
+    )
+    num_category: Optional[int] = field(
+        default=60000, metadata={"help": "number of categories"}
+    )
+    num_categorical_features: Optional[int] = field(
+        default=2, metadata={"help": "number of categorical features of dataset (= number of embedding tables)"}
+    )
+
+
+
+    
 
 
 @dataclass

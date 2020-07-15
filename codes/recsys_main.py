@@ -22,7 +22,6 @@ from recsys_args import DataArguments, ModelArguments
 from recsys_data import (
     recsys_schema_small, 
     f_feature_extract, 
-    vocab_sizes, 
     fetch_data_loaders,
     get_avail_data_dates
 )
@@ -65,7 +64,7 @@ def main():
 
     # embedding size
     seq_model, config = get_recsys_model(model_args, data_args)
-    rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, vocab_sizes)
+    rec_model = RecSysMetaModel(seq_model, config, model_args, data_args)
 
     trainer = RecSysTrainer(
         model=rec_model,

@@ -15,9 +15,6 @@ from recsys_utils import get_filenames, get_dataset_len
 
 # set vocabulary sizes for discrete input seqs. 
 # NOTE: First one is the output (target) size
-product_vocab_size = 300000
-category_vocab_size = 60000
-vocab_sizes = [product_vocab_size, category_vocab_size]
 
 
 def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):

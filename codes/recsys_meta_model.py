@@ -19,7 +19,7 @@ class RecSysMetaModel(PreTrainedModel):
     vocab_sizes : sizes of vocab for each discrete inputs
         e.g., [product_id_vocabs, category_vocabs, etc.]
     """
-    def __init__(self, model, config, model_args, data_args, vocab_sizes):
+    def __init__(self, model, config, model_args, data_args):
         super(RecSysMetaModel, self).__init__(config)
         
         self.model = model 
@@ -30,18 +30,18 @@ class RecSysMetaModel(PreTrainedModel):
             self.is_rnn = False
 
         # set embedding tables
-        self.embedding_product = nn.Embedding(vocab_sizes[0], model_args.d_model, padding_idx=data_args.pad_token)
-        self.embedding_category = nn.Embedding(vocab_sizes[1], model_args.d_model, padding_idx=data_args.pad_token)
+        self.embedding_product = nn.Embedding(data_args.num_product, model_args.d_model, padding_idx=data_args.pad_token)
+        self.embedding_category = nn.Embedding(data_args.num_category, model_args.d_model, padding_idx=data_args.pad_token)
 
         self.merge = model_args.merge_inputs
         
         if self.merge == 'concat_mlp':
-            n_embeddings = len(vocab_sizes)
+            n_embeddings = data_args.num_categorical_features
             self.mlp_merge = nn.Linear(model_args.d_model * n_embeddings, model_args.d_model)
         
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
-        self.output_layer = nn.Linear(model_args.d_model, vocab_sizes[0])
+        self.output_layer = nn.Linear(model_args.d_model, data_args.num_product)
         self.loss_type = model_args.loss_type
         self.cross_entropy = nn.CrossEntropyLoss(ignore_index=data_args.pad_token)
 
