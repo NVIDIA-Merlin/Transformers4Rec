@@ -13,8 +13,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
-    --per_device_train_batch_size 512 \
-    --per_device_eval_batch_size 512 \
+    --per_device_train_batch_size 256 \
+    --per_device_eval_batch_size 256 \
     --model_type "xlnet" \
     --loss_type "cross_entropy" \
     --logging_steps 20 \
