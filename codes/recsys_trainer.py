@@ -12,7 +12,7 @@ import re
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, NamedTuple
 
 import numpy as np
 import torch
@@ -36,6 +36,13 @@ from recsys_metrics import EvalPredictionTensor
 logger = logging.getLogger(__name__)
 
 softmax = nn.Softmax(dim=-1)
+
+
+class TrainOutputAcc(NamedTuple):
+    global_step: int
+    training_loss: float
+    training_acc: float
+    
 
 class RecSysTrainer(Trainer):
     """
@@ -291,7 +298,7 @@ class RecSysTrainer(Trainer):
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
+        return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
 
     def _training_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
