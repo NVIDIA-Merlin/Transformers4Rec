@@ -1,9 +1,28 @@
 import argparse
+import gc
+import glob
+import os
+from collections import defaultdict
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
+import pyarrow
+import pyarrow.parquet as pq
 from tqdm import tqdm
 
-from ..candidate_sampling.candidate_sampling import CandidateSamplingManager
+from ..candidate_sampling.candidate_sampling import (
+    PersistanceType,
+    SamplingManagerFactory,
+    SamplingStrategy,
+)
+from ..config.features_config import (
+    FeatureGroups,
+    FeaturesDataType,
+    FeatureTypes,
+    InputDataConfig,
+    InstanceInfoLevel,
+)
 
 
 def args_parser():
@@ -16,7 +35,9 @@ def args_parser():
         help="Path to look for the pre-processed parquet files (accepts *)",
     )
     parser.add_argument(
-        "--output_parquet_path", type=str, help="Output path with the parquet files appended"
+        "--output_parquet_root_path",
+        type=str,
+        help="Output root path where the processed parquet will be saved",
     )
     parser.add_argument(
         "--subsample_first_n_sessions_by_day",
@@ -27,7 +48,7 @@ def args_parser():
     parser.add_argument(
         "--sampling_strategy",
         type=str,
-        help="Valid choices: uniform|recency|popularity|cooccurrence",
+        help="Valid choices: uniform|recency|recent_popularity|item_cooccurrence",
     )
     parser.add_argument(
         "--num_neg_samples",
@@ -67,22 +88,20 @@ def args_parser():
 
 
 # TODO: Create a new folder tree in the output directory
-def get_output_path_parquet_neg_samples(input_parquet_filename):
-    return (
-        input_parquet_filename.replace(
-            "ecommerce_preproc.parquet",
-            "ecommerce_preproc_neg_samples_{}_strategy_{}.parquet".format(
-                NUM_NEG_SAMPLES, NEGATIVE_SAMPLING_STRATEGY
-            ),
-        )
-        + ".parquet"
-    )
+def get_output_path_parquet_neg_samples(input_parquet_filename, output_root_path, dataset_name):
+    folder_name_with_day = os.path.split(input_parquet_filename)[-1]
+    out_folder_path = os.path.join(output_root_path, dataset_name)
+    # Creates dirs recursivelly if they do not exist
+    Path(out_folder_path).mkdir(parents=True, exist_ok=True)
+    output_file_path = os.path.join(out_folder_path, folder_name_with_day + ".parquet")
+    return output_file_path
 
 
-def split_dataframe_into_chuncks_generator(df, chunk_size):
-    number_chunks = len(df) // chunk_size + 1
-    for i in range(number_chunks):
-        yield df[i * chunk_size : (i + 1) * chunk_size]
+def padarray(A, size):
+    if len(A) > size:
+        A = A[:size]
+    t = size - len(A)
+    return np.pad(A, pad_width=(0, t), mode="constant")
 
 
 def get_input_data_config():
@@ -91,7 +110,7 @@ def get_input_data_config():
         "sess_pid_seq": FeaturesDataType.LONG,
         "sess_csid_seq": FeaturesDataType.INT,
         "sess_ccid_seq": FeaturesDataType.INT,
-        "sess_pid_seq": FeaturesDataType.INT,
+        "sess_bid_seq": FeaturesDataType.INT,
         "sess_price_seq": FeaturesDataType.FLOAT,
         "sess_relative_price_to_avg_category_seq": FeaturesDataType.FLOAT,
         "sess_product_recency_seq": FeaturesDataType.FLOAT,
@@ -148,53 +167,52 @@ def get_input_data_config():
         feature_groups=feature_groups,
         feature_types=feature_types,
         positive_interactions_only=True,
-        instance_info_level=InstanceLevelInfo.SESSION,
+        instance_info_level=InstanceInfoLevel.SESSION,
         session_padded_items_value=0,
     )
 
     return input_data_config
 
 
-def get_sampling_manager(args):
-    sampling_config = CandidateSamplingConfig(
-        recommendable_items_strategy=RecommendableItemSetStrategy.RECENT_INTERACTIONS,
-        sampling_strategy=SamplingStrategy.RECENT_POPULARITY,
+def get_sampling_manager(input_data_config, args):
+
+    sampling_manager = SamplingManagerFactory.build(
+        input_data_config=input_data_config,
+        sampling_strategy=SamplingStrategy(args.sampling_strategy),
         persistance_type=PersistanceType.PANDAS,
         recency_keep_interactions_last_n_days=args.sliding_windows_last_n_days,
         recent_temporal_decay_exp_factor=args.recent_temporal_decay_exp_factor,
         remove_repeated_sampled_items=not args.keep_repeated_sampled_items,
     )
 
-    input_data_config = get_input_data_config()
-
-    sampling_manager = CandidateSamplingManager(input_data_config, sampling_config)
-
     return sampling_manager
 
 
-def generate_neg_samples(session_pids, user_past_pids, n_samples, sampling_manager):
+def generate_neg_samples(
+    session_pids, user_past_pids, n_samples, sampling_manager, input_data_config
+):
     neg_samples_dict = defaultdict(list)
 
     # Ignores session items and also recently interacted items
     ignore_ids = set(np.hstack([session_pids, user_past_pids]))
 
+    categ_features = input_data_config.get_features_from_type("categorical")
+
     for pid in session_pids:
         if pid != 0:
             # Sampling item ids, with metadata features
-            neg_item_features_dict = sampling_manager.get_candidate_samples(
-                n_samples, item_id=pid, return_item_features=True, ignore_list=ignore_ids
+            neg_item_ids, neg_item_features = sampling_manager.get_candidate_samples(
+                n_samples, item_id=pid, return_item_features=True, ignore_items=ignore_ids
             )
 
-            neg_item_ids, neg_item_features = zip(*neg_item_features_dict.items())
+            # neg_item_ids, neg_item_features = zip(*neg_item_features_dict.items())
 
             pids_padded = padarray(neg_item_ids, n_samples).astype(int)
             neg_samples_dict["sess_neg_pids"].append(pids_padded)
 
             for k, v in neg_item_features.items():
                 values = padarray(v, n_samples)
-                values = (
-                    values.astype(int) if k in ["csid", "ccid", "bid"] else values.astype(float)
-                )
+                values = values.astype(int) if k in categ_features else values.astype(float)
                 neg_samples_dict["sess_neg_{}".format(k)].append(values)
 
         else:
@@ -217,111 +235,196 @@ def generate_neg_samples(session_pids, user_past_pids, n_samples, sampling_manag
     return neg_samples_dict
 
 
-def main():
-    parser = args_parser()
-    args = parser.parse_args()
+def create_pq_writer(new_rows_df, path):
+    new_rows_pa = pyarrow.Table.from_pandas(new_rows_df)
+    # Creating parent folder recursively
+    parent_folder = os.path.dirname(os.path.abspath(path))
+    if not os.path.exists(parent_folder):
+        os.makedirs(parent_folder)
+    # Creating parquet file
+    pq_writer = pq.ParquetWriter(path, new_rows_pa.schema)
+    return pq_writer
 
-    input_parquet_files = input_parquet_files = sorted(
-        glob.glob(args.input_parquet_path_pattern + "*")
+
+def append_new_rows_to_parquet(new_rows_df, pq_writer):
+    new_rows_pa = pyarrow.Table.from_pandas(new_rows_df)
+    pq_writer.write_table(new_rows_pa)
+    return pq_writer
+
+
+def get_data_chunk_generator(input_file, chunck_size, subsample_first_n_sessions_by_day):
+    def process_dataframe_into_chuncks_generator(df, chunk_size):
+        number_chunks = len(df) // chunk_size + 1
+        for i in range(number_chunks):
+            start_idx = i * chunk_size
+            end_idx = (i + 1) * chunk_size
+            yield df[start_idx:end_idx]
+        del df
+        gc.collect()
+
+    # Loading parquet file and sorting sessions by timestamp
+    # P.s. Everything is loaded in memory at this time
+    sessions_df = pd.read_parquet(input_file)
+    sessions_df.sort_values("session_start_ts", inplace=True)
+
+    if subsample_first_n_sessions_by_day > 0:
+        # Limiting the number of negative samples per day for faster processing
+        sessions_df = sessions_df[:subsample_first_n_sessions_by_day]
+
+    data_chunks_generator = process_dataframe_into_chuncks_generator(
+        sessions_df, chunk_size=chunck_size
     )
+    return data_chunks_generator
 
-    sampling_manager = get_sampling_manager()
 
+"""
+Temporary, as the event timestamps from some rare items of the pre-processed dataset are many days after the session start
+"""
+
+
+def fix_event_timestamp(event_ts_sequence):
+    MAXIMUM_SESSION_DURATION_SECS = 60 * 120
+    DEFAULT_ELAPSED_SECS_BETWEEN_INTERACTIONS = 60
+    min_event_ts = min([e for e in event_ts_sequence if e != 0])
+    max_event_ts = max(event_ts_sequence)
+
+    if max_event_ts <= min_event_ts + MAXIMUM_SESSION_DURATION_SECS:
+        return event_ts_sequence
+
+    else:
+        last_ts = None
+
+        result = []
+        for etime in event_ts_sequence:
+            if etime > min_event_ts + MAXIMUM_SESSION_DURATION_SECS:
+                etime = last_ts + DEFAULT_ELAPSED_SECS_BETWEEN_INTERACTIONS
+            last_ts = etime
+            result.append(etime)
+
+        return result
+
+
+def process_date(idx_day, input_file, input_data_config, sampling_manager, args):
     pq_writer = None
     try:
-        # For each file (day)
-        for idx_day, input_file in enumerate(input_parquet_files):
-            print("=" * 40)
-            print("[Day {}] Loading sessions from parquet: {}".format(idx_day, input_file))
-            output_filename = get_output_path_parquet_neg_samples(input_file)
+        print("=" * 40)
+        print("[Day {}] Loading sessions from parquet: {}".format(idx_day, input_file))
 
-            if os.path.exists(output_filename):
-                raise Exception("Output parquet file already exists")
+        dataset_name = "ecommerce_preproc_neg_samples_{}_strategy_{}".format(
+            args.num_neg_samples, args.sampling_strategy
+        )
+        output_filename = get_output_path_parquet_neg_samples(
+            input_file, args.output_parquet_root_path, dataset_name
+        )
 
-            # Loading parquet file and sorting sessions by timestamp
-            # P.s. Everything is loaded in memory at this time
-            sessions_df = pd.read_parquet(input_file)
-            sessions_df.sort_values("session_start_ts", inplace=True)
+        if os.path.exists(output_filename):
+            raise Exception("Output parquet file already exists: {}".format(output_filename))
 
-            if args.subsample_first_n_sessions_by_day > 0:
-                # Limiting the number of negative samples per day for faster processing
-                sessions_df = sessions_df[:FIRST_N_SESSIONS_PER_DAY]
+        data_chunks_generator = get_data_chunk_generator(
+            input_file, args.batch_size, args.subsample_first_n_sessions_by_day
+        )
 
-            new_rows_buffer = []
+        new_rows_buffer = []
 
-            print("Processing batches")
-            # For each processing batch
-            for batch_id, batch in tqdm(
-                enumerate(
-                    split_dataframe_into_chuncks_generator(sessions_df, chunk_size=args.batch_size)
-                )
-            ):
-                print("batch_id", batch_id)
-                # For each row (session) in the batch
-                for i, row in batch.iterrows():
+        print("Processing batches")
+        # For each processing batch
+        for batch_id, batch in tqdm(enumerate(data_chunks_generator)):
+            print("batch_id", batch_id)
+            # For each row (session) in the batch
+            for i, row in batch.iterrows():
 
-                    sampling_manager.append_session_interactions(row)
+                # Temporary, as the event timestamps from some rare items of the pre-processed dataset are many days after the session start
+                row["sess_etime_seq"] = fix_event_timestamp(row["sess_etime_seq"])
 
-                    # Ignoring first batch (not computing neg. samples nor saving to parquet)
-                    if batch_id > 0:
-                        # Generating neg. samples for each interaction in the session
-                        session_neg_samples_by_pid_dict = generate_neg_samples(
-                            row["sess_pid_seq"],
-                            row["user_pid_seq_bef_sess"],
-                            args.num_neg_samples,
-                            sampling_manager,
-                        )
-                        # Merging user and session features with neg samples for the session
-                        new_row_with_neg_samples_dict = {
-                            **row.to_dict(),
-                            **session_neg_samples_by_pid_dict,
-                        }
-                        new_rows.append(new_row_with_neg_samples_dict)
+                sampling_manager.append_session_interactions(row)
 
-                # Each N batches updates item statistics (popularity, recency, co-occurrence)
-                # Ps. Do the update for all the first five batches of the first file , for better sampling
-                if (
-                    batch_id % args.update_stats_each_n_batches
-                    == args.update_stats_each_n_batches - 1
-                ) or (idx_day == 0 and batch_id < 5):
-                    print("[Batch {}] Updating item stats".format(batch_id))
-                    # Flushes pending interactions, removes old interactions (outside recency window) and update stats for sampling
-                    sampling_manager.update_stats()
-
-                # Each N batches appends the new rows with neg. samples to parquet file
-                if (
-                    batch_id % BATCHES_TO_APPEND_ROWS_WITH_NEG_SAMPLES
-                    == BATCHES_TO_APPEND_ROWS_WITH_NEG_SAMPLES - 1
-                ):
-                    print(
-                        "[Batch {}] Appending new rows with neg samples to parquet: {}".format(
-                            batch_id, output_filename
-                        )
+                # Ignoring first batch (not computing neg. samples nor saving to parquet)
+                if batch_id > 0:
+                    # Generating neg. samples for each interaction in the session
+                    session_neg_samples_by_pid_dict = generate_neg_samples(
+                        row["sess_pid_seq"],
+                        row["user_pid_seq_bef_sess"],
+                        args.num_neg_samples,
+                        sampling_manager,
+                        input_data_config,
                     )
-                    append_new_rows_to_parquet(pd.DataFrame(new_rows_buffer), output_filename)
-                    del new_rows_buffer
-                    new_rows_buffer = []
+                    # Merging user and session features with neg samples for the session
+                    new_row_with_neg_samples_dict = {
+                        **row.to_dict(),
+                        **session_neg_samples_by_pid_dict,
+                    }
+                    new_rows_buffer.append(new_row_with_neg_samples_dict)
 
-            # Save pending rows
-            if len(new_rows_buffer) > 0:
+            # Each N batches updates item statistics (popularity, recency, co-occurrence)
+            # Ps. Do the update for all the first five batches of the first file , for better sampling
+            if ((batch_id + 1) % args.update_stats_each_n_batches == 0) or (
+                idx_day == 0 and batch_id < 5
+            ):
+                print("[Batch {}] Updating item stats".format(batch_id))
+                # Flushes pending interactions, removes old interactions (outside recency window) and update stats for sampling
+                sampling_manager.update_stats()
+
+            # Each N batches appends the new rows with neg. samples to parquet file
+            if (
+                batch_id % args.save_each_n_batches == args.save_each_n_batches - 1
+                and len(new_rows_buffer) > 0
+            ):
                 print(
                     "[Batch {}] Appending new rows with neg samples to parquet: {}".format(
                         batch_id, output_filename
                     )
                 )
-                append_new_rows_to_parquet(pd.DataFrame(new_rows_buffer), output_filename)
+
+                new_rows_df = pd.DataFrame(new_rows_buffer)
+
+                if not pq_writer:
+                    pq_writer = create_pq_writer(new_rows_df, output_filename)
+
+                append_new_rows_to_parquet(new_rows_df, pq_writer)
+
+                del new_rows_df
                 del new_rows_buffer
                 new_rows_buffer = []
 
-            # Flushing and releasing the current parquet file and proceeding for the new date
+        # Save pending rows
+        if len(new_rows_buffer) > 0:
+            print(
+                "[Batch {}] Appending new rows with neg samples to parquet: {}".format(
+                    batch_id, output_filename
+                )
+            )
+            new_rows_df = pd.DataFrame(new_rows_buffer)
+            append_new_rows_to_parquet(new_rows_df, pq_writer)
+            del new_rows_df
+            del new_rows_buffer
+            new_rows_buffer = []
+
+        # Flushing and releasing the current parquet file and proceeding for the new date
+        if pq_writer:
             pq_writer.close()
             pq_writer = None
 
-            del sessions_df
-            gc.collect()
     finally:
         if pq_writer:
             pq_writer.close()
+
+
+def main():
+    parser = args_parser()
+    args = parser.parse_args()
+
+    input_parquet_files = input_parquet_files = sorted(
+        glob.glob(args.input_parquet_path_pattern.replace("'", "") + "*")
+    )
+
+    input_data_config = get_input_data_config()
+    sampling_manager = get_sampling_manager(input_data_config, args)
+
+    # For each file (day)
+    for idx_day, input_file in enumerate(input_parquet_files):
+        process_date(idx_day, input_file, input_data_config, sampling_manager, args)
+
+    print("Preprocessing script finished")
 
 
 if __name__ == "__main__":

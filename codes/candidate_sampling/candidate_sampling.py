@@ -18,8 +18,8 @@ from .sampling_repository import (
 class SamplingStrategy(Enum):
     UNIFORM = "uniform"
     RECENCY = "recency"
-    RECENT_POPULARITY = "popularity"
-    ITEM_COOCURRENCE = "cooccurrence"
+    RECENT_POPULARITY = "recent_popularity"
+    ITEM_COOCURRENCE = "item_cooccurrence"
     # ITEM_SIMILARITY = "similarity"
 
 
@@ -49,6 +49,62 @@ class RecentPopularitySamplingConfig(CandidateSamplingConfig):
 @dataclass
 class ItemCooccurrenceSamplingConfig(CandidateSamplingConfig):
     sampling_strategy: SamplingStrategy = SamplingStrategy.ITEM_COOCURRENCE
+
+
+class SamplingManagerFactory:
+    @classmethod
+    def build(
+        cls,
+        input_data_config: InputDataConfig,
+        sampling_strategy: SamplingStrategy,
+        recency_keep_interactions_last_n_days: float = 1.0,
+        recent_temporal_decay_exp_factor: float = 0.002,
+        remove_repeated_sampled_items: bool = True,
+        persistance_type: PersistanceType = PersistanceType.PANDAS,
+    ):
+        sampling_manager_class = None
+        sampling_config = None
+
+        if sampling_strategy == SamplingStrategy.UNIFORM:
+            sampling_manager_class = UniformCandidateSamplingManager
+            sampling_config = UniformCandidateSamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=persistance_type,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
+
+        elif sampling_strategy == SamplingStrategy.RECENCY:
+            sampling_manager_class = RecencyCandidateSamplingManager
+            sampling_config = RecencyCandidateSamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=persistance_type,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                recent_temporal_decay_exp_factor=recent_temporal_decay_exp_factor,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
+
+        elif sampling_strategy == SamplingStrategy.RECENT_POPULARITY:
+            sampling_manager_class = RecentPopularityCandidateSamplingManager
+            sampling_config = RecentPopularitySamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=persistance_type,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
+
+        elif sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
+            sampling_manager_class = ItemCooccurrenceCandidateSamplingManager
+            sampling_config = ItemCooccurrenceSamplingConfig(
+                sampling_strategy=sampling_strategy,
+                persistance_type=persistance_type,
+                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
+                remove_repeated_sampled_items=remove_repeated_sampled_items,
+            )
+
+        sampling_manager = sampling_manager_class(input_data_config, sampling_config)
+
+        return sampling_manager
 
 
 class CandidateSamplingManager(ABC):
@@ -113,7 +169,10 @@ class CandidateSamplingManager(ABC):
         sampled_item_ids = sampled_item_ids[:n_samples]
 
         if return_item_features:
-            sampled_items = {i: self.items_metadata_repo.get_item(i) for i in sampled_item_ids}
+            sampled_items = (
+                sampled_item_ids,
+                self.items_metadata_repo.get_items(sampled_item_ids),
+            )
             return sampled_items
         else:
             return sampled_item_ids

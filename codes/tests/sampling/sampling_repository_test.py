@@ -22,7 +22,10 @@ class ItemsMetadataRepositoryInstantiable(ItemsMetadataRepository):
     def item_exists(self, item_id):
         raise NotImplementedError("Not implemented")
 
-    def get_item(self, item_id):
+    def get_item(self, item_id, keep_ts_stats=False):
+        raise NotImplementedError("Not implemented")
+
+    def get_items(self, item_ids, keep_ts_stats=False):
         raise NotImplementedError("Not implemented")
 
     def get_item_ids(self, only_interacted_since_ts):
