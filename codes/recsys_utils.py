@@ -9,20 +9,8 @@ import torch
 
 
 def get_filenames(data_paths):
-    paths = [['file://' + p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
+    paths = [[p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
     return list(itertools.chain.from_iterable(paths))
-
-
-def wc(filename):
-    try:
-        num_lines = int(subprocess.check_output(["wc", "-l", filename], stderr=subprocess.STDOUT).split()[0])
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError("command '{}' return with error (code {}): {}".format(e.cmd, e.returncode, e.output))
-    return num_lines
-
-
-def get_dataset_len(data_paths):
-    return sum(wc(f.replace('file://', '')) for f in data_paths)
 
 
 class Timing(object):

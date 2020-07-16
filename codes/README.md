@@ -4,7 +4,7 @@ Current code uses following ingredients to implement RecSys-Transformer models:
 - DataLoader to read from Parquet file: Petastorm (https://petastorm.readthedocs.io)
 - Trainer and Transformer models implementation: Huggingface (https://huggingface.co/transformers/)
 - Evaluation metrics: karlhigley's implementation (https://github.com/karlhigley/ranking-metrics-torch)
-
+- Training and evaluation logging: Weights & Biases (wandb.com)
 
 ## Installation guide
 
@@ -28,22 +28,35 @@ or
 ```
 pip install transformers==3.0.0
 pip install petastorm==0.9.2
+pip install wandb
 ```
 
+Step 3. Setup wandb for experiment logging
+
+By default, Huggingface uses Weights & Biases (wandb) to log training and evaluation metrics. Let's keep use it.
+
+1) Create account if you don't have and obtain API
+https://www.wandb.com
+
+2) Insert API
+```
+wandb login
+```
+Follow instruction to insert API key
 
 
 ## How to Run?
 
-**Step 1. Get preprocessed e-commerce dataset **
+**Step 1. Get preprocessed e-commerce dataset**
 
-We prepared the sample preprocessed dataset and uploaded at Google drive. You can get it by running following script:
+We prepared the sample preprocessed dataset and uploaded at Google drive. You can get it by running following scripts:
 ```
-bash scripts/get_dataset.bash
+bash script/get_dataset.bash
 ```
 
-**Step 2. Run the training & evaluation code:**
+**Step 2. Run the training & evaluation code**
 ```
-bash scripts/run_transformer.bash
+bash script/run_transformer.bash
 ```
 
 ## NOTE

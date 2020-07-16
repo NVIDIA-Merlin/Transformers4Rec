@@ -1,3 +1,5 @@
 transformers==3.0.0
 petastorm==0.9.2
 scikit-learn==0.23.1
+pyarrow==0.17.1
+wandb

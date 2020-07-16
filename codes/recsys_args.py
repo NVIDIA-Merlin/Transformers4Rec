@@ -2,10 +2,24 @@
 from typing import Any, Callable, Dict, List, NewType, Tuple, Optional
 from dataclasses import dataclass, field
 
-from transformers import MODEL_WITH_LM_HEAD_MAPPING
+from transformers import (
+    MODEL_WITH_LM_HEAD_MAPPING,
+    TrainingArguments as HfTrainingArguments
+)
 
 MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
+
+
+@dataclass
+class TrainingArguments(HfTrainingArguments):
+    validate_every: int = field(default=-1, 
+        metadata={"help": "Run validation set every this epoch. "
+            "-1 means no validation is used (default: -1)"}
+    )
+    eval_on_cpu: bool = field(default=False, 
+        metadata={"help": "Run evaluation on CPU (prevent GPU-OOM)"}
+    )
 
 
 @dataclass
@@ -31,6 +45,34 @@ class DataArguments:
     pad_token: Optional[int] = field(
         default=0, metadata={"help": "pad token"}
     )
+    max_seq_len: Optional[int] = field(
+        default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
+    )
+    num_product: Optional[int] = field(
+        default=300000, metadata={"help": "number of products (target)"}
+    )
+    num_category: Optional[int] = field(
+        default=60000, metadata={"help": "number of categories"}
+    )
+    num_categorical_features: Optional[int] = field(
+        default=2, metadata={"help": "number of categorical features of dataset (= number of embedding tables)"}
+    )
+    # args for selecting which engine to use
+    engine: Optional[str] = field(
+        default='pyarrow', metadata={"help": "Parquet data loader engine. "
+            "'pyarrow': read whole parquet into memory. 'petastorm': read chunck by chunck"
+        }
+    )
+    # args for petastorm
+    reader_pool_type: Optional[str] = field(
+        default='thread', metadata={"help": "A string denoting the reader pool type. \
+            Should be one of ['thread', 'process', 'dummy'] denoting a thread pool, \
+                process pool, or running everything in the master thread. Defaults to 'thread'"}
+    )
+    workers_count: Optional[int] = field(
+        default=10, metadata={"help": "An int for the number of workers to use in the reader pool. \
+            This only is used for the thread or process pool"}
+    )    
 
 
 @dataclass

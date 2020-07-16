@@ -19,7 +19,7 @@ class RecSysMetaModel(PreTrainedModel):
     vocab_sizes : sizes of vocab for each discrete inputs
         e.g., [product_id_vocabs, category_vocabs, etc.]
     """
-    def __init__(self, model, config, model_args, data_args, vocab_sizes):
+    def __init__(self, model, config, model_args, data_args):
         super(RecSysMetaModel, self).__init__(config)
         
         self.model = model 
@@ -29,21 +29,27 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             self.is_rnn = False
 
+        self.pad_token = data_args.pad_token
+
         # set embedding tables
-        self.embedding_product = nn.Embedding(vocab_sizes[0], model_args.d_model, padding_idx=data_args.pad_token)
-        self.embedding_category = nn.Embedding(vocab_sizes[1], model_args.d_model, padding_idx=data_args.pad_token)
+        self.embedding_product = nn.Embedding(data_args.num_product, model_args.d_model, padding_idx=self.pad_token)
+        self.embedding_category = nn.Embedding(data_args.num_category, model_args.d_model, padding_idx=self.pad_token)
 
         self.merge = model_args.merge_inputs
         
         if self.merge == 'concat_mlp':
-            n_embeddings = len(vocab_sizes)
+            n_embeddings = data_args.num_categorical_features
             self.mlp_merge = nn.Linear(model_args.d_model * n_embeddings, model_args.d_model)
         
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
-        self.output_layer = nn.Linear(model_args.d_model, vocab_sizes[0])
+        self.output_layer = nn.Linear(model_args.d_model, data_args.num_product)
         self.loss_type = model_args.loss_type
-        self.cross_entropy = nn.CrossEntropyLoss(ignore_index=data_args.pad_token)
+        self.neg_log_likelihood = nn.NLLLoss(ignore_index=self.pad_token)
+        self.log_softmax = nn.LogSoftmax(dim=-1)
+
+        # NOTE: https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
+        self.cosine_emb_loss = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -62,8 +68,8 @@ class RecSysMetaModel(PreTrainedModel):
         self,
         product_seq,
         category_seq,
-        neg_product_seq,
-        neg_category_seq,
+        neg_product_seq=None,
+        neg_category_seq=None,
     ):
         """
         For cross entropy loss, we split input and target BEFORE embedding layer.
@@ -71,9 +77,8 @@ class RecSysMetaModel(PreTrainedModel):
         """
         
         # Step1. Obtain Embedding
-
-        if self.loss_type == 'cross_entropy':
-            product_seq_trg = product_seq[:, 1:] 
+        product_seq_trg = product_seq[:, 1:] 
+        if self.loss_type == 'cross_entropy':    
             product_seq = product_seq[:, :-1]
             category_seq = category_seq[:, :-1]
 
@@ -94,79 +99,81 @@ class RecSysMetaModel(PreTrainedModel):
         # Step 2. Merge features
 
         if self.merge == 'elem_add':
-            pos_emb_seq = pos_prd_emb + pos_cat_emb
+            pos_emb = pos_prd_emb + pos_cat_emb
             
             if self.loss_type == 'margin_hinge':
-                neg_emb_seq = neg_prd_emb + neg_cat_emb
+                neg_emb = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'concat_mlp':
-            pos_emb_seq = F.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb))))
+            pos_emb = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
 
             if self.loss_type == 'margin_hinge':
-                neg_emb_seq = F.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb))))
+                neg_emb = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
 
         else:
             raise NotImplementedError
 
         if self.loss_type == 'margin_hinge':
-            # set input and target from emb_seq
-            pos_emb_seq_inp = pos_emb_seq[:, :-1]
-            pos_emb_seq_trg = pos_emb_seq[:, 1:]
+            # set input and target from emb
+            pos_emb_inp = pos_emb[:, :-1]
+            pos_emb_trg = pos_emb[:, 1:]
 
-            neg_emb_seq_inp = neg_emb_seq[:, :, :-1]
-            neg_emb_seq_trg = neg_emb_seq[:, :, 1:]
+            neg_emb_inp = neg_emb[:, :, :-1]
+            neg_emb_trg = neg_emb[:, :, 1:]
 
         elif self.loss_type == 'cross_entropy':
-            pos_emb_seq_inp = pos_emb_seq
+            pos_emb_inp = pos_emb
 
         # Step3. Run forward pass on model architecture
 
         if self.is_rnn:
             # compute output through RNNs
             model_outputs = self.model(
-                input=pos_emb_seq_inp
+                input=pos_emb_inp
             )
             
         else:
             # compute output through transformer
             model_outputs = self.model(
-                inputs_embeds=pos_emb_seq_inp,
+                inputs_embeds=pos_emb_inp,
             )
             
-        pos_emb_seq_pred = model_outputs[0]
+        pos_emb_pred = model_outputs[0]
+
+        # compute logits (predicted probability of item ids)
+        logits = self.output_layer(pos_emb_pred)
+        outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
+        
+        pred_flat = self.log_softmax(logits).flatten(end_dim=1)
+        trg_flat = product_seq_trg.flatten()
+        num_elem = (product_seq_trg.flatten() != self.pad_token).sum()
 
         # Step4. Compute loss
 
         if self.loss_type == 'margin_hinge':
-            # compute similarity 
-            if self.similarity_type == 'cos':
-                pos_emb_seq_pred_expanded = pos_emb_seq_pred.unsqueeze(1).expand_as(neg_emb_seq_trg)
-                pos_sim_seq = F.cosine_similarity(pos_emb_seq_trg, pos_emb_seq_pred, dim=2)
-                pos_sim_seq = pos_sim_seq.unsqueeze(1)
-                neg_sim_seq = F.cosine_similarity(neg_emb_seq_trg, pos_emb_seq_pred_expanded, dim=3)
 
-            elif self.similarity_type == 'softmax':
-                # TODO: ref. https://github.com/gabrielspmoreira/chameleon_recsys/blob/master/nar_module/nar/nar_model.py#L508
-                raise NotImplementedError
+            pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
+            pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=2)
+            trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_trg), dim=1).flatten(end_dim=2)
 
-            else:
-                raise NotImplementedError
+            n_pos_ex = pos_emb_trg.size(0) * pos_emb_trg.size(1)
+            n_neg_ex = neg_emb_trg.size(0) * neg_emb_trg.size(1) * neg_emb_trg.size(2)
+            _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
 
-        # compute logits (predicted probability of item ids)
-        logits = self.output_layer(pos_emb_seq_pred)
-        outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
-        
-        if self.loss_type == 'margin_hinge':
-            # compute margin (hinge) loss.
-            # NOTE: simply taking average here.
-
-            loss = - (pos_sim_seq.sum(-1) + self.margin_loss - neg_sim_seq.sum(-1)).mean()
+            loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
+            loss = loss_sum / num_elem
 
         elif self.loss_type == 'cross_entropy':
-            loss = self.cross_entropy(logits, product_seq_trg)
+            loss = self.neg_log_likelihood(pred_flat, trg_flat)
         else:
             raise NotImplementedError
 
         outputs = (loss,) + outputs
 
-        return outputs  # return (loss), logits, (mems), (hidden states), (attentions)
+        # Step 5. Compute accuracy
+        _, max_idx = torch.max(pred_flat, 1)
+        train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / num_elem
+        
+        outputs = (train_acc,) + outputs
+
+        return outputs  # return (train_acc), (loss), logits, (mems), (hidden states), (attentions)
