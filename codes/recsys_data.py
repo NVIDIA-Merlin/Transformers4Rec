@@ -74,11 +74,11 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_dat
     
     # TODO: make this at outer-loop for making evaluation based on days-data-partition
     train_data_path = [
-        d_path + "session_start_date={}.parquet".format(train_date.strftime(date_format)),
+        d_path + "session_start_date={}-train.parquet".format(train_date.strftime(date_format)),
     ]
 
     eval_data_path = [
-        d_path + "session_start_date={}.parquet".format(eval_date.strftime(date_format)),
+        d_path + "session_start_date={}-test.parquet".format(eval_date.strftime(date_format)),
     ]
 
     if test_date is not None:

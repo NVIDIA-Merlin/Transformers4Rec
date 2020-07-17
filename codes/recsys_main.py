@@ -82,7 +82,7 @@ def main():
     results_dates = {}
 
     for date_idx in range(1, len(data_dates)):
-        train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx], data_dates[date_idx]
+        train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx -1], data_dates[date_idx]
 
         train_loader, eval_loader, test_loader \
             = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date,
