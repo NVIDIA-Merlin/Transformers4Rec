@@ -7,16 +7,16 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --overwrite_output_dir \
     --do_train \
     --do_eval \
-    --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_cooccurrence_19_days_first_10k_sessions.parquet/" \
+    --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_recent_popularity-2019-10/" \
     --start_date "2019-10-01" \
     --end_date "2019-10-19" \
     --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
-    --per_device_train_batch_size 256 \
-    --per_device_eval_batch_size 256 \
+    --per_device_train_batch_size 512 \
+    --per_device_eval_batch_size 512 \
     --model_type "xlnet" \
-    --loss_type "cross_entropy" \
+    --loss_type "margin_hinge" \
     --logging_steps 20 \
     --d_model 64 \
     --n_layer 4 \
