@@ -16,6 +16,9 @@ conda install pytorch torchvision cudatoolkit=10.2 -c pytorch --yes
 pip install gpustat
 pip install -r requirements.txt
 
+# wandb setup for experiment tracking
+wandb login
+
 # get dataset
 bash script/get_dataset.bash
 

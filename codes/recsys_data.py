@@ -175,7 +175,7 @@ def f_feature_extract_posneg(inputs):
     product_seq = inputs["sess_pid_seq"].long()
     category_seq = inputs["sess_ccid_seq"].long()
     neg_prod_seq = inputs["sess_neg_pids"].long()
-    neg_category_seq = inputs["sess_neg_ccid"].long()
+    neg_category_seq = inputs["sess_neg_sess_ccid_seq"].long()
     
     return product_seq, category_seq, neg_prod_seq, neg_category_seq
 
@@ -193,7 +193,7 @@ def f_feature_extract_pos(inputs):
 
 
 # (PyArrow) Columns to read 
-parquet_col_posneg = ['sess_pid_seq', 'sess_ccid_seq', 'sess_neg_pids', 'sess_neg_ccid']
+parquet_col_posneg = ['sess_pid_seq', 'sess_ccid_seq', 'sess_neg_pids', 'sess_neg_sess_ccid_seq']
 parquet_col_pos = ['sess_pid_seq', 'sess_ccid_seq']
 
 
@@ -202,7 +202,7 @@ parquet_schema_posneg = [
     UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_neg_pids', np.int64, (None,), None, True),
-    UnischemaField('sess_neg_ccid', np.int64, (None,), None, True),
+    UnischemaField('sess_neg_sess_ccid_seq', np.int64, (None,), None, True),
 ]
 
 parquet_schema_pos = [
