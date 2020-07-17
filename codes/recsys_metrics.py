@@ -3,16 +3,14 @@ from typing import Dict, NamedTuple
 import numpy as np
 import torch
 
+from chameleon_metrics import (
+    NDCG as C_NDCG, 
+    HitRate as C_HitRate, 
+    StreamingMetric
+)
 from ranking_metrics_torch_karlhigley.precision_recall import precision_at, recall_at
 from ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
-from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
-from sklearn.metrics import ndcg_score, average_precision_score
-# TODO .. # from chameleon_metrics import NDCG, HitRate  
-
 from recsys_utils import Timing
-
-# TODO: use this metrics
-# https://github.com/gabrielspmoreira/chameleon_recsys/blob/master/nar_module/nar/metrics.py
 
 
 class EvalPredictionTensor(NamedTuple):
@@ -25,39 +23,78 @@ class EvalPredictionTensor(NamedTuple):
     label_ids: torch.Tensor
 
 
-def compute_recsys_metrics(p: EvalPredictionTensor, ks=[5, 10, 20, 50]) -> Dict:
-    
-    # NOTE: currently under construction 
+class EvalMetrics(object):
+    def __init__(self, ks=[5, 10, 20, 50], use_cpu=False, use_gpu=True):
+        
+        f_ndcg_c = {f'ndcg_c@{k}': C_NDCG(k) for k in ks}
+        f_recall_c = {f'recall_c@{k}': C_HitRate(k) for k in ks}
 
-    device = p.predictions.device
-    event_size = p.predictions.size(-1)
+        f_precision_kh = MetricWrapper('precision', precision_at, ks)
+        f_recall_kh = MetricWrapper('recall', recall_at, ks)
+        f_avgp_kh = MetricWrapper('avg_precision', avg_precision_at, ks)
 
-    _ks = torch.LongTensor(ks).to(device)
-    predictions = p.predictions.view(-1, event_size)
-    labels = p.label_ids.reshape(-1)
-    labels = torch.nn.functional.one_hot(labels, event_size).to(device)
+        self.f_measures_cpu = []
+        if use_cpu:
+            self.f_measures_cpu.extend([f_ndcg_c, f_recall_c])
 
-    # metrics by Karl Higley's code
-    with Timing('gpu (Karl Higley) eval metrics computation'):
-        rec_k = recall_at(_ks, predictions, labels)
-        prec_k = precision_at(_ks, predictions, labels)
-        avgp_k = avg_precision_at(_ks, predictions, labels)
-        ndcg_k = ndcg_at(_ks, predictions, labels)
+        self.f_measures_gpu = []
+        if use_gpu:
+            self.f_measures_gpu.extend([
+                f_precision_kh,
+                f_recall_kh,
+                f_avgp_kh
+            ])
 
-        rec_k = {"recall_{}".format(k): measure.mean().cpu().item() for k, measure in zip(ks, rec_k)}
-        prec_k = {"precision_{}".format(k): measure.mean().cpu().item() for k, measure in zip(ks, prec_k)}
-        avgp_k = {"avgprec_{}".format(k): measure.mean().cpu().item() for k, measure in zip(ks, avgp_k)}
-        ndcg_k = {"ndcg_{}".format(k): measure.mean().cpu().item() for k, measure in zip(ks, ndcg_k)}
+    def update(self, preds, labels):
 
-    # metrics by Scikit-learn
-    
-    labels_cpu, predictions_cpu = labels.cpu().numpy(), predictions.cpu().numpy()
-    with Timing('cpu (scikit-learn) eval metrics computation'):
-        ndcg_sci_k ={"ndcg_s_{}".format(k): ndcg_score(labels_cpu, predictions_cpu, k=k) for k in ks}
-        ap_score_sci = {"avgp_s": average_precision_score(labels_cpu, predictions_cpu)}
+        # compute metrics on GPU
+        for f_measure in self.f_measures_gpu:
+            f_measure.add(*EvalMetrics.flatten(preds, labels))
 
-    metrics =  {
-        **rec_k, **prec_k, **avgp_k, **ndcg_k, 
-        **ndcg_sci_k, **ap_score_sci
-    }
-    return metrics
+        # compute metrics on CPU
+        preds = preds.cpu().numpy()
+        labels = labels.cpu().numpy()
+        for f_measure_ks in self.f_measures_cpu:
+            for f_measure in f_measure_ks.values():
+                f_measure.add(preds, labels)
+
+    def result(self):
+        metrics = [] 
+        metrics.extend([{name: f_measure.result() for name, f_measure in f_measure_ks.items()} \
+            for f_measure_ks in self.f_measures_cpu])
+        metrics.extend([f_measure.result() for f_measure in self.f_measures_gpu])
+        return {k: v for d in metrics for k, v in d.items()}
+
+    @staticmethod
+    def flatten(preds, labels):
+        # flatten (n_batch x seq_len x n_events) to ((n_batch x seq_len) x n_events)
+        preds = preds.view(-1, preds.size(-1))
+        labels = labels.reshape(-1)
+        
+        return preds, labels
+
+
+class MetricWrapper(object):
+    def __init__(self, name, f_metric, topks):
+        self.name = name
+        self.topks = topks
+        self.f_metric = f_metric
+        self.reset()
+
+    def reset(self):
+        self.results = {k:[] for k in self.topks}
+
+    def add(self, predictions, labels):
+
+        # represent target class id as one-hot vector
+        labels = torch.nn.functional.one_hot(labels, predictions.size(-1))
+
+        metric = self.f_metric(torch.LongTensor(self.topks), predictions, labels)
+        metric = metric.mean(0)
+        for k, measure in zip(self.topks, metric):
+            self.results[k].append(measure.cpu().item())
+
+    def result(self):
+        return {f'{self.name}@{k}': np.mean(self.results[k]) for k in self.topks}
+
+

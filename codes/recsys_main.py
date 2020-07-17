@@ -17,7 +17,7 @@ from transformers import (
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
 from recsys_trainer import RecSysTrainer
-from recsys_metrics import compute_recsys_metrics
+from recsys_metrics import EvalMetrics
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     f_feature_extract_pos,
@@ -68,19 +68,21 @@ def main():
     f_feature_extract = f_feature_extract_posneg \
         if model_args.loss_type == 'margin_hinge' else f_feature_extract_pos
 
+    eval_metrics = EvalMetrics()
+
     trainer = RecSysTrainer(
         model=rec_model,
         args=training_args,
         f_feature_extract=f_feature_extract,
-        compute_metrics=compute_recsys_metrics,
-        fast_test=model_args.fast_test)
+        compute_metrics=eval_metrics,
+        fast_test=model_args.fast_test
+        )
 
     data_dates = get_avail_data_dates(data_args)
     results_dates = {}
 
     for date_idx in range(1, len(data_dates)):
-        train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
-        test_date = None
+        train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx], data_dates[date_idx]
 
         train_loader, eval_loader, test_loader \
             = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date,

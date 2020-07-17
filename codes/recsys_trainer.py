@@ -17,11 +17,10 @@ from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tqdm.auto import tqdm, trange
 
-from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, PredictionOutput, is_wandb_available
+from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
 from transformers.training_args import is_torch_tpu_available
 from transformers import Trainer
 
-from recsys_metrics import EvalPredictionTensor
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +32,9 @@ class TrainOutputAcc(NamedTuple):
     training_loss: float
     training_acc: float
     
+class PredictionOutput(NamedTuple):
+    metrics: Optional[Dict[str, float]]
+
 
 class RecSysTrainer(Trainer):
     """
@@ -402,8 +404,6 @@ class RecSysTrainer(Trainer):
         logger.info("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
         eval_accs: List[float] = []
-        preds: torch.Tensor = None
-        label_ids: torch.Tensor = None
         cnt = 0
         model.eval()
 
@@ -429,42 +429,17 @@ class RecSysTrainer(Trainer):
 
             if not prediction_loss_only:
                 # _preds.size(): N_BATCH x SEQLEN x ITEM_SIZE (=300000)
-                _preds = logits.detach().unsqueeze(0)
-                _preds = softmax(_preds)
+                preds = softmax(logits)
 
-                if self.args.eval_on_cpu:
-                    _preds = _preds.cpu()
-                    labels = labels.cpu()
-                    
-                if preds is None:
-                    preds = _preds
-                else:
-                    preds = torch.cat((preds, _preds), dim=0)
-                if label_ids is None:
-                    label_ids = labels.detach()
-                else:
-                    label_ids = torch.cat((label_ids, labels.detach()), dim=0)
+                if self.compute_metrics is not None:
+                    self.compute_metrics.update(preds, labels)
 
             if self.fast_test and cnt > 4:
                 break
             cnt += 1 
 
-        if self.args.local_rank != -1:
-            # In distributed mode, concatenate all results from all nodes:
-            if preds is not None:
-                preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))
-            if label_ids is not None:
-                label_ids = self.distributed_concat(label_ids, num_total_examples=self.num_examples(dataloader))
-        elif is_torch_tpu_available():
-            # tpu-comment: Get all predictions and labels from all worker shards of eval dataset
-            if preds is not None:
-                preds = xm.mesh_reduce(f"{description}_preds", preds, torch.cat)
-            if label_ids is not None:
-                label_ids = xm.mesh_reduce(f"{description}_label_ids", label_ids, torch.cat)
-
-        if self.compute_metrics is not None and preds is not None and label_ids is not None:
-            preds = preds.transpose(1,2).reshape(-1, preds.size(-3), preds.size(-1))
-            metrics = self.compute_metrics(EvalPredictionTensor(predictions=preds, label_ids=label_ids))
+        if self.compute_metrics is not None:
+            metrics = self.compute_metrics.result()
         else:
             metrics = {}
         if len(eval_losses) > 0:
@@ -477,4 +452,4 @@ class RecSysTrainer(Trainer):
             if not key.startswith(f"{description}_"):
                 metrics[f"{description}_{key}"] = metrics.pop(key)
 
-        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
+        return PredictionOutput(metrics=metrics)
