@@ -6,7 +6,7 @@ apt-get install screen -y
 apt-get install nano -y
 
 # create new virtual env and activate
-conda create -n recsys python=3.7
+conda create -n recsys python=3.7 --yes
 source activate recsys
 
 cd ~/recsys/transformers4recsys/codes
