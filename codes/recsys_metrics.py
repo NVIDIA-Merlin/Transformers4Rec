@@ -13,16 +13,6 @@ from ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
 from recsys_utils import Timing
 
 
-class EvalPredictionTensor(NamedTuple):
-    """
-    Evaluation output (always contains labels), to be used
-    to compute metrics.
-    """
-
-    predictions: torch.Tensor
-    label_ids: torch.Tensor
-
-
 class EvalMetrics(object):
     def __init__(self, ks=[5, 10, 20, 50], use_cpu=False, use_gpu=True):
         
@@ -60,8 +50,10 @@ class EvalMetrics(object):
 
     def result(self):
         metrics = [] 
-        metrics.extend([{name: f_measure.result() for name, f_measure in f_measure_ks.items()} \
-            for f_measure_ks in self.f_measures_cpu])
+        metrics.extend([{name: f_measure.result() \
+            for name, f_measure in f_measure_ks.items()} \
+                for f_measure_ks in self.f_measures_cpu]
+        )
         metrics.extend([f_measure.result() for f_measure in self.f_measures_gpu])
         return {k: v for d in metrics for k, v in d.items()}
 
