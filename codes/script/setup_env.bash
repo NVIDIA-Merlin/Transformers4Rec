@@ -13,11 +13,11 @@ cd ~/recsys/transformers4recsys/codes
 
 # install python packages
 conda install pytorch torchvision cudatoolkit=10.2 -c pytorch --yes
-pip install gpustat --yes
+pip install gpustat
 pip install -r requirements.txt
 
 # get dataset
-bash bash script/get_dataset.bash
+bash script/get_dataset.bash
 
 # run experiment
 bash script/run_transformer.bash
