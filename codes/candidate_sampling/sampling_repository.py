@@ -38,7 +38,7 @@ class ItemsMetadataRepository(ABC):
 
         # Keeps a registry of the first and last interactions of an item
         if self.item_exists(item_id):
-            item_row = self.get_item(item_id)
+            item_row = self.get_item(item_id, keep_ts_stats=True)
             first_ts = item_row[self.INTERNAL_FIRST_TS_COL]
             last_ts = item_row[self.INTERNAL_LAST_TS_COL]
             if event_ts > last_ts:
@@ -75,7 +75,13 @@ class ItemsMetadataRepository(ABC):
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    def get_item(self, item_id) -> Mapping[str, Any]:
+    def get_item(self, item_id: ItemId, keep_ts_stats: bool = False) -> Mapping[str, Any]:
+        raise NotImplementedError("Not implemented")
+
+    @abstractmethod
+    def get_items(
+        self, item_ids: Sequence[ItemId], keep_ts_stats: bool = False
+    ) -> Mapping[str, Sequence[Any]]:
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
@@ -97,7 +103,7 @@ class PandasItemsMetadataRepository(ItemsMetadataRepository):
 
     items_df: pd.DataFrame
     # Dummy string col to avoid Pandas converting all features to float when using .loc[] for querying, inserting or updating
-    DUMMY_STR_COL = "dummy"
+    INTERNAL_DUMMY_STR_COL = "dummy"
 
     def __init__(self, input_data_config: InputDataConfig) -> None:
         super().__init__(input_data_config)
@@ -109,22 +115,35 @@ class PandasItemsMetadataRepository(ItemsMetadataRepository):
         columns[self.ITEM_ID_COL] = self.dconf.get_feature_numpy_dtype(self.item_id_col)
         columns[self.INTERNAL_FIRST_TS_COL] = self.dconf.get_feature_numpy_dtype(self.event_ts_col)
         columns[self.INTERNAL_LAST_TS_COL] = columns[self.INTERNAL_FIRST_TS_COL]
-        columns[self.DUMMY_STR_COL] = np.str
+        columns[self.INTERNAL_DUMMY_STR_COL] = np.str
 
         self.items_df = df_empty(columns, self.ITEM_ID_COL)
 
     def update_item(self, item_id: ItemId, item_dict: Mapping[str, Any]) -> None:
-        item_dict = {**item_dict, self.DUMMY_STR_COL: ""}
+        item_dict = {**item_dict, self.INTERNAL_DUMMY_STR_COL: ""}
         # Including or updating the item metadata
         self.items_df.loc[item_id] = pd.Series(item_dict)
 
     def item_exists(self, item_id: ItemId) -> bool:
         return item_id in self.items_df.index
 
-    def get_item(self, item_id: ItemId) -> Mapping[str, Any]:
+    def get_item(self, item_id: ItemId, keep_ts_stats: bool = False) -> Mapping[str, Any]:
         item = self.items_df.loc[item_id].to_dict()
-        del item[self.DUMMY_STR_COL]
+        del item[self.INTERNAL_DUMMY_STR_COL]
+        if not keep_ts_stats:
+            del item[self.INTERNAL_FIRST_TS_COL]
+            del item[self.INTERNAL_LAST_TS_COL]
         return item
+
+    def get_items(
+        self, item_ids: Sequence[ItemId], keep_ts_stats: bool = False
+    ) -> Mapping[str, Sequence[Any]]:
+        items = self.items_df.loc[item_ids].to_dict(orient="list")
+        del items[self.INTERNAL_DUMMY_STR_COL]
+        if not keep_ts_stats:
+            del items[self.INTERNAL_FIRST_TS_COL]
+            del items[self.INTERNAL_LAST_TS_COL]
+        return items
 
     def get_item_ids(self, only_interacted_since_ts: Optional[int] = None) -> np.array:
         df = self._get_recently_interacted_items_df(only_interacted_since_ts)

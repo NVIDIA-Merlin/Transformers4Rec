@@ -5,101 +5,36 @@ import numpy as np
 import pytest
 from pytest_mock import mocker
 
-from ...candidate_sampling.candidate_sampling import (
-    ItemCooccurrenceCandidateSamplingManager,
-    ItemCooccurrenceSamplingConfig,
-    RecencyCandidateSamplingConfig,
-    RecencyCandidateSamplingManager,
-    RecentPopularityCandidateSamplingManager,
-    RecentPopularitySamplingConfig,
-    SamplingStrategy,
-    UniformCandidateSamplingConfig,
-    UniformCandidateSamplingManager,
-)
-from ...candidate_sampling.sampling_repository import PersistanceType
+from ...candidate_sampling.candidate_sampling import SamplingManagerFactory, SamplingStrategy
 from ...config.features_config import InstanceInfoLevel
 from ..tests_utils import get_input_data_config, gini_index, power_law_distribution
 
 
-class SamplingManagerFactory:
-    @classmethod
-    def build(
-        self,
-        sampling_strategy: SamplingStrategy,
-        recency_keep_interactions_last_n_days: float = 1.0,
-        recent_temporal_decay_exp_factor: float = 0.002,
-        instance_info_level: InstanceInfoLevel = InstanceInfoLevel.SESSION,
-        remove_repeated_sampled_items: bool = True,
-    ):
-        sampling_manager_class = None
-        sampling_config = None
-
-        if sampling_strategy == SamplingStrategy.UNIFORM:
-            sampling_manager_class = UniformCandidateSamplingManager
-            sampling_config = UniformCandidateSamplingConfig(
-                sampling_strategy=sampling_strategy,
-                persistance_type=PersistanceType.PANDAS,
-                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
-                remove_repeated_sampled_items=remove_repeated_sampled_items,
-            )
-
-        elif sampling_strategy == SamplingStrategy.RECENCY:
-            sampling_manager_class = RecencyCandidateSamplingManager
-            sampling_config = RecencyCandidateSamplingConfig(
-                sampling_strategy=sampling_strategy,
-                persistance_type=PersistanceType.PANDAS,
-                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
-                recent_temporal_decay_exp_factor=recent_temporal_decay_exp_factor,
-                remove_repeated_sampled_items=remove_repeated_sampled_items,
-            )
-
-        elif sampling_strategy == SamplingStrategy.RECENT_POPULARITY:
-            sampling_manager_class = RecentPopularityCandidateSamplingManager
-            sampling_config = RecentPopularitySamplingConfig(
-                sampling_strategy=sampling_strategy,
-                persistance_type=PersistanceType.PANDAS,
-                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
-                remove_repeated_sampled_items=remove_repeated_sampled_items,
-            )
-
-        elif sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
-            sampling_manager_class = ItemCooccurrenceCandidateSamplingManager
-            sampling_config = ItemCooccurrenceSamplingConfig(
-                sampling_strategy=sampling_strategy,
-                persistance_type=PersistanceType.PANDAS,
-                recency_keep_interactions_last_n_days=recency_keep_interactions_last_n_days,
-                remove_repeated_sampled_items=remove_repeated_sampled_items,
-            )
-
-        input_data_config = get_input_data_config(instance_info_level)
-
-        sampling_manager = sampling_manager_class(input_data_config, sampling_config)
-
-        return sampling_manager
-
-
 class TestCandidateSamplingManager:
+    def setup_method(self):
+        self.input_data_config = get_input_data_config(InstanceInfoLevel.SESSION)
+
     def test_sampling_manager_uniform_constructor(self):
-        SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
+        SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.UNIFORM)
 
     def test_sampling_manager_recency_constructor(self):
-        SamplingManagerFactory.build(SamplingStrategy.RECENCY)
+        SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.RECENCY)
 
     def test_sampling_manager_popularity_constructor(self):
-        SamplingManagerFactory.build(SamplingStrategy.RECENT_POPULARITY)
+        SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.RECENT_POPULARITY)
 
     def test_sampling_manager_cooccurrence_constructor(self):
-        SamplingManagerFactory.build(SamplingStrategy.ITEM_COOCURRENCE)
+        SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.ITEM_COOCURRENCE)
 
     def test_sampling_manager_cooccurrence_without_session_constructor(self):
+        my_input_data_config = get_input_data_config(InstanceInfoLevel.INTERACTION)
         with pytest.raises(ValueError):
             SamplingManagerFactory.build(
-                SamplingStrategy.ITEM_COOCURRENCE,
-                instance_info_level=InstanceInfoLevel.INTERACTION,
+                my_input_data_config, SamplingStrategy.ITEM_COOCURRENCE,
             )
 
     def test_append_item_interaction(self):
-        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.UNIFORM)
 
         item_interaction = {
             "sess_etime_seq": 1594130629,
@@ -110,7 +45,7 @@ class TestCandidateSamplingManager:
         manager.append_item_interaction(item_interaction)
 
     def test_session_interactions(self):
-        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.UNIFORM)
 
         session = {
             "sess_etime_seq": [1594133000, 1594134000, 0],
@@ -122,7 +57,7 @@ class TestCandidateSamplingManager:
         manager.append_session_interactions(session)
 
     def test_get_candidate_samples_uniform(self):
-        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.UNIFORM)
 
         self._append_interactions_popularity_biased(
             manager, num_sessions=100, session_len=10, max_item_id=100
@@ -142,25 +77,35 @@ class TestCandidateSamplingManager:
         assert gini < 0.20
 
     def test_get_candidate_samples_uniform_items_with_side_information(self):
-        manager = SamplingManagerFactory.build(SamplingStrategy.UNIFORM)
+        manager = SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.UNIFORM)
 
         self._append_interactions_popularity_biased(
             manager, num_sessions=10, session_len=10, max_item_id=100
         )
 
-        sampled_items = manager.get_candidate_samples(10, return_item_features=True)
-        assert len(sampled_items) == 10
-        assert type(sampled_items) is dict
+        sample_item_ids, sampled_items_features = manager.get_candidate_samples(
+            10, return_item_features=True
+        )
 
-        expected_features = ["sess_csid_seq", "sess_price_seq"]
-        for item_id, item_features in sampled_items.items():
-            assert len(set(item_features.keys()).intersection(set(expected_features))) == len(
-                expected_features
-            )
+        assert type(sample_item_ids) is list
+        assert len(sample_item_ids) == 10
+
+        assert type(sampled_items_features) is dict
+        assert len(sampled_items_features) == 2
+
+        len(sampled_items_features["sess_csid_seq"]) == 10
+        len(sampled_items_features["sess_price_seq"]) == 10
+
+        # Check if the order categories correspond to the order of ids
+        assert np.all(
+            np.array(sampled_items_features["sess_csid_seq"]) == (np.array(sample_item_ids) * 10)
+        )
 
     def test_get_candidate_samples_popularity(self):
         manager = SamplingManagerFactory.build(
-            SamplingStrategy.RECENT_POPULARITY, remove_repeated_sampled_items=False
+            self.input_data_config,
+            SamplingStrategy.RECENT_POPULARITY,
+            remove_repeated_sampled_items=False,
         )
 
         self._append_interactions_popularity_biased(
@@ -184,6 +129,7 @@ class TestCandidateSamplingManager:
 
     def test_get_candidate_samples_recency(self):
         manager = SamplingManagerFactory.build(
+            self.input_data_config,
             SamplingStrategy.RECENCY,
             remove_repeated_sampled_items=False,
             recency_keep_interactions_last_n_days=2.0,
@@ -210,6 +156,7 @@ class TestCandidateSamplingManager:
 
     def test_get_candidate_samples_cooccurrence(self):
         manager = SamplingManagerFactory.build(
+            self.input_data_config,
             SamplingStrategy.ITEM_COOCURRENCE,
             remove_repeated_sampled_items=False,
             recency_keep_interactions_last_n_days=1.0,

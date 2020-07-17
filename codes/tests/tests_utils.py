@@ -29,7 +29,9 @@ def get_input_data_config(instance_info_level: InstanceInfoLevel = InstanceInfoL
         item_metadata=["sess_csid_seq", "sess_price_seq"],
         user_metadata=["user_seq_length_bef_sess"],
         event_metadata=[],
-        sequential_features=["sess_pid_seq", "sess_csid_seq", "sess_price_seq", "sess_etime_seq"],
+        sequential_features=["sess_pid_seq", "sess_csid_seq", "sess_price_seq", "sess_etime_seq"]
+        if instance_info_level.SESSION
+        else [],
     )
 
     feature_types = FeatureTypes(
