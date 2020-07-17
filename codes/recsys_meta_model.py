@@ -148,7 +148,7 @@ class RecSysMetaModel(PreTrainedModel):
         trg_flat = product_seq_trg.flatten()
         num_elem = (product_seq_trg.flatten() != self.pad_token).sum()
 
-        # Step4. Compute loss
+        # Step4. Compute loss and accuracy
 
         if self.loss_type == 'margin_hinge':
 
@@ -163,16 +163,27 @@ class RecSysMetaModel(PreTrainedModel):
             loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
             loss = loss_sum / num_elem
 
+            # accuracy
+            pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
+            pos_sim = F.cosine_similarity(pos_emb_trg, pos_emb_pred, dim=2)		
+            pos_sim = pos_sim.unsqueeze(1)		
+            neg_sim = F.cosine_similarity(neg_emb_trg, pos_emb_pred_expanded, dim=3)		
+            combine_sim = torch.cat((pos_sim, neg_sim), dim=1)
+            _, max_idx = torch.max(combine_sim, 1)
+            train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
+
         elif self.loss_type == 'cross_entropy':
             loss = self.neg_log_likelihood(pred_flat, trg_flat)
+    
+            # accuracy
+            _, max_idx = torch.max(pred_flat, 1)
+            train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / num_elem
+
         else:
             raise NotImplementedError
 
         outputs = (loss,) + outputs
 
-        # Step 5. Compute accuracy
-        _, max_idx = torch.max(pred_flat, 1)
-        train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / num_elem
         
         outputs = (train_acc,) + outputs
 
