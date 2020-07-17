@@ -17,10 +17,7 @@ class TrainingArguments(HfTrainingArguments):
         metadata={"help": "Run validation set every this epoch. "
             "-1 means no validation is used (default: -1)"}
     )
-    eval_on_cpu: bool = field(default=False, 
-        metadata={"help": "Run evaluation on CPU (prevent GPU-OOM)"}
-    )
-
+    
 
 @dataclass
 class DataArguments:

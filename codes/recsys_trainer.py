@@ -280,7 +280,7 @@ class RecSysTrainer(Trainer):
                 if self.args.tpu_metrics_debug:
                     # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
                     xm.master_print(met.metrics_report())
-                if self.args.validate_every > 0 and self.args.validate_every % self.epoch == 0:
+                if self.args.validate_every > 0 and self.args.validate_every % (epoch + 1) == 0:
                     self._run_validation()
         if self.tb_writer:
             self.tb_writer.close()
