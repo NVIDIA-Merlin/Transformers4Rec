@@ -143,41 +143,58 @@ class RecSysMetaModel(PreTrainedModel):
         # compute logits (predicted probability of item ids)
         logits = self.output_layer(pos_emb_pred)
         outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
-        
-        pred_flat = self.log_softmax(logits).flatten(end_dim=1)
+        pred_flat = (self.log_softmax(logits)).flatten(end_dim=1)
         trg_flat = product_seq_trg.flatten()
-        num_elem = (product_seq_trg.flatten() != self.pad_token).sum()
+
+        non_pad_mask = (trg_flat != self.pad_token)
+        pred_flat_nonpad = torch.masked_select(pred_flat, non_pad_mask.unsqueeze(1).expand_as(pred_flat))
+        pred_flat_nonpad = pred_flat_nonpad.view(-1, pred_flat.size(1))
+        trg_flat_nonpad = torch.masked_select(trg_flat, non_pad_mask)
+        num_elem = trg_flat_nonpad.size(0)
 
         # Step4. Compute loss and accuracy
 
         if self.loss_type == 'margin_hinge':
+            pos_emb_pred = pos_emb_pred.flatten(end_dim=1)
+            pos_emb_pred_fl = torch.masked_select(pos_emb_pred, non_pad_mask.unsqueeze(1).expand_as(pos_emb_pred))
+            pos_emb_pred = pos_emb_pred_fl.view(-1, pos_emb_pred.size(1))
+
+            pos_emb_trg = pos_emb_trg.flatten(end_dim=1)
+            pos_emb_trg_fl = torch.masked_select(pos_emb_trg, non_pad_mask.unsqueeze(1).expand_as(pos_emb_trg))
+            pos_emb_trg = pos_emb_trg_fl.view(-1, pos_emb_trg.size(1))
+
+            # neg_emb_trg: (n_batch x n_negex x seqlen x emb_dim) -> (n_batch x seqlen x n_negex x emb_dim)
+            neg_emb_trg = neg_emb_trg.permute(0, 2, 1, 3)
+            neg_emb_trg_fl = neg_emb_trg.reshape(-1, neg_emb_trg.size(2), neg_emb_trg.size(3))
+            neg_emb_trg_fl = torch.masked_select(neg_emb_trg_fl, non_pad_mask.unsqueeze(1).unsqueeze(2).expand_as(neg_emb_trg_fl))
+            neg_emb_trg = neg_emb_trg_fl.view(-1, neg_emb_trg.size(2), neg_emb_trg.size(3))
 
             pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
-            pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=2)
-            trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_trg), dim=1).flatten(end_dim=2)
+            pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=1)
+            trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_trg), dim=1).flatten(end_dim=1)
 
-            n_pos_ex = pos_emb_trg.size(0) * pos_emb_trg.size(1)
-            n_neg_ex = neg_emb_trg.size(0) * neg_emb_trg.size(1) * neg_emb_trg.size(2)
+            n_pos_ex = pos_emb_trg.size(0)
+            n_neg_ex = neg_emb_trg.size(0) * neg_emb_trg.size(1)
             _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
 
             loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
             loss = loss_sum / num_elem
 
-            # accuracy
+            # # accuracy
             pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
-            pos_sim = F.cosine_similarity(pos_emb_trg, pos_emb_pred, dim=2)		
+            pos_sim = F.cosine_similarity(pos_emb_trg, pos_emb_pred, dim=1)		
             pos_sim = pos_sim.unsqueeze(1)		
-            neg_sim = F.cosine_similarity(neg_emb_trg, pos_emb_pred_expanded, dim=3)		
+            neg_sim = F.cosine_similarity(neg_emb_trg, pos_emb_pred_expanded, dim=2)		
             combine_sim = torch.cat((pos_sim, neg_sim), dim=1)
-            _, max_idx = torch.max(combine_sim, 1)
+            _, max_idx = torch.max(combine_sim, dim=1)
             train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
 
         elif self.loss_type == 'cross_entropy':
-            loss = self.neg_log_likelihood(pred_flat, trg_flat)
+            loss = self.neg_log_likelihood(pred_flat_nonpad, trg_flat_nonpad)
     
             # accuracy
-            _, max_idx = torch.max(pred_flat, 1)
-            train_acc = (max_idx == trg_flat).sum(dtype=torch.float32) / num_elem
+            _, max_idx = torch.max(pred_flat_nonpad, dim=1)
+            train_acc = (max_idx == trg_flat_nonpad).sum(dtype=torch.float32) / num_elem
 
         else:
             raise NotImplementedError
