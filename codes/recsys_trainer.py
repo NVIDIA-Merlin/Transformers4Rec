@@ -423,7 +423,7 @@ class RecSysTrainer(Trainer):
                 
                 outputs = model(*_inputs)
 
-                step_eval_acc, step_eval_loss, logits = outputs
+                step_eval_acc, step_eval_loss, logits = outputs[0], outputs[1], outputs[2]
                 eval_losses += [step_eval_loss.mean().item()]
                 eval_accs += [step_eval_acc.mean().item()]
 

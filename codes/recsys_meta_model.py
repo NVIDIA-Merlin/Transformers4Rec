@@ -128,21 +128,22 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.is_rnn:
             # compute output through RNNs
-            model_outputs = self.model(
+            pos_emb_pred, _ = self.model(
                 input=pos_emb_inp
             )
+            model_outputs = (None, )
             
         else:
             # compute output through transformer
             model_outputs = self.model(
                 inputs_embeds=pos_emb_inp,
             )
-            
-        pos_emb_pred = model_outputs[0]
+            pos_emb_pred = model_outputs[0]
+            model_outputs = model_outputs[1:]
 
         # compute logits (predicted probability of item ids)
         logits = self.output_layer(pos_emb_pred)
-        outputs = (logits,) + model_outputs[1:]  # Keep mems, hidden states, attentions if there are in it
+        outputs = (logits,) + model_outputs  # Keep mems, hidden states, attentions if there are in it
         pred_flat = (self.log_softmax(logits)).flatten(end_dim=1)
         trg_flat = product_seq_trg.flatten()
 
