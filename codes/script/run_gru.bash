@@ -17,13 +17,14 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --per_device_eval_batch_size 128 \
     --model_type "gru" \
     --loss_type "margin_hinge" \
+    --margin_loss 0.0 \
     --logging_steps 20 \
     --d_model 128 \
     --n_layer 4 \
     --dropout 0.2 \
     --learning_rate 1e-04 \
     --validate_every 20 \
-    --num_train_epochs 1000
+    --num_train_epochs 400
 
 # model_type: xlnet, gpt2, longformer
 # loss_type: cross_entropy, margin_hinge
