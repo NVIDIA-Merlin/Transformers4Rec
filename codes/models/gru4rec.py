@@ -43,7 +43,7 @@ class GRU4REC(nn.Module):
         elif final_act.startswith('leaky-'):
             self.final_activation = nn.LeakyReLU(negative_slope=float(final_act.split('-')[1]))
 
-    def forward(self, input, hidden):
+    def forward(self, input=None, hidden=None, inputs_embeds=None):
         '''
         Args:
             input (B,): a batch of item indices from a session-parallel mini-batch.
@@ -52,8 +52,9 @@ class GRU4REC(nn.Module):
             logit (B,C): Variable that stores the logits for the next items in the session-parallel mini-batch
             hidden: GRU hidden state
         '''
-
-        if self.embedding_dim == -1:
+        if inputs_embeds is not None:
+            embedded = inputs_embeds
+        elif self.embedding_dim == -1:
             embedded = self.onehot_encode(input)
             if self.training and self.dropout_input > 0: embedded = self.embedding_dropout(embedded)
             embedded = embedded.unsqueeze(0)

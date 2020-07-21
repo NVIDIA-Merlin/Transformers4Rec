@@ -66,7 +66,7 @@ def main():
     set_seed(training_args.seed)
 
     # embedding size
-    seq_model, config = get_recsys_model(model_args, data_args)
+    seq_model, config = get_recsys_model(model_args, data_args, training_args)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args)
 
     f_feature_extract = f_feature_extract_posneg \

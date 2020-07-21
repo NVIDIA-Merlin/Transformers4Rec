@@ -12,10 +12,12 @@ from transformers.modeling_longformer import LongformerModel
 from transformers.configuration_longformer import LongformerConfig
 from transformers.configuration_utils import PretrainedConfig
 
+from models.gru4rec import GRU4REC
+
 logger = logging.getLogger(__name__)
 
 
-def get_recsys_model(model_args, data_args):
+def get_recsys_model(model_args, data_args, training_args):
 
     if model_args.model_type == 'xlnet':
         model_cls = XLNetModel
@@ -88,10 +90,24 @@ def get_recsys_model(model_args, data_args):
         )
         config = PretrainedConfig()
 
+    elif model_args.model_type == 'gru4rec':
+        model_cls = GRU4REC(
+            input_size=model_args.d_model, 
+            hidden_size=model_args.d_model, 
+            output_size=model_args.d_model, 
+            num_layers=model_args.n_layer, 
+            final_act='tanh',
+            dropout_hidden=model_args.dropout, 
+            dropout_input=model_args.dropout, 
+            batch_size=training_args.per_device_train_batch_size, 
+            embedding_dim=-1, 
+            use_cuda=False
+        )
+
     else:
         raise NotImplementedError
 
-    if model_args.model_type in ['gru', 'lstm']:
+    if model_args.model_type in ['gru', 'lstm', 'gru4rec']:
         model = model_cls
 
     elif model_args.model_name_or_path:
