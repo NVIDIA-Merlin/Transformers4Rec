@@ -70,7 +70,7 @@ def main():
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args)
 
     f_feature_extract = f_feature_extract_posneg \
-        if model_args.loss_type in ['margin_hinge', 'cross_entropy_neg'] else f_feature_extract_pos
+        if model_args.loss_type in ['margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d'] else f_feature_extract_pos
 
     eval_metrics = EvalMetrics()
 
@@ -90,7 +90,7 @@ def main():
 
         train_loader, eval_loader, test_loader \
             = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date,
-                                 neg_sampling=(model_args.loss_type in ['margin_hinge', 'cross_entropy_neg']))
+                                 neg_sampling=(model_args.loss_type in ['margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']))
 
         trainer.set_rec_train_dataloader(train_loader)
         trainer.set_rec_eval_dataloader(eval_loader)

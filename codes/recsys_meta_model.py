@@ -51,6 +51,8 @@ class RecSysMetaModel(PreTrainedModel):
             self.loss_fn = nn.NLLLoss(ignore_index=self.pad_token)
         elif self.loss_type == 'cross_entropy_neg':
             self.loss_fn = nn.NLLLoss()
+        elif self.loss_type == 'cross_entropy_neg_1d':
+            self.loss_fn = nll_1d
         elif self.loss_type == 'margin_hinge':
             # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
             self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
@@ -91,7 +93,7 @@ class RecSysMetaModel(PreTrainedModel):
         pos_prd_emb = self.embedding_product(product_seq)
         pos_cat_emb = self.embedding_category(category_seq)
         
-        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
+        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
 
             # unflatten negative sample
             max_seq_len = product_seq.size(1)
@@ -107,19 +109,19 @@ class RecSysMetaModel(PreTrainedModel):
         if self.merge == 'elem_add':
             pos_emb = pos_prd_emb + pos_cat_emb
             
-            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
+            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
                 neg_emb = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'concat_mlp':
             pos_emb = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
 
-            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
+            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
                 neg_emb = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
 
         else:
             raise NotImplementedError
 
-        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
+        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
             # set input and target from emb
             pos_emb_inp = pos_emb[:, :-1]
             pos_emb_trg = pos_emb[:, 1:]
@@ -161,7 +163,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Step4. Compute loss and accuracy
 
-        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
+        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
             pos_emb_pred = pos_emb_pred.flatten(end_dim=1)
             pos_emb_pred_fl = torch.masked_select(pos_emb_pred, non_pad_mask.unsqueeze(1).expand_as(pos_emb_pred))
             pos_emb_pred = pos_emb_pred_fl.view(-1, pos_emb_pred.size(1))
@@ -183,13 +185,17 @@ class RecSysMetaModel(PreTrainedModel):
             n_pos_ex = pos_emb_trg.size(0)
             n_neg_ex = neg_emb_trg.size(0) * neg_emb_trg.size(1)
 
-            if self.loss_type == 'cross_entropy_neg':
+            if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
                 pos_cos_score = torch.cosine_similarity(pos_emb_pred, pos_emb_trg)
                 neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_trg, dim=2)
                 cos_sim_concat = torch.cat((pos_cos_score.unsqueeze(1), neg_cos_score), dim=1)
                 items_prob = F.log_softmax(cos_sim_concat, dim=1)
-                _label = torch.LongTensor([0] * items_prob.size(0)).to(self.device)
-                loss = self.loss_fn(items_prob, _label)
+
+                if self.loss_type == 'cross_entropy_neg_1d':
+                    loss = self.loss_fn(items_prob)
+                elif self.loss_type == 'cross_entropy_neg':
+                    _label = torch.LongTensor([0] * items_prob.size(0)).to(self.device)
+                    loss = self.loss_fn(items_prob, _label)
         
                 # accuracy
                 _, max_idx = torch.max(cos_sim_concat, dim=1)
@@ -231,3 +237,12 @@ class RecSysMetaModel(PreTrainedModel):
         outputs = (train_acc,) + outputs
 
         return outputs  # return (train_acc), (loss), logits, (mems), (hidden states), (attentions)
+
+
+def nll_1d(items_prob):
+    # https://github.com/gabrielspmoreira/chameleon_recsys/blob/da7f73a2b31d6867d444eded084044304b437413/nar_module/nar/nar_model.py#L639
+    items_prob = torch.exp(items_prob)
+    positive_prob = items_prob[:, 1]
+    xe_loss = torch.log(positive_prob)
+    cosine_sim_loss = - torch.mean(xe_loss)
+    return cosine_sim_loss
