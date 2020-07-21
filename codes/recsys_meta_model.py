@@ -242,7 +242,7 @@ class RecSysMetaModel(PreTrainedModel):
 def nll_1d(items_prob):
     # https://github.com/gabrielspmoreira/chameleon_recsys/blob/da7f73a2b31d6867d444eded084044304b437413/nar_module/nar/nar_model.py#L639
     items_prob = torch.exp(items_prob)
-    positive_prob = items_prob[:, 1]
+    positive_prob = items_prob[:, 0]
     xe_loss = torch.log(positive_prob)
     cosine_sim_loss = - torch.mean(xe_loss)
     return cosine_sim_loss
