@@ -45,11 +45,18 @@ class RecSysMetaModel(PreTrainedModel):
         self.margin_loss = model_args.margin_loss
         self.output_layer = nn.Linear(model_args.d_model, data_args.num_product)
         self.loss_type = model_args.loss_type
-        self.neg_log_likelihood = nn.NLLLoss(ignore_index=self.pad_token)
         self.log_softmax = nn.LogSoftmax(dim=-1)
 
         # NOTE: https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
-        self.cosine_emb_loss = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
+        
+        if self.loss_type == 'cross_entropy':
+            self.loss_fn = nn.NLLLoss(ignore_index=self.pad_token)
+        elif self.loss_type == 'cross_entropy_neg':
+            self.loss_fn = nn.NLLLoss()
+        elif self.loss_type == 'margin_hinge':
+            self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
+        else:
+            raise NotImplementedError
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -181,9 +188,9 @@ class RecSysMetaModel(PreTrainedModel):
                 pos_cos_score = torch.cosine_similarity(pos_emb_pred, pos_emb_trg)
                 neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_trg, dim=2)
                 cos_sim_concat = torch.cat((pos_cos_score.unsqueeze(1), neg_cos_score), dim=1)
-                items_prob = F.softmax(cos_sim_concat, dim=1)
+                items_prob = F.log_softmax(cos_sim_concat, dim=1)
                 _label = torch.LongTensor([0] * items_prob.size(0)).to(self.device)
-                loss = self.neg_log_likelihood(items_prob, _label)
+                loss = self.loss_fn(items_prob, _label)
         
                 # accuracy
                 _, max_idx = torch.max(cos_sim_concat, dim=1)
@@ -193,7 +200,7 @@ class RecSysMetaModel(PreTrainedModel):
 
                 _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
 
-                loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
+                loss_sum = self.loss_fn(pred_emb_flat, trg_emb_flat, _label)
                 loss = loss_sum / num_elem
 
             # # accuracy
@@ -206,7 +213,7 @@ class RecSysMetaModel(PreTrainedModel):
             train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
 
         elif self.loss_type == 'cross_entropy':
-            loss = self.neg_log_likelihood(pred_flat_nonpad, trg_flat_nonpad)
+            loss = self.loss_fn(pred_flat_nonpad, trg_flat_nonpad)
     
             # accuracy
             _, max_idx = torch.max(pred_flat_nonpad, dim=1)
