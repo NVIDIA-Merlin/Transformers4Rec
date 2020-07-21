@@ -85,7 +85,7 @@ class RecSysMetaModel(PreTrainedModel):
         pos_prd_emb = self.embedding_product(product_seq)
         pos_cat_emb = self.embedding_category(category_seq)
         
-        if self.loss_type == 'margin_hinge':
+        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
 
             # unflatten negative sample
             max_seq_len = product_seq.size(1)
@@ -101,19 +101,19 @@ class RecSysMetaModel(PreTrainedModel):
         if self.merge == 'elem_add':
             pos_emb = pos_prd_emb + pos_cat_emb
             
-            if self.loss_type == 'margin_hinge':
+            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
                 neg_emb = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'concat_mlp':
             pos_emb = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
 
-            if self.loss_type == 'margin_hinge':
+            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
                 neg_emb = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
 
         else:
             raise NotImplementedError
 
-        if self.loss_type == 'margin_hinge':
+        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
             # set input and target from emb
             pos_emb_inp = pos_emb[:, :-1]
             pos_emb_trg = pos_emb[:, 1:]
@@ -155,7 +155,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Step4. Compute loss and accuracy
 
-        if self.loss_type == 'margin_hinge':
+        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg']:
             pos_emb_pred = pos_emb_pred.flatten(end_dim=1)
             pos_emb_pred_fl = torch.masked_select(pos_emb_pred, non_pad_mask.unsqueeze(1).expand_as(pos_emb_pred))
             pos_emb_pred = pos_emb_pred_fl.view(-1, pos_emb_pred.size(1))
@@ -176,10 +176,25 @@ class RecSysMetaModel(PreTrainedModel):
 
             n_pos_ex = pos_emb_trg.size(0)
             n_neg_ex = neg_emb_trg.size(0) * neg_emb_trg.size(1)
-            _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
 
-            loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
-            loss = loss_sum / num_elem
+            if self.loss_type == 'cross_entropy_neg':
+                pos_cos_score = torch.cosine_similarity(pos_emb_pred, pos_emb_trg)
+                neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_trg, dim=2)
+                cos_sim_concat = torch.cat((pos_cos_score.unsqueeze(1), neg_cos_score), dim=1)
+                items_prob = F.softmax(cos_sim_concat, dim=1)
+                _label = torch.LongTensor([0] * items_prob.size(0)).to(self.device)
+                loss = self.neg_log_likelihood(items_prob, _label)
+        
+                # accuracy
+                _, max_idx = torch.max(cos_sim_concat, dim=1)
+                train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
+
+            else:
+
+                _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
+
+                loss_sum = self.cosine_emb_loss(pred_emb_flat, trg_emb_flat, _label)
+                loss = loss_sum / num_elem
 
             # # accuracy
             pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)

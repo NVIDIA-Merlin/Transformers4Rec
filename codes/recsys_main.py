@@ -3,6 +3,7 @@ How torun :
     CUDA_VISIBLE_DEVICES=0 python main_runner.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset/sessions_with_neg_samples_example/ --per_device_train_batch_size 128 --model_type xlnet
 """
 import os
+import sys
 import math
 import logging
 import numpy as np
@@ -28,6 +29,9 @@ from recsys_data import (
 
 
 logger = logging.getLogger(__name__)
+
+# this code use Version 3
+assert sys.version_info[0] > 2
 
 def main():
 
@@ -66,7 +70,7 @@ def main():
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args)
 
     f_feature_extract = f_feature_extract_posneg \
-        if model_args.loss_type == 'margin_hinge' else f_feature_extract_pos
+        if model_args.loss_type in ['margin_hinge', 'cross_entropy_neg'] else f_feature_extract_pos
 
     eval_metrics = EvalMetrics()
 
@@ -86,7 +90,7 @@ def main():
 
         train_loader, eval_loader, test_loader \
             = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date,
-                                 neg_sampling=(model_args.loss_type=='margin_hinge'))
+                                 neg_sampling=(model_args.loss_type in ['margin_hinge', 'cross_entropy_neg']))
 
         trainer.set_rec_train_dataloader(train_loader)
         trainer.set_rec_eval_dataloader(eval_loader)

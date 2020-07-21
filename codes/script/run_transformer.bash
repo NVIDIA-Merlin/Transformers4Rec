@@ -13,7 +13,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
-    --per_device_train_batch_size 512 \
+    --per_device_train_batch_size 256 \
     --per_device_eval_batch_size 128 \
     --model_type "xlnet" \
     --loss_type "margin_hinge" \
@@ -28,7 +28,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --num_train_epochs 400
 
 # model_type: xlnet, gpt2, longformer
-# loss_type: cross_entropy, margin_hinge
+# loss_type: cross_entropy, margin_hinge, cross_entropy_neg
 # fast-test: quickly finish loop over examples to check code after the loop
 # d_model: size of hidden states (or internal states) for RNNs and Transformers
 # n_layer: number of layers for RNNs and Transformers
