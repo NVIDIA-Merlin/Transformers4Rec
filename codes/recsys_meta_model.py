@@ -46,14 +46,13 @@ class RecSysMetaModel(PreTrainedModel):
         self.output_layer = nn.Linear(model_args.d_model, data_args.num_product)
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim=-1)
-
-        # NOTE: https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
         
         if self.loss_type == 'cross_entropy':
             self.loss_fn = nn.NLLLoss(ignore_index=self.pad_token)
         elif self.loss_type == 'cross_entropy_neg':
             self.loss_fn = nn.NLLLoss()
         elif self.loss_type == 'margin_hinge':
+            # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
             self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
         else:
             raise NotImplementedError
@@ -196,21 +195,25 @@ class RecSysMetaModel(PreTrainedModel):
                 _, max_idx = torch.max(cos_sim_concat, dim=1)
                 train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
 
-            else:
+            elif self.loss_type == 'margin_hinge':
 
                 _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
 
                 loss_sum = self.loss_fn(pred_emb_flat, trg_emb_flat, _label)
                 loss = loss_sum / num_elem
+            
+                # accuracy
+                pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
+                pos_sim = F.cosine_similarity(pos_emb_trg, pos_emb_pred, dim=1)		
+                pos_sim = pos_sim.unsqueeze(1)		
+                neg_sim = F.cosine_similarity(neg_emb_trg, pos_emb_pred_expanded, dim=2)		
+                combine_sim = torch.cat((pos_sim, neg_sim), dim=1)
+                _, max_idx = torch.max(combine_sim, dim=1)
+                train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
 
-            # # accuracy
-            pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
-            pos_sim = F.cosine_similarity(pos_emb_trg, pos_emb_pred, dim=1)		
-            pos_sim = pos_sim.unsqueeze(1)		
-            neg_sim = F.cosine_similarity(neg_emb_trg, pos_emb_pred_expanded, dim=2)		
-            combine_sim = torch.cat((pos_sim, neg_sim), dim=1)
-            _, max_idx = torch.max(combine_sim, dim=1)
-            train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
+            else:
+                raise NotImplementedError
+
 
         elif self.loss_type == 'cross_entropy':
             loss = self.loss_fn(pred_flat_nonpad, trg_flat_nonpad)
