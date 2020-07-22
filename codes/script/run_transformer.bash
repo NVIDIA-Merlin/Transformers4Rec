@@ -1,6 +1,8 @@
 mkdir -p ./tmp/
 
-# for multiple GPU, use 0,1 not fully supported yet
+model_type=$1
+loss_type=$2
+similarity_type=$3
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -15,8 +17,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --workers_count 10 \
     --per_device_train_batch_size 256 \
     --per_device_eval_batch_size 128 \
-    --model_type "xlnet" \
-    --loss_type "margin_hinge" \
+    --model_type ${model_type} \
+    --loss_type ${loss_type} \
     --margin_loss 0.0 \
     --logging_steps 20 \
     --d_model 64 \
@@ -25,7 +27,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --dropout 0.2 \
     --learning_rate 1e-03 \
     --validate_every 10 \
-    --similarity_type "concat_mlp" \
+    --similarity_type ${similarity_type} \
     --num_train_epochs 10
 
 # model_type: xlnet, gpt2, longformer
