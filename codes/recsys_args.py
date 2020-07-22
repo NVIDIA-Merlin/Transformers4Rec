@@ -103,7 +103,7 @@ class ModelArguments:
         default="elem_add", metadata={"help": "how to merge multiple input sequences: either 'elem_add' OR 'concat_mlp'"}
     )
     similarity_type: Optional[str] = field(
-        default="cos", metadata={"help": "how to compute similarity of sequences for negative sampling based margin loss: 'cos'"}
+        default="cosine", metadata={"help": "how to compute similarity of sequences for negative sampling: 'cosine' OR 'concat_mlp'"}
     )
     margin_loss: Optional[float] = field(
         default=1.0, metadata={"help": "margin value for margin-hinge loss"}

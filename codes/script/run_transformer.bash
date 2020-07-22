@@ -23,9 +23,10 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --n_layer 4 \
     --n_head 2 \
     --dropout 0.2 \
-    --learning_rate 1e-04 \
+    --learning_rate 1e-03 \
     --validate_every 10 \
-    --num_train_epochs 400
+    --similarity_type "concat_mlp" \
+    --num_train_epochs 10
 
 # model_type: xlnet, gpt2, longformer
 # loss_type: cross_entropy, margin_hinge, cross_entropy_neg
@@ -39,3 +40,4 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
 # reader_pool_type: petastorm reader arg: process or thread (default: thread)
 # workers_count: petastorm reader arg: number of workers (default: 10)
 # logging_steps: how often do logging (every n examples)
+# similarity_type 'concat_mlp' or 'cosine'

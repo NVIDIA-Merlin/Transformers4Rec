@@ -4,7 +4,7 @@ mkdir -p ./tmp/
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
-    --overwrite_output_dir \
+         \
     --do_train \
     --do_eval \
     --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_recent_popularity-2019-10/" \
@@ -13,7 +13,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
-    --per_device_train_batch_size 512 \
+    --per_device_train_batch_size 256 \
     --per_device_eval_batch_size 128 \
     --model_type "gru" \
     --loss_type "margin_hinge" \
@@ -22,9 +22,10 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --d_model 128 \
     --n_layer 4 \
     --dropout 0.2 \
-    --learning_rate 1e-04 \
-    --validate_every 20 \
-    --num_train_epochs 400
+    --learning_rate 1e-03 \
+    --validate_every 40 \
+    --similarity_type "concat_mlp" \
+    --num_train_epochs 10
 
 # model_type: xlnet, gpt2, longformer
 # loss_type: cross_entropy, margin_hinge
