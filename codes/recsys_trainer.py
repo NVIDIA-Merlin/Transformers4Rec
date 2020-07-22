@@ -419,17 +419,16 @@ class RecSysTrainer(Trainer):
 
                 #NOTE: RecSys
                 _inputs = self.f_feature_extract(inputs)
-                labels = _inputs[0][:, 1:]
                 
                 outputs = model(*_inputs)
 
-                step_eval_acc, step_eval_loss, logits = outputs[0], outputs[1], outputs[2]
+                step_eval_acc, step_eval_loss, preds, labels = outputs[0:4]
                 eval_losses += [step_eval_loss.mean().item()]
                 eval_accs += [step_eval_acc.mean().item()]
 
             if not prediction_loss_only:
-                # _preds.size(): N_BATCH x SEQLEN x ITEM_SIZE (=300000)
-                preds = softmax(logits)
+                # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
+                # labels.size(): ...  x 1 [51]
 
                 if self.compute_metrics is not None:
                     self.compute_metrics.update(preds, labels)

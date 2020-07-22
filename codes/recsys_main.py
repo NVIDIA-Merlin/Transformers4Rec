@@ -21,8 +21,7 @@ from recsys_trainer import RecSysTrainer
 from recsys_metrics import EvalMetrics
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
-    f_feature_extract_pos,
-    f_feature_extract_posneg, 
+    f_feature_extract, 
     fetch_data_loaders,
     get_avail_data_dates
 )
@@ -69,9 +68,6 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args, training_args)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args)
 
-    f_feature_extract = f_feature_extract_posneg \
-        if model_args.loss_type in ['margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d'] else f_feature_extract_pos
-
     eval_metrics = EvalMetrics()
 
     trainer = RecSysTrainer(
@@ -89,8 +85,7 @@ def main():
         train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx -1], data_dates[date_idx]
 
         train_loader, eval_loader, test_loader \
-            = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date,
-                                 neg_sampling=(model_args.loss_type in ['margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']))
+            = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date)
 
         trainer.set_rec_train_dataloader(train_loader)
         trainer.set_rec_eval_dataloader(eval_loader)
@@ -110,7 +105,7 @@ def main():
 
         # Evaluation (on testset)
         if training_args.do_eval:
-            logger.info("*** Evaluate (date:{})***".format(eval_date))
+            logger.info("*** Evaluate (date:{})***".format(test_date))
 
             eval_output = trainer.predict()
             eval_metrics = eval_output.metrics
@@ -118,13 +113,13 @@ def main():
             output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")
             if trainer.is_world_master():
                 with open(output_eval_file, "w") as writer:
-                    logger.info("***** Eval results (date:{})*****".format(eval_date))
-                    writer.write("***** Eval results (date:{})*****".format(eval_date))
+                    logger.info("***** Eval results (date:{})*****".format(test_date))
+                    writer.write("***** Eval results (date:{})*****".format(test_date))
                     for key in sorted(eval_metrics.keys()):
                         logger.info("  %s = %s", key, str(eval_metrics[key]))
                         writer.write("%s = %s\n" % (key, str(eval_metrics[key])))
 
-            results_dates[eval_date] = eval_metrics
+            results_dates[test_date] = eval_metrics
         
     logger.info("train and eval for all dates are done")
     trainer.save_model()

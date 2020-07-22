@@ -4,6 +4,7 @@ A meta class supports various (Huggingface) transformer models for RecSys tasks.
 """
 
 import logging
+from collections import OrderedDict
 
 import torch
 from torch import nn
@@ -59,6 +60,19 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
+        if self.similarity_type == 'concat_mlp':
+            self.sim_mlp = nn.Sequential(
+                OrderedDict([
+                    ('linear0', nn.Linear(model_args.d_model * 2, model_args.d_model)),
+                    ('relu0', nn.LeakyReLU()),
+                    ('linear1', nn.Linear(model_args.d_model, model_args.d_model // 2)),
+                    ('relu1', nn.LeakyReLU()),
+                    ('linear2', nn.Linear(model_args.d_model // 2, model_args.d_model // 4)),
+                    ('relu2', nn.LeakyReLU()),
+                    ('linear3', nn.Linear(model_args.d_model // 4, 1)),
+                ]       
+            ))
+        
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
         neg_seq: n_batch x (num_neg_samples x max_seq_len); flattened. 2D.
@@ -76,8 +90,8 @@ class RecSysMetaModel(PreTrainedModel):
         self,
         product_seq,
         category_seq,
-        neg_product_seq=None,
-        neg_category_seq=None,
+        neg_product_seq,
+        neg_category_seq,
     ):
         """
         For cross entropy loss, we split input and target BEFORE embedding layer.
@@ -85,52 +99,36 @@ class RecSysMetaModel(PreTrainedModel):
         """
         
         # Step1. Obtain Embedding
+        max_seq_len = product_seq.size(1)
         product_seq_trg = product_seq[:, 1:] 
-        if self.loss_type == 'cross_entropy':    
-            product_seq = product_seq[:, :-1]
-            category_seq = category_seq[:, :-1]
 
         pos_prd_emb = self.embedding_product(product_seq)
         pos_cat_emb = self.embedding_category(category_seq)
         
-        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
-
-            # unflatten negative sample
-            max_seq_len = product_seq.size(1)
-            neg_product_seq = self._unflatten_neg_seq(neg_product_seq, max_seq_len)
-            neg_category_seq = self._unflatten_neg_seq(neg_category_seq, max_seq_len)
-            
-            # obtain embeddings
-            neg_prd_emb = self.embedding_product(neg_product_seq)
-            neg_cat_emb = self.embedding_category(neg_category_seq)
+        # unflatten negative sample
+        neg_product_seq = self._unflatten_neg_seq(neg_product_seq, max_seq_len)
+        neg_category_seq = self._unflatten_neg_seq(neg_category_seq, max_seq_len)
+        
+        # obtain embeddings
+        neg_prd_emb = self.embedding_product(neg_product_seq)
+        neg_cat_emb = self.embedding_category(neg_category_seq)
 
         # Step 2. Merge features
 
         if self.merge == 'elem_add':
             pos_emb = pos_prd_emb + pos_cat_emb
-            
-            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
-                neg_emb = neg_prd_emb + neg_cat_emb
+            neg_emb = neg_prd_emb + neg_cat_emb
 
         elif self.merge == 'concat_mlp':
             pos_emb = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
-
-            if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
-                neg_emb = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
+            neg_emb = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
 
         else:
             raise NotImplementedError
 
-        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
-            # set input and target from emb
-            pos_emb_inp = pos_emb[:, :-1]
-            pos_emb_trg = pos_emb[:, 1:]
-
-            neg_emb_inp = neg_emb[:, :, :-1]
-            neg_emb_trg = neg_emb[:, :, 1:]
-
-        elif self.loss_type == 'cross_entropy':
-            pos_emb_inp = pos_emb
+        pos_emb_inp = pos_emb[:, :-1]
+        pos_emb_trg = pos_emb[:, 1:]
+        neg_emb_inp = neg_emb[:, :, :-1]
 
         # Step3. Run forward pass on model architecture
 
@@ -149,97 +147,84 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_pred = model_outputs[0]
             model_outputs = model_outputs[1:]
 
-        # compute logits (predicted probability of item ids)
-        logits = self.output_layer(pos_emb_pred)
-        outputs = (logits,) + model_outputs  # Keep mems, hidden states, attentions if there are in it
-        pred_flat = (self.log_softmax(logits)).flatten(end_dim=1)
         trg_flat = product_seq_trg.flatten()
+        non_pad_mask = (trg_flat != self.pad_token)        
+        num_elem = non_pad_mask.sum()
 
-        non_pad_mask = (trg_flat != self.pad_token)
-        pred_flat_nonpad = torch.masked_select(pred_flat, non_pad_mask.unsqueeze(1).expand_as(pred_flat))
-        pred_flat_nonpad = pred_flat_nonpad.view(-1, pred_flat.size(1))
         trg_flat_nonpad = torch.masked_select(trg_flat, non_pad_mask)
-        num_elem = trg_flat_nonpad.size(0)
 
-        # Step4. Compute loss and accuracy
+        # Step4. Compute logit and label for neg+pos samples
 
-        if self.loss_type in [ 'margin_hinge', 'cross_entropy_neg', 'cross_entropy_neg_1d']:
-            pos_emb_pred = pos_emb_pred.flatten(end_dim=1)
-            pos_emb_pred_fl = torch.masked_select(pos_emb_pred, non_pad_mask.unsqueeze(1).expand_as(pos_emb_pred))
-            pos_emb_pred = pos_emb_pred_fl.view(-1, pos_emb_pred.size(1))
+        # remove zero padding elements 
+        pos_emb_pred = pos_emb_pred.flatten(end_dim=1)
+        pos_emb_pred_fl = torch.masked_select(pos_emb_pred, non_pad_mask.unsqueeze(1).expand_as(pos_emb_pred))
+        pos_emb_pred = pos_emb_pred_fl.view(-1, pos_emb_pred.size(1))
 
-            pos_emb_trg = pos_emb_trg.flatten(end_dim=1)
-            pos_emb_trg_fl = torch.masked_select(pos_emb_trg, non_pad_mask.unsqueeze(1).expand_as(pos_emb_trg))
-            pos_emb_trg = pos_emb_trg_fl.view(-1, pos_emb_trg.size(1))
+        pos_emb_trg = pos_emb_trg.flatten(end_dim=1)
+        pos_emb_trg_fl = torch.masked_select(pos_emb_trg, non_pad_mask.unsqueeze(1).expand_as(pos_emb_trg))
+        pos_emb_trg = pos_emb_trg_fl.view(-1, pos_emb_trg.size(1))
 
-            # neg_emb_trg: (n_batch x n_negex x seqlen x emb_dim) -> (n_batch x seqlen x n_negex x emb_dim)
-            neg_emb_trg = neg_emb_trg.permute(0, 2, 1, 3)
-            neg_emb_trg_fl = neg_emb_trg.reshape(-1, neg_emb_trg.size(2), neg_emb_trg.size(3))
-            neg_emb_trg_fl = torch.masked_select(neg_emb_trg_fl, non_pad_mask.unsqueeze(1).unsqueeze(2).expand_as(neg_emb_trg_fl))
-            neg_emb_trg = neg_emb_trg_fl.view(-1, neg_emb_trg.size(2), neg_emb_trg.size(3))
+        # neg_emb_inp: (n_batch x n_negex x seqlen x emb_dim) -> (n_batch x seqlen x n_negex x emb_dim)
+        neg_emb_inp = neg_emb_inp.permute(0, 2, 1, 3)
+        neg_emb_inp_fl = neg_emb_inp.reshape(-1, neg_emb_inp.size(2), neg_emb_inp.size(3))
+        neg_emb_inp_fl = torch.masked_select(neg_emb_inp_fl, non_pad_mask.unsqueeze(1).unsqueeze(2).expand_as(neg_emb_inp_fl))
+        neg_emb_inp = neg_emb_inp_fl.view(-1, neg_emb_inp.size(2), neg_emb_inp.size(3))
 
-            pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
-            pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=1)
-            trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_trg), dim=1).flatten(end_dim=1)
+        # concatenate 
+        pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_inp)
+        pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=1)
+        trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_inp), dim=1).flatten(end_dim=1)
 
-            n_pos_ex = pos_emb_trg.size(0)
-            n_neg_ex = neg_emb_trg.size(0) * neg_emb_trg.size(1)
+        n_pos_ex = pos_emb_trg.size(0)
+        n_neg_ex = neg_emb_inp.size(0) * neg_emb_inp.size(1)
+        labels = torch.LongTensor([0] * n_pos_ex).to(self.device)
 
-            if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
-                pos_cos_score = torch.cosine_similarity(pos_emb_pred, pos_emb_trg)
-                neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_trg, dim=2)
-                cos_sim_concat = torch.cat((pos_cos_score.unsqueeze(1), neg_cos_score), dim=1)
-                items_prob = F.log_softmax(cos_sim_concat, dim=1)
+        # compute similarity
+        if self.similarity_type == 'concat_mlp':
+            pos_cos_score = self.sim_mlp(torch.cat((pos_emb_pred, pos_emb_trg), dim=1))
+            neg_cos_score = self.sim_mlp(torch.cat((pos_emb_pred_expanded, neg_emb_inp), dim=2)).squeeze(2)
+        elif self.similarity_type == 'cosine':
+            pos_cos_score = torch.cosine_similarity(pos_emb_pred, pos_emb_trg).unsqueeze(1)
+            neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_inp, dim=2)
 
-                if self.loss_type == 'cross_entropy_neg_1d':
-                    loss = self.loss_fn(items_prob)
-                elif self.loss_type == 'cross_entropy_neg':
-                    _label = torch.LongTensor([0] * items_prob.size(0)).to(self.device)
-                    loss = self.loss_fn(items_prob, _label)
-        
-                # accuracy
-                _, max_idx = torch.max(cos_sim_concat, dim=1)
-                train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
+        # compute predictionss (logits)
+        cos_sim_concat = torch.cat((pos_cos_score, neg_cos_score), dim=1)
+        items_prob_log = F.log_softmax(cos_sim_concat, dim=1)
+        predictions = torch.exp(items_prob_log)
 
-            elif self.loss_type == 'margin_hinge':
+        # Step5. Compute loss and accuracy
 
-                _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
+        if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
 
-                loss_sum = self.loss_fn(pred_emb_flat, trg_emb_flat, _label)
-                loss = loss_sum / num_elem
-            
-                # accuracy
-                pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_trg)
-                pos_sim = F.cosine_similarity(pos_emb_trg, pos_emb_pred, dim=1)		
-                pos_sim = pos_sim.unsqueeze(1)		
-                neg_sim = F.cosine_similarity(neg_emb_trg, pos_emb_pred_expanded, dim=2)		
-                combine_sim = torch.cat((pos_sim, neg_sim), dim=1)
-                _, max_idx = torch.max(combine_sim, dim=1)
-                train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
+            loss = self.loss_fn(items_prob_log, labels)
 
-            else:
-                raise NotImplementedError
+        elif self.loss_type == 'margin_hinge':
 
+            _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
+
+            loss = self.loss_fn(pred_emb_flat, trg_emb_flat, _label) / num_elem 
 
         elif self.loss_type == 'cross_entropy':
-            loss = self.loss_fn(pred_flat_nonpad, trg_flat_nonpad)
-    
-            # accuracy
-            _, max_idx = torch.max(pred_flat_nonpad, dim=1)
-            train_acc = (max_idx == trg_flat_nonpad).sum(dtype=torch.float32) / num_elem
 
+            # compute logits (predicted probability of item ids)
+            logits_all = self.output_layer(pos_emb_pred)
+            pred_flat = self.log_softmax(logits_all)
+
+            loss = self.loss_fn(pred_flat, trg_flat_nonpad)
+            
         else:
             raise NotImplementedError
 
-        outputs = (loss,) + outputs
+        # accuracy
+        _, max_idx = torch.max(cos_sim_concat, dim=1)
+        train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
 
-        
-        outputs = (train_acc,) + outputs
+        outputs = (train_acc, loss, predictions, labels) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 
-        return outputs  # return (train_acc), (loss), logits, (mems), (hidden states), (attentions)
+        return outputs  # return (train_acc), (loss), (predictions), (labels), (mems), (hidden states), (attentions)
 
 
-def nll_1d(items_prob):
+def nll_1d(items_prob, _label=None):
     # https://github.com/gabrielspmoreira/chameleon_recsys/blob/da7f73a2b31d6867d444eded084044304b437413/nar_module/nar/nar_model.py#L639
     items_prob = torch.exp(items_prob)
     positive_prob = items_prob[:, 0]

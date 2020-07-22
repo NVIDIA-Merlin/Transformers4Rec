@@ -64,7 +64,7 @@ def get_dataset_len(data_paths):
 
 
 def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date=None,
-                       neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False):
+                       date_format="%Y-%m-%d", load_from_path=False):
     """
     load_from_path: when a path is given, it automatically determines 
                     list of available parquet files in the path.
@@ -91,7 +91,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_dat
         eval_data_path = get_filenames(eval_data_path)
 
     if data_args.engine == "petastorm":
-        parquet_schema = parquet_schema_posneg if neg_sampling else parquet_schema_pos
+        parquet_schema = parquet_schema
 
         train_data_len = get_dataset_len(train_data_path)
         eval_data_len = get_dataset_len(eval_data_path)
@@ -136,7 +136,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_dat
             )
 
     elif data_args.engine == "pyarrow":
-        cols_to_read = parquet_col_posneg if neg_sampling else parquet_col_pos
+        cols_to_read = parquet_col
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
         train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size)
@@ -166,7 +166,7 @@ class DataLoaderWithLen(PetaStormDataLoader):
         return self.len
 
 
-def f_feature_extract_posneg(inputs):
+def f_feature_extract(inputs):
     """
     This function will be used inside of trainer.py (_training_step) right before being 
     passed inputs to a model. 
@@ -180,34 +180,16 @@ def f_feature_extract_posneg(inputs):
     return product_seq, category_seq, neg_prod_seq, neg_category_seq
 
 
-def f_feature_extract_pos(inputs):
-    """
-    This function will be used inside of trainer.py (_training_step) right before being 
-    passed inputs to a model. 
-    For negative sampling (NS) approach
-    """
-    product_seq = inputs["sess_pid_seq"].long()
-    category_seq = inputs["sess_ccid_seq"].long()
-    
-    return product_seq, category_seq
-
-
 # (PyArrow) Columns to read 
-parquet_col_posneg = ['sess_pid_seq', 'sess_ccid_seq', 'sess_neg_pids', 'sess_neg_sess_ccid_seq']
-parquet_col_pos = ['sess_pid_seq', 'sess_ccid_seq']
+parquet_col = ['sess_pid_seq', 'sess_ccid_seq', 'sess_neg_pids', 'sess_neg_sess_ccid_seq']
 
 
 # (Petastorm) A schema that we use to read specific columns from parquet data file
-parquet_schema_posneg = [
+parquet_schema = [
     UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
     UnischemaField('sess_neg_pids', np.int64, (None,), None, True),
     UnischemaField('sess_neg_sess_ccid_seq', np.int64, (None,), None, True),
-]
-
-parquet_schema_pos = [
-    UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
-    UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
 ]
 
 
