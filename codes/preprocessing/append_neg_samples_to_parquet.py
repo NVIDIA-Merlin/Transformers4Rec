@@ -24,6 +24,8 @@ from ..config.features_config import (
     InstanceInfoLevel,
 )
 
+np.random.seed(42)
+
 
 def args_parser():
     parser = argparse.ArgumentParser(
@@ -54,6 +56,12 @@ def args_parser():
         "--num_neg_samples",
         type=int,
         help="Number of negative samples for each positive interaction",
+    )
+    parser.add_argument(
+        "--perc_valid_set",
+        type=float,
+        default=0.9,
+        help="Percentage of rows for the validation set",
     )
     parser.add_argument(
         "--keep_repeated_sampled_items",
@@ -87,12 +95,15 @@ def args_parser():
     return parser
 
 
-# TODO: Create a new folder tree in the output directory
-def get_output_path_parquet_neg_samples(input_parquet_filename, output_root_path, dataset_name):
-    folder_name_with_day = os.path.split(input_parquet_filename)[-1]
+def create_output_folder_path(output_root_path, dataset_name):
     out_folder_path = os.path.join(output_root_path, dataset_name)
     # Creates dirs recursivelly if they do not exist
     Path(out_folder_path).mkdir(parents=True, exist_ok=True)
+    return out_folder_path
+
+
+def get_output_path_parquet_neg_samples(input_parquet_filename, out_folder_path):
+    folder_name_with_day = os.path.split(input_parquet_filename)[-1]
     output_file_path = os.path.join(out_folder_path, folder_name_with_day + ".parquet")
     return output_file_path
 
@@ -265,11 +276,16 @@ def get_data_chunk_generator(input_file, chunck_size, subsample_first_n_sessions
     # Loading parquet file and sorting sessions by timestamp
     # P.s. Everything is loaded in memory at this time
     sessions_df = pd.read_parquet(input_file)
-    sessions_df.sort_values("session_start_ts", inplace=True)
 
     if subsample_first_n_sessions_by_day > 0:
+        # Shuffling the order of sesions before filtering
+        sessions_df = sessions_df.sample(frac=1).reset_index(drop=True)
+
         # Limiting the number of negative samples per day for faster processing
         sessions_df = sessions_df[:subsample_first_n_sessions_by_day]
+
+    # Sorting the sessions by start time
+    sessions_df.sort_values("session_start_ts", inplace=True)
 
     data_chunks_generator = process_dataframe_into_chuncks_generator(
         sessions_df, chunk_size=chunck_size
@@ -304,18 +320,15 @@ def fix_event_timestamp(event_ts_sequence):
         return result
 
 
-def process_date(idx_day, input_file, input_data_config, sampling_manager, args):
+def process_date(
+    idx_day, input_file, input_data_config, output_folder_path, sampling_manager, args
+):
     pq_writer = None
     try:
         print("=" * 40)
         print("[Day {}] Loading sessions from parquet: {}".format(idx_day, input_file))
 
-        dataset_name = "ecommerce_preproc_neg_samples_{}_strategy_{}".format(
-            args.num_neg_samples, args.sampling_strategy
-        )
-        output_filename = get_output_path_parquet_neg_samples(
-            input_file, args.output_parquet_root_path, dataset_name
-        )
+        output_filename = get_output_path_parquet_neg_samples(input_file, output_folder_path)
 
         if os.path.exists(output_filename):
             raise Exception("Output parquet file already exists: {}".format(output_filename))
@@ -404,25 +417,68 @@ def process_date(idx_day, input_file, input_data_config, sampling_manager, args)
             pq_writer.close()
             pq_writer = None
 
+        return output_filename
+
     finally:
         if pq_writer:
             pq_writer.close()
+
+
+def split_train_eval_parquet_file(parquet_path, perc_valid_set):
+    sessions_df = pd.read_parquet(parquet_path)
+
+    # Shuffling the order of sesions
+    sessions_df = sessions_df.sample(frac=1).reset_index(drop=True)
+
+    dataset_size = len(sessions_df)
+
+    train_set_limit = int(dataset_size * perc_valid_set)
+
+    train_df = sessions_df[:train_set_limit]
+    valid_df = sessions_df[train_set_limit:dataset_size]
+
+    try:
+
+        # Sorting the sessions by start time
+        train_df.sort_values("session_start_ts", inplace=True)
+        valid_df.sort_values("session_start_ts", inplace=True)
+
+        output_train_path = parquet_path.replace(".parquet", "-train.parquet")
+        output_test_path = parquet_path.replace(".parquet", "-test.parquet")
+
+        train_df.to_parquet(output_train_path)
+        valid_df.to_parquet(output_test_path)
+
+    finally:
+        del sessions_df
+        del train_df
+        del valid_df
+        gc.collect()
 
 
 def main():
     parser = args_parser()
     args = parser.parse_args()
 
-    input_parquet_files = input_parquet_files = sorted(
-        glob.glob(args.input_parquet_path_pattern.replace("'", "") + "*")
-    )
+    input_parquet_files = sorted(glob.glob(args.input_parquet_path_pattern.replace("'", "") + "*"))
 
     input_data_config = get_input_data_config()
     sampling_manager = get_sampling_manager(input_data_config, args)
 
+    # Creating and output folder according to the sampling configuration
+    dataset_name = "ecommerce_preproc_neg_samples_{}_strategy_{}".format(
+        args.num_neg_samples, args.sampling_strategy
+    )
+    output_folder_path = create_output_folder_path(args.output_parquet_root_path, dataset_name)
+
     # For each file (day)
     for idx_day, input_file in enumerate(input_parquet_files):
-        process_date(idx_day, input_file, input_data_config, sampling_manager, args)
+        output_parquet_path = process_date(
+            idx_day, input_file, input_data_config, output_folder_path, sampling_manager, args
+        )
+
+        # Splits the generated parquet file into two parquets (train and eval)
+        split_train_eval_parquet_file(output_parquet_path, args.perc_valid_set)
 
     print("Preprocessing script finished")
 
