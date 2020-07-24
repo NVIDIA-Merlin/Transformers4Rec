@@ -4,7 +4,7 @@ mkdir -p ./tmp/
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
-         \
+    --overwrite_output_dir \
     --do_train \
     --do_eval \
     --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_recent_popularity-2019-10/" \
@@ -25,7 +25,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --learning_rate 1e-03 \
     --validate_every 40 \
     --similarity_type "concat_mlp" \
-    --num_train_epochs 10
+    --num_train_epochs 10 \
+    --feature_config config/recsys_input_feature.yaml
 
 # model_type: xlnet, gpt2, longformer
 # loss_type: cross_entropy, margin_hinge

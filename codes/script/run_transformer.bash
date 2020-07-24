@@ -28,7 +28,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --learning_rate 1e-03 \
     --validate_every 10 \
     --similarity_type ${similarity_type} \
-    --num_train_epochs 10
+    --num_train_epochs 10 \
+    --feature_config config/recsys_input_feature.yaml
 
 # model_type: xlnet, gpt2, longformer
 # loss_type: cross_entropy, margin_hinge, cross_entropy_neg
