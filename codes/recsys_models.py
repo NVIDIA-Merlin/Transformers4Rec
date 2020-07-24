@@ -17,7 +17,7 @@ from models.gru4rec import GRU4REC
 logger = logging.getLogger(__name__)
 
 
-def get_recsys_model(model_args, data_args, training_args):
+def get_recsys_model(model_args, data_args, training_args, target_size=None):
 
     if model_args.model_type == 'xlnet':
         model_cls = XLNetModel

@@ -65,8 +65,9 @@ def main():
 
     with open(data_args.feature_config) as yaml_file:
         feature_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
-
-    seq_model, config = get_recsys_model(model_args, data_args, training_args)
+    target_size = feature_map['sess_pid_seq']['cardinality']
+    
+    seq_model, config = get_recsys_model(model_args, data_args, training_args, vocab_size=target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
     eval_metrics = EvalMetrics()
