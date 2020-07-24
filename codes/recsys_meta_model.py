@@ -20,7 +20,7 @@ class RecSysMetaModel(PreTrainedModel):
     vocab_sizes : sizes of vocab for each discrete inputs
         e.g., [product_id_vocabs, category_vocabs, etc.]
     """
-    def __init__(self, model, config, model_args, data_args):
+    def __init__(self, model, config, model_args, data_args, feature_map):
         super(RecSysMetaModel, self).__init__(config)
         
         self.model = model 
@@ -30,21 +30,49 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             self.is_rnn = False
 
+        self.feature_map = feature_map
+        """
+        feature_map : 
+        {
+            cname: {
+                'dtype': categorial / long / float
+                'cardinality' : num_items
+                'is_label' : True, False
+            }
+        }
+        """
+
         self.pad_token = data_args.pad_token
-
-        # set embedding tables
-        self.embedding_product = nn.Embedding(data_args.num_product, model_args.d_model, padding_idx=self.pad_token)
-        self.embedding_category = nn.Embedding(data_args.num_category, model_args.d_model, padding_idx=self.pad_token)
-
-        self.merge = model_args.merge_inputs
+        self.embedding_tables = {}
         
-        if self.merge == 'concat_mlp':
-            n_embeddings = data_args.num_categorical_features
-            self.mlp_merge = nn.Linear(model_args.d_model * n_embeddings, model_args.d_model)
+        concat_input_dim = 0
+        target_dim = -1
+        
+        # set embedding tables
+        for cname, cinfo in self.feature_map.items():
+            if '_neg_' not in cname:
+                if cinfo['dtype'] == 'categorical':
+                    self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
+                        cinfo['cardinality'], 
+                        model_args.d_model, 
+                        padding_idx=self.pad_token
+                    )
+                    concat_input_dim += model_args.d_model
+                elif cinfo['dtype'] in ['long', 'float']:
+                    concat_input_dim += 1   
+                else:
+                    raise NotImplementedError
+                if 'is_label' in cinfo and cinfo['is_label']:
+                    target_dim = cinfo['cardinality']
+        
+        if target_dim == -1:
+            raise RuntimeError('label column is not declared in feature map.')
+
+        self.mlp_merge = nn.Linear(concat_input_dim, model_args.d_model)
         
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
-        self.output_layer = nn.Linear(model_args.d_model, data_args.num_product)
+        self.output_layer = nn.Linear(model_args.d_model, target_dim)
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim=-1)
         
@@ -88,44 +116,70 @@ class RecSysMetaModel(PreTrainedModel):
 
     def forward(
         self,
-        product_seq,
-        category_seq,
-        neg_product_seq,
-        neg_category_seq,
+        inputs,
     ):
         """
         For cross entropy loss, we split input and target BEFORE embedding layer.
         For margin hinge loss, we split input and target AFTER embedding layer.
         """
         
-        # Step1. Obtain Embedding
-        max_seq_len = product_seq.size(1)
-        product_seq_trg = product_seq[:, 1:] 
+        # Step1. Unpack inputs, get embedding, and concatenate them
+        pos_inp, neg_inp, label_seq = [], [], None
+        
+        max_seq_len = None
 
-        pos_prd_emb = self.embedding_product(product_seq)
-        pos_cat_emb = self.embedding_category(category_seq)
-        
-        # unflatten negative sample
-        neg_product_seq = self._unflatten_neg_seq(neg_product_seq, max_seq_len)
-        neg_category_seq = self._unflatten_neg_seq(neg_category_seq, max_seq_len)
-        
-        # obtain embeddings
-        neg_prd_emb = self.embedding_product(neg_product_seq)
-        neg_cat_emb = self.embedding_category(neg_category_seq)
+        # NOTE: we have separate code for positive and negative samples
+        #       as we need to know sequence length first from postiive samples
+        #       and then use the sequence length to process negative samples
+
+        for cname, cinfo in self.feature_map.items():
+            # Positive Samples
+            if '_neg_' not in cname:
+                cdata = inputs[cname]
+                if 'is_label' in cinfo and cinfo['is_label']:
+                    label_seq = cdata
+                if cinfo['dtype'] == 'categorical':
+                    cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
+                    if max_seq_len is None:
+                        max_seq_len = cdata.size(1)
+                elif cinfo['dtype'] == 'long':
+                    cdata = cdata.unsqueeze(-1).long()
+                elif cinfo['dtype'] == 'float':
+                    cdata = cdata.unsqueeze(-1).float()
+                else:
+                    raise NotImplementedError
+
+                pos_inp.append(cdata)
+
+        for cname, cinfo in self.feature_map.items():
+            # Negative Samples
+            if '_neg_' in cname:
+                cdata = inputs[cname]
+                cdata = self._unflatten_neg_seq(cdata, max_seq_len)
+                if cinfo['dtype'] == 'categorical':
+                    cdata = self.embedding_tables[cinfo['emb_table']](cdata)
+                elif cinfo['dtype'] == 'long':
+                    cdata = cdata.unsqueeze(-1).long()
+                elif cinfo['dtype'] == 'float':
+                    cdata = cdata.unsqueeze(-1).float()
+                else:
+                    raise NotImplementedError
+                neg_inp.append(cdata)
+
+        pos_inp = torch.cat(pos_inp, dim=-1)
+        neg_inp = torch.cat(neg_inp, dim=-1)
+
+        if label_seq is not None:
+            label_seq_trg = label_seq[:, 1:] 
+        else:
+            raise RuntimeError('label sequence is not declared in feature_map')
 
         # Step 2. Merge features
+        
+        pos_emb = torch.tanh(self.mlp_merge(pos_inp))
+        neg_emb = torch.tanh(self.mlp_merge(neg_inp))
 
-        if self.merge == 'elem_add':
-            pos_emb = pos_prd_emb + pos_cat_emb
-            neg_emb = neg_prd_emb + neg_cat_emb
-
-        elif self.merge == 'concat_mlp':
-            pos_emb = torch.tanh(self.mlp_merge(torch.cat((pos_prd_emb, pos_cat_emb), dim=-1)))
-            neg_emb = torch.tanh(self.mlp_merge(torch.cat((neg_prd_emb, neg_cat_emb), dim=-1)))
-
-        else:
-            raise NotImplementedError
-
+        # slice over time-steps for input and target 
         pos_emb_inp = pos_emb[:, :-1]
         pos_emb_trg = pos_emb[:, 1:]
         neg_emb_inp = neg_emb[:, :, :-1]
@@ -147,7 +201,7 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_pred = model_outputs[0]
             model_outputs = model_outputs[1:]
 
-        trg_flat = product_seq_trg.flatten()
+        trg_flat = label_seq_trg.flatten()
         non_pad_mask = (trg_flat != self.pad_token)        
         num_elem = non_pad_mask.sum()
 

@@ -45,15 +45,6 @@ class DataArguments:
     max_seq_len: Optional[int] = field(
         default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
     )
-    num_product: Optional[int] = field(
-        default=300000, metadata={"help": "number of products (target)"}
-    )
-    num_category: Optional[int] = field(
-        default=60000, metadata={"help": "number of categories"}
-    )
-    num_categorical_features: Optional[int] = field(
-        default=2, metadata={"help": "number of categorical features of dataset (= number of embedding tables)"}
-    )
     # args for selecting which engine to use
     engine: Optional[str] = field(
         default='pyarrow', metadata={"help": "Parquet data loader engine. "
@@ -70,6 +61,11 @@ class DataArguments:
         default=10, metadata={"help": "An int for the number of workers to use in the reader pool. \
             This only is used for the thread or process pool"}
     )    
+
+    feature_config: Optional[str] = field(
+        default="codes/config/recsys_input_feature.yaml",
+        metadata={"help": "yaml file that contains feature information (columns to be read from Parquet file, its dtype, etc)"}
+    )
 
 
 @dataclass
@@ -98,9 +94,6 @@ class ModelArguments:
     model_type: Optional[str] = field(
         default='xlnet',
         metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
-    )
-    merge_inputs: Optional[str] = field(
-        default="elem_add", metadata={"help": "how to merge multiple input sequences: either 'elem_add' OR 'concat_mlp'"}
     )
     similarity_type: Optional[str] = field(
         default="cosine", metadata={"help": "how to compute similarity of sequences for negative sampling: 'cosine' OR 'concat_mlp'"}

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from dataclasses import dataclass, field
 
+import yaml
 from transformers import (
     HfArgumentParser,
     set_seed,
@@ -21,11 +22,9 @@ from recsys_trainer import RecSysTrainer
 from recsys_metrics import EvalMetrics
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
-    f_feature_extract, 
     fetch_data_loaders,
     get_avail_data_dates
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -64,16 +63,17 @@ def main():
     logger.info("Training/evaluation parameters %s", training_args)
     set_seed(training_args.seed)
 
-    # embedding size
+    with open(data_args.feature_config) as yaml_file:
+        feature_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
     seq_model, config = get_recsys_model(model_args, data_args, training_args)
-    rec_model = RecSysMetaModel(seq_model, config, model_args, data_args)
+    rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
     eval_metrics = EvalMetrics()
 
     trainer = RecSysTrainer(
         model=rec_model,
         args=training_args,
-        f_feature_extract=f_feature_extract,
         compute_metrics=eval_metrics,
         fast_test=model_args.fast_test
         )
@@ -85,7 +85,7 @@ def main():
         train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx -1], data_dates[date_idx]
 
         train_loader, eval_loader, test_loader \
-            = fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date)
+            = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, test_date)
 
         trainer.set_rec_train_dataloader(train_loader)
         trainer.set_rec_eval_dataloader(eval_loader)

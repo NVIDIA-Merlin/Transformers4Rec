@@ -1,0 +1,9 @@
+sess_pid_seq:
+    dtype: categorical
+    cardinality: 300000
+    is_label: True
+    emb_table: product_id
+sess_neg_pids:
+    dtype: categorical
+    cardinality: 300000
+    emb_table: product_id

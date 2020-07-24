@@ -44,11 +44,6 @@ class RecSysTrainer(Trainer):
     def __init__(self, *args, **kwargs):
         self.global_step = 0
 
-        if 'f_feature_extract' not in kwargs: 
-            self.f_feature_extract = lambda x: x
-        else:
-            self.f_feature_extract = kwargs.pop('f_feature_extract')
-
         if 'fast_test' not in kwargs:
             self.fast_test = False
         else:
@@ -309,7 +304,7 @@ class RecSysTrainer(Trainer):
             inputs[k] = v.to(self.args.device)
         
         # NOTE: RecSys
-        outputs = model(*self.f_feature_extract(inputs))
+        outputs = model(inputs)
         
         acc = outputs[0] # accuracy
         loss = outputs[1]  # model outputs are always tuple in transformers (see doc)
@@ -418,9 +413,7 @@ class RecSysTrainer(Trainer):
             with torch.no_grad():
 
                 #NOTE: RecSys
-                _inputs = self.f_feature_extract(inputs)
-                
-                outputs = model(*_inputs)
+                outputs = model(inputs)
 
                 step_eval_acc, step_eval_loss, preds, labels = outputs[0:4]
                 eval_losses += [step_eval_loss.mean().item()]
