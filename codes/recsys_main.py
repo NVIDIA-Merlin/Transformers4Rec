@@ -135,7 +135,8 @@ def main():
             for key in sorted(eval_avg_days.keys()):
                 logger.info("  %s = %s", key, str(eval_avg_days[key]))
                 writer.write("%s = %s\n" % (key, str(eval_avg_days[key])))
-
+            trainer._log({f"AOD_{k}":v for k, v in eval_avg_days.items()})
+                
     return results_dates
 
 

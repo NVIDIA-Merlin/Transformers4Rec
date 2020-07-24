@@ -63,7 +63,7 @@ class DataArguments:
     )    
 
     feature_config: Optional[str] = field(
-        default="codes/config/recsys_input_feature.yaml",
+        default="config/recsys_input_feature.yaml",
         metadata={"help": "yaml file that contains feature information (columns to be read from Parquet file, its dtype, etc)"}
     )
 

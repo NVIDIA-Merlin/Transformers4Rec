@@ -10,6 +10,7 @@ from chameleon_metrics import (
 )
 from ranking_metrics_torch_karlhigley.precision_recall import precision_at, recall_at
 from ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
+from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
 from recsys_utils import Timing
 
 
@@ -22,17 +23,22 @@ class EvalMetrics(object):
         f_precision_kh = MetricWrapper('precision', precision_at, ks)
         f_recall_kh = MetricWrapper('recall', recall_at, ks)
         f_avgp_kh = MetricWrapper('avg_precision', avg_precision_at, ks)
+        f_ndcg_kh = MetricWrapper('ndcg', ndcg_at, ks)
 
         self.f_measures_cpu = []
         if use_cpu:
-            self.f_measures_cpu.extend([f_ndcg_c, f_recall_c])
+            self.f_measures_cpu.extend([
+                f_ndcg_c, 
+                f_recall_c
+            ])
 
         self.f_measures_gpu = []
         if use_gpu:
             self.f_measures_gpu.extend([
                 f_precision_kh,
                 f_recall_kh,
-                f_avgp_kh
+                f_avgp_kh,
+                f_ndcg_kh
             ])
 
     def update(self, preds, labels):

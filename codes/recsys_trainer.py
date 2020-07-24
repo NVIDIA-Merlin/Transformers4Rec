@@ -228,7 +228,7 @@ class RecSysTrainer(Trainer):
                         ):
                             logs: Dict[str, float] = {}
                             logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
-                            logs["accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
+                            logs["train_accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
                             # backward compatibility for pytorch schedulers
                             logs["learning_rate"] = (
                                 scheduler.get_last_lr()[0]
@@ -284,11 +284,18 @@ class RecSysTrainer(Trainer):
         return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
 
     def _run_validation(self):
-        valid_output = self.evaluate()
+        train_output = self.evaluate(self.get_rec_train_dataloader(), "Train")
+        valid_output = self.evaluate(self.get_rec_eval_dataloader(), "Valid")
 
-        output_eval_file = os.path.join(self.args.output_dir, "valid_results.txt")
+        output_eval_file = os.path.join(self.args.output_dir, "valid_train_results.txt")
         if self.is_world_master():
             with open(output_eval_file, "w") as writer:
+                logger.info(f"*** Train results (epoch: {self.epoch})***")
+                writer.write(f"*** Train results (epoch: {self.epoch})***")
+                for key in sorted(train_output.keys()):
+                    logger.info("  %s = %s", key, str(train_output[key]))
+                    writer.write("%s = %s\n" % (key, str(train_output[key])))
+
                 logger.info(f"*** Validation results (epoch: {self.epoch})***")
                 writer.write(f"*** Validation results (epoch: {self.epoch})***")
                 for key in sorted(valid_output.keys()):
@@ -324,7 +331,8 @@ class RecSysTrainer(Trainer):
         return loss.item(), acc.item()
 
     def evaluate(
-        self, eval_dataloader: Optional[DataLoader] = None, prediction_loss_only: Optional[bool] = None,
+        self, eval_dataloader: Optional[DataLoader] = None, desc: Optional[str] = "Valid",
+        prediction_loss_only: Optional[bool] = None
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -347,7 +355,7 @@ class RecSysTrainer(Trainer):
             eval_dataloader = self.get_rec_eval_dataloader()
 
         output = self._prediction_loop(eval_dataloader, 
-            prediction_loss_only=prediction_loss_only, description="Validation")
+            prediction_loss_only=prediction_loss_only, description=desc)
 
         self._log(output.metrics)
 
@@ -367,7 +375,7 @@ class RecSysTrainer(Trainer):
         if test_dataloader is None:
             test_dataloader = self.get_rec_test_dataloader()
 
-        output = self._prediction_loop(test_dataloader, description="Prediction")
+        output = self._prediction_loop(test_dataloader, description="Test")
 
         self._log(output.metrics)
 
