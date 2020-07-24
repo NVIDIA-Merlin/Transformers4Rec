@@ -43,7 +43,7 @@ class RecSysMetaModel(PreTrainedModel):
         """
 
         self.pad_token = data_args.pad_token
-        self.embedding_tables = {}
+        self.embedding_tables = nn.ModuleDict()
         
         concat_input_dim = 0
         target_dim = -1
@@ -114,14 +114,7 @@ class RecSysMetaModel(PreTrainedModel):
         n_neg_seqs_per_pos_seq = flatten_len // seqlen
         return neg_seq.reshape((n_batch, n_neg_seqs_per_pos_seq, seqlen))
 
-    def forward(
-        self,
-        inputs,
-    ):
-        """
-        For cross entropy loss, we split input and target BEFORE embedding layer.
-        For margin hinge loss, we split input and target AFTER embedding layer.
-        """
+    def forward(self, inputs):
         
         # Step1. Unpack inputs, get embedding, and concatenate them
         pos_inp, neg_inp, label_seq = [], [], None
