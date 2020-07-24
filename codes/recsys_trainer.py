@@ -16,6 +16,7 @@ from torch import nn
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from tqdm.auto import tqdm, trange
+import wandb
 
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
 from transformers.training_args import is_torch_tpu_available
@@ -73,6 +74,10 @@ class RecSysTrainer(Trainer):
 
     def num_examples(self, dataloader):
         return len(dataloader)
+
+    def update_wandb_args(self, args):
+        if is_wandb_available:
+            wandb.config.update(args)
 
     def train(self, model_path: Optional[str] = None):
         """

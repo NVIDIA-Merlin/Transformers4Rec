@@ -79,6 +79,9 @@ def main():
         fast_test=model_args.fast_test
         )
 
+    trainer.update_wandb_args(model_args)
+    trainer.update_wandb_args(data_args)
+
     data_dates = get_avail_data_dates(data_args)
     results_dates = {}
 
