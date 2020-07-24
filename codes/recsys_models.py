@@ -60,7 +60,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
             max_position_embeddings=data_args.max_seq_len,
-            vocab_size=data_args.num_product,
+            vocab_size=target_size,
         )
 
     elif model_args.model_type == 'gru':
