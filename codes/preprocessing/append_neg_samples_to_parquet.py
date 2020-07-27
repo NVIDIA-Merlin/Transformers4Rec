@@ -50,7 +50,7 @@ def args_parser():
     parser.add_argument(
         "--sampling_strategy",
         type=str,
-        help="Valid choices: uniform|recency|recent_popularity|item_cooccurrence",
+        help="Valid choices: uniform|recency|recent_popularity|session_cooccurrence",
     )
     parser.add_argument(
         "--num_neg_samples",
@@ -185,22 +185,38 @@ def get_input_data_config():
     return input_data_config
 
 
-def get_sampling_manager(input_data_config, args):
+def get_sampling_managers(input_data_config, args):
+    sampling_managers_chain = []
+    sampling_strategy = SamplingStrategy(args.sampling_strategy)
 
     sampling_manager = SamplingManagerFactory.build(
         input_data_config=input_data_config,
-        sampling_strategy=SamplingStrategy(args.sampling_strategy),
+        sampling_strategy=sampling_strategy,
         persistance_type=PersistanceType.PANDAS,
         recency_keep_interactions_last_n_days=args.sliding_windows_last_n_days,
         recent_temporal_decay_exp_factor=args.recent_temporal_decay_exp_factor,
         remove_repeated_sampled_items=not args.keep_repeated_sampled_items,
     )
+    sampling_managers_chain.append(sampling_manager)
 
-    return sampling_manager
+    # For Session Co-occurrence, as it sometimes is not able to provide the required number of negative samples,
+    # we add to the chain the Recent Popularity Sampling Strategy to provide the remaining negative samples
+    if sampling_strategy == SamplingStrategy.SESSION_COOCURRENCE:
+        sampling_manager = SamplingManagerFactory.build(
+            input_data_config=input_data_config,
+            sampling_strategy=SamplingStrategy.RECENT_POPULARITY,
+            persistance_type=PersistanceType.PANDAS,
+            recency_keep_interactions_last_n_days=args.sliding_windows_last_n_days,
+            recent_temporal_decay_exp_factor=args.recent_temporal_decay_exp_factor,
+            remove_repeated_sampled_items=not args.keep_repeated_sampled_items,
+        )
+        sampling_managers_chain.append(sampling_manager)
+
+    return sampling_managers_chain
 
 
 def generate_neg_samples(
-    session_pids, user_past_pids, n_samples, sampling_manager, input_data_config
+    session_pids, user_past_pids, n_samples, sampling_managers_chain, input_data_config
 ):
     neg_samples_dict = defaultdict(list)
 
@@ -211,10 +227,34 @@ def generate_neg_samples(
 
     for pid in session_pids:
         if pid != 0:
-            # Sampling item ids, with metadata features
-            neg_item_ids, neg_item_features = sampling_manager.get_candidate_samples(
-                n_samples, item_id=pid, return_item_features=True, ignore_items=ignore_ids
-            )
+            neg_item_ids, neg_item_features = None, None
+            # Iterating over the chain of sampling managers, breaking when the required number of negative samples is reached
+            for sampling_manager in sampling_managers_chain:
+                pending_n_samples = (
+                    n_samples if neg_item_ids is None else n_samples - len(neg_item_ids)
+                )
+                # Sampling item ids, with metadata features
+                (
+                    neg_item_ids_from_strategy,
+                    neg_item_features_from_strategy,
+                ) = sampling_manager.get_candidate_samples(
+                    pending_n_samples,
+                    item_id=pid,
+                    return_item_features=True,
+                    ignore_items=ignore_ids,
+                )
+                if neg_item_ids is None:
+                    neg_item_ids = neg_item_ids_from_strategy
+                    neg_item_features = neg_item_features_from_strategy
+                else:
+                    neg_item_ids = np.hstack([neg_item_ids, neg_item_ids_from_strategy])
+                    for k in neg_item_features_from_strategy:
+                        neg_item_features[k] = np.hstack(
+                            [neg_item_features[k], neg_item_features_from_strategy[k]]
+                        )
+
+                if len(neg_item_ids) >= n_samples:
+                    break
 
             # neg_item_ids, neg_item_features = zip(*neg_item_features_dict.items())
 
@@ -321,7 +361,7 @@ def fix_event_timestamp(event_ts_sequence):
 
 
 def process_date(
-    idx_day, input_file, input_data_config, output_folder_path, sampling_manager, args
+    idx_day, input_file, input_data_config, output_folder_path, sampling_managers_chain, args
 ):
     pq_writer = None
     try:
@@ -349,7 +389,8 @@ def process_date(
                 # Temporary, as the event timestamps from some rare items of the pre-processed dataset are many days after the session start
                 row["sess_etime_seq"] = fix_event_timestamp(row["sess_etime_seq"])
 
-                sampling_manager.append_session_interactions(row)
+                for sampling_manager in sampling_managers_chain:
+                    sampling_manager.append_session_interactions(row)
 
                 # Ignoring first batch (not computing neg. samples nor saving to parquet)
                 if batch_id > 0:
@@ -358,9 +399,10 @@ def process_date(
                         row["sess_pid_seq"],
                         row["user_pid_seq_bef_sess"],
                         args.num_neg_samples,
-                        sampling_manager,
+                        sampling_managers_chain,
                         input_data_config,
                     )
+
                     # Merging user and session features with neg samples for the session
                     new_row_with_neg_samples_dict = {
                         **row.to_dict(),
@@ -374,8 +416,9 @@ def process_date(
                 idx_day == 0 and batch_id < 5
             ):
                 print("[Batch {}] Updating item stats".format(batch_id))
-                # Flushes pending interactions, removes old interactions (outside recency window) and update stats for sampling
-                sampling_manager.update_stats()
+                for sampling_manager in sampling_managers_chain:
+                    # Flushes pending interactions, removes old interactions (outside recency window) and update stats for sampling
+                    sampling_manager.update_stats()
 
             # Each N batches appends the new rows with neg. samples to parquet file
             if (
@@ -463,7 +506,7 @@ def main():
     input_parquet_files = sorted(glob.glob(args.input_parquet_path_pattern.replace("'", "") + "*"))
 
     input_data_config = get_input_data_config()
-    sampling_manager = get_sampling_manager(input_data_config, args)
+    sampling_managers_chain = get_sampling_managers(input_data_config, args)
 
     # Creating and output folder according to the sampling configuration
     dataset_name = "ecommerce_preproc_neg_samples_{}_strategy_{}".format(
@@ -474,7 +517,12 @@ def main():
     # For each file (day)
     for idx_day, input_file in enumerate(input_parquet_files):
         output_parquet_path = process_date(
-            idx_day, input_file, input_data_config, output_folder_path, sampling_manager, args
+            idx_day,
+            input_file,
+            input_data_config,
+            output_folder_path,
+            sampling_managers_chain,
+            args,
         )
 
         # Splits the generated parquet file into two parquets (train and eval)

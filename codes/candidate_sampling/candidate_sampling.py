@@ -19,7 +19,7 @@ class SamplingStrategy(Enum):
     UNIFORM = "uniform"
     RECENCY = "recency"
     RECENT_POPULARITY = "recent_popularity"
-    ITEM_COOCURRENCE = "item_cooccurrence"
+    SESSION_COOCURRENCE = "session_cooccurrence"
     # ITEM_SIMILARITY = "similarity"
 
 
@@ -48,7 +48,7 @@ class RecentPopularitySamplingConfig(CandidateSamplingConfig):
 
 @dataclass
 class ItemCooccurrenceSamplingConfig(CandidateSamplingConfig):
-    sampling_strategy: SamplingStrategy = SamplingStrategy.ITEM_COOCURRENCE
+    sampling_strategy: SamplingStrategy = SamplingStrategy.SESSION_COOCURRENCE
 
 
 class SamplingManagerFactory:
@@ -93,7 +93,7 @@ class SamplingManagerFactory:
                 remove_repeated_sampled_items=remove_repeated_sampled_items,
             )
 
-        elif sampling_strategy == SamplingStrategy.ITEM_COOCURRENCE:
+        elif sampling_strategy == SamplingStrategy.SESSION_COOCURRENCE:
             sampling_manager_class = ItemCooccurrenceCandidateSamplingManager
             sampling_config = ItemCooccurrenceSamplingConfig(
                 sampling_strategy=sampling_strategy,
@@ -187,9 +187,11 @@ class CandidateSamplingManager(ABC):
     def get_samples_from_prob_distribution(
         self, item_ids: np.array, n_samples: int, item_probs: Optional[np.array]
     ) -> List[ItemId]:
-        sampled_item_ids = np.random.choice(
-            item_ids, min(n_samples, len(item_ids)), replace=False, p=item_probs
-        ).tolist()
+        sampled_item_ids = []
+        if len(item_ids):
+            sampled_item_ids = np.random.choice(
+                item_ids, min(n_samples, len(item_ids)), replace=False, p=item_probs
+            ).tolist()
         return sampled_item_ids
 
     @abstractmethod
@@ -309,7 +311,7 @@ class ItemCooccurrenceCandidateSamplingManager(CandidateSamplingManager):
         if self.input_data_config.instance_info_level != InstanceInfoLevel.SESSION:
             raise ValueError(
                 'The "{}" strategy is only available the the instance info level is {}'.format(
-                    SamplingStrategy.ITEM_COOCURRENCE, InstanceInfoLevel.SESSION
+                    SamplingStrategy.SESSION_COOCURRENCE, InstanceInfoLevel.SESSION
                 )
             )
 

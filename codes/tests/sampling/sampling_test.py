@@ -24,13 +24,13 @@ class TestCandidateSamplingManager:
         SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.RECENT_POPULARITY)
 
     def test_sampling_manager_cooccurrence_constructor(self):
-        SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.ITEM_COOCURRENCE)
+        SamplingManagerFactory.build(self.input_data_config, SamplingStrategy.SESSION_COOCURRENCE)
 
     def test_sampling_manager_cooccurrence_without_session_constructor(self):
         my_input_data_config = get_input_data_config(InstanceInfoLevel.INTERACTION)
         with pytest.raises(ValueError):
             SamplingManagerFactory.build(
-                my_input_data_config, SamplingStrategy.ITEM_COOCURRENCE,
+                my_input_data_config, SamplingStrategy.SESSION_COOCURRENCE,
             )
 
     def test_append_item_interaction(self):
@@ -157,7 +157,7 @@ class TestCandidateSamplingManager:
     def test_get_candidate_samples_cooccurrence(self):
         manager = SamplingManagerFactory.build(
             self.input_data_config,
-            SamplingStrategy.ITEM_COOCURRENCE,
+            SamplingStrategy.SESSION_COOCURRENCE,
             remove_repeated_sampled_items=False,
             recency_keep_interactions_last_n_days=1.0,
         )
