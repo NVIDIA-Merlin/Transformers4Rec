@@ -5,13 +5,13 @@ sess_pid_seq:
     emb_table: product_id
 sess_ccid_seq:
     dtype: categorical
-    cardinality: 150
+    cardinality: 1000
     emb_table: category_id
 sess_price_seq:
     dtype: float
 sess_csid_seq:
     dtype: categorical
-    cardinality: 150
+    cardinality: 1000
     emb_table: category_s_id
 sess_bid_seq:
     dtype: categorical
@@ -27,13 +27,13 @@ sess_neg_pids:
     emb_table: product_id
 sess_neg_sess_ccid_seq:
     dtype: categorical
-    cardinality: 150
+    cardinality: 1000
     emb_table: category_id
 sess_neg_sess_price_seq:
     dtype: float
 sess_neg_sess_csid_seq:
     dtype: categorical
-    cardinality: 150
+    cardinality: 1000
     emb_table: category_s_id
 sess_neg_sess_bid_seq:
     dtype: categorical

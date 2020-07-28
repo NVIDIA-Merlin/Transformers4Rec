@@ -4,7 +4,7 @@ model_type=$1 # transfoxl, gpt2, reformer, gru
 loss_type=$2 # cross_entropy, margin_hinge, cross_entropy_neg
 similarity_type=$3 # concat_mlp, cosine
 feature_type=$4 # _full, _pidcid , _single
-sampling_type=$5 # recent_popularity, uniform, _session_cooccurrence
+sampling_type=$5 # recent_popularity, uniform, session_cooccurrence
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
