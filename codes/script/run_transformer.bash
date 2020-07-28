@@ -1,10 +1,10 @@
 mkdir -p ./tmp/
 
-model_type=$1
-loss_type=$2
-similarity_type=$3
-feature_type=$4
-recent_popularity=$5
+model_type=$1 # transfoxl, gpt2, reformer, gru
+loss_type=$2 # cross_entropy, margin_hinge, cross_entropy_neg
+similarity_type=$3 # concat_mlp, cosine
+feature_type=$4 # _full, _pidcid , _single
+sampling_type=$5 # recent_popularity, uniform
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
