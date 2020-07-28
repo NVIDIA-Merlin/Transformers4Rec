@@ -33,7 +33,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --num_train_epochs 15 \
     --feature_config config/recsys_input_feature${feature_type}.yaml
 
-# model_type: transfoxl, gpt2, reformer, gru, lstm, 
+# model_type: xlnet, gpt2, reformer, transfoxl, gru, lstm, 
 # loss_type: cross_entropy, margin_hinge, cross_entropy_neg
 # fast-test: quickly finish loop over examples to check code after the loop
 # d_model: size of hidden states (or internal states) for RNNs and Transformers

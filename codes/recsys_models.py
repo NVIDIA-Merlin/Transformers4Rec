@@ -4,6 +4,8 @@ import logging
 import torch.nn as nn
 
 # load transformer model and its configuration classes
+from transformers.modeling_xlnet import XLNetModel
+from transformers.configuration_xlnet import XLNetConfig
 from transformers.modeling_transfo_xl import TransfoXLModel
 from transformers.configuration_transfo_xl import TransfoXLConfig
 from transformers.modeling_gpt2 import GPT2Model
@@ -58,6 +60,24 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             dropout=model_args.dropout,
             pad_token_id=data_args.pad_token,
         )
+
+    elif model_args.model_type == 'xlnet':
+        model_cls = XLNetModel
+        config = XLNetConfig(
+            d_model=model_args.d_model,
+            d_embed=model_args.d_model,
+            n_layer=model_args.n_layer,
+            n_head=model_args.n_head,
+            d_inner=model_args.d_model * 4,
+            ff_activation=model_args.hidden_act,
+            untie_r=True,
+            attn_type="bi",
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            dropout=model_args.dropout,
+            pad_token_id=data_args.pad_token,
+        )
+
 
     elif model_args.model_type == 'gpt2':
         model_cls = GPT2Model

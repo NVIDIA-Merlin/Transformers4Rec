@@ -191,7 +191,7 @@ class RecSysMetaModel(PreTrainedModel):
             Transformer Models
             """
 
-            attention_mask = (label_seq[:, :-1] != self.pad_token).float().to(self.device)
+            # attention_mask = (label_seq[:, :-1] != self.pad_token).float().to(self.device)
 
             if str(self.model).split('(')[0] == 'TransfoXLModel':
                 # NOTE: Mask is (automatically) computed inside of TransfoXLModel
