@@ -187,12 +187,29 @@ class RecSysMetaModel(PreTrainedModel):
             model_outputs = (None, )
             
         else:
-            # compute output through transformer
-            model_outputs = self.model(
-                inputs_embeds=pos_emb_inp,
-            )
+            """
+            Transformer Models
+            """
+
+            # attention_mask: n_batch x max_seq_len x max_seq_len
+            # attention_mask = torch.triu(torch.ones(max_seq_len,max_seq_len)).transpose(0, 1).to(self.device)
+            # n_b = pos_emb_inp.size(0)
+            # attention_mask = attention_mask.unsqueeze(0).expand(n_b, max_seq_len, max_seq_len)
+            attention_mask = label_seq[:, :-1] != self.pad_token
+
+            if str(self.model).split('(')[0] == 'TransfoXLModel':
+                # NOTE: Mask is (automatically) computed inside of TransfoXLModel
+                model_outputs = self.model(
+                    inputs_embeds=pos_emb_inp,
+                )
+
+            else:
+                model_outputs = self.model(
+                    inputs_embeds=pos_emb_inp,
+                    attention_mask=attention_mask,
+                )
             pos_emb_pred = model_outputs[0]
-            model_outputs = model_outputs[1:]
+            model_outputs = tuple(model_outputs[1:])
 
         trg_flat = label_seq_trg.flatten()
         non_pad_mask = (trg_flat != self.pad_token)        

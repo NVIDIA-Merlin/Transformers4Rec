@@ -4,13 +4,15 @@ import logging
 import torch.nn as nn
 
 # load transformer model and its configuration classes
-from transformers.modeling_xlnet import XLNetModel
-from transformers.configuration_xlnet import XLNetConfig
+from transformers.modeling_transfo_xl import TransfoXLModel
+from transformers.configuration_transfo_xl import TransfoXLConfig
 from transformers.modeling_gpt2 import GPT2Model
 from transformers.configuration_gpt2 import GPT2Config
 from transformers.modeling_longformer import LongformerModel
 from transformers.configuration_longformer import LongformerConfig
 from transformers.configuration_utils import PretrainedConfig
+from transformers.modeling_reformer import ReformerModelWithLMHead
+from transformers.configuration_reformer import ReformerConfig
 
 from models.gru4rec import GRU4REC
 
@@ -18,23 +20,43 @@ logger = logging.getLogger(__name__)
 
 
 def get_recsys_model(model_args, data_args, training_args, target_size=None):
+    
+    if model_args.model_type == 'reformer':
+        model_cls = ReformerModelWithLMHead
+        config = ReformerConfig(
+            attention_head_size=model_args.d_model,
+            attn_layers= ["local", "lsh"] * (model_args.n_layer // 2) \
+                if model_args.n_layer > 2 else ["local"],
+            is_decoder=True,
+            feed_forward_size=model_args.d_model * 4,
+            hidden_size=model_args.d_model,
+            num_attention_heads=model_args.n_head,
+            hidden_act=model_args.hidden_act,
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            hidden_dropout_prob=model_args.dropout,
+            pad_token_id=data_args.pad_token,
+            vocab_size=model_args.d_model, # to make it output hidden states size
+            # NOTE: Reformer itself have output size of d_model X2. To make it output d_model dim,
+            #       we use 'ReformerModelWIthLMHead` class which equips projection layer.
+        )
 
-    if model_args.model_type == 'xlnet':
-        model_cls = XLNetModel
-        config = XLNetConfig(
+    elif model_args.model_type == 'transfoxl':
+        model_cls = TransfoXLModel
+        config = TransfoXLConfig(
             d_model=model_args.d_model,
+            d_embed=model_args.d_model,
             n_layer=model_args.n_layer,
             n_head=model_args.n_head,
             d_inner=model_args.d_model * 4,
             ff_activation=model_args.hidden_act,
             untie_r=True,
-            attn_type="uni",
+            attn_type=0,
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
+            pad_token_id=data_args.pad_token,
         )
-
-    #NOTE: gpt2 and longformer are not fully tested supported yet.
 
     elif model_args.model_type == 'gpt2':
         model_cls = GPT2Model
@@ -47,6 +69,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
             n_positions=data_args.max_seq_len,
+            pad_token_id=data_args.pad_token,
         )
 
     elif model_args.model_type == 'longformer':
@@ -61,6 +84,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             dropout=model_args.dropout,
             max_position_embeddings=data_args.max_seq_len,
             vocab_size=target_size,
+            pad_token_id=data_args.pad_token,
         )
 
     elif model_args.model_type == 'gru':

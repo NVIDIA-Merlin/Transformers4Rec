@@ -92,11 +92,11 @@ class ModelArguments:
         default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy' OR 'margin_hinge'"}
     )
     model_type: Optional[str] = field(
-        default='xlnet',
+        default='transfoxl',
         metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
     )
     similarity_type: Optional[str] = field(
-        default="cosine", metadata={"help": "how to compute similarity of sequences for negative sampling: 'cosine' OR 'concat_mlp'"}
+        default="concat_mlp", metadata={"help": "how to compute similarity of sequences for negative sampling: 'cosine' OR 'concat_mlp'"}
     )
     margin_loss: Optional[float] = field(
         default=1.0, metadata={"help": "margin value for margin-hinge loss"}
