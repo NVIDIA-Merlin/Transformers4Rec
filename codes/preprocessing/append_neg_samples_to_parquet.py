@@ -221,7 +221,7 @@ def generate_neg_samples(
     neg_samples_dict = defaultdict(list)
 
     # Ignores session items and also recently interacted items
-    ignore_ids = set(np.hstack([session_pids, user_past_pids]))
+    user_interactions_item_ids = set(np.hstack([session_pids, user_past_pids]))
 
     categ_features = input_data_config.get_features_from_type("categorical")
 
@@ -233,6 +233,9 @@ def generate_neg_samples(
                 pending_n_samples = (
                     n_samples if neg_item_ids is None else n_samples - len(neg_item_ids)
                 )
+
+                # Ignores items interacted by users and already sampled negative items
+                ignore_ids = user_interactions_item_ids.union(set(neg_item_ids))
                 # Sampling item ids, with metadata features
                 (
                     neg_item_ids_from_strategy,
