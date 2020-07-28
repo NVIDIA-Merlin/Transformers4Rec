@@ -202,7 +202,7 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 model_outputs = self.model(
                     inputs_embeds=pos_emb_inp,
-                    attention_mask=attention_mask,
+                    # attention_mask=attention_mask,
                 )
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
