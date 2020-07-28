@@ -13,7 +13,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --do_eval \
     --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_${sampling_type}-2019-10/" \
     --start_date "2019-10-01" \
-    --end_date "2019-10-19" \
+    --end_date "2019-10-31" \
     --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
@@ -30,7 +30,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --learning_rate 1e-03 \
     --validate_every 10 \
     --similarity_type ${similarity_type} \
-    --num_train_epochs 20 \
+    --num_train_epochs 15 \
     --feature_config config/recsys_input_feature${feature_type}.yaml
 
 # model_type: transfoxl, gpt2, reformer, gru, lstm, 
