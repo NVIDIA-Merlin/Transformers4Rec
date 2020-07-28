@@ -1,17 +1,17 @@
 sess_pid_seq:
     dtype: categorical
-    cardinality: 300000
+    cardinality: 390000
     is_label: True
     emb_table: product_id
 sess_ccid_seq:
     dtype: categorical
-    cardinality: 700
+    cardinality: 150
     emb_table: category_id
 sess_neg_pids:
     dtype: categorical
-    cardinality: 300000
+    cardinality: 390000
     emb_table: product_id
 sess_neg_sess_ccid_seq:
     dtype: categorical
-    cardinality: 700
+    cardinality: 150
     emb_table: category_id
