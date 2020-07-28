@@ -191,11 +191,7 @@ class RecSysMetaModel(PreTrainedModel):
             Transformer Models
             """
 
-            # attention_mask: n_batch x max_seq_len x max_seq_len
-            # attention_mask = torch.triu(torch.ones(max_seq_len,max_seq_len)).transpose(0, 1).to(self.device)
-            # n_b = pos_emb_inp.size(0)
-            # attention_mask = attention_mask.unsqueeze(0).expand(n_b, max_seq_len, max_seq_len)
-            attention_mask = label_seq[:, :-1] != self.pad_token
+            attention_mask = (label_seq[:, :-1] != self.pad_token).float().to(self.device)
 
             if str(self.model).split('(')[0] == 'TransfoXLModel':
                 # NOTE: Mask is (automatically) computed inside of TransfoXLModel
