@@ -82,7 +82,7 @@ class RecSysMetaModel(PreTrainedModel):
             self.loss_fn = nn.NLLLoss()
         elif self.loss_type == 'cross_entropy_neg_1d':
             self.loss_fn = nll_1d
-        elif self.loss_type == 'margin_hinge':
+        elif self.loss_type.startswith('margin_hinge'):
             # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
             self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
         else:
@@ -125,6 +125,7 @@ class RecSysMetaModel(PreTrainedModel):
         #       as we need to know sequence length first from postiive samples
         #       and then use the sequence length to process negative samples
 
+        # TODO: refactorize using a function. 
         for cname, cinfo in self.feature_map.items():
             # Positive Samples
             if '_neg_' not in cname:
@@ -163,9 +164,14 @@ class RecSysMetaModel(PreTrainedModel):
         neg_inp = torch.cat(neg_inp, dim=-1)
 
         if label_seq is not None:
+            label_seq_inp = label_seq[:, :-1] 
             label_seq_trg = label_seq[:, 1:] 
         else:
             raise RuntimeError('label sequence is not declared in feature_map')
+
+        # apply mask on input where target is on padding token
+        mask_trg_pad = (label_seq_trg != self.pad_token)
+        label_seq_inp = label_seq_inp * mask_trg_pad
 
         # Step 2. Merge features
         
@@ -258,11 +264,20 @@ class RecSysMetaModel(PreTrainedModel):
 
             loss = self.loss_fn(items_prob_log, labels)
 
-        elif self.loss_type == 'margin_hinge':
+        elif self.loss_type.startswith('margin_hinge'):
 
-            _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
+            # _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
 
-            loss = self.loss_fn(pred_emb_flat, trg_emb_flat, _label) / num_elem 
+            # loss = self.loss_fn(pred_emb_flat, trg_emb_flat, _label) / num_elem 
+            pos_dist, neg_dist = pos_cos_score, neg_cos_score
+            
+            if self.loss_type == 'margin_hinge_a':
+                # case A
+                loss = (pos_dist.sum() + torch.relu(self.margin_loss - neg_dist).sum()) / (n_pos_ex + n_neg_ex)
+            elif self.loss_type == 'margin_hinge_b':
+                # case B (case of the paper)
+                n_neg_samples = neg_emb_inp.size(1)
+                loss = (pos_dist.sum() * n_neg_samples + torch.relu(self.margin_loss - neg_dist).sum()) / (n_pos_ex + n_neg_ex)
 
         elif self.loss_type == 'cross_entropy':
 
