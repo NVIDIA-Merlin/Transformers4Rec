@@ -294,7 +294,6 @@ class RecSysMetaModel(PreTrainedModel):
         # accuracy
         _, max_idx = torch.max(cos_sim_concat, dim=1)
         train_acc = (max_idx == n_neg_items).sum(dtype=torch.float32) / num_elem
-        print(f"train_acc: {train_acc}")
 
         outputs = (train_acc, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all, labels_all) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 
