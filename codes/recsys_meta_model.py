@@ -14,6 +14,7 @@ from transformers.modeling_utils import PreTrainedModel
 
 logger = logging.getLogger(__name__)
 
+torch.manual_seed(0)
 
 class RecSysMetaModel(PreTrainedModel):
     """
@@ -98,9 +99,12 @@ class RecSysMetaModel(PreTrainedModel):
                     ('linear2', nn.Linear(model_args.d_model // 2, model_args.d_model // 4)),
                     ('relu2', nn.LeakyReLU()),
                     ('linear3', nn.Linear(model_args.d_model // 4, 1)),
+                    ('sigmoid', nn.Sigmoid()),
                 ]       
             ))
         
+        self.cnts = []
+
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
         neg_seq: n_batch x (num_neg_samples x max_seq_len); flattened. 2D.
@@ -112,7 +116,7 @@ class RecSysMetaModel(PreTrainedModel):
         assert flatten_len % seqlen == 0
 
         n_neg_seqs_per_pos_seq = flatten_len // seqlen
-        return neg_seq.reshape((n_batch, n_neg_seqs_per_pos_seq, seqlen))
+        return neg_seq.reshape((n_batch, seqlen, n_neg_seqs_per_pos_seq))
 
     def forward(self, inputs):
         
@@ -151,6 +155,7 @@ class RecSysMetaModel(PreTrainedModel):
                 cdata = inputs[cname]
                 cdata = self._unflatten_neg_seq(cdata, max_seq_len)
                 if cinfo['dtype'] == 'categorical':
+                    neg_pids = cdata
                     cdata = self.embedding_tables[cinfo['emb_table']](cdata)
                 elif cinfo['dtype'] == 'long':
                     cdata = cdata.unsqueeze(-1).long()
@@ -181,7 +186,7 @@ class RecSysMetaModel(PreTrainedModel):
         # slice over time-steps for input and target 
         pos_emb_inp = pos_emb[:, :-1]
         pos_emb_trg = pos_emb[:, 1:]
-        neg_emb_inp = neg_emb[:, :, :-1]
+        neg_emb_inp = neg_emb[:, :-1]
 
         # Step3. Run forward pass on model architecture
 
@@ -196,20 +201,9 @@ class RecSysMetaModel(PreTrainedModel):
             """
             Transformer Models
             """
-
-            # attention_mask = (label_seq[:, :-1] != self.pad_token).float().to(self.device)
-
-            if str(self.model).split('(')[0] == 'TransfoXLModel':
-                # NOTE: Mask is (automatically) computed inside of TransfoXLModel
-                model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp,
-                )
-
-            else:
-                model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp,
-                    # attention_mask=attention_mask,
-                )
+            model_outputs = self.model(
+                inputs_embeds=pos_emb_inp,
+            )
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
 
@@ -230,8 +224,7 @@ class RecSysMetaModel(PreTrainedModel):
         pos_emb_trg_fl = torch.masked_select(pos_emb_trg, non_pad_mask.unsqueeze(1).expand_as(pos_emb_trg))
         pos_emb_trg = pos_emb_trg_fl.view(-1, pos_emb_trg.size(1))
 
-        # neg_emb_inp: (n_batch x n_negex x seqlen x emb_dim) -> (n_batch x seqlen x n_negex x emb_dim)
-        neg_emb_inp = neg_emb_inp.permute(0, 2, 1, 3)
+        # neg_emb_inp:  (n_batch x seqlen x n_negex x emb_dim)
         neg_emb_inp_fl = neg_emb_inp.reshape(-1, neg_emb_inp.size(2), neg_emb_inp.size(3))
         neg_emb_inp_fl = torch.masked_select(neg_emb_inp_fl, non_pad_mask.unsqueeze(1).unsqueeze(2).expand_as(neg_emb_inp_fl))
         neg_emb_inp = neg_emb_inp_fl.view(-1, neg_emb_inp.size(2), neg_emb_inp.size(3))
@@ -241,9 +234,10 @@ class RecSysMetaModel(PreTrainedModel):
         pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=1)
         trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_inp), dim=1).flatten(end_dim=1)
 
+        n_neg_items = neg_emb_inp.size(1)
         n_pos_ex = pos_emb_trg.size(0)
-        n_neg_ex = neg_emb_inp.size(0) * neg_emb_inp.size(1)
-        labels = torch.LongTensor([0] * n_pos_ex).to(self.device)
+        n_neg_ex = neg_emb_inp.size(0) * n_neg_items
+        labels = torch.LongTensor([n_neg_items] * n_pos_ex).to(self.device)
 
         # compute similarity
         if self.similarity_type == 'concat_mlp':
@@ -254,7 +248,7 @@ class RecSysMetaModel(PreTrainedModel):
             neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_inp, dim=2)
 
         # compute predictionss (logits)
-        cos_sim_concat = torch.cat((pos_cos_score, neg_cos_score), dim=1)
+        cos_sim_concat = torch.cat((neg_cos_score, pos_cos_score), dim=1)
         items_prob_log = F.log_softmax(cos_sim_concat, dim=1)
         predictions = torch.exp(items_prob_log)
 
@@ -292,7 +286,10 @@ class RecSysMetaModel(PreTrainedModel):
 
         # accuracy
         _, max_idx = torch.max(cos_sim_concat, dim=1)
-        train_acc = (max_idx == 0).sum(dtype=torch.float32) / num_elem
+        train_acc = (max_idx == n_neg_items).sum(dtype=torch.float32) / num_elem
+        print(f"train_acc: {train_acc}")
+
+        self.cnts.extend(max_idx.cpu().tolist())
 
         outputs = (train_acc, loss, predictions, labels) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 

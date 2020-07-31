@@ -9,6 +9,7 @@ import logging
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass, field
+from collections import Counter
 
 import yaml
 from transformers import (
@@ -141,6 +142,8 @@ def main():
                 writer.write("%s = %s\n" % (key, str(eval_avg_days[key])))
             trainer._log({f"AOD_{k}":v for k, v in eval_avg_days.items()})
                 
+    counter = Counter(trainer.model.cnts)
+    print(f"counter: {sorted(counter.items(), key=lambda x: -x[1])}")
     return results_dates
 
 
