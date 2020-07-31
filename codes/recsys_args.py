@@ -66,6 +66,10 @@ class DataArguments:
         default="config/recsys_input_feature.yaml",
         metadata={"help": "yaml file that contains feature information (columns to be read from Parquet file, its dtype, etc)"}
     )
+    feature_prefix_neg_sample: Optional[str] = field(
+        default="_neg_",
+        metadata={"help": "prefix of the column name in input parquet file for negative samples"}
+    )
 
 
 @dataclass

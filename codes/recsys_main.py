@@ -71,20 +71,22 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
-    eval_metrics = EvalMetrics()
+    eval_metrics_all, eval_metrics_neg = EvalMetrics(), EvalMetrics()
 
     trainer = RecSysTrainer(
         model=rec_model,
         args=training_args,
-        compute_metrics=eval_metrics,
+        compute_metrics_all=eval_metrics_all,
+        compute_metrics_neg=eval_metrics_neg,
         fast_test=model_args.fast_test
-        )
+    )
 
     trainer.update_wandb_args(model_args)
     trainer.update_wandb_args(data_args)
 
     data_dates = get_avail_data_dates(data_args)
-    results_dates = {}
+    results_dates_all = {}
+    results_dates_neg = {}
 
     for date_idx in range(1, len(data_dates)):
         train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx -1], data_dates[date_idx]
@@ -113,38 +115,53 @@ def main():
             logger.info("*** Evaluate (date:{})***".format(test_date))
 
             eval_output = trainer.predict()
-            eval_metrics = eval_output.metrics
+            eval_metrics_all = eval_output.metrics_all
+            eval_metrics_neg = eval_output.metrics_neg
 
             output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")
             if trainer.is_world_master():
                 with open(output_eval_file, "w") as writer:
-                    logger.info("***** Eval results (date:{})*****".format(test_date))
-                    writer.write("***** Eval results (date:{})*****".format(test_date))
-                    for key in sorted(eval_metrics.keys()):
-                        logger.info("  %s = %s", key, str(eval_metrics[key]))
-                        writer.write("%s = %s\n" % (key, str(eval_metrics[key])))
+                    logger.info("***** Eval results (all) (date:{})*****".format(test_date))
+                    writer.write("***** Eval results (all) (date:{})*****".format(test_date))
+                    for key in sorted(eval_metrics_all.keys()):
+                        logger.info("  %s = %s", key, str(eval_metrics_all[key]))
+                        writer.write("%s = %s\n" % (key, str(eval_metrics_all[key])))
+                    
+                    logger.info("***** Eval results (neg) (date:{})*****".format(test_date))
+                    writer.write("***** Eval results (neg) (date:{})*****".format(test_date))
+                    for key in sorted(eval_metrics_neg.keys()):
+                        logger.info("  %s = %s", key, str(eval_metrics_neg[key]))
+                        writer.write("%s = %s\n" % (key, str(eval_metrics_neg[key])))
 
-            results_dates[test_date] = eval_metrics
+            results_dates_all[test_date] = eval_metrics_all
+            results_dates_neg[test_date] = eval_metrics_neg
         
     logger.info("train and eval for all dates are done")
     trainer.save_model()
 
     if training_args.do_eval and trainer.is_world_master():
         
-        eval_df = pd.DataFrame.from_dict(results_dates, orient='index')
-        np.save(os.path.join(training_args.output_dir, "eval_results_dates.npy"), eval_df)
-        eval_avg_days = dict(eval_df.mean())
+        eval_df_all = pd.DataFrame.from_dict(results_dates_all, orient='index')
+        eval_df_neg = pd.DataFrame.from_dict(results_dates_neg, orient='index')
+        np.save(os.path.join(training_args.output_dir, "eval_results_dates_all.npy"), eval_df_all)
+        np.save(os.path.join(training_args.output_dir, "eval_results_dates_neg.npy"), eval_df_neg)
+        eval_avg_days_all = dict(eval_df_all.mean())
+        eval_avg_days_neg = dict(eval_df_neg.mean())
         output_eval_file = os.path.join(training_args.output_dir, "eval_results_avg.txt")
         with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results (avg over dates)*****")
-            for key in sorted(eval_avg_days.keys()):
-                logger.info("  %s = %s", key, str(eval_avg_days[key]))
-                writer.write("%s = %s\n" % (key, str(eval_avg_days[key])))
-            trainer._log({f"AOD_{k}":v for k, v in eval_avg_days.items()})
+            logger.info("***** Eval results (all) (avg over dates)*****")
+            for key in sorted(eval_avg_days_all.keys()):
+                logger.info("  %s = %s", key, str(eval_avg_days_all[key]))
+                writer.write("%s = %s\n" % (key, str(eval_avg_days_all[key])))
+            trainer._log({f"AOD_all_{k}":v for k, v in eval_avg_days_all.items()})
+            
+            logger.info("***** Eval results (neg) (avg over dates)*****")
+            for key in sorted(eval_avg_days_neg.keys()):
+                logger.info("  %s = %s", key, str(eval_avg_days_neg[key]))
+                writer.write("%s = %s\n" % (key, str(eval_avg_days_neg[key])))
+            trainer._log({f"AOD_neg_{k}":v for k, v in eval_avg_days_neg.items()})
                 
-    counter = Counter(trainer.model.cnts)
-    print(f"counter: {sorted(counter.items(), key=lambda x: -x[1])}")
-    return results_dates
+    return results_dates_all
 
 
 if __name__ == "__main__":
