@@ -106,7 +106,8 @@ class RecSysMetaModel(PreTrainedModel):
                 ]       
             ))
         
-        self.ce_rescale_factor = model_args.ce_rescale_factor
+        self.all_rescale_factor = model_args.all_rescale_factor
+        self.neg_rescale_factor = model_args.neg_rescale_factor
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -267,7 +268,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # compute logits (predicted probability of item ids)
 
-        loss_ce = self.loss_nll(predictions_all, labels_all) * self.ce_rescale_factor
+        loss_ce = self.loss_nll(predictions_all, labels_all) 
 
         if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
 
@@ -291,6 +292,8 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
+        loss_neg *= self.neg_rescale_factor
+        loss_ce *= self.all_rescale_factor
         loss = loss_neg + loss_ce
 
         # accuracy

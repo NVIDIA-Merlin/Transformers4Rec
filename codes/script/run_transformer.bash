@@ -5,6 +5,7 @@ loss_type=$2 # cross_entropy, margin_hinge, cross_entropy_neg
 similarity_type=$3 # concat_mlp, cosine
 feature_type=$4 # _full, _pidcid , _single
 sampling_type=$5 # recent_popularity, uniform, session_cooccurrence
+all_rescale_factor=$6
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -31,7 +32,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --validate_every 10 \
     --similarity_type ${similarity_type} \
     --num_train_epochs 15 \
-    --ce_rescale_factor 1e-05 \
+    --all_rescale_factor ${all_rescale_factor} \
     --feature_config config/recsys_input_feature${feature_type}.yaml
 
 # model_type: xlnet, gpt2, reformer, transfoxl, gru, lstm, 
