@@ -31,6 +31,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --validate_every 10 \
     --similarity_type ${similarity_type} \
     --num_train_epochs 15 \
+    --ce_rescale_factor 1e-05 \
     --feature_config config/recsys_input_feature${feature_type}.yaml
 
 # model_type: xlnet, gpt2, reformer, transfoxl, gru, lstm, 

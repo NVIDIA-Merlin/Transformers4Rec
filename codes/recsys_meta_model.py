@@ -106,6 +106,8 @@ class RecSysMetaModel(PreTrainedModel):
                 ]       
             ))
         
+        self.ce_rescale_factor = model_args.ce_rescale_factor
+
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
         neg_seq: n_batch x (num_neg_samples x max_seq_len); flattened. 2D.
@@ -289,7 +291,7 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        loss = loss_ce + loss_neg
+        loss = loss_neg + loss_ce * self.ce_rescale_factor
 
         # accuracy
         _, max_idx = torch.max(cos_sim_concat, dim=1)
