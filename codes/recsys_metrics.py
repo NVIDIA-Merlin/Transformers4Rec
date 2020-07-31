@@ -15,7 +15,7 @@ from recsys_utils import Timing
 
 
 class EvalMetrics(object):
-    def __init__(self, ks=[5, 10, 20, 50], use_cpu=False, use_gpu=True):
+    def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_gpu=True):
         
         f_ndcg_c = {f'ndcg_c@{k}': C_NDCG(k) for k in ks}
         f_recall_c = {f'recall_c@{k}': C_HitRate(k) for k in ks}

@@ -71,7 +71,7 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
-    eval_metrics_all, eval_metrics_neg = EvalMetrics(), EvalMetrics()
+    eval_metrics_all, eval_metrics_neg = EvalMetrics(ks=[5,10,100,1000]), EvalMetrics(ks=[5,10,50])
 
     trainer = RecSysTrainer(
         model=rec_model,

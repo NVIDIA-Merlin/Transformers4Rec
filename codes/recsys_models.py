@@ -1,6 +1,7 @@
 
 import logging
 
+import torch
 import torch.nn as nn
 
 # load transformer model and its configuration classes
@@ -23,7 +24,12 @@ logger = logging.getLogger(__name__)
 
 def get_recsys_model(model_args, data_args, training_args, target_size=None):
     
-    if model_args.model_type == 'reformer':
+
+    if model_args.model_type == 'avgseq':
+        model_cls = AvgSeq()
+        config = PretrainedConfig()
+
+    elif model_args.model_type == 'reformer':
         model_cls = ReformerModelWithLMHead
         config = ReformerConfig(
             attention_head_size=model_args.d_model,
@@ -152,7 +158,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
     else:
         raise NotImplementedError
 
-    if model_args.model_type in ['gru', 'lstm', 'gru4rec']:
+    if model_args.model_type in ['gru', 'lstm', 'gru4rec', 'avgseq']:
         model = model_cls
 
     elif model_args.model_name_or_path:
@@ -167,3 +173,16 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         model = model_cls(config)
         
     return model, config
+
+
+class AvgSeq(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, inputs_embeds):
+        # seq: n_batch x n_seq x n_dim
+        output = []
+        for i in range(1, inputs_embeds.size(1) + 1):
+            output.append(inputs_embeds[:, :i].mean(1))
+
+        return (torch.stack(output).permute(1,0,2),)
