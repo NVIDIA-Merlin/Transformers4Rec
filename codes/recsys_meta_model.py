@@ -267,7 +267,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # compute logits (predicted probability of item ids)
 
-        loss_ce = self.loss_nll(predictions_all, labels_all)
+        loss_ce = self.loss_nll(predictions_all, labels_all) * self.ce_rescale_factor
 
         if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
 
@@ -291,7 +291,7 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        loss = loss_neg + loss_ce * self.ce_rescale_factor
+        loss = loss_neg + loss_ce
 
         # accuracy
         _, max_idx = torch.max(cos_sim_concat, dim=1)
