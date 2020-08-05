@@ -6,6 +6,7 @@ similarity_type=$3 # concat_mlp, cosine
 feature_type=$4 # _full, _pidcid , _single
 sampling_type=$5 # recent_popularity, uniform, session_cooccurrence
 all_rescale_factor=$6
+d_model=$7 
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -24,7 +25,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --loss_type ${loss_type} \
     --margin_loss 0.0 \
     --logging_steps 20 \
-    --d_model 64 \
+    --d_model ${d_model} \
     --n_layer 4 \
     --n_head 2 \
     --dropout 0.2 \
