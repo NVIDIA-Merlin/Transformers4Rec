@@ -11,8 +11,9 @@ train_batch_size=$8
 let eval_batch_size=train_batch_size/2
 inp_merge=$9 # mlp or attn
 tf_out_activation=${10} # relu or tanh
-num_train_epochs=${11} 
+num_train_epochs=${11} # default 15
 neg_rescale_factor=${12} # default 1
+n_layer=${13} #default 4
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -32,7 +33,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --margin_loss 0.0 \
     --logging_steps 20 \
     --d_model ${d_model} \
-    --n_layer 4 \
+    --n_layer ${n_layer} \
     --n_head 2 \
     --dropout 0.2 \
     --learning_rate 1e-03 \
