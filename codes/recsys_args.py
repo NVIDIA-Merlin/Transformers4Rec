@@ -91,6 +91,9 @@ class ModelArguments:
     )
 
     # args for RecSys Meta model
+    inp_merge: Optional[str] = field(
+        default="mlp", metadata={"help": "input merge mechanism: 'mlp' OR 'attn'"}
+    )
 
     loss_type: Optional[str] = field(
         default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy' OR 'margin_hinge'"}

@@ -16,6 +16,22 @@ logger = logging.getLogger(__name__)
 
 torch.manual_seed(0)
 
+
+class AttnMerge(nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super().__init__()
+        self.W1 = nn.ModuleList([nn.Linear(input_dim, input_dim)] * output_dim)
+        self.output_dim = output_dim 
+        self.softmax = torch.nn.Softmax(dim=-1)
+
+    def forward(self, inp):
+        out = []
+        for i in range(self.output_dim):
+            attn_weight = self.softmax(self.W1[i](inp))
+            out.append(torch.mul(attn_weight,inp).sum(-1))
+        return torch.stack(out, dim=-1)
+
+
 class RecSysMetaModel(PreTrainedModel):
     """
     vocab_sizes : sizes of vocab for each discrete inputs
@@ -69,8 +85,15 @@ class RecSysMetaModel(PreTrainedModel):
         
         if target_dim == -1:
             raise RuntimeError('label column is not declared in feature map.')
+        
+        self.inp_merge = model_args.inp_merge
+        if self.inp_merge == 'mlp':
+            self.mlp_merge = nn.Linear(concat_input_dim, model_args.d_model)
+        elif self.inp_merge == 'attn':
+            self.attn_merge = AttnMerge(concat_input_dim, model_args.d_model)
+        else:
+            raise NotImplementedError
 
-        self.mlp_merge = nn.Linear(concat_input_dim, model_args.d_model)
         
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
@@ -109,68 +132,6 @@ class RecSysMetaModel(PreTrainedModel):
         self.all_rescale_factor = model_args.all_rescale_factor
         self.neg_rescale_factor = model_args.neg_rescale_factor
 
-    def _unflatten_neg_seq(self, neg_seq, seqlen):
-        """
-        neg_seq: n_batch x (num_neg_samples x max_seq_len); flattened. 2D.
-        """
-        assert neg_seq.dim() == 2
-
-        n_batch, flatten_len = neg_seq.size()
-        
-        assert flatten_len % seqlen == 0
-
-        n_neg_seqs_per_pos_seq = flatten_len // seqlen
-        return neg_seq.reshape((n_batch, seqlen, n_neg_seqs_per_pos_seq))
-
-    def feature_process(self, inputs, max_seq_len=None, is_neg=False):
-        if is_neg:
-            assert max_seq_len is not None, "for negative samples, max_seq_len should be provided"
-        
-        label_seq, output = None, []
-        for cname, cinfo in self.feature_map.items():
-
-            # represent (not is_neg and self.col_prefix_neg not in cname) or (is_neg and self.col_prefix_neg in cname):
-
-            if not (bool(is_neg) ^ bool(self.col_prefix_neg in cname)): 
-
-                cdata = inputs[cname]
-                if is_neg:
-                    cdata = self._unflatten_neg_seq(cdata, max_seq_len)
-
-                if 'is_label' in cinfo and cinfo['is_label']:
-                    label_seq = cdata
-                if cinfo['dtype'] == 'categorical':
-                    cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
-                    if max_seq_len is None:
-                        max_seq_len = cdata.size(1)
-                elif cinfo['dtype'] == 'long':
-                    cdata = cdata.unsqueeze(-1).long()
-                elif cinfo['dtype'] == 'float':
-                    cdata = cdata.unsqueeze(-1).float()
-                else:
-                    raise NotImplementedError
-
-                output.append(cdata)
-
-        output = torch.cat(output, dim=-1)
-
-        return output, label_seq, max_seq_len
-
-
-    def remove_pad_3d(self, inp_tensor, non_pad_mask):
-        # inp_tensor: (n_batch x seqlen x emb_dim)
-        inp_tensor = inp_tensor.flatten(end_dim=1)
-        inp_tensor_fl = torch.masked_select(inp_tensor, non_pad_mask.unsqueeze(1).expand_as(inp_tensor))
-        out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
-        return out_tensor
-
-    def remove_pad_4d(self, inp_tensor, non_pad_mask):
-        # inp_tensor: (n_batch x seqlen x n_negex x emb_dim)
-        inp_tensor_fl = inp_tensor.reshape(-1, inp_tensor.size(2), inp_tensor.size(3))
-        inp_tensor_fl = torch.masked_select(inp_tensor_fl, non_pad_mask.unsqueeze(1).unsqueeze(2).expand_as(inp_tensor_fl))
-        out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(2), inp_tensor.size(3))
-        return out_tensor
-
     def forward(self, inputs):
         
         # Step1. Unpack inputs, get embedding, and concatenate them
@@ -193,8 +154,12 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Step 2. Merge features
         
-        pos_emb = torch.tanh(self.mlp_merge(pos_inp))
-        neg_emb = torch.tanh(self.mlp_merge(neg_inp))
+        if self.inp_merge == 'mlp':
+            pos_emb = torch.tanh(self.mlp_merge(pos_inp))
+            neg_emb = torch.tanh(self.mlp_merge(neg_inp))
+        elif self.inp_merge == 'attn':
+            pos_emb = self.attn_merge(pos_inp)
+            neg_emb = self.attn_merge(neg_inp)
 
         # slice over time-steps for input and target 
         pos_emb_inp = pos_emb[:, :-1]
@@ -303,6 +268,67 @@ class RecSysMetaModel(PreTrainedModel):
         outputs = (train_acc, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all, labels_all) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 
         return outputs  # return (train_acc), (loss), (predictions), (labels), (mems), (hidden states), (attentions)
+
+    def _unflatten_neg_seq(self, neg_seq, seqlen):
+        """
+        neg_seq: n_batch x (num_neg_samples x max_seq_len); flattened. 2D.
+        """
+        assert neg_seq.dim() == 2
+
+        n_batch, flatten_len = neg_seq.size()
+        
+        assert flatten_len % seqlen == 0
+
+        n_neg_seqs_per_pos_seq = flatten_len // seqlen
+        return neg_seq.reshape((n_batch, seqlen, n_neg_seqs_per_pos_seq))
+
+    def feature_process(self, inputs, max_seq_len=None, is_neg=False):
+        if is_neg:
+            assert max_seq_len is not None, "for negative samples, max_seq_len should be provided"
+        
+        label_seq, output = None, []
+        for cname, cinfo in self.feature_map.items():
+
+            # represent (not is_neg and self.col_prefix_neg not in cname) or (is_neg and self.col_prefix_neg in cname):
+
+            if not (bool(is_neg) ^ bool(self.col_prefix_neg in cname)): 
+
+                cdata = inputs[cname]
+                if is_neg:
+                    cdata = self._unflatten_neg_seq(cdata, max_seq_len)
+
+                if 'is_label' in cinfo and cinfo['is_label']:
+                    label_seq = cdata
+                if cinfo['dtype'] == 'categorical':
+                    cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
+                    if max_seq_len is None:
+                        max_seq_len = cdata.size(1)
+                elif cinfo['dtype'] == 'long':
+                    cdata = cdata.unsqueeze(-1).long()
+                elif cinfo['dtype'] == 'float':
+                    cdata = cdata.unsqueeze(-1).float()
+                else:
+                    raise NotImplementedError
+
+                output.append(cdata)
+
+        output = torch.cat(output, dim=-1)
+
+        return output, label_seq, max_seq_len
+
+    def remove_pad_3d(self, inp_tensor, non_pad_mask):
+        # inp_tensor: (n_batch x seqlen x emb_dim)
+        inp_tensor = inp_tensor.flatten(end_dim=1)
+        inp_tensor_fl = torch.masked_select(inp_tensor, non_pad_mask.unsqueeze(1).expand_as(inp_tensor))
+        out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
+        return out_tensor
+
+    def remove_pad_4d(self, inp_tensor, non_pad_mask):
+        # inp_tensor: (n_batch x seqlen x n_negex x emb_dim)
+        inp_tensor_fl = inp_tensor.reshape(-1, inp_tensor.size(2), inp_tensor.size(3))
+        inp_tensor_fl = torch.masked_select(inp_tensor_fl, non_pad_mask.unsqueeze(1).unsqueeze(2).expand_as(inp_tensor_fl))
+        out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(2), inp_tensor.size(3))
+        return out_tensor
 
 
 def nll_1d(items_prob, _label=None):
