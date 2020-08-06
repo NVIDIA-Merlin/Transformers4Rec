@@ -11,6 +11,7 @@ train_batch_size=$8
 let eval_batch_size=train_batch_size/2
 inp_merge=$9 # mlp or attn
 tf_out_activation=${10} # relu or tanh
+num_train_epochs=${11} 
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -36,7 +37,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --learning_rate 1e-03 \
     --validate_every 10 \
     --similarity_type ${similarity_type} \
-    --num_train_epochs 15 \
+    --num_train_epochs ${num_train_epochs} \
     --all_rescale_factor ${all_rescale_factor} \
     --feature_config config/recsys_input_feature${feature_type}.yaml \
     --inp_merge ${inp_merge} \
