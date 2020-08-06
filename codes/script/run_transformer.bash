@@ -7,6 +7,8 @@ feature_type=$4 # _full, _pidcid , _single
 sampling_type=$5 # recent_popularity, uniform, session_cooccurrence
 all_rescale_factor=$6
 d_model=$7 
+train_batch_size=$8
+let eval_batch_size=train_batch_size/2
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -19,8 +21,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
-    --per_device_train_batch_size 256 \
-    --per_device_eval_batch_size 128 \
+    --per_device_train_batch_size ${train_batch_size} \
+    --per_device_eval_batch_size ${eval_batch_size} \
     --model_type ${model_type} \
     --loss_type ${loss_type} \
     --margin_loss 0.0 \
