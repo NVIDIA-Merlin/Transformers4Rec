@@ -115,10 +115,11 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.transformer_output_project = nn.Linear(model_args.d_model, model_args.d_model)
 
-        if self.similarity_type == 'concat_mlp':
+        if self.similarity_type in ['concat_mlp', 'multi_mlp']:
+            m_factor = 2 if self.similarity_type == 'concat_mlp' else 1
             self.sim_mlp = nn.Sequential(
                 OrderedDict([
-                    ('linear0', nn.Linear(model_args.d_model * 2, model_args.d_model)),
+                    ('linear0', nn.Linear(model_args.d_model * m_factor , model_args.d_model)),
                     ('relu0', nn.LeakyReLU()),
                     ('linear1', nn.Linear(model_args.d_model, model_args.d_model // 2)),
                     ('relu1', nn.LeakyReLU()),
@@ -131,6 +132,11 @@ class RecSysMetaModel(PreTrainedModel):
         
         self.all_rescale_factor = model_args.all_rescale_factor
         self.neg_rescale_factor = model_args.neg_rescale_factor
+
+        if model_args.tf_out_activation == 'tanh':
+            self.tf_out_act = torch.tanh
+        elif model_args.tf_out_activation == 'relu':
+            self.tf_out_act = torch.relu
 
     def forward(self, inputs):
         
@@ -185,7 +191,7 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
 
-        pos_emb_pred = torch.relu(self.transformer_output_project(pos_emb_pred))
+        pos_emb_pred = self.tf_out_act(self.transformer_output_project(pos_emb_pred))
 
         trg_flat = label_seq_trg.flatten()
         non_pad_mask = (trg_flat != self.pad_token)        
@@ -220,6 +226,9 @@ class RecSysMetaModel(PreTrainedModel):
         elif self.similarity_type == 'cosine':
             pos_cos_score = torch.cosine_similarity(pos_emb_pred, pos_emb_trg).unsqueeze(1)
             neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_inp, dim=2)
+        elif self.similarity_type == 'multi_mlp':
+            pos_cos_score = self.sim_mlp(pos_emb_pred * pos_emb_trg)
+            neg_cos_score = self.sim_mlp(pos_emb_pred_expanded * neg_emb_inp).squeeze(2)
 
         # compute predictionss (logits)
         cos_sim_concat = torch.cat((neg_cos_score, pos_cos_score), dim=1)

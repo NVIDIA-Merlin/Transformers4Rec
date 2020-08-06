@@ -105,6 +105,9 @@ class ModelArguments:
     similarity_type: Optional[str] = field(
         default="concat_mlp", metadata={"help": "how to compute similarity of sequences for negative sampling: 'cosine' OR 'concat_mlp'"}
     )
+    tf_out_activation: Optional[str] = field(
+        default="relu", metadata={"help": "transformer output activation: 'tanh' OR 'relu'"}
+    )
     margin_loss: Optional[float] = field(
         default=1.0, metadata={"help": "margin value for margin-hinge loss"}
     )

@@ -10,6 +10,7 @@ d_model=$7
 train_batch_size=$8
 let eval_batch_size=train_batch_size/2
 inp_merge=$9 # mlp or attn
+tf_out_activation=${10} # relu or tanh
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -38,7 +39,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --num_train_epochs 15 \
     --all_rescale_factor ${all_rescale_factor} \
     --feature_config config/recsys_input_feature${feature_type}.yaml \
-    --inp_merge ${inp_merge}
+    --inp_merge ${inp_merge} \
+    --tf_out_activation ${tf_out_activation}
 
 # model_type: xlnet, gpt2, reformer, transfoxl, gru, lstm, 
 # loss_type: cross_entropy, margin_hinge, cross_entropy_neg
