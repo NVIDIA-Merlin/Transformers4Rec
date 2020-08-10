@@ -14,6 +14,7 @@ tf_out_activation=${10} # relu or tanh
 num_train_epochs=${11} # default 15
 neg_rescale_factor=${12} # default 1
 n_layer=${13} #default 4
+dropout=${14} #default 0.2
 
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --output_dir "./tmp/" \
@@ -35,7 +36,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --d_model ${d_model} \
     --n_layer ${n_layer} \
     --n_head 2 \
-    --dropout 0.2 \
+    --dropout ${dropout} \
     --learning_rate 1e-03 \
     --validate_every 10 \
     --similarity_type ${similarity_type} \
