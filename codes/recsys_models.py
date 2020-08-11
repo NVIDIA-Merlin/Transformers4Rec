@@ -14,7 +14,7 @@ from transformers.configuration_gpt2 import GPT2Config
 from transformers.modeling_longformer import LongformerModel
 from transformers.configuration_longformer import LongformerConfig
 from transformers.configuration_utils import PretrainedConfig
-from transformers.modeling_reformer import ReformerModelWithLMHead
+from transformers.modeling_reformer import ReformerModel
 from transformers.configuration_reformer import ReformerConfig
 
 from models.gru4rec import GRU4REC
@@ -30,7 +30,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         config = PretrainedConfig()
 
     elif model_args.model_type == 'reformer':
-        model_cls = ReformerModelWithLMHead
+        model_cls = ReformerModel
         config = ReformerConfig(
             attention_head_size=model_args.d_model,
             attn_layers= ["local", "lsh"] * (model_args.n_layer // 2) \
@@ -44,10 +44,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             layer_norm_eps=model_args.layer_norm_eps,
             hidden_dropout_prob=model_args.dropout,
             pad_token_id=data_args.pad_token,
-            axial_pos_shape=[19],
-            vocab_size=model_args.d_model, # to make it output hidden states size
-            # NOTE: Reformer itself have output size of d_model X2. To make it output d_model dim,
-            #       we use 'ReformerModelWIthLMHead` class which equips projection layer.
+            vocab_size=model_args.d_model # to make it output hidden states size
         )
 
     elif model_args.model_type == 'transfoxl':
@@ -161,7 +158,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
     if model_args.model_type in ['gru', 'lstm', 'gru4rec', 'avgseq']:
         model = model_cls
 
-    elif model_args.model_name_or_path:
+    elif model_args.model_name_or_path != 'None':
         model = model_cls.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),

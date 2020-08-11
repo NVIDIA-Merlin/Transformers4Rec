@@ -30,7 +30,7 @@ from recsys_data import (
 logger = logging.getLogger(__name__)
 
 # this code use Version 3
-assert sys.version_info[0] > 2
+assert sys.version_info.major > 2
 
 def main():
 

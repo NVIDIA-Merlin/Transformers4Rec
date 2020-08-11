@@ -113,7 +113,12 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        self.transformer_output_project = nn.Linear(model_args.d_model, model_args.d_model)
+        if model_args.model_type == 'reformer':
+            tf_out_size = model_args.d_model * 2
+        else:
+            tf_out_size = model_args.d_model
+
+        self.transformer_output_project = nn.Linear(tf_out_size, model_args.d_model)
 
         if self.similarity_type in ['concat_mlp', 'multi_mlp']:
             m_factor = 2 if self.similarity_type == 'concat_mlp' else 1
