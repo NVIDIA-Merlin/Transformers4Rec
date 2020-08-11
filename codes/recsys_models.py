@@ -158,7 +158,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
     if model_args.model_type in ['gru', 'lstm', 'gru4rec', 'avgseq']:
         model = model_cls
 
-    elif model_args.model_name_or_path != 'None':
+    elif model_args.model_name_or_path:
         model = model_cls.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
