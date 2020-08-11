@@ -59,11 +59,6 @@ bash script/get_dataset.bash
 bash script/run_transformer.bash
 ```
 
-## NOTE
-- Current version does not support multi-gpu. It shows error when try to use multiple gpus. (Error is caused when the number of elements in each batch at different GPUs are different. Seems not easy to fix so far.)
-
-- Evaluation metrics part is still under-construction. 
-
 ## CODE
 - `recsys_main.py`: main experiment-running (train+eval) code
 - `recsys_models.py`: definition of various sequence models (Huggingface Transformers and PyTorch GRU,RNN,LSTMs)
