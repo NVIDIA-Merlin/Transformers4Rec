@@ -44,6 +44,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             layer_norm_eps=model_args.layer_norm_eps,
             hidden_dropout_prob=model_args.dropout,
             pad_token_id=data_args.pad_token,
+            axial_pos_shap=[19,19],
             axial_pos_embds_dim=[model_args.d_model // 2, model_args.d_model // 2],
             vocab_size=model_args.d_model # to make it output hidden states size
         )
