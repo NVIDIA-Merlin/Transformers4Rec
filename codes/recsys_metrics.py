@@ -169,7 +169,7 @@ class MetricWrapperCuPy(object):
         labels = labels.view(-1,1)
         #Creating a matrix with the same shape of predictions, where each columns values are columns indices
         n_rows, n_candidates = predictions.shape
-        pred_idxs = torch.arange(n_candidates).repeat(n_rows,1)
+        #pred_idxs = torch.arange(n_candidates).repeat(n_rows,1)
 
         #Temporary, for local test with Numpy
         #labels = labels.cpu().numpy()
@@ -179,7 +179,7 @@ class MetricWrapperCuPy(object):
         #Converting to cuPy
         labels = cp.fromDlpack(to_dlpack(labels))
         predictions = cp.fromDlpack(to_dlpack(predictions))
-        pred_idxs = cp.fromDlpack(to_dlpack(pred_idxs))
+        pred_idxs = cp.tile(cp.arange(n_candidates), (n_rows,1))
 
         #Ranks top-k item positions high highest scores
         max_top_k = max(self.topks)
