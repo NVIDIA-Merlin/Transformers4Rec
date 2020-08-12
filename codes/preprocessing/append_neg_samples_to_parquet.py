@@ -282,7 +282,7 @@ def generate_neg_samples(
                     neg_samples.append(neg_samples_zeros)
 
     # Concatenating (flattening) neg. samples of all session interactions because Petastorm data loader
-    # does not support lists of lists. It will require reshaping neg. samples features inside the Pytorch model
+    # does not support lists of lists. It will require reshaping neg. samples features to shape (max_seq_len=20, n_neg_samples=50) inside the Pytorch model
     for k in neg_samples_dict:
         neg_samples_dict[k] = np.hstack(neg_samples_dict[k])
 
