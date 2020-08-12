@@ -26,6 +26,7 @@ from recsys_utils import Timing
 
 
 from torch.utils.dlpack import to_dlpack
+import cupy as cp
 
 
 class EvalMetrics(object):
