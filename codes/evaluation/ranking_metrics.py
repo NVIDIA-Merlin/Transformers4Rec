@@ -10,6 +10,7 @@ def precision_at_n(relevant_item_ids, ranked_item_ids, topn, return_mean=True):
     return result
 
 def precision_at_n_binary(ranked_items_binary_relevance, topn, return_mean=True):
+    ranked_items_binary_relevance = ranked_items_binary_relevance[:, :topn]
     precision_by_row = ranked_items_binary_relevance.mean(axis=1)
     result = float(cp.mean(precision_by_row)) if return_mean else precision_by_row
     return result
