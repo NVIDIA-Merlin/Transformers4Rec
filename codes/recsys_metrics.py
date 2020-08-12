@@ -25,6 +25,9 @@ from evaluation.ranking_metrics import (
 from recsys_utils import Timing
 
 
+from torch.utils.dlpack import to_dlpack
+
+
 class EvalMetrics(object):
     def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_torch=True, use_cupy=True):
         self.use_cpu = use_cpu
@@ -168,9 +171,14 @@ class MetricWrapperCuPy(object):
         pred_idxs = torch.arange(n_candidates).repeat(n_rows,1)
 
         #Temporary, for local test with Numpy
-        labels = labels.cpu().numpy()
-        predictions = predictions.cpu().numpy()
-        pred_idxs = pred_idxs.cpu().numpy()
+        #labels = labels.cpu().numpy()
+        #predictions = predictions.cpu().numpy()
+        #pred_idxs = pred_idxs.cpu().numpy()
+
+        #Converting to cuPy
+        labels = cp.fromDlpack(to_dlpack(labels))
+        predictions = cp.fromDlpack(to_dlpack(predictions))
+        pred_idxs = cp.fromDlpack(to_dlpack(pred_idxs))
 
         #Ranks top-k item positions high highest scores
         max_top_k = max(self.topks)
