@@ -8,13 +8,13 @@ unzip_d () {
 
 cur_path=$(pwd)
 
-target_path="~/dataset"
+target_path="/root/dataset"
 mkdir -p ${target_path}
 
 cd ${target_path}
 
-gdown https://drive.google.com/uc?id=1f0PV3CLyN1EYzmLXBDeprqST-rf1ZaY3
-unzip ecommerce_preproc_neg_samples_50_strategy_cooccurrence_19_days_first_10k_sessions.parquet.zip
+gdown https://drive.google.com/uc?id=1y8ml-lxkwlgVgCZj2w2s_WLd63cFjtfo
+unzip_d ecommerce_preproc_neg_samples_50_strategy_session_cooccurrence-2019-10.zip
 
 gdown https://drive.google.com/uc?id=1AfyZ75KH7XwOWHZ7qY0CDix9yxIn1ejL
 unzip_d ecommerce_preproc_neg_samples_50_strategy_uniform-2019-10.zip

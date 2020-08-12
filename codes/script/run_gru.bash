@@ -13,17 +13,20 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --engine "pyarrow" \
     --reader_pool_type "process" \
     --workers_count 10 \
-    --per_device_train_batch_size 512 \
+    --per_device_train_batch_size 256 \
     --per_device_eval_batch_size 128 \
     --model_type "gru" \
     --loss_type "margin_hinge" \
+    --margin_loss 0.0 \
     --logging_steps 20 \
     --d_model 128 \
     --n_layer 4 \
     --dropout 0.2 \
-    --learning_rate 1e-04 \
-    --validate_every 20 \
-    --num_train_epochs 1000
+    --learning_rate 1e-03 \
+    --validate_every 40 \
+    --similarity_type "concat_mlp" \
+    --num_train_epochs 10 \
+    --feature_config config/recsys_input_feature.yaml
 
 # model_type: xlnet, gpt2, longformer
 # loss_type: cross_entropy, margin_hinge

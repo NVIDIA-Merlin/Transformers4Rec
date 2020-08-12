@@ -63,8 +63,8 @@ def get_dataset_len(data_paths):
     return sum([pq.ParquetFile(d_path).metadata.num_rows for d_path in data_paths])
 
 
-def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_date=None,
-                       neg_sampling=False, date_format="%Y-%m-%d", load_from_path=False):
+def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, test_date=None, 
+        date_format="%Y-%m-%d", load_from_path=False):
     """
     load_from_path: when a path is given, it automatically determines 
                     list of available parquet files in the path.
@@ -91,7 +91,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_dat
         eval_data_path = get_filenames(eval_data_path)
 
     if data_args.engine == "petastorm":
-        parquet_schema = parquet_schema_posneg if neg_sampling else parquet_schema_pos
+        parquet_schema = transform_petastorm_schema(feature_map)
 
         train_data_len = get_dataset_len(train_data_path)
         eval_data_len = get_dataset_len(eval_data_path)
@@ -136,7 +136,7 @@ def fetch_data_loaders(data_args, training_args, train_date, eval_date, test_dat
             )
 
     elif data_args.engine == "pyarrow":
-        cols_to_read = parquet_col_posneg if neg_sampling else parquet_col_pos
+        cols_to_read = feature_map.keys()
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
         train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size)
@@ -166,96 +166,12 @@ class DataLoaderWithLen(PetaStormDataLoader):
         return self.len
 
 
-def f_feature_extract_posneg(inputs):
-    """
-    This function will be used inside of trainer.py (_training_step) right before being 
-    passed inputs to a model. 
-    For negative sampling (NS) approach
-    """
-    product_seq = inputs["sess_pid_seq"].long()
-    category_seq = inputs["sess_ccid_seq"].long()
-    neg_prod_seq = inputs["sess_neg_pids"].long()
-    neg_category_seq = inputs["sess_neg_sess_ccid_seq"].long()
-    
-    return product_seq, category_seq, neg_prod_seq, neg_category_seq
-
-
-def f_feature_extract_pos(inputs):
-    """
-    This function will be used inside of trainer.py (_training_step) right before being 
-    passed inputs to a model. 
-    For negative sampling (NS) approach
-    """
-    product_seq = inputs["sess_pid_seq"].long()
-    category_seq = inputs["sess_ccid_seq"].long()
-    
-    return product_seq, category_seq
-
-
-# (PyArrow) Columns to read 
-parquet_col_posneg = ['sess_pid_seq', 'sess_ccid_seq', 'sess_neg_pids', 'sess_neg_sess_ccid_seq']
-parquet_col_pos = ['sess_pid_seq', 'sess_ccid_seq']
-
-
-# (Petastorm) A schema that we use to read specific columns from parquet data file
-parquet_schema_posneg = [
-    UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
-    UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
-    UnischemaField('sess_neg_pids', np.int64, (None,), None, True),
-    UnischemaField('sess_neg_sess_ccid_seq', np.int64, (None,), None, True),
-]
-
-parquet_schema_pos = [
-    UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
-    UnischemaField('sess_ccid_seq', np.int64, (None,), None, True),
-]
-
-
-
-# Full Schema
-# parquet_schema_full = [
-#     UnischemaField('user_idx', np.int, (), None, True),
-#     #   UnischemaField('user_session', str_, (), None, True),
-#     UnischemaField('sess_seq_len', np.int, (), None, False),
-#     UnischemaField('session_start_ts', np.int64, (), None, True),
-#     UnischemaField('user_seq_length_bef_sess', np.int, (), None, False),
-#     UnischemaField('user_elapsed_days_bef_sess', np.float, (), None, True),
-#     UnischemaField('user_elapsed_days_log_bef_sess_norm', np.double, (), None, True),
-#     UnischemaField('sess_pid_seq', np.int64, (None,), None, True),
-#     UnischemaField('sess_etime_seq', np.int64, (None,), None, True),
-#     UnischemaField('sess_etype_seq', np.int, (None,), None, True),
-#     UnischemaField('sess_csid_seq', np.int, (None,), None, True),
-#     UnischemaField('sess_ccid_seq', np.int, (None,), None, True),
-#     UnischemaField('sess_bid_seq', np.int, (None,), None, True),
-#     UnischemaField('sess_price_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_dtime_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_product_recency_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_relative_price_to_avg_category_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_hour_sin_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_hour_cos_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_month_sin_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_month_cos_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_dayofweek_sin_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_dayofweek_cos_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_dayofmonth_sin_seq', np.float, (None,), None, True),
-#     UnischemaField('sess_et_dayofmonth_cos_seq', np.float, (None,), None, True),
-#     UnischemaField('user_pid_seq_bef_sess', np.int64, (None,), None, True),
-#     UnischemaField('user_etime_seq_bef_sess', np.int64, (None,), None, True),
-#     UnischemaField('user_etype_seq_bef_sess', np.int, (None,), None, True),
-#     UnischemaField('user_csid_seq_bef_sess', np.int, (None,), None, True),
-#     UnischemaField('user_ccid_seq_bef_sess', np.int, (None,), None, True),
-#     UnischemaField('user_bid_seq_bef_sess', np.int, (None,), None, True),
-#     UnischemaField('user_price_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_dtime_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_product_recency_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_relative_price_to_avg_category_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_hour_sin_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_hour_cos_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_month_sin_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_month_cos_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_dayofweek_sin_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_dayofweek_cos_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_dayofmonth_sin_seq_bef_sess', np.float, (None,), None, True),
-#     UnischemaField('user_et_dayofmonth_cos_seq_bef_sess', np.float, (None,), None, True),
-# ]
-
+def transform_petastorm_schema(feature_map):
+    schema = []
+    for cname, cinfo in feature_map.items():
+        if cinfo['dtype'] in ['categorical', 'int']:
+            dtype = np.int64
+        elif cinfo['dtype'] == 'float':
+            dtype = np.float
+        schema.append(UnischemaField(cname, dtype, (None,), None, True))
+    return schema

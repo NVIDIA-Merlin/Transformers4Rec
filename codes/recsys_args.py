@@ -45,15 +45,6 @@ class DataArguments:
     max_seq_len: Optional[int] = field(
         default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
     )
-    num_product: Optional[int] = field(
-        default=300000, metadata={"help": "number of products (target)"}
-    )
-    num_category: Optional[int] = field(
-        default=60000, metadata={"help": "number of categories"}
-    )
-    num_categorical_features: Optional[int] = field(
-        default=2, metadata={"help": "number of categorical features of dataset (= number of embedding tables)"}
-    )
     # args for selecting which engine to use
     engine: Optional[str] = field(
         default='pyarrow', metadata={"help": "Parquet data loader engine. "
@@ -70,6 +61,15 @@ class DataArguments:
         default=10, metadata={"help": "An int for the number of workers to use in the reader pool. \
             This only is used for the thread or process pool"}
     )    
+
+    feature_config: Optional[str] = field(
+        default="config/recsys_input_feature.yaml",
+        metadata={"help": "yaml file that contains feature information (columns to be read from Parquet file, its dtype, etc)"}
+    )
+    feature_prefix_neg_sample: Optional[str] = field(
+        default="_neg_",
+        metadata={"help": "prefix of the column name in input parquet file for negative samples"}
+    )
 
 
 @dataclass
@@ -91,19 +91,22 @@ class ModelArguments:
     )
 
     # args for RecSys Meta model
+    inp_merge: Optional[str] = field(
+        default="mlp", metadata={"help": "input merge mechanism: 'mlp' OR 'attn'"}
+    )
 
     loss_type: Optional[str] = field(
         default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy' OR 'margin_hinge'"}
     )
     model_type: Optional[str] = field(
-        default='xlnet',
+        default='transfoxl',
         metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
     )
-    merge_inputs: Optional[str] = field(
-        default="elem_add", metadata={"help": "how to merge multiple input sequences: either 'elem_add' OR 'concat_mlp'"}
-    )
     similarity_type: Optional[str] = field(
-        default="cos", metadata={"help": "how to compute similarity of sequences for negative sampling based margin loss: 'cos'"}
+        default="concat_mlp", metadata={"help": "how to compute similarity of sequences for negative sampling: 'cosine' OR 'concat_mlp'"}
+    )
+    tf_out_activation: Optional[str] = field(
+        default="relu", metadata={"help": "transformer output activation: 'tanh' OR 'relu'"}
     )
     margin_loss: Optional[float] = field(
         default=1.0, metadata={"help": "margin value for margin-hinge loss"}
@@ -131,6 +134,12 @@ class ModelArguments:
     )
     dropout: Optional[float] = field(
         default=0.1, metadata={"help": "The dropout probability for all fully connected layers in the embeddings, encoder, and decoders for Transformers and RNNs"}
+    )
+    all_rescale_factor: Optional[float] = field(
+        default=1.0, metadata={"help": "rescale cross entropy loss to match with hinge-loss"}
+    )
+    neg_rescale_factor: Optional[float] = field(
+        default=1.0, metadata={"help": "rescale hinge loss to match with cross entropy loss"}
     )
 
     # misc

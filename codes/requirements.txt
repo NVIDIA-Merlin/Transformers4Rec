@@ -4,3 +4,4 @@ scikit-learn==0.23.1
 pyarrow==0.17.1
 wandb
 tensorboard 
+pyyaml
