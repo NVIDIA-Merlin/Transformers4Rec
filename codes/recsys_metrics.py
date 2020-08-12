@@ -160,37 +160,24 @@ class MetricWrapperCuPy(object):
 
     def add(self, predictions, labels):
         # represent target class id as one-hot vector
-        #labels = torch.nn.functional.one_hot(labels, predictions.size(-1))
-        
-        
-        #Creating a matrix with the same shape of predictions, where each columns values are columns indices
-        _, n_candidates = predictions.shape
-        #pred_idxs = torch.arange(n_candidates).repeat(n_rows,1)
+        labels_ohe = torch.nn.functional.one_hot(labels, predictions.size(-1))
 
         #For local debugging with Numpy
-        #labels = labels.cpu().numpy()
+        #labels_ohe = labels_ohe.cpu().numpy()
         #predictions = predictions.cpu().numpy()
 
         #Converting to cuPy
-        #labels = cp.fromDlpack(to_dlpack(labels))
+        labels_ohe = cp.fromDlpack(to_dlpack(labels_ohe))
         predictions = cp.fromDlpack(to_dlpack(predictions))        
-        #pred_idxs = cp.tile(cp.arange(n_candidates), (n_rows,1))
 
-        labels_ohe = np.eye(n_candidates)[labels]
 
         #Ranks top-k item positions high highest scores
         max_top_k = max(self.topks)
         
-        #Creating a matrix with the same shape of predictions, where each columns values are columns indices
-        #n_rows, n_candidates = predictions.shape
-        #pred_idxs = cp.tile(cp.arange(n_candidates), (n_rows,1))
-        #topk_sorted_idxs = sort_topk_matrix_row_by_another_matrix(pred_idxs, sorting_array=predictions, topk=max_top_k)
-
+        #Sorting labels by the predicted score
         labels_ohe_ranked = sort_topk_matrix_row_by_another_matrix(labels_ohe, sorting_array=predictions, topk=max_top_k)
 
-
         for topk in self.topks:
-            #result = self.f_metric(labels, topk_sorted_idxs, topn=topk, return_mean=True)
             result = self.f_metric(labels_ohe_ranked, topn=topk, return_mean=True)
             self.results[topk].append(result)
 
