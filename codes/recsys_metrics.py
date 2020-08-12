@@ -78,13 +78,13 @@ class EvalMetrics(object):
         print("preds.shape: %s", preds.shape)
 
         if self.use_torch:
-            with Timing("TORCH metrics"):
+            #with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
                 for f_measure in self.f_measures_torch:
                     f_measure.add(*EvalMetrics.flatten(preds, labels))
 
         if self.use_cupy:
-            with Timing("CUPY metrics"):    
+            #with Timing("CUPY metrics"):    
                 #Compute metrics on cuPy
                 for f_measure in self.f_measures_cupy:
                     f_measure.add(preds, labels)
