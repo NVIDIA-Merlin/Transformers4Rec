@@ -14,11 +14,11 @@ from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
 
 from evaluation.metrics_commons import sort_topk_matrix_row_by_another_matrix
 from evaluation.ranking_metrics import (
-    precision_at_n as precision_at_n_cupy,
-    recall_at_n as recall_at_n_cupy,
-    mrr_at_n as mrr_at_n_cupy,
-    map_at_n as map_at_n_cupy,
-    ndcg_at_n as ndcg_at_n_cupy
+    precision_at_n_binary as precision_at_n_cupy,
+    recall_at_n_binary as recall_at_n_cupy,
+    mrr_at_n_binary as mrr_at_n_cupy,
+    map_at_n_binary as map_at_n_cupy,
+    ndcg_at_n_binary as ndcg_at_n_cupy
 )
 
 
@@ -27,10 +27,6 @@ from recsys_utils import Timing
 
 from torch.utils.dlpack import to_dlpack
 import cupy as cp
-
-
-import logging
-logger = logging.getLogger(__name__)
 
 
 class EvalMetrics(object):
@@ -79,28 +75,19 @@ class EvalMetrics(object):
 
     def update(self, preds, labels):
 
-        logger.info("preds.shape: %s", preds.shape)
+        print("preds.shape: %s", preds.shape)
 
         if self.use_torch:
-            #start_ts = time.time()
             with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
                 for f_measure in self.f_measures_torch:
                     f_measure.add(*EvalMetrics.flatten(preds, labels))
 
-            #elapsed_ts = time.time() - start_ts 
-            #logger.info("TORCH metrics secs. %s", elapsed_ts)
-
         if self.use_cupy:
-            #start_ts = time.time()
-
             with Timing("CUPY metrics"):    
                 #Compute metrics on cuPy
                 for f_measure in self.f_measures_cupy:
                     f_measure.add(preds, labels)
-
-            #elapsed_ts = time.time() - start_ts 
-            #logger.info("CUPY metrics secs. %s", elapsed_ts)
 
         if self.use_cpu:
             # compute metrics on CPU
@@ -172,21 +159,24 @@ class MetricWrapperCuPy(object):
         self.results = {k:[] for k in self.topks}
 
     def add(self, predictions, labels):
-        #Ensuring that label has two dimensions (as the metrics does accepts multiple labels (relevant items))
-        labels = labels.view(-1,1)
+        # represent target class id as one-hot vector
+        #labels = torch.nn.functional.one_hot(labels, predictions.size(-1))
+        
+        
         #Creating a matrix with the same shape of predictions, where each columns values are columns indices
-        n_rows, n_candidates = predictions.shape
+        _, n_candidates = predictions.shape
         #pred_idxs = torch.arange(n_candidates).repeat(n_rows,1)
 
-        #Temporary, for local test with Numpy
+        #For local debugging with Numpy
         #labels = labels.cpu().numpy()
         #predictions = predictions.cpu().numpy()
-        #pred_idxs = pred_idxs.cpu().numpy()
 
         #Converting to cuPy
-        labels = cp.fromDlpack(to_dlpack(labels))
-        predictions = cp.fromDlpack(to_dlpack(predictions))
-        pred_idxs = cp.tile(cp.arange(n_candidates), (n_rows,1))
+        #labels = cp.fromDlpack(to_dlpack(labels))
+        predictions = cp.fromDlpack(to_dlpack(predictions))        
+        #pred_idxs = cp.tile(cp.arange(n_candidates), (n_rows,1))
+
+        labels_ohe = np.eye(n_candidates)[labels]
 
         #Ranks top-k item positions high highest scores
         max_top_k = max(self.topks)
@@ -196,11 +186,12 @@ class MetricWrapperCuPy(object):
         #pred_idxs = cp.tile(cp.arange(n_candidates), (n_rows,1))
         #topk_sorted_idxs = sort_topk_matrix_row_by_another_matrix(pred_idxs, sorting_array=predictions, topk=max_top_k)
 
-        topk_sorted_idxs = pred_idxs
+        labels_ohe_ranked = sort_topk_matrix_row_by_another_matrix(labels_ohe, sorting_array=predictions, topk=max_top_k)
 
 
         for topk in self.topks:
-            result = self.f_metric(labels, topk_sorted_idxs, topn=topk, return_mean=True)
+            #result = self.f_metric(labels, topk_sorted_idxs, topn=topk, return_mean=True)
+            result = self.f_metric(labels_ohe_ranked, topn=topk, return_mean=True)
             self.results[topk].append(result)
 
     def result(self):
