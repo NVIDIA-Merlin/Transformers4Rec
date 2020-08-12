@@ -66,11 +66,11 @@ class EvalMetrics(object):
             f_map_cp = MetricWrapperCuPy('map_cupy', map_at_n_cupy, ks)
             f_ndcg_cp = MetricWrapperCuPy('ndcg_cupy', ndcg_at_n_cupy, ks)
             self.f_measures_cupy.extend([
-                f_precision_cp,
-                f_recall_cp,
-                #f_mrr_cp,
-                f_map_cp,
-                f_ndcg_cp
+                #f_precision_cp,
+                #f_recall_cp,
+                f_mrr_cp,
+                #f_map_cp,
+                #f_ndcg_cp
             ])
 
     def update(self, preds, labels):
