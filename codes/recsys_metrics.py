@@ -29,6 +29,10 @@ from torch.utils.dlpack import to_dlpack
 import cupy as cp
 
 
+import logging
+logger = logging.getLogger(__name__)
+
+
 class EvalMetrics(object):
     def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_torch=True, use_cupy=True):
         self.use_cpu = use_cpu
@@ -74,6 +78,9 @@ class EvalMetrics(object):
             ])
 
     def update(self, preds, labels):
+
+        logger.info("preds.shape: %s", preds.shape)
+
         if self.use_torch:
             #start_ts = time.time()
             with Timing("TORCH metrics"):
@@ -187,7 +194,10 @@ class MetricWrapperCuPy(object):
         #Creating a matrix with the same shape of predictions, where each columns values are columns indices
         #n_rows, n_candidates = predictions.shape
         #pred_idxs = cp.tile(cp.arange(n_candidates), (n_rows,1))
-        topk_sorted_idxs = sort_topk_matrix_row_by_another_matrix(pred_idxs, sorting_array=predictions, topk=max_top_k)
+        #topk_sorted_idxs = sort_topk_matrix_row_by_another_matrix(pred_idxs, sorting_array=predictions, topk=max_top_k)
+
+        topk_sorted_idxs = pred_idxs
+
 
         for topk in self.topks:
             result = self.f_metric(labels, topk_sorted_idxs, topn=topk, return_mean=True)
