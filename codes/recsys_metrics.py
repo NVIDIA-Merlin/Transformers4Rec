@@ -12,25 +12,11 @@ from ranking_metrics_torch_karlhigley.precision_recall import precision_at, reca
 from ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
 from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
 
-from evaluation.metrics_commons import sort_topk_matrix_row_by_another_matrix
-from evaluation.ranking_metrics import (
-    precision_at_n_binary as precision_at_n_cupy,
-    recall_at_n_binary as recall_at_n_cupy,
-    mrr_at_n_binary as mrr_at_n_cupy,
-    map_at_n_binary as map_at_n_cupy,
-    ndcg_at_n_binary as ndcg_at_n_cupy
-)
-
-
 from recsys_utils import Timing
-
-
 from torch.utils.dlpack import to_dlpack
-import cupy as cp
-
 
 class EvalMetrics(object):
-    def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_torch=True, use_cupy=True):
+    def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_torch=True, use_cupy=False):
         self.use_cpu = use_cpu
         self.use_torch = use_torch
         self.use_cupy = use_cupy
@@ -60,6 +46,15 @@ class EvalMetrics(object):
 
         self.f_measures_cupy = []
         if use_cupy:
+            from evaluation.metrics_commons import sort_topk_matrix_row_by_another_matrix
+            from evaluation.ranking_metrics import (
+                precision_at_n_binary as precision_at_n_cupy,
+                recall_at_n_binary as recall_at_n_cupy,
+                mrr_at_n_binary as mrr_at_n_cupy,
+                map_at_n_binary as map_at_n_cupy,
+                ndcg_at_n_binary as ndcg_at_n_cupy
+            )
+
             f_precision_cp = MetricWrapperCuPy('precision_cupy', precision_at_n_cupy, ks)
             f_recall_cp = MetricWrapperCuPy('recall_cupy', recall_at_n_cupy, ks)
             f_mrr_cp = MetricWrapperCuPy('mrr_cupy', mrr_at_n_cupy, ks)
@@ -155,6 +150,12 @@ class MetricWrapperCuPy(object):
         self.f_metric = f_metric
         self.reset()
 
+        self.import_cupy()
+
+    def import_cupy(self):
+        import numpy as cp
+        self.cp = cp
+
     def reset(self):
         self.results = {k:[] for k in self.topks}
 
@@ -167,8 +168,8 @@ class MetricWrapperCuPy(object):
         #predictions = predictions.cpu().numpy()
 
         #Converting to cuPy
-        labels_ohe = cp.fromDlpack(to_dlpack(labels_ohe))
-        predictions = cp.fromDlpack(to_dlpack(predictions))        
+        labels_ohe = self.cp.fromDlpack(to_dlpack(labels_ohe))
+        predictions = self.cp.fromDlpack(to_dlpack(predictions))        
 
 
         #Ranks top-k item positions high highest scores
