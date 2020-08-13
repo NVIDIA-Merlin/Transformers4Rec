@@ -17,6 +17,11 @@ class TrainingArguments(HfTrainingArguments):
         metadata={"help": "Run validation set every this epoch. "
             "-1 means no validation is used (default: -1)"}
     )
+
+    # misc
+    fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
+
+    log_predictions: bool = field(default=False, metadata={"help": "Logs all predictions, labels and metadata features for test sets in parquet files."})
     
 
 @dataclass
@@ -141,7 +146,3 @@ class ModelArguments:
     neg_rescale_factor: Optional[float] = field(
         default=1.0, metadata={"help": "rescale hinge loss to match with cross entropy loss"}
     )
-
-    # misc
-
-    fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})

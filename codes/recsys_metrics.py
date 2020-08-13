@@ -69,9 +69,6 @@ class EvalMetrics(object):
             ])
 
     def update(self, preds, labels):
-
-        print("preds.shape: %s", preds.shape)
-
         if self.use_torch:
             #with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
@@ -153,7 +150,7 @@ class MetricWrapperCuPy(object):
         self.import_cupy()
 
     def import_cupy(self):
-        import numpy as cp
+        import cupy as cp
         self.cp = cp
 
     def reset(self):
