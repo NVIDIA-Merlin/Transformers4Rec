@@ -75,7 +75,7 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
-    eval_metrics_all, eval_metrics_neg = EvalMetrics(ks=[5,10,100,1000]), EvalMetrics(ks=[5,10,50])
+    eval_metrics_all, eval_metrics_neg = EvalMetrics(ks=[5,10,100,1000]), EvalMetrics(ks=[5,10])
 
     trainer = RecSysTrainer(
         model=rec_model,
@@ -120,7 +120,10 @@ def main():
             logger.info("*** Evaluate (date:{})***".format(test_date))
 
             # To log predictions in a parquet file for each day
-            prediction_logger = PredictionLogger(os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(test_date.strftime("%Y-%m-%d"))))
+            if training_args.log_predictions:
+                output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(test_date.strftime("%Y-%m-%d")))
+                logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
+                prediction_logger = PredictionLogger(output_preds_logs_path)
 
             try:
                 log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
