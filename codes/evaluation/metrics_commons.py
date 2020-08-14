@@ -27,7 +27,9 @@ def sort_topk_matrix_row_by_another_matrix(return_array, sorting_array, topk):
     # Partitioning into two vectors at the k-th position (values of the left partition will be lower than the value at k-th
     # and values on the right partition will be equal or greather the the k-th value)
     # P.s. Sounds like cuPy actually implements partition as a full sort, but is very efficient either in that case, as described in this issue: https://github.com/cupy/cupy/issues/478
-    col_indexes_by_row_partitioned_topk = cp.argpartition(sorting_array, kth=top_k_descending, axis=1)
+    col_indexes_by_row_partitioned_topk = cp.argpartition(
+        sorting_array, kth=top_k_descending, axis=1
+    )
     sorting_values_by_row_partitioned_topk = sorting_array[
         rows_indexes, col_indexes_by_row_partitioned_topk
     ]
@@ -38,7 +40,7 @@ def sort_topk_matrix_row_by_another_matrix(return_array, sorting_array, topk):
     # Resorting only the top-k items (because partition does not ensure that the left partition is sorted)
     col_indexes_by_row_sorted_topk = top_k_descending + cp.argsort(
         sorting_values_by_row_partitioned_topk[:, top_k_descending:], axis=1
-    ) 
+    )
     values_by_row_sorted_topk = cp.hstack(
         [
             values_by_row_partitioned_topk[:, :top_k_descending],
@@ -46,7 +48,7 @@ def sort_topk_matrix_row_by_another_matrix(return_array, sorting_array, topk):
         ]
     )
 
-    #Reversing the matrix so that highest values come in the top-k position
+    # Reversing the matrix so that highest values come in the top-k position
     values_by_row_sorted_topk = cp.flip(values_by_row_sorted_topk, axis=1)
 
     return values_by_row_sorted_topk

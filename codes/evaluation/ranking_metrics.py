@@ -18,7 +18,7 @@ def precision_at_n_binary(ranked_items_binary_relevance, topn, return_mean=True)
 
 def recall_at_n(relevant_item_ids, ranked_item_ids, topn, return_mean=True):
     ranked_items_binary_relevance = is_in_2d_rowwise(ranked_item_ids, in_matrix=relevant_item_ids)
-    return recall_at_n_binary(relevant_item_ids, ranked_item_ids, topn, return_mean)
+    return recall_at_n_binary(ranked_items_binary_relevance, topn, return_mean)
 
 def recall_at_n_binary(ranked_items_binary_relevance, topn, return_mean=True):
     relevant_items_by_row = ranked_items_binary_relevance.sum(axis=1)
@@ -94,3 +94,4 @@ def ndcg_at_n_binary(ranked_items_binary_relevance, topn, return_mean=True):
     ndcg_results[cp.isinf(ndcg_results) | cp.isnan(ndcg_results)] = 0
     result = float(cp.mean(ndcg_results)) if return_mean else ndcg_results
     return result
+
