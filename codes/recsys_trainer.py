@@ -468,8 +468,8 @@ class RecSysTrainer(Trainer):
 
                 if log_predictions_fn:
                     #Converting torch Tensors to NumPy and callback predictions logging function
-                    preds_metadata = {k: v.numpy() for k, v in preds_metadata.items()}
-                    log_predictions_fn(preds_neg.numpy(), labels_neg.numpy(), preds_metadata)
+                    preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
+                    log_predictions_fn(preds_neg.cpu().numpy(), labels_neg.cpu().numpy(), preds_metadata)
 
             if not prediction_loss_only:
                 # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
