@@ -14,6 +14,7 @@ import cupy as cp
 
 from .metrics_commons import sort_topk_matrix_row_by_another_matrix
 from .ranking_metrics import map_at_n, mrr_at_n, ndcg_at_n, precision_at_n, recall_at_n
+from pathlib import Path
 
 
 def args_parser():
@@ -277,7 +278,6 @@ def main():
 
         for idx_file, input_file_path in enumerate(input_parquet_files):
             rec_df = load_rec_file(input_file_path)
-            rec_df = pd.concat([pd.DataFrame(rec_df) for i in range(1000)], ignore_index=True)
 
             chunk_size = args.chunk_size if args.chunk_size else len(rec_df)
             recs_chunks = process_dataframe_into_chuncks_generator(rec_df, chunk_size=chunk_size) 
@@ -298,8 +298,8 @@ def main():
                 _add_metrics_results_to_dataframe(rec_chunk_df, metrics_results_dict)
 
                 if not pq_writer:
-                    file_name = os.path.basename(input_file_path)
-                    pq_writer = create_pq_writer(rec_chunk_df, os.path.join(args.output_parquet_path, 'eval_'+file_name))
+                    file_name = Path(input_file_path).name
+                    pq_writer = create_pq_writer(rec_chunk_df, os.path.join(args.output_parquet_path, 'eval_{}.parquet'.format(file_name)))
 
                 append_new_rows_to_parquet(rec_chunk_df, pq_writer)
 
