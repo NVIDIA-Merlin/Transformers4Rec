@@ -188,6 +188,12 @@ def _compute_ranking_topn_metrics(relevant_item_ids, ranked_rec_item_ids, top_n_
             relevant_item_ids, ranked_rec_item_ids, topn=topn, return_mean=False
         )
 
+    #If it is cuPy, convert results to numpy
+    if hasattr(cp, 'asnumpy'):
+        for k, v in metrics_results.items():
+            metrics_results[k] = cp.asnumpy(v)
+
+
     return metrics_results
 
 
