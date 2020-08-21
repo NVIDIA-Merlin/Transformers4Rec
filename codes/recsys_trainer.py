@@ -5,37 +5,38 @@ for sequential dataset packed with different format in multiple sequences
 """
 
 import logging
-import math
 import os
-import random
-import re
-import shutil
-from contextlib import contextmanager
-from pathlib import Path
-from typing import Callable, Dict, List, Optional, Tuple
+
+from typing import Dict, List, Optional, NamedTuple
 
 import numpy as np
 import torch
 from packaging import version
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
-from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
+import wandb
 
-from transformers.data.data_collator import DataCollator, default_data_collator
-from transformers.modeling_utils import PreTrainedModel
-from transformers.optimization import AdamW, get_linear_schedule_with_warmup
-from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalPrediction, PredictionOutput, TrainOutput, is_wandb_available
-from transformers.training_args import TrainingArguments, is_torch_tpu_available
+from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
+from transformers.training_args import is_torch_tpu_available
 from transformers import Trainer
 
-from metrics import EvalPredictionTensor
 
 logger = logging.getLogger(__name__)
 
 softmax = nn.Softmax(dim=-1)
+
+
+class TrainOutputAcc(NamedTuple):
+    global_step: int
+    training_loss: float
+    training_acc: float
+    
+class PredictionOutput(NamedTuple):
+    metrics_all: Optional[Dict[str, float]]
+    metrics_neg: Optional[Dict[str, float]]
+
 
 class RecSysTrainer(Trainer):
     """
@@ -43,28 +44,23 @@ class RecSysTrainer(Trainer):
     optimized for Transformers.
     """
     def __init__(self, *args, **kwargs):
-        self.train_dataloader = kwargs.pop('train_loader')
-        
-        if 'eval_loader' not in kwargs:
-            self.eval_dataloader = None
-        else:
-            self.eval_dataloader = kwargs.pop('eval_loader')
-        
-        if 'test_loader' not in kwargs:
-            self.test_dataloader = None
-        else:
-            self.test_dataloader = kwargs.pop('test_loader')
-
-        if 'f_feature_extract' not in kwargs: 
-            self.f_feature_extract = lambda x: x
-        else:
-            self.f_feature_extract = kwargs.pop('f_feature_extract')
+        self.global_step = 0
 
         if 'fast_test' not in kwargs:
             self.fast_test = False
         else:
             self.fast_test = kwargs.pop('fast_test')
 
+        if 'compute_metrics_all' not in kwargs:
+            self.compute_metrics_all = None
+        else:
+            self.compute_metrics_all = kwargs.pop('compute_metrics_all')
+        
+        if 'compute_metrics_neg' not in kwargs:
+            self.compute_metrics_neg = None
+        else:
+            self.compute_metrics_neg = kwargs.pop('compute_metrics_neg')
+        
         super(RecSysTrainer, self).__init__(*args, **kwargs)
 
     def get_rec_train_dataloader(self) -> DataLoader:
@@ -72,19 +68,27 @@ class RecSysTrainer(Trainer):
             return self.train_dataloader
         return self.get_train_dataloader()            
         
-    def get_rec_eval_dataloader(self, eval_dataset: Optional[Dataset] = None) -> DataLoader:
-        if self.eval_dataloader is not None:
-            return self.eval_dataloader
-        return self.get_eval_dataloader(eval_dataset)
+    def get_rec_eval_dataloader(self) -> DataLoader:
+        return self.eval_dataloader
 
-    def get_rec_test_dataloader(self, test_dataset: Dataset) -> DataLoader:
-        # We use the same batch_size as for eval.
-        if self.test_dataloader is not None:
-            return self.test_dataloader
-        return self.get_test_dataloader(test_dataset)
+    def get_rec_test_dataloader(self) -> DataLoader:
+        return self.test_dataloader
+
+    def set_rec_train_dataloader(self, dataloader):
+        self.train_dataloader = dataloader
+        
+    def set_rec_eval_dataloader(self, dataloader):
+        self.eval_dataloader = dataloader
+
+    def set_rec_test_dataloader(self, dataloader):
+        self.test_dataloader = dataloader
 
     def num_examples(self, dataloader):
         return len(dataloader)
+
+    def update_wandb_args(self, args):
+        if is_wandb_available:
+            wandb.config.update(args)
 
     def train(self, model_path: Optional[str] = None):
         """
@@ -160,7 +164,6 @@ class RecSysTrainer(Trainer):
         logger.info("  Gradient Accumulation steps = %d", self.args.gradient_accumulation_steps)
         logger.info("  Total optimization steps = %d", t_total)
 
-        self.global_step = 0
         self.epoch = 0
         epochs_trained = 0
         steps_trained_in_current_epoch = 0
@@ -183,7 +186,9 @@ class RecSysTrainer(Trainer):
                 logger.info("  Starting fine-tuning.")
 
         tr_loss = 0.0
+        tr_acc = 0.0
         logging_loss = 0.0
+        logging_acc = 0.0
         model.zero_grad()
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
@@ -199,9 +204,9 @@ class RecSysTrainer(Trainer):
                     parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                         self.args.device
                     )
-                    epoch_iterator = tqdm(parallel_loader, desc="Iteration", disable=not self.is_local_master())
+                    epoch_iterator = tqdm(parallel_loader, desc="In-Epoch Iteration", disable=not self.is_local_master())
                 else:
-                    epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
+                    epoch_iterator = tqdm(train_dataloader, desc="In-Epoch Iteration", disable=not self.is_local_master())
 
                 for step, inputs in enumerate(epoch_iterator):
                     
@@ -210,7 +215,9 @@ class RecSysTrainer(Trainer):
                         steps_trained_in_current_epoch -= 1
                         continue
 
-                    tr_loss += self._training_step(model, inputs, optimizer)
+                    step_loss, step_acc = self._training_step(model, inputs, optimizer)
+                    tr_loss += step_loss
+                    tr_acc += step_acc
 
                     if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                         # last step in epoch but step is always smaller than gradient_accumulation_steps
@@ -237,6 +244,7 @@ class RecSysTrainer(Trainer):
                         ):
                             logs: Dict[str, float] = {}
                             logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
+                            logs["train_accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
                             # backward compatibility for pytorch schedulers
                             logs["learning_rate"] = (
                                 scheduler.get_last_lr()[0]
@@ -244,6 +252,7 @@ class RecSysTrainer(Trainer):
                                 else scheduler.get_lr()[0]
                             )
                             logging_loss = tr_loss
+                            logging_acc = tr_acc
 
                             self._log(logs)
 
@@ -273,7 +282,7 @@ class RecSysTrainer(Trainer):
                                 torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                                 torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
-                    if (self.args.max_steps > 0 and self.global_step > self.args.max_steps) or (self.fast_test and step > 4):
+                    if (self.args.max_steps > 0 and self.global_step > self.args.max_steps) or (self.fast_test and step > 2):
                         epoch_iterator.close()
                         break
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
@@ -282,12 +291,44 @@ class RecSysTrainer(Trainer):
                 if self.args.tpu_metrics_debug:
                     # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
                     xm.master_print(met.metrics_report())
-
+                if self.args.validate_every > 0 and self.args.validate_every % (epoch + 1) == 0:
+                    self._run_validation()
         if self.tb_writer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss / self.global_step)        
+        return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
+
+    def _run_validation(self):
+        train_output_all, train_output_neg = self.evaluate(self.get_rec_train_dataloader(), "Train")
+        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_eval_dataloader(), "Valid")
+
+        output_eval_file = os.path.join(self.args.output_dir, "valid_train_results.txt")
+        if self.is_world_master():
+            with open(output_eval_file, "w") as writer:
+                logger.info(f"*** Train results (all) (epoch: {self.epoch})***")
+                writer.write(f"*** Train results (all) (epoch: {self.epoch})***")
+                for key in sorted(train_output_all.keys()):
+                    logger.info("  %s = %s", key, str(train_output_all[key]))
+                    writer.write("%s = %s\n" % (key, str(train_output_all[key])))
+
+                logger.info(f"*** Train results (neg) (epoch: {self.epoch})***")
+                writer.write(f"*** Train results (neg) (epoch: {self.epoch})***")
+                for key in sorted(train_output_neg.keys()):
+                    logger.info("  %s = %s", key, str(train_output_neg[key]))
+                    writer.write("%s = %s\n" % (key, str(train_output_neg[key])))
+
+                logger.info(f"*** Validation results (all) (epoch: {self.epoch})***")
+                writer.write(f"*** Validation results (all) (epoch: {self.epoch})***")
+                for key in sorted(valid_output_all.keys()):
+                    logger.info("  %s = %s", key, str(valid_output_all[key]))
+                    writer.write("%s = %s\n" % (key, str(valid_output_all[key])))
+
+                logger.info(f"*** Validation results (neg) (epoch: {self.epoch})***")
+                writer.write(f"*** Validation results (neg) (epoch: {self.epoch})***")
+                for key in sorted(valid_output_neg.keys()):
+                    logger.info("  %s = %s", key, str(valid_output_neg[key]))
+                    writer.write("%s = %s\n" % (key, str(valid_output_neg[key])))
 
     def _training_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
@@ -298,12 +339,14 @@ class RecSysTrainer(Trainer):
             inputs[k] = v.to(self.args.device)
         
         # NOTE: RecSys
-        outputs = model(*self.f_feature_extract(inputs))
+        outputs = model(inputs)
         
-        loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
-
+        acc = outputs[0] # accuracy
+        loss = outputs[1]  # model outputs are always tuple in transformers (see doc)
+        
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            acc = acc.mean()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
@@ -313,10 +356,11 @@ class RecSysTrainer(Trainer):
         else:
             loss.backward()
 
-        return loss.item()
+        return loss.item(), acc.item()
 
     def evaluate(
-        self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+        self, eval_dataloader: Optional[DataLoader] = None, desc: Optional[str] = "Valid",
+        prediction_loss_only: Optional[bool] = None
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -325,7 +369,7 @@ class RecSysTrainer(Trainer):
         task-dependent.
 
         Args:
-            eval_dataset: (Optional) Pass a dataset if you wish to override
+            eval_dataloader: (Optional) Pass a data loader if you wish to override
             the one on the instance.
         Returns:
             A dict containing:
@@ -334,28 +378,38 @@ class RecSysTrainer(Trainer):
         """
 
         # NOTE: RecSys
-        eval_dataloader = self.get_rec_eval_dataloader()
 
-        output = self._prediction_loop(eval_dataloader, description="Evaluation")
+        if eval_dataloader is None:
+            eval_dataloader = self.get_rec_eval_dataloader()
 
-        self._log(output.metrics)
+        output = self._prediction_loop(eval_dataloader, 
+            prediction_loss_only=prediction_loss_only, description=desc)
+
+        self._log(output.metrics_all)
+        self._log(output.metrics_neg)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        return output.metrics
+        return output.metrics_all, output.metrics_neg
 
-    def predict(self, test_dataset: Dataset) -> PredictionOutput:
+    def predict(self, test_dataloader: Optional[DataLoader] = None) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
 
         Depending on the dataset and your use case, your test dataset may contain labels.
         In that case, this method will also return metrics, like in evaluate().
         """
-        test_dataloader = self.get_test_dataloader(test_dataset)
+        if test_dataloader is None:
+            test_dataloader = self.get_rec_test_dataloader()
 
-        return self._prediction_loop(test_dataloader, description="Prediction")
+        output = self._prediction_loop(test_dataloader, description="Test")
+
+        self._log(output.metrics_neg)
+        self._log(output.metrics_all)
+
+        return output
 
     def _prediction_loop(
         self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
@@ -382,8 +436,9 @@ class RecSysTrainer(Trainer):
         logger.info("  Num examples = %d", self.num_examples(dataloader))
         logger.info("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
-        preds: torch.Tensor = None
-        label_ids: torch.Tensor = None
+        eval_losses_neg: List[float] = []
+        eval_losses_ce: List[float] = []
+        eval_accs: List[float] = []
         cnt = 0
         model.eval()
 
@@ -398,56 +453,53 @@ class RecSysTrainer(Trainer):
             with torch.no_grad():
 
                 #NOTE: RecSys
-                _inputs = self.f_feature_extract(inputs)
-                labels = _inputs[0][:, 1:]
-                
-                outputs = model(*_inputs)
+                outputs = model(inputs)
 
-                step_eval_loss, logits = outputs[:2]
+                step_eval_acc, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all = outputs[:8]
                 eval_losses += [step_eval_loss.mean().item()]
-            
+                eval_losses_neg += [step_eval_loss_neg.mean().item()]
+                eval_losses_ce += [step_eval_loss_ce.mean().item()]
+                eval_accs += [step_eval_acc.mean().item()]
+
             if not prediction_loss_only:
-                # _preds.size(): N_BATCH x SEQLEN x ITEM_SIZE (=300000)
-                _preds = logits.detach().unsqueeze(0)
-                _preds = softmax(_preds)
+                # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
+                # labels.size(): ...  x 1 [51]
 
-                if preds is None:
-                    preds = _preds
-                else:
-                    preds = torch.cat((preds, _preds), dim=0)
-                if label_ids is None:
-                    label_ids = labels.detach()
-                else:
-                    label_ids = torch.cat((label_ids, labels.detach()), dim=0)
-
+                if self.compute_metrics_neg is not None:
+                    self.compute_metrics_neg.update(preds_neg, labels_neg)
+                if self.compute_metrics_all is not None:
+                    self.compute_metrics_all.update(preds_all, labels_all)
+                    
             if self.fast_test and cnt > 4:
                 break
             cnt += 1 
 
-        if self.args.local_rank != -1:
-            # In distributed mode, concatenate all results from all nodes:
-            if preds is not None:
-                preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))
-            if label_ids is not None:
-                label_ids = self.distributed_concat(label_ids, num_total_examples=self.num_examples(dataloader))
-        elif is_torch_tpu_available():
-            # tpu-comment: Get all predictions and labels from all worker shards of eval dataset
-            if preds is not None:
-                preds = xm.mesh_reduce("eval_preds", preds, torch.cat)
-            if label_ids is not None:
-                label_ids = xm.mesh_reduce("eval_label_ids", label_ids, torch.cat)
-
-        if self.compute_metrics is not None and preds is not None and label_ids is not None:
-            preds = preds.transpose(1,2).reshape(-1, preds.size(-3), preds.size(-1))
-            metrics = self.compute_metrics(EvalPredictionTensor(predictions=preds, label_ids=label_ids))
+        if self.compute_metrics_neg is not None:
+            metrics_neg = self.compute_metrics_neg.result()
         else:
-            metrics = {}
+            metrics_neg = {}
+
+        if self.compute_metrics_all is not None:
+            metrics_all = self.compute_metrics_all.result()
+        else:
+            metrics_all = {}
+
         if len(eval_losses) > 0:
-            metrics["eval_loss"] = np.mean(eval_losses)
+            metrics_all[f"{description}_loss"] = np.mean(eval_losses)
+        if len(eval_losses_ce) > 0:
+            metrics_all[f"{description}_loss_ce"] = np.mean(eval_losses_ce)
+        if len(eval_losses_neg) > 0:
+            metrics_neg[f"{description}_loss_neg"] = np.mean(eval_losses_neg)
+        if len(eval_accs) > 0:
+            metrics_all[f"{description}_accuracy"] = np.mean(eval_accs)
 
         # Prefix all keys with eval_
-        for key in list(metrics.keys()):
-            if not key.startswith("eval_"):
-                metrics[f"eval_{key}"] = metrics.pop(key)
+        for key in list(metrics_all.keys()):
+            if not key.startswith(f"{description}_"):
+                metrics_all[f"{description}_{key}_all"] = metrics_all.pop(key)
 
-        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
+        for key in list(metrics_neg.keys()):
+            if not key.startswith(f"{description}_"):
+                metrics_neg[f"{description}_{key}_neg"] = metrics_neg.pop(key)
+        
+        return PredictionOutput(metrics_all=metrics_all, metrics_neg=metrics_neg)
