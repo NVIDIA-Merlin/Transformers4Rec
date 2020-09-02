@@ -47,6 +47,9 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --inp_merge ${inp_merge} \
     --tf_out_activation ${tf_out_activation}
 
+#cp -r ./tmp/pred_logs/ /result
+#cp -r ./tmp/*.txt /result
+
 # model_type: xlnet, gpt2, reformer, transfoxl, gru, lstm, 
 # loss_type: cross_entropy, margin_hinge, cross_entropy_neg
 # fast-test: quickly finish loop over examples to check code after the loop

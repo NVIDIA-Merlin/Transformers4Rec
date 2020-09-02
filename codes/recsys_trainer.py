@@ -466,20 +466,24 @@ class RecSysTrainer(Trainer):
                 eval_losses_ce += [step_eval_loss_ce.mean().item()]
                 eval_accs += [step_eval_acc.mean().item()]
 
+                if not prediction_loss_only:
+                    # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
+                    # labels.size(): ...  x 1 [51]
+
+                    if self.compute_metrics_neg is not None:
+                        metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg)
+                    if self.compute_metrics_all is not None:
+                        metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all)
+
                 if log_predictions_fn:
                     #Converting torch Tensors to NumPy and callback predictions logging function
                     preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
-                    log_predictions_fn(preds_neg.cpu().numpy(), labels_neg.cpu().numpy(), preds_metadata)
 
-            if not prediction_loss_only:
-                # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
-                # labels.size(): ...  x 1 [51]
-
-                if self.compute_metrics_neg is not None:
-                    self.compute_metrics_neg.update(preds_neg, labels_neg)
-                if self.compute_metrics_all is not None:
-                    self.compute_metrics_all.update(preds_all, labels_all)
+                    metrics_neg = {k: v.cpu().numpy() for k, v in metrics_results_detailed_neg.items()}
+                    metrics_all = {k: v.cpu().numpy() for k, v in metrics_results_detailed_all.items()}
                     
+                    log_predictions_fn(preds_neg.cpu().numpy(), labels_neg.cpu().numpy(), metrics_neg, metrics_all, preds_metadata)
+                        
             if self.fast_test and cnt > 4:
                 break
             cnt += 1 

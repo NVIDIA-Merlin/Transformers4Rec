@@ -201,7 +201,7 @@ class PredictionLogger:
         new_rows_pa = pyarrow.Table.from_pandas(new_rows_df)
         self.pq_writer.write_table(new_rows_pa)
 
-    def log_predictions(self, pred_scores, labels, preds_metadata):
+    def log_predictions(self, pred_scores, labels, metrics_neg, metrics_all, preds_metadata):
         new_rows = []
         for idx in range(len(labels)):
             pred_scores_next = pred_scores[idx]
@@ -209,6 +209,14 @@ class PredictionLogger:
 
             row = {'relevant_item_ids': [labels_next], 
                    'rec_item_scores': pred_scores_next}
+
+            # Adding metrics neg detailed results
+            for metric in metrics_neg:
+                row['metric_neg_'+metric] = metrics_neg[metric][idx]
+
+            # Adding metrics all detailed results
+            for metric in metrics_all:
+                row['metric_all_'+metric] = metrics_all[metric][idx]
 
             # Adding metadata features
             for feat_name in preds_metadata:

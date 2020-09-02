@@ -69,11 +69,13 @@ class EvalMetrics(object):
             ])
 
     def update(self, preds, labels):
+        metrics_results = {}
         if self.use_torch:
             #with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
                 for f_measure in self.f_measures_torch:
-                    f_measure.add(*EvalMetrics.flatten(preds, labels))
+                    results = f_measure.add(*EvalMetrics.flatten(preds, labels))
+                    metrics_results = {**metrics_results, **results}
 
         if self.use_cupy:
             #with Timing("CUPY metrics"):    
@@ -88,6 +90,8 @@ class EvalMetrics(object):
             for f_measure_ks in self.f_measures_cpu:
                 for f_measure in f_measure_ks.values():
                     f_measure.add(preds_cpu, labels_cpu)
+
+        return metrics_results
 
     def result(self):
         metrics = [] 
@@ -131,10 +135,18 @@ class MetricWrapper(object):
         labels = torch.nn.functional.one_hot(labels, predictions.size(-1))
 
         metric = self.f_metric(torch.LongTensor(self.topks), predictions, labels)
-        metric = metric.mean(0)
-        for k, measure in zip(self.topks, metric):
+        returns = {}
+        for k, measures in zip(self.topks, metric.T):
+            returns[f'{self.name}@{k}'] = measures
+
+        #Compyting the mean of the batch metrics (for each cut-off at topk)
+        metric_mean = metric.mean(0)
+        
+        for k, measure in zip(self.topks, metric_mean):
             self.results[k].append(measure.cpu().item())
 
+        return returns
+            
     def result(self):
         return {f'{self.name}@{k}': np.mean(self.results[k]) for k in self.topks}
 
