@@ -7,7 +7,7 @@ for sequential dataset packed with different format in multiple sequences
 import logging
 import os
 
-from typing import Dict, List, Optional, NamedTuple
+from typing import Dict, List, Optional, NamedTuple, Callable
 
 import numpy as np
 import torch
@@ -46,11 +46,6 @@ class RecSysTrainer(Trainer):
     def __init__(self, *args, **kwargs):
         self.global_step = 0
 
-        if 'fast_test' not in kwargs:
-            self.fast_test = False
-        else:
-            self.fast_test = kwargs.pop('fast_test')
-
         if 'compute_metrics_all' not in kwargs:
             self.compute_metrics_all = None
         else:
@@ -60,6 +55,16 @@ class RecSysTrainer(Trainer):
             self.compute_metrics_neg = None
         else:
             self.compute_metrics_neg = kwargs.pop('compute_metrics_neg')
+
+        if 'fast_test' not in kwargs:
+            self.fast_test = False
+        else:
+            self.fast_test = kwargs.pop('fast_test')
+
+        if 'log_predictions' not in kwargs:
+            self.log_predictions = False
+        else:
+            self.log_predictions = kwargs.pop('log_predictions')
         
         super(RecSysTrainer, self).__init__(*args, **kwargs)
 
@@ -394,7 +399,7 @@ class RecSysTrainer(Trainer):
 
         return output.metrics_all, output.metrics_neg
 
-    def predict(self, test_dataloader: Optional[DataLoader] = None) -> PredictionOutput:
+    def predict(self, test_dataloader: Optional[DataLoader] = None, log_predictions_fn: Callable = None) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
 
@@ -404,7 +409,7 @@ class RecSysTrainer(Trainer):
         if test_dataloader is None:
             test_dataloader = self.get_rec_test_dataloader()
 
-        output = self._prediction_loop(test_dataloader, description="Test")
+        output = self._prediction_loop(test_dataloader, description="Test", log_predictions_fn=log_predictions_fn)
 
         self._log(output.metrics_neg)
         self._log(output.metrics_all)
@@ -412,7 +417,7 @@ class RecSysTrainer(Trainer):
         return output
 
     def _prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
+        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None, log_predictions_fn: Callable = None
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by `evaluate()` and `predict()`.
@@ -455,21 +460,32 @@ class RecSysTrainer(Trainer):
                 #NOTE: RecSys
                 outputs = model(inputs)
 
-                step_eval_acc, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all = outputs[:8]
+                step_eval_acc, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all, preds_metadata = outputs[:9]
                 eval_losses += [step_eval_loss.mean().item()]
                 eval_losses_neg += [step_eval_loss_neg.mean().item()]
                 eval_losses_ce += [step_eval_loss_ce.mean().item()]
                 eval_accs += [step_eval_acc.mean().item()]
 
-            if not prediction_loss_only:
-                # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
-                # labels.size(): ...  x 1 [51]
+                if not prediction_loss_only:
+                    # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
+                    # labels.size(): ...  x 1 [51]
 
-                if self.compute_metrics_neg is not None:
-                    self.compute_metrics_neg.update(preds_neg, labels_neg)
-                if self.compute_metrics_all is not None:
-                    self.compute_metrics_all.update(preds_all, labels_all)
+                    if self.compute_metrics_neg is not None:
+                        metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+                    if self.compute_metrics_all is not None:
+                        metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
+
+                if self.log_predictions:
+                    #Converting torch Tensors to NumPy and callback predictions logging function
+                    preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
+
+                    if not log_predictions_fn:
+                        raise ValueError('If --log_predictions is enabled, a log_prediction_fn should be provided')
                     
+                    log_predictions_fn(preds_neg.cpu().numpy(), labels_neg.cpu().numpy(), 
+                                        metrics_results_detailed_neg, metrics_results_detailed_all, 
+                                        preds_metadata)
+                        
             if self.fast_test and cnt > 4:
                 break
             cnt += 1 

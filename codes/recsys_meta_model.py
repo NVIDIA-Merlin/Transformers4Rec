@@ -150,8 +150,8 @@ class RecSysMetaModel(PreTrainedModel):
         
         max_seq_len = None
 
-        pos_inp, label_seq, max_seq_len = self.feature_process(inputs)
-        neg_inp, _, _ = self.feature_process(inputs, max_seq_len, is_neg=True)
+        pos_inp, label_seq, max_seq_len, metadata_for_pred_logging = self.feature_process(inputs)
+        neg_inp, _, _, _ = self.feature_process(inputs, max_seq_len, is_neg=True)
 
         if label_seq is not None:
             label_seq_inp = label_seq[:, :-1] 
@@ -162,6 +162,14 @@ class RecSysMetaModel(PreTrainedModel):
         # apply mask on input where target is on padding token
         mask_trg_pad = (label_seq_trg != self.pad_token)
         label_seq_inp = label_seq_inp * mask_trg_pad
+
+
+        # Creating an additional feature with the position in the sequence
+        metadata_for_pred_logging['seq_pos'] = torch.arange(1, label_seq.shape[1]+1, device=self.device).repeat(label_seq.shape[0], 1)
+        for feat_name in metadata_for_pred_logging:
+            #Keeping only metadata features for the next-clicks (targets)
+            metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name][:, 1:]
+
 
         # Step 2. Merge features
         
@@ -202,6 +210,8 @@ class RecSysMetaModel(PreTrainedModel):
         non_pad_mask = (trg_flat != self.pad_token)        
         num_elem = non_pad_mask.sum()
 
+        
+
         labels_all = torch.masked_select(trg_flat, non_pad_mask)
 
         # Step4. Compute logit and label for neg+pos samples
@@ -211,6 +221,10 @@ class RecSysMetaModel(PreTrainedModel):
         pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)
         pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
         neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
+
+        #Keeping removing zero-padded items metadata features for the next-clicks (targets), so that they are aligned
+        for feat_name in metadata_for_pred_logging:
+            metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), non_pad_mask)
 
         # neg_emb_inp:  
 
@@ -279,7 +293,7 @@ class RecSysMetaModel(PreTrainedModel):
         _, max_idx = torch.max(cos_sim_concat, dim=1)
         train_acc = (max_idx == n_neg_items).sum(dtype=torch.float32) / num_elem
 
-        outputs = (train_acc, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all, labels_all) + model_outputs  # Keep mems, hidden states, attentions if there are in it
+        outputs = (train_acc, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all, labels_all, metadata_for_pred_logging) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 
         return outputs  # return (train_acc), (loss), (predictions), (labels), (mems), (hidden states), (attentions)
 
@@ -301,6 +315,7 @@ class RecSysMetaModel(PreTrainedModel):
             assert max_seq_len is not None, "for negative samples, max_seq_len should be provided"
         
         label_seq, output = None, []
+        metadata_for_pred_logging = {}
         for cname, cinfo in self.feature_map.items():
 
             # represent (not is_neg and self.col_prefix_neg not in cname) or (is_neg and self.col_prefix_neg in cname):
@@ -313,6 +328,7 @@ class RecSysMetaModel(PreTrainedModel):
 
                 if 'is_label' in cinfo and cinfo['is_label']:
                     label_seq = cdata
+
                 if cinfo['dtype'] == 'categorical':
                     cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
                     if max_seq_len is None:
@@ -324,11 +340,16 @@ class RecSysMetaModel(PreTrainedModel):
                 else:
                     raise NotImplementedError
 
+                if not is_neg:
+                    # Keeping item metadata features that will
+                    if 'log_with_preds_as_metadata' in cinfo and cinfo['log_with_preds_as_metadata'] == True:
+                        metadata_for_pred_logging[cname] = inputs[cname]
+
                 output.append(cdata)
 
         output = torch.cat(output, dim=-1)
 
-        return output, label_seq, max_seq_len
+        return output, label_seq, max_seq_len, metadata_for_pred_logging
 
     def remove_pad_3d(self, inp_tensor, non_pad_mask):
         # inp_tensor: (n_batch x seqlen x emb_dim)
