@@ -471,18 +471,20 @@ class RecSysTrainer(Trainer):
                     # labels.size(): ...  x 1 [51]
 
                     if self.compute_metrics_neg is not None:
-                        metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg)
+                        metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
                     if self.compute_metrics_all is not None:
-                        metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all)
+                        metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
 
-                if log_predictions_fn:
+                if self.log_predictions:
                     #Converting torch Tensors to NumPy and callback predictions logging function
                     preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
 
-                    metrics_neg = {k: v.cpu().numpy() for k, v in metrics_results_detailed_neg.items()}
-                    metrics_all = {k: v.cpu().numpy() for k, v in metrics_results_detailed_all.items()}
+                    if not log_predictions_fn:
+                        raise ValueError('If --log_predictions is enabled, a log_prediction_fn should be provided')
                     
-                    log_predictions_fn(preds_neg.cpu().numpy(), labels_neg.cpu().numpy(), metrics_neg, metrics_all, preds_metadata)
+                    log_predictions_fn(preds_neg.cpu().numpy(), labels_neg.cpu().numpy(), 
+                                        metrics_results_detailed_neg, metrics_results_detailed_all, 
+                                        preds_metadata)
                         
             if self.fast_test and cnt > 4:
                 break

@@ -68,20 +68,20 @@ class EvalMetrics(object):
                 #f_ndcg_cp
             ])
 
-    def update(self, preds, labels):
+    def update(self, preds, labels, return_individual_metrics=False):
         metrics_results = {}
         if self.use_torch:
             #with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
                 for f_measure in self.f_measures_torch:
-                    results = f_measure.add(*EvalMetrics.flatten(preds, labels))
+                    results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)
                     metrics_results = {**metrics_results, **results}
 
         if self.use_cupy:
             #with Timing("CUPY metrics"):    
                 #Compute metrics on cuPy
                 for f_measure in self.f_measures_cupy:
-                    f_measure.add(preds, labels)
+                    metrics_results = f_measure.add(preds, labels, return_individual_metrics=return_individual_metrics)
 
         if self.use_cpu:
             # compute metrics on CPU
@@ -120,7 +120,7 @@ class EvalMetrics(object):
 
 
 class MetricWrapper(object):
-    def __init__(self, name, f_metric, topks):
+    def __init__(self, name, f_metric, topks, return_individual_metrics=False):
         self.name = name
         self.topks = topks
         self.f_metric = f_metric
@@ -134,18 +134,25 @@ class MetricWrapper(object):
         # represent target class id as one-hot vector
         labels = torch.nn.functional.one_hot(labels, predictions.size(-1))
 
+        #Computing the metrics at different cut-offs
         metric = self.f_metric(torch.LongTensor(self.topks), predictions, labels)
-        returns = {}
-        for k, measures in zip(self.topks, metric.T):
-            returns[f'{self.name}@{k}'] = measures
 
-        #Compyting the mean of the batch metrics (for each cut-off at topk)
+        #Retrieving individual metric results (for each next-item recommendation list), to return for debug logging purposes
+        if return_individual_metrics:
+            returns = {}
+            for k, measures in zip(self.topks, metric.T):
+                returns[f'{self.name}@{k}'] = measures.cpu().numpy()
+
+        #Computing the mean of the batch metrics (for each cut-off at topk)
         metric_mean = metric.mean(0)
-        
+
+        #Storing in memory the average metric results for this batch
         for k, measure in zip(self.topks, metric_mean):
             self.results[k].append(measure.cpu().item())
 
-        return returns
+        if return_individual_metrics:
+            #Returning individual metric results, for debug logging purposes
+            return returns
             
     def result(self):
         return {f'{self.name}@{k}': np.mean(self.results[k]) for k in self.topks}
@@ -168,7 +175,7 @@ class MetricWrapperCuPy(object):
     def reset(self):
         self.results = {k:[] for k in self.topks}
 
-    def add(self, predictions, labels):
+    def add(self, predictions, labels, return_individual_metrics=False):
         # represent target class id as one-hot vector
         labels_ohe = torch.nn.functional.one_hot(labels, predictions.size(-1))
 
@@ -187,9 +194,18 @@ class MetricWrapperCuPy(object):
         #Sorting labels by the predicted score
         labels_ohe_ranked = sort_topk_matrix_row_by_another_matrix(labels_ohe, sorting_array=predictions, topk=max_top_k)
 
-        for topk in self.topks:
-            result = self.f_metric(labels_ohe_ranked, topn=topk, return_mean=True)
-            self.results[topk].append(result)
+        returns = {}
+        for k in self.topks:
+            detailed_result = self.f_metric(labels_ohe_ranked, topn=k, return_mean=False)
+            if return_individual_metrics:
+                returns[f'{self.name}@{k}'] = self.cp.asnumpy(detailed_result)
+
+            result = detailed_result.mean()
+            self.results[k].append(result)
+
+        if return_individual_metrics:
+            #Returning individual metric results, for debug logging purposes
+            return returns
 
     def result(self):
         return {f'{self.name}@{k}': np.mean(self.results[k]) for k in self.topks}
