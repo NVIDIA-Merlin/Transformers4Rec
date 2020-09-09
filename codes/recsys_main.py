@@ -8,7 +8,7 @@ import math
 import logging
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from collections import Counter
 import pyarrow
 import pyarrow.parquet as pq
@@ -31,6 +31,10 @@ from recsys_data import (
 
 logger = logging.getLogger(__name__)
 
+from dllogger import StdOutBackend, JSONStreamBackend, Verbosity
+import dllogger as DLLogger
+DLLOGGER_FILENAME = 'log.json'
+
 # this code use Version 3
 assert sys.version_info.major > 2
 
@@ -51,6 +55,9 @@ def main():
             f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
 
+    if not os.path.exists(training_args.output_dir):
+        os.makedirs(training_args.output_dir)
+
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -66,6 +73,18 @@ def main():
         training_args.fp16,
     )
     logger.info("Training/evaluation parameters %s", training_args)
+
+    DLLogger.init(backends=[
+        StdOutBackend(Verbosity.DEFAULT),
+        JSONStreamBackend(Verbosity.VERBOSE, os.path.join(training_args.output_dir, DLLOGGER_FILENAME)),
+    ])
+
+    hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
+    DLLogger.log(step="PARAMETER", 
+                 data=hparams, 
+                 verbosity=Verbosity.DEFAULT)
+    DLLogger.flush()
+
     set_seed(training_args.seed)
 
     with open(data_args.feature_config) as yaml_file:
@@ -149,8 +168,12 @@ def main():
                 results_dates_all[test_date] = eval_metrics_all
                 results_dates_neg[test_date] = eval_metrics_neg
 
+                DLLogger.log(step=(test_date.strftime("%Y-%m-%d"),), data={**eval_metrics_all, **eval_metrics_neg}, verbosity=Verbosity.VERBOSE)
+                DLLogger.flush()
+
             finally:
-                prediction_logger.close()
+                if training_args.log_predictions:
+                    prediction_logger.close()
         
     logger.info("train and eval for all dates are done")
     trainer.save_model()
@@ -176,6 +199,11 @@ def main():
                 logger.info("  %s = %s", key, str(eval_avg_days_neg[key]))
                 writer.write("%s = %s\n" % (key, str(eval_avg_days_neg[key])))
             trainer._log({f"AOD_neg_{k}":v for k, v in eval_avg_days_neg.items()})
+
+        #Logging with DLLogger for AutoBench
+        eval_avg_metrics = {**eval_avg_days_all, **eval_avg_days_neg}
+        DLLogger.log(step=(), data=eval_avg_metrics, verbosity=Verbosity.VERBOSE)
+        DLLogger.flush()
                 
     return results_dates_all
 
