@@ -74,14 +74,19 @@ class EvalMetrics(object):
             #with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
                 for f_measure in self.f_measures_torch:
-                    results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)
-                    metrics_results = {**metrics_results, **results}
+                    results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)  
+                    # Merging metrics results
+                    if return_individual_metrics:
+                        metrics_results = {**metrics_results, **results}                  
 
         if self.use_cupy:
             #with Timing("CUPY metrics"):    
                 #Compute metrics on cuPy
                 for f_measure in self.f_measures_cupy:
                     metrics_results = f_measure.add(preds, labels, return_individual_metrics=return_individual_metrics)
+                    # Merging metrics results
+                    if return_individual_metrics:
+                        metrics_results = {**metrics_results, **results}
 
         if self.use_cpu:
             # compute metrics on CPU
