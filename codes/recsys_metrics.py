@@ -120,7 +120,7 @@ class EvalMetrics(object):
 
 
 class MetricWrapper(object):
-    def __init__(self, name, f_metric, topks, return_individual_metrics=False):
+    def __init__(self, name, f_metric, topks):
         self.name = name
         self.topks = topks
         self.f_metric = f_metric
@@ -129,7 +129,7 @@ class MetricWrapper(object):
     def reset(self):
         self.results = {k:[] for k in self.topks}
 
-    def add(self, predictions, labels):
+    def add(self, predictions, labels, return_individual_metrics=False):
 
         # represent target class id as one-hot vector
         labels = torch.nn.functional.one_hot(labels, predictions.size(-1))
