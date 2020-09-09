@@ -21,7 +21,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --workers_count 10 \
     --validate_every 10 \
     --logging_steps 20 \
-    ${@:2} #Remaining parameters
+    ${@:3} #Remaining parameters
     
 echo "Copying outputs to NGC results dir"
 cp -r ./tmp/pred_logs/ /results
