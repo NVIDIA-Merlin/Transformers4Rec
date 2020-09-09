@@ -12,6 +12,7 @@ from dataclasses import dataclass, field, asdict
 from collections import Counter
 import pyarrow
 import pyarrow.parquet as pq
+import wandb
 
 import yaml
 from transformers import (
@@ -104,6 +105,13 @@ def main():
         fast_test=training_args.fast_test,
         log_predictions=training_args.log_predictions
     )
+
+    #Saving Weights & Biases run name
+    wandb.run.save()
+    wandb_run_name = wandb.run.name
+    DLLogger.log(step="PARAMETER", 
+                 data={'wandb_run_name', wandb_run_name}, 
+                 verbosity=Verbosity.DEFAULT)                 
 
     trainer.update_wandb_args(model_args)
     trainer.update_wandb_args(data_args)
