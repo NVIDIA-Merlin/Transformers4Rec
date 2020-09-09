@@ -2,7 +2,7 @@
 
 ```
 cd recsys/transformers4recsys/
-docker build --tag transf4rec_exp:0.1.0 --no-cache container/
+docker build --tag transf4rec_exp:0.1.0 --tag nvcr.io/nvidian/prj-recsys/transf4rec_exp:0.1.0 --no-cache container/
 ```
 
 ## Try locally
@@ -14,6 +14,8 @@ docker run --gpus all -it --rm transf4rec_exp:0.1.0
 Run inside the container
 ```
 cd /workspace/recsys/transformers4recsys/codes
+
+git pull origin experimentation
 
 #Download the eCommerce preprocessed dataset
 bash script/get_dataset.bash
@@ -46,14 +48,13 @@ bash script/run_transformer_v2.bash full session_cooccurrence \
 
 ## Push image to NGC
 ```
-docker tag transf4rec_exp:0.1.0 nvcr.io/nvidian/prj-recsys/transf4rec_exp:0.1.0
 docker push nvcr.io/nvidian/prj-recsys/transf4rec_exp:0.1.0
 ```
 
 ## Run a Job on NGC
 ```
 ngc batch run --name "tranf4rec-job-$(date +%Y%m%d%H%M%S)" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --port 8888 \
---commandline "wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && bash script/get_dataset.bash && bash script/run_transformer_v2.bash full session_cooccurrence \
+--commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/get_dataset.bash && date && bash script/run_transformer_v2.bash full session_cooccurrence \
   --start_date 2019-10-01 \
   --end_date 2019-10-15 \
   --per_device_train_batch_size 256 \
@@ -73,5 +74,5 @@ ngc batch run --name "tranf4rec-job-$(date +%Y%m%d%H%M%S)" --preempt RUNONCE --a
   --neg_rescale_factor 0.0 \
   --inp_merge mlp \
   --tf_out_activation tanh \
-  "
+  && date"
 ```
