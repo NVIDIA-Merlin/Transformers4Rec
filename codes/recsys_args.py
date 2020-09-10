@@ -22,6 +22,8 @@ class TrainingArguments(HfTrainingArguments):
     fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
 
     log_predictions: bool = field(default=False, metadata={"help": "Logs all predictions, labels and metadata features for test sets in parquet files."})
+
+    experiments_group: str = field(default="default", metadata={"help": "Name of the Experiments Group, for organizing job runs logged on W&B"})
     
 
 @dataclass

@@ -1,7 +1,8 @@
 mkdir -p ./tmp/
 
-feature_type=$1 # full, pidcid , single
-sampling_type=$2 # recent_popularity, uniform, session_cooccurrence
+experiments_group=$1 # Name of the experiment group for this run. Used only to organize jobs in W&B
+feature_type=$2 # full, pidcid , single
+sampling_type=$3 # recent_popularity, uniform, session_cooccurrence
 
 # engine: select which parquet data loader to use either 'pyarrow' or 'petastorm' (default: pyarrow)
 # reader_pool_type: petastorm reader arg: process or thread (default: thread)
@@ -21,7 +22,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --workers_count 10 \
     --validate_every 10 \
     --logging_steps 20 \
-    ${@:3} #Remaining parameters
+    --experiments_group ${experiments_group} \
+    ${@:4} # Forwarding Remaining parameters to the script
     
 echo "Copying outputs to NGC results dir"
 cp -r ./tmp/pred_logs/ /results
