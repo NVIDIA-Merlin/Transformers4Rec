@@ -24,11 +24,16 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --logging_steps 20 \
     --experiments_group ${experiments_group} \
     ${@:4} # Forwarding Remaining parameters to the script
+
+train_exit_status=$?    
     
 echo "Copying outputs to NGC results dir"
 cp -r ./tmp/pred_logs/ /results
 cp ./tmp/*.txt /results
 cp ./tmp/*.json /results
+
+#Ensuring that the job exit status is the same of the trainings scripts
+exit train_exit_status
 
 # Additional recsys_main.py command line parameters
 #--start_date #Example: "2019-10-01"
