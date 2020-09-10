@@ -33,7 +33,7 @@ cp ./tmp/*.txt /results
 cp ./tmp/*.json /results
 
 #Ensuring that the job exit status is the same of the trainings scripts
-exit train_exit_status
+exit ${train_exit_status}
 
 # Additional recsys_main.py command line parameters
 #--start_date #Example: "2019-10-01"
