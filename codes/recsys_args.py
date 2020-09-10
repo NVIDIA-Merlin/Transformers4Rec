@@ -103,7 +103,7 @@ class ModelArguments:
     )
 
     loss_type: Optional[str] = field(
-        default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy' OR 'margin_hinge'"}
+        default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy', 'cross_entropy_neg', 'margin_hinge'"}
     )
     model_type: Optional[str] = field(
         default='transfoxl',
@@ -116,7 +116,7 @@ class ModelArguments:
         default="relu", metadata={"help": "transformer output activation: 'tanh' OR 'relu'"}
     )
     margin_loss: Optional[float] = field(
-        default=1.0, metadata={"help": "margin value for margin-hinge loss"}
+        default=0.0, metadata={"help": "margin value for margin-hinge loss"}
     )
 
     # args for Transformers or RNNs

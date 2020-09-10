@@ -110,7 +110,7 @@ class RecSysMetaModel(PreTrainedModel):
         elif self.loss_type.startswith('margin_hinge'):
             # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
             self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
-        else:
+        elif self.loss_type != 'cross_entropy':
             raise NotImplementedError
 
         if model_args.model_type == 'reformer':
@@ -262,6 +262,7 @@ class RecSysMetaModel(PreTrainedModel):
         # compute logits (predicted probability of item ids)
 
         loss_ce = self.loss_nll(predictions_all, labels_all) 
+        loss_neg = 0
 
         if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
 
@@ -282,7 +283,7 @@ class RecSysMetaModel(PreTrainedModel):
                 n_neg_samples = neg_emb_inp.size(1)
                 loss_neg = (pos_dist.sum() * n_neg_samples + torch.relu(self.margin_loss - neg_dist).sum()) / (n_pos_ex + n_neg_ex)
 
-        else:
+        elif self.loss_type != 'cross_entropy':
             raise NotImplementedError
 
         loss_neg *= self.neg_rescale_factor
