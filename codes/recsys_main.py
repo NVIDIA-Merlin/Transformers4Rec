@@ -110,7 +110,7 @@ def main():
     wandb.run.save()
     wandb_run_name = wandb.run.name
     DLLogger.log(step="PARAMETER", 
-                 data={'wandb_run_name', wandb_run_name}, 
+                 data={'wandb_run_name': wandb_run_name}, 
                  verbosity=Verbosity.DEFAULT)                 
 
     trainer.update_wandb_args(model_args)
