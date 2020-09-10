@@ -262,7 +262,7 @@ class RecSysMetaModel(PreTrainedModel):
         # compute logits (predicted probability of item ids)
 
         loss_ce = self.loss_nll(predictions_all, labels_all) 
-        loss_neg = 0
+        loss_neg = torch.tensor(0.0, requires_grad=False)
 
         if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
 
