@@ -13,7 +13,7 @@ mkdir -p ${target_path}
 
 cd ${target_path}
       
-gdown https://drive.google.com/uc?id=1IUl14SLI3wZUsyqGIhKYT6o7dBVYA9cC
+gdown https://drive.google.com/uc?id=1yrpcuSq53Jq5sPT9qTcf4bd9LhTlbdvb
 unzip_d ecommerce_preproc_neg_samples_50_strategy_session_cooccurrence-2019-10.zip
 
 #gdown https://drive.google.com/uc?id=1AfyZ75KH7XwOWHZ7qY0CDix9yxIn1ejL
