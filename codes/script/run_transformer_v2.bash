@@ -15,7 +15,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --overwrite_output_dir \
     --do_train \
     --do_eval \
-    --data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_${sampling_type}-2019-10/" \
+    --data_path "/data" \
     --feature_config config/recsys_input_feature_${feature_type}.yaml \
     --engine "pyarrow" \
     --reader_pool_type "process" \
@@ -24,6 +24,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --logging_steps 20 \
     --experiments_group ${experiments_group} \
     ${@:4} # Forwarding Remaining parameters to the script
+
+#--data_path "/root/dataset/ecommerce_preproc_neg_samples_50_strategy_${sampling_type}-2019-10/" \
 
 train_exit_status=$?    
     
