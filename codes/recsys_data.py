@@ -2,6 +2,7 @@
 Set data-specific schema, vocab sizes, and feature extract function.
 """
  
+import os
 import math
 from datetime import datetime
 from datetime import date, timedelta
@@ -74,16 +75,16 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
     
     # TODO: make this at outer-loop for making evaluation based on days-data-partition
     train_data_path = [
-        d_path + "session_start_date={}-train.parquet".format(train_date.strftime(date_format)),
+        os.path.join(d_path, "session_start_date={}-train.parquet".format(train_date.strftime(date_format))),
     ]
 
     eval_data_path = [
-        d_path + "session_start_date={}-test.parquet".format(eval_date.strftime(date_format)),
+        os.path.join(d_path, "session_start_date={}-test.parquet".format(eval_date.strftime(date_format))),
     ]
 
     if test_date is not None:
         test_data_path = [
-            d_path + "session_start_date={}.parquet".format(test_date.strftime(date_format)),
+            os.path.join(d_path, "session_start_date={}.parquet".format(test_date.strftime(date_format))),
         ]
 
     if load_from_path:

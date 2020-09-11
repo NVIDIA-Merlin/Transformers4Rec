@@ -15,7 +15,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --overwrite_output_dir \
     --do_train \
     --do_eval \
-    --data_path "/data" \
+    --data_path "/data/" \
     --feature_config config/recsys_input_feature_${feature_type}.yaml \
     --engine "pyarrow" \
     --reader_pool_type "process" \
