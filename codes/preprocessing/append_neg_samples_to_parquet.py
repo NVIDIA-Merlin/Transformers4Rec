@@ -308,7 +308,7 @@ def append_new_rows_to_parquet(new_rows_df, pq_writer):
 
 def get_data_chunk_generator(input_file, chunck_size, subsample_first_n_sessions_by_day):
     def process_dataframe_into_chuncks_generator(df, chunk_size):
-        number_chunks = len(df) // chunk_size + 1
+        number_chunks = int(math.ceil(len(df) / chunk_size))
         for i in range(number_chunks):
             start_idx = i * chunk_size
             end_idx = (i + 1) * chunk_size
