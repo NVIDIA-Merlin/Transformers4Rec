@@ -368,7 +368,24 @@ class RecSysTrainer(Trainer):
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
-        
+        #l1_reg_factor = torch.tensor(1e-5)
+        l2_reg_factor = torch.tensor(1e-4)    
+
+        #L1_reg = torch.tensor(0., requires_grad=True)
+        L2_reg = torch.tensor(0., requires_grad=True)
+        for name, param in model.named_parameters():
+            if 'embedding_tables' in name:
+                #L1_reg = L1_reg + torch.norm(param, 1)
+                L2_reg = L2_reg + torch.norm(param, 2)
+
+        #L1_reg = L1_reg * l1_reg_factor
+        L2_reg = L2_reg * l2_reg_factor
+
+        self._log({#'l1_reg_loss': L1_reg,
+                   'l2_reg_loss': L2_reg,
+                   'loss_before_reg': loss})
+
+        loss = loss + L2_reg
 
         if self.args.fp16:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
