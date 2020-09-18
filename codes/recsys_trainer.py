@@ -20,7 +20,7 @@ import wandb
 
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
 from transformers.training_args import is_torch_tpu_available
-from transformers import Trainer, get_constant_schedule, get_constant_schedule_with_warmup
+from transformers import Trainer, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 
 
 logger = logging.getLogger(__name__)
@@ -369,7 +369,7 @@ class RecSysTrainer(Trainer):
             loss = loss / self.args.gradient_accumulation_steps
 
         #l1_reg_factor = torch.tensor(1e-5)
-        l2_reg_factor = torch.tensor(1e-4)    
+        l2_reg_factor = torch.tensor(1e-3)    
 
         #L1_reg = torch.tensor(0., requires_grad=True)
         L2_reg = torch.tensor(0., requires_grad=True)
