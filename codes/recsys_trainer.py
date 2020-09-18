@@ -368,6 +368,9 @@ class RecSysTrainer(Trainer):
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
+
+        '''
+
         #l1_reg_factor = torch.tensor(1e-5)
         l2_reg_factor = torch.tensor(1e-3)    
 
@@ -382,10 +385,12 @@ class RecSysTrainer(Trainer):
         L2_reg = L2_reg * l2_reg_factor
 
         self._log({#'l1_reg_loss': L1_reg,
-                   'l2_reg_loss': L2_reg,
-                   'loss_before_reg': loss})
+                   'l2_reg_loss': L2_reg.item(),
+                   'loss_before_reg': loss.item()})
 
         loss = loss + L2_reg
+
+        '''
 
         if self.args.fp16:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
