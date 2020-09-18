@@ -20,7 +20,7 @@ import wandb
 
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
 from transformers.training_args import is_torch_tpu_available
-from transformers import Trainer
+from transformers import Trainer, get_constant_schedule, get_constant_schedule_with_warmup
 
 
 logger = logging.getLogger(__name__)
@@ -115,7 +115,19 @@ class RecSysTrainer(Trainer):
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
-        optimizer, scheduler = self.get_optimizers(num_training_steps=t_total)
+        optimizer, _ = self.get_optimizers(num_training_steps=t_total)
+
+        
+        if self.args.learning_rate_schedule == 'constant_with_warmup':
+            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps)
+        elif self.args.learning_rate_schedule == 'linear_with_warmup':
+            scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=t_total)
+        elif self.args.learning_rate_schedule == 'cosine_with_warmup':
+            scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=t_total,
+                                                                   num_cycles= self.args.learning_rate_num_cosine_cycles)
+        else:
+            raise ValueError('Invalid value for --learning_rate_schedule.  Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup')
+
 
         # Check if saved optimizer or scheduler states exist
         if (
@@ -162,7 +174,8 @@ class RecSysTrainer(Trainer):
                 * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
             )
         logger.info("***** Running training *****")
-        logger.info("  Num examples = %d", self.num_examples(train_dataloader))
+        logger.info("  Num samples by epoch = %d", self.num_examples(train_dataloader) * self.args.train_batch_size)
+        logger.info("  Num steps by epoch = %d", self.num_examples(train_dataloader))
         logger.info("  Num Epochs = %d", num_train_epochs)
         logger.info("  Instantaneous batch size per device = %d", self.args.per_device_train_batch_size)
         logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
@@ -354,6 +367,8 @@ class RecSysTrainer(Trainer):
             acc = acc.mean()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
+
+        
 
         if self.args.fp16:
             with amp.scale_loss(loss, optimizer) as scaled_loss:
