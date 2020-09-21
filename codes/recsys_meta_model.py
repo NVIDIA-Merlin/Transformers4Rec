@@ -6,6 +6,7 @@ A meta class supports various (Huggingface) transformer models for RecSys tasks.
 import logging
 from collections import OrderedDict
 
+import math
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -30,6 +31,13 @@ class AttnMerge(nn.Module):
             attn_weight = self.softmax(self.W1[i](inp))
             out.append(torch.mul(attn_weight,inp).sum(-1))
         return torch.stack(out, dim=-1)
+
+
+def get_embedding_size_from_cardinality(cardinality, multiplier=2):
+    # A rule-of-thumb from Google.
+    embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
+    return embedding_size
+
 
 
 class RecSysMetaModel(PreTrainedModel):
@@ -70,12 +78,13 @@ class RecSysMetaModel(PreTrainedModel):
         for cname, cinfo in self.feature_map.items():
             if self.col_prefix_neg not in cname:
                 if cinfo['dtype'] == 'categorical':
+                    embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])
                     self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
                         cinfo['cardinality'], 
-                        model_args.d_model, 
+                        embedding_size, 
                         padding_idx=self.pad_token
                     )
-                    concat_input_dim += model_args.d_model
+                    concat_input_dim += embedding_size
                 elif cinfo['dtype'] in ['long', 'float']:
                     concat_input_dim += 1   
                 else:
@@ -312,6 +321,7 @@ class RecSysMetaModel(PreTrainedModel):
         return neg_seq.reshape((n_batch, seqlen, n_neg_seqs_per_pos_seq))
 
     def feature_process(self, inputs, max_seq_len=None, is_neg=False):
+        
         if is_neg:
             assert max_seq_len is not None, "for negative samples, max_seq_len should be provided"
         
@@ -334,6 +344,7 @@ class RecSysMetaModel(PreTrainedModel):
                     cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)
+
                 elif cinfo['dtype'] == 'long':
                     cdata = cdata.unsqueeze(-1).long()
                 elif cinfo['dtype'] == 'float':

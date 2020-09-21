@@ -1,26 +1,26 @@
 sess_pid_seq:
     dtype: categorical
-    cardinality: 390000
+    cardinality: 250000
     is_label: True
     emb_table: product_id
     log_with_preds_as_metadata: True
 sess_ccid_seq:
     dtype: categorical
-    cardinality: 1000
+    cardinality: 150
     emb_table: category_id
     log_with_preds_as_metadata: True
-sess_price_seq:
-    dtype: float
 sess_csid_seq:
     dtype: categorical
-    cardinality: 1000
+    cardinality: 800
     emb_table: category_s_id
     log_with_preds_as_metadata: True
 sess_bid_seq:
     dtype: categorical
-    cardinality: 7000
+    cardinality: 5000
     emb_table: brand
     log_with_preds_as_metadata: True
+sess_price_seq:
+    dtype: float    
 sess_relative_price_to_avg_category_seq:
     dtype: float
 sess_product_recency_seq:
@@ -28,21 +28,21 @@ sess_product_recency_seq:
     log_with_preds_as_metadata: True
 sess_neg_pids:
     dtype: categorical
-    cardinality: 390000
+    cardinality: 250000
     emb_table: product_id
 sess_neg_sess_ccid_seq:
     dtype: categorical
-    cardinality: 1000
+    cardinality: 150
     emb_table: category_id
 sess_neg_sess_price_seq:
     dtype: float
 sess_neg_sess_csid_seq:
     dtype: categorical
-    cardinality: 1000
+    cardinality: 800
     emb_table: category_s_id
 sess_neg_sess_bid_seq:
     dtype: categorical
-    cardinality: 7000
+    cardinality: 5000
     emb_table: brand
 sess_neg_sess_relative_price_to_avg_category_seq:
     dtype: float
