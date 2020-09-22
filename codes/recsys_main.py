@@ -237,22 +237,25 @@ class PredictionLogger:
         new_rows_pa = pyarrow.Table.from_pandas(new_rows_df)
         self.pq_writer.write_table(new_rows_pa)
 
-    def log_predictions(self, pred_scores, labels, metrics_neg, metrics_all, preds_metadata):
+    def log_predictions(self, pred_scores_neg, labels_neg, metrics_neg, metrics_all, preds_metadata):
+        num_predictions = preds_metadata[list(preds_metadata.keys())[0]].shape[0]
         new_rows = []
-        for idx in range(len(labels)):
-            pred_scores_next = pred_scores[idx]
-            labels_next = labels[idx]
+        for idx in range(num_predictions):
+            row = {}
 
-            row = {'relevant_item_ids': [labels_next], 
-                   'rec_item_scores': pred_scores_next}
+            if metrics_all is not None:
+                # Adding metrics all detailed results
+                for metric in metrics_all:
+                    row['metric_all_'+metric] = metrics_all[metric][idx]
 
-            # Adding metrics neg detailed results
-            for metric in metrics_neg:
-                row['metric_neg_'+metric] = metrics_neg[metric][idx]
+            if metrics_neg is not None:
+                # Adding metrics neg detailed results
+                for metric in metrics_neg:
+                    row['metric_neg_'+metric] = metrics_neg[metric][idx]
 
-            # Adding metrics all detailed results
-            for metric in metrics_all:
-                row['metric_all_'+metric] = metrics_all[metric][idx]
+            if labels_neg is not None:
+                row['relevant_item_ids'] = [labels_neg[idx]]
+                row['rec_item_scores'] = pred_scores_neg[idx]
 
             # Adding metadata features
             for feat_name in preds_metadata:

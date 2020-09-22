@@ -360,7 +360,7 @@ class RecSysTrainer(Trainer):
         outputs = model(inputs)
         
         acc = outputs[0] # accuracy
-        loss = outputs[1]  # model outputs are always tuple in transformers (see doc)
+        loss = outputs[2]  # model outputs are always tuple in transformers (see doc)
         
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
@@ -481,6 +481,7 @@ class RecSysTrainer(Trainer):
         eval_losses_neg: List[float] = []
         eval_losses_ce: List[float] = []
         eval_accs: List[float] = []
+        eval_accs_neg: List[float] = []
         cnt = 0
         model.eval()
 
@@ -497,31 +498,41 @@ class RecSysTrainer(Trainer):
                 #NOTE: RecSys
                 outputs = model(inputs)
 
-                step_eval_acc, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all, preds_metadata = outputs[:9]
-                eval_losses += [step_eval_loss.mean().item()]
-                eval_losses_neg += [step_eval_loss_neg.mean().item()]
+                step_eval_acc, step_eval_acc_neg, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all, preds_metadata = outputs[:10]
+                eval_accs += [step_eval_acc.mean().item()]                
+                eval_losses += [step_eval_loss.mean().item()]                
                 eval_losses_ce += [step_eval_loss_ce.mean().item()]
-                eval_accs += [step_eval_acc.mean().item()]
+                if step_eval_acc_neg is not None:
+                    eval_accs_neg += [step_eval_acc_neg.mean().item()]
+                    eval_losses_neg += [step_eval_loss_neg.mean().item()]
+                
 
                 if not prediction_loss_only:
                     # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
                     # labels.size(): ...  x 1 [51]
-
-                    if self.compute_metrics_neg is not None:
-                        metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+                    
+                    metrics_results_detailed_all = None
+                    metrics_results_detailed_neg = None
                     if self.compute_metrics_all is not None:
                         metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
+                    if self.compute_metrics_neg is not None:
+                        if preds_neg is not None:
+                            metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
 
-                if self.log_predictions:
-                    #Converting torch Tensors to NumPy and callback predictions logging function
-                    preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
+                    if self.log_predictions:
+                        #Converting torch Tensors to NumPy and callback predictions logging function
+                        preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
 
-                    if not log_predictions_fn:
-                        raise ValueError('If --log_predictions is enabled, a log_prediction_fn should be provided')
-                    
-                    log_predictions_fn(preds_neg.cpu().numpy(), labels_neg.cpu().numpy(), 
-                                        metrics_results_detailed_neg, metrics_results_detailed_all, 
-                                        preds_metadata)
+                        if log_predictions_fn is not None:                            
+                        
+                            preds_neg_values = None
+                            labels_neg_values = None
+                            if preds_neg is not None:
+                                preds_neg_values = preds_neg.cpu().numpy()
+                                labels_neg_values = labels_neg.cpu().numpy()
+                            log_predictions_fn(preds_neg_values, labels_neg_values, 
+                                                metrics_results_detailed_neg, metrics_results_detailed_all, 
+                                                preds_metadata)
                         
             if self.fast_test and cnt > 4:
                 break
@@ -540,11 +551,13 @@ class RecSysTrainer(Trainer):
         if len(eval_losses) > 0:
             metrics_all[f"{description}_loss"] = np.mean(eval_losses)
         if len(eval_losses_ce) > 0:
-            metrics_all[f"{description}_loss_ce"] = np.mean(eval_losses_ce)
+            metrics_all[f"{description}_loss_xe"] = np.mean(eval_losses_ce)
         if len(eval_losses_neg) > 0:
-            metrics_neg[f"{description}_loss_neg"] = np.mean(eval_losses_neg)
+            metrics_neg[f"{description}_loss_xe_neg"] = np.mean(eval_losses_neg)
         if len(eval_accs) > 0:
             metrics_all[f"{description}_accuracy"] = np.mean(eval_accs)
+        if len(eval_accs_neg) > 0:
+            metrics_all[f"{description}_accuracy_neg"] = np.mean(eval_accs_neg)
 
         # Prefix all keys with eval_
         for key in list(metrics_all.keys()):
