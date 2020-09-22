@@ -140,13 +140,13 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         cols_to_read = feature_map.keys()
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
-        train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size)
+        train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size, drop_last=training_args.dataloader_drop_last)
         eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
-        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size)
+        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
 
         if test_date is not None:
             test_dataset = ParquetDataset(test_data_path, cols_to_read)
-            test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size)
+            test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
     
     if test_date is None:
         test_loader = None

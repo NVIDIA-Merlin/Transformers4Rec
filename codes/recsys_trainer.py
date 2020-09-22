@@ -475,7 +475,7 @@ class RecSysTrainer(Trainer):
 
         batch_size = dataloader.batch_size
         logger.info("***** Running %s *****", description)
-        logger.info("  Num examples = %d", self.num_examples(dataloader))
+        logger.info("  Num steps = %d", self.num_examples(dataloader))
         logger.info("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
         eval_losses_neg: List[float] = []
