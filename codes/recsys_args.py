@@ -27,7 +27,7 @@ class TrainingArguments(HfTrainingArguments):
 
     learning_rate_schedule: str = field(default="constant_with_warmup", metadata={"help": "Learning Rate schedule (restarted for each training day). Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup"})
     learning_rate_warmup_steps: int = field(default=0, metadata={"help": "Number of steps to linearly increase the learning rate from 0 to the specified initial learning rate schedule. Valid for --learning_rate_schedule = constant_with_warmup | linear_with_warmup | cosine_with_warmup"})
-    learning_rate_num_cosine_cycles: int = field(default=0.5, metadata={"help": "Number of cycles for --learning_rate_schedule = cosine_with_warmup. The number of waves in the cosine schedule (the defaults is to just decrease from the max value to 0 following a half-cosine)."})
+    learning_rate_num_cosine_cycles: float = field(default=0.5, metadata={"help": "Number of cycles for --learning_rate_schedule = cosine_with_warmup. The number of waves in the cosine schedule (the defaults is to just decrease from the max value to 0 following a half-cosine)."})
     
 
 @dataclass
