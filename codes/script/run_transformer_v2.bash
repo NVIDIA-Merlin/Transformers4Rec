@@ -31,6 +31,7 @@ train_exit_status=$?
     
 echo "Copying outputs to NGC results dir"
 cp -r ./tmp/pred_logs/ /results
+cp -r ./tmp/attention_weights/ /results
 cp ./tmp/*.txt /results
 cp ./tmp/*.json /results
 

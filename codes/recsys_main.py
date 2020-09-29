@@ -30,6 +30,11 @@ from recsys_data import (
     get_avail_data_dates
 )
 
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 logger = logging.getLogger(__name__)
 
 from dllogger import StdOutBackend, JSONStreamBackend, Verbosity
@@ -40,6 +45,7 @@ DLLOGGER_FILENAME = 'log.json'
 assert sys.version_info.major > 2
 
 PRED_LOG_PARQUET_FILE_PATTERN = 'pred_logs/preds_date_{}.parquet'
+ATTENTION_LOG_FOLDER = 'attention_weights'
 
 def main():
 
@@ -152,9 +158,17 @@ def main():
                 logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
                 prediction_logger = PredictionLogger(output_preds_logs_path)
 
+
+            if training_args.log_attention_weights:
+                attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
+                logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
+                att_weights_logger = AttentionWeightsLogger(attention_output_path)
+
             try:
                 log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
-                eval_output = trainer.predict(log_predictions_fn=log_predictions_fn)
+                att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
+                
+                eval_output = trainer.predict(log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn)
                 eval_metrics_all = eval_output.metrics_all
                 eval_metrics_neg = eval_output.metrics_neg
 
@@ -214,6 +228,22 @@ def main():
         DLLogger.flush()
                 
     return results_dates_all
+
+
+class AttentionWeightsLogger:
+
+    def __init__(self, output_path):
+        self.output_path = output_path
+        if not os.path.exists(self.output_path):
+                os.makedirs(self.output_path)
+
+    def log(self, inputs, att_weights, description):
+        filename = os.path.join(self.output_path, description+'.pickle')
+
+        data = (inputs, att_weights)
+        with open(filename, 'wb') as ouf:
+            pickle.dump(data, ouf)
+            ouf.close()
 
 
 

@@ -23,6 +23,8 @@ class TrainingArguments(HfTrainingArguments):
 
     log_predictions: bool = field(default=False, metadata={"help": "Logs all predictions, labels and metadata features for test sets in parquet files."})
 
+    log_attention_weights: bool = field(default=False, metadata={"help": "Logs the inputs and attention weights of the first 3 batches of test set"})
+
     experiments_group: str = field(default="default", metadata={"help": "Name of the Experiments Group, for organizing job runs logged on W&B"})
 
     learning_rate_schedule: str = field(default="constant_with_warmup", metadata={"help": "Learning Rate schedule (restarted for each training day). Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup"})

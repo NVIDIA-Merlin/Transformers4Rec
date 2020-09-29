@@ -21,7 +21,7 @@ import wandb
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
 from transformers.training_args import is_torch_tpu_available
 from transformers import Trainer, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
-
+from transformers import PreTrainedModel
 
 logger = logging.getLogger(__name__)
 
@@ -436,7 +436,8 @@ class RecSysTrainer(Trainer):
 
         return output.metrics_all, output.metrics_neg
 
-    def predict(self, test_dataloader: Optional[DataLoader] = None, log_predictions_fn: Callable = None) -> PredictionOutput:
+    def predict(self, test_dataloader: Optional[DataLoader] = None, 
+                log_predictions_fn: Callable = None, log_attention_weights_fn: Callable = None) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
 
@@ -446,7 +447,8 @@ class RecSysTrainer(Trainer):
         if test_dataloader is None:
             test_dataloader = self.get_rec_test_dataloader()
 
-        output = self._prediction_loop(test_dataloader, description="Test", log_predictions_fn=log_predictions_fn)
+        output = self._prediction_loop(test_dataloader, description="Test", 
+                        log_predictions_fn=log_predictions_fn, log_attention_weights_fn=log_attention_weights_fn)
 
         self._log(output.metrics_neg)
         self._log(output.metrics_all)
@@ -454,7 +456,8 @@ class RecSysTrainer(Trainer):
         return output
 
     def _prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None, log_predictions_fn: Callable = None
+        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None, 
+        log_predictions_fn: Callable = None, log_attention_weights_fn: Callable = None
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by `evaluate()` and `predict()`.
@@ -505,9 +508,26 @@ class RecSysTrainer(Trainer):
                 if step_eval_acc_neg is not None:
                     eval_accs_neg += [step_eval_acc_neg.mean().item()]
                     eval_losses_neg += [step_eval_loss_neg.mean().item()]
-                
+
 
                 if not prediction_loss_only:
+
+                    if self.args.log_attention_weights and cnt < 3 and \
+                          isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                        
+
+                        if log_attention_weights_fn is not None:
+                            step_attention_weights = list([layer_att.cpu().numpy() for layer_att in outputs[11]])
+
+                            #Converting torch Tensors to NumPy and callback predictions logging function
+                            inputs_cpu = {k: v.cpu().numpy() for k, v in inputs.items()}
+
+                            log_attention_weights_fn(inputs=inputs_cpu, 
+                                                    att_weights=step_attention_weights, 
+                                                    description='attention_{}_step_{:06}'.format(description, self.global_step))
+                    
+                    
+                    
+                    
                     # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
                     # labels.size(): ...  x 1 [51]
                     
