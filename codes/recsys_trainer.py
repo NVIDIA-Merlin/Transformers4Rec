@@ -526,8 +526,15 @@ class RecSysTrainer(Trainer):
                      # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
                     # labels.size(): ...  x 1 [51]
                     
-                    if step % self.args.compute_metrics_each_n_steps == 0:
-                        
+                    #TODO: Remove temporary code, here only to speedup the last hypertuning session
+                    if description in ["Train", "Valid"]:
+                        compute_metrics_each_n_steps = 50
+                    else:
+                        compute_metrics_each_n_steps = self.args.compute_metrics_each_n_steps
+                    
+                    if step % compute_metrics_each_n_steps == 0:
+                    #if step % self.compute_metrics_each_n_steps == 0:
+
                         #Updates metrics and returns detailed metrics if log_predictions=True
                         metrics_results_detailed_all = None
                         metrics_results_detailed_neg = None
