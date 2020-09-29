@@ -500,8 +500,14 @@ class RecSysTrainer(Trainer):
 
                 #NOTE: RecSys
                 outputs = model(inputs)
-
+                
                 step_eval_acc, step_eval_acc_neg, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all, preds_metadata = outputs[:10]
+                
+                step_attention_weights = None
+                if self.args.log_attention_weights:
+                    step_attention_weights = outputs[11]
+
+
                 eval_accs += [step_eval_acc.mean().item()]                
                 eval_losses += [step_eval_loss.mean().item()]                
                 eval_losses_ce += [step_eval_loss_ce.mean().item()]
@@ -512,35 +518,36 @@ class RecSysTrainer(Trainer):
 
                 if not prediction_loss_only:
 
+                     # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
+                    # labels.size(): ...  x 1 [51]
+                    
+                    #Updates metrics and returns detailed metrics if log_predictions=True
+                    metrics_results_detailed_all = None
+                    metrics_results_detailed_neg = None
+                    if self.compute_metrics_all is not None:
+                        metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
+                    if self.compute_metrics_neg is not None:
+                        if preds_neg is not None:
+                            metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+
+
                     #Log predictions and attention weights only for the first 10 batches of the test set
-                    if cnt < 10:
+                    if cnt < self.args.log_preds_att_weights_first_n_steps:
 
                         if self.args.log_attention_weights and \
                             isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                        
 
                             if log_attention_weights_fn is not None:
-                                step_attention_weights = list([layer_att.cpu().numpy() for layer_att in outputs[11]])
+                                
+                                step_attention_weights_cpu = list([layer_att.cpu().numpy() for layer_att in step_attention_weights])
 
                                 #Converting torch Tensors to NumPy and callback predictions logging function
                                 inputs_cpu = {k: v.cpu().numpy() for k, v in inputs.items()}
 
                                 log_attention_weights_fn(inputs=inputs_cpu, 
-                                                        att_weights=step_attention_weights, 
+                                                        att_weights=step_attention_weights_cpu, 
                                                         description='attention_{}_step_{:06}'.format(description, self.global_step))
-                        
-                        
-                        
-                        
-                        # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
-                        # labels.size(): ...  x 1 [51]
-                        
-                        metrics_results_detailed_all = None
-                        metrics_results_detailed_neg = None
-                        if self.compute_metrics_all is not None:
-                            metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
-                        if self.compute_metrics_neg is not None:
-                            if preds_neg is not None:
-                                metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+                                               
 
                         if self.log_predictions:
                             #Converting torch Tensors to NumPy and callback predictions logging function
