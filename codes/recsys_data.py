@@ -101,6 +101,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         eval_data_path = ['file://' + p for p in eval_data_path]
         if test_date is not None:
             test_data_path = ['file://' + p for p in test_data_path]
+            test_data_len = get_dataset_len(eval_data_path)
 
         train_loader = DataLoaderWithLen(
             make_batch_reader(train_data_path, 
@@ -133,7 +134,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                     workers_count=data_args.workers_count,
                 ), 
                 batch_size=training_args.per_device_eval_batch_size,
-                len=math.ceil(eval_data_len / training_args.per_device_eval_batch_size),
+                len=math.ceil(test_data_len / training_args.per_device_eval_batch_size),
             )
 
     elif data_args.engine == "pyarrow":

@@ -274,8 +274,8 @@ class RecSysTrainer(Trainer):
 
                             self._log(logs)
 
-                            if self.args.evaluate_during_training:
-                                self.evaluate()
+                            #if self.args.evaluate_during_training:
+                            #    self.evaluate()
 
                         if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
                             # In all cases (even distributed/parallel), self.model is always a reference
@@ -309,8 +309,13 @@ class RecSysTrainer(Trainer):
                 if self.args.tpu_metrics_debug:
                     # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
                     xm.master_print(met.metrics_report())
-                if self.args.validate_every > 0 and self.args.validate_every % (epoch + 1) == 0:
+                
+                if self.args.validate_every > 0 and (epoch + 1) % self.args.validate_every == 0:
                     self._run_validation()
+
+            # Compute metrics on Train set and Eval Set after all training epochs (for each day)
+            self._run_validation()
+            
         if self.tb_writer:
             self.tb_writer.close()
 
@@ -485,7 +490,7 @@ class RecSysTrainer(Trainer):
         eval_losses_ce: List[float] = []
         eval_accs: List[float] = []
         eval_accs_neg: List[float] = []
-        cnt = 0
+        step = 0
         model.eval()
 
         if is_torch_tpu_available():
@@ -521,18 +526,17 @@ class RecSysTrainer(Trainer):
                      # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
                     # labels.size(): ...  x 1 [51]
                     
-                    #Updates metrics and returns detailed metrics if log_predictions=True
-                    metrics_results_detailed_all = None
-                    metrics_results_detailed_neg = None
-                    if self.compute_metrics_all is not None:
-                        metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
-                    if self.compute_metrics_neg is not None:
-                        if preds_neg is not None:
-                            metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+                    if step % self.args.compute_metrics_each_n_steps == 0:
+                        
+                        #Updates metrics and returns detailed metrics if log_predictions=True
+                        metrics_results_detailed_all = None
+                        metrics_results_detailed_neg = None
+                        if self.compute_metrics_all is not None:
+                            metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
+                        if self.compute_metrics_neg is not None:
+                            if preds_neg is not None:
+                                metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
 
-
-                    #Log predictions and attention weights only for the first 10 batches of the test set
-                    if cnt < self.args.log_preds_att_weights_first_n_steps:
 
                         if self.args.log_attention_weights and \
                             isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                        
@@ -564,9 +568,9 @@ class RecSysTrainer(Trainer):
                                                     metrics_results_detailed_neg, metrics_results_detailed_all, 
                                                     preds_metadata)
                         
-            if self.fast_test and cnt > 4:
+            if self.fast_test and step > 4:
                 break
-            cnt += 1 
+            step += 1 
 
         if self.compute_metrics_neg is not None:
             metrics_neg = self.compute_metrics_neg.result()

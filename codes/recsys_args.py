@@ -21,9 +21,10 @@ class TrainingArguments(HfTrainingArguments):
     # misc
     fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
 
-    log_predictions: bool = field(default=False, metadata={"help": "Logs all predictions, labels and metadata features for test sets in parquet files."})
-    log_attention_weights: bool = field(default=False, metadata={"help": "Logs the inputs and attention weights of the first 3 batches of test set"})
-    log_preds_att_weights_first_n_steps: int = field(default=10, metadata={"help": "Logs predictions and attention weights for the first N steps for each day (if --log_predictions and --log_attention_weights, respectivelly"})
+    compute_metrics_each_n_steps: int = field(default=10, metadata={"help": "Log metrics each n steps (for train, validation and test sets)"})
+
+    log_predictions: bool = field(default=False, metadata={"help": "Logs predictions, labels and metadata features each --compute_metrics_each_n_steps (for test set)."})
+    log_attention_weights: bool = field(default=False, metadata={"help": "Logs the inputs and attention weights each --compute_metrics_each_n_steps (only test set)"})    
 
     experiments_group: str = field(default="default", metadata={"help": "Name of the Experiments Group, for organizing job runs logged on W&B"})
 
