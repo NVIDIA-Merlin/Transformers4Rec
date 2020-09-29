@@ -512,47 +512,50 @@ class RecSysTrainer(Trainer):
 
                 if not prediction_loss_only:
 
-                    if self.args.log_attention_weights and cnt < 3 and \
-                          isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                        
+                    #Log predictions and attention weights only for the first 10 batches of the test set
+                    if cnt < 10:
 
-                        if log_attention_weights_fn is not None:
-                            step_attention_weights = list([layer_att.cpu().numpy() for layer_att in outputs[11]])
+                        if self.args.log_attention_weights and \
+                            isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                        
 
-                            #Converting torch Tensors to NumPy and callback predictions logging function
-                            inputs_cpu = {k: v.cpu().numpy() for k, v in inputs.items()}
+                            if log_attention_weights_fn is not None:
+                                step_attention_weights = list([layer_att.cpu().numpy() for layer_att in outputs[11]])
 
-                            log_attention_weights_fn(inputs=inputs_cpu, 
-                                                    att_weights=step_attention_weights, 
-                                                    description='attention_{}_step_{:06}'.format(description, self.global_step))
-                    
-                    
-                    
-                    
-                    # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
-                    # labels.size(): ...  x 1 [51]
-                    
-                    metrics_results_detailed_all = None
-                    metrics_results_detailed_neg = None
-                    if self.compute_metrics_all is not None:
-                        metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
-                    if self.compute_metrics_neg is not None:
-                        if preds_neg is not None:
-                            metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+                                #Converting torch Tensors to NumPy and callback predictions logging function
+                                inputs_cpu = {k: v.cpu().numpy() for k, v in inputs.items()}
 
-                    if self.log_predictions:
-                        #Converting torch Tensors to NumPy and callback predictions logging function
-                        preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
-
-                        if log_predictions_fn is not None:                            
+                                log_attention_weights_fn(inputs=inputs_cpu, 
+                                                        att_weights=step_attention_weights, 
+                                                        description='attention_{}_step_{:06}'.format(description, self.global_step))
                         
-                            preds_neg_values = None
-                            labels_neg_values = None
+                        
+                        
+                        
+                        # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
+                        # labels.size(): ...  x 1 [51]
+                        
+                        metrics_results_detailed_all = None
+                        metrics_results_detailed_neg = None
+                        if self.compute_metrics_all is not None:
+                            metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
+                        if self.compute_metrics_neg is not None:
                             if preds_neg is not None:
-                                preds_neg_values = preds_neg.cpu().numpy()
-                                labels_neg_values = labels_neg.cpu().numpy()
-                            log_predictions_fn(preds_neg_values, labels_neg_values, 
-                                                metrics_results_detailed_neg, metrics_results_detailed_all, 
-                                                preds_metadata)
+                                metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+
+                        if self.log_predictions:
+                            #Converting torch Tensors to NumPy and callback predictions logging function
+                            preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
+
+                            if log_predictions_fn is not None:                            
+                            
+                                preds_neg_values = None
+                                labels_neg_values = None
+                                if preds_neg is not None:
+                                    preds_neg_values = preds_neg.cpu().numpy()
+                                    labels_neg_values = labels_neg.cpu().numpy()
+                                log_predictions_fn(preds_neg_values, labels_neg_values, 
+                                                    metrics_results_detailed_neg, metrics_results_detailed_all, 
+                                                    preds_metadata)
                         
             if self.fast_test and cnt > 4:
                 break
