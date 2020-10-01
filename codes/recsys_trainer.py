@@ -8,6 +8,7 @@ import logging
 import os
 
 from typing import Dict, List, Optional, NamedTuple, Callable
+from enum import Enum
 
 import numpy as np
 import torch
@@ -18,10 +19,13 @@ from torch.utils.data.distributed import DistributedSampler
 from tqdm.auto import tqdm, trange
 import wandb
 
+from recsys_metrics import EvalMetrics
+
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
 from transformers.training_args import is_torch_tpu_available
 from transformers import Trainer, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from transformers import PreTrainedModel
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,12 @@ class PredictionOutput(NamedTuple):
     metrics_neg: Optional[Dict[str, float]]
 
 
+class DatasetType(Enum):
+    train = "Train"
+    valid = "Valid"
+    test = "Test"
+
+
 class RecSysTrainer(Trainer):
     """
     Trainer is a simple but feature-complete training and eval loop for PyTorch,
@@ -45,16 +55,6 @@ class RecSysTrainer(Trainer):
     """
     def __init__(self, *args, **kwargs):
         self.global_step = 0
-
-        if 'compute_metrics_all' not in kwargs:
-            self.compute_metrics_all = None
-        else:
-            self.compute_metrics_all = kwargs.pop('compute_metrics_all')
-        
-        if 'compute_metrics_neg' not in kwargs:
-            self.compute_metrics_neg = None
-        else:
-            self.compute_metrics_neg = kwargs.pop('compute_metrics_neg')
 
         if 'fast_test' not in kwargs:
             self.fast_test = False
@@ -65,8 +65,18 @@ class RecSysTrainer(Trainer):
             self.log_predictions = False
         else:
             self.log_predictions = kwargs.pop('log_predictions')
+
+        self.create_metrics()
         
         super(RecSysTrainer, self).__init__(*args, **kwargs)
+
+
+    def create_metrics(self):
+        self.streaming_metrics_all = {}
+        self.streaming_metrics_neg = {}
+        for dataset_type in DatasetType:
+            self.streaming_metrics_all[dataset_type] = EvalMetrics(ks=[5,10,100,1000])
+            self.streaming_metrics_neg[dataset_type] = EvalMetrics(ks=[5,10])
 
     def get_rec_train_dataloader(self) -> DataLoader:
         if self.train_dataloader is not None:
@@ -323,8 +333,8 @@ class RecSysTrainer(Trainer):
         return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
 
     def _run_validation(self):
-        train_output_all, train_output_neg = self.evaluate(self.get_rec_train_dataloader(), "Train")
-        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_eval_dataloader(), "Valid")
+        train_output_all, train_output_neg = self.evaluate(self.get_rec_train_dataloader(), DatasetType.train)
+        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_eval_dataloader(), DatasetType.valid)
 
         output_eval_file = os.path.join(self.args.output_dir, "valid_train_results.txt")
         if self.is_world_master():
@@ -406,7 +416,7 @@ class RecSysTrainer(Trainer):
         return loss.item(), acc.item()
 
     def evaluate(
-        self, eval_dataloader: Optional[DataLoader] = None, desc: Optional[str] = "Valid",
+        self, eval_dataloader: Optional[DataLoader] = None, dataset_type: Optional[DatasetType] = DatasetType.valid,
         prediction_loss_only: Optional[bool] = None
     ) -> Dict[str, float]:
         """
@@ -429,8 +439,7 @@ class RecSysTrainer(Trainer):
         if eval_dataloader is None:
             eval_dataloader = self.get_rec_eval_dataloader()
 
-        output = self._prediction_loop(eval_dataloader, 
-            prediction_loss_only=prediction_loss_only, description=desc)
+        output = self._prediction_loop(eval_dataloader, dataset_type, prediction_loss_only=prediction_loss_only)
 
         self._log(output.metrics_all)
         self._log(output.metrics_neg)
@@ -441,7 +450,7 @@ class RecSysTrainer(Trainer):
 
         return output.metrics_all, output.metrics_neg
 
-    def predict(self, test_dataloader: Optional[DataLoader] = None, 
+    def predict(self, test_dataloader: Optional[DataLoader] = None, dataset_type: Optional[DatasetType] = DatasetType.test,
                 log_predictions_fn: Callable = None, log_attention_weights_fn: Callable = None) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
@@ -452,7 +461,7 @@ class RecSysTrainer(Trainer):
         if test_dataloader is None:
             test_dataloader = self.get_rec_test_dataloader()
 
-        output = self._prediction_loop(test_dataloader, description="Test", 
+        output = self._prediction_loop(test_dataloader, dataset_type=dataset_type, 
                         log_predictions_fn=log_predictions_fn, log_attention_weights_fn=log_attention_weights_fn)
 
         self._log(output.metrics_neg)
@@ -461,7 +470,7 @@ class RecSysTrainer(Trainer):
         return output
 
     def _prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None, 
+        self, dataloader: DataLoader, dataset_type: DatasetType, prediction_loss_only: Optional[bool] = None, 
         log_predictions_fn: Callable = None, log_attention_weights_fn: Callable = None
     ) -> PredictionOutput:
         """
@@ -469,6 +478,14 @@ class RecSysTrainer(Trainer):
 
         Works both with or without labels.
         """
+        description = dataset_type.value
+        streaming_metrics_all_ds = self.streaming_metrics_all[dataset_type]
+        streaming_metrics_neg_ds = self.streaming_metrics_neg[dataset_type]
+
+        # Reseting streaming metrics each day
+        streaming_metrics_all_ds.reset()
+        streaming_metrics_neg_ds.reset()
+
 
         prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else self.prediction_loss_only
 
@@ -526,23 +543,16 @@ class RecSysTrainer(Trainer):
                      # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
                     # labels.size(): ...  x 1 [51]
                     
-                    #TODO: Remove temporary code, here only to speedup the last hypertuning session
-                    if description in ["Train", "Valid"]:
-                        compute_metrics_each_n_steps = 50
-                    else:
-                        compute_metrics_each_n_steps = self.args.compute_metrics_each_n_steps
-                    
-                    if step % compute_metrics_each_n_steps == 0:
-                    #if step % self.compute_metrics_each_n_steps == 0:
+                    if step % self.args.compute_metrics_each_n_steps == 0:
 
                         #Updates metrics and returns detailed metrics if log_predictions=True
                         metrics_results_detailed_all = None
                         metrics_results_detailed_neg = None
-                        if self.compute_metrics_all is not None:
-                            metrics_results_detailed_all = self.compute_metrics_all.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
-                        if self.compute_metrics_neg is not None:
+                        if streaming_metrics_all_ds is not None:
+                            metrics_results_detailed_all = streaming_metrics_all_ds.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
+                        if streaming_metrics_neg_ds is not None:
                             if preds_neg is not None:
-                                metrics_results_detailed_neg = self.compute_metrics_neg.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+                                metrics_results_detailed_neg = streaming_metrics_neg_ds.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
 
 
                         if self.args.log_attention_weights and \
@@ -579,15 +589,15 @@ class RecSysTrainer(Trainer):
                 break
             step += 1 
 
-        if self.compute_metrics_neg is not None:
-            metrics_neg = self.compute_metrics_neg.result()
-        else:
-            metrics_neg = {}
-
-        if self.compute_metrics_all is not None:
-            metrics_all = self.compute_metrics_all.result()
+        if streaming_metrics_all_ds is not None:
+            metrics_all = streaming_metrics_all_ds.result()
         else:
             metrics_all = {}
+
+        if streaming_metrics_neg_ds is not None:
+            metrics_neg = streaming_metrics_neg_ds.result()
+        else:
+            metrics_neg = {}
 
         if len(eval_losses) > 0:
             metrics_all[f"{description}_loss"] = np.mean(eval_losses)

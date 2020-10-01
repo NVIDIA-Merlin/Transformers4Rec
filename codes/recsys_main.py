@@ -23,7 +23,7 @@ from transformers import (
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
 from recsys_trainer import RecSysTrainer
-from recsys_metrics import EvalMetrics
+
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loaders,
@@ -101,13 +101,11 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
-    eval_metrics_all, eval_metrics_neg = EvalMetrics(ks=[5,10,100,1000]), EvalMetrics(ks=[5,10])
+    
 
     trainer = RecSysTrainer(
         model=rec_model,
         args=training_args,
-        compute_metrics_all=eval_metrics_all,
-        compute_metrics_neg=eval_metrics_neg,
         fast_test=training_args.fast_test,
         log_predictions=training_args.log_predictions
     )

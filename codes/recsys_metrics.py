@@ -68,6 +68,21 @@ class EvalMetrics(object):
                 #f_ndcg_cp
             ])
 
+
+    def reset(self):
+        if self.use_torch:
+            for f_measure in self.f_measures_torch:
+                f_measure.reset()                
+
+        if self.use_cupy:
+            for f_measure in self.f_measures_cupy:
+                f_measure.reset()
+
+        if self.use_cpu:
+            for f_measure_ks in self.f_measures_cpu:
+                f_measure.reset()
+                
+
     def update(self, preds, labels, return_individual_metrics=False):
         metrics_results = {}
         if self.use_torch:
