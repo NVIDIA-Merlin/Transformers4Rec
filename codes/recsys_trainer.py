@@ -105,7 +105,7 @@ class RecSysTrainer(Trainer):
         if is_wandb_available:
             wandb.config.update(args)
 
-    def train(self, model_path: Optional[str] = None):
+    def train(self, model_path: Optional[str] = None, log_attention_weights_fn: Callable = None):
         """
         Main training entry point.
 
@@ -321,10 +321,10 @@ class RecSysTrainer(Trainer):
                     xm.master_print(met.metrics_report())
                 
                 if self.args.validate_every > 0 and (epoch + 1) % self.args.validate_every == 0:
-                    self._run_validation()
+                    self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
 
             # Compute metrics on Train set and Eval Set after all training epochs (for each day)
-            self._run_validation()
+            self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
             
         if self.tb_writer:
             self.tb_writer.close()
@@ -332,9 +332,9 @@ class RecSysTrainer(Trainer):
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
 
-    def _run_validation(self):
-        train_output_all, train_output_neg = self.evaluate(self.get_rec_train_dataloader(), DatasetType.train)
-        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_eval_dataloader(), DatasetType.valid)
+    def _run_validation(self, log_attention_weights_fn: Callable = None):
+        train_output_all, train_output_neg = self.evaluate(self.get_rec_train_dataloader(), DatasetType.train, log_attention_weights_fn = log_attention_weights_fn)
+        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_eval_dataloader(), DatasetType.valid, log_attention_weights_fn = log_attention_weights_fn)
 
         output_eval_file = os.path.join(self.args.output_dir, "valid_train_results.txt")
         if self.is_world_master():
@@ -417,7 +417,7 @@ class RecSysTrainer(Trainer):
 
     def evaluate(
         self, eval_dataloader: Optional[DataLoader] = None, dataset_type: Optional[DatasetType] = DatasetType.valid,
-        prediction_loss_only: Optional[bool] = None
+        prediction_loss_only: Optional[bool] = None, log_attention_weights_fn: Callable = None
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -439,7 +439,8 @@ class RecSysTrainer(Trainer):
         if eval_dataloader is None:
             eval_dataloader = self.get_rec_eval_dataloader()
 
-        output = self._prediction_loop(eval_dataloader, dataset_type, prediction_loss_only=prediction_loss_only)
+        output = self._prediction_loop(eval_dataloader, dataset_type, prediction_loss_only=prediction_loss_only,
+                                        log_attention_weights_fn=log_attention_weights_fn)
 
         self._log(output.metrics_all)
         self._log(output.metrics_neg)
