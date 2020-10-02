@@ -236,6 +236,10 @@ class RecSysTrainer(Trainer):
                 else:
                     epoch_iterator = tqdm(train_dataloader, desc="In-Epoch Iteration", disable=not self.is_local_master())
 
+
+                # TEMPORARY: TO DEBUG ATTENTION 
+                self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
+
                 for step, inputs in enumerate(epoch_iterator):
                     
                     # Skip past any already trained steps if resuming training
