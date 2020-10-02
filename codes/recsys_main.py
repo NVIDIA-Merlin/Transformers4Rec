@@ -124,6 +124,12 @@ def main():
     results_dates_all = {}
     results_dates_neg = {}
 
+    if training_args.log_attention_weights:
+        attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
+        logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
+        att_weights_logger = AttentionWeightsLogger(attention_output_path)
+        att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
+
     for date_idx in range(1, len(data_dates)):
         train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx -1], data_dates[date_idx]
 
@@ -144,7 +150,7 @@ def main():
                     and os.path.isdir(model_args.model_name_or_path)
                 else None
             )
-            trainer.train(model_path=model_path)
+            trainer.train(model_path=model_path, log_attention_weights_fn=att_weights_fn)
 
         # Evaluation (on testset)
         if training_args.do_eval:
@@ -157,14 +163,14 @@ def main():
                 prediction_logger = PredictionLogger(output_preds_logs_path)
 
 
-            if training_args.log_attention_weights:
-                attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
-                logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
-                att_weights_logger = AttentionWeightsLogger(attention_output_path)
+            #if training_args.log_attention_weights:
+            #    attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
+            #    logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
+            #    att_weights_logger = AttentionWeightsLogger(attention_output_path)
 
             try:
                 log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
-                att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
+                #att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
                 
                 eval_output = trainer.predict(log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn)
                 eval_metrics_all = eval_output.metrics_all
