@@ -150,7 +150,9 @@ def main():
                     and os.path.isdir(model_args.model_name_or_path)
                 else None
             )
-            trainer.train(model_path=model_path, log_attention_weights_fn=att_weights_fn)
+            trainer.train(model_path=model_path, 
+                         #log_attention_weights_fn=att_weights_fn
+                         )
 
         # Evaluation (on testset)
         if training_args.do_eval:
