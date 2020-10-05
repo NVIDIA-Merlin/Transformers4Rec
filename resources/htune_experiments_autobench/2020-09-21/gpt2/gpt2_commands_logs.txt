@@ -1,0 +1,121 @@
+#Hypertuning job - GPT2
+python main.py --htune_study_name gpt2_htune_1_month_v5 --concurrent_jobs 5 --htune_num_trials 20 --verbose --htune_log_dir "/home/gmoreira/projects/nvidia/recsys_fork/recsys/transformers4recsys/resources/autobench_config/2020-09-21/gpt2/htune_log" "/home/gmoreira/projects/nvidia/recsys_fork/recsys/transformers4recsys/resources/autobench_config/2020-09-21/gpt2/autobench_config_1_month_gpt2.yaml"
+
+
+
+---------------------------------------
+
+
+#Hypertuning job - GRU
+python main.py --htune_study_name gru_htune_1_month_v5 --concurrent_jobs 5 --htune_num_trials 30 --verbose --htune_log_dir "/home/gmoreira/projects/nvidia/recsys_fork/recsys/transformers4recsys/resources/autobench_config/2020-09-21/gru/htune_log" "/home/gmoreira/projects/nvidia/recsys_fork/recsys/transformers4recsys/resources/autobench_config/2020-09-21/gru/autobench_config_1_month_gru.yaml"
+
+
+
+------------------------------------------------
+
+
+Additional individual experiments
+====================================================
+
+Disabled gradient logging on W&B to see if it speeds up training
+
+Original: https://wandb.ai/gspmoreira/huggingface/runs/3aihcy85/overview?workspace=user-gspmoreira
+frosty-darkness-710
+Original: Duration W&B: 8h 36m 33s
+
+
+Now with gradients log disabled 
+
+ngc batch run --name "tranf4rec-test-no-grad" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && export WANDB_WATCH=false && bash script/run_transformer_v2.bash gpt2_htune_1_month_v5 full session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 10 --learning_rate_num_cosine_cycles 6.0 --dataloader_drop_last --num_train_epochs 5 --per_device_train_batch_size 192 --learning_rate 0.0035947907305712403 --learning_rate_schedule constant_with_warmup --dropout 0.2 --weight_decay 3.4021361994883917e-06 --n_layer 4 --d_model 256 --n_head 2 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+NGC Job: https://ngc.nvidia.com/jobs/1484867
+New: https://wandb.ai/gspmoreira/huggingface/runs/332y7bba/overview?workspace=user-gspmoreira
+Duration: 8h 39m 4s
+
+expert-cosmos-779
+
+CONCLUSION: Disabling gradients does not speedup apparently
+But disabling metrics accounts for half of the script time (now will only compute and log metrics each n steps, for training, eval and test set.
+
+
+------------------------------------------------
+
+
+==================================================================
+Logging Predictions and Attention weights
+
+
+
+Best GPT-2 architecture so far (frosty-darkness-710) with --log_predictions --log_attention_weights
+
+ngc batch run --name "tranf4rec-htune-single-epoch-1-month" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash gpt2_htune_1_month_v5 full session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 10 --learning_rate_num_cosine_cycles 6.0 --dataloader_drop_last --num_train_epochs 5 --per_device_train_batch_size 192 --learning_rate 0.0035947907305712403 --learning_rate_schedule constant_with_warmup --dropout 0.2 --weight_decay 3.4021361994883917e-06 --n_layer 4 --d_model 256 --n_head 2 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+https://ngc.nvidia.com/jobs/1486198
+
+View run at https://app.wandb.ai/gspmoreira/huggingface/runs/26xczdpe
+curious-shadow-802
+
+------------------------------------------------
+
+Best GRU architecture so far (fresh-haze-744) with --log_predictions 
+
+
+ngc batch run --name "tranf4rec-htune-single-epoch-1-month" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash gru_htune_1_month_v5 full session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gru --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 10 --learning_rate_num_cosine_cycles 6.0 --dataloader_drop_last --num_train_epochs 5 --per_device_train_batch_size 64 --learning_rate 0.003787265136074677 --learning_rate_schedule linear_with_warmup --dropout 0.1 --weight_decay 3.7839397807278785e-05 --n_layer 1 --d_model 128 --log_predictions && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+https://ngc.nvidia.com/jobs/1486131
+
+------------------------------------------------
+
+Avg. embeddings with the best hyperparams for the GRU architecture so far (fresh-haze-744) with --log_predictions 
+
+
+ngc batch run --name "tranf4rec-htune-single-epoch-1-month" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash avgseq_htune_1_month_v5 full session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type avgseq --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 10 --learning_rate_num_cosine_cycles 6.0 --dataloader_drop_last --num_train_epochs 5 --per_device_train_batch_size 64 --learning_rate 0.003787265136074677 --learning_rate_schedule linear_with_warmup --dropout 0.1 --weight_decay 3.7839397807278785e-05 --n_layer 1 --d_model 128 --log_predictions && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+https://ngc.nvidia.com/jobs/1486133
+
+
+=================================================================================
+
+RUNNING 3 MODELS AGAIN WITH ONLY ITEM ID AND LOGGING PREDS AND ATTENTION WEIGHTS (NOW WILL SAMPLE METRICS COMPUTING AND LOGGING EACH 50 STEPS
+
+
+Best GPT-2 architecture so far (frosty-darkness-710) with --log_predictions --log_attention_weights
+
+ngc batch run --name "tranf4rec-gpt2-only-item-id-attention" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash gpt2_htune_1_month_v5 pid_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 10 --learning_rate_num_cosine_cycles 6.0 --dataloader_drop_last --num_train_epochs 5 --per_device_train_batch_size 192 --learning_rate 0.0035947907305712403 --learning_rate_schedule constant_with_warmup --dropout 0.2 --weight_decay 3.4021361994883917e-06 --n_layer 4 --d_model 256 --n_head 2 --compute_metrics_each_n_steps 50 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+https://ngc.nvidia.com/jobs/1488834
+
+giddy-sound-847
+
+
+--------------------------------- 
+
+Best GRU architecture so far (fresh-haze-744) with --log_predictions 
+
+
+ngc batch run --name "tranf4rec-gru-only-item-id-attention" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash gru_htune_1_month_v5 pid_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gru --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 10 --learning_rate_num_cosine_cycles 6.0 --dataloader_drop_last --num_train_epochs 5 --per_device_train_batch_size 64 --learning_rate 0.003787265136074677 --learning_rate_schedule linear_with_warmup --dropout 0.1 --weight_decay 3.7839397807278785e-05 --n_layer 1 --d_model 128 --compute_metrics_each_n_steps 50 --log_predictions && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+https://ngc.nvidia.com/jobs/1488835
+https://app.wandb.ai/gspmoreira/huggingface/runs/pukm1t0s
+pretty-dream-848
+
+
+
+------------------------------------------------
+
+Avg. embeddings with the best hyperparams for the GRU architecture so far (fresh-haze-744) with --log_predictions 
+
+
+ngc batch run --name "tranf4rec-avgseq-only-item-id-attention" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash + pid_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type avgseq --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 10 --learning_rate_num_cosine_cycles 6.0 --dataloader_drop_last --num_train_epochs 5 --per_device_train_batch_size 64 --learning_rate 0.003787265136074677 --learning_rate_schedule linear_with_warmup --dropout 0.1 --weight_decay 3.7839397807278785e-05 --n_layer 1 --d_model 128 --compute_metrics_each_n_steps 50 --log_predictions && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+https://ngc.nvidia.com/jobs/1490219
+https://app.wandb.ai/gspmoreira/huggingface
+graceful-forest-872
+
+

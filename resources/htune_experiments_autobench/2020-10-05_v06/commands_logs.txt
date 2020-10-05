@@ -1,0 +1,27 @@
+Starting a small machine to run AutoBench
+
+
+ngc batch run --name "transf4rec-autobench-htune" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.16g.1.norm --commandline "jupyter lab --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token='' --notebook-dir=/ --NotebookApp.allow_origin='*' & date; sleep 168h" --total-runtime 168h --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --port 8888 --port 8887 --workspace gmoreira-wksp:/workspace:RW
+
+Job id: 1499986
+
+
+---------------------------------------
+
+
+
+#Hypertuning job - GPT2
+python main.py --htune_study_name htune-v06-gpt2 --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/gpt2/htune_log" "gpt2/tranf4rec-htune-v06-gpt2.yaml"
+
+
+
+---------------------------------------
+
+
+#Hypertuning job - GRU
+python main.py --htune_study_name htune-v06-gru --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/gru/htune_log" "gru/tranf4rec-htune-v06-gru.yaml"
+
+
+
+------------------------------------------------
+
