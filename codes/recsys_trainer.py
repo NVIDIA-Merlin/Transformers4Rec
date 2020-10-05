@@ -533,7 +533,7 @@ class RecSysTrainer(Trainer):
                 
                 step_attention_weights = None
                 if self.args.log_attention_weights:
-                    step_attention_weights = outputs[11]
+                    step_attention_weights = outputs[10]
 
 
                 eval_accs += [step_eval_acc.mean().item()]                
