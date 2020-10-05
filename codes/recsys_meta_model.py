@@ -185,9 +185,7 @@ class RecSysMetaModel(PreTrainedModel):
         # Step 2. Merge features
         
         if self.inp_merge == 'mlp':
-            #pos_emb = torch.tanh(self.mlp_merge(pos_inp))
-            #TEMPORARY, JUST TO SEE IF THE PROBLEM IS WITH THE TANH ACTIVATION FUNCTION
-            pos_emb = torch.relu(self.mlp_merge(pos_inp))
+            pos_emb = torch.tanh(self.mlp_merge(pos_inp))
             
             if self.loss_type != 'cross_entropy':
                 neg_emb = torch.tanh(self.mlp_merge(neg_inp))
@@ -222,9 +220,7 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
 
-        #pos_emb_pred = self.tf_out_act(self.transformer_output_project(pos_emb_pred))
-        #TEMPORARY, JUST TO SEE IF THE PROBLEM IS WITH THE TANH ACTIVATION FUNCTION
-        pos_emb_pred = torch.relu(self.transformer_output_project(pos_emb_pred))
+        pos_emb_pred = self.tf_out_act(self.transformer_output_project(pos_emb_pred))
 
         trg_flat = label_seq_trg.flatten()
         non_pad_mask = (trg_flat != self.pad_token)        
