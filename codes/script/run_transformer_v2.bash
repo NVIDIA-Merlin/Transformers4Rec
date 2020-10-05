@@ -34,6 +34,7 @@ cp -r ./tmp/pred_logs/ /results
 cp -r ./tmp/attention_weights/ /results
 cp ./tmp/*.txt /results
 cp ./tmp/*.json /results
+cp -r ./runs/ /results
 
 #Ensuring that the job exit status is the same of the trainings scripts
 exit ${train_exit_status}
