@@ -152,11 +152,7 @@ class RecSysMetaModel(PreTrainedModel):
         elif model_args.tf_out_activation == 'relu':
             self.tf_out_act = torch.relu
 
-
-        if model_args.disable_positional_embeddings:
-            self.position_ids = torch.zeros(data_args.max_seq_len-1, dtype=torch.long, device=self.device)
-        else:
-            self.position_ids = None
+        self.disable_positional_embeddings = model_args.disable_positional_embeddings
 
 
     def forward(self, inputs):
@@ -220,9 +216,14 @@ class RecSysMetaModel(PreTrainedModel):
             """
             Transformer Models
             """
+            if self.disable_positional_embeddings:
+                position_ids = torch.zeros(max_seq_len-1, requires_grad=False, dtype=torch.long, device=self.device)
+            else:
+                position_ids = None
+
             model_outputs = self.model(
                 inputs_embeds=pos_emb_inp,
-                position_ids=self.position_ids
+                position_ids=position_ids
             )
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
