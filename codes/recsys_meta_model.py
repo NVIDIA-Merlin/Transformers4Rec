@@ -235,6 +235,7 @@ class RecSysMetaModel(PreTrainedModel):
             """
             model_outputs = self.model(
                 inputs_embeds=pos_emb_inp,
+                position_ids=torch.zeros(19, dtype=torch.long, device=self.device)
             )
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
