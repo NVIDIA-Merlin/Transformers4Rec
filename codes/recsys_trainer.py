@@ -564,6 +564,10 @@ class RecSysTrainer(Trainer):
                             isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                        
 
                             if log_attention_weights_fn is not None:
+
+                                for idx, layer_att in enumerate(step_attention_weights):
+                                    self.tb_writer.add_histogram('attention/softmax/layer-{}/{}'.format(idx, description), 
+                                                layer_att, self.global_step)
                                 
                                 step_attention_weights_cpu = list([layer_att.cpu().numpy() for layer_att in step_attention_weights])
 
