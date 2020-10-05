@@ -568,7 +568,7 @@ class RecSysTrainer(Trainer):
 
                                 for idx, layer_att in enumerate(step_attention_weights):
                                     self.tb_writer.add_histogram('attention/softmax/layer-{}/{}'.format(idx, description), 
-                                                layer_att, self.global_step)
+                                                layer_att[:,:,:5,:5], self.global_step)
                                 
                                 step_attention_weights_cpu = list([layer_att.cpu().numpy() for layer_att in step_attention_weights])
 
