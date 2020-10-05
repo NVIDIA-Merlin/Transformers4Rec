@@ -95,8 +95,10 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
             n_positions=data_args.max_seq_len,
+            n_ctx=data_args.max_seq_len,
             pad_token_id=data_args.pad_token,
-            output_attentions=training_args.log_attention_weights
+            output_attentions=training_args.log_attention_weights,
+            vocab_size=1 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
     elif model_args.model_type == 'longformer':
