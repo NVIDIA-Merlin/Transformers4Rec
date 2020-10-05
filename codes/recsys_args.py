@@ -163,3 +163,5 @@ class ModelArguments:
     neg_rescale_factor: Optional[float] = field(
         default=1.0, metadata={"help": "rescale hinge loss to match with cross entropy loss"}
     )
+
+    disable_positional_embeddings: bool = field(default=False, metadata={"help": "Disable usage of (sum) positional embeddings with items embeddings."})
