@@ -171,6 +171,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # apply mask on input where target is on padding token
         mask_trg_pad = (label_seq_trg != self.pad_token)
+        
         label_seq_inp = label_seq_inp * mask_trg_pad
 
 
@@ -192,11 +193,12 @@ class RecSysMetaModel(PreTrainedModel):
             if self.loss_type != 'cross_entropy':
                 neg_emb = self.attn_merge(neg_inp)
 
-        # slice over time-steps for input and target 
-        pos_emb_inp = pos_emb[:, :-1]
-        pos_emb_trg = pos_emb[:, 1:]
+        # slice over time-steps for input and target and ensuring masking is applied
+        mask_trg_pad_expanded = mask_trg_pad.unsqueeze(-1)
+        pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad_expanded
         if self.loss_type != 'cross_entropy':
-            neg_emb_inp = neg_emb[:, :-1]
+            pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad_expanded
+            neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad_expanded
 
         # Step3. Run forward pass on model architecture
 
@@ -231,9 +233,9 @@ class RecSysMetaModel(PreTrainedModel):
 
         # remove zero padding elements 
 
-        pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)
-        pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
+        pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)        
         if self.loss_type != 'cross_entropy':
+            pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
             neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
 
         #Keeping removing zero-padded items metadata features for the next-clicks (targets), so that they are aligned
