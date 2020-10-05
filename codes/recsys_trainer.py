@@ -238,7 +238,7 @@ class RecSysTrainer(Trainer):
 
 
                 # TEMPORARY: TO DEBUG ATTENTION 
-                self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
+                #self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
 
                 for step, inputs in enumerate(epoch_iterator):
                     
@@ -566,9 +566,10 @@ class RecSysTrainer(Trainer):
 
                             if log_attention_weights_fn is not None:
 
-                                for idx, layer_att in enumerate(step_attention_weights):
-                                    self.tb_writer.add_histogram('attention/softmax/layer-{}/{}'.format(idx, description), 
-                                                layer_att[:,:,:5,:5], self.global_step)
+                                # Saving histograms of attention weights (up to the 5th position) to debug how attention changes over training
+                                #for idx, layer_att in enumerate(step_attention_weights):
+                                #    self.tb_writer.add_histogram('attention/softmax/layer-{}/{}'.format(idx, description), 
+                                #                layer_att[:,:,:5,:5], self.global_step)
                                 
                                 step_attention_weights_cpu = list([layer_att.cpu().numpy() for layer_att in step_attention_weights])
 
