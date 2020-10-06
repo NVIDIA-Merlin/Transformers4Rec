@@ -124,11 +124,12 @@ def main():
     results_dates_all = {}
     results_dates_neg = {}
 
+    att_weights_fn = None
     if training_args.log_attention_weights:
         attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
         logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
         att_weights_logger = AttentionWeightsLogger(attention_output_path)
-        att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
+        att_weights_fn = att_weights_logger.log 
 
     for date_idx in range(1, len(data_dates)):
         train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx -1], data_dates[date_idx]
