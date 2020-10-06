@@ -65,14 +65,10 @@ hyperparameters_tuning:
             max_value: 0.0001
 
           - name: --d_model
-            sampling: categorical
-            categ_values:
-              - 32
-              - 64
-              - 128
-              - 192
-              - 256 
-              - 320
+            sampling: int_uniform
+            min_value: 64
+            max_value: 320
+            step_value: 64
 
           - name: --n_layer
             sampling: int_uniform
