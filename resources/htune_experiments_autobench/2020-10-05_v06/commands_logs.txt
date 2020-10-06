@@ -1,17 +1,29 @@
 Starting a small machine to run AutoBench
 
 
-ngc batch run --name "transf4rec-autobench-htune" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.16g.1.norm --commandline "jupyter lab --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token='' --notebook-dir=/ --NotebookApp.allow_origin='*' & date; sleep 168h" --total-runtime 168h --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --port 8888 --port 8887 --workspace gmoreira-wksp:/workspace:RW
+ngc batch run --name "transf4rec-autobench-htune" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.16g.1.norm --commandline "apt update; apt-get install screen -y; pip install -r requirements.txt --quiet; echo "export PATH=\"\$PATH:/wksp/ngc/\"" >> ~/.bash_profile && source ~/.bash_profile && mkdir/root/.ngc ; cp /wksp/ngc/config /root/.ngc/config ; git pull origin experimentation & date & jupyter lab --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token='' --notebook-dir=/ --NotebookApp.allow_origin='*' & date; sleep 168h" --total-runtime 168h --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --port 8888 --port 8887 --workspace gmoreira-wksp:/wksp:RW
 
-Job id: 1499986
+
+Commands in the machine:
+echo "export PATH=\"\$PATH:/wksp/ngc/\"" >> ~/.bash_profile && source ~/.bash_profile
+mkdir/root/.ngc ; cp /wksp/ngc/config /root/.ngc/config
+
+
+Last Job id: 1500072
 
 
 ---------------------------------------
 
+cd /wksp/autobench
 
 
 #Hypertuning job - GPT2
-python main.py --htune_study_name htune-v06-gpt2 --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/gpt2/htune_log" "gpt2/tranf4rec-htune-v06-gpt2.yaml"
+screen -S gpt2
+
+python main.py --htune_study_name htune-v06-gpt2 --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/gpt2/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-05_v06/gpt2/tranf4rec-htune-v06-gpt2.yaml"
+
+
+[then, ctrl + A + D: make me outside of the screen session]
 
 
 
@@ -19,7 +31,11 @@ python main.py --htune_study_name htune-v06-gpt2 --concurrent_jobs 5 --htune_num
 
 
 #Hypertuning job - GRU
-python main.py --htune_study_name htune-v06-gru --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/gru/htune_log" "gru/tranf4rec-htune-v06-gru.yaml"
+
+screen -S gru
+python main.py --htune_study_name htune-v06-gru --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/gru/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-05_v06/gru/tranf4rec-htune-v06-gru.yaml"
+
+[then, ctrl + A + D: make me outside of the screen session]
 
 
 
