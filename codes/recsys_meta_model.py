@@ -187,17 +187,11 @@ class RecSysMetaModel(PreTrainedModel):
             mask_trg_pad = (label_seq_trg != self.pad_token)
             label_seq_inp = label_seq_inp * mask_trg_pad
 
-        if label_seq_trg.sum() == 0:
-            # for mlm, when mask zeroed out all labels
-            return None
-
         # Creating an additional feature with the position in the sequence
         metadata_for_pred_logging['seq_pos'] = torch.arange(1, label_seq.shape[1]+1, device=self.device).repeat(label_seq.shape[0], 1)
         for feat_name in metadata_for_pred_logging:
             #Keeping only metadata features for the next-clicks (targets)
-            if self.mlm and self.training:
-                metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name]
-            else:
+            if not (self.mlm and self.training):
                 metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name][:, 1:]
 
 
@@ -388,10 +382,16 @@ class RecSysMetaModel(PreTrainedModel):
         # We only compute loss on masked tokens (=invalidate non-masked tokens in label)
         labels[~masked_indices] = self.pad_token
 
+        # set at least one time-step as token, by randomly selecting one step
+        indices_should_one = torch.multinomial(
+            (itemid_seq != 0).float(), num_samples=1).squeeze()
+        for idx, idx_one in enumerate(indices_should_one):
+            labels[idx, idx_one] = itemid_seq[idx, idx_one]
+
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token
         indices_replaced = torch.bernoulli(torch.full(
             labels.shape, 0.8)).bool() & masked_indices
-        itemid_seq[indices_replaced] = self.mask_token # we set here 
+        itemid_seq[indices_replaced] = self.mask_token 
         
         # 10% of the time, we replace masked input tokens with random word
         indices_random = torch.bernoulli(torch.full(
@@ -400,7 +400,7 @@ class RecSysMetaModel(PreTrainedModel):
             self.target_dim, labels.shape, dtype=torch.long)
         itemid_seq[indices_random] = random_words[indices_random]
 
-        input_seq[indices_random] = input_seq[indices_random] #* 0
+        input_seq[indices_random] = torch.zeros(input_seq.size(2))
 
         # The rest of the time (10% of the time) we keep the masked input tokens unchanged
         return itemid_seq, labels, input_seq, masked_indices
