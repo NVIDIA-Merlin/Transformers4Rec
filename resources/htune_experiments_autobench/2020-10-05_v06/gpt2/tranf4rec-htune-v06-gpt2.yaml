@@ -67,7 +67,7 @@ hyperparameters_tuning:
           - name: --d_model
             sampling: int_uniform
             min_value: 64
-            max_value: 256
+            max_value: 320
             step_value: 64
 
           - name: --n_layer
