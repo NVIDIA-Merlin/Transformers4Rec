@@ -96,6 +96,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             dropout=model_args.dropout,
             n_positions=data_args.max_seq_len,
             pad_token_id=data_args.pad_token,
+            output_attentions=training_args.log_attention_weights
         )
 
     elif model_args.model_type == 'longformer':

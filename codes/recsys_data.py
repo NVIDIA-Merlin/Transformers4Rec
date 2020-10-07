@@ -2,6 +2,7 @@
 Set data-specific schema, vocab sizes, and feature extract function.
 """
  
+import os
 import math
 from datetime import datetime
 from datetime import date, timedelta
@@ -74,16 +75,16 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
     
     # TODO: make this at outer-loop for making evaluation based on days-data-partition
     train_data_path = [
-        d_path + "session_start_date={}-train.parquet".format(train_date.strftime(date_format)),
+        os.path.join(d_path, "session_start_date={}-train.parquet".format(train_date.strftime(date_format))),
     ]
 
     eval_data_path = [
-        d_path + "session_start_date={}-test.parquet".format(eval_date.strftime(date_format)),
+        os.path.join(d_path, "session_start_date={}-test.parquet".format(eval_date.strftime(date_format))),
     ]
 
     if test_date is not None:
         test_data_path = [
-            d_path + "session_start_date={}.parquet".format(test_date.strftime(date_format)),
+            os.path.join(d_path, "session_start_date={}.parquet".format(test_date.strftime(date_format))),
         ]
 
     if load_from_path:
@@ -100,6 +101,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         eval_data_path = ['file://' + p for p in eval_data_path]
         if test_date is not None:
             test_data_path = ['file://' + p for p in test_data_path]
+            test_data_len = get_dataset_len(eval_data_path)
 
         train_loader = DataLoaderWithLen(
             make_batch_reader(train_data_path, 
@@ -132,20 +134,20 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                     workers_count=data_args.workers_count,
                 ), 
                 batch_size=training_args.per_device_eval_batch_size,
-                len=math.ceil(eval_data_len / training_args.per_device_eval_batch_size),
+                len=math.ceil(test_data_len / training_args.per_device_eval_batch_size),
             )
 
     elif data_args.engine == "pyarrow":
         cols_to_read = feature_map.keys()
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
-        train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size)
+        train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size, drop_last=training_args.dataloader_drop_last)
         eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
-        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size)
+        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
 
         if test_date is not None:
             test_dataset = ParquetDataset(test_data_path, cols_to_read)
-            test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size)
+            test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
     
     if test_date is None:
         test_loader = None

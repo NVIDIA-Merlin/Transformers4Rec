@@ -8,10 +8,11 @@ import math
 import logging
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from collections import Counter
 import pyarrow
 import pyarrow.parquet as pq
+import wandb
 
 import yaml
 from transformers import (
@@ -22,19 +23,29 @@ from transformers import (
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
 from recsys_trainer import RecSysTrainer
-from recsys_metrics import EvalMetrics
+
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loaders,
     get_avail_data_dates
 )
 
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 logger = logging.getLogger(__name__)
+
+from dllogger import StdOutBackend, JSONStreamBackend, Verbosity
+import dllogger as DLLogger
+DLLOGGER_FILENAME = 'log.json'
 
 # this code use Version 3
 assert sys.version_info.major > 2
 
 PRED_LOG_PARQUET_FILE_PATTERN = 'pred_logs/preds_date_{}.parquet'
+ATTENTION_LOG_FOLDER = 'attention_weights'
 
 def main():
 
@@ -51,6 +62,9 @@ def main():
             f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
 
+    if not os.path.exists(training_args.output_dir):
+        os.makedirs(training_args.output_dir)
+
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -66,6 +80,18 @@ def main():
         training_args.fp16,
     )
     logger.info("Training/evaluation parameters %s", training_args)
+
+    DLLogger.init(backends=[
+        StdOutBackend(Verbosity.DEFAULT),
+        JSONStreamBackend(Verbosity.VERBOSE, os.path.join(training_args.output_dir, DLLOGGER_FILENAME)),
+    ])
+
+    hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
+    DLLogger.log(step="PARAMETER", 
+                 data=hparams, 
+                 verbosity=Verbosity.DEFAULT)
+    DLLogger.flush()
+
     set_seed(training_args.seed)
 
     with open(data_args.feature_config) as yaml_file:
@@ -75,16 +101,21 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
-    eval_metrics_all, eval_metrics_neg = EvalMetrics(ks=[5,10,100,1000]), EvalMetrics(ks=[5,10])
+    
 
     trainer = RecSysTrainer(
         model=rec_model,
         args=training_args,
-        compute_metrics_all=eval_metrics_all,
-        compute_metrics_neg=eval_metrics_neg,
         fast_test=training_args.fast_test,
         log_predictions=training_args.log_predictions
     )
+
+    #Saving Weights & Biases run name
+    wandb.run.save()
+    wandb_run_name = wandb.run.name
+    DLLogger.log(step="PARAMETER", 
+                 data={'wandb_run_name': wandb_run_name}, 
+                 verbosity=Verbosity.DEFAULT)                 
 
     trainer.update_wandb_args(model_args)
     trainer.update_wandb_args(data_args)
@@ -125,9 +156,17 @@ def main():
                 logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
                 prediction_logger = PredictionLogger(output_preds_logs_path)
 
+
+            if training_args.log_attention_weights:
+                attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
+                logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
+                att_weights_logger = AttentionWeightsLogger(attention_output_path)
+
             try:
                 log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
-                eval_output = trainer.predict(log_predictions_fn=log_predictions_fn)
+                att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
+                
+                eval_output = trainer.predict(log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn)
                 eval_metrics_all = eval_output.metrics_all
                 eval_metrics_neg = eval_output.metrics_neg
 
@@ -149,8 +188,12 @@ def main():
                 results_dates_all[test_date] = eval_metrics_all
                 results_dates_neg[test_date] = eval_metrics_neg
 
+                DLLogger.log(step=(test_date.strftime("%Y-%m-%d"),), data={**eval_metrics_all, **eval_metrics_neg}, verbosity=Verbosity.VERBOSE)
+                DLLogger.flush()
+
             finally:
-                prediction_logger.close()
+                if training_args.log_predictions:
+                    prediction_logger.close()
         
     logger.info("train and eval for all dates are done")
     trainer.save_model()
@@ -176,8 +219,29 @@ def main():
                 logger.info("  %s = %s", key, str(eval_avg_days_neg[key]))
                 writer.write("%s = %s\n" % (key, str(eval_avg_days_neg[key])))
             trainer._log({f"AOD_neg_{k}":v for k, v in eval_avg_days_neg.items()})
+
+        #Logging with DLLogger for AutoBench
+        eval_avg_metrics = {**eval_avg_days_all, **eval_avg_days_neg}
+        DLLogger.log(step=(), data=eval_avg_metrics, verbosity=Verbosity.VERBOSE)
+        DLLogger.flush()
                 
     return results_dates_all
+
+
+class AttentionWeightsLogger:
+
+    def __init__(self, output_path):
+        self.output_path = output_path
+        if not os.path.exists(self.output_path):
+                os.makedirs(self.output_path)
+
+    def log(self, inputs, att_weights, description):
+        filename = os.path.join(self.output_path, description+'.pickle')
+
+        data = (inputs, att_weights)
+        with open(filename, 'wb') as ouf:
+            pickle.dump(data, ouf)
+            ouf.close()
 
 
 
@@ -201,22 +265,25 @@ class PredictionLogger:
         new_rows_pa = pyarrow.Table.from_pandas(new_rows_df)
         self.pq_writer.write_table(new_rows_pa)
 
-    def log_predictions(self, pred_scores, labels, metrics_neg, metrics_all, preds_metadata):
+    def log_predictions(self, pred_scores_neg, labels_neg, metrics_neg, metrics_all, preds_metadata):
+        num_predictions = preds_metadata[list(preds_metadata.keys())[0]].shape[0]
         new_rows = []
-        for idx in range(len(labels)):
-            pred_scores_next = pred_scores[idx]
-            labels_next = labels[idx]
+        for idx in range(num_predictions):
+            row = {}
 
-            row = {'relevant_item_ids': [labels_next], 
-                   'rec_item_scores': pred_scores_next}
+            if metrics_all is not None:
+                # Adding metrics all detailed results
+                for metric in metrics_all:
+                    row['metric_all_'+metric] = metrics_all[metric][idx]
 
-            # Adding metrics neg detailed results
-            for metric in metrics_neg:
-                row['metric_neg_'+metric] = metrics_neg[metric][idx]
+            if metrics_neg is not None:
+                # Adding metrics neg detailed results
+                for metric in metrics_neg:
+                    row['metric_neg_'+metric] = metrics_neg[metric][idx]
 
-            # Adding metrics all detailed results
-            for metric in metrics_all:
-                row['metric_all_'+metric] = metrics_all[metric][idx]
+            if labels_neg is not None:
+                row['relevant_item_ids'] = [labels_neg[idx]]
+                row['rec_item_scores'] = pred_scores_neg[idx]
 
             # Adding metadata features
             for feat_name in preds_metadata:

@@ -6,6 +6,7 @@ A meta class supports various (Huggingface) transformer models for RecSys tasks.
 import logging
 from collections import OrderedDict
 
+import math
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -30,6 +31,13 @@ class AttnMerge(nn.Module):
             attn_weight = self.softmax(self.W1[i](inp))
             out.append(torch.mul(attn_weight,inp).sum(-1))
         return torch.stack(out, dim=-1)
+
+
+def get_embedding_size_from_cardinality(cardinality, multiplier=2):
+    # A rule-of-thumb from Google.
+    embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
+    return embedding_size
+
 
 
 class RecSysMetaModel(PreTrainedModel):
@@ -71,12 +79,13 @@ class RecSysMetaModel(PreTrainedModel):
         for cname, cinfo in self.feature_map.items():
             if self.col_prefix_neg not in cname:
                 if cinfo['dtype'] == 'categorical':
+                    embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])
                     self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
                         cinfo['cardinality'], 
-                        model_args.d_model, 
+                        embedding_size, 
                         padding_idx=self.pad_token
                     )
-                    concat_input_dim += model_args.d_model
+                    concat_input_dim += embedding_size
                 elif cinfo['dtype'] in ['long', 'float']:
                     concat_input_dim += 1   
                 else:
@@ -114,7 +123,7 @@ class RecSysMetaModel(PreTrainedModel):
         elif self.loss_type.startswith('margin_hinge'):
             # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
             self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
-        else:
+        elif self.loss_type != 'cross_entropy':
             raise NotImplementedError
 
         if model_args.model_type == 'reformer':
@@ -155,7 +164,8 @@ class RecSysMetaModel(PreTrainedModel):
         max_seq_len = None
 
         pos_inp, label_seq, max_seq_len, metadata_for_pred_logging = self.feature_process(inputs)
-        neg_inp, _, _, _ = self.feature_process(inputs, max_seq_len, is_neg=True)
+        if self.loss_type != 'cross_entropy':
+            neg_inp, _, _, _ = self.feature_process(inputs, max_seq_len, is_neg=True)
 
         assert label_seq is not None, 'label sequence is not declared in feature_map'
 
@@ -190,10 +200,12 @@ class RecSysMetaModel(PreTrainedModel):
         
         if self.inp_merge == 'mlp':
             pos_emb = torch.tanh(self.mlp_merge(pos_inp))
-            neg_emb = torch.tanh(self.mlp_merge(neg_inp))
+            if self.loss_type != 'cross_entropy':
+                neg_emb = torch.tanh(self.mlp_merge(neg_inp))
         elif self.inp_merge == 'attn':
             pos_emb = self.attn_merge(pos_inp)
-            neg_emb = self.attn_merge(neg_inp)
+            if self.loss_type != 'cross_entropy':
+                neg_emb = self.attn_merge(neg_inp)
 
         if self.mlm:
             pos_emb_inp = pos_emb
@@ -203,7 +215,9 @@ class RecSysMetaModel(PreTrainedModel):
             # slice over time-steps for input and target 
             pos_emb_inp = pos_emb[:, :-1]
             pos_emb_trg = pos_emb[:, 1:]
-            neg_emb_inp = neg_emb[:, :-1]
+
+            if self.loss_type != 'cross_entropy':
+                neg_emb_inp = neg_emb[:, :-1]
 
         # Step3. Run forward pass on model architecture
 
@@ -240,7 +254,8 @@ class RecSysMetaModel(PreTrainedModel):
 
         pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)
         pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
-        neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
+        if self.loss_type != 'cross_entropy':
+            neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
 
         #Keeping removing zero-padded items metadata features for the next-clicks (targets), so that they are aligned
         for feat_name in metadata_for_pred_logging:
@@ -285,38 +300,79 @@ class RecSysMetaModel(PreTrainedModel):
         
         loss_neg = 0
         loss_ce = self.loss_nll(predictions_all, labels_all) 
-
-        if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
-
-            loss_neg = self.loss_fn(items_prob_log, labels_neg)
-
-        elif self.loss_type.startswith('margin_hinge'):
-
-            # _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
-
-            # loss = self.loss_fn(pred_emb_flat, trg_emb_flat, _label) / num_elem 
-            pos_dist, neg_dist = pos_cos_score, neg_cos_score
-            
-            if self.loss_type == 'margin_hinge_a':
-                # case A
-                loss_neg = (pos_dist.sum() + torch.relu(self.margin_loss - neg_dist).sum()) / (n_pos_ex + n_neg_ex)
-            elif self.loss_type == 'margin_hinge_b':
-                # case B (case of the paper)
-                n_neg_samples = neg_emb_inp.size(1)
-                loss_neg = (pos_dist.sum() * n_neg_samples + torch.relu(self.margin_loss - neg_dist).sum()) / (n_pos_ex + n_neg_ex)
-
-        else:
-            raise NotImplementedError
-
-        loss_neg *= self.neg_rescale_factor
-        loss_ce *= self.all_rescale_factor
-        loss = loss_neg + loss_ce
+        loss = loss_ce
 
         # accuracy
-        _, max_idx = torch.max(cos_sim_concat, dim=1)
-        train_acc = (max_idx == n_neg_items).sum(dtype=torch.float32) / num_elem
+        _, max_idx = torch.max(logits_all, dim=1)
+        train_acc = (max_idx == labels_all).mean(dtype=torch.float32)
 
-        outputs = (train_acc, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all, labels_all, metadata_for_pred_logging) + model_outputs  # Keep mems, hidden states, attentions if there are in it
+
+        loss_neg = None
+        predictions_neg = None
+        labels_neg = None
+        train_acc_neg = None
+        # concatenate 
+        if self.loss_type != 'cross_entropy':
+            pos_emb_pred_expanded = pos_emb_pred.unsqueeze(1).expand_as(neg_emb_inp)
+            pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(1), pos_emb_pred_expanded), dim=1).flatten(end_dim=1)
+            trg_emb_flat = torch.cat((pos_emb_trg.unsqueeze(1), neg_emb_inp), dim=1).flatten(end_dim=1)
+
+            n_neg_items = neg_emb_inp.size(1)
+            n_pos_ex = pos_emb_trg.size(0)
+            n_neg_ex = neg_emb_inp.size(0) * n_neg_items
+            labels_neg = torch.LongTensor([n_neg_items] * n_pos_ex).to(self.device)
+
+            # compute similarity
+            if self.similarity_type == 'concat_mlp':
+                pos_cos_score = self.sim_mlp(torch.cat((pos_emb_pred, pos_emb_trg), dim=1))
+                neg_cos_score = self.sim_mlp(torch.cat((pos_emb_pred_expanded, neg_emb_inp), dim=2)).squeeze(2)
+            elif self.similarity_type == 'cosine':
+                pos_cos_score = torch.cosine_similarity(pos_emb_pred, pos_emb_trg).unsqueeze(1)
+                neg_cos_score = torch.cosine_similarity(pos_emb_pred_expanded, neg_emb_inp, dim=2)
+            elif self.similarity_type == 'multi_mlp':
+                pos_cos_score = self.sim_mlp(pos_emb_pred * pos_emb_trg)
+                neg_cos_score = self.sim_mlp(pos_emb_pred_expanded * neg_emb_inp).squeeze(2)
+
+            # compute predictionss (logits)
+            cos_sim_concat = torch.cat((neg_cos_score, pos_cos_score), dim=1)
+            items_prob_log = F.log_softmax(cos_sim_concat, dim=1)
+            predictions_neg = torch.exp(items_prob_log)
+
+            # Step5. Compute loss and accuracy
+            loss_neg = torch.tensor(0.0, requires_grad=False, device=self.device)
+
+            if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
+
+                loss_neg = self.loss_fn(items_prob_log, labels_neg)
+
+            elif self.loss_type.startswith('margin_hinge'):
+
+                # _label = torch.LongTensor([1] * n_pos_ex + [-1] * n_neg_ex).to(pred_emb_flat.device)
+
+                # loss = self.loss_fn(pred_emb_flat, trg_emb_flat, _label) / num_elem 
+                pos_dist, neg_dist = pos_cos_score, neg_cos_score
+                
+                if self.loss_type == 'margin_hinge_a':
+                    # case A
+                    loss_neg = (pos_dist.sum() + torch.relu(self.margin_loss - neg_dist).sum()) / (n_pos_ex + n_neg_ex)
+                elif self.loss_type == 'margin_hinge_b':
+                    # case B (case of the paper)
+                    n_neg_samples = neg_emb_inp.size(1)
+                    loss_neg = (pos_dist.sum() * n_neg_samples + torch.relu(self.margin_loss - neg_dist).sum()) / (n_pos_ex + n_neg_ex)
+
+            else:
+                raise NotImplementedError
+
+            #Multi-task learning (XE over all items + XE over negative samples)
+            loss_neg *= self.neg_rescale_factor            
+            loss_ce *= self.all_rescale_factor
+            loss = loss_neg + loss_ce
+
+            # accuracy
+            _, max_idx = torch.max(cos_sim_concat, dim=1)
+            train_acc_neg = (max_idx == n_neg_items).sum(dtype=torch.float32) / num_elem
+
+        outputs = (train_acc, train_acc_neg, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all, labels_all, metadata_for_pred_logging) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 
         return outputs  # return (train_acc), (loss), (predictions), (labels), (mems), (hidden states), (attentions)
 
@@ -380,6 +436,7 @@ class RecSysMetaModel(PreTrainedModel):
         return neg_seq.reshape((n_batch, seqlen, n_neg_seqs_per_pos_seq))
 
     def feature_process(self, inputs, max_seq_len=None, is_neg=False):
+        
         if is_neg:
             assert max_seq_len is not None, "for negative samples, max_seq_len should be provided"
         
@@ -402,6 +459,7 @@ class RecSysMetaModel(PreTrainedModel):
                     cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)
+
                 elif cinfo['dtype'] == 'long':
                     cdata = cdata.unsqueeze(-1).long()
                 elif cinfo['dtype'] == 'float':

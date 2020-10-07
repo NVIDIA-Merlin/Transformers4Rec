@@ -68,20 +68,40 @@ class EvalMetrics(object):
                 #f_ndcg_cp
             ])
 
+
+    def reset(self):
+        if self.use_torch:
+            for f_measure in self.f_measures_torch:
+                f_measure.reset()                
+
+        if self.use_cupy:
+            for f_measure in self.f_measures_cupy:
+                f_measure.reset()
+
+        if self.use_cpu:
+            for f_measure_ks in self.f_measures_cpu:
+                f_measure.reset()
+                
+
     def update(self, preds, labels, return_individual_metrics=False):
         metrics_results = {}
         if self.use_torch:
             #with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
                 for f_measure in self.f_measures_torch:
-                    results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)
-                    metrics_results = {**metrics_results, **results}
+                    results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)  
+                    # Merging metrics results
+                    if return_individual_metrics:
+                        metrics_results = {**metrics_results, **results}                  
 
         if self.use_cupy:
             #with Timing("CUPY metrics"):    
                 #Compute metrics on cuPy
                 for f_measure in self.f_measures_cupy:
                     metrics_results = f_measure.add(preds, labels, return_individual_metrics=return_individual_metrics)
+                    # Merging metrics results
+                    if return_individual_metrics:
+                        metrics_results = {**metrics_results, **results}
 
         if self.use_cpu:
             # compute metrics on CPU
@@ -120,7 +140,7 @@ class EvalMetrics(object):
 
 
 class MetricWrapper(object):
-    def __init__(self, name, f_metric, topks, return_individual_metrics=False):
+    def __init__(self, name, f_metric, topks):
         self.name = name
         self.topks = topks
         self.f_metric = f_metric
@@ -129,7 +149,7 @@ class MetricWrapper(object):
     def reset(self):
         self.results = {k:[] for k in self.topks}
 
-    def add(self, predictions, labels):
+    def add(self, predictions, labels, return_individual_metrics=False):
 
         # represent target class id as one-hot vector
         labels = torch.nn.functional.one_hot(labels, predictions.size(-1))

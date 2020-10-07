@@ -21,7 +21,16 @@ class TrainingArguments(HfTrainingArguments):
     # misc
     fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
 
-    log_predictions: bool = field(default=False, metadata={"help": "Logs all predictions, labels and metadata features for test sets in parquet files."})
+    compute_metrics_each_n_steps: int = field(default=10, metadata={"help": "Log metrics each n steps (for train, validation and test sets)"})
+
+    log_predictions: bool = field(default=False, metadata={"help": "Logs predictions, labels and metadata features each --compute_metrics_each_n_steps (for test set)."})
+    log_attention_weights: bool = field(default=False, metadata={"help": "Logs the inputs and attention weights each --compute_metrics_each_n_steps (only test set)"})    
+
+    experiments_group: str = field(default="default", metadata={"help": "Name of the Experiments Group, for organizing job runs logged on W&B"})
+
+    learning_rate_schedule: str = field(default="constant_with_warmup", metadata={"help": "Learning Rate schedule (restarted for each training day). Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup"})
+    learning_rate_warmup_steps: int = field(default=0, metadata={"help": "Number of steps to linearly increase the learning rate from 0 to the specified initial learning rate schedule. Valid for --learning_rate_schedule = constant_with_warmup | linear_with_warmup | cosine_with_warmup"})
+    learning_rate_num_cosine_cycles: float = field(default=0.5, metadata={"help": "Number of cycles for --learning_rate_schedule = cosine_with_warmup. The number of waves in the cosine schedule (the defaults is to just decrease from the max value to 0 following a half-cosine)."})
     
 
 @dataclass
@@ -104,7 +113,7 @@ class ModelArguments:
     )
 
     loss_type: Optional[str] = field(
-        default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy' OR 'margin_hinge'"}
+        default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy', 'cross_entropy_neg', 'margin_hinge'"}
     )
     model_type: Optional[str] = field(
         default='transfoxl',
@@ -117,7 +126,7 @@ class ModelArguments:
         default="relu", metadata={"help": "transformer output activation: 'tanh' OR 'relu'"}
     )
     margin_loss: Optional[float] = field(
-        default=1.0, metadata={"help": "margin value for margin-hinge loss"}
+        default=0.0, metadata={"help": "margin value for margin-hinge loss"}
     )
     mlm: bool = field(default=False, metadata={"help": "use masked language modeling (mlm) based training objective."})
 
