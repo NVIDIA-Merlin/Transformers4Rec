@@ -47,6 +47,9 @@ class DataArguments:
     pad_token: Optional[int] = field(
         default=0, metadata={"help": "pad token"}
     )
+    mask_token: Optional[int] = field(
+        default=-10, metadata={"help": "mask token"}
+    )
     max_seq_len: Optional[int] = field(
         default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
     )
@@ -115,6 +118,11 @@ class ModelArguments:
     )
     margin_loss: Optional[float] = field(
         default=1.0, metadata={"help": "margin value for margin-hinge loss"}
+    )
+    mlm: bool = field(default=False, metadata={"help": "use masked language modeling (mlm) based training objective."})
+
+    mlm_probability: Optional[float] = field(
+        default=0.15, metadata={"help": "ratio of tokens to mask (set target) from an origianl sequence"}
     )
 
     # args for Transformers or RNNs

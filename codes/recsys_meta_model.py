@@ -60,6 +60,7 @@ class RecSysMetaModel(PreTrainedModel):
         """
 
         self.pad_token = data_args.pad_token
+        self.mask_token = data_args.mask_token
         self.embedding_tables = nn.ModuleDict()
         
         self.col_prefix_neg = data_args.feature_prefix_neg_sample
@@ -93,8 +94,11 @@ class RecSysMetaModel(PreTrainedModel):
             self.attn_merge = AttnMerge(concat_input_dim, model_args.d_model)
         else:
             raise NotImplementedError
-
         
+        self.mlm = model_args.mlm
+        self.mlm_probability = model_args.mlm_probability
+
+        self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
         self.output_layer = nn.Linear(model_args.d_model, target_dim)
@@ -153,15 +157,26 @@ class RecSysMetaModel(PreTrainedModel):
         pos_inp, label_seq, max_seq_len, metadata_for_pred_logging = self.feature_process(inputs)
         neg_inp, _, _, _ = self.feature_process(inputs, max_seq_len, is_neg=True)
 
-        if label_seq is not None:
-            label_seq_inp = label_seq[:, :-1] 
-            label_seq_trg = label_seq[:, 1:] 
-        else:
-            raise RuntimeError('label sequence is not declared in feature_map')
+        assert label_seq is not None, 'label sequence is not declared in feature_map'
 
-        # apply mask on input where target is on padding token
-        mask_trg_pad = (label_seq_trg != self.pad_token)
-        label_seq_inp = label_seq_inp * mask_trg_pad
+        if self.mlm:
+            """
+            Masked Language Model
+            """
+            label_seq_inp, label_seq_trg, pos_inp, masked_indices = self.mask_tokens(
+                label_seq, pos_inp, self.mlm_probability)
+
+        else:
+            """
+            Predict Next token
+            """
+
+            label_seq_inp = label_seq[:, :-1]
+            label_seq_trg = label_seq[:, 1:]
+            
+            # apply mask on input where target is on padding token
+            mask_trg_pad = (label_seq_trg != self.pad_token)
+            label_seq_inp = label_seq_inp * mask_trg_pad
 
 
         # Creating an additional feature with the position in the sequence
@@ -180,10 +195,15 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb = self.attn_merge(pos_inp)
             neg_emb = self.attn_merge(neg_inp)
 
-        # slice over time-steps for input and target 
-        pos_emb_inp = pos_emb[:, :-1]
-        pos_emb_trg = pos_emb[:, 1:]
-        neg_emb_inp = neg_emb[:, :-1]
+        if self.mlm:
+            pos_emb_inp = pos_emb
+            pos_emb_trg = pos_emb
+            neg_emb_inp = neg_emb
+        else:
+            # slice over time-steps for input and target 
+            pos_emb_inp = pos_emb[:, :-1]
+            pos_emb_trg = pos_emb[:, 1:]
+            neg_emb_inp = neg_emb[:, :-1]
 
         # Step3. Run forward pass on model architecture
 
@@ -248,6 +268,8 @@ class RecSysMetaModel(PreTrainedModel):
         elif self.similarity_type == 'multi_mlp':
             pos_cos_score = self.sim_mlp(pos_emb_pred * pos_emb_trg)
             neg_cos_score = self.sim_mlp(pos_emb_pred_expanded * neg_emb_inp).squeeze(2)
+        else:
+            raise NotImplementedError
 
         # compute predictionss (logits)
         cos_sim_concat = torch.cat((neg_cos_score, pos_cos_score), dim=1)
@@ -260,7 +282,8 @@ class RecSysMetaModel(PreTrainedModel):
         # Step5. Compute loss and accuracy
 
         # compute logits (predicted probability of item ids)
-
+        
+        loss_neg = 0
         loss_ce = self.loss_nll(predictions_all, labels_all) 
 
         if self.loss_type in ['cross_entropy_neg', 'cross_entropy_neg_1d']:
@@ -296,6 +319,52 @@ class RecSysMetaModel(PreTrainedModel):
         outputs = (train_acc, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all, labels_all, metadata_for_pred_logging) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 
         return outputs  # return (train_acc), (loss), (predictions), (labels), (mems), (hidden states), (attentions)
+
+    def mask_tokens(self, itemid_seq, input_seq, mlm_probability):
+        """
+        prepare sequence with mask for masked language modeling prediction
+        the function is based on HuggingFace's transformers/data/data_collator.py 
+
+        INPUT:
+        itemid_seq: sequence of input itemid (label) column
+        input_seq: sequence of other info (e.g., price, popularity, etc. 
+                   concatenated into a single vector at each timestep)
+
+        OUTPUT:
+        labels: item id sequence as label
+        itemid_seq: item id sequence as input
+        input_seq: masked input_seq
+        """
+
+        labels = itemid_seq.clone()
+        probability_matrix = torch.full(itemid_seq.shape, mlm_probability)
+
+        pad_token_mask = (itemid_seq == self.pad_token)
+        
+        probability_matrix.masked_fill_(torch.tensor(
+            pad_token_mask, dtype=torch.bool), value=0.0)
+
+        masked_indices = torch.bernoulli(probability_matrix).bool()
+        # We only compute loss on masked tokens (=invalidate non-masked tokens in label)
+        labels[~masked_indices] = self.pad_token
+
+        # 80% of the time, we replace masked input tokens with tokenizer.mask_token
+        indices_replaced = torch.bernoulli(torch.full(
+            labels.shape, 0.8)).bool() & masked_indices
+        itemid_seq[indices_replaced] = self.mask_token # we set here 
+        
+        input_seq[indices_replaced] = self.mask_token * torch.ones(input_seq.size(2))
+
+        # 10% of the time, we replace masked input tokens with random word
+        indices_random = torch.bernoulli(torch.full(
+            labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
+        random_words = torch.randint(
+            self.target_dim, labels.shape, dtype=torch.long)
+        itemid_seq[indices_random] = random_words[indices_random]
+        input_seq[indices_random] = torch.zeros(input_seq.size(2))
+
+        # The rest of the time (10% of the time) we keep the masked input tokens unchanged
+        return itemid_seq, labels, input_seq, masked_indices
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
