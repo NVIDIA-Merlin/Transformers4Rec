@@ -244,6 +244,11 @@ class RecSysTrainer(Trainer):
                         continue
 
                     step_loss, step_acc = self._training_step(model, inputs, optimizer)
+                    
+                    if step_loss == None and step_acc == None:
+                        # when MLM get all current step as masked
+                        continue
+
                     tr_loss += step_loss
                     tr_acc += step_acc
 
@@ -374,6 +379,9 @@ class RecSysTrainer(Trainer):
         # NOTE: RecSys
         outputs = model(inputs)
         
+        if outputs == None:
+            return None, None
+
         acc = outputs[0] # accuracy
         loss = outputs[2]  # model outputs are always tuple in transformers (see doc)
         
@@ -400,8 +408,8 @@ class RecSysTrainer(Trainer):
         L2_reg = L2_reg * l2_reg_factor
 
         self._log({#'l1_reg_loss': L1_reg,
-                   'l2_reg_loss': L2_reg.item(),
-                   'loss_before_reg': loss.item()})
+                'l2_reg_loss': L2_reg.item(),
+                'loss_before_reg': loss.item()})
 
         loss = loss + L2_reg
 
