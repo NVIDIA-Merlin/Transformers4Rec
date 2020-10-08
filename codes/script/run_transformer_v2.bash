@@ -22,6 +22,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --workers_count 10 \
     --validate_every 10 \
     --logging_steps 20 \
+    --save_steps 0 \
     --experiments_group ${experiments_group} \
     ${@:4} # Forwarding Remaining parameters to the script
 
