@@ -50,10 +50,12 @@ class RecSysMetaModel(PreTrainedModel):
         
         self.model = model 
 
+        """
         if self.model.__class__ in [nn.GRU, nn.LSTM, nn.RNN]:
             self.is_rnn = True
         else:
             self.is_rnn = False
+        """
 
         self.feature_map = feature_map
         """
@@ -205,11 +207,17 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Step3. Run forward pass on model architecture
 
-        if self.is_rnn:
+        if not isinstance(self.model, PreTrainedModel): #Checks if its a transformer
             # compute output through RNNs
-            pos_emb_pred, _ = self.model(
+            results = self.model(
                 input=pos_emb_inp
             )
+
+            if type(results) is tuple or type(results) is list:
+                pos_emb_pred = results[0]
+            else:
+                pos_emb_pred = results
+
             model_outputs = (None, )
             
         else:
