@@ -531,7 +531,8 @@ class RecSysTrainer(Trainer):
                 step_eval_acc, step_eval_acc_neg, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all, preds_metadata = outputs[:10]
                 
                 step_attention_weights = None
-                if self.args.log_attention_weights:                    
+                if self.args.log_attention_weights and \
+                            isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                     
                     step_attention_weights = outputs[-1] #Attention weights should be 10th or 11th position
                     assert len(step_attention_weights[0].shape) == 4, "Attention weights tensor should be rank 4, with shape (batch_size, heads, seqlen, seqlen)"
 
