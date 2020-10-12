@@ -181,10 +181,10 @@ class AvgSeq(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, inputs_embeds):
+    def forward(self, input):
         # seq: n_batch x n_seq x n_dim
         output = []
-        for i in range(1, inputs_embeds.size(1) + 1):
-            output.append(inputs_embeds[:, :i].mean(1))
+        for i in range(1, input.size(1) + 1):
+            output.append(input[:, :i].mean(1))
 
         return (torch.stack(output).permute(1,0,2),)
