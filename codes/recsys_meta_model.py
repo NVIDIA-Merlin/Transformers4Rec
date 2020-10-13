@@ -218,11 +218,10 @@ class RecSysMetaModel(PreTrainedModel):
                 neg_emb_inp = neg_emb   
         else:
             # slice over time-steps for input and target and ensuring masking is applied
-            mask_trg_pad_expanded = mask_trg_pad.unsqueeze(-1)
-            pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad_expanded
+            pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
             if self.loss_type != 'cross_entropy':
-                pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad_expanded
-                neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad_expanded
+                pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad.unsqueeze(-1)
+                neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
 
         # Step3. Run forward pass on model architecture
 
