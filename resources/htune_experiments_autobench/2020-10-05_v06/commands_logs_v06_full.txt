@@ -62,17 +62,32 @@ cosmic-deluge-1136
 ------------------------------------------------
 
 
+-----
 
-Best GRU upd to this point
-iconic-plasma-1262
-https://wandb.ai/gspmoreira/huggingface/runs/27h3i246/overview?workspace=user-gspmoreira
+Best GPT-2 up to the 80th trial
 
-AOD_all_Test_ndcg@1000_all: 0.2591
+ngc batch run --name "tranf4rec-htune-v06-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 8 --per_device_train_batch_size 64 --learning_rate 0.002765352013424135 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 3.1625564350525762e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+- Running it again logging predictions and attention weights
+Id: 1516063
+
+laced-fire-1297
+https://wandb.ai/gspmoreira/huggingface/runs/2iqaecgb/overview?workspace=user-gspmoreira
+AOD_all_Test_ndcg@1000_all: 0.5304
+
+----------------------
+
+Best GRU
 
 ngc batch run --name "tranf4rec-htune-v06-gru" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gru full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gru --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 10 --per_device_train_batch_size 256 --learning_rate 0.0002024939202283675 --learning_rate_schedule  constant_with_warmup --dropout 0.2 --weight_decay 9.065312473196671e-05 --d_model 320 --n_layer 1 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
 
 - Running it again logging predictions and attention weights
 Id: 1516105
+
+iconic-plasma-1262
+https://wandb.ai/gspmoreira/huggingface/runs/27h3i246/overview?workspace=user-gspmoreira
+
+AOD_all_Test_ndcg@1000_all: 0.2591
 
 
 ------
@@ -84,16 +99,11 @@ ngc batch run --name "tranf4rec-htune-v06-avgseq" --preempt RUNONCE --ace nv-us-
 
 Id: 1516822
 
------
-
-Best GPT-2 up to the 80th trial
-
-laced-fire-1297
-https://wandb.ai/gspmoreira/huggingface/runs/2iqaecgb/overview?workspace=user-gspmoreira
-AOD_all_Test_ndcg@1000_all: 0.5304
+wandb: Syncing run dazzling-wind-1352
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1dvpu74e
 
 
-ngc batch run --name "tranf4rec-htune-v06-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 8 --per_device_train_batch_size 64 --learning_rate 0.002765352013424135 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 3.1625564350525762e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+AOD_all_Test_ndcg@1000_all
+0.2424
 
-- Running it again logging predictions and attention weights
-Id: 1516063
+
