@@ -194,9 +194,9 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Creating an additional feature with the position in the sequence
         metadata_for_pred_logging['seq_pos'] = torch.arange(1, label_seq.shape[1]+1, device=self.device).repeat(label_seq.shape[0], 1)
-        for feat_name in metadata_for_pred_logging:
-            #Keeping only metadata features for the next-clicks (targets)
-            if not (self.mlm and self.training):
+        #Keeping only metadata features for the next-clicks (targets)
+        if not (self.mlm and self.training):
+            for feat_name in metadata_for_pred_logging:                
                 metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name][:, 1:]
 
 
@@ -249,7 +249,7 @@ class RecSysMetaModel(PreTrainedModel):
 
             model_outputs = self.model(
                 inputs_embeds=pos_emb_inp,
-                position_ids=position_ids
+                #position_ids=position_ids
             )
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
