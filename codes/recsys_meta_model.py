@@ -391,7 +391,7 @@ class RecSysMetaModel(PreTrainedModel):
         pad_token_mask = (itemid_seq == self.pad_token)
         
         probability_matrix = probability_matrix.clone().detach().masked_fill(torch.tensor(
-            pad_token_mask, dtype=torch.bool), value=0.0)
+            pad_token_mask, dtype=torch.bool, device=self.device), value=0.0)
 
         masked_indices = torch.bernoulli(probability_matrix).bool()
 
@@ -406,7 +406,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token
         indices_replaced = torch.bernoulli(torch.full(
-            labels.shape, 0.8)).bool() & masked_indices
+            labels.shape, 0.8, device=self.device)).bool() & masked_indices
         #itemid_seq[indices_replaced] = self.mask_token 
         
         # 10% of the time, we replace masked input tokens with random word
