@@ -407,14 +407,14 @@ class RecSysMetaModel(PreTrainedModel):
         # 80% of the time, we replace masked input tokens with tokenizer.mask_token
         indices_replaced = torch.bernoulli(torch.full(
             labels.shape, 0.8)).bool() & masked_indices
-        itemid_seq[indices_replaced] = self.mask_token 
+        #itemid_seq[indices_replaced] = self.mask_token 
         
         # 10% of the time, we replace masked input tokens with random word
         indices_random = torch.bernoulli(torch.full(
             labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
-        random_words = torch.randint(
-            self.target_dim, labels.shape, dtype=torch.long)
-        itemid_seq[indices_random] = random_words[indices_random]
+        #random_words = torch.randint(
+        #    self.target_dim, labels.shape, dtype=torch.long, device=self.device)
+        #itemid_seq[indices_random] = random_words[indices_random]
 
         input_seq[indices_random] = torch.zeros(input_seq.size(2))
 
