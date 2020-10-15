@@ -166,3 +166,7 @@ class ModelArguments:
     )
 
     disable_positional_embeddings: bool = field(default=False, metadata={"help": "Disable usage of (sum) positional embeddings with items embeddings."})
+
+    attn_type: str = field(
+        default="uni", metadata={"help": "The type of attention. Use 'uni' for Causal LM and 'bi' for Masked LM"}
+    )
