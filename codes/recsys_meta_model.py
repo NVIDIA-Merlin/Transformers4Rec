@@ -386,7 +386,7 @@ class RecSysMetaModel(PreTrainedModel):
         """
 
         labels = itemid_seq.clone()
-        probability_matrix = torch.full(itemid_seq.shape, mlm_probability)
+        probability_matrix = torch.full(itemid_seq.shape, mlm_probability, device=self.device)
 
         pad_token_mask = (itemid_seq == self.pad_token)
         
