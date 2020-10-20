@@ -1,0 +1,120 @@
+Starting a small machine to run AutoBench
+
+
+ngc batch run --name "transf4rec-autobench-htune" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.16g.1.norm --commandline "apt update; apt-get install screen -y; pip install -r requirements.txt --quiet; git pull origin experimentation & date & jupyter lab --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token='' --notebook-dir=/ --NotebookApp.allow_origin='*' & date; sleep 672h" --total-runtime 672h --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --port 8888 --port 8887 --workspace gmoreira-wksp:/wksp:RW
+
+
+Commands in the machine:
+echo "export PATH=\"\$PATH:/wksp/ngc/\"" >> ~/.bash_profile && source ~/.bash_profile
+mkdir /root/.ngc ; cp /wksp/ngc/config /root/.ngc/config
+
+cd /wksp/autobench
+pip install -r requirements.txt 
+
+
+Last Job id: 1536764
+
+
+-----------------------------------------
+
+
+#Hypertuning job - XLNET (uni)
+
+screen -S xlnet_uni
+
+source ~/.bash_profile
+
+python main.py --htune_study_name htune-v07-xlnet-uni --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/xlnet-uni/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-20_v07_eval_on_last_item/xlnet_uni/tranf4rec-htune-v07-xlnet-uni.yaml"
+
+
+[then, ctrl + A + D: make me outside of the screen session]
+
+
+
+---------------------------------------
+
+
+#Hypertuning job - XLNET (bi)
+
+screen -S xlnet_bi
+
+source ~/.bash_profile
+
+python main.py --htune_study_name htune-v07-xlnet-bi --concurrent_jobs 5 --htune_num_trials 100 --verbose --htune_log_dir "/results/xlnet-uni/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-20_v07_eval_on_last_item/xlnet_bi/tranf4rec-htune-v07-xlnet-bi.yaml"
+
+[then, ctrl + A + D: make me outside of the screen session]
+
+
+
+
+---------------------------------------------------------------
+
+Running this job manually because of its high accuracy before crashing (happy-lake-1075)
+
+
+ngc batch run --name "tranf4rec-htune-v06-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 7 --per_device_train_batch_size 128 --learning_rate 0.0028003389578467436 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 2.6170162662253176e-05 --d_model 256 --n_layer 2 --n_head 2 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Job Information
+    Id: 1502547
+
+cosmic-deluge-1136
+ 
+
+------------------------------------------------
+
+
+
+
+Best GPT-2 
+
+Job Id: 1515939
+swift-pyramid-1312
+https://wandb.ai/gspmoreira/huggingface/runs/2k5k7bwf/overview?workspace=user-gspmoreira
+AOD_all_Test_ndcg@1000_all: 0.5514
+
+ngc batch run --name "tranf4rec-htune-v06-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+- Running it again logging predictions and attention weights
+Id: 1520322
+
+wandb: fallen-field-1434
+wandb: https://app.wandb.ai/gspmoreira/huggingface/runs/1j4rgno5
+
+AOD_all_Test_ndcg@1000_all: 0.5514
+
+
+
+----------------------
+
+Best GRU
+
+ngc batch run --name "tranf4rec-htune-v06-gru" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gru full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gru --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 10 --per_device_train_batch_size 256 --learning_rate 0.0002024939202283675 --learning_rate_schedule  constant_with_warmup --dropout 0.2 --weight_decay 9.065312473196671e-05 --d_model 320 --n_layer 1 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+- Running it again logging predictions and attention weights
+Id: 1516105
+
+iconic-plasma-1262
+https://wandb.ai/gspmoreira/huggingface/runs/27h3i246/overview?workspace=user-gspmoreira
+
+AOD_all_Test_ndcg@1000_all: 0.2591
+
+
+------
+
+Running AVGSEQ with the best config for GRU (iconic-plasma-1262)
+
+ngc batch run --name "tranf4rec-htune-v06-avgseq" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-avgseq full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type avgseq --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 10 --per_device_train_batch_size 256 --learning_rate 0.0002024939202283675 --learning_rate_schedule  constant_with_warmup --dropout 0.2 --weight_decay 9.065312473196671e-05 --d_model 320 --n_layer 1 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1516822
+
+wandb: Syncing run dazzling-wind-1352
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1dvpu74e
+
+
+AOD_all_Test_ndcg@1000_all
+0.2424
+
+
+
