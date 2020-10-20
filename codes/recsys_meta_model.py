@@ -107,6 +107,7 @@ class RecSysMetaModel(PreTrainedModel):
             raise NotImplementedError
         
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
+        self.train_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
 
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
@@ -198,7 +199,8 @@ class RecSysMetaModel(PreTrainedModel):
             label_seq_inp = label_seq_inp * mask_trg_pad
 
             #When evaluating, computes metrics only for the last item of the session
-            if self.eval_on_last_item_seq_only and not self.training:
+            if (self.eval_on_last_item_seq_only and not self.training) or \
+               (self.train_on_last_item_seq_only and self.training):
                 rows_ids = torch.arange(label_seq_inp.size(0), dtype=torch.long, device=self.device)
                 last_item_sessions = mask_trg_pad.sum(axis=1) - 1
                 label_seq_trg_eval = torch.zeros(label_seq_trg.shape, dtype=torch.long, device=self.device)
