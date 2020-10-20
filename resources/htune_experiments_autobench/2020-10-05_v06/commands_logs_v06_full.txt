@@ -62,7 +62,7 @@ cosmic-deluge-1136
 ------------------------------------------------
 
 
------
+
 
 Best GPT-2 
 
@@ -78,6 +78,8 @@ Id: 1520322
 
 wandb: fallen-field-1434
 wandb: https://app.wandb.ai/gspmoreira/huggingface/runs/1j4rgno5
+
+AOD_all_Test_ndcg@1000_all: 0.5514
 
 
 
@@ -111,5 +113,6 @@ wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1dvpu74
 
 AOD_all_Test_ndcg@1000_all
 0.2424
+
 
 

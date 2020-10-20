@@ -1,0 +1,223 @@
+Using the best hyperparams for GPT-2 (hypertuning v06)
+=================================================================================
+
+Best GPT-2 as baseline
+
+Job Id: 1515939
+swift-pyramid-1312
+https://wandb.ai/gspmoreira/huggingface/runs/2k5k7bwf/overview?workspace=user-gspmoreira
+AOD_all_Test_ndcg@1000_all: 0.5514
+
+
+ngc batch run --name "tranf4rec-htune-v06-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+
+
+=================================================================================
+
+GPT-2 with Masked (--mlm --mlm_probability 0.0)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --mlm --mlm_probability 0.0 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id:  1523520
+
+
+wandb: Syncing run fanciful-mountain-1518
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/wywalekc
+
+AOD_all_Test_ndcg@1000_all:    0.01046
+
+
+--------------------------------------------------
+
+
+XLNET with Causal (--attn_type uni)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-xlnet full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --attn_type uni && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1523457
+
+
+wandb: Syncing run neat-smoke-1500
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1qqpepot
+
+AOD_all_Test_ndcg@1000_all:    0.1846
+
+--------------------------------------
+
+XLNET with Causal (--attn_type bi)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-xlnet full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --attn_type bi && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1523459
+
+wandb: Syncing run amber-glitter-1501
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/2681trmk
+
+
+
+AOD_all_Test_ndcg@1000_all:   0.5117
+
+--------------------------------------
+
+XLNET with Masked (--attn_type uni --mlm --mlm_probability 0.0)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-xlnet full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --attn_type uni --mlm --mlm_probability 0.0 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1523509
+
+wandb: Syncing run chocolate-sun-1514
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/10ty7y8p
+
+AOD_all_Test_ndcg@1000_all:   0.01654
+
+
+--------------------------------------
+
+XLNET with Masked (--attn_type uni --mlm --mlm_probability 0.15)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-xlnet full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --attn_type uni --mlm --mlm_probability 0.15 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1523510
+
+wandb: Syncing run peach-moon-1515
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/3twqw1uy
+
+AOD_all_Test_ndcg@1000_all: 0.08402
+
+
+--------------------------------------
+
+XLNET with Masked (--attn_type bi --mlm --mlm_probability 0.0)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-xlnet full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --attn_type bi --mlm --mlm_probability 0.0 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1523512
+
+wandb: Syncing run sage-star-1516
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/pu603xm4
+
+
+AOD_all_Test_ndcg@1000_all: 0.04634
+
+--------------------------------------
+
+XLNET with Masked (--attn_type bi --mlm --mlm_probability 0.15)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-xlnet full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --attn_type bi --mlm --mlm_probability 0.15 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1523513
+
+wandb: Syncing run fanciful-serenity-1517
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1qi527ge
+
+AOD_all_Test_ndcg@1000_all  0.06733
+
+
+
+
+
+
+
+
+
+
+
+=============================================================
+
+Oct. 10
+
+-------------------------------------------------------
+
+Running again after refactory of Masked LM training
+
+
+
+XLNET with Causal (--attn_type uni) --eval_on_last_item_seq_only
+
+ngc batch run --name "tranf4rec-htune-xlnet-tests" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-xlnet-tests full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --eval_on_last_item_seq_only --attn_type uni && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1535406
+
+
+wandb: Syncing run morning-voice-1623
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/3406vfbj
+
+
+---------------------------------------------------------------------------------
+
+XLNET with Causal (--attn_type bi) --eval_on_last_item_seq_only
+
+ngc batch run --name "tranf4rec-htune-xlnet-tests" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-xlnet-tests full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --eval_on_last_item_seq_only --attn_type bi && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1535410
+
+wandb: Syncing run eager-glade-1624
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1ebl31ae
+
+
+---------------------------------------------------------------------------------
+
+
+
+XLNET with Masked (--attn_type bi --mlm --mlm_probability 0.15)
+
+ngc batch run --name "tranf4rec-htune-v06-xlnet" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-xlnet full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --attn_type bi --mlm --mlm_probability 0.15 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1535289
+
+wandb: Syncing run zany-dragon-1615
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/ugmjl727
+
+
+---------------------------------------------------------------------------------
+
+
+GPT-2 with TRAINING and EVALUATION for the last item of the sequence only to be able (to compare eval metrics with Masked) --eval_on_last_item_seq_only
+
+
+ngc batch run --name "tranf4rec-htune-v06-gpt2-" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights --eval_on_last_item_seq_only && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1535324
+
+
+wandb: Syncing run daily-paper-1619
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1eqpnaoe
+
+-------------------------------------
+
+GPT-2 with evaluation for the last item of the sequence only to be able (to compare eval metrics with Masked) --eval_on_last_item_seq_only --train_on_last_item_seq_only
+
+
+ngc batch run --name "tranf4rec-htune-gpt2-tests_mlm" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights --eval_on_last_item_seq_only --train_on_last_item_seq_only && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1535366
+
+wandb: Syncing run golden-jazz-1621
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/stmvcew1
+
+
+-------------------------------------
+
+GPT-2 with evaluation for the last item of the sequence only to be able (to compare eval metrics with Masked) in Masked LM --mlm --mlm_probability 0.0 
+
+ngc batch run --name "tranf4rec-htune-gpt2-tests_mlm" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v06-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --learning_rate 0.002162094632215143 --learning_rate_schedule constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights --mlm --mlm_probability 0.0 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1535375
+
+wandb: Syncing run jumping-music-1622
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/3l63sjkv
+
+
+
+
+
+
+
+
+Trials to compare: swift-pyramid-1312|zany-dragon-1615|daily-paper-1619|golden-jazz-1621|jumping-music-1622|morning-voice-1623|eager-glade-1624

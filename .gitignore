@@ -139,3 +139,10 @@ cython_debug/
 
 
 .vscode/
+
+
+# Transf4Rec specific ignores
+pred_logs/
+attention_weights/
+runs/
+wandb/
