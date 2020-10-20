@@ -34,6 +34,8 @@ class TrainingArguments(HfTrainingArguments):
 
     
 
+    
+
 @dataclass
 class DataArguments:
     data_path: Optional[str] = field(
@@ -170,3 +172,5 @@ class ModelArguments:
     attn_type: str = field(
         default="uni", metadata={"help": "The type of attention. Use 'uni' for Causal LM and 'bi' for Masked LM"}
     )
+
+    eval_on_last_item_seq_only: bool = field(default=False, metadata={"help": "Evaluate metrics only on predictions for the last item of the sequence (rather then evaluation for all next-item predictions)."})

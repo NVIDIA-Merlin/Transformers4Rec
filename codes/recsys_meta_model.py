@@ -106,8 +106,11 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
         
+        self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
+
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
+
         self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model, device=self.device))
         nn.init.normal_(self.masked_item_embedding, mean = 0, std = 1)
 
@@ -193,6 +196,17 @@ class RecSysMetaModel(PreTrainedModel):
             # apply mask on input where target is on padding token
             mask_trg_pad = (label_seq_trg != self.pad_token)
             label_seq_inp = label_seq_inp * mask_trg_pad
+
+            #When evaluating, computes metrics only for the last item of the session
+            if self.eval_on_last_item_seq_only and not self.training:
+                rows_ids = torch.arange(label_seq_inp.size(0), dtype=torch.long, device=self.device)
+                last_item_sessions = mask_trg_pad.sum(axis=1) - 1
+                label_seq_trg_eval = torch.zeros(label_seq_trg.shape, dtype=torch.long, device=self.device)
+                label_seq_trg_eval[rows_ids, last_item_sessions] = label_seq_trg[rows_ids, last_item_sessions]
+                #Updating labels and mask
+                label_seq_trg = label_seq_trg_eval
+                mask_trg_pad = (label_seq_trg != self.pad_token)
+
 
         # Creating an additional feature with the position in the sequence
         metadata_for_pred_logging['seq_pos'] = torch.arange(1, label_seq.shape[1]+1, device=self.device).repeat(label_seq.shape[0], 1)
