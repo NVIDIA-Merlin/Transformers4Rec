@@ -108,6 +108,8 @@ class RecSysMetaModel(PreTrainedModel):
         
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
+        self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model, device=self.device))
+        nn.init.normal_(self.masked_item_embedding, mean = 0, std = 1)
 
         self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
@@ -173,12 +175,12 @@ class RecSysMetaModel(PreTrainedModel):
 
         assert label_seq is not None, 'label sequence is not declared in feature_map'
 
-        if self.mlm and self.training:
+        if self.mlm:
             """
             Masked Language Model
             """
-            label_seq_inp, label_seq_trg, pos_inp, masked_indices = self.mask_tokens(
-                label_seq, pos_inp, self.mlm_probability)
+            label_seq_trg, label_mlm_mask = self.mask_tokens(
+                label_seq, self.mlm_probability)
 
         else:
             """
@@ -211,10 +213,12 @@ class RecSysMetaModel(PreTrainedModel):
             if self.loss_type != 'cross_entropy':
                 neg_emb = self.attn_merge(neg_inp)
 
-        if self.mlm and self.training:
-            pos_emb_inp = pos_emb            
+
+        if self.mlm:
+            # Masking inputs (with trainable [mask] embedding]) at masked label positions      
+            pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1), self.masked_item_embedding, pos_emb)            
             if self.loss_type != 'cross_entropy':
-                pos_emb_trg = pos_emb.clone()
+                pos_emb_trg = pos_emb #.clone()
                 neg_emb_inp = neg_emb   
         else:
             # slice over time-steps for input and target and ensuring masking is applied
@@ -222,6 +226,7 @@ class RecSysMetaModel(PreTrainedModel):
             if self.loss_type != 'cross_entropy':
                 pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad.unsqueeze(-1)
                 neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
+
 
         # Step3. Run forward pass on model architecture
 
@@ -242,10 +247,12 @@ class RecSysMetaModel(PreTrainedModel):
             """
             Transformer Models
             """
+            '''
             if self.disable_positional_embeddings:
                 position_ids = torch.zeros(max_seq_len-1, requires_grad=False, dtype=torch.long, device=self.device)
             else:
                 position_ids = None
+            '''
 
             model_outputs = self.model(
                 inputs_embeds=pos_emb_inp,
@@ -272,9 +279,10 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
             neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
 
-        #Keeping removing zero-padded items metadata features for the next-clicks (targets), so that they are aligned
-        for feat_name in metadata_for_pred_logging:
-            metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), non_pad_mask)
+        if not self.mlm:
+            #Keeping removing zero-padded items metadata features for the next-clicks (targets), so that they are aligned
+            for feat_name in metadata_for_pred_logging:
+                metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), non_pad_mask)
 
         logits_all = self.output_layer(pos_emb_pred)
         predictions_all = self.log_softmax(logits_all)
@@ -369,57 +377,65 @@ class RecSysMetaModel(PreTrainedModel):
 
         return outputs  # return (train_acc), (loss), (predictions), (labels), (mems), (hidden states), (attentions)
 
-    def mask_tokens(self, itemid_seq, input_seq, mlm_probability):
+    def mask_tokens(self, itemid_seq, mlm_probability):
         """
         prepare sequence with mask for masked language modeling prediction
         the function is based on HuggingFace's transformers/data/data_collator.py 
 
         INPUT:
         itemid_seq: sequence of input itemid (label) column
-        input_seq: sequence of other info (e.g., price, popularity, etc. 
-                   concatenated into a single vector at each timestep)
+        mlm_probability: probability of an item to be selected (masked) to be a label for this sequence. P.s. We enforce that at least one item is masked for each sequence, so that the network can learn something with it.
 
         OUTPUT:
         labels: item id sequence as label
-        itemid_seq: item id sequence as input
-        input_seq: masked input_seq
+        masked_labels: bool mask with is true only for masked labels (targets)
         """
 
-        labels = itemid_seq.clone()
-        probability_matrix = torch.full(itemid_seq.shape, mlm_probability, device=self.device)
+        #labels = itemid_seq.clone()
+        labels = torch.full(itemid_seq.shape, self.pad_token, dtype=itemid_seq.dtype, device=self.device)
+        non_padded_mask = (itemid_seq != self.pad_token)
 
-        pad_token_mask = (itemid_seq == self.pad_token)
+        rows_ids = torch.arange(itemid_seq.size(0), dtype=torch.long, device=self.device)
+
+        # During training, masks labels to be predicted according to a probability, ensuring that each session has at least one label to predict
+        if self.training:
+            probability_matrix = torch.full(itemid_seq.shape, mlm_probability, device=self.device)            
+            masked_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
+            labels = torch.where(masked_labels, itemid_seq, 
+                                torch.tensor(self.pad_token, device=self.device))
+
+            # set at least one item in the sequence to maske, so that the network can learn something with this session
+            one_random_index_by_session = torch.multinomial(
+                non_padded_mask.float(), num_samples=1).squeeze()         
+            labels[rows_ids, one_random_index_by_session] = itemid_seq[rows_ids, one_random_index_by_session]
         
-        probability_matrix = probability_matrix.clone().detach().masked_fill(torch.tensor(
-            pad_token_mask, dtype=torch.bool, device=self.device), value=0.0)
+        # During evaluation always masks the last item of the session
+        else:
+            last_item_sessions = non_padded_mask.sum(axis=1) - 1
+            labels[rows_ids, last_item_sessions] = itemid_seq[rows_ids, last_item_sessions]
 
-        masked_indices = torch.bernoulli(probability_matrix).bool()
+        masked_labels = (labels != self.pad_token)
 
-        # We only compute loss on masked tokens (=invalidate non-masked tokens in label)
-        labels[~masked_indices] = self.pad_token
 
-        # set at least one time-step as token, by randomly selecting one step
-        indices_should_one = torch.multinomial(
-            (itemid_seq != 0).float(), num_samples=1).squeeze()
-        for idx, idx_one in enumerate(indices_should_one):
-            labels[idx, idx_one] = itemid_seq[idx, idx_one]
-
-        # 80% of the time, we replace masked input tokens with tokenizer.mask_token
-        indices_replaced = torch.bernoulli(torch.full(
-            labels.shape, 0.8, device=self.device)).bool() & masked_indices
-        #itemid_seq[indices_replaced] = self.mask_token 
+        #TODO: Based on HF Data Collator (https://github.com/huggingface/transformers/blob/bef0175168002e40588da53c45a0760744731e76/src/transformers/data/data_collator.py#L164). Experiment later how much replacing masked input by a random item or keeping the masked input token unchanged helps, like
         
-        # 10% of the time, we replace masked input tokens with random word
-        indices_random = torch.bernoulli(torch.full(
-            labels.shape, 0.5, device=self.device)).bool() & masked_indices & ~indices_replaced
-        #random_words = torch.randint(
-        #    self.target_dim, labels.shape, dtype=torch.long, device=self.device)
-        #itemid_seq[indices_random] = random_words[indices_random]
+        ## 80% of the time, we replace masked input tokens with tokenizer.mask_token
+        #indices_replaced = torch.bernoulli(torch.full(
+        #    labels.shape, 0.8, device=self.device)).bool() & masked_indices
+        ##itemid_seq[indices_replaced] = self.mask_token 
+        
+        ## 10% of the time, we replace masked input tokens with random word
+        #indices_random = torch.bernoulli(torch.full(
+        #    labels.shape, 0.5, device=self.device)).bool() & masked_indices & ~indices_replaced
+        ##random_words = torch.randint(
+        ##    self.target_dim, labels.shape, dtype=torch.long, device=self.device)
+        ##itemid_seq[indices_random] = random_words[indices_random]
 
-        input_seq[indices_random] = torch.zeros(input_seq.size(2), device=self.device)
+        #input_seq[indices_random] = torch.zeros(input_seq.size(2), device=self.device)
 
-        # The rest of the time (10% of the time) we keep the masked input tokens unchanged
-        return itemid_seq, labels, input_seq, masked_indices
+        #itemid_seq[masked_labels] = self.mask_token
+
+        return labels, masked_labels
 
     def _unflatten_neg_seq(self, neg_seq, seqlen):
         """
@@ -455,7 +471,8 @@ class RecSysMetaModel(PreTrainedModel):
                     label_seq = cdata
 
                 if cinfo['dtype'] == 'categorical':
-                    cdata = self.embedding_tables[cinfo['emb_table']](cdata.clone().detach().long())
+                    #cdata = self.embedding_tables[cinfo['emb_table']](cdata.clone().detach().long())
+                    cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)
 
