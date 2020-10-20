@@ -131,10 +131,10 @@ class ModelArguments:
     margin_loss: Optional[float] = field(
         default=0.0, metadata={"help": "margin value for margin-hinge loss"}
     )
-    mlm: bool = field(default=False, metadata={"help": "use masked language modeling (mlm) based training objective."})
+    mlm: bool = field(default=False, metadata={"help": "Use Masked Language Modeling (Cloze objective) for training."})
 
     mlm_probability: Optional[float] = field(
-        default=0.15, metadata={"help": "ratio of tokens to mask (set target) from an origianl sequence"}
+        default=0.15, metadata={"help": "Ratio of tokens to mask (set target) from an original sequence. There is a hard constraint that ensures that each sequence have at least one target (masked) and one non-masked item, for effective learning. Thus, if the sequence has more than 2 items, this is the probability of the additional items to be masked"}
     )
 
     # args for Transformers or RNNs

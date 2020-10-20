@@ -112,8 +112,9 @@ class RecSysMetaModel(PreTrainedModel):
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
 
+        # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model, device=self.device))
-        nn.init.normal_(self.masked_item_embedding, mean = 0, std = 1)
+        nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.4)
 
         self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
@@ -415,22 +416,38 @@ class RecSysMetaModel(PreTrainedModel):
 
         # During training, masks labels to be predicted according to a probability, ensuring that each session has at least one label to predict
         if self.training:
+            # Selects a percentage of items to be masked (selected as labels)
             probability_matrix = torch.full(itemid_seq.shape, mlm_probability, device=self.device)            
             masked_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
             labels = torch.where(masked_labels, itemid_seq, 
                                 torch.tensor(self.pad_token, device=self.device))
 
-            # set at least one item in the sequence to maske, so that the network can learn something with this session
+            # Set at least one item in the sequence to mask, so that the network can learn something with this session
             one_random_index_by_session = torch.multinomial(
                 non_padded_mask.float(), num_samples=1).squeeze()         
             labels[rows_ids, one_random_index_by_session] = itemid_seq[rows_ids, one_random_index_by_session]
+            masked_labels = (labels != self.pad_token)
+
+            # If a sequence has only masked labels, unmasks one of the labels
+            sequences_with_only_labels = masked_labels.sum(axis=1) == non_padded_mask.sum(axis=1)
+            sampled_labels_to_unmask = torch.multinomial(masked_labels.float(), num_samples=1).squeeze() 
+
+            labels_to_unmask = torch.masked_select(sampled_labels_to_unmask, sequences_with_only_labels)
+            rows_to_unmask = torch.masked_select(rows_ids, sequences_with_only_labels)
+            
+            labels[rows_to_unmask, labels_to_unmask] = self.pad_token
+            masked_labels = (labels != self.pad_token)
+
+            # Logging the real percentage of masked items (labels)
+            #perc_masked_labels = masked_labels.sum() / non_padded_mask.sum().float()
+            #logger.info(f"  % Masked items as labels: {perc_masked_labels}")
+
         
         # During evaluation always masks the last item of the session
         else:
             last_item_sessions = non_padded_mask.sum(axis=1) - 1
             labels[rows_ids, last_item_sessions] = itemid_seq[rows_ids, last_item_sessions]
-
-        masked_labels = (labels != self.pad_token)
+            masked_labels = (labels != self.pad_token)
 
 
         #TODO: Based on HF Data Collator (https://github.com/huggingface/transformers/blob/bef0175168002e40588da53c45a0760744731e76/src/transformers/data/data_collator.py#L164). Experiment later how much replacing masked input by a random item or keeping the masked input token unchanged helps, like

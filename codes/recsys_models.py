@@ -70,18 +70,21 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         model_cls = XLNetModel
         config = XLNetConfig(
             d_model=model_args.d_model,
-            d_embed=model_args.d_model,
-            n_layer=model_args.n_layer,
-            n_head=model_args.n_head,
             d_inner=model_args.d_model * 4,
+            n_layer=model_args.n_layer,
+            n_head=model_args.n_head,            
             ff_activation=model_args.hidden_act,
             untie_r=True,
+            bi_data=False,
             #attn_type="bi",
             attn_type=model_args.attn_type,
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
             pad_token_id=data_args.pad_token,
+            mem_len=1024,
+            output_attentions=training_args.log_attention_weights,
+            vocab_size=1 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
 
@@ -89,15 +92,17 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         model_cls = GPT2Model
         config = GPT2Config(
             n_embd=model_args.d_model,
+            n_inner=n_embd * 4,
             n_layer=model_args.n_layer,
             n_head=model_args.n_head,
             activation_function=model_args.hidden_act,
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
-            dropout=model_args.dropout,
+            resid_pdrop=model_args.dropout,
+            embd_pdrop=model_args.dropout,
+            attn_pdrop=model_args.dropout,
             n_positions=data_args.max_seq_len,
             n_ctx=data_args.max_seq_len,
-            pad_token_id=data_args.pad_token,
             output_attentions=training_args.log_attention_weights,
             vocab_size=1 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
