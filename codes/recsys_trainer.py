@@ -7,7 +7,7 @@ for sequential dataset packed with different format in multiple sequences
 import logging
 import os
 
-from typing import Dict, List, Optional, NamedTuple, Callable
+from typing import Dict, List, Optional, NamedTuple, Callable, Tuple
 from enum import Enum
 
 import numpy as np
@@ -23,7 +23,7 @@ from recsys_metrics import EvalMetrics
 
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
 from transformers.training_args import is_torch_tpu_available
-from transformers import Trainer, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
+from transformers import Trainer, AdamW, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from transformers import PreTrainedModel
 
 
@@ -105,7 +105,56 @@ class RecSysTrainer(Trainer):
         if is_wandb_available:
             wandb.config.update(args)
 
-    def train(self, model_path: Optional[str] = None, log_attention_weights_fn: Callable = None):
+
+    def get_optimizers(
+        self, num_training_steps: int, use_warmup_lr=False
+    ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+        """
+        Setup the optimizer and the learning rate scheduler.
+
+        We provide a reasonable default that works well.
+        If you want to use something else, you can pass a tuple in the Trainer's init,
+        or override this method in a subclass.
+        """
+        if self.optimizers is not None:
+            return self.optimizers
+        # Prepare optimizer and schedule 
+        no_decay = ["bias", "LayerNorm.weight"]
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "weight_decay": self.args.weight_decay,
+            },
+            {
+                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+        ]
+
+        if use_warmup_lr:
+            learning_rate = self.args.learning_rate_warmup
+            learning_rate_schedule = self.args.learning_rate_schedule_warmup
+        else:
+            learning_rate = self.args.learning_rate
+            learning_rate_schedule = self.args.learning_rate_schedule
+
+        optimizer = AdamW(optimizer_grouped_parameters, lr=learning_rate, eps=self.args.adam_epsilon)
+
+        if learning_rate_schedule == 'constant_with_warmup':
+            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps)
+        elif learning_rate_schedule == 'linear_with_warmup':
+            scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=num_training_steps)
+        elif learning_rate_schedule == 'cosine_with_warmup':
+            scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=num_training_steps,
+                                                                   num_cycles= self.args.learning_rate_num_cosine_cycles_by_epoch * self.args.num_train_epochs)
+        else:
+            raise ValueError('Invalid value for --learning_rate_schedule.  Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup')
+
+
+        return optimizer, scheduler
+
+
+    def train(self, model_path: Optional[str] = None, day_index: Optional[int] = None, log_attention_weights_fn: Callable = None):
         """
         Main training entry point.
 
@@ -125,19 +174,7 @@ class RecSysTrainer(Trainer):
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
-        optimizer, _ = self.get_optimizers(num_training_steps=t_total)
-
-        
-        if self.args.learning_rate_schedule == 'constant_with_warmup':
-            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps)
-        elif self.args.learning_rate_schedule == 'linear_with_warmup':
-            scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=t_total)
-        elif self.args.learning_rate_schedule == 'cosine_with_warmup':
-            scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=t_total,
-                                                                   num_cycles= self.args.learning_rate_num_cosine_cycles)
-        else:
-            raise ValueError('Invalid value for --learning_rate_schedule.  Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup')
-
+        optimizer, scheduler = self.get_optimizers(num_training_steps=t_total, use_warmup_lr=(day_index <= self.args.warmup_days))
 
         # Check if saved optimizer or scheduler states exist
         if (

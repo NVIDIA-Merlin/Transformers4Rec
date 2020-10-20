@@ -152,6 +152,7 @@ def main():
                 else None
             )
             trainer.train(model_path=model_path, 
+                          day_index=date_idx,
                          #log_attention_weights_fn=att_weights_fn
                          )
 
