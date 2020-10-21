@@ -19,7 +19,7 @@ jobs:
       - date
       - git pull origin experimentation
       - date
-      - bash script/run_transformer_v2.bash !{htune_study_name} full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --eval_on_last_item_seq_only --warmup_days 1 --attn_type bi --mlm {training_hparams}
+      - bash script/run_transformer_v2.bash !{htune_study_name} full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --hidden_act gelu --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --eval_on_last_item_seq_only --warmup_days 1 --attn_type bi --mlm {training_hparams}
       - date
     backend: *NGC_32GB_2GPU
 
@@ -95,12 +95,6 @@ hyperparameters_tuning:
               - 4
               - 8
               - 16
-          
-          - name: --hidden_act
-            sampling: categorical
-            categ_values:
-              - gelu
-              - gelu_new  
               
           - name: --mlm_probability
             sampling: discrete_uniform
