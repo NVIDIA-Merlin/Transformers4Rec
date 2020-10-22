@@ -65,10 +65,6 @@ Problem: There was a bug in which when --eval_on_last_item_seq_only, the --train
 daily-paper-1619
 
 
-P.s. compare to the following GPT-2 experiment with --eval_on_last_item_seq_only (before fixing dropout)
-wandb: Syncing run golden-jazz-1621
-wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/stmvcew1
-
 
 
 ---------------------------------------

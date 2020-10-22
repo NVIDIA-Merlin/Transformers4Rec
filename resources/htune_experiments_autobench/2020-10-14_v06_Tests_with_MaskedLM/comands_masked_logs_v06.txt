@@ -4,7 +4,7 @@ Using the best hyperparams for GPT-2 (hypertuning v06)
 Best GPT-2 as baseline
 
 Job Id: 1515939
-swift-pyramid-1312
+swift-pyramid-1312 / fallen-field-1434
 https://wandb.ai/gspmoreira/huggingface/runs/2k5k7bwf/overview?workspace=user-gspmoreira
 AOD_all_Test_ndcg@1000_all: 0.5514
 
