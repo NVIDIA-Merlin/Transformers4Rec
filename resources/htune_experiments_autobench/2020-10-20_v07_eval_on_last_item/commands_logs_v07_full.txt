@@ -49,20 +49,27 @@ python main.py --htune_study_name htune-v07-xlnet-bi --concurrent_jobs 5 --htune
 ---------------------------------------
 
 
-GPT-2 - Manually running model with the best hparams for v06 hypertuning (but now with gelu_new and --eval_on_last_item_seq_only and dropout fixed)
+GPT-2 - Manually running model with the best hparams for v06 hypertuning (--eval_on_last_item_seq_only and dropout fixed)
 
-ngc batch run --name "htune-v07-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-07-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --eval_on_last_item_seq_only --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+ngc batch run --name "htune-v07-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-07-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --eval_on_last_item_seq_only --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
 
-Id: 1536845
-
-
+Id: 1537618
 
 
+sparkling-firebrand-1666
+https://wandb.ai/gspmoreira/huggingface/runs/3d945ly5/overview?workspace=user-
+
+AOD_all_Test_ndcg@1000_all: 0.1753
+
+Problem: There was a bug in which when --eval_on_last_item_seq_only, the --train_on_last_item_seq_only was also true. That is why its result is equal to to golden-jazz-1621 (with --train_on_last_item_seq_only), and not with 
+daily-paper-1619
 
 
 P.s. compare to the following GPT-2 experiment with --eval_on_last_item_seq_only (before fixing dropout)
 wandb: Syncing run golden-jazz-1621
 wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/stmvcew1
+
+
 
 ---------------------------------------
 
@@ -85,7 +92,8 @@ ngc batch run --name "htune-v07-avgseq" --preempt RUNONCE --ace nv-us-west-2 --i
 
 Id: 1536832
 
-
+wandb: Syncing run desert-yogurt-1649
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1pae854a
 
 
 
