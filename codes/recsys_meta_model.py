@@ -107,7 +107,7 @@ class RecSysMetaModel(PreTrainedModel):
             raise NotImplementedError
         
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
-        self.train_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
+        self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
 
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
