@@ -2,7 +2,7 @@ NGC: &NGC
   docker_image: nvidian/prj-recsys/transf4rec_exp:0.1.0
   download_dir: /tmp
   hostname: ngc
-  job_name: tranf4rec-htune-v07-xlnet-bi
+  job_name: tranf4rec-htune-v08-xlnet-bi
   results_mount: /results
 
   datasets:

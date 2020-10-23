@@ -25,7 +25,7 @@ screen -S xlnet_uni
 source ~/.bash_profile
 
 mkdir -p /results/xlnet-uni/htune_log
-python main.py --optuna_study_name htune-v08-xlnet-uni --concurrent_jobs 5 --optuna_num_trials 100 --verbose --optuna_log_dir "/results/xlnet-uni/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-20_v08_eval_on_last_item_new_autobench/xlnet_uni/tranf4rec-htune-v08-xlnet-uni.yaml"
+python main.py --optuna_study_name htune-v08-xlnet-uni --concurrent_jobs 2 --optuna_num_trials 6 --verbose --optuna_log_dir "/results/xlnet-uni/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-20_v08_eval_on_last_item_new_autobench/xlnet_uni/tranf4rec-htune-v08-xlnet-uni.yaml"
 
 
 [then, ctrl + A + D: make me outside of the screen session]
