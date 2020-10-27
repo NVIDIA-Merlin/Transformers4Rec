@@ -12,7 +12,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from transformers.modeling_utils import PreTrainedModel
-from transformers.modeling_gpt2 import GPT2Model
+from transformers.modeling_gpt2 import GPT2Model, Attention
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,11 @@ class RecSysMetaModel(PreTrainedModel):
         super(RecSysMetaModel, self).__init__(config)
         
         self.model = model 
+
+        #Temporary, replacing the Attention block of GPT-2 for one that enforces mask future informatino
+        if type(self.model) is GPT2Model:
+            for block in self.model.h:
+                block.attn = AttentionFixed(128, 20, config, True)
 
         """
         if self.model.__class__ in [nn.GRU, nn.LSTM, nn.RNN]:
@@ -199,7 +204,6 @@ class RecSysMetaModel(PreTrainedModel):
             # apply mask on input where target is on padding token
             mask_trg_pad = (label_seq_trg != self.pad_token)
 
-            #if type(self.model) is not GPT2Model:
             label_seq_inp = label_seq_inp * mask_trg_pad
 
             #When evaluating, computes metrics only for the last item of the session
@@ -243,11 +247,14 @@ class RecSysMetaModel(PreTrainedModel):
                 neg_emb_inp = neg_emb   
         else:
             # slice over time-steps for input and target and ensuring masking is applied
+            pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
+            '''
             if type(self.model) is GPT2Model:
                 #Temporary hack to test if the last shifted item leaks and improves last item prediction accuracy
                 pos_emb_inp = pos_emb[:, :-1]
             else:
                 pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
+            '''
             if self.loss_type != 'cross_entropy':
                 pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad.unsqueeze(-1)
                 neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
@@ -281,7 +288,7 @@ class RecSysMetaModel(PreTrainedModel):
 
             #label_seq_inp_ohe = torch.nn.functional.one_hot(label_seq_inp, self.target_dim)
 
-
+            '''
             if type(self.model) is GPT2Model:
                 model_outputs = self.model(
                     input_ids=label_seq_inp,
@@ -299,7 +306,7 @@ class RecSysMetaModel(PreTrainedModel):
                 inputs_embeds=pos_emb_inp,
                 #position_ids=position_ids
             )
-            '''
+            
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
 
@@ -574,3 +581,116 @@ def nll_1d(items_prob, _label=None):
     xe_loss = torch.log(positive_prob)
     cosine_sim_loss = - torch.mean(xe_loss)
     return cosine_sim_loss
+
+
+
+from transformers.modeling_utils import (
+    Conv1D, prune_conv1d_layer)
+
+
+class AttentionFixed(nn.Module):
+    def __init__(self, nx, n_ctx, config, scale=False):
+        super().__init__()
+
+        n_state = nx  # in Attention: n_state=768 (nx=n_embd)
+        # [switch nx => n_state from Block to Attention to keep identical to TF implem]
+        assert n_state % config.n_head == 0
+        self.register_buffer(
+            "bias", torch.tril(torch.ones((n_ctx, n_ctx), dtype=torch.uint8)).view(1, 1, n_ctx, n_ctx)
+        )
+        self.register_buffer("masked_bias", torch.tensor(-1e4))
+        self.n_head = config.n_head
+        self.split_size = n_state
+        self.scale = scale
+
+        self.c_attn = Conv1D(n_state * 3, nx)
+        self.c_proj = Conv1D(n_state, nx)
+        self.attn_dropout = nn.Dropout(config.attn_pdrop)
+        self.resid_dropout = nn.Dropout(config.resid_pdrop)
+        self.pruned_heads = set()
+
+    def prune_heads(self, heads):
+        if len(heads) == 0:
+            return
+        heads, index = find_pruneable_heads_and_indices(
+            heads, self.n_head, self.split_size // self.n_head, self.pruned_heads
+        )
+        index_attn = torch.cat([index, index + self.split_size, index + (2 * self.split_size)])
+
+        # Prune conv1d layers
+        self.c_attn = prune_conv1d_layer(self.c_attn, index_attn, dim=1)
+        self.c_proj = prune_conv1d_layer(self.c_proj, index, dim=0)
+
+        # Update hyper params
+        self.split_size = (self.split_size // self.n_head) * (self.n_head - len(heads))
+        self.n_head = self.n_head - len(heads)
+        self.pruned_heads = self.pruned_heads.union(heads)
+
+    def _attn(self, q, k, v, attention_mask=None, head_mask=None, output_attentions=False):
+        w = torch.matmul(q, k)
+        if self.scale:
+            w = w / (float(v.size(-1)) ** 0.5)
+        nd, ns = w.size(-2), w.size(-1)
+        mask = self.bias[:, :, ns - nd : ns, :ns]
+        w = torch.where(mask.bool(), w, self.masked_bias.to(w.dtype))
+
+        if attention_mask is not None:
+            # Apply the attention mask
+            w = w + attention_mask            
+
+        w = nn.Softmax(dim=-1)(w)
+
+        ##### ADDED THIS LINE TRYING TO ENFORCE THE MASK
+        w = w * mask
+        
+        c = self.attn_dropout(w)
+
+        # Mask heads if we want to
+        if head_mask is not None:
+            w = w * head_mask
+
+        outputs = [torch.matmul(w, v)]
+        if output_attentions:
+            outputs.append(w)
+        return outputs
+
+    def merge_heads(self, x):
+        x = x.permute(0, 2, 1, 3).contiguous()
+        new_x_shape = x.size()[:-2] + (x.size(-2) * x.size(-1),)
+        return x.view(*new_x_shape)  # in Tensorflow implem: fct merge_states
+
+    def split_heads(self, x, k=False):
+        new_x_shape = x.size()[:-1] + (self.n_head, x.size(-1) // self.n_head)
+        x = x.view(*new_x_shape)  # in Tensorflow implem: fct split_states
+        if k:
+            return x.permute(0, 2, 3, 1)  # (batch, head, head_features, seq_length)
+        else:
+            return x.permute(0, 2, 1, 3)  # (batch, head, seq_length, head_features)
+
+    def forward(
+        self, x, layer_past=None, attention_mask=None, head_mask=None, use_cache=False, output_attentions=False
+    ):
+        x = self.c_attn(x)
+        query, key, value = x.split(self.split_size, dim=2)
+        query = self.split_heads(query)
+        key = self.split_heads(key, k=True)
+        value = self.split_heads(value)
+        if layer_past is not None:
+            past_key, past_value = layer_past[0].transpose(-2, -1), layer_past[1]  # transpose back cf below
+            key = torch.cat((past_key, key), dim=-1)
+            value = torch.cat((past_value, value), dim=-2)
+
+        if use_cache is True:
+            present = torch.stack((key.transpose(-2, -1), value))  # transpose to have same shapes for stacking
+        else:
+            present = (None,)
+
+        attn_outputs = self._attn(query, key, value, attention_mask, head_mask, output_attentions)
+        a = attn_outputs[0]
+
+        a = self.merge_heads(a)
+        a = self.c_proj(a)
+        a = self.resid_dropout(a)
+
+        outputs = [a, present] + attn_outputs[1:]
+        return outputs  # a, present, (attentions)
