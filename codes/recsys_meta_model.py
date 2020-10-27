@@ -12,6 +12,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from transformers.modeling_utils import PreTrainedModel
+from transformers.modeling_gpt2 import GPT2Model
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +241,11 @@ class RecSysMetaModel(PreTrainedModel):
                 neg_emb_inp = neg_emb   
         else:
             # slice over time-steps for input and target and ensuring masking is applied
-            pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
+            if type(self.model) is GPT2Model:
+                #Temporary hack to test if the last shifted item leaks and improves last item prediction accuracy
+                pos_emb_inp = pos_emb[:, :-1]
+            else:
+                pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
             if self.loss_type != 'cross_entropy':
                 pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad.unsqueeze(-1)
                 neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
