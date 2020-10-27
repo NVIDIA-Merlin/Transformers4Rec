@@ -304,7 +304,8 @@ class RecSysMetaModel(PreTrainedModel):
             '''
 
             if type(self.model) is GPT2Model:
-                head_mask = torch.tril(torch.ones((max_seq_len-1, max_seq_len-1), dtype=torch.uint8, device=self.device)).view(1, 1, 1, max_seq_len-1, max_seq_len-1)
+                head_mask = torch.tril(torch.ones((max_seq_len-1, max_seq_len-1), dtype=torch.uint8, device=self.device), 
+                                diagonal=-1).view(1, 1, 1, max_seq_len-1, max_seq_len-1)
                 head_mask = head_mask.repeat(2, 1, 1, 1, 1)
                 # head_mask has shape n_layer x batch x n_heads x N x N
                 model_outputs = self.model(
