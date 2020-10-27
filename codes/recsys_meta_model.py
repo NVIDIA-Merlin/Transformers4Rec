@@ -640,7 +640,10 @@ class AttentionFixed(nn.Module):
 
         w = nn.Softmax(dim=-1)(w)
 
-        ##### ADDED THIS LINE TRYING TO ENFORCE THE MASK
+        ##### FIX: ADDED THIS LINE TRYING TO ENFORCE THE MASK
+        masked_sum = torch.masked_select(w, ~mask.bool()).sum().float()
+        masked_is_zero = (torch.masked_select(w, ~mask.bool()).sum() == 0.0).bool()
+        logger.info(f"  MASKED SUM: {masked_sum} - {masked_is_zero}")
         w = w * mask
         
         c = self.attn_dropout(w)
