@@ -199,8 +199,8 @@ class RecSysMetaModel(PreTrainedModel):
             # apply mask on input where target is on padding token
             mask_trg_pad = (label_seq_trg != self.pad_token)
 
-            if type(self.model) is not GPT2Model:
-                label_seq_inp = label_seq_inp * mask_trg_pad
+            #if type(self.model) is not GPT2Model:
+            label_seq_inp = label_seq_inp * mask_trg_pad
 
             #When evaluating, computes metrics only for the last item of the session
             if (self.eval_on_last_item_seq_only and not self.training) or \
