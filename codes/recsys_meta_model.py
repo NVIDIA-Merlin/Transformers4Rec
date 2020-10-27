@@ -52,9 +52,9 @@ class RecSysMetaModel(PreTrainedModel):
         self.model = model 
 
         #Temporary, replacing the Attention block of GPT-2 for one that enforces mask future informatino
-        if type(self.model) is GPT2Model:
-            for block in self.model.h:
-                block.attn = AttentionFixed(128, 20, config, True)
+        #if type(self.model) is GPT2Model:
+        #    for block in self.model.h:
+        #        block.attn = AttentionFixed(128, 20, config, True)
 
         """
         if self.model.__class__ in [nn.GRU, nn.LSTM, nn.RNN]:
@@ -302,10 +302,24 @@ class RecSysMetaModel(PreTrainedModel):
                 )
 
             '''
-            model_outputs = self.model(
-                inputs_embeds=pos_emb_inp,
-                #position_ids=position_ids
-            )
+
+            if type(self.model) is GPT2Model:
+                head_mask = torch.tril(torch.ones((max_seq_len-1, max_seq_len-1), dtype=torch.uint8)).view(1, 1, 1, max_seq_len-1, max_seq_len-1)
+                head_mask = head_mask.repeat(2, 1, 1, 1, 1)
+                # head_mask has shape n_layer x batch x n_heads x N x N
+                model_outputs = self.model(
+                    inputs_embeds=pos_emb_inp,
+                    head_mask=head_mask,
+                    #position_ids=position_ids
+                )
+            else:
+                
+                # head_mask has shape n_layer x batch x n_heads x N x N
+                model_outputs = self.model(
+                    inputs_embeds=pos_emb_inp,
+                    #position_ids=position_ids
+                )
+            
             
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
