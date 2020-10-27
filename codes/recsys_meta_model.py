@@ -198,7 +198,9 @@ class RecSysMetaModel(PreTrainedModel):
             
             # apply mask on input where target is on padding token
             mask_trg_pad = (label_seq_trg != self.pad_token)
-            label_seq_inp = label_seq_inp * mask_trg_pad
+
+            if type(self.model) is not GPT2Model:
+                label_seq_inp = label_seq_inp * mask_trg_pad
 
             #When evaluating, computes metrics only for the last item of the session
             if (self.eval_on_last_item_seq_only and not self.training) or \
@@ -277,10 +279,27 @@ class RecSysMetaModel(PreTrainedModel):
                 position_ids = None
             '''
 
+            #label_seq_inp_ohe = torch.nn.functional.one_hot(label_seq_inp, self.target_dim)
+
+
+            if type(self.model) is GPT2Model:
+                model_outputs = self.model(
+                    input_ids=label_seq_inp,
+                    #position_ids=position_ids
+                )
+            else:
+                
+                model_outputs = self.model(
+                    inputs_embeds=pos_emb_inp,
+                    #position_ids=position_ids
+                )
+
+            '''
             model_outputs = self.model(
                 inputs_embeds=pos_emb_inp,
                 #position_ids=position_ids
             )
+            '''
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
 
