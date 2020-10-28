@@ -115,8 +115,6 @@ class RecSysMetaModel(PreTrainedModel):
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
 
-        logger.info("  DEVICE constructor: {}".format(self.device))
-
         self.max_seq_len = data_args.max_seq_len
         self.n_layer = model_args.n_layer        
 
@@ -180,8 +178,6 @@ class RecSysMetaModel(PreTrainedModel):
 
 
     def forward(self, inputs):
-        logger.info("  DEVICE forward: {}".format(self.device))        
-
         # Step1. Unpack inputs, get embedding, and concatenate them
         label_seq = None
         
