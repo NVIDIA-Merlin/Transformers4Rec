@@ -115,15 +115,10 @@ class RecSysMetaModel(PreTrainedModel):
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
 
-        logger.info("  DEVICE: {}".format(self.device))
+        logger.info("  DEVICE constructor: {}".format(self.device))
 
         self.max_seq_len = data_args.max_seq_len
-        # head_mask has shape n_layer x batch x n_heads x N x N
-        self.head_mask = torch.tril(torch.ones((self.max_seq_len-1, self.max_seq_len-1), dtype=torch.uint8, device=self.device)) \
-                        .view(1, 1, 1, self.max_seq_len-1, self.max_seq_len-1)
-        logger.info("  HEAD_MASK #1: {}".format(self.head_mask.device))
-        self.head_mask = self.head_mask.repeat(model_args.n_layer, 1, 1, 1, 1)
-        logger.info("  HEAD_MASK #2: {}".format(self.head_mask.device))
+        self.n_layer = model_args.n_layer        
 
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
@@ -185,6 +180,8 @@ class RecSysMetaModel(PreTrainedModel):
 
 
     def forward(self, inputs):
+        logger.info("  DEVICE forward: {}".format(self.device))        
+
         # Step1. Unpack inputs, get embedding, and concatenate them
         label_seq = None
         
@@ -299,12 +296,17 @@ class RecSysMetaModel(PreTrainedModel):
             #label_seq_inp_ohe = torch.nn.functional.one_hot(label_seq_inp, self.target_dim)
 
 
-            if type(self.model) is GPT2Model:                
+            if type(self.model) is GPT2Model:   
+                # head_mask has shape n_layer x batch x n_heads x N x N
+                head_mask = torch.tril(torch.ones((self.max_seq_len-1, self.max_seq_len-1), dtype=torch.uint8, device=self.device)) \
+                                .view(1, 1, 1, self.max_seq_len-1, self.max_seq_len-1) \
+                                .repeat(self.n_layer, 1, 1, 1, 1)
+
                 model_outputs = self.model(
                     #Temporary, to see if the problem of hard attention is related to the item embedding generation
                     input_ids=label_seq_inp,
                     #inputs_embeds=pos_emb_inp,
-                    head_mask=self.head_mask,
+                    head_mask=head_mask,
                     #position_ids=position_ids
                 )
             else:
