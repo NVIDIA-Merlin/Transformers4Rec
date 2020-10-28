@@ -12,7 +12,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from transformers.modeling_utils import PreTrainedModel
-from transformers.modeling_gpt2 import GPT2Model, Attention
+from transformers.modeling_gpt2 import GPT2Model
 
 logger = logging.getLogger(__name__)
 
@@ -115,11 +115,15 @@ class RecSysMetaModel(PreTrainedModel):
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
 
+        logger.info("  DEVICE: {}".format(self.device))
+
         self.max_seq_len = data_args.max_seq_len
         # head_mask has shape n_layer x batch x n_heads x N x N
         self.head_mask = torch.tril(torch.ones((self.max_seq_len-1, self.max_seq_len-1), dtype=torch.uint8, device=self.device)) \
-                        .view(1, 1, 1, self.max_seq_len-1, self.max_seq_len-1) \
-                        .repeat(model_args.n_layer, 1, 1, 1, 1)
+                        .view(1, 1, 1, self.max_seq_len-1, self.max_seq_len-1)
+        logger.info("  HEAD_MASK #1: {}".format(self.head_mask.device))
+        self.head_mask = self.head_mask.repeat(model_args.n_layer, 1, 1, 1, 1)
+        logger.info("  HEAD_MASK #2: {}".format(self.head_mask.device))
 
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
