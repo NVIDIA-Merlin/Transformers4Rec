@@ -294,24 +294,12 @@ class RecSysMetaModel(PreTrainedModel):
 
             #label_seq_inp_ohe = torch.nn.functional.one_hot(label_seq_inp, self.target_dim)
 
-            '''
-            if type(self.model) is GPT2Model:
-                model_outputs = self.model(
-                    input_ids=label_seq_inp,
-                    #position_ids=position_ids
-                )
-            else:
-                
-                model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp,
-                    #position_ids=position_ids
-                )
-
-            '''
 
             if type(self.model) is GPT2Model:                
                 model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp,
+                    #Temporary, to see if the problem of hard attention is related to the item embedding generation
+                    input_ids=label_seq_inp,
+                    #inputs_embeds=pos_emb_inp,
                     head_mask=self.head_mask,
                     #position_ids=position_ids
                 )
