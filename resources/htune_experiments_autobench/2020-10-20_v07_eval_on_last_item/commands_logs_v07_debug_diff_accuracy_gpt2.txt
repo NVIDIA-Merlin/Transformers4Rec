@@ -139,3 +139,141 @@ spring-oath-1825
 https://wandb.ai/gspmoreira/huggingface/runs/327l6jdu/overview?workspace=user-
 
 0.5187
+
+
+
+=============================================================================================
+
+Running best GPT-2 again (floral-bird-1821), but now --log_predictions will also include the session_length
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1543937
+
+
+atomic-lion-1864
+https://wandb.ai/gspmoreira/huggingface/runs/1omqsut1/overview?workspace=user-
+
+---------------------------------------------------------------------
+
+Running best GPT-2 again with --eval_on_last_item_seq_only (now --log_predictions will also include the session_length)
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --eval_on_last_item_seq_only --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1543939
+
+sleek-puddle-1863
+https://wandb.ai/gspmoreira/huggingface/runs/1omqsut1/overview?workspace=user-
+
+---------------------------------------------------------------------
+
+Running best GPT-2 again with --eval_on_last_item_seq_only and --train_on_last_item_seq_only (now --log_predictions will also include the session_length)
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --train_on_last_item_seq_only --eval_on_last_item_seq_only --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1544517
+
+
+smart-elevator-1882
+https://app.wandb.ai/gspmoreira/huggingface/runs/2etqtydt
+
+
+
+-----------------------------------------------------
+
+26/10/2020
+
+
+Running best GPT-2 again with --log_predictions (like atomic-lion-1864), but now not masking the last item embedding (without corresponding target, to see if it leaks and improves accuracy of the last-item prediction)
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1549284
+
+wandb: Syncing run driven-microwave-2037
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/22cju12s
+
+
+
+------------------------------------------
+
+
+Running best GPT-2 again with --log_predictions (like driven-microwave-2037), NOT MASKING the last item embedding (without corresponding target, but using as input only item id (embedding managed by GPT-2)
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1550207
+
+wandb: Syncing run sunny-haze-2051
+wandb: ⭐️ View project at https://app.wandb.ai/gspmoreira/huggingface
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/2yhsus44
+
+RUNNING
+
+------------------------------------------
+
+
+Running best GPT-2 again with --log_predictions (like driven-microwave-2037), MASKING the last item embedding (without corresponding target, but using as input only item id (embedding managed by GPT-2)
+
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1550223
+
+
+wandb: Syncing run devoted-wave-2052
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/xj2av2a0
+
+RUNNING
+
+
+------------------------------------------
+
+
+
+Running best GPT-2 again (atomic-lion-1864), but now setting HEAD_MASK(diagonal=0) trying to enforce no leakage from future information
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1550809
+
+wandb: Syncing run azure-oath-2072
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/v74qhuft
+
+
+--------------------------------------------------
+
+
+
+Running best GPT-2 again (atomic-lion-1864), but now setting HEAD_MASK(diagonal=-1) trying to enforce no leakage from future information
+
+ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+Id: 1550863
+
+wandb: Syncing run ethereal-plasma-2074
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/rc8pxp5r
+
+
+--------------------------------------------------
+
+
+GRU - Running best GRU again with --eval_on_last_item_seq_only (now --log_predictions will also include the session_length)
+
+ngc batch run --name "htune-v07-gru-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gru-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gru --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 10 --per_device_train_batch_size 256 --warmup_days 1 --learning_rate 0.0002024939202283675 --learning_rate_warmup 0.0002024939202283675 --learning_rate_schedule  constant_with_warmup --learning_rate_schedule_warmup  constant_with_warmup --dropout 0.2 --weight_decay 9.065312473196671e-05 --d_model 320 --n_layer 1 --eval_on_last_item_seq_only --log_predictions && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1548891
+
+wandb: Syncing run noble-forest-2027
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/2e2oxxgd
+
+
+
+
+-----------------------------------------
+
+
