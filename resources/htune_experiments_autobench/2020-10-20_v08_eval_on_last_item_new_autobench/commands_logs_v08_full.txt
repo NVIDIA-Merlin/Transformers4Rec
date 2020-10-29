@@ -53,3 +53,20 @@ python main.py --optuna_study_name htune-v08-xlnet-bi --concurrent_jobs 5 --optu
 
 ---------------------------------------
 
+
+
+#Hypertuning job - GPT-2
+
+screen -S gpt2
+
+source ~/.bash_profile
+
+mkdir -p /results/gpt2/htune_log
+python main.py --optuna_study_name htune-v08-gpt2 --concurrent_jobs 5 --optuna_num_trials 100 --verbose --optuna_log_dir "/results/gpt2/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-20_v08_eval_on_last_item_new_autobench/gpt2/tranf4rec-htune-v08-gpt2.yaml"
+
+
+[then, ctrl + A + D: make me outside of the screen session]
+
+
+---------------------------------------
+

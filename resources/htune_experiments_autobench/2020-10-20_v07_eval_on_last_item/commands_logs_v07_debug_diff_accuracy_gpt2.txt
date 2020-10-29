@@ -211,7 +211,6 @@ wandb: Syncing run sunny-haze-2051
 wandb: ⭐️ View project at https://app.wandb.ai/gspmoreira/huggingface
 wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/2yhsus44
 
-RUNNING
 
 ------------------------------------------
 
@@ -227,7 +226,6 @@ Id: 1550223
 wandb: Syncing run devoted-wave-2052
 wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/xj2av2a0
 
-RUNNING
 
 
 ------------------------------------------
@@ -244,6 +242,9 @@ wandb: Syncing run azure-oath-2072
 wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/v74qhuft
 
 
+The HEAD_MASK has solved the problem!!
+
+
 --------------------------------------------------
 
 
@@ -258,6 +259,8 @@ wandb: Syncing run ethereal-plasma-2074
 wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/rc8pxp5r
 
 
+Interestingly the performance with HEAD_MASK(diagonal=-1), which means ignoring the last clicked item, is the same as HEAD_MASK(diagonal=0) (azure-oath-2072). Maybe these hyperparameters are not the best for GPT-2 (which was tuned under the leak problem)
+
 ------------------------------------------
 
 
@@ -267,9 +270,12 @@ Running best GPT-2 again (azure-oath-2072). It has solved the future leak proble
 ngc batch run --name "htune-v07-gpt2-debug" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v07-gpt2-debug full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --hidden_act gelu_new --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 4.0 --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --num_train_epochs 9 --per_device_train_batch_size 64 --warmup_days 1 --learning_rate 0.002162094632215143 --learning_rate_warmup 0.002162094632215143 --learning_rate_schedule constant_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 5.189724812073076e-06 --d_model 256 --n_layer 2 --n_head 2 --log_predictions --log_attention_weights" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
 
 
-Id: 1551213
+Id: 1551342
 
+wandb: Syncing run sandy-water-2090
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1rmokcbs
 
+It has not solved the "hard" attention problem. And also overfit a lot
 
 --------------------------------------------------
 

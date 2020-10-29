@@ -1,0 +1,104 @@
+NGC: &NGC
+  docker_image: nvidian/prj-recsys/transf4rec_exp:0.1.0
+  download_dir: /tmp
+  hostname: ngc
+  job_name: tranf4rec-htune-08-gpt2
+  results_mount: /results
+
+  datasets:
+    /data: 66609
+
+NGC_32GB_2GPU: &NGC_32GB_2GPU
+  <<: *NGC
+  instance: dgx1v.32g.2.norm
+
+jobs:
+  - steps:
+      - nvidia-smi
+      - wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12
+      - date
+      - git pull origin experimentation
+      - date
+      - bash script/run_transformer_v2.bash htune-v08-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --hidden_act gelu_new --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --eval_on_last_item_seq_only --warmup_days 1 {training_hparams}
+      - date
+    backend: *NGC_32GB_2GPU
+
+
+optimization:
+  goal: maximize
+  metric: Test_ndcg@1000_all
+  groups:
+      - name: training_hparams
+        parameters:
+          - name: --num_train_epochs
+            sampling: int_uniform
+            min: 1
+            max: 10
+
+          - name: --per_device_train_batch_size
+            sampling: int_uniform
+            min: 64
+            max: 256
+            step: 64
+
+          - name: --learning_rate
+            sampling: log_uniform
+            min: 0.0001
+            max: 0.01
+
+          - name: --learning_rate_warmup
+            sampling: log_uniform
+            min: 0.0001
+            max: 0.01
+
+          - name: --learning_rate_schedule
+            sampling: categorical
+            values:
+              - constant_with_warmup
+              - linear_with_warmup
+              - cosine_with_warmup
+
+          - name: --learning_rate_schedule_warmup
+            sampling: categorical
+            values:
+              - constant_with_warmup
+              - linear_with_warmup
+              - cosine_with_warmup
+
+          - name: --dropout
+            sampling: discrete_uniform
+            min: 0.0
+            max: 0.3
+            step: 0.1 
+
+          - name: --weight_decay
+            sampling: log_uniform
+            min: 0.000001
+            max: 0.0001
+
+          - name: --d_model
+            sampling: int_uniform
+            min: 64
+            max: 320
+            step: 64
+
+          - name: --n_layer
+            sampling: int_uniform
+            min: 1
+            max: 4
+
+          - name: --n_head
+            sampling: categorical
+            values:
+              - 1
+              - 2
+              - 4
+              - 8
+              - 16
+
+
+reports:
+  filename: exp_results
+  types:
+    - xls
+    - pickle
