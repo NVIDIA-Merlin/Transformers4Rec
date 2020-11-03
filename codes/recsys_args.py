@@ -39,6 +39,9 @@ class TrainingArguments(HfTrainingArguments):
     learning_rate_warmup_steps: int = field(default=0, metadata={"help": "Number of steps to linearly increase the learning rate from 0 to the specified initial learning rate schedule. Valid for --learning_rate_schedule = constant_with_warmup | linear_with_warmup | cosine_with_warmup"})
     learning_rate_num_cosine_cycles_by_epoch: float = field(default=1.25, metadata={"help": "Number of cycles for by epoch when --learning_rate_schedule = cosine_with_warmup. The number of waves in the cosine schedule (e.g. 0.5 is to just decrease from the max value to 0, following a half-cosine)."})
 
+
+    shuffle_buffer_size: int = field(default=0, metadata={"help": "Number of samples to keep in the buffer for shuffling. shuffle_buffer_size=0 means no shuffling"})
+
     
 
     

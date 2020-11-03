@@ -79,6 +79,17 @@ python main.py --optuna_study_name htune-v08-gpt2 --concurrent_jobs 5 --optuna_n
 [then, ctrl + A + D: make me outside of the screen session]
 
 
+major-morning-2338
+https://wandb.ai/gspmoreira/huggingface/runs/ylnjbk9r/overview?workspace=user-gspmoreira
+AOD_all_Test_ndcg@1000_all:  0.2735
+
+
+magic-firefly-2302
+https://wandb.ai/gspmoreira/huggingface/runs/3aqddi9a/overview
+AOD_all_Test_ndcg@1000_all
+AOD_all_Test_ndcg@1000_all:  0.2734
+
+
 ---------------------------------------
 
 ONLY PID
@@ -90,14 +101,14 @@ screen -S xlnet_uni_pid
 
 source ~/.bash_profile
 
-mkdir -p /results/xlnet-uni/htune_log
+mkdir -p /results/xlnet-uni-pid/htune_log
 python main.py --optuna_study_name htune-v08-xlnet-uni-pid --concurrent_jobs 5 --optuna_num_trials 100 --verbose --optuna_log_dir "/results/xlnet-uni-pid/htune_log" "/workspace/recsys/transformers4recsys/resources/htune_experiments_autobench/2020-10-20_v08_eval_on_last_item_new_autobench/xlnet_uni_onlypid/tranf4rec-htune-v08-xlnet-uni-pid.yaml"
 
 
 [then, ctrl + A + D: make me outside of the screen session]
 
 
-
+NOT RUNNING YET
 
 
 ---------------------------------------
@@ -115,7 +126,7 @@ python main.py --optuna_study_name htune-v08-xlnet-bi-pid --concurrent_jobs 5 --
 [then, ctrl + A + D: make me outside of the screen session]
 
 
-
+RUNNING
 
 
 ---------------------------------------
@@ -134,5 +145,7 @@ python main.py --optuna_study_name htune-v08-gpt2-pid --concurrent_jobs 5 --optu
 
 [then, ctrl + A + D: make me outside of the screen session]
 
+
+NOT RUNNING YET
 
 

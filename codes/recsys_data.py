@@ -6,13 +6,14 @@ import os
 import math
 from datetime import datetime
 from datetime import date, timedelta
+from random import randint
 
 import numpy as np
 from petastorm import make_batch_reader
 from petastorm.pytorch import DataLoader as PetaStormDataLoader
 from petastorm.unischema import UnischemaField
 import pyarrow.parquet as pq
-from torch.utils.data import Dataset, DataLoader as PyTorchDataLoader
+from torch.utils.data import Dataset, IterableDataset, DataLoader as PyTorchDataLoader
 
 from recsys_utils import get_filenames
 
@@ -141,14 +142,20 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         cols_to_read = feature_map.keys()
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
+        if training_args.shuffle_buffer_size > 0:
+            train_dataset = ShuffleDataset(train_dataset, buffer_size=training_args.shuffle_buffer_size)
         train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size, drop_last=training_args.dataloader_drop_last)
         eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
+        if training_args.shuffle_buffer_size > 0:
+            eval_dataset = ShuffleDataset(eval_dataset, buffer_size=training_args.shuffle_buffer_size)
         eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
 
         if test_date is not None:
             test_dataset = ParquetDataset(test_data_path, cols_to_read)
+            if training_args.shuffle_buffer_size > 0:
+                test_dataset = ShuffleDataset(test_dataset, buffer_size=training_args.shuffle_buffer_size)
             test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
-    
+
     if test_date is None:
         test_loader = None
 
@@ -177,3 +184,37 @@ def transform_petastorm_schema(feature_map):
             dtype = np.float
         schema.append(UnischemaField(cname, dtype, (None,), None, True))
     return schema
+
+
+class ShuffleDataset(IterableDataset):
+    def __init__(self, dataset, buffer_size):
+        super().__init__()
+        self.dataset = dataset
+        self.buffer_size = buffer_size
+
+    def __iter__(self):
+        shufbuf = []
+        try:
+            dataset_iter = iter(self.dataset)
+            for i in range(self.buffer_size):
+                shufbuf.append(next(dataset_iter))
+        except:
+            self.buffer_size = len(shufbuf)
+
+        try:
+            while True:
+                try:
+                    item = next(dataset_iter)
+                    evict_idx = randint(0, self.buffer_size - 1)
+                    yield shufbuf[evict_idx]
+                    shufbuf[evict_idx] = item
+                except StopIteration:
+                    break
+
+            while len(shufbuf) > 0:
+                yield shufbuf.pop()
+        except GeneratorExit:
+            pass
+
+    def __len__(self):
+        return len(self.dataset)
