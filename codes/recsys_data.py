@@ -8,6 +8,8 @@ from datetime import datetime
 from datetime import date, timedelta
 from random import randint
 
+import logging
+
 import numpy as np
 from petastorm import make_batch_reader
 from petastorm.pytorch import DataLoader as PetaStormDataLoader
@@ -16,6 +18,10 @@ import pyarrow.parquet as pq
 from torch.utils.data import Dataset, IterableDataset, DataLoader as PyTorchDataLoader
 
 from recsys_utils import get_filenames
+
+
+logger = logging.getLogger(__name__)
+
 
 
 # set vocabulary sizes for discrete input seqs. 
@@ -193,6 +199,11 @@ class ShuffleDataset(IterableDataset):
         self.buffer_size = buffer_size
 
     def __iter__(self):
+
+        logger.info('[SHUFFLE] INITIALIZING BUFFER_SIZE: {}'.format(self.buffer_size))
+
+        raise StopIteration()
+
         shufbuf = []
         try:
             dataset_iter = iter(self.dataset)
@@ -202,17 +213,24 @@ class ShuffleDataset(IterableDataset):
             self.buffer_size = len(shufbuf)
 
         try:
+            logger.info('[SHUFFLE] RETRIEVING FROM BUFFER AND REPLACING FROM ITERATOR: {}'.format(len(shufbuf)))
             while True:
                 try:
                     item = next(dataset_iter)
                     evict_idx = randint(0, self.buffer_size - 1)
                     yield shufbuf[evict_idx]
                     shufbuf[evict_idx] = item
-                except StopIteration:
+                except StopIteration as e:
+                    logger.info('[SHUFFLE] StopIteration EXCEPTION: {}', e)
                     break
+
+            logger.info('[SHUFFLE] STARTING TO RETRIEVE ONLY FROM BUFFER: {}'.format(len(shufbuf)))
 
             while len(shufbuf) > 0:
                 yield shufbuf.pop()
+
+            logger.info('[SHUFFLE] FINISHED ITERATING')
+
         except GeneratorExit:
             pass
 
