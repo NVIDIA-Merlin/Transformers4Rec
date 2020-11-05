@@ -15,6 +15,7 @@ pip install -r requirements.txt
 Job Ids
 1st: 1536764
 2nd: 1551217
+3rd: 1571838
 
 
 
@@ -58,6 +59,7 @@ python main.py --optuna_study_name htune-v08-xlnet-bi --concurrent_jobs 5 --optu
 
 
 Best XLNET bi: fresh-microwave-1910
+https://wandb.ai/gspmoreira/huggingface/runs/3h57d4we?workspace=
 AOD_all_Test_ndcg@1000_all:   0.2758
 
 
@@ -89,6 +91,18 @@ https://wandb.ai/gspmoreira/huggingface/runs/3aqddi9a/overview
 AOD_all_Test_ndcg@1000_all
 AOD_all_Test_ndcg@1000_all:  0.2734
 
+----------------
+
+Running again the best GPT-2 (major-morning-2338), but now with --log_predictions --log_attention_weights
+
+ngc batch run --name "tranf4rec-htune-08-gpt2" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash htune-v08-gpt2 full_noneg session_cooccurrence --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --hidden_act gelu_new --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --eval_on_last_item_seq_only --warmup_days 1 --num_train_epochs 9 --per_device_train_batch_size 192 --learning_rate 0.00021103662821025438 --learning_rate_warmup 0.00020003190020791603 --learning_rate_schedule linear_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 3.522219206555709e-05 --d_model 320 --n_layer 1 --n_head 1 --log_predictions --log_attention_weights && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
+
+
+Id: 1567795
+
+wandb: Syncing run devout-yogurt-2400
+wandb: 🚀 View run at https://app.wandb.ai/gspmoreira/huggingface/runs/1xtk19yc
+
 
 ---------------------------------------
 
@@ -108,7 +122,7 @@ python main.py --optuna_study_name htune-v08-xlnet-uni-pid --concurrent_jobs 5 -
 [then, ctrl + A + D: make me outside of the screen session]
 
 
-NOT RUNNING YET
+RUNNING 
 
 
 ---------------------------------------
@@ -126,7 +140,11 @@ python main.py --optuna_study_name htune-v08-xlnet-bi-pid --concurrent_jobs 5 --
 [then, ctrl + A + D: make me outside of the screen session]
 
 
-RUNNING
+Best model
+warm-leaf-2243
+https://wandb.ai/gspmoreira/huggingface/runs/i9o75j9u?workspace=user-gspmoreira
+
+AOD_all_Test_ndcg@1000_all: 0.2549
 
 
 ---------------------------------------
@@ -146,6 +164,6 @@ python main.py --optuna_study_name htune-v08-gpt2-pid --concurrent_jobs 5 --optu
 [then, ctrl + A + D: make me outside of the screen session]
 
 
-NOT RUNNING YET
+RUNNING
 
 
