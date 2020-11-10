@@ -32,6 +32,23 @@ logger = logging.getLogger(__name__)
 softmax = nn.Softmax(dim=-1)
 
 
+#From https://huggingface.co/transformers/_modules/transformers/trainer.html
+
+_use_native_amp = False
+_use_apex = False
+# Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
+if version.parse(torch.__version__) < version.parse("1.6"):
+    from transformers.file_utils import is_apex_available
+
+    if is_apex_available():
+        from apex import amp
+    _use_apex = True
+else:
+    _use_native_amp = True
+    from torch.cuda.amp import autocast
+
+
+
 class TrainOutputAcc(NamedTuple):
     global_step: int
     training_loss: float
