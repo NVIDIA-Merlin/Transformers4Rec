@@ -12,6 +12,7 @@ from enum import Enum
 
 import numpy as np
 import torch
+
 from packaging import version
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
@@ -28,6 +29,7 @@ from transformers import PreTrainedModel
 
 
 logger = logging.getLogger(__name__)
+logger.info('PyTorch version: {}'.format(torch.__version__))
 
 softmax = nn.Softmax(dim=-1)
 
@@ -37,6 +39,7 @@ softmax = nn.Softmax(dim=-1)
 _use_native_amp = False
 _use_apex = False
 # Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
+'''
 if version.parse(torch.__version__) < version.parse("1.6"):
     from transformers.file_utils import is_apex_available
 
@@ -46,7 +49,14 @@ if version.parse(torch.__version__) < version.parse("1.6"):
 else:
     _use_native_amp = True
     from torch.cuda.amp import autocast
+'''
 
+from transformers.file_utils import is_apex_available
+if is_apex_available():
+    logger.info('APEX is available')
+    from apex import amp
+else:
+    logger.info('APEX is not available')
 
 
 class TrainOutputAcc(NamedTuple):
