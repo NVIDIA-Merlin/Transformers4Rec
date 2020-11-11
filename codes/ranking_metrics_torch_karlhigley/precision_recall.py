@@ -61,7 +61,8 @@ def recall_at(
             
             recalls[rel_indices, index] = torch.div(
                 torch.sum(rel_labels, dim=-1), rel_count
-            ).reshape(len(rel_indices), 1)
+            ).reshape(len(rel_indices), 1) \
+            .to(dtype=torch.float64) #Ensuring type is double, becaus
 
     return recalls
 
