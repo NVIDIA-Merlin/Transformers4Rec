@@ -32,6 +32,7 @@ def avg_precision_at(
 
     for index, k in enumerate(ks):
         total_prec = rel_precisions[:, :int(k)].sum(dim=1)
-        avg_precisions[:, index] = total_prec / num_relevant.clamp(min=1, max=k)
+        avg_precisions[:, index] = total_prec / num_relevant.clamp(min=1, max=k) \
+        .to(dtype=torch.float32, device=scores.device) #Ensuring type is double, because it can be float if --fp16
 
     return avg_precisions

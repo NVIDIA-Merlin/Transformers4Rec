@@ -24,11 +24,11 @@ def dcg_at(
 
     # Compute discounts
     discount_positions = torch.arange(ks.max().item()).to(
-        device=scores.device, dtype=torch.float64
+        device=scores.device, dtype=torch.float32
     )
 
     discount_log_base = torch.log(
-        torch.tensor([log_base]).to(device=scores.device, dtype=torch.float64)
+        torch.tensor([log_base]).to(device=scores.device, dtype=torch.float32)
     ).item()
 
     discounts = 1 / (torch.log(discount_positions + 2) / discount_log_base)
@@ -38,7 +38,7 @@ def dcg_at(
         dcgs[:, index] = torch.sum(
             (topk_labels[:, :k] * discounts[:k].repeat(topk_labels.shape[0], 1)), dim=1
         ) \
-        .to(dtype=torch.float64) #Ensuring type is double, because it can be float if --fp16
+        .to(dtype=torch.float32, device=scores.device) #Ensuring type is double, because it can be float if --fp16
 
     return dcgs
 
