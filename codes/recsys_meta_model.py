@@ -537,6 +537,9 @@ class RecSysMetaModel(PreTrainedModel):
                 if is_neg:
                     cdata = self._unflatten_neg_seq(cdata, max_seq_len)
 
+                #Temporary change to see if with sequences multiples of 8 we can get better acceleration with --fp16, by using TensorCores
+                cdata = cdata[:,:17]
+
                 if 'is_label' in cinfo and cinfo['is_label']:
                     label_seq = cdata
 
@@ -553,10 +556,14 @@ class RecSysMetaModel(PreTrainedModel):
                 else:
                     raise NotImplementedError
 
+                
                 if not is_neg:
                     # Keeping item metadata features that will
                     if 'log_with_preds_as_metadata' in cinfo and cinfo['log_with_preds_as_metadata'] == True:
-                        metadata_for_pred_logging[cname] = inputs[cname].detach()
+                        #metadata_for_pred_logging[cname] = inputs[cname].detach()
+
+                        #Temporary change to see if with sequences multiples of 8 we can get better acceleration with --fp16, by using TensorCores
+                        metadata_for_pred_logging[cname] = inputs[cname][:,:17].detach()
 
                 output.append(cdata)
 
