@@ -37,7 +37,8 @@ def dcg_at(
     for index, k in enumerate(ks):
         dcgs[:, index] = torch.sum(
             (topk_labels[:, :k] * discounts[:k].repeat(topk_labels.shape[0], 1)), dim=1
-        )
+        ) \
+        .to(dtype=torch.float64) #Ensuring type is double, because it can be float if --fp16
 
     return dcgs
 
