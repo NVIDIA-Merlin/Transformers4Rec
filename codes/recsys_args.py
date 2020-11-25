@@ -76,11 +76,16 @@ class DataArguments:
         default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
     )
     # args for selecting which engine to use
-    engine: Optional[str] = field(
+    data_loader_engine: Optional[str] = field(
         default='pyarrow', metadata={"help": "Parquet data loader engine. "
-            "'pyarrow': read whole parquet into memory. 'petastorm': read chunck by chunck"
+            "'nvtabular': GPU-accelerated parquet data loader from NVTabular, 'pyarrow': read whole parquet into memory. 'petastorm': read chunck by chunck"
         }
     )
+    
+    nvt_part_mem_fraction: Optional[int] = field(
+        default=0.1, metadata={"help": "Percentage of GPU to allocate for NVTabular dataset / dataloader"}
+    )
+
     # args for petastorm
     reader_pool_type: Optional[str] = field(
         default='thread', metadata={"help": "A string denoting the reader pool type. \

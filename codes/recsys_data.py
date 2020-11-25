@@ -11,11 +11,19 @@ from random import randint
 import logging
 
 import numpy as np
+
+#Petastorm data loader dependencies
 from petastorm import make_batch_reader
 from petastorm.pytorch import DataLoader as PetaStormDataLoader
 from petastorm.unischema import UnischemaField
+
+#Pyarrow dependencies
 import pyarrow.parquet as pq
 from torch.utils.data import Dataset, IterableDataset, DataLoader as PyTorchDataLoader
+
+#NVTabular dependencies
+from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
+from nvtabular import Dataset as NVTDataset
 
 from recsys_utils import get_filenames
 
@@ -50,6 +58,27 @@ class DataLoaderWrapper(PyTorchDataLoader):
 
     def __exit__(self, type, value, traceback):
         return None
+
+
+
+class NVTDataLoaderWrapper(NVTDataLoader):
+    def __init__(self, *args, **kwargs):
+        super(NVTDataLoaderWrapper, self).__init__(*args, **kwargs)
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, type, value, traceback):
+        return None
+
+    def __next__(self):
+        cat_features, cont_features, label_features = super(NVTDataLoaderWrapper, self).__next__()
+        cat_seq_features = {k: v[0].reshape(-1,20) for k, v in cat_features[1].items()}
+        cont_seq_features = {k: v[0].reshape(-1,20) for k, v in cont_features[1].items()}
+        inputs = {**cat_seq_features, **cont_seq_features}
+        return inputs
+
+
 
 
 def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
@@ -98,7 +127,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         train_data_path = get_filenames(train_data_path)
         eval_data_path = get_filenames(eval_data_path)
 
-    if data_args.engine == "petastorm":
+    if data_args.data_loader_engine == "petastorm":
         parquet_schema = transform_petastorm_schema(feature_map)
 
         train_data_len = get_dataset_len(train_data_path)
@@ -144,7 +173,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 len=math.ceil(test_data_len / training_args.per_device_eval_batch_size),
             )
 
-    elif data_args.engine == "pyarrow":
+    elif data_args.data_loader_engine == "pyarrow":
         cols_to_read = feature_map.keys()
 
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
@@ -158,6 +187,37 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         if test_date is not None:
             test_dataset = ParquetDataset(test_data_path, cols_to_read)
             test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
+
+    elif data_args.data_loader_engine == "nvtabular":
+        
+        categ_features = []
+        continuous_features = []
+        for fname, fprops in feature_map.items():
+            if fprops['dtype'] == 'categorical':
+                categ_features.append(fname)
+            elif fprops['dtype'] == 'float':
+                continuous_features.append(fname)
+
+        part_mem_fraction = 0.3
+
+        data_loader_config = {
+                "cats": categ_features,
+                "conts": continuous_features,
+                "labels": [],
+                "devices": [0],
+            }
+  
+
+        train_set = NVTDataset(train_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
+        train_loader = NVTDataLoaderWrapper(train_set, batch_size=training_args.per_device_train_batch_size, shuffle=False, **data_loader_config)
+
+        eval_set = NVTDataset(eval_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
+        eval_loader = NVTDataLoaderWrapper(eval_set, batch_size=training_args.per_device_train_batch_size, shuffle=False, **data_loader_config)
+
+        if test_date is not None:
+            test_set = NVTDataset(test_dataset, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
+            test_loader = NVTDataLoaderWrapper(eval_set, batch_size=training_args.per_device_train_batch_size, shuffle=False, **data_loader_config)
+
 
     if test_date is None:
         test_loader = None
