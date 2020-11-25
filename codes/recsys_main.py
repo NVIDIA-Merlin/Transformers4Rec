@@ -2,6 +2,11 @@
 How torun : 
     CUDA_VISIBLE_DEVICES=0 python main_runner.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset/sessions_with_neg_samples_example/ --per_device_train_batch_size 128 --model_type xlnet
 """
+
+import pyprof
+pyprof.init(enable_function_stack=True)
+
+
 import os
 import sys
 import math
@@ -48,7 +53,7 @@ PRED_LOG_PARQUET_FILE_PATTERN = 'pred_logs/preds_date_{}.parquet'
 ATTENTION_LOG_FOLDER = 'attention_weights'
 
 def main():
-
+  
     parser = HfArgumentParser((DataArguments, ModelArguments, TrainingArguments))
     data_args, model_args, training_args = parser.parse_args_into_dataclasses()
 
