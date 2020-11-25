@@ -1,8 +1,12 @@
-## Build the image
+# NGC image
+
+## Build the  image
 
 ```
 cd recsys/transformers4recsys/
 docker build --tag transf4rec_exp:0.1.0 --tag nvcr.io/nvidian/prj-recsys/transf4rec_exp:0.1.0 --no-cache container/
+
+
 ```
 
 ## Try locally
@@ -76,3 +80,192 @@ ngc batch run --name "tranf4rec-job-$(date +%Y%m%d%H%M%S)" --preempt RUNONCE --a
   --tf_out_activation tanh \
   && date"
 ```
+
+
+# Development image
+
+## Build the development image
+
+docker build -t transf4rec/dev -f container/Dockerfile.dev .
+
+# Enable sampling in containers
+
+Nsight Systems samples CPU activity and gets backtraces using the Linux kernel’s perf subsystem. To collect thread scheduling data and instruction pointer (IP) samples, the perf paranoid level on the target system must be ≤2. Run the following command to check the level:
+
+cat /proc/sys/kernel/perf_event_paranoid
+If the output is >2, then run the following command to temporarily adjust the paranoid level (after each reboot):
+
+sudo sh -c 'echo 1 >/proc/sys/kernel/perf_event_paranoid'
+To make the change permanent, run the following command:
+
+sudo sh -c 'echo kernel.perf_event_paranoid=1 > /etc/sysctl.d/local.conf'
+
+
+## Run the container
+docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN  \
+ --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864  \
+ -p 6006:6006 -v /home/gmoreira/projects/nvidia/recsys:/workspace -v /home/gmoreira/dataset/ecommerce/2019-10:/data --workdir /workspace/transformers4recsys/codes transf4rec/dev /bin/bash 
+
+## Train the model
+
+
+TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python3  recsys_main.py \
+    --output_dir "./tmp/" \
+    --overwrite_output_dir \
+    --do_train \
+    --do_eval \
+    --data_path "/home/gmoreira/dataset/ecommerce/2019-10" \
+    --feature_config config/recsys_input_feature_full_noneg.yaml \
+    --engine "pyarrow" \
+    --reader_pool_type "process" \
+    --workers_count 10 \
+    --validate_every 10 \
+    --logging_steps 20 \
+    --save_steps 0 \
+--start_date 2019-10-01 \
+--end_date 2019-10-15 \
+--model_type gpt2 \
+--loss_type cross_entropy \
+--per_device_eval_batch_size 128 \
+--similarity_type concat_mlp \
+--tf_out_activation tanh \
+--all_rescale_factor 1.0 \
+--neg_rescale_factor 0.0 \
+--inp_merge mlp \
+--learning_rate_warmup_steps 0 \
+--learning_rate_num_cosine_cycles 1.25 \
+--hidden_act gelu_new \
+--dataloader_drop_last \
+--compute_metrics_each_n_steps 50 \
+--max_seq_len 20 \
+--eval_on_last_item_seq_only \
+--warmup_days 1 \
+--num_train_epochs 10 \
+--per_device_train_batch_size 192 \
+--learning_rate 0.00014969647714359603 \
+--learning_rate_warmup 0.00014529247619095396 \
+--learning_rate_schedule linear_with_warmup \
+--learning_rate_schedule_warmup constant_with_warmup \
+--dropout 0.1 \
+--weight_decay 6.211639773976265e-05 \
+--d_model 320 \
+--n_layer 1 \
+--n_head 2
+
+
+## Profile the model with DLProf
+
+Based in this article: https://developer.nvidia.com/blog/profiling-and-optimizing-deep-neural-networks-with-dlprof-and-pyprof/
+
+export TOKENIZERS_PARALLELISM=false
+export CUDA_VISIBLE_DEVICES=0
+
+
+dlprof --mode=pytorch \
+       --force=true \
+       --output_path=nsights_files/fp32_nvtloader \
+       --tb_dir=tensorboard_event_files \
+       --nsys_base_name=nsys_profile_fp32_nvtloader \
+       --reports=all \
+       --nsys_opts="--sample=cpu --trace 'nvtx,cuda,osrt,cudnn'" \
+       --iter_start=1 --iter_stop=40 \
+python3  recsys_main.py \
+    --output_dir "./tmp/" \
+    --overwrite_output_dir \
+    --do_train \
+    --do_eval \
+    --data_path "/data" \
+    --feature_config config/recsys_input_feature_full_noneg.yaml \
+    --reader_pool_type "process" \
+    --workers_count 10 \
+    --validate_every 10 \
+    --logging_steps 20 \
+    --save_steps 1000 \
+--start_date 2019-10-01 \
+--end_date 2019-10-02 \
+--model_type gpt2 \
+--loss_type cross_entropy \
+--per_device_eval_batch_size 128 \
+--similarity_type concat_mlp \
+--tf_out_activation tanh \
+--all_rescale_factor 1.0 \
+--neg_rescale_factor 0.0 \
+--inp_merge mlp \
+--learning_rate_warmup_steps 0 \
+--learning_rate_num_cosine_cycles 1.25 \
+--hidden_act gelu_new \
+--dataloader_drop_last \
+--compute_metrics_each_n_steps 50 \
+--max_seq_len 20 \
+--eval_on_last_item_seq_only \
+--warmup_days 1 \
+--num_train_epochs 1 \
+--per_device_train_batch_size 192 \
+--learning_rate 0.00014969647714359603 \
+--learning_rate_warmup 0.00014529247619095396 \
+--learning_rate_schedule linear_with_warmup \
+--learning_rate_schedule_warmup constant_with_warmup \
+--dropout 0.1 \
+--weight_decay 6.211639773976265e-05 \
+--d_model 320 \
+--n_layer 1 \
+--n_head 2 \
+--data_loader_engine nvtabular \
+--fp16
+
+
+
+
+
+
+----------------------------------------------------------------------
+
+
+
+
+Run the Rapids image
+NVT Data Loader can read sequences now!!!
+docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN   --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864   -p 6006:6006 -p 8888:8888 -v /home/gmoreira/projects/nvidia/recsys:/workspace -v /home/gmoreira/dataset/ecommerce/2019-10:/data --workdir /workspace/transformers4recsys/codes nvcr.io/nvidia/rapidsai/rapidsai:cuda10.2-runtime-ubuntu18.04 /bin/bash 
+
+apt update
+
+mkdir /nvtabular0.3
+cd /nvtabular0.3 && git clone https://github.com/NVIDIA/NVTabular.git && cd NVTabular && pip install -e . && pip install nvtx
+
+pip install torch
+pip install -r requirements.txt
+
+#DLProf
+pip install nvidia-pyindex
+pip install nvidia-pyprof
+pip install nvidia-dlprof
+
+#Apex
+mkdir /apex
+cd /apex
+git clone https://github.com/NVIDIA/apex
+cd apex
+pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="--cuda_ext" ./
+
+apt install gcc
+pip install apex
+
+
+---------------------------------------------------------
+Image with RAPIDS 0.16, NVT 0.3, PyTorch, DLProf
+
+docker build -t transf4rec/nvt_dl --no-cache -f container/Dockerfile.dev_nvt .
+
+docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN   --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864   -p 6006:6006 -p 8888:8888 -v /home/gmoreira/projects/nvidia/recsys:/workspace -v /home/gmoreira/dataset/ecommerce/2019-10:/data --workdir /workspace/transformers4recsys/codes transf4rec/nvt_dl /bin/bash 
+
+wandb login
+
+tensorboard --bind_all --logdir . 
+
+
+### TODO:
+- Have apex installed in this image
+- Run experiments --fp32 and --fp16 with pyarrow data loader
+- Run experiments --fp32 and --fp16 with NVT data loader
+- Report speed-up to the team
+- Enable shuffling
