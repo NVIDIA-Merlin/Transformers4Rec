@@ -27,39 +27,45 @@ from transformers.training_args import is_torch_tpu_available
 from transformers import Trainer, AdamW, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from transformers import PreTrainedModel
 
-import apex
-
 
 logger = logging.getLogger(__name__)
 logger.info('PyTorch version: {}'.format(torch.__version__))
 
-softmax = nn.Softmax(dim=-1)
 
+
+################## Setting Automatic Mixed Precision ##################
 
 #From https://huggingface.co/transformers/_modules/transformers/trainer.html
-
 _use_native_amp = False
 _use_apex = False
-# Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
-'''
-if version.parse(torch.__version__) < version.parse("1.6"):
-    from transformers.file_utils import is_apex_available
 
+try:
+    from apex import amp  # noqa: F401
+    _has_apex = True
+except ImportError:
+    _has_apex = False
+
+def is_apex_available():
+    return _has_apex
+
+# Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
+if version.parse(torch.__version__) < version.parse("1.6"):
     if is_apex_available():
-        from apex import amp
-    _use_apex = True
+        logger.info('APEX is available')
+        from apex import amp    
+        logger.info('Using APEX for AMP')
+        _use_apex = True
+    else:
+        logger.info('APEX is not available')
+
 else:
+    logger.info('Using PyTorch native AMP')
     _use_native_amp = True
     from torch.cuda.amp import autocast
-'''
 
-from transformers.file_utils import is_apex_available
-if is_apex_available():
-    logger.info('APEX is available')
-    from apex import amp
-else:
-    logger.info('APEX is not available')
+###############################################################
 
+softmax = nn.Softmax(dim=-1)
 
 class TrainOutputAcc(NamedTuple):
     global_step: int
@@ -95,7 +101,14 @@ class RecSysTrainer(Trainer):
         else:
             self.log_predictions = kwargs.pop('log_predictions')
 
+        self.fp16 = False
+        if 'args' in kwargs and kwargs['args'].fp16:
+            self.fp16 = True
+
         self.create_metrics()
+
+        if self.fp16 and _use_native_amp:
+            self.scaler = torch.cuda.amp.GradScaler()
         
         super(RecSysTrainer, self).__init__(*args, **kwargs)
 
@@ -221,8 +234,9 @@ class RecSysTrainer(Trainer):
             )
             scheduler.load_state_dict(torch.load(os.path.join(model_path, "scheduler.pt")))
 
+        # Mixed precision training with apex (torch < 1.6)
         model = self.model
-        if self.args.fp16:
+        if self.args.fp16 and _use_apex:
             if not is_apex_available():
                 raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
             model, optimizer = amp.initialize(model, optimizer, opt_level=self.args.fp16_opt_level)
@@ -327,13 +341,19 @@ class RecSysTrainer(Trainer):
                         len(epoch_iterator) <= self.args.gradient_accumulation_steps
                         and (step + 1) == len(epoch_iterator)
                     ):
-                        if self.args.fp16:
+                        if self.args.fp16 and _use_native_amp:
+                            self.scaler.unscale_(optimizer)
+                            torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
+                        elif self.args.fp16 and _use_apex:
                             torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                         else:
                             torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
 
                         if is_torch_tpu_available():
                             xm.optimizer_step(optimizer)
+                        elif self.args.fp16 and _use_native_amp:
+                            self.scaler.step(optimizer)
+                            self.scaler.update()
                         else:
                             optimizer.step()
 
@@ -446,8 +466,11 @@ class RecSysTrainer(Trainer):
         for k, v in inputs.items():
             inputs[k] = v.to(self.args.device)
         
-        # NOTE: RecSys
-        outputs = model(inputs)
+        if self.args.fp16 and _use_native_amp:
+            with autocast():
+                outputs = model(inputs)
+        else:
+            outputs = model(inputs)
         
         acc = outputs[0] # accuracy
         loss = outputs[2]  # model outputs are always tuple in transformers (see doc)
@@ -482,8 +505,10 @@ class RecSysTrainer(Trainer):
 
         '''
 
-        if self.args.fp16:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
+        if self.args.fp16 and _use_native_amp:
+            self.scaler.scale(loss).backward()
+        elif self.args.fp16 and _use_apex:
+            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
             loss.backward()
@@ -596,8 +621,11 @@ class RecSysTrainer(Trainer):
 
             with torch.no_grad():
 
-                #NOTE: RecSys
-                outputs = model(inputs)
+                if self.args.fp16 and _use_native_amp:
+                    with autocast():
+                        outputs = model(inputs)
+                else:
+                    outputs = model(inputs)
                 
                 step_eval_acc, step_eval_acc_neg, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all, preds_metadata = outputs[:10]
                 

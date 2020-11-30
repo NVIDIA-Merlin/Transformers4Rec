@@ -172,9 +172,9 @@ export CUDA_VISIBLE_DEVICES=0
 
 dlprof --mode=pytorch \
        --force=true \
-       --output_path=nsights_files/fp32_nvtloader_fusedadam \
+       --output_path=nsights_files/fp16_nvtloader_nativeamp \
        --tb_dir=tensorboard_event_files \
-       --nsys_base_name=nsys_profile_fp32_nvtloader_fusedadam \
+       --nsys_base_name=nsys_profile_fp16_nvtloader_nativeamp \
        --reports=all \
        --nsys_opts="--sample=cpu --trace 'nvtx,cuda,osrt,cudnn'" \
        --iter_start=1 --iter_stop=10 \
