@@ -86,7 +86,7 @@ ngc batch run --name "tranf4rec-job-$(date +%Y%m%d%H%M%S)" --preempt RUNONCE --a
 
 ## Build the development image
 
-docker build -t transf4rec/dev -f container/Dockerfile.dev .
+docker build --no-cache -t transf4rec/dev -f container/Dockerfile.dev_nvt .
 
 # Enable sampling in containers
 
@@ -106,6 +106,15 @@ docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN  \
  --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864  \
  -p 6006:6006 -v /home/gmoreira/projects/nvidia/recsys:/workspace -v /home/gmoreira/dataset/ecommerce/2019-10:/data --workdir /workspace/transformers4recsys/codes transf4rec/dev /bin/bash 
 
+
+## Set environment variables
+
+export WANDB_API_KEY=76eea90114bb1cdcbafe151b262e4a5d4ff60f
+
+export TOKENIZERS_PARALLELISM=false
+export CUDA_VISIBLE_DEVICES=0
+
+
 ## Train the model
 
 
@@ -118,7 +127,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python3  recsys_main.py \
     --feature_config config/recsys_input_feature_full_noneg.yaml \
     --engine "pyarrow" \
     --reader_pool_type "process" \
-    --workers_count 10 \
+    --workers_count 8 \
     --validate_every 10 \
     --logging_steps 20 \
     --save_steps 0 \
@@ -163,13 +172,13 @@ export CUDA_VISIBLE_DEVICES=0
 
 dlprof --mode=pytorch \
        --force=true \
-       --output_path=nsights_files/fp32_nvtloader \
+       --output_path=nsights_files/fp32_nvtloader_fusedadam \
        --tb_dir=tensorboard_event_files \
-       --nsys_base_name=nsys_profile_fp32_nvtloader \
+       --nsys_base_name=nsys_profile_fp32_nvtloader_fusedadam \
        --reports=all \
        --nsys_opts="--sample=cpu --trace 'nvtx,cuda,osrt,cudnn'" \
-       --iter_start=1 --iter_stop=40 \
-python3  recsys_main.py \
+       --iter_start=1 --iter_stop=10 \
+python recsys_main.py \
     --output_dir "./tmp/" \
     --overwrite_output_dir \
     --do_train \
@@ -177,7 +186,7 @@ python3  recsys_main.py \
     --data_path "/data" \
     --feature_config config/recsys_input_feature_full_noneg.yaml \
     --reader_pool_type "process" \
-    --workers_count 10 \
+    --workers_count 8 \
     --validate_every 10 \
     --logging_steps 20 \
     --save_steps 1000 \
@@ -185,7 +194,7 @@ python3  recsys_main.py \
 --end_date 2019-10-02 \
 --model_type gpt2 \
 --loss_type cross_entropy \
---per_device_eval_batch_size 128 \
+--per_device_eval_batch_size 640 \
 --similarity_type concat_mlp \
 --tf_out_activation tanh \
 --all_rescale_factor 1.0 \
@@ -200,7 +209,7 @@ python3  recsys_main.py \
 --eval_on_last_item_seq_only \
 --warmup_days 1 \
 --num_train_epochs 1 \
---per_device_train_batch_size 192 \
+--per_device_train_batch_size 640 \
 --learning_rate 0.00014969647714359603 \
 --learning_rate_warmup 0.00014529247619095396 \
 --learning_rate_schedule linear_with_warmup \
@@ -259,6 +268,8 @@ docker build -t transf4rec/nvt_dl --no-cache -f container/Dockerfile.dev_nvt .
 docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN   --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864   -p 6006:6006 -p 8888:8888 -v /home/gmoreira/projects/nvidia/recsys:/workspace -v /home/gmoreira/dataset/ecommerce/2019-10:/data --workdir /workspace/transformers4recsys/codes transf4rec/nvt_dl /bin/bash 
 
 wandb login
+OR
+export WANDB_API_KEY=76eea90114bb1cdcbafe151b262e4a5d4ff60f
 
 tensorboard --bind_all --logdir . 
 

@@ -27,6 +27,8 @@ from transformers.training_args import is_torch_tpu_available
 from transformers import Trainer, AdamW, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
 from transformers import PreTrainedModel
 
+import apex
+
 
 logger = logging.getLogger(__name__)
 logger.info('PyTorch version: {}'.format(torch.__version__))
@@ -166,6 +168,10 @@ class RecSysTrainer(Trainer):
             learning_rate_schedule = self.args.learning_rate_schedule
 
         optimizer = AdamW(optimizer_grouped_parameters, lr=learning_rate, eps=self.args.adam_epsilon)
+
+        #Optimized Adam for FP16
+        #optimizer = apex.optimizers.FusedAdam(optimizer_grouped_parameters, lr=learning_rate, eps=self.args.adam_epsilon)
+
 
         if learning_rate_schedule == 'constant_with_warmup':
             scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps)

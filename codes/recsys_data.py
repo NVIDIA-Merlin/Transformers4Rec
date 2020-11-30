@@ -133,11 +133,13 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         train_data_len = get_dataset_len(train_data_path)
         eval_data_len = get_dataset_len(eval_data_path)
 
+        if test_date is not None:
+            test_data_len = get_dataset_len(eval_data_path)
+
         train_data_path = ['file://' + p for p in train_data_path]
         eval_data_path = ['file://' + p for p in eval_data_path]
         if test_date is not None:
             test_data_path = ['file://' + p for p in test_data_path]
-            test_data_len = get_dataset_len(eval_data_path)
 
         train_loader = DataLoaderWithLen(
             make_batch_reader(train_data_path, 
@@ -179,14 +181,17 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         train_dataset = ParquetDataset(train_data_path, cols_to_read)
         if training_args.shuffle_buffer_size > 0:
             train_dataset = ShuffleDataset(train_dataset, buffer_size=training_args.shuffle_buffer_size)
-        train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size, drop_last=training_args.dataloader_drop_last)
+        train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size, 
+                                        drop_last=training_args.dataloader_drop_last, num_workers=data_args.workers_count)
         
         eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
-        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
+        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, 
+                                        drop_last=training_args.dataloader_drop_last, num_workers=data_args.workers_count)
 
         if test_date is not None:
             test_dataset = ParquetDataset(test_data_path, cols_to_read)
-            test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, drop_last=training_args.dataloader_drop_last)
+            test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, 
+                                        drop_last=training_args.dataloader_drop_last, num_workers=data_args.workers_count)
 
     elif data_args.data_loader_engine == "nvtabular":
         
@@ -212,11 +217,11 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         train_loader = NVTDataLoaderWrapper(train_set, batch_size=training_args.per_device_train_batch_size, shuffle=False, **data_loader_config)
 
         eval_set = NVTDataset(eval_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        eval_loader = NVTDataLoaderWrapper(eval_set, batch_size=training_args.per_device_train_batch_size, shuffle=False, **data_loader_config)
+        eval_loader = NVTDataLoaderWrapper(eval_set, batch_size=training_args.per_device_eval_batch_size, shuffle=False, **data_loader_config)
 
         if test_date is not None:
-            test_set = NVTDataset(test_dataset, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-            test_loader = NVTDataLoaderWrapper(eval_set, batch_size=training_args.per_device_train_batch_size, shuffle=False, **data_loader_config)
+            test_set = NVTDataset(test_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
+            test_loader = NVTDataLoaderWrapper(test_set, batch_size=training_args.per_device_eval_batch_size, shuffle=False, **data_loader_config)
 
 
     if test_date is None:
