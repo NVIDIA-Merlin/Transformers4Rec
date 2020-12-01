@@ -42,6 +42,8 @@ class TrainingArguments(HfTrainingArguments):
 
     shuffle_buffer_size: int = field(default=0, metadata={"help": "Number of samples to keep in the buffer for shuffling. shuffle_buffer_size=0 means no shuffling"})
 
+    pyprof: bool = field(default=False, metadata={"help": "Enables pyprof logging to inspect with NSights System and DLProf pluging for Tensorboard. Warning: It slows down training, so it should be used only for profiling"})    
+
     
 
     
@@ -82,7 +84,7 @@ class DataArguments:
         }
     )
     
-    nvt_part_mem_fraction: Optional[int] = field(
+    nvt_part_mem_fraction: Optional[float] = field(
         default=0.1, metadata={"help": "Percentage of GPU to allocate for NVTabular dataset / dataloader"}
     )
 

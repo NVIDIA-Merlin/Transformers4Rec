@@ -323,6 +323,7 @@ class RecSysTrainer(Trainer):
 
                 # TEMPORARY: TO DEBUG ATTENTION 
                 #self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
+                
 
                 for step, inputs in enumerate(epoch_iterator):
                     
