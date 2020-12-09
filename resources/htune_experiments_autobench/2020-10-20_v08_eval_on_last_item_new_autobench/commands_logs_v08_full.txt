@@ -88,7 +88,6 @@ AOD_all_Test_ndcg@1000_all:  0.2735
 
 magic-firefly-2302
 https://wandb.ai/gspmoreira/huggingface/runs/3aqddi9a/overview
-AOD_all_Test_ndcg@1000_all
 AOD_all_Test_ndcg@1000_all:  0.2734
 
 ----------------
@@ -122,7 +121,9 @@ python main.py --optuna_study_name htune-v08-xlnet-uni-pid --concurrent_jobs 5 -
 [then, ctrl + A + D: make me outside of the screen session]
 
 
-RUNNING 
+amber-cosmos-2482
+https://wandb.ai/gspmoreira/huggingface/runs/3gmda2qs?workspace=user-gspmoreira
+AOD_all_Test_ndcg@1000_all:  0.2443
 
 
 ---------------------------------------
@@ -153,7 +154,7 @@ AOD_all_Test_ndcg@1000_all: 0.2549
 
 #Hypertuning job - ONLY PID - GPT-2
 
-screen -S gpt2_pid_pid
+screen -S gpt2_pid
 
 source ~/.bash_profile
 
@@ -164,6 +165,16 @@ python main.py --optuna_study_name htune-v08-gpt2-pid --concurrent_jobs 5 --optu
 [then, ctrl + A + D: make me outside of the screen session]
 
 
-RUNNING
+Before 100 trials:
+soft-dragon-2479
+https://wandb.ai/gspmoreira/huggingface/runs/5ejk6qso?workspace=user-gspmoreira
+AOD_all_Test_ndcg@1000_all: 0.2691
+
+After 100 trials:
+youthful-sky-2564
+https://wandb.ai/gspmoreira/huggingface/runs/zncx2ge2/overview?workspace=user-gspmoreira
+AOD_all_Test_ndcg@1000_all: 0.2732
+
+
 
 
