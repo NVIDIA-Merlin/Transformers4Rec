@@ -537,7 +537,7 @@ class RecSysTrainer(Trainer):
         if self.args.fp16 and _use_native_amp:
             self.scaler.scale(loss).backward()
         elif self.args.fp16 and _use_apex:
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
             loss.backward()
