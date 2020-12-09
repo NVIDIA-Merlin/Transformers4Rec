@@ -16,10 +16,8 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --do_train \
     --do_eval \
     --data_path "/data/" \
-    --feature_config config/recsys_input_feature_${feature_type}.yaml \
-    --engine "pyarrow" \
+    --feature_config config/recsys_input_feature_${feature_type}.yaml \    
     --reader_pool_type "process" \
-    --workers_count 10 \
     --validate_every 10 \
     --logging_steps 20 \
     --save_steps 0 \
