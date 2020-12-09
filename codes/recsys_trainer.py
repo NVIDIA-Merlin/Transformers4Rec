@@ -32,6 +32,9 @@ logger = logging.getLogger(__name__)
 logger.info('PyTorch version: {}'.format(torch.__version__))
 
 
+import torch.cuda.profiler as profiler
+
+
 
 ################## Setting Automatic Mixed Precision ##################
 
@@ -140,7 +143,7 @@ class RecSysTrainer(Trainer):
     def set_rec_test_dataloader(self, dataloader):
         self.test_dataloader = dataloader
 
-    def num_examples(self, dataloader):
+    def num_steps(self, dataloader):
         return len(dataloader)
 
     def update_wandb_args(self, args):
@@ -267,9 +270,15 @@ class RecSysTrainer(Trainer):
                 * self.args.gradient_accumulation_steps
                 * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
             )
+
+        num_steps = self.num_steps(train_dataloader)
+
+        if self.args.dataloader_drop_last:
+            num_steps -= 1
+
         logger.info("***** Running training *****")
-        logger.info("  Num samples by epoch = %d", self.num_examples(train_dataloader) * self.args.train_batch_size)
-        logger.info("  Num steps by epoch = %d", self.num_examples(train_dataloader))
+        logger.info("  Num samples by epoch = %d", num_steps * self.args.train_batch_size)
+        logger.info("  Num steps by epoch = %d", num_steps)
         logger.info("  Num Epochs = %d", num_train_epochs)
         logger.info("  Instantaneous batch size per device = %d", self.args.per_device_train_batch_size)
         logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
@@ -309,6 +318,7 @@ class RecSysTrainer(Trainer):
         # NOTE: RecSys
         with train_dataloader:
             for epoch in train_iterator:
+                print('Training Epoch {}'.format(epoch))
                 if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                     train_dataloader.sampler.set_epoch(epoch)
 
@@ -324,100 +334,111 @@ class RecSysTrainer(Trainer):
                 # TEMPORARY: TO DEBUG ATTENTION 
                 #self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
                 
+                with torch.autograd.profiler.emit_nvtx():
 
-                for step, inputs in enumerate(epoch_iterator):
-                    
-                    # Skip past any already trained steps if resuming training
-                    if steps_trained_in_current_epoch > 0:
-                        steps_trained_in_current_epoch -= 1
-                        continue
+                    for step, inputs in enumerate(epoch_iterator):
+                        # Ignoring last training batch  if --dataloader_drop_last, because some data loaders does not support drop_last=True
+                        if self.args.dataloader_drop_last and step >= num_steps:
+                            break    
 
-                    step_loss, step_acc = self._training_step(model, inputs, optimizer)
-                    
-                    tr_loss += step_loss
-                    tr_acc += step_acc
+                        if self.args.pyprof and step == self.args.pyprof_start_step:
+                            profiler.start()
+                        
+                        # Skip past any already trained steps if resuming training
+                        if steps_trained_in_current_epoch > 0:
+                            steps_trained_in_current_epoch -= 1
+                            continue
 
-                    if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
-                        # last step in epoch but step is always smaller than gradient_accumulation_steps
-                        len(epoch_iterator) <= self.args.gradient_accumulation_steps
-                        and (step + 1) == len(epoch_iterator)
-                    ):
-                        if self.args.fp16 and _use_native_amp:
-                            self.scaler.unscale_(optimizer)
-                            torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
-                        elif self.args.fp16 and _use_apex:
-                            torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
-                        else:
-                            torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
+                        step_loss, step_acc = self._training_step(model, inputs, optimizer)
+                        
+                        tr_loss += step_loss
+                        tr_acc += step_acc
 
-                        if is_torch_tpu_available():
-                            xm.optimizer_step(optimizer)
-                        elif self.args.fp16 and _use_native_amp:
-                            self.scaler.step(optimizer)
-                            self.scaler.update()
-                        else:
-                            optimizer.step()
-
-                        scheduler.step()
-                        model.zero_grad()
-                        self.global_step += 1
-                        self.epoch = epoch + (step + 1) / len(epoch_iterator)
-
-                        if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
-                            self.global_step == 1 and self.args.logging_first_step
+                        if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
+                            # last step in epoch but step is always smaller than gradient_accumulation_steps
+                            len(epoch_iterator) <= self.args.gradient_accumulation_steps
+                            and (step + 1) == len(epoch_iterator)
                         ):
-                            logs: Dict[str, float] = {}
-                            logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
-                            logs["train_accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
-                            # backward compatibility for pytorch schedulers
-                            logs["learning_rate"] = (
-                                scheduler.get_last_lr()[0]
-                                if version.parse(torch.__version__) >= version.parse("1.4")
-                                else scheduler.get_lr()[0]
-                            )
-                            logging_loss = tr_loss
-                            logging_acc = tr_acc
-
-                            self._log(logs)
-
-                            #if self.args.evaluate_during_training:
-                            #    self.evaluate()
-
-                        if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
-                            # In all cases (even distributed/parallel), self.model is always a reference
-                            # to the model we want to save.
-                            if hasattr(model, "module"):
-                                assert model.module is self.model
+                            if self.args.fp16 and _use_native_amp:
+                                self.scaler.unscale_(optimizer)
+                                torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
+                            elif self.args.fp16 and _use_apex:
+                                torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                             else:
-                                assert model is self.model
-                            # Save model checkpoint
-                            output_dir = os.path.join(self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-
-                            self.save_model(output_dir)
-
-                            if self.is_world_master():
-                                self._rotate_checkpoints()
+                                torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
 
                             if is_torch_tpu_available():
-                                xm.rendezvous("saving_optimizer_states")
-                                xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                                xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-                            elif self.is_world_master():
-                                torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                                torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                                xm.optimizer_step(optimizer)
+                            elif self.args.fp16 and _use_native_amp:
+                                self.scaler.step(optimizer)
+                                self.scaler.update()
+                            else:
+                                optimizer.step()
 
-                    if (self.args.max_steps > 0 and self.global_step > self.args.max_steps) or (self.fast_test and step > 2):
-                        epoch_iterator.close()
+                            scheduler.step()
+                            model.zero_grad()
+                            self.global_step += 1
+                            self.epoch = epoch + (step + 1) / len(epoch_iterator)
+
+                            if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
+                                self.global_step == 1 and self.args.logging_first_step
+                            ):
+                                logs: Dict[str, float] = {}
+                                logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
+                                logs["train_accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
+                                # backward compatibility for pytorch schedulers
+                                logs["learning_rate"] = (
+                                    scheduler.get_last_lr()[0]
+                                    if version.parse(torch.__version__) >= version.parse("1.4")
+                                    else scheduler.get_lr()[0]
+                                )
+                                logging_loss = tr_loss
+                                logging_acc = tr_acc
+
+                                self._log(logs)
+
+                                #if self.args.evaluate_during_training:
+                                #    self.evaluate()
+
+                            if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
+                                # In all cases (even distributed/parallel), self.model is always a reference
+                                # to the model we want to save.
+                                if hasattr(model, "module"):
+                                    assert model.module is self.model
+                                else:
+                                    assert model is self.model
+                                # Save model checkpoint
+                                output_dir = os.path.join(self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+
+                                self.save_model(output_dir)
+
+                                if self.is_world_master():
+                                    self._rotate_checkpoints()
+
+                                if is_torch_tpu_available():
+                                    xm.rendezvous("saving_optimizer_states")
+                                    xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                                    xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                                elif self.is_world_master():
+                                    torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                                    torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+
+                        if (self.args.max_steps > 0 and self.global_step > self.args.max_steps) or (self.fast_test and step > 2):
+                            epoch_iterator.close()
+                            break
+
+                        if self.args.pyprof and step == self.args.pyprof_stop_step:
+                            profiler.stop()
+
+                    if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
+                        train_iterator.close()
                         break
-                if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
-                    train_iterator.close()
-                    break
-                if self.args.tpu_metrics_debug:
-                    # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
-                    xm.master_print(met.metrics_report())
-                
-                if self.args.validate_every > 0 and (epoch + 1) % self.args.validate_every == 0:
-                    self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
+                    if self.args.tpu_metrics_debug:
+                        # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+                        xm.master_print(met.metrics_report())
+                    
+                    if self.args.validate_every > 0 and (epoch + 1) % self.args.validate_every == 0:
+                        self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
 
             # Compute metrics on Train set and Eval Set after all training epochs (for each day)
             self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
@@ -600,9 +621,13 @@ class RecSysTrainer(Trainer):
         # Note: in torch.distributed mode, there's no point in wrapping the model
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
+        num_steps = self.num_steps(dataloader)
+        if self.args.dataloader_drop_last:
+            num_steps -= 1
+
         batch_size = dataloader.batch_size
         logger.info("***** Running %s *****", description)
-        logger.info("  Num steps = %d", self.num_examples(dataloader))
+        logger.info("  Num steps = %d", num_steps)
         logger.info("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
         eval_losses_neg: List[float] = []
@@ -615,7 +640,11 @@ class RecSysTrainer(Trainer):
         if is_torch_tpu_available():
             dataloader = pl.ParallelLoader(dataloader, [self.args.device]).per_device_loader(self.args.device)
 
-        for inputs in tqdm(dataloader, desc=description):
+        for step, inputs in tqdm(enumerate(dataloader), desc=description):
+
+            # Ignoring last training batch  if --dataloader_drop_last, because some data loaders does not support drop_last=True
+            if self.args.dataloader_drop_last and step >= num_steps:
+                break
 
             for k, v in inputs.items():
                 inputs[k] = v.to(self.args.device)

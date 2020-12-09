@@ -44,6 +44,9 @@ class TrainingArguments(HfTrainingArguments):
 
     pyprof: bool = field(default=False, metadata={"help": "Enables pyprof logging to inspect with NSights System and DLProf pluging for Tensorboard. Warning: It slows down training, so it should be used only for profiling"})    
 
+    pyprof_start_step: int = field(default=0, metadata={"help": "Start step to profile with PyProf"})
+    pyprof_stop_step: int = field(default=0, metadata={"help": "Stop step to profile with PyProf"})
+
     
 
     

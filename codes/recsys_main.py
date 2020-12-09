@@ -4,7 +4,7 @@ How torun :
 """
 
 
-import pyprof
+
 
 import os
 import sys
@@ -59,6 +59,7 @@ def main():
     #Enables profiling with DLProf and Nsight Systems (slows down training)
     if training_args.pyprof:
         logger.info("Enabling PyProf for profiling, to inspect with DLProf and Nsight Sytems. This will slow down training and should be used only for debug purposes.", training_args)        
+        import pyprof
         pyprof.init(enable_function_stack=True)
 
     if (

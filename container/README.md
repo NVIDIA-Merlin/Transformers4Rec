@@ -102,9 +102,10 @@ sudo sh -c 'echo kernel.perf_event_paranoid=1 > /etc/sysctl.d/local.conf'
 
 
 ## Run the container
+
 docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN  \
  --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864  \
- -p 6006:6006 -v /home/gmoreira/projects/nvidia/recsys:/workspace -v /home/gmoreira/dataset/ecommerce/2019-10:/data --workdir /workspace/transformers4recsys/codes transf4rec/dev /bin/bash 
+ -p 6006:6006 -p 8888:8888 -v /home/gmoreira/projects/nvidia/recsys:/workspace -v /home/gmoreira/dataset/ecommerce/ecommerce_preproc_split/ecommerce_preproc_2019-10:/data --workdir /workspace/transformers4recsys/codes transf4rec/dev /bin/bash  
 
 
 ## Set environment variables
@@ -166,7 +167,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python3  recsys_main.py \
 
 Based in this article: https://developer.nvidia.com/blog/profiling-and-optimizing-deep-neural-networks-with-dlprof-and-pyprof/
 
-export WANDB_API_KEY=76eea90114bb1cdcbafe151b262e4a5d4ff60f
+export WANDB_API_KEY=76eea90114bb1cdcbafe151b262e4a5d4ff60f12
 
 export TOKENIZERS_PARALLELISM=false
 export CUDA_VISIBLE_DEVICES=0
@@ -205,7 +206,6 @@ python recsys_main.py \
 --learning_rate_warmup_steps 0 \
 --learning_rate_num_cosine_cycles 1.25 \
 --hidden_act gelu_new \
---dataloader_drop_last \
 --compute_metrics_each_n_steps 50 \
 --max_seq_len 20 \
 --eval_on_last_item_seq_only \
@@ -221,8 +221,9 @@ python recsys_main.py \
 --d_model 320 \
 --n_layer 1 \
 --n_head 2 \
---data_loader_engine pyarrow \
---fp16
+--data_loader_engine nvtabular \
+--fp16 \
+--pyprof
 
 
 
