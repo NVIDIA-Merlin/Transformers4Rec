@@ -274,7 +274,11 @@ docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN   --shm-size=2g --
 
 tensorboard --bind_all --logdir . 
 
+----------------------------------------------------
+Build NGC image with NVTabular dependencies
 
-### TODO:
-- Report FP16 tests to the team
-- Enable shuffling
+docker build -t nvcr.io/nvidian/prj-recsys/transf4rec_nvt_exp:0.1.0 -f Dockerfile.ngc_nvt .
+
+docker run --gpus all -it -t nvcr.io/nvidian/prj-recsys/transf4rec_nvt_exp:0.1.0 bash
+
+docker push nvcr.io/nvidian/prj-recsys/transf4rec_nvt_exp:0.1.0
