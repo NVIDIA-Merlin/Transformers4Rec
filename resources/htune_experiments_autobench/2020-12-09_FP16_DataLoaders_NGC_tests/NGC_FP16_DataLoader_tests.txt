@@ -14,6 +14,8 @@ PyArrow Data Loader using 8 workers
 
 ngc batch run --name "tranf4rec-fp16-dataloaders-tests" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash tranf4rec-fp16-dataloaders-tests full_noneg session_cooccurrence --data_loader_engine "pyarrow" --workers_count 8 --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --hidden_act gelu_new --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --eval_on_last_item_seq_only --warmup_days 1 --num_train_epochs 10 --per_device_train_batch_size 512 --learning_rate 0.00014969647714359603 --learning_rate_warmup 0.00014529247619095396 --learning_rate_schedule linear_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 6.211639773976265e-05 --d_model 320 --n_layer 1 --n_head 2 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
 
+ID: 1635488
+
 
 ----------------------------------------------------------------------------------------
 
@@ -21,4 +23,5 @@ PyArrow Data Loader using 8 workers + FP16
 
 ngc batch run --name "tranf4rec-fp16-dataloaders-tests" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --commandline "nvidia-smi && wandb login 76eea90114bb1cdcbafe151b262e4a5d4ff60f12 && date && git pull origin experimentation && date && bash script/run_transformer_v2.bash tranf4rec-fp16-dataloaders-tests full_noneg session_cooccurrence --fp16 --data_loader_engine "pyarrow" --workers_count 8 --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 128 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --neg_rescale_factor 0.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --hidden_act gelu_new --dataloader_drop_last --compute_metrics_each_n_steps 50 --max_seq_len 20 --eval_on_last_item_seq_only --warmup_days 1 --num_train_epochs 10 --per_device_train_batch_size 512 --learning_rate 0.00014969647714359603 --learning_rate_warmup 0.00014529247619095396 --learning_rate_schedule linear_with_warmup --learning_rate_schedule_warmup constant_with_warmup --dropout 0.1 --weight_decay 6.211639773976265e-05 --d_model 320 --n_layer 1 --n_head 2 && date" --result /results --image "nvidian/prj-recsys/transf4rec_exp:0.1.0" --org nvidian --team prj-recsys --datasetid 66609:/data
 
+ID: 1635489
 
