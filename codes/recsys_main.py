@@ -117,7 +117,8 @@ def main():
         model=rec_model,
         args=training_args,
         fast_test=training_args.fast_test,
-        log_predictions=training_args.log_predictions
+        log_predictions=training_args.log_predictions,
+        fp16=training_args.fp16,
     )
 
     #Saving Weights & Biases run name

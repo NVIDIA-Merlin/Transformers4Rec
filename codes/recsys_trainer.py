@@ -104,9 +104,16 @@ class RecSysTrainer(Trainer):
         else:
             self.log_predictions = kwargs.pop('log_predictions')
 
-        self.fp16 = False
-        if 'args' in kwargs and kwargs['args'].fp16:
-            self.fp16 = True
+        if 'fp16' not in kwargs:
+            self.fp16 = False
+        else:
+            self.fp16 = kwargs.pop('fp16')
+
+        logger.info(
+            "FP16 enabled: {} - Using APEX: {} - Using Native AMP - {}".format(
+                self.fp16, _use_apex, _use_native_amp
+            )
+        )
 
         self.create_metrics()
 
@@ -530,7 +537,7 @@ class RecSysTrainer(Trainer):
         if self.args.fp16 and _use_native_amp:
             self.scaler.scale(loss).backward()
         elif self.args.fp16 and _use_apex:
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+            with amp.scale_loss(loss, optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
             loss.backward()
