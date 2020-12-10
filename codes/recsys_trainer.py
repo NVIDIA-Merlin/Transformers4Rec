@@ -52,7 +52,7 @@ def is_apex_available():
     return _has_apex
 
 # Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
-if True: #version.parse(torch.__version__) < version.parse("1.6"):
+if version.parse(torch.__version__) < version.parse("1.6"):
     if is_apex_available():
         logger.info('APEX is available')
         from apex import amp    
