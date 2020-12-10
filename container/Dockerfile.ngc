@@ -22,8 +22,9 @@ RUN git clone git@github.com:gabrielspmoreira/recsys.git
 WORKDIR recsys
 RUN git checkout -b experimentation origin/experimentation
 
-################ Setup GitHub repo ################
 WORKDIR /workspace/recsys/transformers4recsys/codes
+
+################ Installing dependencies ################
 
 #echo "Installing dependencies"
 RUN pip install -r requirements.txt;
