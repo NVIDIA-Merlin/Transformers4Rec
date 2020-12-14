@@ -104,7 +104,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             n_positions=data_args.max_seq_len,
             n_ctx=data_args.max_seq_len,
             output_attentions=training_args.log_attention_weights,
-            vocab_size=390000 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
+            vocab_size=1 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
     elif model_args.model_type == 'longformer':

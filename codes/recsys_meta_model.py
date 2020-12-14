@@ -300,8 +300,8 @@ class RecSysMetaModel(PreTrainedModel):
 
                 model_outputs = self.model(
                     #Temporary, to see if the problem of hard attention is related to the item embedding generation
-                    input_ids=label_seq_inp,
-                    #inputs_embeds=pos_emb_inp,
+                    #input_ids=label_seq_inp,
+                    inputs_embeds=pos_emb_inp,
                     head_mask=head_mask,
                     #position_ids=position_ids
                 )
