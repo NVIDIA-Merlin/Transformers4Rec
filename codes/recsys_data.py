@@ -201,10 +201,10 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
             def __next__(self):
                 cat_features, cont_features, label_features = super(NVTDataLoaderWrapper, self).__next__()
                 cat_seq_features = {}
-                if len(cat_features) > 0:
+                if cat_features is not None:
                     cat_seq_features = {k: v[0].reshape(-1, self.seq_features_len) for k, v in cat_features[1].items()}
                 cont_seq_features = {}
-                if len(cont_features) > 0:
+                if cont_features is not None:
                     cont_seq_features = {k: v[0].reshape(-1, self.seq_features_len) for k, v in cont_features[1].items()}
                 inputs = {**cat_seq_features, **cont_seq_features}
                 return inputs
