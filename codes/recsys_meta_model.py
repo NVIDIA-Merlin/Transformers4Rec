@@ -284,8 +284,8 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_inp = pos_emb[:, :-1]
             # Replacing the inputs corresponding to masked label with a trainable embedding
             pos_emb_inp = torch.where(mask_trg_pad.unsqueeze(-1).bool(), 
-                                      self.masked_item_embedding.to(pos_emb_inp.dtype), 
-                                      pos_emb_inp)            
+                                      pos_emb_inp,
+                                      self.masked_item_embedding.to(pos_emb_inp.dtype))            
 
 
             '''
