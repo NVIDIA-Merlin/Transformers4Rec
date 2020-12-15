@@ -14,9 +14,13 @@ from torch.nn import functional as F
 from transformers.modeling_utils import PreTrainedModel
 from transformers.modeling_gpt2 import GPT2Model
 
+
 logger = logging.getLogger(__name__)
 
 torch.manual_seed(0)
+
+
+past_interactions_feature_suffix = '_bef_sess'
 
 
 class AttnMerge(nn.Module):
@@ -78,6 +82,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.pad_token = data_args.pad_token
         self.mask_token = data_args.mask_token
         self.embedding_tables = nn.ModuleDict()
+
+        self.use_interactions_bef_sess = model_args.use_interactions_bef_sess
         
         self.col_prefix_neg = data_args.feature_prefix_neg_sample
         concat_input_dim = 0
@@ -85,7 +91,13 @@ class RecSysMetaModel(PreTrainedModel):
         
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
+            #if self.col_prefix_neg not in cname:
+            
             if self.col_prefix_neg not in cname:
+                #TEMP: Ignoring past features to define embedding tables
+                if (self.use_interactions_bef_sess and cname.endswith(past_interactions_feature_suffix)):
+                    continue
+
                 if cinfo['dtype'] == 'categorical':
                     embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])
                     self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
@@ -189,13 +201,22 @@ class RecSysMetaModel(PreTrainedModel):
 
         assert label_seq is not None, 'label sequence is not declared in feature_map'
 
+        #TEMP: To mark past sequence labels
+        if self.use_interactions_bef_sess:
+            masked_past_session = torch.zeros_like(label_seq, dtype=torch.long, device=self.device)
+
         if self.mlm:
             """
             Masked Language Model
             """
             label_seq_trg, label_mlm_mask = self.mask_tokens(
                 label_seq, self.mlm_probability)
-
+            
+            #TEMP: To mark past sequence labels
+            if self.use_interactions_bef_sess:
+                label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
+                label_mlm_mask = torch.cat([masked_past_session, label_mlm_mask], axis=1)
+            
         else:
             """
             Predict Next token
@@ -220,6 +241,11 @@ class RecSysMetaModel(PreTrainedModel):
                 label_seq_trg = label_seq_trg_eval
                 mask_trg_pad = (label_seq_trg != self.pad_token)
 
+            #TEMP: To mark past sequence labels
+            if self.use_interactions_bef_sess:
+                label_seq_trg_original = label_seq_trg.clone()
+                label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
+                mask_trg_pad = torch.cat([masked_past_session, mask_trg_pad], axis=1)
 
         # Creating an additional feature with the position in the sequence
         metadata_for_pred_logging['seq_pos'] = torch.arange(1, label_seq.shape[1]+1, device=self.device).repeat(label_seq.shape[0], 1)
@@ -228,7 +254,6 @@ class RecSysMetaModel(PreTrainedModel):
         if not (self.mlm and self.training):
             for feat_name in metadata_for_pred_logging:                
                 metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name][:, 1:]
-
 
         # Step 2. Merge features
         
@@ -244,13 +269,20 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.mlm:
             # Masking inputs (with trainable [mask] embedding]) at masked label positions      
-            pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1), self.masked_item_embedding, pos_emb)            
+            pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1).bool(), self.masked_item_embedding, pos_emb)            
             if self.loss_type != 'cross_entropy':
                 pos_emb_trg = pos_emb #.clone()
                 neg_emb_inp = neg_emb   
         else:
             # slice over time-steps for input and target and ensuring masking is applied
-            pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
+            #pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
+            
+            # Truncating the inpyt sequences length to -1
+            pos_emb_inp = pos_emb[:, :-1]
+            # Replacing the inputs corresponding to masked label with a trainable embedding
+            pos_emb_inp = torch.where(mask_trg_pad.unsqueeze(-1).bool(), self.masked_item_embedding, pos_emb_inp)            
+
+
             '''
             if type(self.model) is GPT2Model:
                 #Temporary hack to test if the last shifted item leaks and improves last item prediction accuracy
@@ -301,6 +333,7 @@ class RecSysMetaModel(PreTrainedModel):
                 model_outputs = self.model(
                     #Temporary, to see if the problem of hard attention is related to the item embedding generation
                     #input_ids=label_seq_inp,
+                    
                     inputs_embeds=pos_emb_inp,
                     head_mask=head_mask,
                     #position_ids=position_ids
@@ -319,7 +352,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         trg_flat = label_seq_trg.flatten()
         non_pad_mask = (trg_flat != self.pad_token)        
-        num_elem = non_pad_mask.sum()
+        num_elem = non_pad_mask.sum()        
 
 
         labels_all = torch.masked_select(trg_flat, non_pad_mask)
@@ -333,11 +366,21 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
             neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
 
-        if not self.mlm:
-            #Keeping removing zero-padded items metadata features for the next-clicks (targets), so that they are aligned
-            for feat_name in metadata_for_pred_logging:
-                metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), non_pad_mask)
+        if not self.mlm:                        
+            ##Temporary. Replace by the commented code after experiments with past information
+            if self.use_interactions_bef_sess:
+                non_pad_original_mask = (label_seq_trg_original.flatten() != self.pad_token)
+                for feat_name in metadata_for_pred_logging:                
+                    metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), 
+                                                                            non_pad_original_mask)
+            else:
+                #Keeping removing zero-padded items metadata features for the next-clicks (targets), so that they are aligned
+                for feat_name in metadata_for_pred_logging:                
+                    metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), 
+                                                                            non_pad_mask)
 
+
+                
         logits_all = self.output_layer(pos_emb_pred)
         predictions_all = self.log_softmax(logits_all)
         loss_ce = self.loss_nll(predictions_all, labels_all)
@@ -527,6 +570,8 @@ class RecSysMetaModel(PreTrainedModel):
         
         label_seq, output = None, []
         metadata_for_pred_logging = {}
+
+        transformed_features = OrderedDict()
         for cname, cinfo in self.feature_map.items():
 
             # represent (not is_neg and self.col_prefix_neg not in cname) or (is_neg and self.col_prefix_neg in cname):
@@ -565,9 +610,28 @@ class RecSysMetaModel(PreTrainedModel):
                         #Temporary change to see if with sequences multiples of 8 we can get better acceleration with --fp16, by using TensorCores
                         #metadata_for_pred_logging[cname] = inputs[cname][:,:17].detach()
 
-                output.append(cdata)
+                transformed_features[cname] = cdata
+                #output.append(cdata)
 
-        output = torch.cat(output, dim=-1)
+
+
+        #TEMP: Concatenates user interactions before the session with the current session
+        if self.use_interactions_bef_sess:
+            
+            features_to_delete = []            
+            for fname in transformed_features.keys():
+                if not fname.endswith(past_interactions_feature_suffix):
+                    past_fname = fname.replace('sess_', 'user_') + past_interactions_feature_suffix
+                    if not fname.endswith(past_interactions_feature_suffix) and \
+                        past_fname in transformed_features:
+                        transformed_features[fname] = \
+                            torch.cat([transformed_features[fname], 
+                                       transformed_features[past_fname]], axis=1)
+                    features_to_delete.append(past_fname)
+            for past_fname in features_to_delete:
+                del transformed_features[past_fname]
+
+        output = torch.cat(list(transformed_features.values()), dim=-1)
 
         return output, label_seq, max_seq_len, metadata_for_pred_logging
 

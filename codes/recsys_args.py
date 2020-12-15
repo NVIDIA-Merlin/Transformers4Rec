@@ -195,3 +195,5 @@ class ModelArguments:
 
     eval_on_last_item_seq_only: bool = field(default=False, metadata={"help": "Evaluate metrics only on predictions for the last item of the sequence (rather then evaluation for all next-item predictions)."})
     train_on_last_item_seq_only: bool = field(default=False, metadata={"help": "Train only for predicting the last item of the sequence (rather then training to predict for all next-item predictions) (only for Causal LM)."})
+
+    use_interactions_bef_sess: bool = field(default=False, metadata={"help": "Use the available user interactions befor the session (up to 20 for the e-commerce dataset)"})
