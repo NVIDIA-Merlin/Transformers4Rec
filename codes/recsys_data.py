@@ -184,8 +184,12 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
         from nvtabular import Dataset as NVTDataset
 
+        #TODO: Move this to a data parameter (different fronm max_seq_len, which is used by the transformer)
+        FEATURES_SEQ_LEN = 20
+
         class NVTDataLoaderWrapper(NVTDataLoader):
             def __init__(self, *args, **kwargs):
+                self.seq_features_len = FEATURES_SEQ_LEN
                 super(NVTDataLoaderWrapper, self).__init__(*args, **kwargs)
 
             def __enter__(self):
@@ -196,8 +200,12 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
 
             def __next__(self):
                 cat_features, cont_features, label_features = super(NVTDataLoaderWrapper, self).__next__()
-                cat_seq_features = {k: v[0].reshape(-1,20) for k, v in cat_features[1].items()}
-                cont_seq_features = {k: v[0].reshape(-1,20) for k, v in cont_features[1].items()}
+                cat_seq_features = {}
+                if len(cat_features) > 0:
+                    cat_seq_features = {k: v[0].reshape(-1, self.seq_features_len) for k, v in cat_features[1].items()}
+                cont_seq_features = {}
+                if len(cont_features) > 0:
+                    cont_seq_features = {k: v[0].reshape(-1, self.seq_features_len) for k, v in cont_features[1].items()}
                 inputs = {**cat_seq_features, **cont_seq_features}
                 return inputs
 
