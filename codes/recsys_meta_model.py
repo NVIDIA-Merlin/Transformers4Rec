@@ -135,7 +135,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model, 
-                                    dtype=torch.float32, device=self.device))
+                                    device=self.device))
         nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.4)
 
         self.target_dim = target_dim
