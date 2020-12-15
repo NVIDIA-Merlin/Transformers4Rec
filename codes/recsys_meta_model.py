@@ -134,7 +134,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.mlm_probability = model_args.mlm_probability
 
         # Creating a trainable embedding for masking inputs for Masked LM
-        self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model, device=self.device))
+        self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model, 
+                                    dtype=torch.float32, device=self.device))
         nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.4)
 
         self.target_dim = target_dim
@@ -269,7 +270,9 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.mlm:
             # Masking inputs (with trainable [mask] embedding]) at masked label positions      
-            pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1).bool(), self.masked_item_embedding, pos_emb)            
+            pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1).bool(), 
+                                      self.masked_item_embedding.to(pos_emb.dtype), 
+                                      pos_emb)            
             if self.loss_type != 'cross_entropy':
                 pos_emb_trg = pos_emb #.clone()
                 neg_emb_inp = neg_emb   
@@ -280,7 +283,9 @@ class RecSysMetaModel(PreTrainedModel):
             # Truncating the inpyt sequences length to -1
             pos_emb_inp = pos_emb[:, :-1]
             # Replacing the inputs corresponding to masked label with a trainable embedding
-            pos_emb_inp = torch.where(mask_trg_pad.unsqueeze(-1).bool(), self.masked_item_embedding, pos_emb_inp)            
+            pos_emb_inp = torch.where(mask_trg_pad.unsqueeze(-1).bool(), 
+                                      self.masked_item_embedding.to(pos_emb_inp.dtype), 
+                                      pos_emb_inp)            
 
 
             '''
