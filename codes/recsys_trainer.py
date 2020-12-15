@@ -9,7 +9,7 @@ import os
 
 from typing import Dict, List, Optional, NamedTuple, Callable, Tuple
 from enum import Enum
-
+from contextlib import nullcontext
 import numpy as np
 import torch
 
@@ -340,9 +340,13 @@ class RecSysTrainer(Trainer):
 
                 # TEMPORARY: TO DEBUG ATTENTION 
                 #self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
-                
-                with torch.autograd.profiler.emit_nvtx():
 
+                if self.args.pyprof:
+                    cm = torch.autograd.profiler.emit_nvtx()
+                else:
+                    cm = nullcontext()
+
+                with cm:
                     for step, inputs in enumerate(epoch_iterator):
                         # Ignoring last training batch  if --dataloader_drop_last, because some data loaders does not support drop_last=True
                         if self.args.dataloader_drop_last and step >= num_steps:
