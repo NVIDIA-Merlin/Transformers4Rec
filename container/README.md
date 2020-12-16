@@ -282,3 +282,8 @@ docker build -t nvcr.io/nvidian/prj-recsys/transf4rec_nvt_exp:0.1.0 -f Dockerfil
 docker run --gpus all -it -t nvcr.io/nvidian/prj-recsys/transf4rec_nvt_exp:0.1.0 bash
 
 docker push nvcr.io/nvidian/prj-recsys/transf4rec_nvt_exp:0.1.0
+
+
+## Alternative - Setup enviromnent with conda
+
+conda install -c rapidsai -c nvidia -c numba -c conda-forge -c defaults cudf=0.16 nvtabular=0.3

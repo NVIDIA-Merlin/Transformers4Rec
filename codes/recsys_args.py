@@ -90,7 +90,7 @@ class DataArguments:
     nvt_part_mem_fraction: Optional[float] = field(
         default=0.1, metadata={"help": "Percentage of GPU to allocate for NVTabular dataset / dataloader"}
     )
-
+    
     # args for petastorm
     reader_pool_type: Optional[str] = field(
         default='thread', metadata={"help": "A string denoting the reader pool type. \
@@ -110,6 +110,7 @@ class DataArguments:
         default="_neg_",
         metadata={"help": "prefix of the column name in input parquet file for negative samples"}
     )
+
 
 
 @dataclass

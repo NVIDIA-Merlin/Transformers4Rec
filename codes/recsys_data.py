@@ -20,7 +20,7 @@ from petastorm.unischema import UnischemaField
 #Pyarrow dependencies
 import pyarrow.parquet as pq
 from torch.utils.data import Dataset, IterableDataset, DataLoader as PyTorchDataLoader
-
+import torch
 
 
 from recsys_utils import get_filenames
@@ -185,11 +185,18 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         from nvtabular import Dataset as NVTDataset
 
         #TODO: Move this to a data parameter (different fronm max_seq_len, which is used by the transformer)
-        FEATURES_SEQ_LEN = 20
+        NVT_FEATURES_SEQ_LEN = 20
+
 
         class NVTDataLoaderWrapper(NVTDataLoader):
             def __init__(self, *args, **kwargs):
-                self.seq_features_len = FEATURES_SEQ_LEN
+                self.default_seq_features_len = None
+                if 'default_seq_features_len' in kwargs:
+                    self.default_seq_features_len = kwargs.pop('default_seq_features_len')
+                else:
+                    raise ValueError('NVTabular data loader requires the "default_seq_features_len" argument "'+\
+                                     'to create the sparse tensors for list columns')
+                
                 super(NVTDataLoaderWrapper, self).__init__(*args, **kwargs)
 
             def __enter__(self):
@@ -200,14 +207,68 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
 
             def __next__(self):
                 cat_features, cont_features, label_features = super(NVTDataLoaderWrapper, self).__next__()
-                cat_seq_features = {}
+                
+                cat_sequence_features_transf = {}
                 if cat_features is not None:
-                    cat_seq_features = {k: v[0].reshape(-1, self.seq_features_len) for k, v in cat_features[1].items()}
-                cont_seq_features = {}
+                    cat_single_features, cat_sequence_features = cat_features
+                    cat_sequence_features_transf = {fname: self.get_sparse_tensor_list_column(cat_sequence_features[fname], 
+                                                                                         'categorical').to_dense() \
+                                                for fname in cat_sequence_features}
+
+                cont_sequence_features_transf = {}
                 if cont_features is not None:
-                    cont_seq_features = {k: v[0].reshape(-1, self.seq_features_len) for k, v in cont_features[1].items()}
-                inputs = {**cat_seq_features, **cont_seq_features}
+                    cont_single_features, cont_sequence_features = cont_features
+
+                    cont_sequence_features_transf = {fname: self.get_sparse_tensor_list_column(cont_sequence_features[fname], 
+                                                                                            'continuous').to_dense() \
+                                                    for fname in cont_sequence_features}
+
+                '''
+                #Reconstructing sequential feature tensors assuming they have the same length for all rows
+                cat_sequence_features_transf = {}
+                if cat_features is not None:
+                    cat_sequence_features_transf = {k: v[0].reshape(-1, self.default_seq_features_len) for k, v in cat_features[1].items()}
+                cont_sequence_features_transf = {}
+                if cont_features is not None:
+                    cont_sequence_features_transf = {k: v[0].reshape(-1, self.default_seq_features_len) for k, v in cont_features[1].items()}
+                '''
+
+                inputs = {**cat_sequence_features_transf, **cont_sequence_features_transf}
                 return inputs
+
+            def get_sparse_tensor_list_column(self, values_offset, feature_group):
+                values = values_offset[0].flatten()
+                offsets = values_offset[1].flatten()
+                num_rows = len(offsets)
+
+                #Appending the values length to the end of the offset vector, to be able to compute diff of the last sequence
+                offsets = torch.cat([offsets, torch.LongTensor([len(values)]).to(offsets.device)])
+                #Computing the difference between consecutive offsets, to get the sequence lengths
+                diff_offsets = offsets[1:] - offsets[:-1]
+                #Infering the number of cols based on the maximum sequence length
+                max_seq_len = int(diff_offsets.max())
+                default_seq_features_len = self.default_seq_features_len
+                if max_seq_len > default_seq_features_len:
+                    raise ValueError('The default sequence length has been configured to {}, but the '+\
+                                     'largest sequence in this batch have {} length'.format(self.default_seq_features_len,
+                                                                                            max_seq_len))
+
+                #Building the indices to reconstruct the sparse tensors
+                row_ids = torch.arange(len(offsets)-1).to(offsets.device)
+                row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
+                row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
+                col_ids = torch.arange(len(row_offset_repeated)).to(offsets.device) - row_offset_repeated.to(offsets.device)
+                indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1)
+
+                if feature_group == 'categorical':
+                    sparse_tensor_class = torch.sparse.LongTensor
+                elif feature_group == 'continuous':
+                    sparse_tensor_class = torch.sparse.FloatTensor
+                else:
+                    raise NotImplementedError('Invalid feature group from NVTabular: {}'.format(feature_group))
+
+                sparse_tensor = sparse_tensor_class(indices.T, values, torch.Size([num_rows, default_seq_features_len]))
+                return sparse_tensor
 
         
         categ_features = []
@@ -215,8 +276,10 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         for fname, fprops in feature_map.items():
             if fprops['dtype'] == 'categorical':
                 categ_features.append(fname)
-            elif fprops['dtype'] == 'float':
+            elif fprops['dtype'] in ['float', 'long']:
                 continuous_features.append(fname)
+            else:
+                raise NotImplementedError("The dtype {} is not currently supported.".format(fprops['dtype']))
 
         data_loader_config = {
                 "cats": categ_features,
@@ -227,16 +290,16 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
   
 
         train_set = NVTDataset(train_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        train_loader = NVTDataLoaderWrapper(train_set, batch_size=training_args.per_device_train_batch_size, 
+        train_loader = NVTDataLoaderWrapper(train_set, default_seq_features_len=NVT_FEATURES_SEQ_LEN, batch_size=training_args.per_device_train_batch_size, 
                                             shuffle=False, **data_loader_config)
 
         eval_set = NVTDataset(eval_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        eval_loader = NVTDataLoaderWrapper(eval_set, batch_size=training_args.per_device_eval_batch_size, 
+        eval_loader = NVTDataLoaderWrapper(eval_set, default_seq_features_len=NVT_FEATURES_SEQ_LEN, batch_size=training_args.per_device_eval_batch_size, 
                                             shuffle=False, **data_loader_config)
 
         if test_date is not None:
             test_set = NVTDataset(test_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-            test_loader = NVTDataLoaderWrapper(test_set, batch_size=training_args.per_device_eval_batch_size, 
+            test_loader = NVTDataLoaderWrapper(test_set, default_seq_features_len=NVT_FEATURES_SEQ_LEN, batch_size=training_args.per_device_eval_batch_size, 
                                             shuffle=False, **data_loader_config)
 
 
