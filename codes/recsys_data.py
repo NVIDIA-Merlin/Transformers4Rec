@@ -296,7 +296,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 "cats": categ_features,
                 "conts": continuous_features,
                 "labels": [],
-                "devices": [0],
+                "devices": list(range(training_args.n_gpu)),
             }
   
 
