@@ -35,16 +35,31 @@ logger = logging.getLogger(__name__)
 
 
 class ParquetDataset(Dataset):
-    def __init__(self, parquet_file, cols_to_read):
+    def __init__(self, parquet_file, cols_to_read, seq_features_len_pad_trim):
         self.cols_to_read = cols_to_read
         self.data = pq.ParquetDataset(parquet_file).read(columns=self.cols_to_read).to_pandas()
+        self.seq_features_len_pad_trim = seq_features_len_pad_trim
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, index):
         df = self.data.loc[index]
-        return {col: df[col] for col in df.index}
+        return {col: self.pad_seq_column_if_needed(df[col]) for col in df.index}
+
+    def pad_seq_column_if_needed(self, values):
+        if type(values) is np.ndarray:
+            values = values[:self.seq_features_len_pad_trim]
+            if len(values) < self.seq_features_len_pad_trim:
+                placeholder = np.zeros(self.seq_features_len_pad_trim, dtype=values.dtype)
+                placeholder[:len(values)] = values
+                values = placeholder            
+            if isinstance(values[0], np.floating) and values.dtype is not np.float32:
+                values = values.astype(np.float32)
+            if isinstance(values[0], np.integer) and values.dtype is not np.int64:
+                values = values.astype(np.int64)
+        return values
+
 
 
 class DataLoaderWrapper(PyTorchDataLoader):
@@ -154,7 +169,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
     elif data_args.data_loader_engine == "pyarrow":
         cols_to_read = feature_map.keys()
 
-        train_dataset = ParquetDataset(train_data_path, cols_to_read)
+        train_dataset = ParquetDataset(train_data_path, cols_to_read, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim)
         if training_args.shuffle_buffer_size > 0:
             train_dataset = ShuffleDataset(train_dataset, buffer_size=training_args.shuffle_buffer_size)
         train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size, 
@@ -163,7 +178,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                                         num_workers=data_args.workers_count,
                                         pin_memory=True)
         
-        eval_dataset = ParquetDataset(eval_data_path, cols_to_read)
+        eval_dataset = ParquetDataset(eval_data_path, cols_to_read, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim)
         eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, 
                                         #drop_last=training_args.dataloader_drop_last, 
                                         drop_last=False, #This drop is being performed in the training loop, so that all data loaders can be supported
@@ -171,7 +186,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                                         pin_memory=True)
 
         if test_date is not None:
-            test_dataset = ParquetDataset(test_data_path, cols_to_read)
+            test_dataset = ParquetDataset(test_data_path, cols_to_read, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim)
             test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, 
                                         #drop_last=training_args.dataloader_drop_last, 
                                         drop_last=False, #This drop is being performed in the training loop, so that all data loaders can be supported
@@ -184,17 +199,14 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
         from nvtabular import Dataset as NVTDataset
 
-        #TODO: Move this to a data parameter (different fronm max_seq_len, which is used by the transformer)
-        NVT_FEATURES_SEQ_LEN = 20
-
 
         class NVTDataLoaderWrapper(NVTDataLoader):
             def __init__(self, *args, **kwargs):
-                self.default_seq_features_len = None
-                if 'default_seq_features_len' in kwargs:
-                    self.default_seq_features_len = kwargs.pop('default_seq_features_len')
+                self.seq_features_len_pad_trim = None
+                if 'seq_features_len_pad_trim' in kwargs:
+                    self.seq_features_len_pad_trim = kwargs.pop('seq_features_len_pad_trim')
                 else:
-                    raise ValueError('NVTabular data loader requires the "default_seq_features_len" argument "'+\
+                    raise ValueError('NVTabular data loader requires the "seq_features_len_pad_trim" argument "'+\
                                      'to create the sparse tensors for list columns')
                 
                 super(NVTDataLoaderWrapper, self).__init__(*args, **kwargs)
@@ -247,10 +259,9 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 diff_offsets = offsets[1:] - offsets[:-1]
                 #Infering the number of cols based on the maximum sequence length
                 max_seq_len = int(diff_offsets.max())
-                default_seq_features_len = self.default_seq_features_len
-                if max_seq_len > default_seq_features_len:
+                if max_seq_len > self.seq_features_len_pad_trim:
                     raise ValueError('The default sequence length has been configured to {}, but the '+\
-                                     'largest sequence in this batch have {} length'.format(self.default_seq_features_len,
+                                     'largest sequence in this batch have {} length'.format(self.seq_features_len_pad_trim,
                                                                                             max_seq_len))
 
                 #Building the indices to reconstruct the sparse tensors
@@ -267,7 +278,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 else:
                     raise NotImplementedError('Invalid feature group from NVTabular: {}'.format(feature_group))
 
-                sparse_tensor = sparse_tensor_class(indices.T, values, torch.Size([num_rows, default_seq_features_len]))
+                sparse_tensor = sparse_tensor_class(indices.T, values, torch.Size([num_rows, self.seq_features_len_pad_trim]))
                 return sparse_tensor
 
         
@@ -290,16 +301,19 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
   
 
         train_set = NVTDataset(train_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        train_loader = NVTDataLoaderWrapper(train_set, default_seq_features_len=NVT_FEATURES_SEQ_LEN, batch_size=training_args.per_device_train_batch_size, 
+        train_loader = NVTDataLoaderWrapper(train_set, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim, 
+                                            batch_size=training_args.per_device_train_batch_size, 
                                             shuffle=False, **data_loader_config)
 
         eval_set = NVTDataset(eval_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        eval_loader = NVTDataLoaderWrapper(eval_set, default_seq_features_len=NVT_FEATURES_SEQ_LEN, batch_size=training_args.per_device_eval_batch_size, 
+        eval_loader = NVTDataLoaderWrapper(eval_set, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim, 
+                                            batch_size=training_args.per_device_eval_batch_size, 
                                             shuffle=False, **data_loader_config)
 
         if test_date is not None:
             test_set = NVTDataset(test_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-            test_loader = NVTDataLoaderWrapper(test_set, default_seq_features_len=NVT_FEATURES_SEQ_LEN, batch_size=training_args.per_device_eval_batch_size, 
+            test_loader = NVTDataLoaderWrapper(test_set, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim, 
+                                            batch_size=training_args.per_device_eval_batch_size, 
                                             shuffle=False, **data_loader_config)
 
 
