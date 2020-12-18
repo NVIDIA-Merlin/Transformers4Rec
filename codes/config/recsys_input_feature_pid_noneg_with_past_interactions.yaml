@@ -5,7 +5,7 @@ sess_pid_seq:
     emb_table: product_id
     log_with_preds_as_metadata: True
 
-user_pid_seq_bef_sess:
+bef_sess_pid_seq:
     dtype: categorical
     cardinality: 390000
     is_label: False
