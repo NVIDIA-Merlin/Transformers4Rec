@@ -1,0 +1,2 @@
+
+ngc batch run --name "gmoreira-jupyterlab" --preempt RUNONCE --min-timeslice 0s --total-runtime 0s --ace nv-us-west-2 --instance dgx1v.16g.8.norm --commandline "jupyter lab --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token='recsys' --notebook-dir=/ --NotebookApp.allow_origin='*' & date; sleep 200000h" --result /mount/results --image "nvidian/rapids/spark2_on_ngc_test" --org nvidian --team prj-recsys --workspace gmoreira-wksp:/mount/workspace:RW --datasetid 62351:/mount/data/ecommerce_raw --port 6006 --port 7000 --port 8888 --port 8080
