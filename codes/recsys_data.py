@@ -262,8 +262,8 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 max_seq_len = int(diff_offsets.max())
                 print('[get_sparse_tensor_list_column] self.seq_features_len_pad_trim', self.seq_features_len_pad_trim)
                 if max_seq_len > self.seq_features_len_pad_trim:
-                    raise ValueError('The default sequence length has been configured to {}, but the '+\
-                                     'largest sequence in this batch have {} length'.format(self.seq_features_len_pad_trim,
+                    raise ValueError('The default sequence length has been configured to {}, '
+                                     'but the largest sequence in this batch have {} length'.format(self.seq_features_len_pad_trim,
                                                                                             max_seq_len))
 
                 #Building the indices to reconstruct the sparse tensors
