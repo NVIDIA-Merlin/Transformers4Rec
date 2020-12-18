@@ -216,7 +216,7 @@ class RecSysMetaModel(PreTrainedModel):
             #TEMP: To mark past sequence labels
             if self.use_interactions_bef_sess:
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
-                label_mlm_mask = torch.cat([masked_past_session, label_mlm_mask], axis=1)
+                label_mlm_mask = torch.cat([masked_past_session.bool(), label_mlm_mask], axis=1)
             
         else:
             """

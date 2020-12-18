@@ -302,7 +302,6 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
             }
   
 
-        print('data_args.seq_features_len_pad_trim=', data_args.seq_features_len_pad_trim)
         train_set = NVTDataset(train_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
         train_loader = NVTDataLoaderWrapper(train_set, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim, 
                                             batch_size=training_args.per_device_train_batch_size, 
