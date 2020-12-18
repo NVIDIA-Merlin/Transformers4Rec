@@ -111,7 +111,7 @@ class DataArguments:
         metadata={"help": "prefix of the column name in input parquet file for negative samples"}
     )
 
-    seq_features_len_pad_trim: Optional[int] = field(
+    seq_features_len_pad_trim: int = field(
         default=20, metadata={"help": "The maximum length of list/sequence features, for padding/trimming"}
     )    
 
