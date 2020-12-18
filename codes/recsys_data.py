@@ -280,7 +280,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 else:
                     raise NotImplementedError('Invalid feature group from NVTabular: {}'.format(feature_group))
 
-                sparse_tensor = sparse_tensor_class(indices.T, values, torch.Size([num_rows, self.seq_features_len_pad_trim]))                
+                sparse_tensor = sparse_tensor_class(indices.T, values, torch.Size([num_rows, max(max_seq_len, self.seq_features_len_pad_trim)]))                
                 return sparse_tensor
 
         
