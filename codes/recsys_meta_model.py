@@ -20,9 +20,6 @@ logger = logging.getLogger(__name__)
 torch.manual_seed(0)
 
 
-past_interactions_feature_suffix = 'bef_'
-
-
 class AttnMerge(nn.Module):
     def __init__(self, input_dim, output_dim):
         super().__init__()
@@ -83,7 +80,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.mask_token = data_args.mask_token
         self.embedding_tables = nn.ModuleDict()
 
-        self.use_interactions_bef_sess = model_args.use_interactions_bef_sess
+        self.session_aware = data_args.session_aware
+        self.session_aware_features_prefix = data_args.session_aware_features_prefix
         
         self.col_prefix_neg = data_args.feature_prefix_neg_sample
         concat_input_dim = 0
@@ -95,7 +93,7 @@ class RecSysMetaModel(PreTrainedModel):
             
             if self.col_prefix_neg not in cname:
                 #TEMP: Ignoring past features to define embedding tables
-                if (self.use_interactions_bef_sess and cname.startswith(past_interactions_feature_suffix)):
+                if (self.session_aware and cname.startswith(self.session_aware_features_prefix)):
                     continue
 
                 if cinfo['dtype'] == 'categorical':
@@ -127,7 +125,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
 
-        self.max_seq_len = data_args.max_seq_len
+        self.total_seq_length = data_args.total_seq_length
         self.n_layer = model_args.n_layer        
 
         self.mlm = model_args.mlm
@@ -194,16 +192,16 @@ class RecSysMetaModel(PreTrainedModel):
         # Step1. Unpack inputs, get embedding, and concatenate them
         label_seq = None
         
-        max_seq_len = None
+        max_feature_seq_len = None
 
-        pos_inp, label_seq, max_seq_len, metadata_for_pred_logging = self.feature_process(inputs)
+        pos_inp, label_seq, max_feature_seq_len, metadata_for_pred_logging = self.feature_process(inputs)
         if self.loss_type != 'cross_entropy':
-            neg_inp, _, _, _ = self.feature_process(inputs, max_seq_len, is_neg=True)
+            neg_inp, _, _, _ = self.feature_process(inputs, max_feature_seq_len, is_neg=True)
 
         assert label_seq is not None, 'label sequence is not declared in feature_map'
 
         #TEMP: To mark past sequence labels
-        if self.use_interactions_bef_sess:
+        if self.session_aware:
             masked_past_session = torch.zeros_like(label_seq, dtype=torch.long, device=self.device)
 
         if self.mlm:
@@ -214,7 +212,7 @@ class RecSysMetaModel(PreTrainedModel):
                 label_seq, self.mlm_probability)
             
             #TEMP: To mark past sequence labels
-            if self.use_interactions_bef_sess:
+            if self.session_aware:
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
                 label_mlm_mask = torch.cat([masked_past_session.bool(), label_mlm_mask], axis=1)
             
@@ -243,7 +241,7 @@ class RecSysMetaModel(PreTrainedModel):
                 mask_trg_pad = (label_seq_trg != self.pad_token)
 
             #TEMP: To mark past sequence labels
-            if self.use_interactions_bef_sess:
+            if self.session_aware:
                 label_seq_trg_original = label_seq_trg.clone()
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
                 mask_trg_pad = torch.cat([masked_past_session, mask_trg_pad], axis=1)
@@ -330,9 +328,10 @@ class RecSysMetaModel(PreTrainedModel):
 
 
             if type(self.model) is GPT2Model:   
+                seq_len = pos_emb_inp.shape[1]
                 # head_mask has shape n_layer x batch x n_heads x N x N
-                head_mask = torch.tril(torch.ones((self.max_seq_len-1, self.max_seq_len-1), dtype=torch.uint8, device=self.device)) \
-                                .view(1, 1, 1, self.max_seq_len-1, self.max_seq_len-1) \
+                head_mask = torch.tril(torch.ones((seq_len, seq_len), dtype=torch.uint8, device=self.device)) \
+                                .view(1, 1, 1, seq_len, seq_len) \
                                 .repeat(self.n_layer, 1, 1, 1, 1)
 
                 model_outputs = self.model(
@@ -373,7 +372,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         if not self.mlm:                        
             ##Temporary. Replace by the commented code after experiments with past information
-            if self.use_interactions_bef_sess:
+            if self.session_aware:
                 non_pad_original_mask = (label_seq_trg_original.flatten() != self.pad_token)
                 for feat_name in metadata_for_pred_logging:                
                     metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), 
@@ -620,18 +619,18 @@ class RecSysMetaModel(PreTrainedModel):
 
 
 
-        #TEMP: Concatenates user interactions before the session with the current session
-        if self.use_interactions_bef_sess:
-            
+
+        if self.session_aware:
+            # Concatenates past sessions before the session with the current session, for each feature
+            # assuming that features from past sessions have a common prefix
             features_to_delete = []            
             for fname in transformed_features.keys():
-                if not fname.startswith(past_interactions_feature_suffix):
-                    past_fname = past_interactions_feature_suffix + fname
-                    if not fname.startswith(past_interactions_feature_suffix) and \
-                        past_fname in transformed_features:
+                if not fname.startswith(self.session_aware_features_prefix):
+                    past_fname = self.session_aware_features_prefix + fname
+                    if past_fname in transformed_features:
                         transformed_features[fname] = \
-                            torch.cat([transformed_features[fname], 
-                                       transformed_features[past_fname]], axis=1)
+                            torch.cat([transformed_features[past_fname], 
+                                       transformed_features[fname]], axis=1)
                     features_to_delete.append(past_fname)
             for past_fname in features_to_delete:
                 del transformed_features[past_fname]

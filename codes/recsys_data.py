@@ -169,7 +169,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
     elif data_args.data_loader_engine == "pyarrow":
         cols_to_read = feature_map.keys()
 
-        train_dataset = ParquetDataset(train_data_path, cols_to_read, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim)
+        train_dataset = ParquetDataset(train_data_path, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
         if training_args.shuffle_buffer_size > 0:
             train_dataset = ShuffleDataset(train_dataset, buffer_size=training_args.shuffle_buffer_size)
         train_loader = DataLoaderWrapper(train_dataset, batch_size=training_args.per_device_train_batch_size, 
@@ -178,7 +178,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                                         num_workers=data_args.workers_count,
                                         pin_memory=True)
         
-        eval_dataset = ParquetDataset(eval_data_path, cols_to_read, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim)
+        eval_dataset = ParquetDataset(eval_data_path, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
         eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, 
                                         #drop_last=training_args.dataloader_drop_last, 
                                         drop_last=False, #This drop is being performed in the training loop, so that all data loaders can be supported
@@ -186,7 +186,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                                         pin_memory=True)
 
         if test_date is not None:
-            test_dataset = ParquetDataset(test_data_path, cols_to_read, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim)
+            test_dataset = ParquetDataset(test_data_path, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
             test_loader = DataLoaderWrapper(test_dataset, batch_size=training_args.per_device_eval_batch_size, 
                                         #drop_last=training_args.dataloader_drop_last, 
                                         drop_last=False, #This drop is being performed in the training loop, so that all data loaders can be supported
@@ -303,18 +303,18 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
   
 
         train_set = NVTDataset(train_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        train_loader = NVTDataLoaderWrapper(train_set, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim, 
+        train_loader = NVTDataLoaderWrapper(train_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 
                                             batch_size=training_args.per_device_train_batch_size, 
                                             shuffle=False, **data_loader_config)
 
         eval_set = NVTDataset(eval_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        eval_loader = NVTDataLoaderWrapper(eval_set, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim, 
+        eval_loader = NVTDataLoaderWrapper(eval_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 
                                             batch_size=training_args.per_device_eval_batch_size, 
                                             shuffle=False, **data_loader_config)
 
         if test_date is not None:
             test_set = NVTDataset(test_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-            test_loader = NVTDataLoaderWrapper(test_set, seq_features_len_pad_trim=data_args.seq_features_len_pad_trim, 
+            test_loader = NVTDataLoaderWrapper(test_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 
                                             batch_size=training_args.per_device_eval_batch_size, 
                                             shuffle=False, **data_loader_config)
 

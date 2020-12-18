@@ -23,7 +23,12 @@ logger = logging.getLogger(__name__)
 
 
 def get_recsys_model(model_args, data_args, training_args, target_size=None):
-    
+    total_seq_length = data_args.total_seq_length
+
+    #For Causal LM (not Masked LM), reduces the length by 1 because the 
+    # sequence is shifted and trimmed (last item in the sequence is not used as input because it is the last)
+    #if not model_args.mlm:
+    #    total_seq_length -= 1
 
     if model_args.model_type == 'avgseq':
         model_cls = AvgSeq()
@@ -44,7 +49,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             layer_norm_eps=model_args.layer_norm_eps,
             hidden_dropout_prob=model_args.dropout,
             pad_token_id=data_args.pad_token,
-            axial_pos_shape=[19,1],
+            axial_pos_shape=[total_seq_length-1,1],
             axial_pos_embds_dim=[model_args.d_model // 2, model_args.d_model // 2],
             vocab_size=model_args.d_model # to make it output hidden states size
         )
@@ -101,8 +106,8 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             resid_pdrop=model_args.dropout,
             embd_pdrop=model_args.dropout,
             attn_pdrop=model_args.dropout,
-            n_positions=data_args.max_seq_len,
-            n_ctx=data_args.max_seq_len,
+            n_positions=data_args.total_seq_length,
+            n_ctx=data_args.total_seq_length,
             output_attentions=training_args.log_attention_weights,
             vocab_size=1 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
@@ -117,7 +122,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
-            max_position_embeddings=data_args.max_seq_len,
+            max_position_embeddings=data_args.total_seq_length,
             vocab_size=target_size,
             pad_token_id=data_args.pad_token,
         )

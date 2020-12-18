@@ -51,6 +51,8 @@ class TrainingArguments(HfTrainingArguments):
 
     
 
+    
+
 @dataclass
 class DataArguments:
     data_path: Optional[str] = field(
@@ -77,9 +79,7 @@ class DataArguments:
     mask_token: Optional[int] = field(
         default=0, metadata={"help": "mask token"}
     )
-    max_seq_len: Optional[int] = field(
-        default=1024, metadata={"help": "maximum sequence length; it is used to create Positional Encoding in Transfomrer"}
-    )
+
     # args for selecting which engine to use
     data_loader_engine: Optional[str] = field(
         default='pyarrow', metadata={"help": "Parquet data loader engine. "
@@ -111,9 +111,33 @@ class DataArguments:
         metadata={"help": "prefix of the column name in input parquet file for negative samples"}
     )
 
-    seq_features_len_pad_trim: int = field(
-        default=20, metadata={"help": "The maximum length of list/sequence features, for padding/trimming"}
+    
+    session_seq_length_max: Optional[int] = field(
+        default=20, metadata={"help": "The maximum length of a session (for padding and trimming). For sequential recommendation, this is the maximum length of the sequence"}
+    )
+
+    session_aware: bool = field(default=False, metadata={"help": "Configure the pipeline for session-aware recommendation, where the model can access information of past users sessions. For that, each session feature might "
+                                                                "have a correspondent feature for past sessions with a standard prefix (e.g. --session_aware_features_prefix 'bef_', means that values for current session will be in 'sess_pid_seq' feature and "
+                                                                " past sessions interactions in 'bef_sess_pid_seq'). Those past session features need also to be included in the features config (yaml)"})
+
+    session_aware_features_prefix: Optional[str]  = field(
+        default="bef_", metadata={"help": "how to compute similarity of sequences for negative sampling: 'cosine' OR 'concat_mlp'"}
+    )      
+
+    session_aware_past_seq_length_max: int = field(
+        default=20, metadata={"help": "For session-aware recommendation, this is the length of the past interactions sessions"}
     )    
+
+    @property
+    def total_seq_length(self) -> int:
+        """
+        The total sequence length = session length + past session interactions (if --session_aware)
+        """
+        total_sequence_length = self.session_seq_length_max
+        #For session aware, increments with the length of past interactions features
+        if self.session_aware:
+            total_sequence_length += self.session_aware_past_seq_length_max 
+        return total_sequence_length
 
 
 
@@ -201,4 +225,4 @@ class ModelArguments:
     eval_on_last_item_seq_only: bool = field(default=False, metadata={"help": "Evaluate metrics only on predictions for the last item of the sequence (rather then evaluation for all next-item predictions)."})
     train_on_last_item_seq_only: bool = field(default=False, metadata={"help": "Train only for predicting the last item of the sequence (rather then training to predict for all next-item predictions) (only for Causal LM)."})
 
-    use_interactions_bef_sess: bool = field(default=False, metadata={"help": "Use the available user interactions befor the session (up to 20 for the e-commerce dataset)"})
+                                                           
