@@ -204,12 +204,10 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
             def __init__(self, *args, **kwargs):
                 if 'seq_features_len_pad_trim' in kwargs:
                     self.seq_features_len_pad_trim = kwargs.pop('seq_features_len_pad_trim')
-                    print('self.seq_features_len_pad_trim', self.seq_features_len_pad_trim)
                 else:
                     raise ValueError('NVTabular data loader requires the "seq_features_len_pad_trim" argument "'+\
                                      'to create the sparse tensors for list columns')
                 
-                self.seq_features_len_pad_trim = 20
                 super(NVTDataLoaderWrapper, self).__init__(*args, **kwargs)
 
             def __enter__(self):
@@ -225,15 +223,14 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 if cat_features is not None:
                     cat_single_features, cat_sequence_features = cat_features
                     cat_sequence_features_transf = {fname: self.get_sparse_tensor_list_column(cat_sequence_features[fname], 
-                                                                                         'categorical').to_dense() \
+                                                                                         'categorical').to_dense()[:, :self.seq_features_len_pad_trim] \
                                                 for fname in cat_sequence_features}
 
-                cont_sequence_features_transf = {}
                 if cont_features is not None:
                     cont_single_features, cont_sequence_features = cont_features
 
                     cont_sequence_features_transf = {fname: self.get_sparse_tensor_list_column(cont_sequence_features[fname], 
-                                                                                            'continuous').to_dense() \
+                                                                                            'continuous').to_dense()[:, :self.seq_features_len_pad_trim] \
                                                     for fname in cont_sequence_features}
 
                 '''
@@ -282,9 +279,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 else:
                     raise NotImplementedError('Invalid feature group from NVTabular: {}'.format(feature_group))
 
-                sparse_tensor = sparse_tensor_class(indices.T, values, torch.Size([num_rows, self.seq_features_len_pad_trim]))
-                #Truncating the sparse tensor to the default length
-                sparse_tensor = sparse_tensor[:, :self.seq_features_len_pad_trim]
+                sparse_tensor = sparse_tensor_class(indices.T, values, torch.Size([num_rows, self.seq_features_len_pad_trim]))                
                 return sparse_tensor
 
         
