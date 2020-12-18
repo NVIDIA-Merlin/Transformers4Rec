@@ -220,6 +220,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 cat_features, cont_features, label_features = super(NVTDataLoaderWrapper, self).__next__()
                 
                 cat_sequence_features_transf = {}
+                cont_sequence_features_transf = {}
                 if cat_features is not None:
                     cat_single_features, cat_sequence_features = cat_features
                     cat_sequence_features_transf = {fname: self.get_sparse_tensor_list_column(cat_sequence_features[fname], 
