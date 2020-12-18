@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 torch.manual_seed(0)
 
 
-past_interactions_feature_suffix = '_bef_sess'
+past_interactions_feature_suffix = 'bef_'
 
 
 class AttnMerge(nn.Module):
@@ -95,7 +95,7 @@ class RecSysMetaModel(PreTrainedModel):
             
             if self.col_prefix_neg not in cname:
                 #TEMP: Ignoring past features to define embedding tables
-                if (self.use_interactions_bef_sess and cname.endswith(past_interactions_feature_suffix)):
+                if (self.use_interactions_bef_sess and cname.startswith(past_interactions_feature_suffix)):
                     continue
 
                 if cinfo['dtype'] == 'categorical':
@@ -625,9 +625,9 @@ class RecSysMetaModel(PreTrainedModel):
             
             features_to_delete = []            
             for fname in transformed_features.keys():
-                if not fname.endswith(past_interactions_feature_suffix):
-                    past_fname = fname.replace('sess_', 'user_') + past_interactions_feature_suffix
-                    if not fname.endswith(past_interactions_feature_suffix) and \
+                if not fname.startswith(past_interactions_feature_suffix):
+                    past_fname = past_interactions_feature_suffix + fname
+                    if not fname.startswith(past_interactions_feature_suffix) and \
                         past_fname in transformed_features:
                         transformed_features[fname] = \
                             torch.cat([transformed_features[fname], 
