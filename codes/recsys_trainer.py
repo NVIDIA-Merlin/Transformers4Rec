@@ -281,7 +281,7 @@ class RecSysTrainer(Trainer):
         num_steps = self.num_steps(train_dataloader)
 
         if self.args.dataloader_drop_last:
-            num_steps -= 2 # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
+            num_steps -= 1 # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
 
         logger.info("***** Running training *****")
         logger.info("  Num samples by epoch = %d", num_steps * self.args.train_batch_size)
@@ -634,7 +634,7 @@ class RecSysTrainer(Trainer):
 
         num_steps = self.num_steps(dataloader)
         if self.args.dataloader_drop_last:
-            num_steps -= 2  # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
+            num_steps -= 1  # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
 
         batch_size = dataloader.batch_size
         logger.info("***** Running %s *****", description)
