@@ -16,7 +16,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python recsys_main.py \
     --logging_steps 20 \
     --save_steps 0 \
     --experiments_group ${experiments_group} \
-    ${@:4} # Forwarding Remaining parameters to the script
+    ${@:2} # Forwarding Remaining parameters to the script
 
 train_exit_status=$?    
     
