@@ -91,7 +91,7 @@ def get_dataset_len(data_paths):
     return sum([pq.ParquetFile(d_path).metadata.num_rows for d_path in data_paths])
 
 
-def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, test_date=None, 
+def fetch_data_loaders(data_args, training_args, feature_map, train_date, valid_date, test_date=None, 
         date_format="%Y-%m-%d", load_from_path=False):
     """
     load_from_path: when a path is given, it automatically determines 
@@ -105,30 +105,30 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
         os.path.join(d_path, "session_start_date={}-train.parquet".format(train_date.strftime(date_format))),
     ]
 
-    eval_data_path = [
-        os.path.join(d_path, "session_start_date={}-test.parquet".format(eval_date.strftime(date_format))),
+    valid_data_path = [
+        os.path.join(d_path, "session_start_date={}-valid.parquet".format(valid_date.strftime(date_format))),
     ]
 
     if test_date is not None:
         test_data_path = [
-            os.path.join(d_path, "session_start_date={}.parquet".format(test_date.strftime(date_format))),
+            os.path.join(d_path, "session_start_date={}-test.parquet".format(test_date.strftime(date_format))),
         ]
 
     if load_from_path:
         train_data_path = get_filenames(train_data_path)
-        eval_data_path = get_filenames(eval_data_path)
+        valid_data_path = get_filenames(valid_data_path)
 
     if data_args.data_loader_engine == "petastorm":
         parquet_schema = transform_petastorm_schema(feature_map)
 
         train_data_len = get_dataset_len(train_data_path)
-        eval_data_len = get_dataset_len(eval_data_path)
+        valid_data_len = get_dataset_len(valid_data_path)
 
         if test_date is not None:
-            test_data_len = get_dataset_len(eval_data_path)
+            test_data_len = get_dataset_len(valid_data_path)
 
         train_data_path = ['file://' + p for p in train_data_path]
-        eval_data_path = ['file://' + p for p in eval_data_path]
+        valid_data_path = ['file://' + p for p in valid_data_path]
         if test_date is not None:
             test_data_path = ['file://' + p for p in test_data_path]
 
@@ -143,8 +143,8 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
             len=math.ceil(train_data_len / training_args.per_device_train_batch_size),
         )
 
-        eval_loader = DataLoaderWithLen(
-            make_batch_reader(eval_data_path, 
+        valid_loader = DataLoaderWithLen(
+            make_batch_reader(valid_data_path, 
                 num_epochs=None,
                 schema_fields=parquet_schema,
                 reader_pool_type=data_args.reader_pool_type,
@@ -178,8 +178,8 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                                         num_workers=data_args.workers_count,
                                         pin_memory=True)
         
-        eval_dataset = ParquetDataset(eval_data_path, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
-        eval_loader = DataLoaderWrapper(eval_dataset, batch_size=training_args.per_device_eval_batch_size, 
+        valid_dataset = ParquetDataset(valid_data_path, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
+        valid_loader = DataLoaderWrapper(valid_dataset, batch_size=training_args.per_device_eval_batch_size, 
                                         #drop_last=training_args.dataloader_drop_last, 
                                         drop_last=False, #This drop is being performed in the training loop, so that all data loaders can be supported
                                         num_workers=data_args.workers_count,
@@ -307,8 +307,8 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                                             batch_size=training_args.per_device_train_batch_size, 
                                             shuffle=False, **data_loader_config)
 
-        eval_set = NVTDataset(eval_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        eval_loader = NVTDataLoaderWrapper(eval_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 
+        valid_set = NVTDataset(valid_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
+        valid_loader = NVTDataLoaderWrapper(valid_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 
                                             batch_size=training_args.per_device_eval_batch_size, 
                                             shuffle=False, **data_loader_config)
 
@@ -322,7 +322,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
     if test_date is None:
         test_loader = None
 
-    return train_loader, eval_loader, test_loader
+    return train_loader, valid_loader, test_loader
 
 
 class DataLoaderWithLen(PetaStormDataLoader):

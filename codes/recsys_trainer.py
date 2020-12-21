@@ -135,8 +135,8 @@ class RecSysTrainer(Trainer):
             return self.train_dataloader
         return self.get_train_dataloader()            
         
-    def get_rec_eval_dataloader(self) -> DataLoader:
-        return self.eval_dataloader
+    def get_rec_valid_dataloader(self) -> DataLoader:
+        return self.valid_dataloader
 
     def get_rec_test_dataloader(self) -> DataLoader:
         return self.test_dataloader
@@ -144,8 +144,8 @@ class RecSysTrainer(Trainer):
     def set_rec_train_dataloader(self, dataloader):
         self.train_dataloader = dataloader
         
-    def set_rec_eval_dataloader(self, dataloader):
-        self.eval_dataloader = dataloader
+    def set_rec_valid_dataloader(self, dataloader):
+        self.valid_dataloader = dataloader
 
     def set_rec_test_dataloader(self, dataloader):
         self.test_dataloader = dataloader
@@ -462,7 +462,7 @@ class RecSysTrainer(Trainer):
 
     def _run_validation(self, log_attention_weights_fn: Callable = None):
         train_output_all, train_output_neg = self.evaluate(self.get_rec_train_dataloader(), DatasetType.train, log_attention_weights_fn = log_attention_weights_fn)
-        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_eval_dataloader(), DatasetType.valid, log_attention_weights_fn = log_attention_weights_fn)
+        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_valid_dataloader(), DatasetType.valid, log_attention_weights_fn = log_attention_weights_fn)
 
         output_eval_file = os.path.join(self.args.output_dir, "valid_train_results.txt")
         if self.is_world_master():
@@ -569,10 +569,10 @@ class RecSysTrainer(Trainer):
 
         # NOTE: RecSys
 
-        if eval_dataloader is None:
-            eval_dataloader = self.get_rec_eval_dataloader()
+        if valid_dataloader is None:
+            valid_dataloader = self.get_rec_valid_dataloader()
 
-        output = self._prediction_loop(eval_dataloader, dataset_type, prediction_loss_only=prediction_loss_only,
+        output = self._prediction_loop(valid_dataloader, dataset_type, prediction_loss_only=prediction_loss_only,
                                         log_attention_weights_fn=log_attention_weights_fn)
 
         self._log(output.metrics_all)

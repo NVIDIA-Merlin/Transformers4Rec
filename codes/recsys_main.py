@@ -26,12 +26,12 @@ from transformers import (
 
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
-from recsys_trainer import RecSysTrainer
+from recsys_trainer import RecSysTrainer, DatasetType
 
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loaders,
-    get_avail_data_dates
+    get_avail_data_dates    
 )
 
 try:
@@ -143,13 +143,13 @@ def main():
         att_weights_fn = att_weights_logger.log 
 
     for date_idx in range(1, len(data_dates)):
-        train_date, eval_date, test_date = data_dates[date_idx - 1], data_dates[date_idx -1], data_dates[date_idx]
+        train_date, valid_date, test_date = data_dates[date_idx - 1], data_dates[date_idx], data_dates[date_idx]
 
-        train_loader, eval_loader, test_loader \
-            = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, test_date)
+        train_loader, valid_loader, test_loader \
+            = fetch_data_loaders(data_args, training_args, feature_map, train_date, valid_date, test_date)
 
         trainer.set_rec_train_dataloader(train_loader)
-        trainer.set_rec_eval_dataloader(eval_loader)
+        trainer.set_rec_valid_dataloader(valid_loader)
         trainer.set_rec_test_dataloader(test_loader)
 
         # Training
@@ -169,11 +169,21 @@ def main():
 
         # Evaluation (on testset)
         if training_args.do_eval:
-            logger.info("*** Evaluate (date:{})***".format(test_date))
+            
+            if training_args.eval_on_test_set:
+                eval_date = test_date
+                eval_dataloader = test_dataloader
+                eval_datasettype = DatasetType.test
+            else:
+                valid_date = eval_date
+                eval_dataloader = valid_dataloader
+                eval_datasettype = DatasetType.valid
+
+            logger.info("*** Evaluate (date:{})***".format(eval_date))
 
             # To log predictions in a parquet file for each day
             if training_args.log_predictions:
-                output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(test_date.strftime("%Y-%m-%d")))
+                output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(eval_date.strftime("%Y-%m-%d")))
                 logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
                 prediction_logger = PredictionLogger(output_preds_logs_path)
 
@@ -187,29 +197,30 @@ def main():
                 log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
                 #att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
                 
-                eval_output = trainer.predict(log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn)
+                eval_output = trainer.predict(test_dataloader=eval_dataloader, dataset_type=eval_datasettype,
+                                              log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn)
                 eval_metrics_all = eval_output.metrics_all
                 eval_metrics_neg = eval_output.metrics_neg
 
                 output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")
                 if trainer.is_world_master():
                     with open(output_eval_file, "w") as writer:
-                        logger.info("***** Eval results (all) (date:{})*****".format(test_date))
-                        writer.write("***** Eval results (all) (date:{})*****".format(test_date))
+                        logger.info("***** Eval results (all) (date:{})*****".format(eval_date))
+                        writer.write("***** Eval results (all) (date:{})*****".format(eval_date))
                         for key in sorted(eval_metrics_all.keys()):
                             logger.info("  %s = %s", key, str(eval_metrics_all[key]))
                             writer.write("%s = %s\n" % (key, str(eval_metrics_all[key])))
                         
-                        logger.info("***** Eval results (neg) (date:{})*****".format(test_date))
-                        writer.write("***** Eval results (neg) (date:{})*****".format(test_date))
+                        logger.info("***** Eval results (neg) (date:{})*****".format(eval_date))
+                        writer.write("***** Eval results (neg) (date:{})*****".format(eval_date))
                         for key in sorted(eval_metrics_neg.keys()):
                             logger.info("  %s = %s", key, str(eval_metrics_neg[key]))
                             writer.write("%s = %s\n" % (key, str(eval_metrics_neg[key])))
 
-                results_dates_all[test_date] = eval_metrics_all
-                results_dates_neg[test_date] = eval_metrics_neg
+                results_dates_all[eval_date] = eval_metrics_all
+                results_dates_neg[eval_date] = eval_metrics_neg
 
-                DLLogger.log(step=(test_date.strftime("%Y-%m-%d"),), data={**eval_metrics_all, **eval_metrics_neg}, verbosity=Verbosity.VERBOSE)
+                DLLogger.log(step=(eval_date.strftime("%Y-%m-%d"),), data={**eval_metrics_all, **eval_metrics_neg}, verbosity=Verbosity.VERBOSE)
                 DLLogger.flush()
 
             finally:

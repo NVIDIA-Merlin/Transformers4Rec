@@ -21,6 +21,8 @@ class TrainingArguments(HfTrainingArguments):
     # misc
     fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
 
+    eval_on_test_set: bool = field(default=False, metadata={"help": "Evaluate on test set (by default, evaluates on the validation set)."})
+
     compute_metrics_each_n_steps: int = field(default=10, metadata={"help": "Log metrics each n steps (for train, validation and test sets)"})
 
     log_predictions: bool = field(default=False, metadata={"help": "Logs predictions, labels and metadata features each --compute_metrics_each_n_steps (for test set)."})

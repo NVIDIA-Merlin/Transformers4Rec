@@ -1,3 +1,4 @@
+#Current session features
 sess_pid_seq:
     dtype: categorical
     cardinality: 390000
