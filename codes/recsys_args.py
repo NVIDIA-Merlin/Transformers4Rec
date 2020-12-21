@@ -94,13 +94,13 @@ class DataArguments:
     )
     
     # args for petastorm
-    reader_pool_type: Optional[str] = field(
+    petastorm_reader_pool_type: Optional[str] = field(
         default='thread', metadata={"help": "A string denoting the reader pool type. \
             Should be one of ['thread', 'process', 'dummy'] denoting a thread pool, \
                 process pool, or running everything in the master thread. Defaults to 'thread'"}
     )
     workers_count: Optional[int] = field(
-        default=10, metadata={"help": "An int for the number of workers to use in the reader pool. \
+        default=8, metadata={"help": "An int for the number of workers to use in the reader pool. \
             This only is used for the thread or process pool"}
     )    
 
@@ -215,7 +215,7 @@ class ModelArguments:
         default=1.0, metadata={"help": "rescale cross entropy loss to match with hinge-loss"}
     )
     neg_rescale_factor: Optional[float] = field(
-        default=1.0, metadata={"help": "rescale hinge loss to match with cross entropy loss"}
+        default=0.0, metadata={"help": "rescale hinge loss to match with cross entropy loss"}
     )
 
     disable_positional_embeddings: bool = field(default=False, metadata={"help": "Disable usage of (sum) positional embeddings with items embeddings."})
