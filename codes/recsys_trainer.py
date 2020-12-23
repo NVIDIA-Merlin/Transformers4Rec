@@ -569,10 +569,10 @@ class RecSysTrainer(Trainer):
 
         # NOTE: RecSys
 
-        if valid_dataloader is None:
-            valid_dataloader = self.get_rec_valid_dataloader()
+        if eval_dataloader is None:
+            eval_dataloader = self.get_rec_valid_dataloader()
 
-        output = self._prediction_loop(valid_dataloader, dataset_type, prediction_loss_only=prediction_loss_only,
+        output = self._prediction_loop(eval_dataloader, dataset_type, prediction_loss_only=prediction_loss_only,
                                         log_attention_weights_fn=log_attention_weights_fn)
 
         self._log(output.metrics_all)

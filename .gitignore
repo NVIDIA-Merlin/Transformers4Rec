@@ -147,3 +147,4 @@ attention_weights/
 runs/
 wandb/
 tmp/
+nsights_files/

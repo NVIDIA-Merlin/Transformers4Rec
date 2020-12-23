@@ -172,11 +172,11 @@ def main():
             
             if training_args.eval_on_test_set:
                 eval_date = test_date
-                eval_dataloader = test_dataloader
+                eval_dataloader = test_loader
                 eval_datasettype = DatasetType.test
             else:
-                valid_date = eval_date
-                eval_dataloader = valid_dataloader
+                eval_date = valid_date
+                eval_dataloader = valid_loader
                 eval_datasettype = DatasetType.valid
 
             logger.info("*** Evaluate (date:{})***".format(eval_date))
