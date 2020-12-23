@@ -8,6 +8,18 @@ from typing import NamedTuple
 import torch
 
 
+def safe_json(data): 
+    if data is None: 
+        return True 
+    elif isinstance(data, (bool, int, float, str)): 
+        return True 
+    elif isinstance(data, (tuple, list)): 
+        return all(safe_json(x) for x in data) 
+    elif isinstance(data, dict): 
+        return all(isinstance(k, str) and safe_json(v) for k, v in data.items()) 
+    return False 
+
+
 def get_filenames(data_paths):
     paths = [[p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
     return list(itertools.chain.from_iterable(paths))

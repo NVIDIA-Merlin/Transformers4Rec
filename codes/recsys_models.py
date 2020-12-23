@@ -5,17 +5,12 @@ import torch
 import torch.nn as nn
 
 # load transformer model and its configuration classes
-from transformers.modeling_xlnet import XLNetModel
-from transformers.configuration_xlnet import XLNetConfig
-from transformers.modeling_transfo_xl import TransfoXLModel
-from transformers.configuration_transfo_xl import TransfoXLConfig
-from transformers.modeling_gpt2 import GPT2Model
-from transformers.configuration_gpt2 import GPT2Config
-from transformers.modeling_longformer import LongformerModel
-from transformers.configuration_longformer import LongformerConfig
-from transformers.configuration_utils import PretrainedConfig
-from transformers.modeling_reformer import ReformerModel
-from transformers.configuration_reformer import ReformerConfig
+from transformers import (XLNetModel, XLNetConfig,
+                         TransfoXLModel, TransfoXLConfig,
+                         GPT2Model, GPT2Config,
+                         LongformerModel, LongformerConfig,
+                         ReformerModel, ReformerConfig,
+                         PretrainedConfig)
 
 from models.gru4rec import GRU4REC
 

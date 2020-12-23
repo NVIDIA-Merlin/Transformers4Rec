@@ -27,7 +27,7 @@ from transformers import (
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
 from recsys_trainer import RecSysTrainer, DatasetType
-
+from recsys_utils import safe_json
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loaders,
@@ -97,6 +97,7 @@ def main():
     ])
 
     hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
+    hparams = {k:v for k,v in hparams.items() if safe_json(v)}
     DLLogger.log(step="PARAMETER", 
                  data=hparams, 
                  verbosity=Verbosity.DEFAULT)
@@ -126,10 +127,11 @@ def main():
     wandb_run_name = wandb.run.name
     DLLogger.log(step="PARAMETER", 
                  data={'wandb_run_name': wandb_run_name}, 
-                 verbosity=Verbosity.DEFAULT)                 
+                 verbosity=Verbosity.DEFAULT)             
 
     trainer.update_wandb_args(model_args)
     trainer.update_wandb_args(data_args)
+    trainer.update_wandb_args(training_args)
 
     data_dates = get_avail_data_dates(data_args)
     results_dates_all = {}

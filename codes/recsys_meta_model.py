@@ -11,8 +11,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-from transformers.modeling_utils import PreTrainedModel
-from transformers.modeling_gpt2 import GPT2Model
+from transformers import (GPT2Model, PreTrainedModel)
 
 
 logger = logging.getLogger(__name__)

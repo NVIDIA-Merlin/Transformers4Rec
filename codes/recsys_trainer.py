@@ -22,10 +22,12 @@ import wandb
 
 from recsys_metrics import EvalMetrics
 
-from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, is_wandb_available
-from transformers.training_args import is_torch_tpu_available
-from transformers import Trainer, AdamW, get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
-from transformers import PreTrainedModel
+from transformers.integrations import is_wandb_available
+from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
+from transformers import is_torch_tpu_available
+from transformers import (Trainer, AdamW, PreTrainedModel,
+        get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup)
+
 
 
 logger = logging.getLogger(__name__)
