@@ -187,7 +187,9 @@ class RecSysMetaModel(PreTrainedModel):
         self.disable_positional_embeddings = model_args.disable_positional_embeddings
 
 
-    def forward(self, inputs):
+    def forward(self, *args, **kwargs):
+        inputs = kwargs
+
         # Step1. Unpack inputs, get embedding, and concatenate them
         label_seq = None
         
@@ -472,8 +474,9 @@ class RecSysMetaModel(PreTrainedModel):
             train_acc_neg = (max_idx == n_neg_items).sum(
                 dtype=torch.float32) / num_elem
 
-        outputs = (train_acc, train_acc_neg, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all,
-                   labels_all, metadata_for_pred_logging) + model_outputs  # Keep mems, hidden states, attentions if there are in it
+        outputs = {'loss': loss_ce}
+        #outputs = (train_acc, train_acc_neg, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all,
+        #           labels_all, metadata_for_pred_logging) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 
         return outputs  # return (train_acc), (loss), (predictions), (labels), (mems), (hidden states), (attentions)
 

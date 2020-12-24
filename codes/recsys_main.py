@@ -26,7 +26,8 @@ from transformers import (
 
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
-from recsys_trainer import RecSysTrainer, DatasetType
+#from recsys_trainer import RecSysTrainer, DatasetType
+from recsys_trainer_v2 import RecSysTrainer, DatasetType
 from recsys_utils import safe_json
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
@@ -117,9 +118,9 @@ def main():
     trainer = RecSysTrainer(
         model=rec_model,
         args=training_args,
-        fast_test=training_args.fast_test,
+        #fast_test=training_args.fast_test,
         log_predictions=training_args.log_predictions,
-        fp16=training_args.fp16,
+        #fp16=training_args.fp16,
     )
 
     #Saving Weights & Biases run name
@@ -152,9 +153,15 @@ def main():
         train_loader, valid_loader, test_loader \
             = fetch_data_loaders(data_args, training_args, feature_map, train_date, valid_date, test_date)
 
+        '''
         trainer.set_rec_train_dataloader(train_loader)
         trainer.set_rec_valid_dataloader(valid_loader)
         trainer.set_rec_test_dataloader(test_loader)
+        '''
+
+        trainer.set_train_dataloader(train_loader)
+        trainer.set_eval_dataloader(valid_loader)
+        trainer.set_test_dataloader(test_loader)
 
         # Training
         if training_args.do_train:
@@ -167,7 +174,7 @@ def main():
                 else None
             )
             trainer.train(model_path=model_path, 
-                          day_index=date_idx,
+                         # day_index=date_idx,
                          #log_attention_weights_fn=att_weights_fn
                          )
 
