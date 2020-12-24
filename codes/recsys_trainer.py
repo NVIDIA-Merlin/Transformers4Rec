@@ -4,6 +4,7 @@ for sequential dataset packed with different format in multiple sequences
 (e.g., item-id-seq, elapsed-time-seq) in parquet file format
 """
 
+import collections
 import logging
 import os
 
@@ -152,7 +153,7 @@ class RecSysTrainer(Trainer):
     def set_rec_test_dataloader(self, dataloader):
         self.test_dataloader = dataloader
 
-    def num_steps(self, dataloader):
+    def num_examples(self, dataloader):
         return len(dataloader)
 
     def update_wandb_args(self, args):
@@ -170,7 +171,7 @@ class RecSysTrainer(Trainer):
         If you want to use something else, you can pass a tuple in the Trainer's init,
         or override this method in a subclass.
         """
-        if self.optimizers is not None:
+        if self.optimizer is not None:
             return self.optimizers
         # Prepare optimizer and schedule 
         no_decay = ["bias", "LayerNorm.weight"]
@@ -221,8 +222,33 @@ class RecSysTrainer(Trainer):
                 (Optional) Local path to model if model to train has been instantiated from a local path
                 If present, we will try reloading the optimizer/scheduler states from there.
         """
-        # NOTE: RecSys
+
+        # Keeping track whether we can can len() on the dataset or not
+        train_dataset_is_sized = isinstance(self.train_dataset, collections.abc.Sized)
+
         train_dataloader = self.get_rec_train_dataloader()
+
+        # Setting up training control variables:
+        # number of training epochs: num_train_epochs
+        # number of training steps per epoch: num_update_steps_per_epoch
+        # total number of training steps to execute: max_steps
+        if train_dataset_is_sized:
+            num_update_steps_per_epoch = len(train_dataloader) // self.args.gradient_accumulation_steps
+            num_update_steps_per_epoch = max(num_update_steps_per_epoch, 1)
+            if self.args.max_steps > 0:
+                max_steps = self.args.max_steps
+                num_train_epochs = self.args.max_steps // num_update_steps_per_epoch + int(
+                    self.args.max_steps % num_update_steps_per_epoch > 0
+                )
+            else:
+                max_steps = math.ceil(self.args.num_train_epochs * num_update_steps_per_epoch)
+                num_train_epochs = math.ceil(self.args.num_train_epochs)
+        else:
+            # see __init__. max_steps is set when the dataset has no __len__
+            max_steps = self.args.max_steps
+            num_train_epochs = 1
+            num_update_steps_per_epoch = max_steps
+        
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
             num_train_epochs = (
@@ -231,6 +257,9 @@ class RecSysTrainer(Trainer):
         else:
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
+
+        '''
+        self.create_optimizer_and_scheduler(num_training_steps=max_steps)
 
         optimizer, scheduler = self.get_optimizers(num_training_steps=t_total, use_warmup_lr=(day_index <= self.args.warmup_days))
 
@@ -241,17 +270,21 @@ class RecSysTrainer(Trainer):
             and os.path.isfile(os.path.join(model_path, "scheduler.pt"))
         ):
             # Load in optimizer and scheduler states
-            optimizer.load_state_dict(
+            self.optimizer.load_state_dict(
                 torch.load(os.path.join(model_path, "optimizer.pt"), map_location=self.args.device)
             )
             scheduler.load_state_dict(torch.load(os.path.join(model_path, "scheduler.pt")))
+        '''
+
+        # Check if saved optimizer or scheduler states exist
+        self._load_optimizer_and_scheduler(model_path)
 
         # Mixed precision training with apex (torch < 1.6)
         model = self.model
         if self.args.fp16 and _use_apex:
             if not is_apex_available():
                 raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
-            model, optimizer = amp.initialize(model, optimizer, opt_level=self.args.fp16_opt_level)
+            model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level)
 
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
@@ -266,9 +299,11 @@ class RecSysTrainer(Trainer):
                 find_unused_parameters=True,
             )
 
+        '''
         if self.tb_writer is not None:
             self.tb_writer.add_text("args", self.args.to_json_string())
             self.tb_writer.add_hparams(self.args.to_sanitized_dict(), metric_dict={})
+        '''
 
         # Train!
         if is_torch_tpu_available():
@@ -280,10 +315,8 @@ class RecSysTrainer(Trainer):
                 * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
             )
 
+        '''
         num_steps = self.num_steps(train_dataloader)
-
-        if self.args.dataloader_drop_last:
-            num_steps -= 1 # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
 
         logger.info("***** Running training *****")
         logger.info("  Num samples by epoch = %d", num_steps * self.args.train_batch_size)
@@ -293,6 +326,25 @@ class RecSysTrainer(Trainer):
         logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
         logger.info("  Gradient Accumulation steps = %d", self.args.gradient_accumulation_steps)
         logger.info("  Total optimization steps = %d", t_total)
+        '''
+
+        num_examples = (
+            self.num_examples(train_dataloader)
+            if train_dataset_is_sized
+            else total_train_batch_size * self.args.max_steps
+        )
+
+        if self.args.dataloader_drop_last:
+            num_examples -= 1 # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
+
+
+        logger.info("***** Running training *****")
+        logger.info(f"  Num examples = {num_examples}")
+        logger.info(f"  Num Epochs = {num_train_epochs}")
+        logger.info(f"  Instantaneous batch size per device = {self.args.per_device_train_batch_size}")
+        logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_train_batch_size}")
+        logger.info(f"  Gradient Accumulation steps = {self.args.gradient_accumulation_steps}")
+        logger.info(f"  Total optimization steps = {max_steps}")
 
         self.epoch = 0
         epochs_trained = 0
@@ -315,18 +367,31 @@ class RecSysTrainer(Trainer):
                 self.global_step = 0
                 logger.info("  Starting fine-tuning.")
 
+        # Update the references
+        self.callback_handler.model = self.model
+        self.callback_handler.optimizer = self.optimizer
+        self.callback_handler.lr_scheduler = self.lr_scheduler
+        self.callback_handler.train_dataloader = train_dataloader
+
         tr_loss = 0.0
         tr_acc = 0.0
         logging_loss = 0.0
         logging_acc = 0.0
         model.zero_grad()
+
+        '''
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
+        '''
+
+
+        self.control = self.callback_handler.on_train_begin(self.args, self.state, self.control)
+
         
         # NOTE: RecSys
         with train_dataloader:
-            for epoch in train_iterator:
+            for epoch in range(epochs_trained, int(num_train_epochs)):
                 print('Training Epoch {}'.format(epoch))
                 if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                     train_dataloader.sampler.set_epoch(epoch)
@@ -335,9 +400,12 @@ class RecSysTrainer(Trainer):
                     parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                         self.args.device
                     )
-                    epoch_iterator = tqdm(parallel_loader, desc="In-Epoch Iteration", disable=not self.is_local_master())
+                    epoch_iterator = parallel_loader
                 else:
-                    epoch_iterator = tqdm(train_dataloader, desc="In-Epoch Iteration", disable=not self.is_local_master())
+                    epoch_iterator = train_dataloader
+
+                steps_in_epoch = len(epoch_iterator) if train_dataset_is_sized else self.args.max_steps
+                self.control = self.callback_handler.on_epoch_begin(self.args, self.state, self.control)
 
 
                 # TEMPORARY: TO DEBUG ATTENTION 
@@ -351,7 +419,7 @@ class RecSysTrainer(Trainer):
                 with cm:
                     for step, inputs in enumerate(epoch_iterator):
                         # Ignoring last training batch  if --dataloader_drop_last, because some data loaders does not support drop_last=True
-                        if self.args.dataloader_drop_last and step >= num_steps:
+                        if self.args.dataloader_drop_last and step >= num_examples:
                             break    
 
                         if self.args.pyprof and step == self.args.pyprof_start_step:
@@ -362,37 +430,44 @@ class RecSysTrainer(Trainer):
                             steps_trained_in_current_epoch -= 1
                             continue
 
-                        step_loss, step_acc = self._training_step(model, inputs, optimizer)
+                        if (step + 1) % self.args.gradient_accumulation_steps == 0:
+                            self.control = self.callback_handler.on_step_begin(self.args, self.state, self.control)
+
+                        step_loss, step_acc = self._training_step(model, inputs, self.optimizer)
                         
                         tr_loss += step_loss
                         tr_acc += step_acc
 
                         if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                             # last step in epoch but step is always smaller than gradient_accumulation_steps
-                            len(epoch_iterator) <= self.args.gradient_accumulation_steps
-                            and (step + 1) == len(epoch_iterator)
+                            steps_in_epoch <= self.args.gradient_accumulation_steps
+                            and (step + 1) == steps_in_epoch
                         ):
                             if self.args.fp16 and _use_native_amp:
-                                self.scaler.unscale_(optimizer)
+                                self.scaler.unscale_(self.optimizer)
                                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
                             elif self.args.fp16 and _use_apex:
-                                torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
+                                torch.nn.utils.clip_grad_norm_(amp.master_params(self.optimizer), self.args.max_grad_norm)
                             else:
                                 torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
 
                             if is_torch_tpu_available():
-                                xm.optimizer_step(optimizer)
+                                xm.optimizer_step(self.optimizer)
                             elif self.args.fp16 and _use_native_amp:
-                                self.scaler.step(optimizer)
+                                self.scaler.step(self.optimizer)
                                 self.scaler.update()
                             else:
-                                optimizer.step()
+                                self.optimizer.step()
 
-                            scheduler.step()
+                            self.lr_scheduler.step()
                             model.zero_grad()
                             self.global_step += 1
-                            self.epoch = epoch + (step + 1) / len(epoch_iterator)
+                            self.epoch = epoch + (step + 1) / steps_in_epoch
+                            self.control = self.callback_handler.on_step_end(self.args, self.state, self.control)
 
+                            
+
+                            '''
                             if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
                                 self.global_step == 1 and self.args.logging_first_step
                             ):
@@ -401,9 +476,9 @@ class RecSysTrainer(Trainer):
                                 logs["train_accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
                                 # backward compatibility for pytorch schedulers
                                 logs["learning_rate"] = (
-                                    scheduler.get_last_lr()[0]
+                                    self.lr_scheduler.get_last_lr()[0]
                                     if version.parse(torch.__version__) >= version.parse("1.4")
-                                    else scheduler.get_lr()[0]
+                                    else self.lr_scheduler.get_lr()[0]
                                 )
                                 logging_loss = tr_loss
                                 logging_acc = tr_acc
@@ -430,11 +505,15 @@ class RecSysTrainer(Trainer):
 
                                 if is_torch_tpu_available():
                                     xm.rendezvous("saving_optimizer_states")
-                                    xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                                    xm.save(self.optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                                     xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
                                 elif self.is_world_master():
-                                    torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                                    torch.save(self.optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                            '''
+
+                        self.control = self.callback_handler.on_epoch_end(self.args, self.state, self.control)
+                        self._maybe_log_save_evaluate(tr_loss, model, 0, epoch)
 
                         if (self.args.max_steps > 0 and self.global_step > self.args.max_steps) or (self.fast_test and step > 2):
                             epoch_iterator.close()
@@ -450,14 +529,23 @@ class RecSysTrainer(Trainer):
                         # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
                         xm.master_print(met.metrics_report())
                     
+                    '''
                     if self.args.validate_every > 0 and (epoch + 1) % self.args.validate_every == 0:
                         self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
+                    '''
 
+            
+            self.control = self.callback_handler.on_train_end(self.args, self.state, self.control)
+
+            '''
             # Compute metrics on Train set and Eval Set after all training epochs (for each day)
             self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
-            
+            '''
+
+        '''    
         if self.tb_writer:
             self.tb_writer.close()
+        '''
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
@@ -577,13 +665,15 @@ class RecSysTrainer(Trainer):
         output = self._prediction_loop(eval_dataloader, dataset_type, prediction_loss_only=prediction_loss_only,
                                         log_attention_weights_fn=log_attention_weights_fn)
 
-        self._log(output.metrics_all)
-        self._log(output.metrics_neg)
+        
+        output_metrics = {**output.metrics_all, **output.metrics_neg}
+        self.log(output_metrics)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
+        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output_metrics)
         return output.metrics_all, output.metrics_neg
 
     def predict(self, test_dataloader: Optional[DataLoader] = None, dataset_type: Optional[DatasetType] = DatasetType.test,
@@ -600,8 +690,7 @@ class RecSysTrainer(Trainer):
         output = self._prediction_loop(test_dataloader, dataset_type=dataset_type, 
                         log_predictions_fn=log_predictions_fn, log_attention_weights_fn=log_attention_weights_fn)
 
-        self._log(output.metrics_neg)
-        self._log(output.metrics_all)
+        self.log({**output.metrics_neg, **output.metrics_all})
 
         return output
 
@@ -622,8 +711,9 @@ class RecSysTrainer(Trainer):
         streaming_metrics_all_ds.reset()
         streaming_metrics_neg_ds.reset()
 
-
+        '''
         prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else self.prediction_loss_only
+        '''
 
         model = self.model
         # multi-gpu eval
@@ -634,14 +724,16 @@ class RecSysTrainer(Trainer):
         # Note: in torch.distributed mode, there's no point in wrapping the model
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
-        num_steps = self.num_steps(dataloader)
-        if self.args.dataloader_drop_last:
-            num_steps -= 1  # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
 
         batch_size = dataloader.batch_size
+        num_examples = self.num_examples(dataloader)
+        if self.args.dataloader_drop_last:
+            num_examples -= 1  # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
+
         logger.info("***** Running %s *****", description)
-        logger.info("  Num steps = %d", num_steps)
+        logger.info("  Num examples = %d", num_examples)
         logger.info("  Batch size = %d", batch_size)
+
         eval_losses: List[float] = []
         eval_losses_neg: List[float] = []
         eval_losses_ce: List[float] = []
@@ -653,10 +745,12 @@ class RecSysTrainer(Trainer):
         if is_torch_tpu_available():
             dataloader = pl.ParallelLoader(dataloader, [self.args.device]).per_device_loader(self.args.device)
 
+        self.callback_handler.eval_dataloader = dataloader
+
         for step, inputs in tqdm(enumerate(dataloader), desc=description):
 
             # Ignoring last training batch  if --dataloader_drop_last, because some data loaders does not support drop_last=True
-            if self.args.dataloader_drop_last and step >= num_steps: 
+            if self.args.dataloader_drop_last and step >= num_examples: 
                 break
 
             for k, v in inputs.items():
@@ -687,7 +781,10 @@ class RecSysTrainer(Trainer):
                     eval_losses_neg += [step_eval_loss_neg.mean().item()]
 
 
+                '''
                 if not prediction_loss_only:
+                '''
+                if True:
 
                      # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
                     # labels.size(): ...  x 1 [51]
@@ -739,6 +836,9 @@ class RecSysTrainer(Trainer):
                                                     metrics_results_detailed_neg, metrics_results_detailed_all, 
                                                     preds_metadata)
                         
+            
+            self.control = self.callback_handler.on_prediction_step(self.args, self.state, self.control)
+            
             if self.fast_test and step > 4:
                 break
             step += 1 

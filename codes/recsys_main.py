@@ -123,6 +123,7 @@ def main():
     )
 
     #Saving Weights & Biases run name
+    '''
     wandb.run.save()
     wandb_run_name = wandb.run.name
     DLLogger.log(step="PARAMETER", 
@@ -132,6 +133,7 @@ def main():
     trainer.update_wandb_args(model_args)
     trainer.update_wandb_args(data_args)
     trainer.update_wandb_args(training_args)
+    '''
 
     data_dates = get_avail_data_dates(data_args)
     results_dates_all = {}
