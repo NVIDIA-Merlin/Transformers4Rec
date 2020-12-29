@@ -13,10 +13,12 @@ import logging
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass, field, asdict
-from collections import Counter
+from collections import Counter, namedtuple
 import pyarrow
 import pyarrow.parquet as pq
 import wandb
+
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
 from transformers import (
@@ -27,13 +29,15 @@ from transformers import (
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
 #from recsys_trainer import RecSysTrainer, DatasetType
-from recsys_trainer_v2 import RecSysTrainer, DatasetType
+from recsys_trainer_v2 import RecSysTrainer, DatasetType, DatasetMock
 from recsys_utils import safe_json
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loaders,
     get_avail_data_dates    
 )
+
+from transformers.integrations import WandbCallback
 
 try:
     import cPickle as pickle
@@ -52,10 +56,42 @@ assert sys.version_info.major > 2
 PRED_LOG_PARQUET_FILE_PATTERN = 'pred_logs/preds_date_{}.parquet'
 ATTENTION_LOG_FOLDER = 'attention_weights'
 
+
+class AllHparams:
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+    def to_sanitized_dict(self):
+        result = {k:v for k,v in self.__dict__.items() if safe_json(v)}
+        return result
+
+
+
+def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
+    label_feature_config = list([k for k,v in feature_map.items() if 'is_label' in v and v['is_label']])
+
+    if len(label_feature_config) == 0:
+        raise ValueError('One feature have be configured as label (is_label = True)')
+    if len(label_feature_config) > 1:
+        raise ValueError('Only one feature can be selected as label (is_label = True)')
+    label_name = label_feature_config[0]
+    return label_name
+
 def main():
   
     parser = HfArgumentParser((DataArguments, ModelArguments, TrainingArguments))
     data_args, model_args, training_args = parser.parse_args_into_dataclasses()
+
+    #Ensuring to set W&B run name to null, so that a nice run name is generated
+    training_args.run_name = None
+
+    #Loading features config file
+    with open(data_args.feature_config) as yaml_file:
+        feature_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+    label_name = get_label_feature_name(feature_map)
+    #training_args.label_names = [label_name]
+    target_size = feature_map[label_name]['cardinality']
 
     #Enables profiling with DLProf and Nsight Systems (slows down training)
     if training_args.pyprof:
@@ -97,31 +133,44 @@ def main():
         JSONStreamBackend(Verbosity.VERBOSE, os.path.join(training_args.output_dir, DLLOGGER_FILENAME)),
     ])
 
-    hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
-    hparams = {k:v for k,v in hparams.items() if safe_json(v)}
+    all_hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
+    all_hparams = {k:v for k,v in all_hparams.items() if safe_json(v)}
     DLLogger.log(step="PARAMETER", 
-                 data=hparams, 
+                 data=all_hparams, 
                  verbosity=Verbosity.DEFAULT)
     DLLogger.flush()
 
     set_seed(training_args.seed)
 
-    with open(data_args.feature_config) as yaml_file:
-        feature_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
-    target_size = feature_map['sess_pid_seq']['cardinality']
-
     seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
-    
 
     trainer = RecSysTrainer(
-        model=rec_model,
+        model=rec_model,        
         args=training_args,
         #fast_test=training_args.fast_test,
         log_predictions=training_args.log_predictions,
         #fp16=training_args.fp16,
     )
+
+    
+    #Creating an object with all hparams and a method to get sanitized values (like DataClass), because the setup code for WandbCallback requires a DataClass and not a dict
+    all_hparams = AllHparams(**all_hparams)
+    #Enforcing init of W&B  before begin_train callback (where it is originally initiated)
+    for callback in trainer.callback_handler.callbacks:
+        if isinstance(callback, WandbCallback):
+            callback.setup(all_hparams, trainer.state, trainer.model, reinit=False)
+
+            #Saving Weights & Biases run name to DLLogger
+            wandb_run_name = wandb.run.name
+            DLLogger.log(step="PARAMETER", 
+                        data={'wandb_run_name': wandb_run_name}, 
+                        verbosity=Verbosity.DEFAULT)   
+
+            break
+
+    
 
     #Saving Weights & Biases run name
     '''
@@ -137,8 +186,7 @@ def main():
     '''
 
     data_dates = get_avail_data_dates(data_args)
-    results_dates_all = {}
-    results_dates_neg = {}
+    results_dates = {}
 
     att_weights_fn = None
     if training_args.log_attention_weights:
@@ -178,6 +226,7 @@ def main():
                          #log_attention_weights_fn=att_weights_fn
                          )
 
+
         # Evaluation (on testset)
         if training_args.do_eval:
             
@@ -208,30 +257,23 @@ def main():
                 log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
                 #att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
                 
-                eval_output = trainer.predict(test_dataloader=eval_dataloader, dataset_type=eval_datasettype,
-                                              log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn)
-                eval_metrics_all = eval_output.metrics_all
-                eval_metrics_neg = eval_output.metrics_neg
+                eval_metrics = trainer.evaluate(metric_key_prefix=eval_datasettype.value
+                                              #test_dataloader=eval_dataloader, 
+                                              #dataset_type=eval_datasettype, log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn
+                                              )
 
                 output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")
                 if trainer.is_world_master():
                     with open(output_eval_file, "w") as writer:
                         logger.info("***** Eval results (all) (date:{})*****".format(eval_date))
                         writer.write("***** Eval results (all) (date:{})*****".format(eval_date))
-                        for key in sorted(eval_metrics_all.keys()):
-                            logger.info("  %s = %s", key, str(eval_metrics_all[key]))
-                            writer.write("%s = %s\n" % (key, str(eval_metrics_all[key])))
-                        
-                        logger.info("***** Eval results (neg) (date:{})*****".format(eval_date))
-                        writer.write("***** Eval results (neg) (date:{})*****".format(eval_date))
-                        for key in sorted(eval_metrics_neg.keys()):
-                            logger.info("  %s = %s", key, str(eval_metrics_neg[key]))
-                            writer.write("%s = %s\n" % (key, str(eval_metrics_neg[key])))
+                        for key in sorted(eval_metrics.keys()):
+                            logger.info("  %s = %s", key, str(eval_metrics[key]))
+                            writer.write("%s = %s\n" % (key, str(eval_metrics[key])))
 
-                results_dates_all[eval_date] = eval_metrics_all
-                results_dates_neg[eval_date] = eval_metrics_neg
+                results_dates[eval_date] = eval_metrics
 
-                DLLogger.log(step=(eval_date.strftime("%Y-%m-%d"),), data={**eval_metrics_all, **eval_metrics_neg}, verbosity=Verbosity.VERBOSE)
+                DLLogger.log(step=(eval_date.strftime("%Y-%m-%d"),), data=eval_metrics, verbosity=Verbosity.VERBOSE)
                 DLLogger.flush()
 
             finally:
@@ -240,35 +282,27 @@ def main():
         
     logger.info("train and eval for all dates are done")
     trainer.save_model()
+      
 
     if training_args.do_eval and trainer.is_world_master():
         
-        eval_df_all = pd.DataFrame.from_dict(results_dates_all, orient='index')
-        eval_df_neg = pd.DataFrame.from_dict(results_dates_neg, orient='index')
-        np.save(os.path.join(training_args.output_dir, "eval_results_dates_all.npy"), eval_df_all)
-        np.save(os.path.join(training_args.output_dir, "eval_results_dates_neg.npy"), eval_df_neg)
-        eval_avg_days_all = dict(eval_df_all.mean())
-        eval_avg_days_neg = dict(eval_df_neg.mean())
+        eval_df= pd.DataFrame.from_dict(results_dates, orient='index')
+        np.save(os.path.join(training_args.output_dir, "eval_results_dates.npy"), eval_df_all)
+        eval_avg_days = dict(eval_df.mean())
         output_eval_file = os.path.join(training_args.output_dir, "eval_results_avg.txt")
         with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results (all) (avg over dates)*****")
-            for key in sorted(eval_avg_days_all.keys()):
-                logger.info("  %s = %s", key, str(eval_avg_days_all[key]))
-                writer.write("%s = %s\n" % (key, str(eval_avg_days_all[key])))
-            trainer._log({f"AOD_all_{k}":v for k, v in eval_avg_days_all.items()})
-            
-            logger.info("***** Eval results (neg) (avg over dates)*****")
-            for key in sorted(eval_avg_days_neg.keys()):
-                logger.info("  %s = %s", key, str(eval_avg_days_neg[key]))
-                writer.write("%s = %s\n" % (key, str(eval_avg_days_neg[key])))
-            trainer._log({f"AOD_neg_{k}":v for k, v in eval_avg_days_neg.items()})
+            logger.info("***** Eval results (avg over dates)*****")
+            for key in sorted(eval_avg_days.keys()):
+                logger.info("  %s = %s", key, str(eval_avg_days[key]))
+                writer.write("%s = %s\n" % (key, str(eval_avg_days[key])))
+            trainer._log({f"AOD_{k}":v for k, v in eval_avg_days.items()})
 
         #Logging with DLLogger for AutoBench
-        eval_avg_metrics = {**eval_avg_days_all, **eval_avg_days_neg}
+        eval_avg_metrics = eval_avg_days
         DLLogger.log(step=(), data=eval_avg_metrics, verbosity=Verbosity.VERBOSE)
         DLLogger.flush()
                 
-    return results_dates_all
+    return results_dates
 
 
 class AttentionWeightsLogger:

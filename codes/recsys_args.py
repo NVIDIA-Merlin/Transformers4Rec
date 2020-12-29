@@ -18,8 +18,8 @@ class TrainingArguments(HfTrainingArguments):
             "-1 means no validation is used (default: -1)"}
     )
 
-    # misc
-    fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
+    #fast_test: bool = field(default=False, metadata={"help": "Quick test by running only one loop."})
+    #Use --max_steps instead to speed up training
 
     eval_on_test_set: bool = field(default=False, metadata={"help": "Evaluate on test set (by default, evaluates on the validation set)."})
 

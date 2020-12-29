@@ -474,7 +474,13 @@ class RecSysMetaModel(PreTrainedModel):
             train_acc_neg = (max_idx == n_neg_items).sum(
                 dtype=torch.float32) / num_elem
 
-        outputs = {'loss': loss_ce}
+        outputs = {'loss': loss_ce,
+                   'labels': labels_all,
+                   'predictions': logits_all,                   
+                   'pred_metadata': metadata_for_pred_logging,
+                   'model_outputs': model_outputs # Keep mems, hidden states, attentions if there are in it
+                   #'metadata_pred': metadata_for_pred_logging
+                   }
         #outputs = (train_acc, train_acc_neg, loss, loss_neg, loss_ce, predictions_neg, labels_neg, predictions_all,
         #           labels_all, metadata_for_pred_logging) + model_outputs  # Keep mems, hidden states, attentions if there are in it
 

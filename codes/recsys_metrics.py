@@ -1,5 +1,5 @@
 
-from typing import Dict, NamedTuple
+from typing import Dict, NamedTuple, List
 import numpy as np
 import torch
 
@@ -14,6 +14,43 @@ from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
 
 from recsys_utils import Timing
 from torch.utils.dlpack import to_dlpack
+
+METRICS_MAPPING ={
+    'ndcg': ndcg_at,
+    'map': avg_precision_at,
+    'recall': recall_at,
+    'precision': precision_at,
+}
+
+def compute_accuracy_metrics(preds: torch.Tensor, labels: torch.Tensor,
+                     metrics: str = ['ndcg', 'map', 'recall', 'precision'], 
+                     top_k: List = [5, 10, 100, 1000],
+                     average_metrics: bool = True) -> Dict:
+
+    # flatten (n_batch , seq_len , n_events) to ((n_batch x seq_len), n_events)
+    n_labels = preds.size(-1)
+    preds = preds.view(-1, n_labels)
+    labels = labels.reshape(-1)
+    # represent target class id as one-hot vector
+    labels = torch.nn.functional.one_hot(labels, n_labels)
+
+    top_k = torch.LongTensor(top_k)
+    metric_results = {}
+    for metric_name in metrics:
+        metric = METRICS_MAPPING[metric_name]
+        #Computing the metrics at different cut-offs
+        results_by_topk = metric(top_k, preds, labels)
+
+        if average_metrics:
+            results_by_topk = results_by_topk.mean(0)
+
+        #Separating metrics for different top-k and converting to numpy        
+        for k, measures in zip(self.topks, results_by_topk.T):
+            metric_results[f'{self.name}@{k}'] = measures.cpu().numpy()
+
+    return metric_results
+
+
 
 class EvalMetrics(object):
     def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_torch=True, use_cupy=False):

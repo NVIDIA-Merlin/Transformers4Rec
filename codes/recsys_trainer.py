@@ -30,7 +30,6 @@ from transformers import (Trainer, AdamW, PreTrainedModel,
         get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup)
 
 
-
 logger = logging.getLogger(__name__)
 logger.info('PyTorch version: {}'.format(torch.__version__))
 
