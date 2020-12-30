@@ -91,7 +91,7 @@ class RecSysMetaModel(PreTrainedModel):
             #if self.col_prefix_neg not in cname:
             
             if self.col_prefix_neg not in cname:
-                #TEMP: Ignoring past features to define embedding tables
+                #Ignoring past features to define embedding tables
                 if (self.session_aware and cname.startswith(self.session_aware_features_prefix)):
                     continue
 
@@ -201,7 +201,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         assert label_seq is not None, 'label sequence is not declared in feature_map'
 
-        #TEMP: To mark past sequence labels
+        #To mark past sequence labels
         if self.session_aware:
             masked_past_session = torch.zeros_like(label_seq, dtype=torch.long, device=self.device)
 
@@ -212,7 +212,7 @@ class RecSysMetaModel(PreTrainedModel):
             label_seq_trg, label_mlm_mask = self.mask_tokens(
                 label_seq, self.mlm_probability)
             
-            #TEMP: To mark past sequence labels
+            #To mark past sequence labels
             if self.session_aware:
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
                 label_mlm_mask = torch.cat([masked_past_session.bool(), label_mlm_mask], axis=1)
@@ -241,7 +241,7 @@ class RecSysMetaModel(PreTrainedModel):
                 label_seq_trg = label_seq_trg_eval
                 mask_trg_pad = (label_seq_trg != self.pad_token)
 
-            #TEMP: To mark past sequence labels
+            #To mark past sequence labels
             if self.session_aware:
                 label_seq_trg_original = label_seq_trg.clone()
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)

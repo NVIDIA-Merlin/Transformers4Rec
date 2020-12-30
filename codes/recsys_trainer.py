@@ -1,875 +1,473 @@
-"""
-Extend Huggingface's Trainer Class to make it work with custom dataloader
-for sequential dataset packed with different format in multiple sequences 
-(e.g., item-id-seq, elapsed-time-seq) in parquet file format
-"""
-
 import collections
-import logging
-import os
+from typing import Dict, Optional, Tuple, List, Any, Union, Callable
 
-from typing import Dict, List, Optional, NamedTuple, Callable, Tuple
-from enum import Enum
-from contextlib import nullcontext
-import numpy as np
 import torch
-
-from packaging import version
+import math
+import numpy as np
+from torch.utils.data.dataset import Dataset
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
-from torch.utils.data.distributed import DistributedSampler
-from tqdm.auto import tqdm, trange
-import wandb
+from torch.cuda.amp import autocast
+from copy import deepcopy
+
+from transformers.integrations import (  
+    is_fairscale_available
+)
+
+from transformers import (Trainer, PreTrainedModel, AdamW,
+                       get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup,
+                       EvalPrediction, is_torch_tpu_available)
+from transformers.trainer_utils import PredictionOutput
+from transformers.utils import logging
+from transformers.trainer_pt_utils import DistributedTensorGatherer, nested_concat
+from transformers.trainer_callback import TrainerCallback
+from enum import Enum
 
 from recsys_metrics import EvalMetrics
 
-from transformers.integrations import is_wandb_available
-from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR
-from transformers import is_torch_tpu_available
-from transformers import (Trainer, AdamW, PreTrainedModel,
-        get_constant_schedule, get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup)
 
+from collections.abc import Sized
 
-logger = logging.getLogger(__name__)
-logger.info('PyTorch version: {}'.format(torch.__version__))
+if is_fairscale_available():
+    from fairscale.optim import OSS
 
-
-import torch.cuda.profiler as profiler
-
-
-
-################## Setting Automatic Mixed Precision ##################
-
-#From https://huggingface.co/transformers/_modules/transformers/trainer.html
-_use_native_amp = False
-_use_apex = False
-
-try:
-    from apex import amp  # noqa: F401
-    _has_apex = True
-except ImportError:
-    _has_apex = False
-
-def is_apex_available():
-    return _has_apex
-
-# Check if Pytorch version >= 1.6 to switch between Native AMP and Apex
-if version.parse(torch.__version__) < version.parse("1.6"):
-    if is_apex_available():
-        logger.info('APEX is available')
-        from apex import amp    
-        logger.info('Using APEX for AMP')
-        _use_apex = True
-    else:
-        logger.info('APEX is not available')
-
-else:
-    logger.info('Using PyTorch native AMP')
-    _use_native_amp = True
-    from torch.cuda.amp import autocast
-
-###############################################################
-
-softmax = nn.Softmax(dim=-1)
-
-class TrainOutputAcc(NamedTuple):
-    global_step: int
-    training_loss: float
-    training_acc: float
-    
-class PredictionOutput(NamedTuple):
-    metrics_all: Optional[Dict[str, float]]
-    metrics_neg: Optional[Dict[str, float]]
-
+logger = logging.get_logger(__name__)    
 
 class DatasetType(Enum):
-    train = "Train"
-    valid = "Valid"
-    test = "Test"
+    train = "train"
+    eval = "eval"
+
+
+#Mock to inform HF Trainer that the dataset is sized, and can be obtained via the data loader
+class DatasetMock(Dataset, Sized):
+
+    def __init__(self, nsteps=0):
+        self.nsteps = nsteps
+
+    def __len__(self):
+        return self.nsteps
+
+
+class RecSysTrainerCallback(TrainerCallback):
+    """
+    An :class:`~transformers.TrainerCallback` that changes the state of the Trainer
+    on specific hooks for the purpose of the RecSysTrainer
+    """
+
+    def __init__(self, trainer: Trainer):
+        self.trainer = trainer
+
+    def on_train_begin(self, args, state, control, model=None, **kwargs):        
+        pass
+
+    def on_train_end(self, args, state, control, model=None, **kwargs):
+        #Increments the global steps for logging with the global steps of the last train()
+        self.trainer._increment_past_global_steps(state.global_step)
+
+    def on_epoch_end(self, args, state, control, model=None, **kwargs):
+        #Evaluates on eval set
+        #self.trainer.evaluate()
+        pass
 
 
 class RecSysTrainer(Trainer):
     """
-    Trainer is a simple but feature-complete training and eval loop for PyTorch,
-    optimized for Transformers.
+    An :class:`~transformers.Trainer` specialized for sequential recommendation 
+    including (session-based and session-aware recommendation)
     """
+    
     def __init__(self, *args, **kwargs):
-        self.global_step = 0
-
-        if 'fast_test' not in kwargs:
-            self.fast_test = False
-        else:
-            self.fast_test = kwargs.pop('fast_test')
-
-        if 'log_predictions' not in kwargs:
-            self.log_predictions = False
-        else:
-            self.log_predictions = kwargs.pop('log_predictions')
-
-        if 'fp16' not in kwargs:
-            self.fp16 = False
-        else:
-            self.fp16 = kwargs.pop('fp16')
-
-        logger.info(
-            "FP16 enabled: {} - Using APEX: {} - Using Native AMP - {}".format(
-                self.fp16, _use_apex, _use_native_amp
-            )
-        )
+        self.past_global_steps = 0
 
         self.create_metrics()
 
-        if self.fp16 and _use_native_amp:
-            self.scaler = torch.cuda.amp.GradScaler()
-        
-        super(RecSysTrainer, self).__init__(*args, **kwargs)
+        recsys_callback = RecSysTrainerCallback(self)
 
+        mock_dataset = DatasetMock()
+        super(RecSysTrainer, self).__init__(train_dataset=mock_dataset, 
+                                            eval_dataset=mock_dataset,
+                                            callbacks=[
+                                                recsys_callback
+                                                ],
+                                            *args, **kwargs)
+
+    def _increment_past_global_steps(self, current_global_step: int):
+        self.past_global_steps += current_global_step
+
+    def _get_general_global_step(self) -> int:
+        general_global_step = self.past_global_steps
+        if self.model.training:
+            general_global_step += self.state.global_step 
+
+        return general_global_step
 
     def create_metrics(self):
-        self.streaming_metrics_all = {}
-        self.streaming_metrics_neg = {}
+        """
+        Instantiates streaming metrics (updated each step during the evaluation loop)
+        """
+        self.streaming_metrics = {}
         for dataset_type in DatasetType:
-            self.streaming_metrics_all[dataset_type] = EvalMetrics(ks=[5,10,100,1000])
-            self.streaming_metrics_neg[dataset_type] = EvalMetrics(ks=[5,10])
+            self.streaming_metrics[dataset_type.value] = EvalMetrics(ks=[5,10,100,1000])
 
-    def get_rec_train_dataloader(self) -> DataLoader:
-        if self.train_dataloader is not None:
-            return self.train_dataloader
-        return self.get_train_dataloader()            
+
+    def get_train_dataloader(self) -> DataLoader:
+        return self.train_dataloader            
         
-    def get_rec_valid_dataloader(self) -> DataLoader:
-        return self.valid_dataloader
+    def get_eval_dataloader(self, eval_dataset) -> DataLoader:
+        return self.eval_dataloader
 
-    def get_rec_test_dataloader(self) -> DataLoader:
-        return self.test_dataloader
-
-    def set_rec_train_dataloader(self, dataloader):
+    def set_train_dataloader(self, dataloader: DataLoader):
         self.train_dataloader = dataloader
         
-    def set_rec_valid_dataloader(self, dataloader):
-        self.valid_dataloader = dataloader
+    def set_eval_dataloader(self, dataloader: DataLoader):
+        self.eval_dataloader = dataloader
 
-    def set_rec_test_dataloader(self, dataloader):
-        self.test_dataloader = dataloader
+    @property
+    def log_attention_weights_callback(self) -> Callable:
+        return self.__log_attention_weights_callback
 
-    def num_examples(self, dataloader):
-        return len(dataloader)
+    @log_attention_weights_callback.setter
+    def log_attention_weights_callback(self, var: Callable):
+        self.__log_attention_weights_callback = var
 
-    def update_wandb_args(self, args):
-        if is_wandb_available:
-            wandb.config.update(args)
+    @property
+    def log_predictions_callback(self) -> Callable:
+        return self.__log_predictions_callback
 
+    @log_predictions_callback.setter
+    def log_predictions_callback(self, var: Callable):
+        self.__log_predictions_callback = var
 
-    def get_optimizers(
-        self, num_training_steps: int, use_warmup_lr=False
-    ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+    def num_examples(self, dataloader: DataLoader):
         """
-        Setup the optimizer and the learning rate scheduler.
-
-        We provide a reasonable default that works well.
-        If you want to use something else, you can pass a tuple in the Trainer's init,
-        or override this method in a subclass.
+        Overriding :obj:`Trainer.num_examples()` method because
+        the data loaders for this project do not return the dataset size,
+        but the number of steps. So we estimate the dataset size here
+        by multiplying the number of steps * batch size
         """
-        if self.optimizer is not None:
-            return self.optimizers
-        # Prepare optimizer and schedule 
-        no_decay = ["bias", "LayerNorm.weight"]
-        optimizer_grouped_parameters = [
-            {
-                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
-                "weight_decay": self.args.weight_decay,
-            },
-            {
-                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
-                "weight_decay": 0.0,
-            },
-        ]
-
-        if use_warmup_lr:
-            learning_rate = self.args.learning_rate_warmup
-            learning_rate_schedule = self.args.learning_rate_schedule_warmup
+        if dataloader == self.get_train_dataloader():
+            batch_size = self.args.per_device_train_batch_size
         else:
-            learning_rate = self.args.learning_rate
-            learning_rate_schedule = self.args.learning_rate_schedule
+            batch_size = self.args.per_device_eval_batch_size
 
-        optimizer = AdamW(optimizer_grouped_parameters, lr=learning_rate, eps=self.args.adam_epsilon)
+        return len(dataloader) * batch_size
 
-        #Optimized Adam for FP16
-        #optimizer = apex.optimizers.FusedAdam(optimizer_grouped_parameters, lr=learning_rate, eps=self.args.adam_epsilon)
-
-
-        if learning_rate_schedule == 'constant_with_warmup':
-            scheduler = get_constant_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps)
-        elif learning_rate_schedule == 'linear_with_warmup':
-            scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=num_training_steps)
-        elif learning_rate_schedule == 'cosine_with_warmup':
-            scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=num_training_steps,
-                                                                   num_cycles= self.args.learning_rate_num_cosine_cycles_by_epoch * self.args.num_train_epochs)
-        else:
-            raise ValueError('Invalid value for --learning_rate_schedule.  Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup')
-
-
-        return optimizer, scheduler
-
-
-    def train(self, model_path: Optional[str] = None, day_index: Optional[int] = None, log_attention_weights_fn: Callable = None):
+    def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
-        Main training entry point.
-
-        Args:
-            model_path:
-                (Optional) Local path to model if model to train has been instantiated from a local path
-                If present, we will try reloading the optimizer/scheduler states from there.
+        Overriding :obj:`Trainer.create_optimizer_and_scheduler()` to provide
+        flexibility in the optimizers and learning rate schedule choices, as hyperparams
         """
-
-        # Keeping track whether we can can len() on the dataset or not
-        train_dataset_is_sized = isinstance(self.train_dataset, collections.abc.Sized)
-
-        train_dataloader = self.get_rec_train_dataloader()
-
-        # Setting up training control variables:
-        # number of training epochs: num_train_epochs
-        # number of training steps per epoch: num_update_steps_per_epoch
-        # total number of training steps to execute: max_steps
-        if train_dataset_is_sized:
-            num_update_steps_per_epoch = len(train_dataloader) // self.args.gradient_accumulation_steps
-            num_update_steps_per_epoch = max(num_update_steps_per_epoch, 1)
-            if self.args.max_steps > 0:
-                max_steps = self.args.max_steps
-                num_train_epochs = self.args.max_steps // num_update_steps_per_epoch + int(
-                    self.args.max_steps % num_update_steps_per_epoch > 0
+        if self.optimizer is None:
+            no_decay = ["bias", "LayerNorm.weight"]
+            optimizer_grouped_parameters = [
+                {
+                    "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                    "weight_decay": self.args.weight_decay,
+                },
+                {
+                    "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                    "weight_decay": 0.0,
+                },
+            ]
+            if self.sharded_dpp:
+                self.optimizer = OSS(
+                    params=optimizer_grouped_parameters,
+                    optim=AdamW,
+                    lr=self.args.learning_rate,
+                    betas=(self.args.adam_beta1, self.args.adam_beta2),
+                    eps=self.args.adam_epsilon,
                 )
             else:
-                max_steps = math.ceil(self.args.num_train_epochs * num_update_steps_per_epoch)
-                num_train_epochs = math.ceil(self.args.num_train_epochs)
-        else:
-            # see __init__. max_steps is set when the dataset has no __len__
-            max_steps = self.args.max_steps
-            num_train_epochs = 1
-            num_update_steps_per_epoch = max_steps
-        
-        if self.args.max_steps > 0:
-            t_total = self.args.max_steps
-            num_train_epochs = (
-                self.args.max_steps // (len(train_dataloader) // self.args.gradient_accumulation_steps) + 1
-            )
-        else:
-            t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
-            num_train_epochs = self.args.num_train_epochs
-
-        '''
-        self.create_optimizer_and_scheduler(num_training_steps=max_steps)
-
-        optimizer, scheduler = self.get_optimizers(num_training_steps=t_total, use_warmup_lr=(day_index <= self.args.warmup_days))
-
-        # Check if saved optimizer or scheduler states exist
-        if (
-            model_path is not None
-            and os.path.isfile(os.path.join(model_path, "optimizer.pt"))
-            and os.path.isfile(os.path.join(model_path, "scheduler.pt"))
-        ):
-            # Load in optimizer and scheduler states
-            self.optimizer.load_state_dict(
-                torch.load(os.path.join(model_path, "optimizer.pt"), map_location=self.args.device)
-            )
-            scheduler.load_state_dict(torch.load(os.path.join(model_path, "scheduler.pt")))
-        '''
-
-        # Check if saved optimizer or scheduler states exist
-        self._load_optimizer_and_scheduler(model_path)
-
-        # Mixed precision training with apex (torch < 1.6)
-        model = self.model
-        if self.args.fp16 and _use_apex:
-            if not is_apex_available():
-                raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
-            model, self.optimizer = amp.initialize(model, self.optimizer, opt_level=self.args.fp16_opt_level)
-
-        # multi-gpu training (should be after apex fp16 initialization)
-        if self.args.n_gpu > 1:
-            model = torch.nn.DataParallel(model)
-
-        # Distributed training (should be after apex fp16 initialization)
-        if self.args.local_rank != -1:
-            model = torch.nn.parallel.DistributedDataParallel(
-                model,
-                device_ids=[self.args.local_rank],
-                output_device=self.args.local_rank,
-                find_unused_parameters=True,
-            )
-
-        '''
-        if self.tb_writer is not None:
-            self.tb_writer.add_text("args", self.args.to_json_string())
-            self.tb_writer.add_hparams(self.args.to_sanitized_dict(), metric_dict={})
-        '''
-
-        # Train!
-        if is_torch_tpu_available():
-            total_train_batch_size = self.args.train_batch_size * xm.xrt_world_size()
-        else:
-            total_train_batch_size = (
-                self.args.train_batch_size
-                * self.args.gradient_accumulation_steps
-                * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
-            )
-
-        '''
-        num_steps = self.num_steps(train_dataloader)
-
-        logger.info("***** Running training *****")
-        logger.info("  Num samples by epoch = %d", num_steps * self.args.train_batch_size)
-        logger.info("  Num steps by epoch = %d", num_steps)
-        logger.info("  Num Epochs = %d", num_train_epochs)
-        logger.info("  Instantaneous batch size per device = %d", self.args.per_device_train_batch_size)
-        logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
-        logger.info("  Gradient Accumulation steps = %d", self.args.gradient_accumulation_steps)
-        logger.info("  Total optimization steps = %d", t_total)
-        '''
-
-        num_examples = (
-            self.num_examples(train_dataloader)
-            if train_dataset_is_sized
-            else total_train_batch_size * self.args.max_steps
-        )
-
-        if self.args.dataloader_drop_last:
-            num_examples -= 1 # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
-
-
-        logger.info("***** Running training *****")
-        logger.info(f"  Num examples = {num_examples}")
-        logger.info(f"  Num Epochs = {num_train_epochs}")
-        logger.info(f"  Instantaneous batch size per device = {self.args.per_device_train_batch_size}")
-        logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_train_batch_size}")
-        logger.info(f"  Gradient Accumulation steps = {self.args.gradient_accumulation_steps}")
-        logger.info(f"  Total optimization steps = {max_steps}")
-
-        self.epoch = 0
-        epochs_trained = 0
-        steps_trained_in_current_epoch = 0
-        # Check if continuing training from a checkpoint
-        if model_path is not None:
-            # set global_step to global_step of last saved checkpoint from model path
-            try:
-                self.global_step = int(model_path.split("-")[-1].split("/")[0])
-                epochs_trained = self.global_step // (len(train_dataloader) // self.args.gradient_accumulation_steps)
-                steps_trained_in_current_epoch = self.global_step % (
-                    len(train_dataloader) // self.args.gradient_accumulation_steps
+                self.optimizer = AdamW(
+                    optimizer_grouped_parameters,
+                    lr=self.args.learning_rate,
+                    betas=(self.args.adam_beta1, self.args.adam_beta2),
+                    eps=self.args.adam_epsilon,
                 )
 
-                logger.info("  Continuing training from checkpoint, will skip to saved global_step")
-                logger.info("  Continuing training from epoch %d", epochs_trained)
-                logger.info("  Continuing training from global step %d", self.global_step)
-                logger.info("  Will skip the first %d steps in the first epoch", steps_trained_in_current_epoch)
-            except ValueError:
-                self.global_step = 0
-                logger.info("  Starting fine-tuning.")
-
-        # Update the references
-        self.callback_handler.model = self.model
-        self.callback_handler.optimizer = self.optimizer
-        self.callback_handler.lr_scheduler = self.lr_scheduler
-        self.callback_handler.train_dataloader = train_dataloader
-
-        tr_loss = 0.0
-        tr_acc = 0.0
-        logging_loss = 0.0
-        logging_acc = 0.0
-        model.zero_grad()
-
-        '''
-        train_iterator = trange(
-            epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
-        )
-        '''
+        if self.lr_scheduler is None:
+            if self.args.learning_rate_schedule == 'constant_with_warmup':
+                self.lr_scheduler = get_constant_schedule_with_warmup(self.optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps)
+            elif self.args.learning_rate_schedule == 'linear_with_warmup':
+                self.lr_scheduler = get_linear_schedule_with_warmup(self.optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=num_training_steps)
+            elif self.args.learning_rate_schedule == 'cosine_with_warmup':
+                self.lr_scheduler = get_cosine_schedule_with_warmup(self.optimizer, num_warmup_steps = self.args.learning_rate_warmup_steps, num_training_steps=num_training_steps,
+                                                                    num_cycles= self.args.learning_rate_num_cosine_cycles_by_epoch * self.args.num_train_epochs)
+            else:
+                raise ValueError('Invalid value for --learning_rate_schedule.  Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup')
 
 
-        self.control = self.callback_handler.on_train_begin(self.args, self.state, self.control)
-
-        
-        # NOTE: RecSys
-        with train_dataloader:
-            for epoch in range(epochs_trained, int(num_train_epochs)):
-                print('Training Epoch {}'.format(epoch))
-                if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
-                    train_dataloader.sampler.set_epoch(epoch)
-
-                if is_torch_tpu_available():
-                    parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
-                        self.args.device
-                    )
-                    epoch_iterator = parallel_loader
-                else:
-                    epoch_iterator = train_dataloader
-
-                steps_in_epoch = len(epoch_iterator) if train_dataset_is_sized else self.args.max_steps
-                self.control = self.callback_handler.on_epoch_begin(self.args, self.state, self.control)
-
-
-                # TEMPORARY: TO DEBUG ATTENTION 
-                #self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
-
-                if self.args.pyprof:
-                    cm = torch.autograd.profiler.emit_nvtx()
-                else:
-                    cm = nullcontext()
-
-                with cm:
-                    for step, inputs in enumerate(epoch_iterator):
-                        # Ignoring last training batch  if --dataloader_drop_last, because some data loaders does not support drop_last=True
-                        if self.args.dataloader_drop_last and step >= num_examples:
-                            break    
-
-                        if self.args.pyprof and step == self.args.pyprof_start_step:
-                            profiler.start()
-                        
-                        # Skip past any already trained steps if resuming training
-                        if steps_trained_in_current_epoch > 0:
-                            steps_trained_in_current_epoch -= 1
-                            continue
-
-                        if (step + 1) % self.args.gradient_accumulation_steps == 0:
-                            self.control = self.callback_handler.on_step_begin(self.args, self.state, self.control)
-
-                        step_loss, step_acc = self._training_step(model, inputs, self.optimizer)
-                        
-                        tr_loss += step_loss
-                        tr_acc += step_acc
-
-                        if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
-                            # last step in epoch but step is always smaller than gradient_accumulation_steps
-                            steps_in_epoch <= self.args.gradient_accumulation_steps
-                            and (step + 1) == steps_in_epoch
-                        ):
-                            if self.args.fp16 and _use_native_amp:
-                                self.scaler.unscale_(self.optimizer)
-                                torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
-                            elif self.args.fp16 and _use_apex:
-                                torch.nn.utils.clip_grad_norm_(amp.master_params(self.optimizer), self.args.max_grad_norm)
-                            else:
-                                torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
-
-                            if is_torch_tpu_available():
-                                xm.optimizer_step(self.optimizer)
-                            elif self.args.fp16 and _use_native_amp:
-                                self.scaler.step(self.optimizer)
-                                self.scaler.update()
-                            else:
-                                self.optimizer.step()
-
-                            self.lr_scheduler.step()
-                            model.zero_grad()
-                            self.global_step += 1
-                            self.epoch = epoch + (step + 1) / steps_in_epoch
-                            self.control = self.callback_handler.on_step_end(self.args, self.state, self.control)
-
-                            
-
-                            '''
-                            if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
-                                self.global_step == 1 and self.args.logging_first_step
-                            ):
-                                logs: Dict[str, float] = {}
-                                logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
-                                logs["train_accuracy"] = (tr_acc - logging_acc) / self.args.logging_steps
-                                # backward compatibility for pytorch schedulers
-                                logs["learning_rate"] = (
-                                    self.lr_scheduler.get_last_lr()[0]
-                                    if version.parse(torch.__version__) >= version.parse("1.4")
-                                    else self.lr_scheduler.get_lr()[0]
-                                )
-                                logging_loss = tr_loss
-                                logging_acc = tr_acc
-
-                                self._log(logs)
-
-                                #if self.args.evaluate_during_training:
-                                #    self.evaluate()
-
-                            if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
-                                # In all cases (even distributed/parallel), self.model is always a reference
-                                # to the model we want to save.
-                                if hasattr(model, "module"):
-                                    assert model.module is self.model
-                                else:
-                                    assert model is self.model
-                                # Save model checkpoint
-                                output_dir = os.path.join(self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-
-                                self.save_model(output_dir)
-
-                                if self.is_world_master():
-                                    self._rotate_checkpoints()
-
-                                if is_torch_tpu_available():
-                                    xm.rendezvous("saving_optimizer_states")
-                                    xm.save(self.optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                                    xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-                                elif self.is_world_master():
-                                    torch.save(self.optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                                    torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-                            '''
-
-                        self.control = self.callback_handler.on_epoch_end(self.args, self.state, self.control)
-                        self._maybe_log_save_evaluate(tr_loss, model, 0, epoch)
-
-                        if (self.args.max_steps > 0 and self.global_step > self.args.max_steps) or (self.fast_test and step > 2):
-                            epoch_iterator.close()
-                            break
-
-                        if self.args.pyprof and step == self.args.pyprof_stop_step:
-                            profiler.stop()
-
-                    if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
-                        train_iterator.close()
-                        break
-                    if self.args.tpu_metrics_debug:
-                        # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
-                        xm.master_print(met.metrics_report())
-                    
-                    '''
-                    if self.args.validate_every > 0 and (epoch + 1) % self.args.validate_every == 0:
-                        self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
-                    '''
-
-            
-            self.control = self.callback_handler.on_train_end(self.args, self.state, self.control)
-
-            '''
-            # Compute metrics on Train set and Eval Set after all training epochs (for each day)
-            self._run_validation(log_attention_weights_fn=log_attention_weights_fn)
-            '''
-
-        '''    
-        if self.tb_writer:
-            self.tb_writer.close()
-        '''
-
-        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutputAcc(self.global_step, tr_loss / self.global_step, tr_acc / self.global_step)        
-
-    def _run_validation(self, log_attention_weights_fn: Callable = None):
-        train_output_all, train_output_neg = self.evaluate(self.get_rec_train_dataloader(), DatasetType.train, log_attention_weights_fn = log_attention_weights_fn)
-        valid_output_all, valid_output_neg = self.evaluate(self.get_rec_valid_dataloader(), DatasetType.valid, log_attention_weights_fn = log_attention_weights_fn)
-
-        output_eval_file = os.path.join(self.args.output_dir, "valid_train_results.txt")
-        if self.is_world_master():
-            with open(output_eval_file, "w") as writer:
-                logger.info(f"*** Train results (all) (epoch: {self.epoch})***")
-                writer.write(f"*** Train results (all) (epoch: {self.epoch})***")
-                for key in sorted(train_output_all.keys()):
-                    logger.info("  %s = %s", key, str(train_output_all[key]))
-                    writer.write("%s = %s\n" % (key, str(train_output_all[key])))
-
-                logger.info(f"*** Train results (neg) (epoch: {self.epoch})***")
-                writer.write(f"*** Train results (neg) (epoch: {self.epoch})***")
-                for key in sorted(train_output_neg.keys()):
-                    logger.info("  %s = %s", key, str(train_output_neg[key]))
-                    writer.write("%s = %s\n" % (key, str(train_output_neg[key])))
-
-                logger.info(f"*** Validation results (all) (epoch: {self.epoch})***")
-                writer.write(f"*** Validation results (all) (epoch: {self.epoch})***")
-                for key in sorted(valid_output_all.keys()):
-                    logger.info("  %s = %s", key, str(valid_output_all[key]))
-                    writer.write("%s = %s\n" % (key, str(valid_output_all[key])))
-
-                logger.info(f"*** Validation results (neg) (epoch: {self.epoch})***")
-                writer.write(f"*** Validation results (neg) (epoch: {self.epoch})***")
-                for key in sorted(valid_output_neg.keys()):
-                    logger.info("  %s = %s", key, str(valid_output_neg[key]))
-                    writer.write("%s = %s\n" % (key, str(valid_output_neg[key])))
-
-    def _training_step(
-        self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
-    ) -> float:
-        model.train()
-        _inputs = {}
-        for k, v in inputs.items():
-            inputs[k] = v.to(self.args.device)
-        
-        if self.args.fp16 and _use_native_amp:
-            with autocast():
-                outputs = model(inputs)
-        else:
-            outputs = model(inputs)
-        
-        acc = outputs[0] # accuracy
-        loss = outputs[2]  # model outputs are always tuple in transformers (see doc)
-        
-        if self.args.n_gpu > 1:
-            loss = loss.mean()  # mean() to average on multi-gpu parallel training
-            acc = acc.mean()
-        if self.args.gradient_accumulation_steps > 1:
-            loss = loss / self.args.gradient_accumulation_steps
-
-
-        '''
-
-        #l1_reg_factor = torch.tensor(1e-5)
-        l2_reg_factor = torch.tensor(1e-3)    
-
-        #L1_reg = torch.tensor(0., requires_grad=True)
-        L2_reg = torch.tensor(0., requires_grad=True)
-        for name, param in model.named_parameters():
-            if 'embedding_tables' in name:
-                #L1_reg = L1_reg + torch.norm(param, 1)
-                L2_reg = L2_reg + torch.norm(param, 2)
-
-        #L1_reg = L1_reg * l1_reg_factor
-        L2_reg = L2_reg * l2_reg_factor
-
-        self._log({#'l1_reg_loss': L1_reg,
-                'l2_reg_loss': L2_reg.item(),
-                'loss_before_reg': loss.item()})
-
-        loss = loss + L2_reg
-
-        '''
-
-        if self.args.fp16 and _use_native_amp:
-            self.scaler.scale(loss).backward()
-        elif self.args.fp16 and _use_apex:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
-        else:
-            loss.backward()
-
-        return loss.item(), acc.item()
-
-    def evaluate(
-        self, eval_dataloader: Optional[DataLoader] = None, dataset_type: Optional[DatasetType] = DatasetType.valid,
-        prediction_loss_only: Optional[bool] = None, log_attention_weights_fn: Callable = None
-    ) -> Dict[str, float]:
+    def log(self, logs: Dict[str, float]) -> None:
         """
-        Run evaluation and return metrics.
+        Overriding :obj:`Trainer.log()` to ensure that the global step
+        used for logging to W&B and Tensorboard is incremental across multiple :obj:`Trainer.train()` methods
+        so that the logged values do not overlap
+        """        
+        if self.state.epoch is not None:
+            logs["epoch"] = self.state.epoch
 
-        The calling script will be responsible for providing a method to compute metrics, as they are
-        task-dependent.
+        #Incremental global steps across train() calls so that logs to W&B and Tensorboard do not overlap
+        state_copy = deepcopy(self.state)
+        state_copy.global_step = self._get_general_global_step()
 
-        Args:
-            eval_dataloader: (Optional) Pass a data loader if you wish to override
-            the one on the instance.
-        Returns:
-            A dict containing:
-                - the eval loss
-                - the potential metrics computed from the predictions
-        """
+        self.control = self.callback_handler.on_log(self.args, state_copy, self.control, logs)
+        output = {**logs, **{"step": state_copy.global_step}}
+        self.state.log_history.append(output)
 
-        # NOTE: RecSys
 
-        if eval_dataloader is None:
-            eval_dataloader = self.get_rec_valid_dataloader()
-
-        output = self._prediction_loop(eval_dataloader, dataset_type, prediction_loss_only=prediction_loss_only,
-                                        log_attention_weights_fn=log_attention_weights_fn)
-
-        
-        output_metrics = {**output.metrics_all, **output.metrics_neg}
-        self.log(output_metrics)
-
-        if self.args.tpu_metrics_debug:
-            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
-            xm.master_print(met.metrics_report())
-
-        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, output_metrics)
-        return output.metrics_all, output.metrics_neg
-
-    def predict(self, test_dataloader: Optional[DataLoader] = None, dataset_type: Optional[DatasetType] = DatasetType.test,
-                log_predictions_fn: Callable = None, log_attention_weights_fn: Callable = None) -> PredictionOutput:
-        """
-        Run prediction and return predictions and potential metrics.
-
-        Depending on the dataset and your use case, your test dataset may contain labels.
-        In that case, this method will also return metrics, like in evaluate().
-        """
-        if test_dataloader is None:
-            test_dataloader = self.get_rec_test_dataloader()
-
-        output = self._prediction_loop(test_dataloader, dataset_type=dataset_type, 
-                        log_predictions_fn=log_predictions_fn, log_attention_weights_fn=log_attention_weights_fn)
-
-        self.log({**output.metrics_neg, **output.metrics_all})
-
-        return output
-
-    def _prediction_loop(
-        self, dataloader: DataLoader, dataset_type: DatasetType, prediction_loss_only: Optional[bool] = None, 
-        log_predictions_fn: Callable = None, log_attention_weights_fn: Callable = None
+    def prediction_loop(
+        self,
+        dataloader: DataLoader,
+        description: str,
+        prediction_loss_only: Optional[bool] = None,
+        ignore_keys: Optional[List[str]] = None,
+        metric_key_prefix: str = "eval",
     ) -> PredictionOutput:
         """
-        Prediction/evaluation loop, shared by `evaluate()` and `predict()`.
-
-        Works both with or without labels.
+        Overriding :obj:`Trainer.prediction_loop()` (shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`) 
+        to provide more flexibility to work with streaming metrics (computed at each eval batch) and
+        to log with the outputs of the model (e.g. prediction scores, prediction metadata, attention weights)
         """
-        description = dataset_type.value
-        streaming_metrics_all_ds = self.streaming_metrics_all[dataset_type]
-        streaming_metrics_neg_ds = self.streaming_metrics_neg[dataset_type]
 
-        # Reseting streaming metrics each day
-        streaming_metrics_all_ds.reset()
-        streaming_metrics_neg_ds.reset()
+        #Ensures that metrics will be computed, even if self.compute_metrics function is not defined (because here we use streaming metrics)
+        prediction_loss_only = False
+        
+        # Reseting streaming metrics for the dataset (Train, Valid or Test
+        streaming_metrics_ds = self.streaming_metrics[metric_key_prefix]
+        streaming_metrics_ds.reset()
 
-        '''
-        prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else self.prediction_loss_only
-        '''
+
+        if not isinstance(dataloader.dataset, collections.abc.Sized):
+            raise ValueError("dataset must implement __len__")
+
+        prediction_loss_only = (
+            prediction_loss_only if prediction_loss_only is not None else self.args.prediction_loss_only
+        )
 
         model = self.model
         # multi-gpu eval
-        if self.args.n_gpu > 1:
+        if self.args.n_gpu > 1 and not self.args.model_parallel:
             model = torch.nn.DataParallel(model)
-        else:
-            model = self.model
         # Note: in torch.distributed mode, there's no point in wrapping the model
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
-
         batch_size = dataloader.batch_size
+        
         num_examples = self.num_examples(dataloader)
-        if self.args.dataloader_drop_last:
-            num_examples -= 1  # It was -1, but the NVTabular dataloader is raising an error in the second-to-last batch
 
         logger.info("***** Running %s *****", description)
         logger.info("  Num examples = %d", num_examples)
         logger.info("  Batch size = %d", batch_size)
 
-        eval_losses: List[float] = []
-        eval_losses_neg: List[float] = []
-        eval_losses_ce: List[float] = []
-        eval_accs: List[float] = []
-        eval_accs_neg: List[float] = []
-        step = 0
+        
+        preds_item_ids_scores_host: Union[torch.Tensor, List[torch.Tensor]] = None
+        labels_host: Union[torch.Tensor, List[torch.Tensor]] = None
+
+        losses = []
+
+        world_size = 1
+        if is_torch_tpu_available():
+            world_size = xm.xrt_world_size()
+        elif self.args.local_rank != -1:
+            world_size = torch.distributed.get_world_size()
+        world_size = max(1, world_size)
+
+        PADDING_INDEX = -100
+
+        if not prediction_loss_only:
+            preds_item_ids_scores_gatherer = DistributedTensorGatherer(world_size, num_examples, make_multiple_of=batch_size,
+                                                                       padding_index=PADDING_INDEX)
+            labels_gatherer = DistributedTensorGatherer(world_size, num_examples, make_multiple_of=batch_size,
+                                                        padding_index=PADDING_INDEX)
+
         model.eval()
 
         if is_torch_tpu_available():
             dataloader = pl.ParallelLoader(dataloader, [self.args.device]).per_device_loader(self.args.device)
 
+        if self.args.past_index >= 0:
+            self._past = None
+
         self.callback_handler.eval_dataloader = dataloader
 
-        for step, inputs in tqdm(enumerate(dataloader), desc=description):
+        for step, inputs in enumerate(dataloader):
 
-            # Ignoring last training batch  if --dataloader_drop_last, because some data loaders does not support drop_last=True
-            if self.args.dataloader_drop_last and step >= num_examples: 
+            #Limits the number of evaluation steps on train set (which is usually larger)
+            if metric_key_prefix == DatasetType.train.value and \
+                self.args.eval_steps_on_train_set > 0 and step+1 > self.args.eval_steps_on_train_set:
                 break
+            
+            loss, preds, labels, outputs = self.prediction_step(model, inputs, prediction_loss_only, ignore_keys=ignore_keys)
 
-            for k, v in inputs.items():
-                inputs[k] = v.to(self.args.device)
+            losses.append(loss.item())
 
-            with torch.no_grad():
+            if step % self.args.compute_metrics_each_n_steps == 0:
 
-                if self.args.fp16 and _use_native_amp:
-                    with autocast():
-                        outputs = model(inputs)
-                else:
-                    outputs = model(inputs)
-                
-                step_eval_acc, step_eval_acc_neg, step_eval_loss, step_eval_loss_neg, step_eval_loss_ce, preds_neg, labels_neg, preds_all, labels_all, preds_metadata = outputs[:10]
-                
-                step_attention_weights = None
-                if self.args.log_attention_weights and \
-                            isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                     
-                    step_attention_weights = outputs[-1] #Attention weights should be 10th or 11th position
-                    assert len(step_attention_weights[0].shape) == 4, "Attention weights tensor should be rank 4, with shape (batch_size, heads, seqlen, seqlen)"
+                #Updates metrics and returns detailed metrics if log_predictions=True
+                metrics_results_detailed = None
+                if streaming_metrics_ds is not None:
+                    metrics_results_detailed = streaming_metrics_ds.update(preds, labels, return_individual_metrics=self.args.log_predictions)
+
+                self._maybe_log_attention_weights(inputs, outputs['model_outputs'], metric_key_prefix, step)
 
 
-                eval_accs += [step_eval_acc.mean().item()]                
-                eval_losses += [step_eval_loss.mean().item()]                
-                eval_losses_ce += [step_eval_loss_ce.mean().item()]
-                if step_eval_acc_neg is not None:
-                    eval_accs_neg += [step_eval_acc_neg.mean().item()]
-                    eval_losses_neg += [step_eval_loss_neg.mean().item()]
+            if labels is not None:
+                labels_host = labels if labels_host is None else nested_concat(labels_host, labels, padding_index=-100)
 
+            if preds is not None:
+                preds_sorted_item_scores, preds_sorted_item_ids = torch.sort(preds, axis=1, descending=True)
 
-                '''
-                if not prediction_loss_only:
-                '''
-                if True:
+                if self.args.predict_top_k > 0:
+                    preds_sorted_item_scores = preds_sorted_item_scores[:, :self.args.predict_top_k]
+                    preds_sorted_item_ids = preds_sorted_item_ids[:, :self.args.predict_top_k]
 
-                     # preds.size(): N_BATCH x SEQLEN x (POS_Sample + NEG_Sample) (=51)
-                    # labels.size(): ...  x 1 [51]
-                    
-                    if step % self.args.compute_metrics_each_n_steps == 0:
+                self._maybe_log_predictions(labels, preds_sorted_item_ids, preds_sorted_item_scores, outputs['pred_metadata'], 
+                                    metrics_results_detailed, metric_key_prefix)
 
-                        #Updates metrics and returns detailed metrics if log_predictions=True
-                        metrics_results_detailed_all = None
-                        metrics_results_detailed_neg = None
-                        if streaming_metrics_all_ds is not None:
-                            metrics_results_detailed_all = streaming_metrics_all_ds.update(preds_all, labels_all, return_individual_metrics=self.log_predictions)
-                        if streaming_metrics_neg_ds is not None:
-                            if preds_neg is not None:
-                                metrics_results_detailed_neg = streaming_metrics_neg_ds.update(preds_neg, labels_neg, return_individual_metrics=self.log_predictions)
+                # The output predictions will be a tuple with the ranked top-n item ids, and item recommendation scores
+                preds_item_ids_scores = (preds_sorted_item_ids, preds_sorted_item_scores)                
 
-
-                        if self.args.log_attention_weights and \
-                            isinstance(self.model.model, PreTrainedModel): #Checks if its a transformer                        
-
-                            if log_attention_weights_fn is not None:
-
-                                # Saving histograms of attention weights (up to the 5th position) to debug how attention changes over training
-                                #for idx, layer_att in enumerate(step_attention_weights):
-                                #    self.tb_writer.add_histogram('attention/softmax/layer-{}/{}'.format(idx, description), 
-                                #                layer_att[:,:,:5,:5], self.global_step)
-                                
-                                step_attention_weights_cpu = list([layer_att.cpu().numpy() for layer_att in step_attention_weights])
-
-                                #Converting torch Tensors to NumPy and callback predictions logging function
-                                inputs_cpu = {k: v.cpu().numpy() for k, v in inputs.items()}
-
-                                log_attention_weights_fn(inputs=inputs_cpu, 
-                                                        att_weights=step_attention_weights_cpu, 
-                                                        description='attention_{}_step_{:06}'.format(description, self.global_step))
-                                               
-
-                        if self.log_predictions:
-                            #Converting torch Tensors to NumPy and callback predictions logging function
-                            preds_metadata = {k: v.cpu().numpy() for k, v in preds_metadata.items()}
-
-                            if log_predictions_fn is not None:                            
-                            
-                                preds_neg_values = None
-                                labels_neg_values = None
-                                if preds_neg is not None:
-                                    preds_neg_values = preds_neg.cpu().numpy()
-                                    labels_neg_values = labels_neg.cpu().numpy()
-                                log_predictions_fn(preds_neg_values, labels_neg_values, 
-                                                    metrics_results_detailed_neg, metrics_results_detailed_all, 
-                                                    preds_metadata)
-                        
+                preds_item_ids_scores_host = preds_item_ids_scores if preds_item_ids_scores_host is None \
+                                              else nested_concat(preds_item_ids_scores_host, preds_item_ids_scores, padding_index=-100)                
             
             self.control = self.callback_handler.on_prediction_step(self.args, self.state, self.control)
-            
-            if self.fast_test and step > 4:
-                break
-            step += 1 
 
-        if streaming_metrics_all_ds is not None:
-            metrics_all = streaming_metrics_all_ds.result()
+            # Gather all tensors and put them back on the CPU if we have done enough accumulation steps.
+            if self.args.eval_accumulation_steps is not None and (step + 1) % self.args.eval_accumulation_steps == 0:
+                if not prediction_loss_only:
+                    preds_item_ids_scores_gatherer.add_arrays(self._gather_and_numpify(preds_item_ids_scores_host, "preds_item_ids_scores"))
+                    labels_gatherer.add_arrays(self._gather_and_numpify(labels_host, "eval_label_ids"))
+
+                # Set back to None to begin a new accumulation
+                losses_host, preds_item_ids_scores_host, labels_host = None, None, None
+
+        if self.args.past_index and hasattr(self, "_past"):
+            # Clean the state at the end of the evaluation loop
+            delattr(self, "_past")
+
+        # Gather all remaining tensors and put them back on the CPU
+        if not prediction_loss_only:
+            preds_item_ids_scores_gatherer.add_arrays(self._gather_and_numpify(preds_item_ids_scores_host, "preds_item_ids_scores"))
+            labels_gatherer.add_arrays(self._gather_and_numpify(labels_host, "eval_label_ids"))
+
+        preds_item_ids_scores = preds_item_ids_scores_gatherer.finalize() if not prediction_loss_only else None
+        label_ids = labels_gatherer.finalize() if not prediction_loss_only else None
+
+        #Truncating labels and predictions (because the last batch is usually not complete)
+        valid_preds_mask = (label_ids != PADDING_INDEX)
+        label_ids = label_ids[valid_preds_mask]
+        if isinstance(preds_item_ids_scores, tuple):            
+            preds_item_ids_scores = tuple([pred_section[valid_preds_mask] for pred_section in preds_item_ids_scores])
         else:
-            metrics_all = {}
+            preds_item_ids_scores = preds_item_ids_scores[valid_preds_mask]
 
-        if streaming_metrics_neg_ds is not None:
-            metrics_neg = streaming_metrics_neg_ds.result()
-        else:
-            metrics_neg = {}
+        #if self.compute_metrics is not None and preds is not None and label_ids is not None:
+        #    metrics = self.compute_metrics(EvalPrediction(predictions=preds, label_ids=label_ids))
+        #else:
+        #    metrics = {}
 
-        if len(eval_losses) > 0:
-            metrics_all[f"{description}_loss"] = np.mean(eval_losses)
-        if len(eval_losses_ce) > 0:
-            metrics_all[f"{description}_loss_xe"] = np.mean(eval_losses_ce)
-        if len(eval_losses_neg) > 0:
-            metrics_neg[f"{description}_loss_xe_neg"] = np.mean(eval_losses_neg)
-        if len(eval_accs) > 0:
-            metrics_all[f"{description}_accuracy"] = np.mean(eval_accs)
-        if len(eval_accs_neg) > 0:
-            metrics_all[f"{description}_accuracy_neg"] = np.mean(eval_accs_neg)
+        metrics = {}
 
-        # Prefix all keys with eval_
-        for key in list(metrics_all.keys()):
-            if not key.startswith(f"{description}_"):
-                metrics_all[f"{description}_{key}_all"] = metrics_all.pop(key)
+        #Computing the metrics results as the average of all steps
+        if streaming_metrics_ds is not None:
+            streaming_metrics_results = streaming_metrics_ds.result()
+            metrics = {**metrics, **streaming_metrics_results}
 
-        for key in list(metrics_neg.keys()):
-            if not key.startswith(f"{description}_"):
-                metrics_neg[f"{description}_{key}_neg"] = metrics_neg.pop(key)
+        metrics[f"{metric_key_prefix}_loss"] = np.mean(losses)
+
+        # Prefix all keys with metric_key_prefix + '_'
+        for key in list(metrics.keys()):
+            if not key.startswith(f"{metric_key_prefix}_"):
+                metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
+
+        return PredictionOutput(predictions=preds_item_ids_scores, label_ids=label_ids, metrics=metrics)
+
+
+    def prediction_step(
+        self,
+        model: nn.Module,
+        inputs: Dict[str, Union[torch.Tensor, Any]],
+        prediction_loss_only: bool,
+        ignore_keys: Optional[List[str]] = None,
+    ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor], Optional[Dict[str, Any]]]:
+        """
+        Overriding :obj:`Trainer.prediction_step()` to provide more flexibility to unpack results from the model,
+        like returning labels that are not exactly one input feature
+        """
         
-        return PredictionOutput(metrics_all=metrics_all, metrics_neg=metrics_neg)
+        inputs = self._prepare_inputs(inputs)
+        if ignore_keys is None:
+            if hasattr(self.model, "config"):
+                ignore_keys = getattr(self.model.config, "keys_to_ignore_at_inference", [])
+            else:
+                ignore_keys = []
+
+        with torch.no_grad():
+            if self.use_amp:
+                with autocast():
+                    outputs = model(**inputs)
+            else:
+                outputs = model(**inputs)
+
+            loss = outputs["loss"].mean().detach()            
+
+        if prediction_loss_only:
+            return (loss, None, None, None)
+
+        predictions = outputs["predictions"].detach()     
+        labels = outputs["labels"].detach()     
+
+        other_outputs = {k: v.detach() if isinstance(v, torch.Tensor) 
+                                       else v for k, v in outputs.items()  if k not in ignore_keys + ["loss", "predictions", "labels"]}    
+
+        return (loss, predictions, labels, other_outputs)
+
+
+    def _maybe_log_attention_weights(self, inputs: Dict[str, torch.Tensor], 
+                                           model_outputs: Dict[str, torch.Tensor], 
+                                           metric_key_prefix: str, 
+                                           prediction_step: int):
+        """
+        If --log_attention_weights is enabled, calls a callback function to log attention weights along with the input features
+        """
+
+        #Logs the attention weights
+        if self.args.log_attention_weights and \
+            isinstance(self.model.model, PreTrainedModel):
+
+            if self.log_attention_weights_callback is not None:
+
+                step_attention_weights = model_outputs[-1]
+                assert len(step_attention_weights[0].shape) == 4, "Attention weights tensor should be rank 4, with shape (batch_size, heads, seqlen, seqlen)"
+                
+                layers_step_attention_weights_cpu = list([layer_att.cpu().numpy() for layer_att in step_attention_weights])
+
+                #Converting torch Tensors to NumPy and callback predictions logging function
+                inputs_cpu = {k: v.cpu().numpy() for k, v in inputs.items()}
+
+                log_step = self._get_general_global_step() + prediction_step
+                self.log_attention_weights_callback(inputs=inputs_cpu, 
+                                        att_weights=layers_step_attention_weights_cpu, 
+                                        description='attention_{}_step_{:06}'.format(metric_key_prefix, log_step))
+
+    def _maybe_log_predictions(self, labels: torch.Tensor, 
+                                pred_item_ids: torch.Tensor,                                 
+                                pred_item_scores: torch.Tensor, 
+                                pred_metadata: Dict[str, torch.Tensor], 
+                                metrics: Dict[str, np.ndarray], 
+                                metric_key_prefix:str):
+        """
+        If --log_predictions is enabled, calls a callback function to log predicted item ids, scores, metadata and metrics
+        """
+
+        if self.args.log_predictions and self.log_predictions_callback is not None:         
+
+            #Converting torch Tensors to NumPy and callback predictions logging function
+            preds_metadata = {k: v.cpu().numpy() for k, v in pred_metadata.items()}              
+        
+            self.log_predictions_callback(labels=labels.cpu().numpy(), 
+                                            pred_item_ids=pred_item_ids.cpu().numpy(), 
+                                            pred_item_scores=pred_item_scores.cpu().numpy().astype(np.float32), #Because it is float16 when --fp16
+                                            preds_metadata=preds_metadata, 
+                                            metrics=metrics, 
+                                            dataset_type=metric_key_prefix)

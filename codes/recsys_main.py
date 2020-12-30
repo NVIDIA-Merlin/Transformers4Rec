@@ -1,10 +1,7 @@
 """
-How torun : 
-    CUDA_VISIBLE_DEVICES=0 python main_runner.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset/sessions_with_neg_samples_example/ --per_device_train_batch_size 128 --model_type xlnet
+Example arguments for command line: 
+    CUDA_VISIBLE_DEVICES=0,1 TOKENIZERS_PARALLELISM=false python recsys_main.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset_path/ --start_date 2019-10-01 --end_date 2019-10-15 --data_loader_engine nvtabular --per_device_train_batch_size 320 --per_device_eval_batch_size 512 --model_type gpt2 --loss_type cross_entropy --logging_steps 10 --d_model 256 --n_layer 2 --n_head 8 --dropout 0.1 --learning_rate 0.001 --similarity_type concat_mlp --num_train_epochs 1 --all_rescale_factor 1 --neg_rescale_factor 0 --feature_config ../datasets/ecommerce-large/config/features/session_based_features_pid.yaml --inp_merge mlp --tf_out_activation tanh --experiments_group local_test --weight_decay 1.3e-05 --learning_rate_schedule constant_with_warmup --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 1 --hidden_act gelu_new --save_steps 0 --eval_on_last_item_seq_only --fp16 --overwrite_output_dir --session_seq_length_max 20 --predict_top_k 1000 --eval_accumulation_steps 10
 """
-
-
-
 
 import os
 import sys
@@ -24,8 +21,7 @@ import yaml
 
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
-#from recsys_trainer import RecSysTrainer, DatasetType
-from recsys_trainer_v2 import RecSysTrainer, DatasetType, DatasetMock
+from recsys_trainer import RecSysTrainer, DatasetType, DatasetMock
 from recsys_utils import safe_json
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
@@ -62,6 +58,10 @@ ATTENTION_LOG_FOLDER = 'attention_weights'
 
 
 class AllHparams:
+    """
+    Used to aggregate all arguments in a single object for logging
+    """
+
     def __init__(self, **entries):
         self.__dict__.update(entries)
 
@@ -72,6 +72,9 @@ class AllHparams:
 
 
 def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
+    """
+        Analyses the feature map config and returns the name of the label feature (e.g. item_id)
+    """
     label_feature_config = list([k for k,v in feature_map.items() if 'is_label' in v and v['is_label']])
 
     if len(label_feature_config) == 0:
@@ -139,8 +142,6 @@ def main():
         training_args.fp16,
     )
 
-    
-
     # Set the verbosity to info of the Transformers logger (on main process only):
     if is_main_process(training_args.local_rank):
         transformers.utils.logging.set_verbosity_info()
@@ -166,10 +167,7 @@ def main():
 
     trainer = RecSysTrainer(
         model=rec_model,        
-        args=training_args,
-        #fast_test=training_args.fast_test,
-        log_predictions=training_args.log_predictions,
-        #fp16=training_args.fp16,
+        args=training_args
     )
 
     
@@ -188,18 +186,11 @@ def main():
 
             break
 
+    set_log_attention_weights_callback(trainer, training_args)
+    
 
     data_dates = get_avail_data_dates(data_args)
     results_dates = {}
-
-    '''
-    att_weights_fn = None
-    if training_args.log_attention_weights:
-        attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
-        logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
-        att_weights_logger = AttentionWeightsLogger(attention_output_path)
-        att_weights_fn = att_weights_logger.log 
-    '''
 
     for date_idx in range(1, len(data_dates)):
         train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
@@ -212,31 +203,6 @@ def main():
             train_loader, eval_loader \
                  = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date)
 
-            '''
-            print('FIRST')
-            for step, inputs in enumerate(train_loader):
-                if step < 2: 
-                    cat, cont, label = inputs
-                    print(cont[1]['sess_dtime_secs_log_norm_seq'][0][:5])
-                    print(cont[1]['sess_dtime_secs_log_norm_seq'][1].shape)
-                    #print(inputs['sess_pid_seq'][0])
-                    #print(inputs['sess_pid_seq'].shape)
-                else:
-                    break
-
-            #trash = next(train_loader)
-            
-            print('SECOND')
-            for step, inputs in enumerate(train_loader):
-                if step < 2: 
-                    cat, cont, label = inputs
-                    print(cont[1]['sess_dtime_secs_log_norm_seq'][0][:5])
-                    print(cont[1]['sess_dtime_secs_log_norm_seq'][1].shape)
-                    #print(inputs['sess_pid_seq'][0])
-                    #print(inputs['sess_pid_seq'].shape)
-                else:
-                    break
-            '''
 
             trainer.set_train_dataloader(train_loader)
             trainer.set_eval_dataloader(eval_loader)
@@ -252,6 +218,8 @@ def main():
 
         # Evaluation
         if training_args.do_eval:
+            set_log_predictions_callback(trainer, training_args, eval_date)
+
             logger.info("************* Evaluation *************")
 
             # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
@@ -277,54 +245,6 @@ def main():
 
             results_dates[eval_date] = {**eval_metrics, **train_metrics}
 
-
-            
-
-            # To log predictions in a parquet file for each day
-            #if training_args.log_predictions:
-            #    output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(eval_date.strftime("%Y-%m-%d")))
-            #    logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
-            #    prediction_logger = PredictionLogger(output_preds_logs_path)
-
-
-            #if training_args.log_attention_weights:
-            #    attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
-            #    logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
-            #    att_weights_logger = AttentionWeightsLogger(attention_output_path)
-
-            #try:
-                #log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
-                #att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
-                
-                #eval_metrics = trainer.evaluate(metric_key_prefix=DatasetType.eval.value
-                                              #log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn
-                #                              )
-
-                
-                #log_results_txt_format(training_args.output_dir, eval_metrics, prefix='eval', date=eval_date)
-
-                #if trainer.is_world_process_zero():
-                #    output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")                    
-                #    with open(output_eval_file, "w+") as writer:
-                #        logger.info("***** Eval results (date:{})*****".format(eval_date))
-                #        writer.write("***** Eval results (date:{})*****".format(eval_date))
-                #        for key in sorted(eval_metrics.keys()):
-                #            logger.info("  %s = %s", key, str(eval_metrics[key]))
-                #            writer.write("%s = %s\n" % (key, str(eval_metrics[key])))
-
-                #results_dates[eval_date] = eval_metrics
-
-                #DLLogger.log(step=(eval_date.strftime("%Y-%m-%d"),), data=eval_metrics, verbosity=Verbosity.VERBOSE)
-                #DLLogger.flush()
-
-            #finally:
-            #    if training_args.log_predictions:
-            #        prediction_logger.close()
-
-        #if training_args.do_predict:
-        #predictions = trainer.predict(test_dataset=test_dataset).predictions
-        #predictions = np.squeeze(predictions) if is_regression else np.argmax(predictions, axis=1)
-
     logger.info("Training and evaluation loops are finished")
     
      
@@ -349,7 +269,10 @@ def main():
 
 
 
-def log_metric_results(output_dir, metrics, prefix, date=None):
+def log_metric_results(output_dir, metrics, prefix, date):
+    """
+    Logs to a text file metric results for each day, in a human-readable format
+    """
     output_file = os.path.join(output_dir, f"{prefix}_results_dates.txt")                    
     with open(output_file, "a") as writer:
         logger.info(f"***** {prefix} results ({date})*****")
@@ -362,6 +285,9 @@ def log_metric_results(output_dir, metrics, prefix, date=None):
     DLLogger.flush()
 
 def log_aod_metric_results(output_dir, results_df, results_avg_days):
+    """
+    Logs to a text file the final metric results (average over days), in a human-readable format
+    """
     output_eval_file = os.path.join(output_dir, "eval_results_avg_over_days.txt")
     with open(output_eval_file, "a") as writer:
         logger.info("***** Eval results (avg over dates) *****")
@@ -377,8 +303,22 @@ def log_aod_metric_results(output_dir, results_df, results_avg_days):
 
     return results_avg_days
 
-class AttentionWeightsLogger:
+def set_log_attention_weights_callback(trainer, training_args):
+    """
+    Sets a callback in the :obj:`RecSysTrainer` to log the attention weights of Transformer models
+    """
+    log_attention_weights_callback = None
+    if training_args.log_attention_weights:
+        attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
+        logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
+        att_weights_logger = AttentionWeightsLogger(attention_output_path)
 
+        trainer.log_attention_weights_callback = att_weights_logger.log 
+
+class AttentionWeightsLogger:
+    """
+    Manages the logging of Transformers' attention weights
+    """
     def __init__(self, output_path):
         self.output_path = output_path
         if not os.path.exists(self.output_path):
@@ -393,9 +333,20 @@ class AttentionWeightsLogger:
             ouf.close()
 
 
+def set_log_predictions_callback(trainer, training_args, eval_date):
+    """
+    Sets a callback in the :obj:`RecSysTrainer` to log the predictions of the model, for each day
+    """
+    if training_args.log_predictions:
+        output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(eval_date.strftime("%Y-%m-%d")))
+        logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
+        prediction_logger = PredictionLogger(output_preds_logs_path)
+        trainer.log_predictions_callback = prediction_logger.log_predictions
 
 class PredictionLogger:
-
+    """
+    Manages the logging of model predictions during evaluation
+    """
     def __init__(self, output_parquet_path):
         self.output_parquet_path = output_parquet_path
         self.pq_writer = None
@@ -414,25 +365,23 @@ class PredictionLogger:
         new_rows_pa = pyarrow.Table.from_pandas(new_rows_df)
         self.pq_writer.write_table(new_rows_pa)
 
-    def log_predictions(self, pred_scores_neg, labels_neg, metrics_neg, metrics_all, preds_metadata):
+
+    def log_predictions(self, labels, pred_item_ids, pred_item_scores, preds_metadata, metrics, dataset_type):
         num_predictions = preds_metadata[list(preds_metadata.keys())[0]].shape[0]
         new_rows = []
         for idx in range(num_predictions):
             row = {}
+            row['dataset_type'] = dataset_type
 
-            if metrics_all is not None:
+            if metrics is not None:
                 # Adding metrics all detailed results
-                for metric in metrics_all:
-                    row['metric_all_'+metric] = metrics_all[metric][idx]
+                for metric in metrics:
+                    row['metric_'+metric] = metrics[metric][idx]
 
-            if metrics_neg is not None:
-                # Adding metrics neg detailed results
-                for metric in metrics_neg:
-                    row['metric_neg_'+metric] = metrics_neg[metric][idx]
-
-            if labels_neg is not None:
-                row['relevant_item_ids'] = [labels_neg[idx]]
-                row['rec_item_scores'] = pred_scores_neg[idx]
+            if labels is not None:
+                row['relevant_item_ids'] = [labels[idx]]
+                row['rec_item_ids'] = pred_item_ids[idx]
+                row['rec_item_scores'] = pred_item_scores[idx]
 
             # Adding metadata features
             for feat_name in preds_metadata:
