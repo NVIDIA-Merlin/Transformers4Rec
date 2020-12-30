@@ -21,10 +21,6 @@ import wandb
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
-from transformers import (
-    HfArgumentParser,
-    set_seed,
-)
 
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
@@ -37,6 +33,14 @@ from recsys_data import (
     get_avail_data_dates    
 )
 
+
+import transformers
+from transformers import (
+    HfArgumentParser,
+    set_seed,
+)
+from transformers.trainer_utils import is_main_process
+from transformers.trainer_utils import is_main_process
 from transformers.integrations import WandbCallback
 
 try:
@@ -80,10 +84,18 @@ def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
 def main():
   
     parser = HfArgumentParser((DataArguments, ModelArguments, TrainingArguments))
-    data_args, model_args, training_args = parser.parse_args_into_dataclasses()
+    if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+        # If we pass only one argument to the script and it's the path to a json file,
+        # let's parse it to get our arguments.
+        data_args, model_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+    else:
+        data_args, model_args, training_args = parser.parse_args_into_dataclasses()
 
     #Ensuring to set W&B run name to null, so that a nice run name is generated
     training_args.run_name = None
+
+    all_hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
+    all_hparams = {k:v for k,v in all_hparams.items() if safe_json(v)}
 
     #Loading features config file
     with open(data_args.feature_config) as yaml_file:
@@ -126,15 +138,21 @@ def main():
         bool(training_args.local_rank != -1),
         training_args.fp16,
     )
-    logger.info("Training/evaluation parameters %s", training_args)
+
+    
+
+    # Set the verbosity to info of the Transformers logger (on main process only):
+    if is_main_process(training_args.local_rank):
+        transformers.utils.logging.set_verbosity_info()
+        transformers.utils.logging.enable_default_handler()
+        transformers.utils.logging.enable_explicit_format()
+    logger.info(f"Training, Model and Data parameters {all_hparams}")
 
     DLLogger.init(backends=[
         StdOutBackend(Verbosity.DEFAULT),
         JSONStreamBackend(Verbosity.VERBOSE, os.path.join(training_args.output_dir, DLLOGGER_FILENAME)),
     ])
-
-    all_hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
-    all_hparams = {k:v for k,v in all_hparams.items() if safe_json(v)}
+    
     DLLogger.log(step="PARAMETER", 
                  data=all_hparams, 
                  verbosity=Verbosity.DEFAULT)
@@ -170,50 +188,58 @@ def main():
 
             break
 
-    
-
-    #Saving Weights & Biases run name
-    '''
-    wandb.run.save()
-    wandb_run_name = wandb.run.name
-    DLLogger.log(step="PARAMETER", 
-                 data={'wandb_run_name': wandb_run_name}, 
-                 verbosity=Verbosity.DEFAULT)             
-
-    trainer.update_wandb_args(model_args)
-    trainer.update_wandb_args(data_args)
-    trainer.update_wandb_args(training_args)
-    '''
 
     data_dates = get_avail_data_dates(data_args)
     results_dates = {}
 
+    '''
     att_weights_fn = None
     if training_args.log_attention_weights:
         attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
         logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
         att_weights_logger = AttentionWeightsLogger(attention_output_path)
         att_weights_fn = att_weights_logger.log 
+    '''
 
     for date_idx in range(1, len(data_dates)):
-        train_date, valid_date, test_date = data_dates[date_idx - 1], data_dates[date_idx], data_dates[date_idx]
-
-        train_loader, valid_loader, test_loader \
-            = fetch_data_loaders(data_args, training_args, feature_map, train_date, valid_date, test_date)
-
-        '''
-        trainer.set_rec_train_dataloader(train_loader)
-        trainer.set_rec_valid_dataloader(valid_loader)
-        trainer.set_rec_test_dataloader(test_loader)
-        '''
-
-        trainer.set_train_dataloader(train_loader)
-        trainer.set_eval_dataloader(valid_loader)
-        trainer.set_test_dataloader(test_loader)
+        train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
+        train_date_str, eval_date_str = train_date.strftime("%Y-%m-%d"), eval_date.strftime("%Y-%m-%d")
 
         # Training
         if training_args.do_train:
-            logger.info("*** Train (date:{})***".format(train_date))
+            logger.info("************* Training (date:{}) *************".format(train_date_str))
+
+            train_loader, eval_loader \
+                 = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date)
+
+            '''
+            print('FIRST')
+            for step, inputs in enumerate(train_loader):
+                if step < 2: 
+                    cat, cont, label = inputs
+                    print(cont[1]['sess_dtime_secs_log_norm_seq'][0][:5])
+                    print(cont[1]['sess_dtime_secs_log_norm_seq'][1].shape)
+                    #print(inputs['sess_pid_seq'][0])
+                    #print(inputs['sess_pid_seq'].shape)
+                else:
+                    break
+
+            #trash = next(train_loader)
+            
+            print('SECOND')
+            for step, inputs in enumerate(train_loader):
+                if step < 2: 
+                    cat, cont, label = inputs
+                    print(cont[1]['sess_dtime_secs_log_norm_seq'][0][:5])
+                    print(cont[1]['sess_dtime_secs_log_norm_seq'][1].shape)
+                    #print(inputs['sess_pid_seq'][0])
+                    #print(inputs['sess_pid_seq'].shape)
+                else:
+                    break
+            '''
+
+            trainer.set_train_dataloader(train_loader)
+            trainer.set_eval_dataloader(eval_loader)
 
             model_path = (
                 model_args.model_name_or_path
@@ -221,31 +247,44 @@ def main():
                     and os.path.isdir(model_args.model_name_or_path)
                 else None
             )
-            trainer.train(model_path=model_path, 
-                         # day_index=date_idx,
-                         #log_attention_weights_fn=att_weights_fn
-                         )
+            trainer.train(model_path=model_path)
 
 
-        # Evaluation (on testset)
+        # Evaluation
         if training_args.do_eval:
-            
-            if training_args.eval_on_test_set:
-                eval_date = test_date
-                eval_dataloader = test_loader
-                eval_datasettype = DatasetType.test
-            else:
-                eval_date = valid_date
-                eval_dataloader = valid_loader
-                eval_datasettype = DatasetType.valid
+            logger.info("************* Evaluation *************")
 
-            logger.info("*** Evaluate (date:{})***".format(eval_date))
+            # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
+            train_loader, eval_loader \
+                 = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, shuffle_train_dataloader=False)
+
+            logger.info(f'Evaluating on train set ({train_date_str})....')
+            trainer.set_train_dataloader(train_loader)
+            #Defining temporarily the the train data loader for evaluation
+            trainer.set_eval_dataloader(train_loader)
+
+            train_metrics = trainer.evaluate(metric_key_prefix=DatasetType.train.value)
+
+            log_metric_results(training_args.output_dir, train_metrics, prefix=DatasetType.train.value, date=train_date_str)
+            
+            
+            logger.info(f'Evaluating on test set ({eval_date_str})....')
+            trainer.set_eval_dataloader(eval_loader)
+            eval_metrics = trainer.evaluate(metric_key_prefix=DatasetType.eval.value)
+
+            log_metric_results(training_args.output_dir, eval_metrics, prefix=DatasetType.eval.value, date=eval_date_str)
+
+
+            results_dates[eval_date] = {**eval_metrics, **train_metrics}
+
+
+            
 
             # To log predictions in a parquet file for each day
-            if training_args.log_predictions:
-                output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(eval_date.strftime("%Y-%m-%d")))
-                logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
-                prediction_logger = PredictionLogger(output_preds_logs_path)
+            #if training_args.log_predictions:
+            #    output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(eval_date.strftime("%Y-%m-%d")))
+            #    logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
+            #    prediction_logger = PredictionLogger(output_preds_logs_path)
 
 
             #if training_args.log_attention_weights:
@@ -253,57 +292,90 @@ def main():
             #    logger.info('Will output attention weights (and inputs) logs to {}'.format(attention_output_path))
             #    att_weights_logger = AttentionWeightsLogger(attention_output_path)
 
-            try:
-                log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
+            #try:
+                #log_predictions_fn = prediction_logger.log_predictions if training_args.log_predictions else None
                 #att_weights_fn = att_weights_logger.log if training_args.log_attention_weights else None
                 
-                eval_metrics = trainer.evaluate(metric_key_prefix=eval_datasettype.value
-                                              #test_dataloader=eval_dataloader, 
-                                              #dataset_type=eval_datasettype, log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn
-                                              )
+                #eval_metrics = trainer.evaluate(metric_key_prefix=DatasetType.eval.value
+                                              #log_predictions_fn=log_predictions_fn, log_attention_weights_fn=att_weights_fn
+                #                              )
 
-                output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")
-                if trainer.is_world_master():
-                    with open(output_eval_file, "w") as writer:
-                        logger.info("***** Eval results (all) (date:{})*****".format(eval_date))
-                        writer.write("***** Eval results (all) (date:{})*****".format(eval_date))
-                        for key in sorted(eval_metrics.keys()):
-                            logger.info("  %s = %s", key, str(eval_metrics[key]))
-                            writer.write("%s = %s\n" % (key, str(eval_metrics[key])))
-
-                results_dates[eval_date] = eval_metrics
-
-                DLLogger.log(step=(eval_date.strftime("%Y-%m-%d"),), data=eval_metrics, verbosity=Verbosity.VERBOSE)
-                DLLogger.flush()
-
-            finally:
-                if training_args.log_predictions:
-                    prediction_logger.close()
-        
-    logger.info("train and eval for all dates are done")
-    trainer.save_model()
-      
-
-    if training_args.do_eval and trainer.is_world_master():
-        
-        eval_df= pd.DataFrame.from_dict(results_dates, orient='index')
-        np.save(os.path.join(training_args.output_dir, "eval_results_dates.npy"), eval_df_all)
-        eval_avg_days = dict(eval_df.mean())
-        output_eval_file = os.path.join(training_args.output_dir, "eval_results_avg.txt")
-        with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results (avg over dates)*****")
-            for key in sorted(eval_avg_days.keys()):
-                logger.info("  %s = %s", key, str(eval_avg_days[key]))
-                writer.write("%s = %s\n" % (key, str(eval_avg_days[key])))
-            trainer._log({f"AOD_{k}":v for k, v in eval_avg_days.items()})
-
-        #Logging with DLLogger for AutoBench
-        eval_avg_metrics = eval_avg_days
-        DLLogger.log(step=(), data=eval_avg_metrics, verbosity=Verbosity.VERBOSE)
-        DLLogger.flush()
                 
-    return results_dates
+                #log_results_txt_format(training_args.output_dir, eval_metrics, prefix='eval', date=eval_date)
 
+                #if trainer.is_world_process_zero():
+                #    output_eval_file = os.path.join(training_args.output_dir, "eval_results_dates.txt")                    
+                #    with open(output_eval_file, "w+") as writer:
+                #        logger.info("***** Eval results (date:{})*****".format(eval_date))
+                #        writer.write("***** Eval results (date:{})*****".format(eval_date))
+                #        for key in sorted(eval_metrics.keys()):
+                #            logger.info("  %s = %s", key, str(eval_metrics[key]))
+                #            writer.write("%s = %s\n" % (key, str(eval_metrics[key])))
+
+                #results_dates[eval_date] = eval_metrics
+
+                #DLLogger.log(step=(eval_date.strftime("%Y-%m-%d"),), data=eval_metrics, verbosity=Verbosity.VERBOSE)
+                #DLLogger.flush()
+
+            #finally:
+            #    if training_args.log_predictions:
+            #        prediction_logger.close()
+
+        #if training_args.do_predict:
+        #predictions = trainer.predict(test_dataset=test_dataset).predictions
+        #predictions = np.squeeze(predictions) if is_regression else np.argmax(predictions, axis=1)
+
+    logger.info("Training and evaluation loops are finished")
+    
+     
+    if trainer.is_world_process_zero():
+        
+        logger.info("Saving model...")   
+        trainer.save_model()
+        # Need to save the state, since Trainer.save_model saves only the tokenizer with the model
+        trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
+      
+        if training_args.do_eval:    
+            logger.info("Computing and loging AOD metrics")   
+            results_df= pd.DataFrame.from_dict(results_dates, orient='index')
+            results_df.reset_index().to_csv(os.path.join(training_args.output_dir, "eval_train_results_dates.csv"), index=False) 
+
+            # Computing Average Over Days (AOD) metrics
+            results_avg_days = dict(results_df.mean())
+            # Logging to W&B
+            trainer.log({f"{k}_AOD":v for k, v in results_avg_days.items()})
+
+            log_aod_metric_results(training_args.output_dir, results_df, results_avg_days)              
+
+
+
+def log_metric_results(output_dir, metrics, prefix, date=None):
+    output_file = os.path.join(output_dir, f"{prefix}_results_dates.txt")                    
+    with open(output_file, "a") as writer:
+        logger.info(f"***** {prefix} results ({date})*****")
+        writer.write(f"\n***** {prefix} results ({date})*****\n")
+        for key in sorted(metrics.keys()):
+            logger.info("  %s = %s", key, str(metrics[key]))
+            writer.write("%s = %s\n" % (key, str(metrics[key])))
+
+    DLLogger.log(step=(date,), data=metrics, verbosity=Verbosity.VERBOSE)
+    DLLogger.flush()
+
+def log_aod_metric_results(output_dir, results_df, results_avg_days):
+    output_eval_file = os.path.join(output_dir, "eval_results_avg_over_days.txt")
+    with open(output_eval_file, "a") as writer:
+        logger.info("***** Eval results (avg over dates) *****")
+        writer.write(f"\n***** Eval results (avg over dates) *****\n")
+        for key in sorted(results_avg_days.keys()):
+            logger.info("  %s = %s", key, str(results_avg_days[key]))
+            writer.write("%s = %s\n" % (key, str(results_avg_days[key])))
+       
+
+    #Logging AOD metrics with DLLogger
+    DLLogger.log(step=(), data=results_avg_days, verbosity=Verbosity.VERBOSE)
+    DLLogger.flush()
+
+    return results_avg_days
 
 class AttentionWeightsLogger:
 

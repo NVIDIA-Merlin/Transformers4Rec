@@ -23,7 +23,7 @@ class TrainingArguments(HfTrainingArguments):
 
     eval_on_test_set: bool = field(default=False, metadata={"help": "Evaluate on test set (by default, evaluates on the validation set)."})
 
-    compute_metrics_each_n_steps: int = field(default=10, metadata={"help": "Log metrics each n steps (for train, validation and test sets)"})
+    compute_metrics_each_n_steps: int = field(default=1, metadata={"help": "Log metrics each n steps (for train, validation and test sets)"})
 
     log_predictions: bool = field(default=False, metadata={"help": "Logs predictions, labels and metadata features each --compute_metrics_each_n_steps (for test set)."})
     log_attention_weights: bool = field(default=False, metadata={"help": "Logs the inputs and attention weights each --compute_metrics_each_n_steps (only test set)"})    
@@ -48,6 +48,10 @@ class TrainingArguments(HfTrainingArguments):
 
     pyprof_start_step: int = field(default=0, metadata={"help": "Start step to profile with PyProf"})
     pyprof_stop_step: int = field(default=0, metadata={"help": "Stop step to profile with PyProf"})
+
+    predict_top_k: int = field(default=0, metadata={"help": "Truncate recommendation list to the highest top-K predicted items"})
+
+    eval_steps_on_train_set: int = field(default=20, metadata={"help": "Number of steps to evaluate on train set (which is usually large)"})
 
     
 
