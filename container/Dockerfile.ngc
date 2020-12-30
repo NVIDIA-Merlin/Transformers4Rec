@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/pytorch:20.08-py3
+FROM nvcr.io/nvidia/pytorch:20.10-py3
 
 ################ Setup GitHub repo ################
 
@@ -18,7 +18,7 @@ WORKDIR /workspace
 # Clone repo
 RUN git clone git@github.com:gabrielspmoreira/recsys.git
 
-#Checkout experimentation branch
+#Checkout the repo to the "experimentation" branch
 WORKDIR recsys
 RUN git checkout -b experimentation origin/experimentation
 

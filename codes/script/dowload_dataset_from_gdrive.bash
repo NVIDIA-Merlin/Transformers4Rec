@@ -8,7 +8,7 @@ unzip_d () {
 
 cur_path=$(pwd)
 
-target_path="/root/dataset"
+target_path="~/dataset"
 mkdir -p ${target_path}
 
 cd ${target_path}
