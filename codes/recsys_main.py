@@ -213,6 +213,8 @@ def main():
                     and os.path.isdir(model_args.model_name_or_path)
                 else None
             )
+
+            trainer.reset_lr_scheduler()
             trainer.train(model_path=model_path)
 
 

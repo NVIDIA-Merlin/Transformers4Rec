@@ -138,6 +138,14 @@ class RecSysTrainer(Trainer):
     def log_predictions_callback(self, var: Callable):
         self.__log_predictions_callback = var
 
+    def reset_lr_scheduler(self) -> None:
+        """ 
+        Resets the LR scheduler of the previous :obj:`Trainer.train()` call, 
+        so that a new LR scheduler one is created by the next :obj:`Trainer.train()` call.
+        This is important for LR schedules like `get_linear_schedule_with_warmup()` which decays LR to 0 in the end of the train
+        """
+        self.lr_scheduler = None
+
     def num_examples(self, dataloader: DataLoader):
         """
         Overriding :obj:`Trainer.num_examples()` method because

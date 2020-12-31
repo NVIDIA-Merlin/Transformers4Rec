@@ -39,7 +39,7 @@ class TrainingArguments(HfTrainingArguments):
     pyprof_start_step: int = field(default=0, metadata={"help": "Start step to profile with PyProf"})
     pyprof_stop_step: int = field(default=0, metadata={"help": "Stop step to profile with PyProf"})
 
-    predict_top_k: int = field(default=0, metadata={"help": "Truncate recommendation list to the highest top-K predicted items"})
+    predict_top_k: int = field(default=10, metadata={"help": "Truncate recommendation list to the highest top-K predicted items (do not affect evaluation metrics computation)"})
 
     eval_steps_on_train_set: int = field(default=20, metadata={"help": "Number of steps to evaluate on train set (which is usually large)"})
 
