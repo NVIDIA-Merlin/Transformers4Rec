@@ -95,11 +95,33 @@ The pipeline expects three parquet files for each time period unit (e.g. date or
 
 ### 2. **Run the training & evaluation script**
 
+#### **DataParallel (default)**
+
+The following command runs the pipeline using `torch.nn.DataParallel()` (default) to make the pipeline data parallel. In this setting, the dataloader loads a batch from a dataset and splits it to the different GPUs using multi-threading that processes those chuncks of data in parallel.  
+
 ```bash
 CUDA_VISIBLE_DEVICES=0,1 TOKENIZERS_PARALLELISM=false python recsys_main.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset_path/ --start_date 2019-10-01 --end_date 2019-10-15 --data_loader_engine nvtabular --per_device_train_batch_size 320 --per_device_eval_batch_size 512 --model_type gpt2 --loss_type cross_entropy --logging_steps 10 --d_model 256 --n_layer 2 --n_head 8 --dropout 0.1 --learning_rate 0.001 --similarity_type concat_mlp --num_train_epochs 1 --all_rescale_factor 1 --neg_rescale_factor 0 --feature_config ../datasets/ecommerce-large/config/features/session_based_features_pid.yaml --inp_merge mlp --tf_out_activation tanh --experiments_group local_test --weight_decay 1.3e-05 --learning_rate_schedule constant_with_warmup --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 1 --hidden_act gelu_new --save_steps 0 --eval_on_last_item_seq_only --fp16 --overwrite_output_dir --session_seq_length_max 20 --predict_top_k 1000 --eval_accumulation_steps 10
 ```
 
-### Notes on command line arguments
+**Notes:**
+- The following Transformer architectures do not work when using multiple GPUs with `torch.nn.DataParallel()` (because they use `model.parameters()`, which is not available with `DataParallel()`): 
+  - **TransfoXLModel()**
+
+#### **DistributedDataParallel**
+
+
+Another option is to run the pipeline using `torch.nn.parallel.DistributedDataParallel()`, which is more optimized than `torch.nn.DataParallel()` for using multi-processing instead of multi-threading (more info [here](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html)). The `DistributedDataParallel()` can be used by providing `--model_parallel` argument and launch it using `torch.distributed.launch`, as shown in the following command (set `--nproc_per_node` with the number of available GPUs):
+
+```bash
+python -m torch.distributed.launch --nproc_per_node 2 recsys_main.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset_path/ --start_date 2019-10-01 --end_date 2019-10-15 --data_loader_engine nvtabular --per_device_train_batch_size 320 --per_device_eval_batch_size 512 --model_type gpt2 --loss_type cross_entropy --logging_steps 10 --d_model 256 --n_layer 2 --n_head 8 --dropout 0.1 --learning_rate 0.001 --similarity_type concat_mlp --num_train_epochs 1 --all_rescale_factor 1 --neg_rescale_factor 0 --feature_config ../datasets/ecommerce-large/config/features/session_based_features_pid.yaml --inp_merge mlp --tf_out_activation tanh --experiments_group local_test --weight_decay 1.3e-05 --learning_rate_schedule constant_with_warmup --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 1 --hidden_act gelu_new --save_steps 0 --eval_on_last_item_seq_only --fp16 --overwrite_output_dir --session_seq_length_max 20 --predict_top_k 1000 --eval_accumulation_steps 10 --model_parallel
+```
+
+**Notes:**
+- When using `torch.nn.parallel.DistributedDataParallel()`, currently all GPUs receive the exact same data (batch), which is not interesting for training. It needs further investigation on how to enable shuffling for NVTabular and PyArrow data loaders to circumvent that problem.
+
+
+
+### **Notes on command line arguments**
 
 #### **Data loading**
 - The date range considered for the incremental training and evaluation loop are defined using `--start_date` and `--end_date`. For each day, the model will train for as many epochs as defined in `--num_train_epochs`, before moving to the next day. To train for only a few steps each day before moving to evaluation for the next day, use the argument `--max_steps`.

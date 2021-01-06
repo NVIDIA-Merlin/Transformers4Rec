@@ -168,7 +168,7 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 super(NVTDatasetWrapper, self).__init__(*args, **kwargs)
 
             def __len__(self):
-                return len(self.data)
+                return self.num_rows
 
         class NVTDataLoaderWrapper(NVTDataLoader):
             def __init__(self, *args, **kwargs):
@@ -279,7 +279,6 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 "labels": [],
                 "devices": list(range(training_args.n_gpu)),
             }
-  
 
         train_set = NVTDatasetWrapper(train_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
         train_loader = NVTDataLoaderWrapper(dataset=train_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 

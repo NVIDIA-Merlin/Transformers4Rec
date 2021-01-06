@@ -101,7 +101,7 @@ class RecSysMetaModel(PreTrainedModel):
                         cinfo['cardinality'], 
                         embedding_size, 
                         padding_idx=self.pad_token
-                    )
+                    ).to(self.device)
                     concat_input_dim += embedding_size
                 elif cinfo['dtype'] in ['long', 'float']:
                     concat_input_dim += 1   
@@ -115,9 +115,9 @@ class RecSysMetaModel(PreTrainedModel):
         
         self.inp_merge = model_args.inp_merge
         if self.inp_merge == 'mlp':
-            self.mlp_merge = nn.Linear(concat_input_dim, model_args.d_model)
+            self.mlp_merge = nn.Linear(concat_input_dim, model_args.d_model).to(self.device)
         elif self.inp_merge == 'attn':
-            self.attn_merge = AttnMerge(concat_input_dim, model_args.d_model)
+            self.attn_merge = AttnMerge(concat_input_dim, model_args.d_model).to(self.device)
         else:
             raise NotImplementedError
         
@@ -131,14 +131,13 @@ class RecSysMetaModel(PreTrainedModel):
         self.mlm_probability = model_args.mlm_probability
 
         # Creating a trainable embedding for masking inputs for Masked LM
-        self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model, 
-                                    device=self.device))
+        self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model)).to(self.device)
         nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.4)
 
         self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
-        self.output_layer = nn.Linear(model_args.d_model, target_dim)
+        self.output_layer = nn.Linear(model_args.d_model, target_dim).to(self.device)
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim=-1)
         
@@ -159,19 +158,19 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             tf_out_size = model_args.d_model
 
-        self.transformer_output_project = nn.Linear(tf_out_size, model_args.d_model)
+        self.transformer_output_project = nn.Linear(tf_out_size, model_args.d_model).to(self.device)
 
         if self.similarity_type in ['concat_mlp', 'multi_mlp']:
             m_factor = 2 if self.similarity_type == 'concat_mlp' else 1
             self.sim_mlp = nn.Sequential(
                 OrderedDict([
-                    ('linear0', nn.Linear(model_args.d_model * m_factor , model_args.d_model)),
+                    ('linear0', nn.Linear(model_args.d_model * m_factor , model_args.d_model).to(self.device)),
                     ('relu0', nn.LeakyReLU()),
-                    ('linear1', nn.Linear(model_args.d_model, model_args.d_model // 2)),
+                    ('linear1', nn.Linear(model_args.d_model, model_args.d_model // 2).to(self.device)),
                     ('relu1', nn.LeakyReLU()),
-                    ('linear2', nn.Linear(model_args.d_model // 2, model_args.d_model // 4)),
+                    ('linear2', nn.Linear(model_args.d_model // 2, model_args.d_model // 4).to(self.device)),
                     ('relu2', nn.LeakyReLU()),
-                    ('linear3', nn.Linear(model_args.d_model // 4, 1)),
+                    ('linear3', nn.Linear(model_args.d_model // 4, 1).to(self.device)),
                     ('sigmoid', nn.Sigmoid()),
                 ]       
             ))
@@ -189,6 +188,8 @@ class RecSysMetaModel(PreTrainedModel):
 
     def forward(self, *args, **kwargs):
         inputs = kwargs
+
+        #print('DEVICE={} - input device: {} - INPUTS: {}'.format(self.device, inputs['sess_pid_seq'].device, inputs['sess_pid_seq'][:2,:5].cpu().numpy()))
 
         # Step1. Unpack inputs, get embedding, and concatenate them
         label_seq = None

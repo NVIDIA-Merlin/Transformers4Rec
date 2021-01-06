@@ -164,6 +164,8 @@ def main():
     seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
+    if training_args.model_parallel:
+        rec_model = rec_model.to(training_args.device)
 
     trainer = RecSysTrainer(
         model=rec_model,        
