@@ -3,3 +3,5 @@ codes/dataset
 codes/runs
 codes/wandb
 codes/tmp
+codes/nsights_files/
+.vscode/
