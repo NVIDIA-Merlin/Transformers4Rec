@@ -170,6 +170,9 @@ class RecSysMetaModel(PreTrainedModel):
         self.output_layer = nn.Linear(model_args.d_model, target_dim).to(self.device)
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim=-1)
+
+        self.output_layer_bias = nn.Parameter(torch.Tensor(target_dim)).to(self.device)
+        nn.init.zeros_(self.output_layer_bias)
         
         self.loss_nll = nn.NLLLoss(ignore_index=self.pad_token)
         
