@@ -12,8 +12,6 @@ from transformers import (XLNetModel, XLNetConfig,
                          ReformerModel, ReformerConfig,
                          PretrainedConfig)
 
-from models.gru4rec import GRU4REC
-
 logger = logging.getLogger(__name__)
 
 
@@ -82,7 +80,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
             pad_token_id=data_args.pad_token,
-            mem_len=1024,
+            mem_len=1, #We do not use mems, because we feed the full sequence to the Transformer models and not sliding segments (which is useful for the long sequences in NLP. As setting mem_len to 0 leads to NaN in loss, we set it to one, to minimize the computing overhead)	
             output_attentions=training_args.log_attention_weights,
             vocab_size=1 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
@@ -117,9 +115,9 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
             dropout=model_args.dropout,
-            max_position_embeddings=data_args.total_seq_length,
-            vocab_size=target_size,
+            max_position_embeddings=data_args.total_seq_length,            
             pad_token_id=data_args.pad_token,
+            vocab_size=1, #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
     elif model_args.model_type == 'gru':

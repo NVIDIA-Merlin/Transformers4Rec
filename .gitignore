@@ -1,7 +1,10 @@
 .ipynb_checkpoints
 codes/dataset
-codes/runs
-codes/wandb
-codes/tmp
+codes/runs/
+codes/wandb/
+codes/tmp/
 codes/nsights_files/
+runs/
+wandb/
+tmp/
 .vscode/

@@ -13,6 +13,7 @@ from torch.nn import functional as F
 
 from transformers import (GPT2Model, PreTrainedModel)
 
+from loss_functions import TOP1Loss, TOP1_max, BPR_max, BPRLoss, BPR_max_reg, TOP1_max_reg
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +84,17 @@ class RecSysMetaModel(PreTrainedModel):
         self.session_aware_features_prefix = data_args.session_aware_features_prefix
         
         self.col_prefix_neg = data_args.feature_prefix_neg_sample
+
+        self.use_ohe_item_ids_inputs = model_args.use_ohe_item_ids_inputs
+        self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
+        self.constrained_embeddings = model_args.constrained_embeddings
+        if self.mf_constrained_embeddings and self.constrained_embeddings:
+            raise ValueError('You cannot enable both --mf_constrained_embeddings and --constrained_embeddings.')
+
         concat_input_dim = 0
         target_dim = -1
+
+        self.label_feature = None
         
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -95,14 +105,28 @@ class RecSysMetaModel(PreTrainedModel):
                 if (self.session_aware and cname.startswith(self.session_aware_features_prefix)):
                     continue
 
-                if cinfo['dtype'] == 'categorical':
-                    embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])
-                    self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
-                        cinfo['cardinality'], 
-                        embedding_size, 
-                        padding_idx=self.pad_token
-                    ).to(self.device)
-                    concat_input_dim += embedding_size
+                if cinfo['dtype'] == 'categorical': 
+                    if self.use_ohe_item_ids_inputs:
+                        feature_size = cinfo['cardinality']                   
+                    else:
+                        if 'is_label' in cinfo and cinfo['is_label']:
+                            self.label_embedding_table_name = cinfo['emb_table']
+                        
+                        if ('is_label' in cinfo and cinfo['is_label']) and \
+                           (model_args.constrained_embeddings or model_args.mf_constrained_embeddings):
+                            embedding_size = model_args.d_model
+                        else:                      
+                            embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])
+                        feature_size = embedding_size
+                        self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
+                            cinfo['cardinality'], 
+                            embedding_size, 
+                            padding_idx=self.pad_token
+                        ).to(self.device)
+                        # Added to initialize embeddings to small weights
+                        self.embedding_tables[cinfo['emb_table']].weight.data.normal_(0., 1./math.sqrt(embedding_size))
+                    
+                    concat_input_dim += feature_size
                 elif cinfo['dtype'] in ['long', 'float']:
                     concat_input_dim += 1   
                 else:
@@ -120,6 +144,9 @@ class RecSysMetaModel(PreTrainedModel):
             self.attn_merge = AttnMerge(concat_input_dim, model_args.d_model).to(self.device)
         else:
             raise NotImplementedError
+
+        self.layernorm1 = nn.LayerNorm(normalized_shape=concat_input_dim)
+        self.layernorm2 = nn.LayerNorm(normalized_shape=model_args.d_model)
         
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
@@ -132,7 +159,10 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model)).to(self.device)
-        nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.4)
+        #nn.init.normal_(self.masked_item_embedding, mean = 0, std = 1./math.sqrt(model_args.d_model))
+        nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.01)
+        
+        
 
         self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
@@ -150,6 +180,18 @@ class RecSysMetaModel(PreTrainedModel):
         elif self.loss_type.startswith('margin_hinge'):
             # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
             self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
+        elif self.loss_type == 'TOP1':
+            self.loss_fn = TOP1Loss()
+        elif self.loss_type == 'BPR':
+            self.loss_fn = BPRLoss()
+        elif self.loss_type == 'TOP1_max':
+            self.loss_fn = TOP1_max()
+        elif self.loss_type == 'BPR_max':
+            self.loss_fn = BPR_max()
+        elif self.loss_type == 'BPR_max_reg':
+            self.loss_fn = BPR_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
+        elif self.loss_type == 'TOP1_max_reg':
+            self.loss_fn = TOP1_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
         elif self.loss_type != 'cross_entropy':
             raise NotImplementedError
 
@@ -197,8 +239,8 @@ class RecSysMetaModel(PreTrainedModel):
         max_feature_seq_len = None
 
         pos_inp, label_seq, max_feature_seq_len, metadata_for_pred_logging = self.feature_process(inputs)
-        if self.loss_type != 'cross_entropy':
-            neg_inp, _, _, _ = self.feature_process(inputs, max_feature_seq_len, is_neg=True)
+        #if self.loss_type != 'cross_entropy':
+        #    neg_inp, _, _, _ = self.feature_process(inputs, max_feature_seq_len, is_neg=True)
 
         assert label_seq is not None, 'label sequence is not declared in feature_map'
 
@@ -259,13 +301,15 @@ class RecSysMetaModel(PreTrainedModel):
         # Step 2. Merge features
         
         if self.inp_merge == 'mlp':
-            pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))            
-            if self.loss_type != 'cross_entropy':
-                neg_emb = torch.tanh(self.mlp_merge(neg_inp))
+            #pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
+            pos_inp = self.layernorm1(pos_inp) 
+            pos_emb = self.tf_out_act(self.layernorm2(self.mlp_merge(pos_inp)))             
+            #if self.loss_type != 'cross_entropy':
+            #    neg_emb = torch.tanh(self.mlp_merge(neg_inp))
         elif self.inp_merge == 'attn':
             pos_emb = self.attn_merge(pos_inp)
-            if self.loss_type != 'cross_entropy':
-                neg_emb = self.attn_merge(neg_inp)
+            #if self.loss_type != 'cross_entropy':
+            #    neg_emb = self.attn_merge(neg_inp)
 
 
         if self.mlm:
@@ -273,9 +317,9 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1).bool(), 
                                       self.masked_item_embedding.to(pos_emb.dtype), 
                                       pos_emb)            
-            if self.loss_type != 'cross_entropy':
-                pos_emb_trg = pos_emb #.clone()
-                neg_emb_inp = neg_emb   
+            #if self.loss_type != 'cross_entropy':
+            #    pos_emb_trg = pos_emb #.clone()
+            #    neg_emb_inp = neg_emb   
         else:
             # slice over time-steps for input and target and ensuring masking is applied
             #pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
@@ -295,9 +339,9 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
             '''
-            if self.loss_type != 'cross_entropy':
-                pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad.unsqueeze(-1)
-                neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
+            #if self.loss_type != 'cross_entropy':
+            #    pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad.unsqueeze(-1)
+            #    neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
 
 
         # Step3. Run forward pass on model architecture
@@ -368,9 +412,9 @@ class RecSysMetaModel(PreTrainedModel):
         # remove zero padding elements 
 
         pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)        
-        if self.loss_type != 'cross_entropy':
-            pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
-            neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
+        #if self.loss_type != 'cross_entropy':
+        #    pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
+        #    neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
 
         if not self.mlm:                        
             ##Temporary. Replace by the commented code after experiments with past information
@@ -387,7 +431,11 @@ class RecSysMetaModel(PreTrainedModel):
 
 
                 
-        logits_all = self.output_layer(pos_emb_pred)
+        if self.mf_constrained_embeddings:        
+            logits_all = F.linear(pos_emb_pred, weight=self.embedding_tables[self.label_embedding_table_name].weight, bias=self.output_layer_bias)   
+        else:
+            logits_all = self.output_layer(pos_emb_pred)
+
         predictions_all = self.log_softmax(logits_all)
         loss_ce = self.loss_nll(predictions_all, labels_all)
         loss = loss_ce
@@ -403,6 +451,11 @@ class RecSysMetaModel(PreTrainedModel):
 
         # concatenate
         if self.loss_type != 'cross_entropy':
+            # the negative samples are the targets present in the mini-batch  (select ids in labels_all)
+            logit_sample = logits_all[:, labels_all]
+            # loss:
+            loss = self.loss_fn(logit_sample)
+            '''
             pos_emb_pred_expanded = pos_emb_pred.unsqueeze(
                 1).expand_as(neg_emb_inp)
             pred_emb_flat = torch.cat((pos_emb_pred.unsqueeze(
@@ -474,8 +527,9 @@ class RecSysMetaModel(PreTrainedModel):
             _, max_idx = torch.max(cos_sim_concat, dim=1)
             train_acc_neg = (max_idx == n_neg_items).sum(
                 dtype=torch.float32) / num_elem
+            '''
 
-        outputs = {'loss': loss_ce,
+        outputs = {'loss': loss,
                    'labels': labels_all,
                    'predictions': logits_all,                   
                    'pred_metadata': metadata_for_pred_logging,
@@ -601,9 +655,16 @@ class RecSysMetaModel(PreTrainedModel):
                 if 'is_label' in cinfo and cinfo['is_label']:
                     label_seq = cdata
 
-                if cinfo['dtype'] == 'categorical':
-                    #cdata = self.embedding_tables[cinfo['emb_table']](cdata.clone().detach().long())
-                    cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())
+                if cinfo['dtype'] == 'categorical': 
+                    if 'is_label' in cinfo and cinfo['is_label']:
+                        if self.use_ohe_item_ids_inputs:          
+                            cdata = torch.nn.functional.one_hot(cdata.long(), num_classes=self.target_dim).float()
+                        elif self.constrained_embeddings: # use output layer for the embedding matrix
+                            cdata = self.output_layer.weight[cdata.long(), :]
+                        else:
+                            cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())                    
+                    else:
+                        cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())    
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)
 
@@ -644,7 +705,10 @@ class RecSysMetaModel(PreTrainedModel):
             for past_fname in features_to_delete:
                 del transformed_features[past_fname]
 
-        output = torch.cat(list(transformed_features.values()), dim=-1)
+        if len(transformed_features) > 1:
+            output = torch.cat(list(transformed_features.values()), dim=-1)
+        else:
+            output = list(transformed_features.values())[0]
 
         return output, label_seq, max_seq_len, metadata_for_pred_logging
 
