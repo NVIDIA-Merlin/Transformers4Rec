@@ -30,59 +30,75 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
     elif model_args.model_type == 'reformer':
         model_cls = ReformerModel
         config = ReformerConfig(
-            attention_head_size=model_args.d_model,
-            attn_layers= ["local", "lsh"] * (model_args.n_layer // 2) \
+            attention_head_size = model_args.d_model,
+            attn_layers = ["local", "lsh"] * (model_args.n_layer // 2) \
                 if model_args.n_layer > 2 else ["local"],
-            is_decoder=True,
-            feed_forward_size=model_args.d_model * 4,
-            hidden_size=model_args.d_model,
-            num_attention_heads=model_args.n_head,
-            hidden_act=model_args.hidden_act,
-            initializer_range=model_args.initializer_range,
-            layer_norm_eps=model_args.layer_norm_eps,
-            hidden_dropout_prob=model_args.dropout,
-            pad_token_id=data_args.pad_token,
-            axial_pos_shape=[total_seq_length-1,1],
-            axial_pos_embds_dim=[model_args.d_model // 2, model_args.d_model // 2],
-            vocab_size=model_args.d_model # to make it output hidden states size
+            is_decoder = not model_args.mlm, #is_decoder must be False for Masked LM and True for Causal LM
+            feed_forward_size = model_args.d_model * 4,
+            hidden_size = model_args.d_model,
+            num_attention_heads = model_args.n_head,
+            hidden_act = model_args.hidden_act,
+            initializer_range = model_args.initializer_range,
+            layer_norm_eps = model_args.layer_norm_eps,
+            hidden_dropout_prob = model_args.dropout,
+            lsh_attention_probs_dropout_prob = model_args.dropout,
+            pad_token_id = data_args.pad_token,
+            axial_pos_embds = True, #If `True` use axial position embeddings.
+            axial_pos_shape = [model_args.axial_pos_shape_first_dim, total_seq_length // model_args.axial_pos_shape_first_dim], #The position dims of the axial position encodings. During training the product of the position dims has to equal the sequence length.            
+            axial_pos_embds_dim = [model_args.d_model // 2, model_args.d_model // 2], #The embedding dims of the axial position encodings. The sum of the embedding dims has to equal the hidden size.
+            lsh_num_chunks_before = model_args.num_chunks_before,
+            lsh_num_chunks_after = model_args.num_chunks_after,
+            num_buckets = None, #Number of buckets, the key query vectors can be 'hashed into' using the locality sensitive hashing scheme. When training a model from scratch, it is recommended to leave config.num_buckets=None, so that depending on the sequence length a good value for num_buckets is calculated on the fly. This value will then automatically be saved in the config and should be reused for inference.
+            num_hashes = model_args.lsh_num_hashes,
+            local_attn_chunk_length = model_args.attn_chunk_length,
+            lsh_attn_chunk_length = model_args.attn_chunk_length,
+            chunk_size_feed_forward = model_args.chunk_size_feed_forward,
+            output_attentions=training_args.log_attention_weights,
+            max_position_embeddings=data_args.total_seq_length,
+            vocab_size = 1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
+            #vocab_size = model_args.d_model  # to make it output hidden states size
         )
 
     elif model_args.model_type == 'transfoxl':
         model_cls = TransfoXLModel
         config = TransfoXLConfig(
-            d_model=model_args.d_model,
-            d_embed=model_args.d_model,
-            n_layer=model_args.n_layer,
-            n_head=model_args.n_head,
-            d_inner=model_args.d_model * 4,
-            ff_activation=model_args.hidden_act,
-            untie_r=True,
-            attn_type=0,
-            initializer_range=model_args.initializer_range,
-            layer_norm_eps=model_args.layer_norm_eps,
-            dropout=model_args.dropout,
-            pad_token_id=data_args.pad_token,
+            d_model = model_args.d_model,
+            d_embed = model_args.d_model,
+            n_layer = model_args.n_layer,
+            n_head = model_args.n_head,
+            d_inner = model_args.d_model * 4,
+            untie_r = True,
+            attn_type = 0,
+            initializer_range = model_args.initializer_range,
+            layer_norm_eps = model_args.layer_norm_eps,
+            dropout = model_args.dropout,
+            pad_token_id = data_args.pad_token,
+            output_attentions=training_args.log_attention_weights,
+            mem_len=1, #We do not use mems, because we feed the full sequence to the Transformer models and not sliding segments (which is useful for the long sequences in NLP. As setting mem_len to 0 leads to NaN in loss, we set it to one, to minimize the computing overhead)
+            div_val=1, #Disables adaptative input (embeddings), because the embeddings are managed by RecSysMetaModel
+            vocab_size = 1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
     elif model_args.model_type == 'xlnet':
         model_cls = XLNetModel
         config = XLNetConfig(
-            d_model=model_args.d_model,
-            d_inner=model_args.d_model * 4,
-            n_layer=model_args.n_layer,
-            n_head=model_args.n_head,            
-            ff_activation=model_args.hidden_act,
-            untie_r=True,
-            bi_data=False,
-            #attn_type="bi",
-            attn_type=model_args.attn_type,
-            initializer_range=model_args.initializer_range,
-            layer_norm_eps=model_args.layer_norm_eps,
-            dropout=model_args.dropout,
-            pad_token_id=data_args.pad_token,
-            mem_len=1, #We do not use mems, because we feed the full sequence to the Transformer models and not sliding segments (which is useful for the long sequences in NLP. As setting mem_len to 0 leads to NaN in loss, we set it to one, to minimize the computing overhead)	
-            output_attentions=training_args.log_attention_weights,
-            vocab_size=1 #As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
+            d_model = model_args.d_model,
+            d_inner = model_args.d_model * 4,
+            n_layer = model_args.n_layer,
+            n_head = model_args.n_head,
+            ff_activation = model_args.hidden_act,
+            untie_r = True,
+            bi_data = False,
+            attn_type = "bi",            
+            summary_type = model_args.summary_type,
+            use_mems_train = True,
+            initializer_range = model_args.initializer_range,
+            layer_norm_eps = model_args.layer_norm_eps,
+            dropout = model_args.dropout,
+            pad_token_id = data_args.pad_token,
+            output_attentions = training_args.log_attention_weights,
+            mem_len=1, #We do not use mems, because we feed the full sequence to the Transformer models and not sliding segments (which is useful for the long sequences in NLP. As setting mem_len to 0 leads to NaN in loss, we set it to one, to minimize the computing overhead)
+            vocab_size = 1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
 

@@ -218,6 +218,36 @@ class ModelArguments:
         default="uni", metadata={"help": "The type of attention. Use 'uni' for Causal LM and 'bi' for Masked LM"}
     )
 
+    # args for XLNET
+    summary_type: Optional[str] = field(
+        default = 'last', metadata = {
+            "help": "How to summarize the vector representation of the sequence'last', 'first', 'mean', 'attn' are supported"})
+
+    # args for Reformer : chunked lsh-attention and axial positional encoding
+    axial_pos_shape_first_dim: Optional[int] = field(
+        default = 4, metadata = {"help": "[Reformer] First dimension of axial position encoding "}
+    )
+
+    attn_chunk_length: Optional[int] = field(
+        default = 4, metadata = {"help": " [Reformer] Length of chunk (for bothLocalSelfAttention or LSHSelfAttention layers) which attends to itself. Chunking reduces memory complexity from sequence length x sequence length (self attention) to chunk length x chunk length x sequence length / chunk length (chunked self attention)."}
+    )
+
+    num_chunks_before: Optional[int] = field(
+        default = 1, metadata = {"help": "[Reformer] Number of previous neighbouring chunks to attend in LocalSelfAttention or LSHSelfAttention layer to itself."}
+    )
+
+    num_chunks_after: Optional[int] = field(
+        default = 0, metadata = {"help": "[Reformer] Number of following neighbouring chunks to attend in LocalSelfAttention or LSHSelfAttention layer to itself(for Masked LM)."}
+    )
+
+    chunk_size_feed_forward: Optional[int] = field(
+        default = 0, metadata = {"help": "[Reformer] The chunk size of all feed forward layers in the residual attention blocks. A chunk size of 0 means that the feed forward layer is not chunked. A chunk size of n means that the feed forward layer processes n < sequence_length embeddings at a time."}
+    )    
+
+    lsh_num_hashes: Optional[int] = field(
+        default = 2, metadata = {"help": "[Reformer] Number of hashing rounds (e.g. number of random rotations) in Local Sensitive Hashing scheme. The higher `num_hashes`, the more accurate the `LSHSelfAttention` becomes, but also the more memory and time intensive the hashing becomes."}
+    )
+
     eval_on_last_item_seq_only: bool = field(default=False, metadata={"help": "Evaluate metrics only on predictions for the last item of the sequence (rather then evaluation for all next-item predictions)."})
     train_on_last_item_seq_only: bool = field(default=False, metadata={"help": "Train only for predicting the last item of the sequence (rather then training to predict for all next-item predictions) (only for Causal LM)."})
 

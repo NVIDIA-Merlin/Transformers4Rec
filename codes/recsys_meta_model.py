@@ -267,6 +267,13 @@ class RecSysMetaModel(PreTrainedModel):
 
             label_seq_inp = label_seq[:, :-1]
             label_seq_trg = label_seq[:, 1:]
+
+            # As after shifting the sequence length will be subtracted by one, adding a masked item in 
+            # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
+            label_seq_inp = torch.cat([label_seq_inp, 
+                        torch.zeros((label_seq_inp.shape[0], 1), dtype=label_seq_inp.dtype).to(self.device)], axis=-1)
+            label_seq_trg = torch.cat([label_seq_trg, 
+                        torch.zeros((label_seq_trg.shape[0], 1), dtype=label_seq_trg.dtype).to(self.device)], axis=-1)
             
             # apply mask on input where target is on padding token
             mask_trg_pad = (label_seq_trg != self.pad_token)
@@ -298,6 +305,11 @@ class RecSysMetaModel(PreTrainedModel):
             for feat_name in metadata_for_pred_logging:                
                 metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name][:, 1:]
 
+                # As after shifting the sequence length will be subtracted by one, adding a masked item in 
+                # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
+                metadata_for_pred_logging[feat_name] = torch.cat([metadata_for_pred_logging[feat_name], 
+                        torch.zeros((metadata_for_pred_logging[feat_name].shape[0], 1), dtype=metadata_for_pred_logging[feat_name].dtype).to(self.device)], axis=-1)
+
         # Step 2. Merge features
         
         if self.inp_merge == 'mlp':
@@ -324,8 +336,15 @@ class RecSysMetaModel(PreTrainedModel):
             # slice over time-steps for input and target and ensuring masking is applied
             #pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
             
-            # Truncating the inpyt sequences length to -1
+            # Truncating the input sequences length to -1
             pos_emb_inp = pos_emb[:, :-1]
+
+            # As after shifting the sequence length will be subtracted by one, adding a masked item in 
+            # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
+            pos_emb_inp = torch.cat([pos_emb_inp, 
+                        torch.zeros((pos_emb_inp.shape[0], 1, pos_emb_inp.shape[2]), 
+                                     dtype=pos_emb_inp.dtype).to(self.device)], axis=1)
+
             # Replacing the inputs corresponding to masked label with a trainable embedding
             pos_emb_inp = torch.where(mask_trg_pad.unsqueeze(-1).bool(), 
                                       pos_emb_inp,
@@ -340,8 +359,23 @@ class RecSysMetaModel(PreTrainedModel):
                 pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
             '''
             #if self.loss_type != 'cross_entropy':
-            #    pos_emb_trg = pos_emb[:, 1:] * mask_trg_pad.unsqueeze(-1)
-            #    neg_emb_inp = neg_emb[:, :-1] * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
+                # # Shifting labels by one
+                # pos_emb_trg = pos_emb[:, 1:]
+                # neg_emb_inp = neg_emb[:, :-1]
+
+                # # As after shifting the sequence length will be subtracted by one, adding a masked item in 
+                # # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
+                # pos_emb_trg = torch.cat([pos_emb_trg, 
+                #             torch.zeros((pos_emb_trg.shape[0], 1, pos_emb_trg.shape[2]), 
+                #                         dtype=pos_emb_trg.dtype).to(self.device)], axis=1)
+
+                # neg_emb_inp = torch.cat([neg_emb_inp, 
+                #             torch.zeros((neg_emb_inp.shape[0], 1, neg_emb_inp.shape[2]), 
+                #                         dtype=neg_emb_inp.dtype).to(self.device)], axis=1)
+
+
+                # pos_emb_trg = pos_emb_trg * mask_trg_pad.unsqueeze(-1)
+                # neg_emb_inp = neg_emb_inp * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
 
 
         # Step3. Run forward pass on model architecture
