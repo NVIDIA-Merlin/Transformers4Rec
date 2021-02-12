@@ -41,7 +41,7 @@ class DatasetType(Enum):
 #Mock to inform HF Trainer that the dataset is sized, and can be obtained via the data loader
 class DatasetMock(Dataset, Sized):
 
-    def __init__(self, nsteps=0):
+    def __init__(self, nsteps=1):
         self.nsteps = nsteps
 
     def __len__(self):
@@ -254,8 +254,9 @@ class RecSysTrainer(Trainer):
 
         model = self.model
         # multi-gpu eval
-        if self.args.n_gpu > 1 and not self.args.model_parallel:
-            model = torch.nn.DataParallel(model)
+        #if self.args.n_gpu > 1 and not self.args.model_parallel:
+        #    model = torch.nn.DataParallel(model)
+
         # Note: in torch.distributed mode, there's no point in wrapping the model
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
