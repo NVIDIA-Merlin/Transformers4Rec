@@ -5,6 +5,99 @@ This document provides example command lines to build, run locally and push Dock
 
 # Development image
 
+## NVIDIA Container Toolkit Installation
+
+To build and locally run the Docker images described in this directory,
+it will be very likely that you will need to install the NVIDIA Container Toolkit stack.
+
+This NVIDIA Container Toolkit stack allows your host OS to run Docker containers, and to have
+your host OS's NVIDIA GPU capabilities accessible to the these Docker
+containers.
+
+The architecture of the NVIDIA Container Toolkit may best be visualized by this
+diagram:
+
+![here](https://cloud.githubusercontent.com/assets/3028125/12213714/5b208976-b632-11e5-8406-38d379ec46aa.png).
+
+The NVIDIA Container Toolkit Installation instructions have been last verified to work 
+in mid January 2021. 
+
+### Host OS
+
+You will need a development machine with a host OS capable of running the 
+Docker container engine and NVIDIA Container Toolkit. A popular choice for this team 
+that has been verified to work is the Ubuntu 18.04 OS distribution. 
+
+The installation of Ubuntu 18.04 follows a typical setup involving, for
+example, a USB Flash drive containing an Ubuntu 18.04 together with the appropriate boot
+loaders.
+
+This setup for Ubuntu 18.04 is detailed
+[here](https://help.ubuntu.com/community/BurningIsoHowto),
+while the actual Ubuntu 18.04 images may be downloaded
+[here](http://releases.ubuntu.com/18.04/).
+
+
+### Setup NVIDIA CUDA Drivers
+
+You will need NVIDIA's CUDA software to full access and support the
+GPU's that are hopefully connected to the machine running your host's OS.
+
+We recommend having your OS distribution's package manager manage the
+CUDA package for ease of package dependency and compatibility management 
+between the CUDA packages and other OS packages, as well as ease of future 
+CUDA package upgrades.
+
+Full installation instructions may be found
+[here](https://docs.nvidia.com/datacenter/tesla/tesla-installation-notes/index.html).
+
+For Ubuntu, the package that you will eventually install is `nvidia-cuda`.
+
+
+### Setup Docker
+
+The Docker framework will allow you to run Docker containers on your host OS.
+
+Full instructions for Ubuntu may be followed
+[here](https://docs.docker.com/engine/install/ubuntu/).
+
+Helpful post-installation steps for Linux installation, like allowing non-sudo 
+invocations of Docker commands, may be followed
+[here](https://docs.docker.com/engine/install/linux-postinstall/).
+
+Note that `docker-ce` is the package we will install, while the `docker.io`
+and `docker` (if they exist) packages are depreciated. 
+
+### Setup NVIDIA Container Toolkit
+
+The NVIDIA Container Toolkit will finally allow the running containers to access most,
+if not all, of the full capabilities of your host machine's GPU.
+
+The packages in the NVIDIA Container Toolkit can best visualized by the 
+architectural diagram found at the top of this page:
+[here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/arch-overview.html).
+
+Note that we will eventually install the `nvidia-docker2` package, over the 
+now-depreciated `nvidia-docker` package.
+
+Full instructions to install NVIDIA Container Toolkit may be followed 
+[here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker).
+
+The GitHub project homepage for NVIDIA Container Toolkit is located [here](https://github.com/NVIDIA/nvidia-docker).
+
+### Potential Errors
+   
+If you see this error, or similar
+
+    `docker: Error response from daemon: could not select device driver "" with capabilities: [[gpu]]',
+
+then it is likely that Docker is installed on your host OS, but that the NVIDIA
+CUDA package and NV Docker package have not yet been correctly installed. 
+Try re-doing the steps in the Setup NVIDIA CUDA and Setup NVIDIA Container Toolkit sections.
+
+With the installation of the NVIDIA Container Toolkit stack, you will now be able to locally
+build and locally run the containers documented in this README below. 
+
 ## Build
 
 ```bash
