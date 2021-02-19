@@ -13,7 +13,9 @@ from torch.nn import functional as F
 
 from transformers import (GPT2Model, PreTrainedModel)
 
-from loss_functions import TOP1Loss, TOP1_max, BPR_max, BPRLoss, BPR_max_reg, TOP1_max_reg
+from loss_functions import TOP1Loss, TOP1_max, BPR_max, BPRLoss, BPR_max_reg, TOP1_max_reg, NewTOP1, NewTOP1_max, NewBPR_max_reg
+
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +43,6 @@ def get_embedding_size_from_cardinality(cardinality, multiplier=2):
     return embedding_size
 
 
-
 class RecSysMetaModel(PreTrainedModel):
     """
     vocab_sizes : sizes of vocab for each discrete inputs
@@ -50,8 +51,7 @@ class RecSysMetaModel(PreTrainedModel):
     def __init__(self, model, config, model_args, data_args, feature_map):
         super(RecSysMetaModel, self).__init__(config)
         
-        self.model = model 
-
+        self.model = model
         #Temporary, replacing the Attention block of GPT-2 for one that enforces mask future informatino
         #if type(self.model) is GPT2Model:
         #    for block in self.model.h:
@@ -86,8 +86,11 @@ class RecSysMetaModel(PreTrainedModel):
         self.col_prefix_neg = data_args.feature_prefix_neg_sample
 
         self.use_ohe_item_ids_inputs = model_args.use_ohe_item_ids_inputs
+
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
         self.constrained_embeddings = model_args.constrained_embeddings
+        self.negative_sampling = model_args.negative_sampling
+
         if self.mf_constrained_embeddings and self.constrained_embeddings:
             raise ValueError('You cannot enable both --mf_constrained_embeddings and --constrained_embeddings.')
 
@@ -95,48 +98,55 @@ class RecSysMetaModel(PreTrainedModel):
         target_dim = -1
 
         self.label_feature = None
-        
+
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
-            #if self.col_prefix_neg not in cname:
-            
+            # if self.col_prefix_neg not in cname:
+
             if self.col_prefix_neg not in cname:
-                #Ignoring past features to define embedding tables
+                # Ignoring past features to define embedding tables
                 if (self.session_aware and cname.startswith(self.session_aware_features_prefix)):
                     continue
 
-                if cinfo['dtype'] == 'categorical': 
+                if cinfo['dtype'] == 'categorical':
                     if self.use_ohe_item_ids_inputs:
-                        feature_size = cinfo['cardinality']                   
+                        feature_size = cinfo['cardinality']
                     else:
                         if 'is_label' in cinfo and cinfo['is_label']:
                             self.label_embedding_table_name = cinfo['emb_table']
-                        
+
                         if ('is_label' in cinfo and cinfo['is_label']) and \
                            (model_args.constrained_embeddings or model_args.mf_constrained_embeddings):
                             embedding_size = model_args.d_model
                         else:                      
                             embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])
+
                         feature_size = embedding_size
                         self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
                             cinfo['cardinality'], 
                             embedding_size, 
                             padding_idx=self.pad_token
                         ).to(self.device)
+
                         # Added to initialize embeddings to small weights
                         self.embedding_tables[cinfo['emb_table']].weight.data.normal_(0., 1./math.sqrt(embedding_size))
                     
+
                     concat_input_dim += feature_size
                 elif cinfo['dtype'] in ['long', 'float']:
-                    concat_input_dim += 1   
+                    concat_input_dim += 1
                 else:
                     raise NotImplementedError
                 if 'is_label' in cinfo and cinfo['is_label']:
                     target_dim = cinfo['cardinality']
-        
+
         if target_dim == -1:
             raise RuntimeError('label column is not declared in feature map.')
-        
+
+        self.neg_sampling_store_size = model_args.neg_sampling_store_size
+        self.neg_sampling_store_n_sample = model_args.neg_sampling_store_n_sample
+        self.neg_sampling_alpha = model_args.neg_sampling_alpha
+
         self.inp_merge = model_args.inp_merge
         if self.inp_merge == 'mlp':
             self.mlp_merge = nn.Linear(concat_input_dim, model_args.d_model).to(self.device)
@@ -145,56 +155,72 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        self.layernorm1 = nn.LayerNorm(normalized_shape=concat_input_dim)
-        self.layernorm2 = nn.LayerNorm(normalized_shape=model_args.d_model)
-        
+        self.layernorm1 = nn.LayerNorm(normalized_shape = concat_input_dim)
+        self.layernorm2 = nn.LayerNorm(normalized_shape = model_args.d_model)
+
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
 
         self.total_seq_length = data_args.total_seq_length
-        self.n_layer = model_args.n_layer        
+        self.n_layer = model_args.n_layer
 
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
 
         # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model)).to(self.device)
-        #nn.init.normal_(self.masked_item_embedding, mean = 0, std = 1./math.sqrt(model_args.d_model))
+
+        # nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.4)
+        # nn.init.normal_(self.masked_item_embedding, mean = 0, std = 1./math.sqrt(model_args.d_model))
         nn.init.normal_(self.masked_item_embedding, mean = 0, std = 0.01)
-        
-        
 
         self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
+
         self.output_layer = nn.Linear(model_args.d_model, target_dim).to(self.device)
         self.loss_type = model_args.loss_type
-        self.log_softmax = nn.LogSoftmax(dim=-1)
+        self.log_softmax = nn.LogSoftmax(dim = -1)
 
         self.output_layer_bias = nn.Parameter(torch.Tensor(target_dim)).to(self.device)
         nn.init.zeros_(self.output_layer_bias)
-        
-        self.loss_nll = nn.NLLLoss(ignore_index=self.pad_token)
-        
+
+        self.loss_nll = nn.NLLLoss(ignore_index = self.pad_token)
+
         if self.loss_type == 'cross_entropy_neg':
             self.loss_fn = nn.NLLLoss()
         elif self.loss_type == 'cross_entropy_neg_1d':
             self.loss_fn = nll_1d
         elif self.loss_type.startswith('margin_hinge'):
             # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
-            self.loss_fn = nn.CosineEmbeddingLoss(margin=model_args.margin_loss, reduction='sum')
+            self.loss_fn = nn.CosineEmbeddingLoss(margin = model_args.margin_loss, reduction = 'sum')
         elif self.loss_type == 'TOP1':
             self.loss_fn = TOP1Loss()
+
         elif self.loss_type == 'BPR':
             self.loss_fn = BPRLoss()
+
         elif self.loss_type == 'TOP1_max':
             self.loss_fn = TOP1_max()
+
         elif self.loss_type == 'BPR_max':
             self.loss_fn = BPR_max()
+
+        elif self.loss_type == 'NewTOP1':
+            self.loss_fn = NewTOP1()
+
+        elif self.loss_type == 'NewTOP1_max':
+            self.loss_fn = NewTOP1_max()
+
+        elif self.loss_type == 'NewBPR_max_reg':
+            self.loss_fn = NewBPR_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
+
         elif self.loss_type == 'BPR_max_reg':
             self.loss_fn = BPR_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
+
         elif self.loss_type == 'TOP1_max_reg':
             self.loss_fn = TOP1_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
+
         elif self.loss_type != 'cross_entropy':
             raise NotImplementedError
 
@@ -228,11 +254,11 @@ class RecSysMetaModel(PreTrainedModel):
         elif model_args.tf_out_activation == 'relu':
             self.tf_out_act = torch.relu
 
-        self.disable_positional_embeddings = model_args.disable_positional_embeddings
-
+        self.disable_positional_embeddings = model_args.disable_positional_embeddings        
 
     def forward(self, *args, **kwargs):
         inputs = kwargs
+
 
         #print('DEVICE={} - input device: {} - INPUTS: {}'.format(self.device, inputs['sess_pid_seq'].device, inputs['sess_pid_seq'][:2,:5].cpu().numpy()))
 
@@ -247,7 +273,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         assert label_seq is not None, 'label sequence is not declared in feature_map'
 
-        #To mark past sequence labels
+        # To mark past sequence labels
         if self.session_aware:
             masked_past_session = torch.zeros_like(label_seq, dtype=torch.long, device=self.device)
 
@@ -271,11 +297,11 @@ class RecSysMetaModel(PreTrainedModel):
             label_seq_inp = label_seq[:, :-1]
             label_seq_trg = label_seq[:, 1:]
 
-            # As after shifting the sequence length will be subtracted by one, adding a masked item in 
-            # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
-            label_seq_inp = torch.cat([label_seq_inp, 
-                        torch.zeros((label_seq_inp.shape[0], 1), dtype=label_seq_inp.dtype).to(self.device)], axis=-1)
-            label_seq_trg = torch.cat([label_seq_trg, 
+            # As after shifting the sequence length will be subtracted by one, adding a masked item in 	
+            # the sequence to return to the initial sequence. This is important for ReformerModel(), for example	
+            label_seq_inp = torch.cat([label_seq_inp, 	
+                        torch.zeros((label_seq_inp.shape[0], 1), dtype=label_seq_inp.dtype).to(self.device)], axis=-1)	
+            label_seq_trg = torch.cat([label_seq_trg, 	
                         torch.zeros((label_seq_trg.shape[0], 1), dtype=label_seq_trg.dtype).to(self.device)], axis=-1)
             
             # apply mask on input where target is on padding token
@@ -301,58 +327,61 @@ class RecSysMetaModel(PreTrainedModel):
                 mask_trg_pad = torch.cat([masked_past_session, mask_trg_pad], axis=1)
 
         # Creating an additional feature with the position in the sequence
-        metadata_for_pred_logging['seq_pos'] = torch.arange(1, label_seq.shape[1]+1, device=self.device).repeat(label_seq.shape[0], 1)
-        metadata_for_pred_logging['seq_len'] = (label_seq != self.pad_token).int().sum(axis=1).unsqueeze(-1).repeat(1,label_seq.shape[1])
-        #Keeping only metadata features for the next-clicks (targets)
+        metadata_for_pred_logging['seq_pos'] = torch.arange(1, label_seq.shape[1] + 1, device = self.device).repeat(
+            label_seq.shape[0], 1)
+        metadata_for_pred_logging['seq_len'] = (label_seq != self.pad_token).int().sum(axis = 1).unsqueeze(-1).repeat(1,
+                                                                                                                      label_seq.shape[
+                                                                                                                          1])
+        # Keeping only metadata features for the next-clicks (targets)
         if not (self.mlm and self.training):
-            for feat_name in metadata_for_pred_logging:                
+            for feat_name in metadata_for_pred_logging:
                 metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name][:, 1:]
 
-                # As after shifting the sequence length will be subtracted by one, adding a masked item in 
-                # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
-                metadata_for_pred_logging[feat_name] = torch.cat([metadata_for_pred_logging[feat_name], 
+                # As after shifting the sequence length will be subtracted by one, adding a masked item in 	
+                # the sequence to return to the initial sequence. This is important for ReformerModel(), for example	
+                metadata_for_pred_logging[feat_name] = torch.cat([metadata_for_pred_logging[feat_name], 	
                         torch.zeros((metadata_for_pred_logging[feat_name].shape[0], 1), dtype=metadata_for_pred_logging[feat_name].dtype).to(self.device)], axis=-1)
 
         # Step 2. Merge features
-        
+
         if self.inp_merge == 'mlp':
-            #pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
-            pos_inp = self.layernorm1(pos_inp) 
-            pos_emb = self.tf_out_act(self.layernorm2(self.mlp_merge(pos_inp)))             
-            #if self.loss_type != 'cross_entropy':
+            # pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
+
+            pos_inp = self.layernorm1(pos_inp)
+            pos_emb = self.tf_out_act(self.layernorm2(self.mlp_merge(pos_inp)))
+
+            # if self.loss_type != 'cross_entropy':
             #    neg_emb = torch.tanh(self.mlp_merge(neg_inp))
         elif self.inp_merge == 'attn':
             pos_emb = self.attn_merge(pos_inp)
-            #if self.loss_type != 'cross_entropy':
+            # if self.loss_type != 'cross_entropy':
             #    neg_emb = self.attn_merge(neg_inp)
-
 
         if self.mlm:
             # Masking inputs (with trainable [mask] embedding]) at masked label positions      
-            pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1).bool(), 
-                                      self.masked_item_embedding.to(pos_emb.dtype), 
-                                      pos_emb)            
-            #if self.loss_type != 'cross_entropy':
+            pos_emb_inp = torch.where(label_mlm_mask.unsqueeze(-1).bool(),
+                                      self.masked_item_embedding.to(pos_emb.dtype),
+                                      pos_emb)
+            # if self.loss_type != 'cross_entropy':
             #    pos_emb_trg = pos_emb #.clone()
             #    neg_emb_inp = neg_emb   
         else:
             # slice over time-steps for input and target and ensuring masking is applied
-            #pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
-            
+            # pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
+
             # Truncating the input sequences length to -1
             pos_emb_inp = pos_emb[:, :-1]
 
-            # As after shifting the sequence length will be subtracted by one, adding a masked item in 
-            # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
-            pos_emb_inp = torch.cat([pos_emb_inp, 
-                        torch.zeros((pos_emb_inp.shape[0], 1, pos_emb_inp.shape[2]), 
+            # As after shifting the sequence length will be subtracted by one, adding a masked item in 	
+            # the sequence to return to the initial sequence. This is important for ReformerModel(), for example	
+            pos_emb_inp = torch.cat([pos_emb_inp, 	
+                        torch.zeros((pos_emb_inp.shape[0], 1, pos_emb_inp.shape[2]), 	
                                      dtype=pos_emb_inp.dtype).to(self.device)], axis=1)
 
             # Replacing the inputs corresponding to masked label with a trainable embedding
-            pos_emb_inp = torch.where(mask_trg_pad.unsqueeze(-1).bool(), 
+            pos_emb_inp = torch.where(mask_trg_pad.unsqueeze(-1).bool(),
                                       pos_emb_inp,
-                                      self.masked_item_embedding.to(pos_emb_inp.dtype))            
-
+                                      self.masked_item_embedding.to(pos_emb_inp.dtype))
 
             '''
             if type(self.model) is GPT2Model:
@@ -361,32 +390,27 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 pos_emb_inp = pos_emb[:, :-1] * mask_trg_pad.unsqueeze(-1)
             '''
-            #if self.loss_type != 'cross_entropy':
-                # # Shifting labels by one
-                # pos_emb_trg = pos_emb[:, 1:]
-                # neg_emb_inp = neg_emb[:, :-1]
-
-                # # As after shifting the sequence length will be subtracted by one, adding a masked item in 
-                # # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
-                # pos_emb_trg = torch.cat([pos_emb_trg, 
-                #             torch.zeros((pos_emb_trg.shape[0], 1, pos_emb_trg.shape[2]), 
-                #                         dtype=pos_emb_trg.dtype).to(self.device)], axis=1)
-
-                # neg_emb_inp = torch.cat([neg_emb_inp, 
-                #             torch.zeros((neg_emb_inp.shape[0], 1, neg_emb_inp.shape[2]), 
-                #                         dtype=neg_emb_inp.dtype).to(self.device)], axis=1)
-
-
-                # pos_emb_trg = pos_emb_trg * mask_trg_pad.unsqueeze(-1)
+            # if self.loss_type != 'cross_entropy':
+                # # Shifting labels by one	
+                # pos_emb_trg = pos_emb[:, 1:]	
+                # neg_emb_inp = neg_emb[:, :-1]	
+                # # As after shifting the sequence length will be subtracted by one, adding a masked item in 	
+                # # the sequence to return to the initial sequence. This is important for ReformerModel(), for example	
+                # pos_emb_trg = torch.cat([pos_emb_trg, 	
+                #             torch.zeros((pos_emb_trg.shape[0], 1, pos_emb_trg.shape[2]), 	
+                #                         dtype=pos_emb_trg.dtype).to(self.device)], axis=1)	
+                # neg_emb_inp = torch.cat([neg_emb_inp, 	
+                #             torch.zeros((neg_emb_inp.shape[0], 1, neg_emb_inp.shape[2]), 	
+                #                         dtype=neg_emb_inp.dtype).to(self.device)], axis=1)	
+                # pos_emb_trg = pos_emb_trg * mask_trg_pad.unsqueeze(-1)	
                 # neg_emb_inp = neg_emb_inp * mask_trg_pad.unsqueeze(-1).unsqueeze(-1)
-
 
         # Step3. Run forward pass on model architecture
 
-        if not isinstance(self.model, PreTrainedModel): #Checks if its a transformer
+        if not isinstance(self.model, PreTrainedModel):  # Checks if its a transformer
             # compute output through RNNs
             results = self.model(
-                input=pos_emb_inp
+                input = pos_emb_inp
             )
 
             if type(results) is tuple or type(results) is list:
@@ -394,8 +418,8 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 pos_emb_pred = results
 
-            model_outputs = (None, )
-            
+            model_outputs = (None,)
+
         else:
             """
             Transformer Models
@@ -407,40 +431,37 @@ class RecSysMetaModel(PreTrainedModel):
                 position_ids = None
             '''
 
-            #label_seq_inp_ohe = torch.nn.functional.one_hot(label_seq_inp, self.target_dim)
+            # label_seq_inp_ohe = torch.nn.functional.one_hot(label_seq_inp, self.target_dim)
 
-
-            if type(self.model) is GPT2Model:   
+            if type(self.model) is GPT2Model:
                 seq_len = pos_emb_inp.shape[1]
                 # head_mask has shape n_layer x batch x n_heads x N x N
-                head_mask = torch.tril(torch.ones((seq_len, seq_len), dtype=torch.uint8, device=self.device)) \
-                                .view(1, 1, 1, seq_len, seq_len) \
-                                .repeat(self.n_layer, 1, 1, 1, 1)
+                head_mask = torch.tril(torch.ones((seq_len, seq_len), dtype = torch.uint8, device = self.device)) \
+                    .view(1, 1, 1, seq_len, seq_len) \
+                    .repeat(self.n_layer, 1, 1, 1, 1)
 
                 model_outputs = self.model(
-                    #Temporary, to see if the problem of hard attention is related to the item embedding generation
-                    #input_ids=label_seq_inp,
-                    
-                    inputs_embeds=pos_emb_inp,
-                    head_mask=head_mask,
-                    #position_ids=position_ids
+                    # Temporary, to see if the problem of hard attention is related to the item embedding generation
+                    # input_ids=label_seq_inp,
+
+                    inputs_embeds = pos_emb_inp,
+                    head_mask = head_mask,
+                    # position_ids=position_ids
                 )
             else:
                 model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp,
-                    #position_ids=position_ids
+                    inputs_embeds = pos_emb_inp,
+                    # position_ids=position_ids
                 )
-            
-            
+
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
 
         pos_emb_pred = self.tf_out_act(self.transformer_output_project(pos_emb_pred))
 
         trg_flat = label_seq_trg.flatten()
-        non_pad_mask = (trg_flat != self.pad_token)        
-        num_elem = non_pad_mask.sum()        
-
+        non_pad_mask = (trg_flat != self.pad_token)
+        num_elem = non_pad_mask.sum()
 
         labels_all = torch.masked_select(trg_flat, non_pad_mask)
 
@@ -448,12 +469,12 @@ class RecSysMetaModel(PreTrainedModel):
 
         # remove zero padding elements 
 
-        pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)        
-        #if self.loss_type != 'cross_entropy':
+        pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)
+        # if self.loss_type != 'cross_entropy':
         #    pos_emb_trg = self.remove_pad_3d(pos_emb_trg, non_pad_mask)
         #    neg_emb_inp = self.remove_pad_4d(neg_emb_inp, non_pad_mask)
 
-        if not self.mlm:                        
+        if not self.mlm:
             ##Temporary. Replace by the commented code after experiments with past information
             if self.session_aware:
                 non_pad_original_mask = (label_seq_trg_original.flatten() != self.pad_token)
@@ -466,32 +487,63 @@ class RecSysMetaModel(PreTrainedModel):
                     metadata_for_pred_logging[feat_name] = torch.masked_select(metadata_for_pred_logging[feat_name].flatten(), 
                                                                             non_pad_mask)
 
-
-                
-        if self.mf_constrained_embeddings:        
-            logits_all = F.linear(pos_emb_pred, weight=self.embedding_tables[self.label_embedding_table_name].weight, bias=self.output_layer_bias)   
+        if self.mf_constrained_embeddings:
+            logits_all = F.linear(pos_emb_pred, weight = self.embedding_tables[self.label_embedding_table_name].weight,
+                                  bias = self.output_layer_bias)
         else:
             logits_all = self.output_layer(pos_emb_pred)
 
-        predictions_all = self.log_softmax(logits_all)
-        loss_ce = self.loss_nll(predictions_all, labels_all)
-        loss = loss_ce
-
-        # accuracy
-        _, max_idx = torch.max(logits_all, dim=1)
-        train_acc = (max_idx == labels_all).mean(dtype=torch.float32)
+        if not self.negative_sampling:
+            predictions_all = self.log_softmax(logits_all)
+            loss_ce = self.loss_nll(predictions_all, labels_all)
+            loss = loss_ce
+            # accuracy
+            _, max_idx = torch.max(logits_all, dim = 1)
+            train_acc = (max_idx == labels_all).mean(dtype = torch.float32)
 
         loss_neg = None
         predictions_neg = None
         labels_neg = None
         train_acc_neg = None
 
-        # concatenate
-        if self.loss_type != 'cross_entropy':
-            # the negative samples are the targets present in the mini-batch  (select ids in labels_all)
-            logit_sample = logits_all[:, labels_all]
-            # loss:
-            loss = self.loss_fn(logit_sample)
+        if self.negative_sampling:
+            # Compute pairwise loss using negative samples
+            # The negative samples are the targets present in the other sessions of same the mini-batch
+            # ==> (items with the same session are not considered as negatives)
+            bs = label_seq_trg.shape[0]
+            # build negative mask for each session (bs, #negatives):
+            if self.mlm:
+                negatives = torch.masked_select(label_seq_trg, label_mlm_mask)
+                negative_mask = self.compute_neg_mask(label_mlm_mask)
+            else:
+                negatives = torch.masked_select(label_seq_trg, mask_trg_pad)
+                negative_mask = self.compute_neg_mask(mask_trg_pad)
+            # If adding extra negative samples: neg_sampling_store_n_sample > 0
+            if self.neg_sampling_store_n_sample:
+                if self.neg_sampling_store_size != 0:
+                    if self.sample_pointer == self.generate_length:
+                        # if all examples in the cache were used: re-sample a new cache
+                        self.neg_samples = self.generate_neg_samples(length = self.generate_length)
+                        self.sample_pointer = 0
+                    # Get a vector of neg_sampling_store_n_sample for the current batch
+                    sample = self.neg_samples[self.sample_pointer].to(self.device)
+                    self.sample_pointer += 1
+                else:
+                    # Sample for each batch without using a cache
+                    sample = self.generate_neg_samples(length = 1).to(self.device)
+                # Concat the additional samples to mini-batch negatives
+                negatives = torch.cat([negatives, sample], dim = 0)
+                # add ones to negative_mask for additional negatives
+                negative_mask = torch.cat([negative_mask, torch.ones((bs, len(sample)), device = self.device).bool()],
+                                          dim = 1)
+            positives = ~negative_mask
+            # flat negative mask : of shape  N_pos_targets x N_negatives
+            negative_mask_all = torch.repeat_interleave(negative_mask, positives.sum(1), dim = 0)
+            # Get logit scores
+            logit_sample = logits_all[:, negatives]
+            # Compute loss:
+            loss = self.loss_fn(logit_sample, negative_mask_all)
+
             '''
             pos_emb_pred_expanded = pos_emb_pred.unsqueeze(
                 1).expand_as(neg_emb_inp)
@@ -559,6 +611,7 @@ class RecSysMetaModel(PreTrainedModel):
             loss_neg *= self.neg_rescale_factor
             loss_ce *= self.all_rescale_factor
             loss = loss_neg + loss_ce
+            
 
             # accuracy
             _, max_idx = torch.max(cos_sim_concat, dim=1)
@@ -692,7 +745,7 @@ class RecSysMetaModel(PreTrainedModel):
                 if 'is_label' in cinfo and cinfo['is_label']:
                     label_seq = cdata
 
-                if cinfo['dtype'] == 'categorical': 
+                if cinfo['dtype'] == 'categorical':
                     if 'is_label' in cinfo and cinfo['is_label']:
                         if self.use_ohe_item_ids_inputs:          
                             cdata = torch.nn.functional.one_hot(cdata.long(), num_classes=self.target_dim).float()
@@ -701,7 +754,8 @@ class RecSysMetaModel(PreTrainedModel):
                         else:
                             cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())                    
                     else:
-                        cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())    
+                        cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())                    
+
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)
 
@@ -712,7 +766,6 @@ class RecSysMetaModel(PreTrainedModel):
                 else:
                     raise NotImplementedError
 
-                
                 if not is_neg:
                     # Keeping item metadata features that will
                     if 'log_with_preds_as_metadata' in cinfo and cinfo['log_with_preds_as_metadata'] == True:
@@ -724,9 +777,6 @@ class RecSysMetaModel(PreTrainedModel):
                 transformed_features[cname] = cdata
                 #output.append(cdata)
 
-
-
-
         if self.session_aware:
             # Concatenates past sessions before the session with the current session, for each feature
             # assuming that features from past sessions have a common prefix
@@ -736,14 +786,14 @@ class RecSysMetaModel(PreTrainedModel):
                     past_fname = self.session_aware_features_prefix + fname
                     if past_fname in transformed_features:
                         transformed_features[fname] = \
-                            torch.cat([transformed_features[past_fname], 
-                                       transformed_features[fname]], axis=1)
+                            torch.cat([transformed_features[past_fname],
+                                       transformed_features[fname]], axis = 1)
                     features_to_delete.append(past_fname)
             for past_fname in features_to_delete:
                 del transformed_features[past_fname]
 
         if len(transformed_features) > 1:
-            output = torch.cat(list(transformed_features.values()), dim=-1)
+            output = torch.cat(list(transformed_features.values()), dim = -1)
         else:
             output = list(transformed_features.values())[0]
 
@@ -764,6 +814,69 @@ class RecSysMetaModel(PreTrainedModel):
         return out_tensor
 
 
+    def set_items_freq_for_sampling(self, items_sorted_freq_series):
+        self.items_ids_sorted_by_freq = torch.tensor(items_sorted_freq_series.index.values, device=self.device)
+        self.items_freq_sorted = torch.tensor(items_sorted_freq_series.values, device=self.device)
+
+        # if adding extra samples (neg_sampling_store_n_sample > 0): compute the sampling strategy using the frequency of item_ids
+        if self.neg_sampling_store_n_sample != 0:
+            self.items_freq_sorted_norm = self.items_freq_sorted ** self.neg_sampling_alpha
+            self.items_freq_sorted_norm = self.items_freq_sorted_norm.cumsum(dim = 0) / self.items_freq_sorted_norm.sum(dim=0)
+            self.items_freq_sorted_norm[-1] = 1
+
+        # Define a cache that pre-stores  N="neg_sampling_store_size" negative samples if neg_sampling_store_size > 0
+        if (self.neg_sampling_store_size != 0) and self.neg_sampling_store_n_sample > 0:
+            self.generate_length = self.neg_sampling_store_size // self.neg_sampling_store_n_sample
+            if self.generate_length <= 1:
+                self.neg_sampling_store_size = 0
+                print('No example store was used')
+            else:
+                self.neg_samples = self.generate_neg_samples(length = self.generate_length)
+                self.sample_pointer = 0
+                print('Created sample store with {} batches of samples (type=CPU)'.format(self.generate_length))
+        else:
+            print('No example store was used')
+
+    def generate_neg_samples(self, length):
+        """
+        Args:
+            length: the number of vectors of shape self.neg_sampling_store_n_sample to store in cache memory
+        return:
+            sample: Tensor of negative samples of shape length x self.neg_sampling_store_n_sample
+        """
+
+        if self.neg_sampling_alpha:
+            samples_idx = torch.searchsorted(self.items_freq_sorted_norm, torch.rand(self.neg_sampling_store_n_sample * length))
+            #Retrieves the correct item ids from the sampled indices over the cumulative prob distribution
+            sampled_item_ids = self.items_ids_sorted_by_freq[samples_idx]
+        else:
+            n_items = self.items_freq_sorted_norm.shape[0]
+            sampled_item_ids = torch.randint(0, n_items, size = (self.neg_sampling_store_n_sample * length,))
+        if length > 1:
+            sampled_item_ids = sampled_item_ids.reshape((length, self.neg_sampling_store_n_sample))
+        return sampled_item_ids
+
+    def compute_neg_mask(self, positive_mask):
+        """
+        Args:
+            positive_mask: Tensor of shape bs x seq_len: mask  input where target is on padding token
+        Return:
+            negative_mask: Tensor of shape #pos_targets x negatives to specify the negative items
+                            for each positive target
+        """
+        # TODO: Refactor the code to not use  For loop
+        bs, _ = positive_mask.shape
+        N_neg = positive_mask.flatten().sum()
+        pos_target_per_session = positive_mask.sum(1)
+        pos_target_per_session = torch.cat([torch.tensor([0], device=self.device), pos_target_per_session])
+        cumul_pos_target = pos_target_per_session.cumsum(dim = 0)
+        # define mask over all mini-batch negatives
+        mask = torch.zeros(bs, N_neg, device=self.device)
+        for i in range(bs):
+            mask[i, cumul_pos_target[i]:cumul_pos_target[i + 1]] = 1
+        return ~mask.bool()
+
+
 def nll_1d(items_prob, _label=None):
     # https://github.com/gabrielspmoreira/chameleon_recsys/blob/da7f73a2b31d6867d444eded084044304b437413/nar_module/nar/nar_model.py#L639
     items_prob = torch.exp(items_prob)
@@ -771,4 +884,3 @@ def nll_1d(items_prob, _label=None):
     xe_loss = torch.log(positive_prob)
     cosine_sim_loss = - torch.mean(xe_loss)
     return cosine_sim_loss
-

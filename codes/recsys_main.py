@@ -26,6 +26,7 @@ from recsys_utils import safe_json
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loaders,
+    fetch_data_loader,
     get_avail_data_dates    
 )
 
@@ -83,6 +84,45 @@ def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
         raise ValueError('Only one feature can be selected as label (is_label = True)')
     label_name = label_feature_config[0]
     return label_name
+
+def get_parquet_files_names(data_path, date, is_train, eval_on_test_set=False):
+    date_format="%Y-%m-%d"
+
+    if is_train:
+        parquet_paths = ["session_start_date={}-train.parquet".format(date.strftime(date_format))]
+    else:
+        if eval_on_test_set:
+            eval_dataset_type = 'test'
+        else:
+            eval_dataset_type = 'valid'
+        parquet_paths = ["session_start_date={}-{}.parquet".format(date.strftime(date_format), eval_dataset_type)]
+
+    parquet_paths = [os.path.join(data_path, parquet_file) for parquet_file in parquet_paths]
+
+    ##If paths are folders, list the parquet file within the folders
+    #parquet_paths = get_filenames(parquet_paths, files_filter_pattern="*.parquet"
+    
+
+    return parquet_paths
+
+
+def get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map):
+    train_loader = fetch_data_loader(data_args, training_args, feature_map, train_data_paths, is_train_set=True)
+    eval_loader = fetch_data_loader(data_args, training_args, feature_map, eval_data_paths, is_train_set=False)
+
+    return train_loader, eval_loader
+
+def get_items_sorted_freq(train_data_paths, item_id_feature_name):
+    dataframes = []
+    for parquet_file in train_data_paths:
+        df = pd.read_parquet(parquet_file, columns=[item_id_feature_name])
+        dataframes.append(df)
+    
+    concat_df = pd.concat(dataframes)
+    #Returns a series indexed by item ids and sorted by the item frequncy values
+    items_sorted_freq_series = concat_df.explode(item_id_feature_name).groupby(item_id_feature_name).size().sort_values(ascending=True)
+
+    return items_sorted_freq_series
 
 def main():
   
@@ -198,13 +238,18 @@ def main():
         train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
         train_date_str, eval_date_str = train_date.strftime("%Y-%m-%d"), eval_date.strftime("%Y-%m-%d")
 
+        train_data_paths = get_parquet_files_names(data_args.data_path, train_date, is_train=True)
+        eval_data_paths = get_parquet_files_names(data_args.data_path, eval_date, is_train=False, 
+                                                  eval_on_test_set=training_args.eval_on_test_set)
+
         # Training
         if training_args.do_train:
             logger.info("************* Training (date:{}) *************".format(train_date_str))
 
-            train_loader, eval_loader \
-                 = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date)
+            #train_loader, eval_loader \
+            #     = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date)
 
+            train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map)
 
             trainer.set_train_dataloader(train_loader)
             trainer.set_eval_dataloader(eval_loader)
@@ -215,6 +260,10 @@ def main():
                     and os.path.isdir(model_args.model_name_or_path)
                 else None
             )
+
+            if model_args.negative_sampling and model_args.neg_sampling_store_n_sample > 0:
+                items_sorted_freq_series = get_items_sorted_freq(train_data_paths, item_id_feature_name=label_name)
+                trainer.model.set_items_freq_for_sampling(items_sorted_freq_series)
 
             trainer.reset_lr_scheduler()
             trainer.train(model_path=model_path)
@@ -227,8 +276,9 @@ def main():
             logger.info("************* Evaluation *************")
 
             # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
-            train_loader, eval_loader \
-                 = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, shuffle_train_dataloader=False)
+            #train_loader, eval_loader \
+            #     = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, shuffle_train_dataloader=False)
+            train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths)
 
             logger.info(f'Evaluating on train set ({train_date_str})....')
             trainer.set_train_dataloader(train_loader)
@@ -271,7 +321,9 @@ def main():
 
             log_aod_metric_results(training_args.output_dir, results_df, results_avg_days)              
 
-
+def get_items_frequency():
+    items_sorted_freq_series = interactions_df.groupby(self.item_key).size().sort_values(ascending=True)
+    return items_sorted_freq_series
 
 def log_metric_results(output_dir, metrics, prefix, date):
     """
