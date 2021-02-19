@@ -25,7 +25,6 @@ from recsys_trainer import RecSysTrainer, DatasetType, DatasetMock
 from recsys_utils import safe_json
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
-    fetch_data_loaders,
     fetch_data_loader,
     get_avail_data_dates    
 )
@@ -258,7 +257,7 @@ def main():
                 else None
             )
 
-            if model_args.negative_sampling and model_args.neg_sampling_store_n_sample > 0:
+            if model_args.negative_sampling and model_args.neg_sampling_extra_samples_per_batch > 0:
                 items_sorted_freq_series = get_items_sorted_freq(train_data_paths, item_id_feature_name=label_name)
                 trainer.model.set_items_freq_for_sampling(items_sorted_freq_series)
 

@@ -144,7 +144,7 @@ class RecSysMetaModel(PreTrainedModel):
             raise RuntimeError('label column is not declared in feature map.')
 
         self.neg_sampling_store_size = model_args.neg_sampling_store_size
-        self.neg_sampling_store_n_sample = model_args.neg_sampling_store_n_sample
+        self.neg_sampling_extra_samples_per_batch = model_args.neg_sampling_extra_samples_per_batch
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
         self.inp_merge = model_args.inp_merge
@@ -507,19 +507,20 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 negatives = torch.masked_select(label_seq_trg, mask_trg_pad)
                 negative_mask = self.compute_neg_mask(mask_trg_pad)
-            # If adding extra negative samples: neg_sampling_store_n_sample > 0
-            if self.neg_sampling_store_n_sample:
+            # If adding extra negative samples: neg_sampling_extra_samples_per_batch > 0
+            if self.neg_sampling_extra_samples_per_batch:
                 if self.neg_sampling_store_size != 0:
-                    if self.sample_pointer == self.generate_length:
+                    if self.neg_sampling_store_pointer == self.neg_sampling_store_rows:
                         # if all examples in the cache were used: re-sample a new cache
-                        self.neg_samples = self.generate_neg_samples(length = self.generate_length)
-                        self.sample_pointer = 0
-                    # Get a vector of neg_sampling_store_n_sample for the current batch
-                    sample = self.neg_samples[self.sample_pointer].to(self.device)
-                    self.sample_pointer += 1
+                        self.neg_samples = self.generate_neg_samples(length = self.neg_sampling_store_rows)
+                        self.neg_sampling_store_pointer = 0
+                    # Get a vector of neg_sampling_extra_samples_per_batch for the current batch
+                    sample = self.neg_samples[self.neg_sampling_store_pointer].to(self.device)
+                    self.neg_sampling_store_pointer += 1
                 else:
                     # Sample for each batch without using a cache
                     sample = self.generate_neg_samples(length = 1).to(self.device)
+
                 # Concat the additional samples to mini-batch negatives
                 negatives = torch.cat([negatives, sample], dim = 0)
                 # add ones to negative_mask for additional negatives
@@ -807,42 +808,42 @@ class RecSysMetaModel(PreTrainedModel):
         self.items_ids_sorted_by_freq = torch.tensor(items_sorted_freq_series.index.values, device=self.device)
         self.items_freq_sorted = torch.tensor(items_sorted_freq_series.values, device=self.device)
 
-        # if adding extra samples (neg_sampling_store_n_sample > 0): compute the sampling strategy using the frequency of item_ids
-        if self.neg_sampling_store_n_sample != 0:
+        # If should adding extra negative samples to the batch ones         
+        if (self.neg_sampling_store_size != 0) and self.neg_sampling_extra_samples_per_batch > 0:
+            # Generate a cumulative distribution of frequency (sorted in ascending order), so that more popular items can be sampled more often
             self.items_freq_sorted_norm = self.items_freq_sorted ** self.neg_sampling_alpha
             self.items_freq_sorted_norm = self.items_freq_sorted_norm.cumsum(dim = 0) / self.items_freq_sorted_norm.sum(dim=0)
             self.items_freq_sorted_norm[-1] = 1
 
-        # Define a cache that pre-stores  N="neg_sampling_store_size" negative samples if neg_sampling_store_size > 0
-        if (self.neg_sampling_store_size != 0) and self.neg_sampling_store_n_sample > 0:
-            self.generate_length = self.neg_sampling_store_size // self.neg_sampling_store_n_sample
-            if self.generate_length <= 1:
-                self.neg_sampling_store_size = 0
-                print('No example store was used')
+            # Defines a cache that pre-stores N="neg_sampling_store_size" negative samples
+            self.neg_sampling_store_rows = self.neg_sampling_store_size // self.neg_sampling_extra_samples_per_batch
+            if self.neg_sampling_store_rows <= 1:
+                self.neg_sampling_store_rows = 0
+                print('No negative samples store was used.')
             else:
-                self.neg_samples = self.generate_neg_samples(length = self.generate_length)
-                self.sample_pointer = 0
-                print('Created sample store with {} batches of samples (type=CPU)'.format(self.generate_length))
+                self.neg_samples = self.generate_neg_samples(length = self.neg_sampling_store_rows)
+                self.neg_sampling_store_pointer = 0
+                print('Created sample store with {} batches of samples (type=CPU)'.format(self.neg_sampling_store_rows))
         else:
             print('No example store was used')
 
     def generate_neg_samples(self, length):
         """
         Args:
-            length: the number of vectors of shape self.neg_sampling_store_n_sample to store in cache memory
+            length: the number of vectors of shape self.neg_sampling_extra_samples_per_batch to store in cache memory
         return:
-            sample: Tensor of negative samples of shape length x self.neg_sampling_store_n_sample
+            sample: Tensor of negative samples of shape length x self.neg_sampling_extra_samples_per_batch
         """
 
         if self.neg_sampling_alpha:
-            samples_idx = torch.searchsorted(self.items_freq_sorted_norm, torch.rand(self.neg_sampling_store_n_sample * length))
+            samples_idx = torch.searchsorted(self.items_freq_sorted_norm, torch.rand(self.neg_sampling_extra_samples_per_batch * length, device=self.device))
             #Retrieves the correct item ids from the sampled indices over the cumulative prob distribution
             sampled_item_ids = self.items_ids_sorted_by_freq[samples_idx]
         else:
             n_items = self.items_freq_sorted_norm.shape[0]
-            sampled_item_ids = torch.randint(0, n_items, size = (self.neg_sampling_store_n_sample * length,))
+            sampled_item_ids = torch.randint(0, n_items, size = (self.neg_sampling_extra_samples_per_batch * length,), device=self.device)
         if length > 1:
-            sampled_item_ids = sampled_item_ids.reshape((length, self.neg_sampling_store_n_sample))
+            sampled_item_ids = sampled_item_ids.reshape((length, self.neg_sampling_extra_samples_per_batch))
         return sampled_item_ids
 
     def compute_neg_mask(self, positive_mask):
