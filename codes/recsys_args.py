@@ -267,8 +267,7 @@ class ModelArguments:
         default=1000000, metadata={"help": "number of samples to store in cache"}
     )
 
-    
-    neg_sampling_store_n_sample: Optional[int] = field(
+    neg_sampling_extra_samples_per_batch: Optional[int] = field(
         default=32, metadata={"help": "Number of negative samples to add to mini-batch samples"}
     )
 
