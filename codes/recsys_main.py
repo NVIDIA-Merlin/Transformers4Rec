@@ -241,6 +241,10 @@ def main():
         eval_data_paths = get_parquet_files_names(data_args.data_path, eval_date, is_train=False, 
                                                   eval_on_test_set=training_args.eval_on_test_set)
 
+        if model_args.negative_sampling and model_args.neg_sampling_extra_samples_per_batch > 0:
+                items_sorted_freq_series = get_items_sorted_freq(train_data_paths, item_id_feature_name=label_name)
+                trainer.model.set_items_freq_for_sampling(items_sorted_freq_series)
+                
         # Training
         if training_args.do_train:
             logger.info("************* Training (date:{}) *************".format(train_date_str))
@@ -257,10 +261,6 @@ def main():
                 else None
             )
 
-            if model_args.negative_sampling and model_args.neg_sampling_extra_samples_per_batch > 0:
-                items_sorted_freq_series = get_items_sorted_freq(train_data_paths, item_id_feature_name=label_name)
-                trainer.model.set_items_freq_for_sampling(items_sorted_freq_series)
-
             trainer.reset_lr_scheduler()
             trainer.train(model_path=model_path)
 
@@ -272,7 +272,7 @@ def main():
             logger.info("************* Evaluation *************")
 
             # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
-            train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths)
+            train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map)
 
             logger.info(f'Evaluating on train set ({train_date_str})....')
             trainer.set_train_dataloader(train_loader)
