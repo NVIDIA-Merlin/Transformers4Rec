@@ -80,79 +80,42 @@ def get_dataset_len(data_paths):
     return sum([pq.ParquetFile(d_path).metadata.num_rows for d_path in data_paths])
 
 
-def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, 
-                       date_format="%Y-%m-%d", load_from_path=False, shuffle_train_dataloader=False):
-    """
-    load_from_path: when a path is given, it automatically determines 
-                    list of available parquet files in the path.
-                    otherwise, the path should be a direct path to the parquet file 
-    """
-    d_path = data_args.data_path if data_args.data_path else ''
-    
-    # TODO: make this at outer-loop for making evaluation based on days-data-partition
-    train_data_path = [
-        os.path.join(d_path, "session_start_date={}-train.parquet".format(train_date.strftime(date_format))),
-    ]
+def fetch_data_loader(data_args, training_args, feature_map, data_paths, is_train_set,
+                      shuffle_dataloader=False):
 
-    if training_args.eval_on_test_set:
-        eval_dataset_type = 'test'
-    else:
-        eval_dataset_type = 'valid'
+    if type(data_paths) is not list:
+        data_paths = [data_paths]
 
-    eval_data_path = [
-        os.path.join(d_path, "session_start_date={}-{}.parquet".format(eval_date.strftime(date_format), eval_dataset_type)),
-    ]
-
-    if load_from_path:
-        train_data_path = get_filenames(train_data_path)
-        valid_data_path = get_filenames(eval_data_path)
+    batch_size = training_args.per_device_train_batch_size if is_train_set else training_args.per_device_eval_batch_size
 
     if data_args.data_loader_engine == "petastorm":
         #eval_data_path = transform_petastorm_schema(feature_map)
 
-        train_data_len = get_dataset_len(train_data_path)
-        eval_data_len = get_dataset_len(eval_data_path)
+        data_len = get_dataset_len(data_paths)
 
-        train_data_path = ['file://' + p for p in train_data_path]
-        eval_data_path = ['file://' + p for p in eval_data_path]
+        data_paths = ['file://' + p for p in data_paths]
 
-        train_loader = DataLoaderWithLen(
-            make_batch_reader(train_data_path, 
+        
+        loader = DataLoaderWithLen(
+            make_batch_reader(data_paths, 
                 num_epochs=None,
                 schema_fields=parquet_schema,
                 reader_pool_type=data_args.petastorm_reader_pool_type,
                 workers_count=data_args.workers_count,
             ), 
-            batch_size=training_args.per_device_train_batch_size,
-            len=math.ceil(train_data_len / training_args.per_device_train_batch_size),
-        )
-
-        eval_loader = DataLoaderWithLen(
-            make_batch_reader(eval_data_path, 
-                num_epochs=None,
-                schema_fields=parquet_schema,
-                reader_pool_type=data_args.petastorm_reader_pool_type,
-                workers_count=data_args.workers_count,
-            ), 
-            batch_size=training_args.per_device_eval_batch_size,
-            len=math.ceil(eval_data_len / training_args.per_device_eval_batch_size),
+            batch_size=batch_size,
+            len=math.ceil(data_len / batch_size),
         )
 
 
     elif data_args.data_loader_engine == "pyarrow":
         cols_to_read = feature_map.keys()
 
-        train_dataset = ParquetDataset(train_data_path, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
-        if shuffle_train_dataloader and training_args.shuffle_buffer_size > 0:
-            train_dataset = ShuffleDataset(train_dataset, buffer_size=training_args.shuffle_buffer_size)
-        train_loader = PyTorchDataLoader(train_dataset, batch_size=training_args.per_device_train_batch_size, 
+        dataset = ParquetDataset(data_paths, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
+        if shuffle_dataloader and training_args.shuffle_buffer_size > 0:
+            dataset = ShuffleDataset(dataset, buffer_size=training_args.shuffle_buffer_size)
+        loader = PyTorchDataLoader(dataset, batch_size=batch_size, 
                                         drop_last=training_args.dataloader_drop_last,                                         
-                                        num_workers=data_args.workers_count,
-                                        pin_memory=True)
-        
-        eval_dataset = ParquetDataset(eval_data_path, cols_to_read, seq_features_len_pad_trim=data_args.session_seq_length_max)
-        eval_loader = PyTorchDataLoader(eval_dataset, batch_size=training_args.per_device_eval_batch_size, 
-                                        drop_last=training_args.dataloader_drop_last,                                 
                                         num_workers=data_args.workers_count,
                                         pin_memory=True)
 
@@ -280,18 +243,11 @@ def fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_d
                 "devices": list(range(training_args.n_gpu)),
             }
 
-        train_set = NVTDatasetWrapper(train_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        train_loader = NVTDataLoaderWrapper(dataset=train_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 
-                                            batch_size=training_args.per_device_train_batch_size, 
-                                            shuffle=shuffle_train_dataloader, **data_loader_config)
-
-        eval_set = NVTDatasetWrapper(eval_data_path, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
-        eval_loader = NVTDataLoaderWrapper(dataset=eval_set, seq_features_len_pad_trim=data_args.session_seq_length_max, 
-                                            batch_size=training_args.per_device_eval_batch_size, 
-                                            shuffle=False, **data_loader_config)
-
-    return train_loader, eval_loader
-
+        dataset = NVTDatasetWrapper(data_paths, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction)
+        loader = NVTDataLoaderWrapper(dataset=dataset, seq_features_len_pad_trim=data_args.session_seq_length_max, 
+                                            batch_size=batch_size, 
+                                            shuffle=shuffle_dataloader, **data_loader_config)
+    return loader
 
 class DataLoaderWithLen(PetaStormDataLoader):
     def __init__(self, *args, **kwargs):

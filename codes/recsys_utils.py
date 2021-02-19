@@ -1,3 +1,4 @@
+import os
 import sys
 import glob
 import time
@@ -20,8 +21,8 @@ def safe_json(data):
     return False 
 
 
-def get_filenames(data_paths):
-    paths = [[p for p in glob.glob(path + "/*.parquet")] for path in data_paths]
+def get_filenames(data_paths, files_filter_pattern="*"):
+    paths = [[p for p in glob.glob(os.path.join(path, files_filter_pattern))] for path in data_paths]
     return list(itertools.chain.from_iterable(paths))
 
 

@@ -52,7 +52,7 @@ class TrainingArguments(HfTrainingArguments):
 @dataclass
 class DataArguments:
     data_path: Optional[str] = field(
-        default=None,
+        default='',
         metadata={
             "help": "Path to dataset."
         },
@@ -257,6 +257,24 @@ class ModelArguments:
     mf_constrained_embeddings : bool = field(default=False, metadata={"help": "Performs a matrix factorization (element-wise multiplication) operation between the Transformers output and the item embeddings, to produce output logits for all items. Requires the item id embeddings to have the same dimension as the second-to-last layer."})	
     bpr_max_reg_lambda: Optional[float] = field(	
         default=0.0, metadata={"help": "regularization hyper-param of the loss function:  BPR-MAX"}	
+    )
+
+
+    negative_sampling: bool = field(default=False, metadata={"help": "Compute negative samples for pairwise losses"}
+                                     )
+    
+    neg_sampling_store_size: Optional[int] = field(
+        default=1000000, metadata={"help": "number of samples to store in cache"}
+    )
+
+    
+    neg_sampling_store_n_sample: Optional[int] = field(
+        default=32, metadata={"help": "Number of negative samples to add to mini-batch samples"}
+    )
+
+    
+    neg_sampling_alpha: Optional[float] = field(
+        default=0.0, metadata={"help": "parameter of sampling: = 0 and = 1 are uniform and popularity-based sapling respectively "}
     )
 
                                                            
