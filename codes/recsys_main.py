@@ -246,9 +246,6 @@ def main():
         if training_args.do_train:
             logger.info("************* Training (date:{}) *************".format(train_date_str))
 
-            #train_loader, eval_loader \
-            #     = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date)
-
             train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map)
 
             trainer.set_train_dataloader(train_loader)
@@ -276,8 +273,6 @@ def main():
             logger.info("************* Evaluation *************")
 
             # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
-            #train_loader, eval_loader \
-            #     = fetch_data_loaders(data_args, training_args, feature_map, train_date, eval_date, shuffle_train_dataloader=False)
             train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths)
 
             logger.info(f'Evaluating on train set ({train_date_str})....')
