@@ -212,6 +212,10 @@ class ModelArguments:
         default=0.0, metadata={"help": "rescale hinge loss to match with cross entropy loss"}
     )
 
+    loss_scale_factor: Optional[float] = field(
+        default=1.0, metadata={"help": "Rescale the loss. The scale of different losses types are very different (e.g. cross_entropy > bpr_max > top1_max) and this scaling might help to avoid underflow with fp16"}
+    )
+
     disable_positional_embeddings: bool = field(default=False, metadata={"help": "Disable usage of (sum) positional embeddings with items embeddings."})
 
     attn_type: str = field(

@@ -87,6 +87,8 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.use_ohe_item_ids_inputs = model_args.use_ohe_item_ids_inputs
 
+        self.loss_scale_factor = model_args.loss_scale_factor
+
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
@@ -608,6 +610,9 @@ class RecSysMetaModel(PreTrainedModel):
             train_acc_neg = (max_idx == n_neg_items).sum(
                 dtype=torch.float32) / num_elem
             '''
+
+        #Scaling the loss
+        loss = loss * self.loss_scale_factor
 
         outputs = {'loss': loss,
                    'labels': labels_all,
