@@ -13,7 +13,7 @@ from torch.nn import functional as F
 
 from transformers import (GPT2Model, PreTrainedModel)
 
-from loss_functions import TOP1Loss, TOP1_max, BPR_max, BPRLoss, BPR_max_reg, TOP1_max_reg, NewTOP1, NewTOP1_max, NewBPR_max_reg
+from loss_functions import TOP1, TOP1_max, BPR, BPR_max, BPR_max_reg
 
 import numpy as np
 
@@ -194,32 +194,21 @@ class RecSysMetaModel(PreTrainedModel):
         elif self.loss_type.startswith('margin_hinge'):
             # https://pytorch.org/docs/master/generated/torch.nn.CosineEmbeddingLoss.html
             self.loss_fn = nn.CosineEmbeddingLoss(margin = model_args.margin_loss, reduction = 'sum')
-        elif self.loss_type == 'TOP1':
-            self.loss_fn = TOP1Loss()
 
-        elif self.loss_type == 'BPR':
-            self.loss_fn = BPRLoss()
+        elif self.loss_type == 'top1':
+            self.loss_fn = TOP1()
 
-        elif self.loss_type == 'TOP1_max':
+        elif self.loss_type == 'top1_max':
             self.loss_fn = TOP1_max()
 
-        elif self.loss_type == 'BPR_max':
+        elif self.loss_type == 'bpr':
+            self.loss_fn = BPR()
+
+        elif self.loss_type == 'bpr_max':
             self.loss_fn = BPR_max()
 
-        elif self.loss_type == 'NewTOP1':
-            self.loss_fn = NewTOP1()
-
-        elif self.loss_type == 'NewTOP1_max':
-            self.loss_fn = NewTOP1_max()
-
-        elif self.loss_type == 'NewBPR_max_reg':
-            self.loss_fn = NewBPR_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
-
-        elif self.loss_type == 'BPR_max_reg':
+        elif self.loss_type == 'bpr_max_reg':
             self.loss_fn = BPR_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
-
-        elif self.loss_type == 'TOP1_max_reg':
-            self.loss_fn = TOP1_max_reg(lambda_ = model_args.bpr_max_reg_lambda)
 
         elif self.loss_type != 'cross_entropy':
             raise NotImplementedError
