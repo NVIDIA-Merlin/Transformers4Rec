@@ -206,8 +206,8 @@ class RecSysMetaModel(PreTrainedModel):
         elif self.loss_type == 'bpr':
             self.loss_fn = BPR()
 
-        elif self.loss_type == 'bpr_max':
-            self.loss_fn = BPR_max()
+        #elif self.loss_type == 'bpr_max':
+        #    self.loss_fn = BPR_max()
 
         elif self.loss_type == 'bpr_max_reg':
             self.loss_fn = BPR_max_reg(lambda_ = model_args.bpr_max_reg_lambda)

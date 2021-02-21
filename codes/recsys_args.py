@@ -160,8 +160,8 @@ class ModelArguments:
         default="mlp", metadata={"help": "input merge mechanism: 'mlp' OR 'attn'"}
     )
 
-    loss_type: Optional[str] = field(	
-        default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy', 'cross_entropy_neg', 'margin_hinge', 'TOP1', 'TOP1_max', 'BPR', 'BPR_max', 'BPR_max_reg', 'TOP1_max_reg'"}	
+    loss_type: Optional[str] = field(
+        default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy', 'top1', 'top1_max', 'bpr', 'bpr_max_reg'"}
     )
     model_type: Optional[str] = field(
         default='transfoxl',
@@ -257,8 +257,11 @@ class ModelArguments:
 
 
     use_ohe_item_ids_inputs : bool = field(default=False, metadata={"help": "Uses the one-hot encoding of the item ids as inputs followed by a MLP layer, instead of using item embeddings"})	
+    
     constrained_embeddings : bool = field(default=False, metadata={"help": "Use the weight matrix of the output layer as the embedding layer of item_ids. Requires the item id embedding to have the same dimension as the second-to-last layer."})	
+    
     mf_constrained_embeddings : bool = field(default=False, metadata={"help": "Performs a matrix factorization (element-wise multiplication) operation between the Transformers output and the item embeddings, to produce output logits for all items. Requires the item id embeddings to have the same dimension as the second-to-last layer."})	
+    
     bpr_max_reg_lambda: Optional[float] = field(	
         default=0.0, metadata={"help": "regularization hyper-param of the loss function:  BPR-MAX"}	
     )
