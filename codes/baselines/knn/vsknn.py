@@ -1,5 +1,12 @@
+'''
+Based on the implementation from https://github.com/rn5l/session-rec/blob/master/algorithms/knn/vsknn.py from the paper
+    Malte, Ludewig, et al. "Empirical analysis of session-based recommendation algorithms." (2020): 1-33.
+
+This version makes it possible to update during the evaluation (predict_next() method) the item IDF stats
+'''
+
 from _operator import itemgetter
-from math import sqrt
+from math import sqrt, log
 import random
 import time
 
@@ -10,6 +17,7 @@ from math import log10
 from datetime import datetime as dt
 from datetime import timedelta as td
 import math
+from collections import defaultdict
 
 class VMContextKNN:
     '''
@@ -72,16 +80,21 @@ class VMContextKNN:
         self.last_n_days = last_n_days
         self.last_n_clicks = last_n_clicks
         
+        self.num_items = 0
+        
         #updated while recommending
         self.session = -1
         self.session_items = []
-        self.relevant_sessions = set()
+        self.relevant_sessions = set()        
 
         # cache relations once at startup
         self.session_item_map = dict() 
         self.item_session_map = dict()
         self.session_time = dict()
         self.min_time = -1
+
+        self.item_freq = defaultdict(int)
+        self.sessions_count = 0
         
         self.sim_time = 0
         
@@ -107,7 +120,7 @@ class VMContextKNN:
         else: 
             train = data
             
-        self.num_items = train[self.item_key].max()
+        self.num_items = max(self.num_items, train[self.item_key].max())
         
         index_session = train.columns.get_loc( self.session_key )
         index_item = train.columns.get_loc( self.item_key )
@@ -124,12 +137,14 @@ class VMContextKNN:
                     self.session_item_map.update({session : session_items})
                     # cache the last time stamp of the session
                     self.session_time.update({session : time})
+                    self.sessions_count += 1
                     if time < self.min_time:
                         self.min_time = time
                 session = row[index_session]
                 session_items = set()
             time = row[index_time]
             session_items.add(row[index_item])
+            self.item_freq[row[index_item]] += 1
             
             # cache sessions involving an item
             map_is = self.item_session_map.get( row[index_item] )
@@ -142,11 +157,14 @@ class VMContextKNN:
         self.session_item_map.update({session : session_items})
         self.session_time.update({session : time})
         
-        if self.idf_weighting or self.idf_weighting_session: 
-            self.idf = pd.DataFrame()
-            self.idf['idf'] = train.groupby( self.item_key ).size()
-            self.idf['idf'] = np.log( train[self.session_key].nunique() / self.idf['idf'] )
-            self.idf = self.idf['idf'].to_dict()
+        #if self.idf_weighting or self.idf_weighting_session: 
+        #    self.idf = pd.DataFrame()
+        #    self.idf['idf'] = train.groupby( self.item_key ).size()
+        #    self.idf['idf'] = np.log( train[self.session_key].nunique() / self.idf['idf'] )
+        #    self.idf = self.idf['idf'].to_dict()
+
+        #Making the IDF computing incremental
+        self.idf = {k: log(self.sessions_count / v) for k, v in self.item_freq.items()}
         
         
     def predict_next(self, session_id, input_item_id, predict_for_item_ids, timestamp=0, skip=False, mode_type='view'):
@@ -177,17 +195,25 @@ class VMContextKNN:
             
             if( self.extend ):
                 item_set = set( self.session_items )
-                self.session_item_map[self.session] = item_set;
+                self.session_item_map[self.session] = item_set
                 for item in item_set:
                     map_is = self.item_session_map.get( item )
                     if map_is is None:
                         map_is = set()
                         self.item_session_map.update({item : map_is})
                     map_is.add(self.session)
+
+                    #Updating item IDF stats
+                    self.item_freq[item] += 1
+                    self.idf[item] = log(self.sessions_count / self.item_freq[item])
+
                     
                 ts = time.time()
                 self.session_time.update({self.session : ts})
                 
+            #Updating item IDF stats    
+            self.sessions_count += 1
+
             self.last_ts = -1 
             self.session = session_id
             self.session_items = list()
