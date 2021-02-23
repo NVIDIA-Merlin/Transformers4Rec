@@ -5,9 +5,6 @@ sess_pid_seq:
     is_label: True
     emb_table: product_id
     log_with_preds_as_metadata: True
-sess_dtime_secs_log_norm_seq:
-    dtype: float 
-    log_with_preds_as_metadata: True   
 sess_ccid_seq:
     dtype: categorical
     cardinality: 150
@@ -26,21 +23,36 @@ sess_bid_seq:
 sess_price_log_norm_seq:
     dtype: float  
     log_with_preds_as_metadata: True
+sess_relative_price_to_avg_category_seq:
+    dtype: float  
+    log_with_preds_as_metadata: True
+sess_dtime_secs_log_norm_seq:
+    dtype: float 
+    log_with_preds_as_metadata: True   
+sess_prod_recency_days_log_norm_seq:
+    dtype: float  
+    log_with_preds_as_metadata: True 
 sess_et_hour_sin_seq:
     dtype: float
     log_with_preds_as_metadata: True
 sess_et_hour_cos_seq:
     dtype: float    
     log_with_preds_as_metadata: True
-sess_et_month_sin_seq:
-    dtype: float
+sess_et_dayofweek_sin_seq:
+    dtype: float    
     log_with_preds_as_metadata: True
-sess_et_month_cos_seq:
-    dtype: float
-    log_with_preds_as_metadata: True
-sess_et_dayofmonth_sin_seq:
-    dtype: float
-    log_with_preds_as_metadata: True
-sess_et_dayofmonth_cos_seq:
-    dtype: float
-    log_with_preds_as_metadata: True
+sess_et_dayofweek_cos_seq:
+    dtype: float    
+    log_with_preds_as_metadata: True    
+#sess_et_month_sin_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
+#sess_et_month_cos_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
+#sess_et_dayofmonth_sin_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
+#sess_et_dayofmonth_cos_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
