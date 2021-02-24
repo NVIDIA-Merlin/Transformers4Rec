@@ -345,7 +345,8 @@ def main():
                 num_cores = multiprocessing.cpu_count()
                 logger.info(f"Number of CPU cores: {num_cores}")
 
-                n_workers = data_args.workers_count
+                n_workers = max(data_args.workers_count,1)
+                logger.info(f"Number of workers (--workers_count): {n_workers}")
 
                 #eval_sessions_df = eval_sessions_df[:1000]
 
