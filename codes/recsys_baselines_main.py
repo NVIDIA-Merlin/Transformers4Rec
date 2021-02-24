@@ -352,7 +352,7 @@ def main():
 
                 logger.info("Eval dataset - # sessions: {}".format(len(eval_sessions_df)))
                 chunk_size = (len(eval_sessions_df)//n_workers)+1
-                logger.info(f"# sessions by worker: {n_workers}")
+                logger.info(f"# sessions by worker: {chunk_size}")
                 eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=chunk_size)
 
                 
