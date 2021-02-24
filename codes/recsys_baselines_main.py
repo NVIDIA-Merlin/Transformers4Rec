@@ -16,6 +16,7 @@ import pyarrow.parquet as pq
 import wandb
 import random
 import importlib
+import inspect
 
 import multiprocessing
 from joblib import Parallel, delayed
@@ -59,13 +60,9 @@ SESSION_FNAME = 'SessionId'
 ITEM_FNAME = 'ItemId'
 TIMESTAMP_FNAME = 'Time'
 
-#TODO: Finish args mapping for hypertuning
-ALGORITHMS_ARGS_MAPPING = {
-    'vsknn': {
-        'k_neighbours': 'k'
-    }
+ALGORITHMS = {
+    'vsknn': VMContextKNN
 }
-
 
 class WandbLogger:
 
@@ -195,6 +192,7 @@ def set_seed(seed: int):
     #torch.manual_seed(seed)
     #torch.cuda.manual_seed_all(seed)
 
+
 def main():
   
     parser = HfArgumentParser((DataArguments, ModelArguments, TrainingArguments))
@@ -205,10 +203,12 @@ def main():
     else:
         data_args, model_args, training_args, remaining_args = parser.parse_args_into_dataclasses(return_remaining_strings=True)
 
+        remaining_hparams = parse_remaining_args(remaining_args)
+
     #Ensuring to set W&B run name to null, so that a nice run name is generated
     training_args.run_name = None
 
-    all_hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args)}
+    all_hparams = {**asdict(data_args), **asdict(model_args), **asdict(training_args), **remaining_hparams}
     all_hparams = {k:v for k,v in all_hparams.items() if safe_json(v)}
 
     #Loading features config file
@@ -283,13 +283,12 @@ def main():
     '''
     
 
-    algorithm = VMContextKNN(k=500, sample_size=5000,  weighting='quadratic', weighting_score='quadratic', idf_weighting=5,
-            sampling='recent', similarity='cosine',
-            dwelling_time=False, last_n_days=None, last_n_clicks=None, 
-            remind=True, push_reminders=True, add_reminders=False, 
-            extend=False, 
-            weighting_time=False, normalize=True, idf_weighting_session=False, 
-            session_key = 'SessionId', item_key= 'ItemId', time_key= 'Time' )
+    #algorithm = VMContextKNN(#k=500, sample_size=5000,  weighting='quadratic', weighting_score='quadratic', idf_weighting=5,
+    #        #remind=True, push_reminders=True,
+    #        session_key = SESSION_FNAME, item_key= ITEM_FNAME, time_key= TIMESTAMP_FNAME,
+    #        **valid_kwargs)
+
+    algorithm = get_algorithm(model_args.model_type, remaining_hparams)
 
 
     data_dates = get_avail_data_dates(data_args)
@@ -333,31 +332,33 @@ def main():
                                         start_session_id=start_session_id)
 
             
-            
-            ##Sequential approach
-            #metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
-            #for idx, session_row in tqdm(eval_sessions_df.iterrows(), total=len(eval_sessions_df)):
-            #     evaluate_session(algorithm, metrics, session_row, items_to_predict, model_args.eval_on_last_item_seq_only)
-            #eval_metrics_results = metrics.result()
+            if not remaining_hparams['eval_baseline_cpu_parallel']:
+                #Sequential approach 
+                metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
+                for idx, session_row in tqdm(eval_sessions_df.iterrows(), total=len(eval_sessions_df)):
+                    evaluate_session(algorithm, metrics, session_row, items_to_predict, 
+                                total_items=target_size, eval_on_last_item_seq_only=model_args.eval_on_last_item_seq_only)
+                eval_metrics_results = metrics.result()
 
-            #Parallel approach
-            num_cores = multiprocessing.cpu_count()
-            num_cores = 8
+            else:
+                #Parallel approach
+                num_cores = multiprocessing.cpu_count()
 
-            #eval_sessions_df = eval_sessions_df[:1000]
-            eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=(len(eval_sessions_df)//num_cores)+1)
+                #eval_sessions_df = eval_sessions_df[:1000]
+                eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=(len(eval_sessions_df)//num_cores)+1)
 
-            
-            chunks_metrics_results = Parallel(n_jobs=num_cores, batch_size=1) \
-                (delayed(evaluate_sessions_parallel)(sessions_chunk_df, 
-                                                     deepcopy(algorithm), 
-                                                     items_to_predict, 
-                                                     model_args.eval_on_last_item_seq_only) \
-                                                    for sessions_chunk_df in eval_sessions_df_chunks)
+                
+                chunks_metrics_results = Parallel(n_jobs=num_cores, batch_size=1) \
+                    (delayed(evaluate_sessions_parallel)(sessions_chunk_df, 
+                                                        deepcopy(algorithm), 
+                                                        items_to_predict, 
+                                                        target_size,
+                                                        model_args.eval_on_last_item_seq_only) \
+                                                        for sessions_chunk_df in eval_sessions_df_chunks)
 
-            # Averaging metrics by chunk
-            chunks_metrics_df = pd.DataFrame(chunks_metrics_results)
-            eval_metrics_results = chunks_metrics_df.mean(axis=0).to_dict()            
+                # Averaging metrics by chunk
+                chunks_metrics_df = pd.DataFrame(chunks_metrics_results)
+                eval_metrics_results = chunks_metrics_df.mean(axis=0).to_dict()            
             
             #Adding prefix to make them compatible with the Transformers metrics
             eval_metrics_results = {f"eval_{k}": v for k,v in eval_metrics_results.items()}
@@ -388,6 +389,88 @@ def main():
 
         log_aod_metric_results(training_args.output_dir, results_df, results_avg_days)  
 
+def parse_remaining_args(remaining_args):
+
+    def parse_buffer(args_buffer, hparams):
+        if len(args_buffer) > 0:
+            if len(args_buffer) == 1:
+                hparams[args_buffer[0]] = True
+            elif len(args_buffer) == 2:
+                hparams[args_buffer[0]] = args_buffer[1]
+            else:
+                raise ValueError("Could not parse these arguments: {}".format(args_buffer))
+
+    hparams = {}
+    args_buffer = []
+    for arg in remaining_args:        
+        if arg.startswith('--'):
+            parse_buffer(args_buffer, hparams)
+                
+            args_buffer = [arg.replace("--", "")]
+        else:
+            args_buffer.append(arg)
+
+    parse_buffer(args_buffer, hparams)
+
+    #Type casting the arguments from string
+    hparams = {k: cast_str_argument(v) for k,v in hparams.items()}
+
+    return hparams
+
+def cast_str_argument(arg_value):
+
+    def is_float(value):
+        try:
+            float(value)
+            return True
+        except:
+            return False
+
+    def is_number(s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
+    def is_float(s):
+        try:
+            int(s)
+            return False
+        except ValueError:
+            float(s)
+            return True
+
+    def is_bool(value):
+        return value.lower() in ["false", "true"]
+
+    if type(arg_value) is not str:
+        return arg_value
+    else:
+        if is_bool(arg_value):
+            return bool(arg_value)
+        elif is_number(arg_value):
+            if is_float(arg_value):
+                return float(arg_value)
+            else:
+                return int(arg_value)
+        else:
+            return str(arg_value)
+
+
+def get_algorithm(model_type, remaining_hparams):
+    model_hparms = {k.replace(f"{model_type}-", ""): v for k,v in remaining_hparams.items() if k.startswith(f"{model_type}-")}
+
+    alg_cls = ALGORITHMS[model_type]
+    #Removing not existing model args in the class constructor
+    #model_hparms = filter_kwargs(model_hparms, alg_cls)
+
+    logger.info(f"Instantiating the algorithm {model_type} with these arguments: {model_hparms}")
+
+    algorithm_obj = alg_cls(session_key = SESSION_FNAME, item_key= ITEM_FNAME, time_key= TIMESTAMP_FNAME,
+                            **model_hparms)
+
+    return algorithm_obj
 
 def index_marks(nrows, chunk_size):
     return range(chunk_size, math.ceil(nrows / chunk_size) * chunk_size, chunk_size)
@@ -396,18 +479,18 @@ def split(dfm, chunk_size):
     indices = index_marks(dfm.shape[0], chunk_size)
     return np.split(dfm, indices)
 
-def evaluate_sessions_parallel(sessions_chuck_df, algorithm, items_to_predict, eval_on_last_item_seq_only):
+def evaluate_sessions_parallel(sessions_chuck_df, algorithm, items_to_predict, target_size, eval_on_last_item_seq_only):
 
-    #TODO: Parameterize top-k metrics. Check if CPU MRR is consistent with Torch MAP
+    #TODO: Make the metric top-k a hyperparameter
     metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
 
     for idx, session_row in tqdm(sessions_chuck_df.iterrows()):
-        evaluate_session(algorithm, metrics, session_row, items_to_predict, eval_on_last_item_seq_only)
+        evaluate_session(algorithm, metrics, session_row, items_to_predict, target_size, eval_on_last_item_seq_only)
 
     eval_metrics_results = metrics.result()
     return eval_metrics_results
 
-def evaluate_session(algorithm, metrics, session_row, items_to_predict, eval_on_last_item_seq_only):
+def evaluate_session(algorithm, metrics, session_row, items_to_predict, total_items, eval_on_last_item_seq_only):
     for pos, (item_id, ts) in enumerate(zip(session_row[ITEM_FNAME], session_row[TIMESTAMP_FNAME])):
         if pos < len(session_row[ITEM_FNAME])-1:
             label_next_item = session_row[ITEM_FNAME][pos+1]
@@ -416,11 +499,18 @@ def evaluate_session(algorithm, metrics, session_row, items_to_predict, eval_on_
                                 input_item_id=item_id, 
                                 predict_for_item_ids=items_to_predict, 
                                 timestamp=ts)
-            preds_series.sort_values(ascending=False, inplace=True)
+
+            
+            #preds_series.sort_values(ascending=False, inplace=True)
+            preds_all_items = np.zeros(total_items)
+            preds_all_items[preds_series.index] = preds_series.values
 
             if not eval_on_last_item_seq_only or pos == len(session_row[ITEM_FNAME])-2:
-                metrics.update(preds=preds_series.index.values.reshape(1,1,-1), 
-                            labels=np.array([[label_next_item]]))
+                metrics.update(preds=preds_all_items.reshape(1,-1), 
+                            labels=np.array([label_next_item]))
+
+                #metrics.update(preds=preds_series.index.values.reshape(1,1,-1), 
+                #            labels=np.array([[label_next_item]]))
 
 def dataframe_from_parquet_files(train_data_paths, cols_to_read):
     dataframes = []
@@ -479,6 +569,15 @@ def explode_multiple_cols(df, lst_cols, fill_value=''):
         }).assign(**{col:np.concatenate(df[col].values) for col in lst_cols}) \
           .append(df.loc[lens==0, idx_cols]).fillna(fill_value) \
           .loc[:, df.columns]    
+
+
+
+def filter_kwargs(kwargs, thing_with_kwargs):
+    sig = inspect.signature(thing_with_kwargs)
+    filter_keys = [param.name for param in sig.parameters.values() if param.kind == param.POSITIONAL_OR_KEYWORD]
+    filtered_dict = {filter_key:kwargs[filter_key] for filter_key in filter_keys if filter_key in kwargs}
+    return filtered_dict
+
 
 def log_aod_metric_results(output_dir, results_df, results_avg_days):
     """

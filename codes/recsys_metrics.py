@@ -55,6 +55,9 @@ def compute_accuracy_metrics(preds: torch.Tensor, labels: torch.Tensor,
 
 class EvalMetrics(object):
     def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_torch=True, use_cupy=False):
+        self.ks = ks
+        self.max_k = max(ks)
+
         self.use_cpu = use_cpu
         self.use_torch = use_torch
         self.use_cupy = use_cupy
@@ -151,10 +154,17 @@ class EvalMetrics(object):
             if type(preds_cpu) is torch.Tensor:
                 preds_cpu = preds_cpu.cpu().numpy()
                 labels_cpu = labels_cpu.cpu().numpy()
+
+            
+            #Getting item ids sorted decreasingly by the pred scores (slow)
+            #pred_items_sorted = np.argsort(preds_cpu, axis=1)[:,::-1]
+
+            #Gets only the top-k items (sorted by relevance) from the predictions for each label
+            pred_items_sorted = np.argpartition(preds_cpu, kth=np.arange(-self.max_k,0,1), axis=-1)[:,-self.max_k:][:,::-1]
             
             for f_measure_ks in self.f_measures_cpu:
                 for name, f_measure in f_measure_ks.items():
-                    f_measure.add(np.expand_dims(preds_cpu, 0), 
+                    f_measure.add(np.expand_dims(pred_items_sorted, 0), 
                                   np.expand_dims(labels_cpu, 0))
 
         return metrics_results
