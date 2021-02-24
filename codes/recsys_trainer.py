@@ -107,7 +107,8 @@ class RecSysTrainer(Trainer):
         """
         self.streaming_metrics = {}
         for dataset_type in DatasetType:
-            self.streaming_metrics[dataset_type.value] = EvalMetrics(ks=[5,10,100,1000])
+            self.streaming_metrics[dataset_type.value] = EvalMetrics(ks=[10,20,1000]
+            #self.streaming_metrics[dataset_type.value] = EvalMetrics(ks=[10], use_cpu=True, use_torch=False)
 
 
     def get_train_dataloader(self) -> DataLoader:

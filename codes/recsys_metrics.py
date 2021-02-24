@@ -120,7 +120,8 @@ class EvalMetrics(object):
 
         if self.use_cpu:
             for f_measure_ks in self.f_measures_cpu:
-                f_measure.reset()
+                for name, f_measure in f_measure_ks.items():
+                    f_measure.reset()
                 
 
     def update(self, preds, labels, return_individual_metrics=False):
@@ -145,13 +146,16 @@ class EvalMetrics(object):
 
         if self.use_cpu:
             # compute metrics on CPU
-            #preds_cpu = preds.cpu().numpy()
-            #labels_cpu = labels.cpu().numpy()
             preds_cpu = preds
             labels_cpu = labels
+            if type(preds_cpu) is torch.Tensor:
+                preds_cpu = preds_cpu.cpu().numpy()
+                labels_cpu = labels_cpu.cpu().numpy()
+            
             for f_measure_ks in self.f_measures_cpu:
                 for name, f_measure in f_measure_ks.items():
-                    f_measure.add(preds_cpu, labels_cpu)
+                    f_measure.add(np.expand_dims(preds_cpu, 0), 
+                                  np.expand_dims(labels_cpu, 0))
 
         return metrics_results
 
@@ -174,14 +178,9 @@ class EvalMetrics(object):
 
     @staticmethod
     def flatten(preds, labels):
-        if self.use_cpu:
-            preds = preds.view(-1, preds.size(-1))
-            labels = labels.reshape(-1)
-
-        else:
-            # flatten (n_batch x seq_len x n_events) to ((n_batch x seq_len) x n_events)
-            preds = preds.view(-1, preds.size(-1))
-            labels = labels.reshape(-1)
+        # flatten (n_batch x seq_len x n_events) to ((n_batch x seq_len) x n_events)
+        preds = preds.view(-1, preds.size(-1))
+        labels = labels.reshape(-1)
         
         return preds, labels
 
