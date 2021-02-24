@@ -6,6 +6,7 @@ import torch
 from chameleon_metrics import (
     NDCG as C_NDCG, 
     HitRate as C_HitRate, 
+    MRR as C_MRR,
     StreamingMetric
 )
 from ranking_metrics_torch_karlhigley.precision_recall import precision_at, recall_at
@@ -60,12 +61,14 @@ class EvalMetrics(object):
 
         self.f_measures_cpu = []
         if use_cpu:
-            f_ndcg_c = {f'ndcg_c@{k}': C_NDCG(k) for k in ks}
-            f_recall_c = {f'recall_c@{k}': C_HitRate(k) for k in ks}
+            f_ndcg_c = {f'ndcg@{k}': C_NDCG(k) for k in ks}
+            f_recall_c = {f'recall@{k}': C_HitRate(k) for k in ks}
+            f_mrr_c = {f'mrr@{k}': C_MRR(k) for k in ks}            
 
             self.f_measures_cpu.extend([
                 f_ndcg_c, 
-                f_recall_c
+                f_recall_c,
+                f_mrr_c
             ])
 
         self.f_measures_torch = []
@@ -135,17 +138,19 @@ class EvalMetrics(object):
             #with Timing("CUPY metrics"):    
                 #Compute metrics on cuPy
                 for f_measure in self.f_measures_cupy:
-                    metrics_results = f_measure.add(preds, labels, return_individual_metrics=return_individual_metrics)
+                    results = f_measure.add(preds, labels, return_individual_metrics=return_individual_metrics)
                     # Merging metrics results
                     if return_individual_metrics:
                         metrics_results = {**metrics_results, **results}
 
         if self.use_cpu:
             # compute metrics on CPU
-            preds_cpu = preds.cpu().numpy()
-            labels_cpu = labels.cpu().numpy()
+            #preds_cpu = preds.cpu().numpy()
+            #labels_cpu = labels.cpu().numpy()
+            preds_cpu = preds
+            labels_cpu = labels
             for f_measure_ks in self.f_measures_cpu:
-                for f_measure in f_measure_ks.values():
+                for name, f_measure in f_measure_ks.items():
                     f_measure.add(preds_cpu, labels_cpu)
 
         return metrics_results
@@ -169,9 +174,14 @@ class EvalMetrics(object):
 
     @staticmethod
     def flatten(preds, labels):
-        # flatten (n_batch x seq_len x n_events) to ((n_batch x seq_len) x n_events)
-        preds = preds.view(-1, preds.size(-1))
-        labels = labels.reshape(-1)
+        if self.use_cpu:
+            preds = preds.view(-1, preds.size(-1))
+            labels = labels.reshape(-1)
+
+        else:
+            # flatten (n_batch x seq_len x n_events) to ((n_batch x seq_len) x n_events)
+            preds = preds.view(-1, preds.size(-1))
+            labels = labels.reshape(-1)
         
         return preds, labels
 

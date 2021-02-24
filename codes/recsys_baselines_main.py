@@ -15,6 +15,11 @@ import pyarrow
 import pyarrow.parquet as pq
 import wandb
 import random
+import importlib
+
+import multiprocessing
+from joblib import Parallel, delayed
+from copy import deepcopy
 
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -26,16 +31,19 @@ from recsys_data import (
     fetch_data_loader,
     get_avail_data_dates    
 )
+from tqdm import tqdm
+
+from recsys_metrics import EvalMetrics
 
 from baselines.knn.vsknn import VMContextKNN
 
 from transformers import HfArgumentParser
 
-
 try:
     import cPickle as pickle
 except:
     import pickle
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +54,86 @@ DLLOGGER_FILENAME = 'log.json'
 # this code use Version 3
 assert sys.version_info.major > 2
 
+USER_FNAME = 'UserId'
+SESSION_FNAME = 'SessionId'
+ITEM_FNAME = 'ItemId'
+TIMESTAMP_FNAME = 'Time'
 
+#TODO: Finish args mapping for hypertuning
+ALGORITHMS_ARGS_MAPPING = {
+    'vsknn': {
+        'k_neighbours': 'k'
+    }
+}
+
+
+class WandbLogger:
+
+    def __init__(self):
+        if WandbLogger.is_wandb_available():
+            import wandb
+
+            wandb.ensure_configured()
+            if wandb.api.api_key is None:
+                has_wandb = False
+                logger.warning(
+                    "W&B installed but not logged in. Run `wandb login` or set the WANDB_API_KEY env variable."
+                )
+                self._wandb = None
+            else:
+                self._wandb = wandb
+        else:
+            logger.warning("WandbCallback requires wandb to be installed. Run `pip install wandb`.")
+
+        self._initialized = False
+
+
+    def setup(self, config_to_log, reinit, **kwargs):
+        """
+        Setup the optional Weights & Biases (`wandb`) integration.
+        Environment:
+            WANDB_PROJECT (:obj:`str`, `optional`, defaults to :obj:`"huggingface"`):
+                Set this to a custom string to store results in a different project.
+            WANDB_DISABLED (:obj:`bool`, `optional`, defaults to :obj:`False`):
+                Whether or not to disable wandb entirely. Set `WANDB_DISABLED=true` to disable.
+        """
+        if self._wandb is None:
+            return
+        
+        logger.info(
+            'Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"'
+        )
+
+        self._wandb.init(
+            project=os.getenv("WANDB_PROJECT", "huggingface"),
+            config=config_to_log,
+            #name="xpto",
+            reinit=reinit
+        )
+
+        self._initialized = True
+
+    def log(self, logs, step=0):
+        if self._wandb is None:
+            return
+        if not self._initialized:
+            return
+        
+        self._wandb.log(logs, step=step)
+
+    
+    @classmethod
+    def is_wandb_available(cls):
+        # any value of WANDB_DISABLED disables wandb
+        if os.getenv("WANDB_DISABLED", "").upper() in ["TRUE", "1"]:
+            logger.warn(
+                "Using the `WAND_DISABLED` environment variable is deprecated and will be removed in v5. Use the "
+                "--report_to flag to control the integrations used for logging result (for instance --report_to none)."
+            )
+            return False
+        return importlib.util.find_spec("wandb") is not None
+
+    
 
 class AllHparams:
     """
@@ -116,7 +203,7 @@ def main():
         # let's parse it to get our arguments.
         data_args, model_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
-        data_args, model_args, training_args = parser.parse_args_into_dataclasses()
+        data_args, model_args, training_args, remaining_args = parser.parse_args_into_dataclasses(return_remaining_strings=True)
 
     #Ensuring to set W&B run name to null, so that a nice run name is generated
     training_args.run_name = None
@@ -175,6 +262,8 @@ def main():
 
     set_seed(training_args.seed)
 
+    wandb_logger = WandbLogger()
+    wandb_logger.setup(all_hparams, reinit=False)
     
     '''
     #Creating an object with all hparams and a method to get sanitized values (like DataClass), because the setup code for WandbCallback requires a DataClass and not a dict
@@ -196,13 +285,21 @@ def main():
 
     algorithm = VMContextKNN(k=500, sample_size=5000,  weighting='quadratic', weighting_score='quadratic', idf_weighting=5,
             sampling='recent', similarity='cosine',
-            dwelling_time=False, last_n_days=None, last_n_clicks=None, remind=True, push_reminders=False, add_reminders=False, 
-            extend=False, weighting_time=False, normalize=True, idf_weighting_session=False, 
+            dwelling_time=False, last_n_days=None, last_n_clicks=None, 
+            remind=True, push_reminders=True, add_reminders=False, 
+            extend=False, 
+            weighting_time=False, normalize=True, idf_weighting_session=False, 
             session_key = 'SessionId', item_key= 'ItemId', time_key= 'Time' )
 
 
     data_dates = get_avail_data_dates(data_args)
     results_dates = {}
+
+    start_session_id = 0
+
+    user_id_fname='user_idx'
+    item_id_fname='sess_pid_seq'
+    timestamp_fname='sess_etime_seq'
 
     for date_idx in range(1, len(data_dates)):
         train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
@@ -217,16 +314,13 @@ def main():
         if training_args.do_train:
             logger.info("************* Training (date:{}) *************".format(train_date_str))
 
-            train_df = prepare_data(train_data_paths, user_id_fname='user_idx', item_id_fname='sess_pid_seq', timestamp_fname='sess_etime_seq')
-            algorithm.fit(train_df)
+            train_sessions_df, start_session_id = prepare_sessions_data(train_data_paths, user_id_fname=user_id_fname, 
+                                        item_id_fname=item_id_fname, timestamp_fname=timestamp_fname,
+                                        start_session_id=start_session_id)
+            train_interactions_df = sessions_to_interactions_dataframe(train_sessions_df)
+            algorithm.fit(train_interactions_df)
 
-            eval_df = prepare_data(eval_data_paths, user_id_fname='user_idx', item_id_fname='sess_pid_seq', timestamp_fname='sess_etime_seq')            
-
-            #Adapt the evaluate_sessions() code from Transf4Rec to loop over items and call predict_next()
-            #algorithm.predict_next(self, session_id, input_item_id, predict_for_item_ids, timestamp=0, skip=False, mode_type='view')
-
-            #Include CPU-based metric using EvalMetrics(use_cpu=True)
-            
+            items_to_predict = train_interactions_df[ITEM_FNAME].unique()           
 
 
         # Evaluation
@@ -234,52 +328,131 @@ def main():
 
             logger.info("************* Evaluation *************")
 
-            # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
-            train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map)
-
+            eval_sessions_df, start_session_id = prepare_sessions_data(eval_data_paths, user_id_fname=user_id_fname, 
+                                        item_id_fname=item_id_fname, timestamp_fname=timestamp_fname,
+                                        start_session_id=start_session_id)
 
             
-            logger.info(f'Evaluating on test set ({eval_date_str})....')
+            
+            ##Sequential approach
+            #metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
+            #for idx, session_row in tqdm(eval_sessions_df.iterrows(), total=len(eval_sessions_df)):
+            #     evaluate_session(algorithm, metrics, session_row, items_to_predict, model_args.eval_on_last_item_seq_only)
+            #eval_metrics_results = metrics.result()
 
-            results_dates[eval_date] = eval_metrics
+            #Parallel approach
+            num_cores = multiprocessing.cpu_count()
+            num_cores = 8
+
+            #eval_sessions_df = eval_sessions_df[:1000]
+            eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=(len(eval_sessions_df)//num_cores)+1)
+
+            
+            chunks_metrics_results = Parallel(n_jobs=num_cores, batch_size=1) \
+                (delayed(evaluate_sessions_parallel)(sessions_chunk_df, 
+                                                     deepcopy(algorithm), 
+                                                     items_to_predict, 
+                                                     model_args.eval_on_last_item_seq_only) \
+                                                    for sessions_chunk_df in eval_sessions_df_chunks)
+
+            # Averaging metrics by chunk
+            chunks_metrics_df = pd.DataFrame(chunks_metrics_results)
+            eval_metrics_results = chunks_metrics_df.mean(axis=0).to_dict()            
+            
+            #Adding prefix to make them compatible with the Transformers metrics
+            eval_metrics_results = {f"eval_{k}": v for k,v in eval_metrics_results.items()}
+            results_dates[eval_date] = eval_metrics_results
+
+            #Logging metrics with DLLogger
+            DLLogger.log(step=(date_idx), data=eval_metrics_results, verbosity=Verbosity.VERBOSE)
+            DLLogger.flush()
+
+            logger.info("Eval metrics for day {}: {}".format(eval_date_str, eval_metrics_results))
+
+            #Logging to W&B
+            #eval_metrics_results_wandb = {k.replace('eval_', 'eval/'): v for k,v in eval_metrics_results.items()}
+            wandb_logger.log(eval_metrics_results, step=date_idx)
 
     logger.info("Training and evaluation loops are finished")
     
-     
-    if trainer.is_world_process_zero():
         
-        if training_args.do_eval:    
-            logger.info("Computing and loging AOD metrics")   
-            results_df= pd.DataFrame.from_dict(results_dates, orient='index')
-            results_df.reset_index().to_csv(os.path.join(training_args.output_dir, "eval_train_results_dates.csv"), index=False) 
+    if training_args.do_eval:    
+        logger.info("Computing and loging AOD metrics")   
+        results_df= pd.DataFrame.from_dict(results_dates, orient='index')
+        results_df.reset_index().to_csv(os.path.join(training_args.output_dir, "eval_train_results_dates.csv"), index=False) 
 
-            # Computing Average Over Days (AOD) metrics
-            results_avg_days = dict(results_df.mean())
-            # Logging to W&B
-            trainer.log({f"{k}_AOD":v for k, v in results_avg_days.items()})
+        # Computing Average Over Days (AOD) metrics
+        results_avg_days = dict(results_df.mean())
+        # Logging to W&B
+        wandb_logger.log({f"{k}_AOD":v for k, v in results_avg_days.items()}, step=date_idx)
 
-            log_aod_metric_results(training_args.output_dir, results_df, results_avg_days)    
+        log_aod_metric_results(training_args.output_dir, results_df, results_avg_days)  
 
 
-def prepare_data(train_data_paths, user_id_fname, item_id_fname, timestamp_fname):
+def index_marks(nrows, chunk_size):
+    return range(chunk_size, math.ceil(nrows / chunk_size) * chunk_size, chunk_size)
+
+def split(dfm, chunk_size):
+    indices = index_marks(dfm.shape[0], chunk_size)
+    return np.split(dfm, indices)
+
+def evaluate_sessions_parallel(sessions_chuck_df, algorithm, items_to_predict, eval_on_last_item_seq_only):
+
+    #TODO: Parameterize top-k metrics. Check if CPU MRR is consistent with Torch MAP
+    metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
+
+    for idx, session_row in tqdm(sessions_chuck_df.iterrows()):
+        evaluate_session(algorithm, metrics, session_row, items_to_predict, eval_on_last_item_seq_only)
+
+    eval_metrics_results = metrics.result()
+    return eval_metrics_results
+
+def evaluate_session(algorithm, metrics, session_row, items_to_predict, eval_on_last_item_seq_only):
+    for pos, (item_id, ts) in enumerate(zip(session_row[ITEM_FNAME], session_row[TIMESTAMP_FNAME])):
+        if pos < len(session_row[ITEM_FNAME])-1:
+            label_next_item = session_row[ITEM_FNAME][pos+1]
+
+            preds_series = algorithm.predict_next(session_id=session_row[SESSION_FNAME], 
+                                input_item_id=item_id, 
+                                predict_for_item_ids=items_to_predict, 
+                                timestamp=ts)
+            preds_series.sort_values(ascending=False, inplace=True)
+
+            if not eval_on_last_item_seq_only or pos == len(session_row[ITEM_FNAME])-2:
+                metrics.update(preds=preds_series.index.values.reshape(1,1,-1), 
+                            labels=np.array([[label_next_item]]))
+
+def dataframe_from_parquet_files(train_data_paths, cols_to_read):
     dataframes = []
     for parquet_file in train_data_paths:
-        df = pd.read_parquet(parquet_file, columns=[user_id_fname, item_id_fname, timestamp_fname])
+        df = pd.read_parquet(parquet_file, columns=cols_to_read)
         dataframes.append(df)
     
     concat_df = pd.concat(dataframes)
+    return concat_df
+
+def prepare_sessions_data(train_data_paths, user_id_fname, item_id_fname, timestamp_fname, start_session_id=0):
+    concat_df = dataframe_from_parquet_files(train_data_paths, cols_to_read=[user_id_fname, item_id_fname, timestamp_fname])
+
+    #TODO: Ensure data is sorted by time
 
     #Generating contiguous item ids
-    concat_df['SessionId'] = range(0, len(concat_df))
+    concat_df[SESSION_FNAME] = start_session_id + np.arange(len(concat_df))
+    last_session_id = concat_df[SESSION_FNAME].max()
 
+    concat_df = concat_df.rename({user_id_fname: USER_FNAME,
+                    item_id_fname: ITEM_FNAME,
+                    timestamp_fname: TIMESTAMP_FNAME}, axis=1)
+
+    return concat_df, last_session_id
+
+def sessions_to_interactions_dataframe(sessions_df):
     # Converts from the representation of one row per session to one row by interaction
-    data_df = explode_multiple_cols(concat_df, [item_id_fname, timestamp_fname])    
+    interactions_df = explode_multiple_cols(sessions_df, [ITEM_FNAME, TIMESTAMP_FNAME])    
 
-    data_df = data_df.rename({user_id_fname: 'UserId',
-                    item_id_fname: 'ItemId',
-                    timestamp_fname: 'Time'}, axis=1)
+    return interactions_df
 
-    return data_df
+
         
 def explode_multiple_cols(df, lst_cols, fill_value=''):
     # make sure `lst_cols` is a list
