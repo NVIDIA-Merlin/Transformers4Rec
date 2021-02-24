@@ -343,12 +343,19 @@ def main():
             else:
                 #Parallel approach
                 num_cores = multiprocessing.cpu_count()
+                logger.info(f"Number of CPU cores: {num_cores}")
+
+                n_workers = data_args.workers_count
 
                 #eval_sessions_df = eval_sessions_df[:1000]
-                eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=(len(eval_sessions_df)//num_cores)+1)
+
+                logger.info("Eval dataset - # sessions: {}".format(len(eval_sessions_df)))
+                chunk_size = (len(eval_sessions_df)//n_workers)+1
+                logger.info(f"# sessions by worker: {n_workers}")
+                eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=chunk_size)
 
                 
-                chunks_metrics_results = Parallel(n_jobs=num_cores, batch_size=1) \
+                chunks_metrics_results = Parallel(n_jobs=n_workers, batch_size=1) \
                     (delayed(evaluate_sessions_parallel)(sessions_chunk_df, 
                                                         deepcopy(algorithm), 
                                                         items_to_predict, 
