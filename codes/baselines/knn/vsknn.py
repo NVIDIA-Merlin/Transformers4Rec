@@ -196,6 +196,10 @@ class VMContextKNN:
             if( self.extend ):
                 item_set = set( self.session_items )
                 self.session_item_map[self.session] = item_set
+
+                #Updating item IDF stats    
+                self.sessions_count += 1
+                
                 for item in item_set:
                     map_is = self.item_session_map.get( item )
                     if map_is is None:
@@ -207,12 +211,8 @@ class VMContextKNN:
                     self.item_freq[item] += 1
                     self.idf[item] = log(self.sessions_count / self.item_freq[item])
 
-                    
                 ts = time.time()
                 self.session_time.update({self.session : ts})
-                
-            #Updating item IDF stats    
-            self.sessions_count += 1
 
             self.last_ts = -1 
             self.session = session_id
@@ -243,15 +243,17 @@ class VMContextKNN:
         predictions[mask] = values
         series = pd.Series(data=predictions, index=predict_for_item_ids)
 
+        known_session_items_for_reminders = [item for item in self.session_items if item in series.index]
         if self.push_reminders:
-
-            session_series = pd.Series( self.session_items )
+            
+            session_series = pd.Series( known_session_items_for_reminders )
+            
             session_count = session_series.groupby( session_series ).count() + 1
 
             series[ session_count.index ] *= session_count
 
         if self.add_reminders:
-            session_series = pd.Series( index=self.session_items, data=series[ self.session_items  ])
+            session_series = pd.Series( index=known_session_items_for_reminders, data=series[ known_session_items_for_reminders  ])
             session_series = session_series[ session_series > 0 ]
 
             if len(session_series) > 0:
