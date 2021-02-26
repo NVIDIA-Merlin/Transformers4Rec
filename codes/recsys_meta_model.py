@@ -137,8 +137,12 @@ class RecSysMetaModel(PreTrainedModel):
                     concat_input_dim += feature_size
                 elif cinfo['dtype'] in ['long', 'float']:
                     concat_input_dim += 1
+                elif cinfo['is_control']:
+                    #Control features are not used as input for the model
+                    continue
                 else:
                     raise NotImplementedError
+
                 if 'is_label' in cinfo and cinfo['is_label']:
                     target_dim = cinfo['cardinality']
 
@@ -758,6 +762,9 @@ class RecSysMetaModel(PreTrainedModel):
                     cdata = cdata.unsqueeze(-1).long()
                 elif cinfo['dtype'] == 'float':
                     cdata = cdata.unsqueeze(-1).float()
+                elif cinfo['is_control']:
+                    #Control features are not used as input for the model
+                    continue
                 else:
                     raise NotImplementedError
 
