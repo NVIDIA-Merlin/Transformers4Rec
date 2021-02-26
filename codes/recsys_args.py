@@ -57,18 +57,7 @@ class DataArguments:
             "help": "Path to dataset."
         },
     )
-    start_date: Optional[str] = field(
-        default=None,
-        metadata={
-            "help": "start date of the data."
-        },
-    )
-    end_date: Optional[str] = field(
-        default=None,
-        metadata={
-            "help": "end date of the data."
-        },
-    )
+    
     pad_token: Optional[int] = field(
         default=0, metadata={"help": "pad token"}
     )
@@ -123,6 +112,47 @@ class DataArguments:
     session_aware_past_seq_length_max: int = field(
         default=20, metadata={"help": "For session-aware recommendation, this is the length of the past interactions sessions"}
     )    
+
+    start_time_window_index: Optional[int] = field(
+        default=1,
+        metadata={
+            "help": "The start time window index to use for training & evaluation."
+                    "The framework expects data to be split in contiguous non-overlapping time windows, with fixed time units (e.g. days, hours)."
+                    
+        },
+    )
+
+    final_time_window_index: Optional[int] = field(
+        default=None,
+        metadata={
+            "help": "The final time window index to use for training & evaluation."
+                    "The framework expects data to be split in contiguous non-overlapping time windows, with fixed time units (e.g. days, hours)."
+                    
+        },
+    )
+
+    time_window_folder_pad_digits: Optional[int] = field(
+        default=4,
+        metadata={
+            "help": "The framework expects data to be split in contiguous non-overlapping time windows, with fixed time units (e.g. days, hours)."
+                    "Each time window is represented as a folder within --data_path, named with padded zeros on the left, according to the number"
+                    " of digits defined in --time_window_folder_digits. For example, for --time_window_folder_digits 4, folders should be: '0001', '0002', ..."
+                    
+        },
+    )
+
+    no_incremental_training: bool = field(default=False, metadata={"help": "Indicates whether the model should be trained incrementally over time (False) or trained using only the time window (True) defined in --training_time_window_size"})    
+
+
+    training_time_window_size: Optional[int] = field(
+        default=0,
+        metadata={
+            "help": "Window size of time units (e.g. days or hours) to use for training, when --no_incremental_training."
+                    "The framework expects data to be split in contiguous non-overlapping time windows, with fixed time units (e.g. days, hours)."
+                    
+        },
+    )
+
 
     @property
     def total_seq_length(self) -> int:

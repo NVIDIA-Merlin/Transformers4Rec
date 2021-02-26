@@ -60,7 +60,7 @@ class ParquetDataset(Dataset):
                 values = values.astype(np.int64)
         return values
 
-
+'''
 def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
     start_date, end_date = data_args.start_date, data_args.end_date
     end_date = datetime.strptime(end_date, date_format)
@@ -74,7 +74,7 @@ def get_avail_data_dates(data_args, date_format="%Y-%m-%d"):
         avail_dates.append(day)
 
     return avail_dates
-
+'''
 
 def get_dataset_len(data_paths):
     return sum([pq.ParquetFile(d_path).metadata.num_rows for d_path in data_paths])
@@ -229,7 +229,7 @@ def fetch_data_loader(data_args, training_args, feature_map, data_paths, is_trai
         categ_features = []
         continuous_features = []
         for fname, fprops in feature_map.items():
-            if fprops['dtype'] == 'categorical':
+            if fprops['dtype'] in ['categorical', 'timestamp']:
                 categ_features.append(fname)
             elif fprops['dtype'] in ['float', 'long']:
                 continuous_features.append(fname)
@@ -265,7 +265,7 @@ class DataLoaderWithLen(PetaStormDataLoader):
 def transform_petastorm_schema(feature_map):
     schema = []
     for cname, cinfo in feature_map.items():
-        if cinfo['dtype'] in ['categorical', 'int']:
+        if cinfo['dtype'] in ['categorical', 'int', 'timestamp']:
             dtype = np.int64
         elif cinfo['dtype'] == 'float':
             dtype = np.float

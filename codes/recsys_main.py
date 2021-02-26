@@ -22,11 +22,11 @@ import yaml
 from recsys_models import get_recsys_model
 from recsys_meta_model import RecSysMetaModel
 from recsys_trainer import RecSysTrainer, DatasetType, DatasetMock
-from recsys_utils import safe_json
+from recsys_utils import safe_json, get_label_feature_name, get_timestamp_feature_name, get_parquet_files_names
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loader,
-    get_avail_data_dates    
+    #get_avail_data_dates    
 )
 
 
@@ -53,7 +53,7 @@ DLLOGGER_FILENAME = 'log.json'
 # this code use Version 3
 assert sys.version_info.major > 2
 
-PRED_LOG_PARQUET_FILE_PATTERN = 'pred_logs/preds_date_{}.parquet'
+PRED_LOG_PARQUET_FILE_PATTERN = 'pred_logs/preds_{:04}.parquet'
 ATTENTION_LOG_FOLDER = 'attention_weights'
 
 
@@ -68,41 +68,6 @@ class AllHparams:
     def to_sanitized_dict(self):
         result = {k:v for k,v in self.__dict__.items() if safe_json(v)}
         return result
-
-
-
-def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
-    """
-        Analyses the feature map config and returns the name of the label feature (e.g. item_id)
-    """
-    label_feature_config = list([k for k,v in feature_map.items() if 'is_label' in v and v['is_label']])
-
-    if len(label_feature_config) == 0:
-        raise ValueError('One feature have be configured as label (is_label = True)')
-    if len(label_feature_config) > 1:
-        raise ValueError('Only one feature can be selected as label (is_label = True)')
-    label_name = label_feature_config[0]
-    return label_name
-
-def get_parquet_files_names(data_path, date, is_train, eval_on_test_set=False):
-    date_format="%Y-%m-%d"
-
-    if is_train:
-        parquet_paths = ["session_start_date={}-train.parquet".format(date.strftime(date_format))]
-    else:
-        if eval_on_test_set:
-            eval_dataset_type = 'test'
-        else:
-            eval_dataset_type = 'valid'
-        parquet_paths = ["session_start_date={}-{}.parquet".format(date.strftime(date_format), eval_dataset_type)]
-
-    parquet_paths = [os.path.join(data_path, parquet_file) for parquet_file in parquet_paths]
-
-    ##If paths are folders, list the parquet file within the folders
-    #parquet_paths = get_filenames(parquet_paths, files_filter_pattern="*.parquet"
-    
-
-    return parquet_paths
 
 
 def get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map):
@@ -230,25 +195,38 @@ def main():
     set_log_attention_weights_callback(trainer, training_args)
     
 
-    data_dates = get_avail_data_dates(data_args)
-    results_dates = {}
+    #data_dates = get_avail_data_dates(data_args)
+    results_over_time = {}
 
-    for date_idx in range(1, len(data_dates)):
-        train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
-        train_date_str, eval_date_str = train_date.strftime("%Y-%m-%d"), eval_date.strftime("%Y-%m-%d")
+    max_time_index = data_args.final_time_window_index
+    if data_args.no_incremental_training:
+        max_time_index = max_time_index - data_args.training_time_window_size + 1
 
-        train_data_paths = get_parquet_files_names(data_args.data_path, train_date, is_train=True)
-        eval_data_paths = get_parquet_files_names(data_args.data_path, eval_date, is_train=False, 
-                                                  eval_on_test_set=training_args.eval_on_test_set)
+    #for date_idx in range(1, len(data_dates)):
+    for time_index in range (data_args.start_time_window_index, max_time_index):
+        #train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
+        #train_date_str, eval_date_str = train_date.strftime("%Y-%m-%d"), eval_date.strftime("%Y-%m-%d")
+
+        if data_args.no_incremental_training:
+            time_indices_train = list(range(time_index, time_index+data_args.training_time_window_size))
+            time_index_eval = time_index+data_args.training_time_window_size
+        else:
+            time_indices_train = time_index
+            time_index_eval = time_index + 1
 
         if model_args.negative_sampling and model_args.neg_sampling_extra_samples_per_batch > 0:
                 items_sorted_freq_series = get_items_sorted_freq(train_data_paths, item_id_feature_name=label_name)
                 trainer.model.set_items_freq_for_sampling(items_sorted_freq_series)
                 
+
+        train_data_paths = get_parquet_files_names(data_args, time_indices_train, is_train=True)
+        eval_data_paths = get_parquet_files_names(data_args, [time_index_eval], is_train=False, 
+                                eval_on_test_set=training_args.eval_on_test_set)
+
         # Training
         if training_args.do_train:
-            logger.info("************* Training (date:{}) *************".format(train_date_str))
-
+            logger.info(f"************* Training (time indices:{time_indices_train}) *************")
+            
             train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map)
 
             trainer.set_train_dataloader(train_loader)
@@ -267,31 +245,31 @@ def main():
 
         # Evaluation
         if training_args.do_eval:
-            set_log_predictions_callback(trainer, training_args, eval_date)
+            set_log_predictions_callback(trainer, training_args, time_index_eval)
 
-            logger.info("************* Evaluation *************")
+            logger.info(f"************* Evaluation *************")                        
 
             # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
             train_loader, eval_loader = get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map)
 
-            logger.info(f'Evaluating on train set ({train_date_str})....')
+            logger.info(f'Evaluating on train set (time index:{time_indices_train})....')
             trainer.set_train_dataloader(train_loader)
             #Defining temporarily the the train data loader for evaluation
             trainer.set_eval_dataloader(train_loader)
 
             train_metrics = trainer.evaluate(metric_key_prefix=DatasetType.train.value)
 
-            log_metric_results(training_args.output_dir, train_metrics, prefix=DatasetType.train.value, date=train_date_str)
+            log_metric_results(training_args.output_dir, train_metrics, prefix=DatasetType.train.value, time_index=time_index_eval)
             
             
-            logger.info(f'Evaluating on test set ({eval_date_str})....')
+            logger.info(f'Evaluating on test set (time index:{time_index_eval})....')
             trainer.set_eval_dataloader(eval_loader)
             eval_metrics = trainer.evaluate(metric_key_prefix=DatasetType.eval.value)
 
-            log_metric_results(training_args.output_dir, eval_metrics, prefix=DatasetType.eval.value, date=eval_date_str)
+            log_metric_results(training_args.output_dir, eval_metrics, prefix=DatasetType.eval.value, time_index=time_index_eval)
 
 
-            results_dates[eval_date] = {**eval_metrics, **train_metrics}
+            results_over_time[time_index_eval] = {**eval_metrics, **train_metrics}
 
     logger.info("Training and evaluation loops are finished")
     
@@ -304,54 +282,55 @@ def main():
         trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
       
         if training_args.do_eval:    
-            logger.info("Computing and loging AOD metrics")   
-            results_df= pd.DataFrame.from_dict(results_dates, orient='index')
-            results_df.reset_index().to_csv(os.path.join(training_args.output_dir, "eval_train_results_dates.csv"), index=False) 
+            logger.info("Computing and loging AOT metrics")   
+            results_df= pd.DataFrame.from_dict(results_over_time, orient='index')
+            results_df.reset_index().to_csv(os.path.join(training_args.output_dir, "eval_train_results.csv"), index=False) 
 
             # Computing Average Over Days (AOD) metrics
-            results_avg_days = dict(results_df.mean())
+            results_avg_time = dict(results_df.mean())
             # Logging to W&B
-            trainer.log({f"{k}_AOD":v for k, v in results_avg_days.items()})
+            #TODO: Rename AOD to AOT (because time units can also be hours)
+            trainer.log({f"{k}_AOD":v for k, v in results_avg_time.items()})
 
-            log_aod_metric_results(training_args.output_dir, results_df, results_avg_days)              
+            log_aod_metric_results(training_args.output_dir, results_df, results_avg_time)              
 
 def get_items_frequency():
     items_sorted_freq_series = interactions_df.groupby(self.item_key).size().sort_values(ascending=True)
     return items_sorted_freq_series
 
-def log_metric_results(output_dir, metrics, prefix, date):
+def log_metric_results(output_dir, metrics, prefix, time_index):
     """
     Logs to a text file metric results for each day, in a human-readable format
     """
-    output_file = os.path.join(output_dir, f"{prefix}_results_dates.txt")                    
+    output_file = os.path.join(output_dir, f"{prefix}_results_over_time.txt")                    
     with open(output_file, "a") as writer:
-        logger.info(f"***** {prefix} results ({date})*****")
-        writer.write(f"\n***** {prefix} results ({date})*****\n")
+        logger.info(f"***** {prefix} results (time index): {time_index})*****")
+        writer.write(f"\n***** {prefix} results (time index): {time_index})*****\n")
         for key in sorted(metrics.keys()):
             logger.info("  %s = %s", key, str(metrics[key]))
             writer.write("%s = %s\n" % (key, str(metrics[key])))
 
-    DLLogger.log(step=(date,), data=metrics, verbosity=Verbosity.VERBOSE)
+    DLLogger.log(step=(time_index,), data=metrics, verbosity=Verbosity.VERBOSE)
     DLLogger.flush()
 
-def log_aod_metric_results(output_dir, results_df, results_avg_days):
+def log_aod_metric_results(output_dir, results_df, results_avg_time):
     """
     Logs to a text file the final metric results (average over days), in a human-readable format
     """
     output_eval_file = os.path.join(output_dir, "eval_results_avg_over_days.txt")
     with open(output_eval_file, "a") as writer:
-        logger.info("***** Eval results (avg over dates) *****")
-        writer.write(f"\n***** Eval results (avg over dates) *****\n")
-        for key in sorted(results_avg_days.keys()):
-            logger.info("  %s = %s", key, str(results_avg_days[key]))
-            writer.write("%s = %s\n" % (key, str(results_avg_days[key])))
+        logger.info("***** Eval results (avg over time) *****")
+        writer.write(f"\n***** Eval results (avg over time) *****\n")
+        for key in sorted(results_avg_time.keys()):
+            logger.info("  %s = %s", key, str(results_avg_time[key]))
+            writer.write("%s = %s\n" % (key, str(results_avg_time[key])))
        
 
     #Logging AOD metrics with DLLogger
-    DLLogger.log(step=(), data=results_avg_days, verbosity=Verbosity.VERBOSE)
+    DLLogger.log(step=(), data=results_avg_time, verbosity=Verbosity.VERBOSE)
     DLLogger.flush()
 
-    return results_avg_days
+    return results_avg_time
 
 def set_log_attention_weights_callback(trainer, training_args):
     """
@@ -383,12 +362,12 @@ class AttentionWeightsLogger:
             ouf.close()
 
 
-def set_log_predictions_callback(trainer, training_args, eval_date):
+def set_log_predictions_callback(trainer, training_args, time_index_eval):
     """
     Sets a callback in the :obj:`RecSysTrainer` to log the predictions of the model, for each day
     """
     if training_args.log_predictions:
-        output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(eval_date.strftime("%Y-%m-%d")))
+        output_preds_logs_path = os.path.join(training_args.output_dir, PRED_LOG_PARQUET_FILE_PATTERN.format(time_index_eval))
         logger.info('Will output prediction logs to {}'.format(output_preds_logs_path))
         prediction_logger = PredictionLogger(output_preds_logs_path)
         trainer.log_predictions_callback = prediction_logger.log_predictions

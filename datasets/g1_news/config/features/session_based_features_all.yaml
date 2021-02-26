@@ -1,0 +1,53 @@
+#Current session features
+click_article_id:
+    dtype: categorical
+    cardinality: 365000
+    is_label: True
+    emb_table: item_id
+    log_with_preds_as_metadata: True
+click_environment:
+     dtype: categorical
+     cardinality: 5
+     emb_table: click_environment
+     log_with_preds_as_metadata: True    
+click_deviceGroup:
+    dtype: categorical
+    cardinality: 6
+    emb_table: click_deviceGroup
+    log_with_preds_as_metadata: True   
+click_os:
+    dtype: categorical
+    cardinality: 21
+    emb_table: click_os
+    log_with_preds_as_metadata: True   
+click_country:
+    dtype: categorical
+    cardinality: 12
+    emb_table: click_country
+    log_with_preds_as_metadata: True   
+click_region:
+    dtype: categorical
+    cardinality: 30
+    emb_table: click_region
+    log_with_preds_as_metadata: True   
+hour_sin:
+    dtype: float    
+    log_with_preds_as_metadata: True    
+hour_cos:
+    dtype: float    
+    log_with_preds_as_metadata: True    
+weekday_sin:
+    dtype: float    
+    log_with_preds_as_metadata: True    
+weekday_cos:
+    dtype: float    
+    log_with_preds_as_metadata: True    
+item_age_hours_norm:
+    dtype: float    
+    log_with_preds_as_metadata: True    
+
+#Control features
+click_timestamp:
+    dtype: timestamp
+    is_control: True #Control features are not uses as input features to the model
+    log_with_preds_as_metadata: True    

@@ -10,7 +10,7 @@ import logging
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass, field, asdict
-from collections import Counter, namedtuple
+from collections import Counter, namedtuple, defaultdict
 import pyarrow
 import pyarrow.parquet as pq
 import wandb
@@ -26,11 +26,11 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
 
-from recsys_utils import safe_json
+from recsys_utils import safe_json, get_label_feature_name, get_timestamp_feature_name, get_parquet_files_names
 from recsys_args import DataArguments, ModelArguments, TrainingArguments
 from recsys_data import (
     fetch_data_loader,
-    get_avail_data_dates    
+    #get_avail_data_dates    
 )
 from tqdm import tqdm
 
@@ -55,7 +55,6 @@ DLLOGGER_FILENAME = 'log.json'
 # this code use Version 3
 assert sys.version_info.major > 2
 
-USER_FNAME = 'UserId'
 SESSION_FNAME = 'SessionId'
 ITEM_FNAME = 'ItemId'
 TIMESTAMP_FNAME = 'Time'
@@ -146,39 +145,6 @@ class AllHparams:
 
 
 
-def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
-    """
-        Analyses the feature map config and returns the name of the label feature (e.g. item_id)
-    """
-    label_feature_config = list([k for k,v in feature_map.items() if 'is_label' in v and v['is_label']])
-
-    if len(label_feature_config) == 0:
-        raise ValueError('One feature have be configured as label (is_label = True)')
-    if len(label_feature_config) > 1:
-        raise ValueError('Only one feature can be selected as label (is_label = True)')
-    label_name = label_feature_config[0]
-    return label_name
-
-def get_parquet_files_names(data_path, date, is_train, eval_on_test_set=False):
-    date_format="%Y-%m-%d"
-
-    if is_train:
-        parquet_paths = ["session_start_date={}-train.parquet".format(date.strftime(date_format))]
-    else:
-        if eval_on_test_set:
-            eval_dataset_type = 'test'
-        else:
-            eval_dataset_type = 'valid'
-        parquet_paths = ["session_start_date={}-{}.parquet".format(date.strftime(date_format), eval_dataset_type)]
-
-    parquet_paths = [os.path.join(data_path, parquet_file) for parquet_file in parquet_paths]
-
-    ##If paths are folders, list the parquet file within the folders
-    #parquet_paths = get_filenames(parquet_paths, files_filter_pattern="*.parquet"
-    
-
-    return parquet_paths
-
 
 def get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map):
     train_loader = fetch_data_loader(data_args, training_args, feature_map, train_data_paths, is_train_set=True)
@@ -215,9 +181,11 @@ def main():
     with open(data_args.feature_config) as yaml_file:
         feature_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
-    label_name = get_label_feature_name(feature_map)
+    item_id_fname = get_label_feature_name(feature_map)
+    timestamp_fname = get_timestamp_feature_name(feature_map)
+
     #training_args.label_names = [label_name]
-    target_size = feature_map[label_name]['cardinality']
+    target_size = feature_map[item_id_fname]['cardinality']
 
     
 
@@ -291,31 +259,38 @@ def main():
     algorithm = get_algorithm(model_args.model_type, remaining_hparams)
 
 
-    data_dates = get_avail_data_dates(data_args)
-    results_dates = {}
+    #data_dates = get_avail_data_dates(data_args)
+    results_times = {}
 
     start_session_id = 0
 
-    user_id_fname='user_idx'
-    item_id_fname='sess_pid_seq'
-    timestamp_fname='sess_etime_seq'
+    max_time_index = data_args.final_time_window_index
+    if data_args.no_incremental_training:
+        max_time_index = max_time_index - data_args.training_time_window_size + 1
 
-    for date_idx in range(1, len(data_dates)):
-        train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
-        train_date_str, eval_date_str = train_date.strftime("%Y-%m-%d"), eval_date.strftime("%Y-%m-%d")
-
-        train_data_paths = get_parquet_files_names(data_args.data_path, train_date, is_train=True)
-        eval_data_paths = get_parquet_files_names(data_args.data_path, eval_date, is_train=False, 
-                                                  eval_on_test_set=training_args.eval_on_test_set)
+    #for date_idx in range(1, len(data_dates)):
+    for time_index in range (data_args.start_time_window_index, max_time_index):
+        #train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
+        #train_date_str, eval_date_str = train_date.strftime("%Y-%m-%d"), eval_date.strftime("%Y-%m-%d")
+        
+        if data_args.no_incremental_training:
+            time_indices_train = list(range(time_index, time_index+data_args.training_time_window_size))
+            time_index_eval = time_index+data_args.training_time_window_size
+        else:
+            time_indices_train = time_index
+            time_index_eval = time_index + 1
  
                 
         # Training
         if training_args.do_train:
-            logger.info("************* Training (date:{}) *************".format(train_date_str))
+            logger.info(f"************* Training (time indices:{time_indices_train}) *************")
+            train_data_paths = get_parquet_files_names(data_args, time_indices_train, is_train=True)
 
-            train_sessions_df, start_session_id = prepare_sessions_data(train_data_paths, user_id_fname=user_id_fname, 
+            train_sessions_df, start_session_id = prepare_sessions_data(train_data_paths, 
                                         item_id_fname=item_id_fname, timestamp_fname=timestamp_fname,
                                         start_session_id=start_session_id)
+
+            #train_sessions_df = train_sessions_df[:100]
             train_interactions_df = sessions_to_interactions_dataframe(train_sessions_df)
             algorithm.fit(train_interactions_df)
 
@@ -323,15 +298,17 @@ def main():
 
 
         # Evaluation
-        if training_args.do_eval:            
+        if training_args.do_eval:                        
+            logger.info(f"************* Evaluation (time index:{time_index_eval}) *************")            
+            eval_data_paths = get_parquet_files_names(data_args, [time_index_eval], is_train=False, 
+                                eval_on_test_set=training_args.eval_on_test_set)
 
-            logger.info("************* Evaluation *************")
-
-            eval_sessions_df, start_session_id = prepare_sessions_data(eval_data_paths, user_id_fname=user_id_fname, 
+            eval_sessions_df, start_session_id = prepare_sessions_data(eval_data_paths, 
                                         item_id_fname=item_id_fname, timestamp_fname=timestamp_fname,
                                         start_session_id=start_session_id)
 
-            
+            #eval_sessions_df = eval_sessions_df[:100]
+
             if not remaining_hparams['eval_baseline_cpu_parallel']:
                 #Sequential approach 
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
@@ -370,32 +347,33 @@ def main():
             
             #Adding prefix to make them compatible with the Transformers metrics
             eval_metrics_results = {f"eval_{k}": v for k,v in eval_metrics_results.items()}
-            results_dates[eval_date] = eval_metrics_results
+            results_times[time_index_eval] = eval_metrics_results
 
             #Logging metrics with DLLogger
-            DLLogger.log(step=(date_idx), data=eval_metrics_results, verbosity=Verbosity.VERBOSE)
+            DLLogger.log(step=(time_index_eval), data=eval_metrics_results, verbosity=Verbosity.VERBOSE)
             DLLogger.flush()
 
-            logger.info("Eval metrics for day {}: {}".format(eval_date_str, eval_metrics_results))
+            logger.info(f"Eval metrics for time index {time_index_eval}: {eval_metrics_results}")
 
             #Logging to W&B
             #eval_metrics_results_wandb = {k.replace('eval_', 'eval/'): v for k,v in eval_metrics_results.items()}
-            wandb_logger.log(eval_metrics_results, step=date_idx)
+            wandb_logger.log(eval_metrics_results, step=time_index_eval)
 
     logger.info("Training and evaluation loops are finished")
     
         
     if training_args.do_eval:    
-        logger.info("Computing and loging AOD metrics")   
-        results_df= pd.DataFrame.from_dict(results_dates, orient='index')
-        results_df.reset_index().to_csv(os.path.join(training_args.output_dir, "eval_train_results_dates.csv"), index=False) 
+        logger.info("Computing and loging AOT metrics")   
+        results_df= pd.DataFrame.from_dict(results_times, orient='index')
+        results_df.reset_index().to_csv(os.path.join(training_args.output_dir, "eval_train_results.csv"), index=False) 
 
-        # Computing Average Over Days (AOD) metrics
-        results_avg_days = dict(results_df.mean())
+        # Computing Average Over Time (AOD) metrics
+        results_avg_time = dict(results_df.mean())
         # Logging to W&B
-        wandb_logger.log({f"{k}_AOD":v for k, v in results_avg_days.items()}, step=date_idx)
+        #TODO: Rename AOD to AOT (because time units can also be hours)
+        wandb_logger.log({f"{k}_AOD":v for k, v in results_avg_time.items()}, step=time_index_eval)
 
-        log_aod_metric_results(training_args.output_dir, results_df, results_avg_days)  
+        log_aod_metric_results(training_args.output_dir, results_df, results_avg_time)  
 
 def parse_remaining_args(remaining_args):
 
@@ -422,6 +400,8 @@ def parse_remaining_args(remaining_args):
 
     #Type casting the arguments from string
     hparams = {k: cast_str_argument(v) for k,v in hparams.items()}
+    #Make it return None if the key does not exist
+    hparams = defaultdict(lambda: None, hparams)
 
     return hparams
 
@@ -529,8 +509,8 @@ def dataframe_from_parquet_files(train_data_paths, cols_to_read):
     concat_df = pd.concat(dataframes)
     return concat_df
 
-def prepare_sessions_data(train_data_paths, user_id_fname, item_id_fname, timestamp_fname, start_session_id=0):
-    concat_df = dataframe_from_parquet_files(train_data_paths, cols_to_read=[user_id_fname, item_id_fname, timestamp_fname])
+def prepare_sessions_data(train_data_paths, item_id_fname, timestamp_fname, start_session_id=0):
+    concat_df = dataframe_from_parquet_files(train_data_paths, cols_to_read=[item_id_fname, timestamp_fname])
 
     #TODO: Ensure data is sorted by time
 
@@ -538,7 +518,7 @@ def prepare_sessions_data(train_data_paths, user_id_fname, item_id_fname, timest
     concat_df[SESSION_FNAME] = start_session_id + np.arange(len(concat_df))
     last_session_id = concat_df[SESSION_FNAME].max()
 
-    concat_df = concat_df.rename({user_id_fname: USER_FNAME,
+    concat_df = concat_df.rename({
                     item_id_fname: ITEM_FNAME,
                     timestamp_fname: TIMESTAMP_FNAME}, axis=1)
 
@@ -587,24 +567,24 @@ def filter_kwargs(kwargs, thing_with_kwargs):
     return filtered_dict
 
 
-def log_aod_metric_results(output_dir, results_df, results_avg_days):
+def log_aod_metric_results(output_dir, results_df, results_avg_time):
     """
-    Logs to a text file the final metric results (average over days), in a human-readable format
+    Logs to a text file the final metric results (average over time), in a human-readable format
     """
-    output_eval_file = os.path.join(output_dir, "eval_results_avg_over_days.txt")
+    output_eval_file = os.path.join(output_dir, "eval_results_avg_over_time.txt")
     with open(output_eval_file, "a") as writer:
-        logger.info("***** Eval results (avg over dates) *****")
-        writer.write(f"\n***** Eval results (avg over dates) *****\n")
-        for key in sorted(results_avg_days.keys()):
-            logger.info("  %s = %s", key, str(results_avg_days[key]))
-            writer.write("%s = %s\n" % (key, str(results_avg_days[key])))
+        logger.info("***** Eval results (avg over time) *****")
+        writer.write(f"\n***** Eval results (avg over time) *****\n")
+        for key in sorted(results_avg_time.keys()):
+            logger.info("  %s = %s", key, str(results_avg_time[key]))
+            writer.write("%s = %s\n" % (key, str(results_avg_time[key])))
        
 
     #Logging AOD metrics with DLLogger
-    DLLogger.log(step=(), data=results_avg_days, verbosity=Verbosity.VERBOSE)
+    DLLogger.log(step=(), data=results_avg_time, verbosity=Verbosity.VERBOSE)
     DLLogger.flush()
 
-    return results_avg_days
+    return results_avg_time
 
 
 if __name__ == "__main__":
