@@ -369,9 +369,10 @@ def main():
 
         # Computing Average Over Time (AOD) metrics
         results_avg_time = dict(results_df.mean())
+        results_avg_time = {f"{k}_AOD":v for k, v in results_avg_time.items()}
         # Logging to W&B
         #TODO: Rename AOD to AOT (because time units can also be hours)
-        wandb_logger.log({f"{k}_AOD":v for k, v in results_avg_time.items()}, step=time_index_eval)
+        wandb_logger.log(results_avg_time, step=time_index_eval)
 
         log_aod_metric_results(training_args.output_dir, results_df, results_avg_time)  
 
