@@ -456,7 +456,7 @@ def cast_str_argument(arg_value):
         return arg_value
     else:
         if is_bool(arg_value):
-            return bool(arg_value)
+            return arg_value.lower().strip() == "true"
         elif is_number(arg_value):
             if is_float(arg_value):
                 return float(arg_value)
