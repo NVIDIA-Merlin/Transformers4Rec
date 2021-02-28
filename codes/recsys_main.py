@@ -288,9 +288,10 @@ def main():
 
             # Computing Average Over Days (AOD) metrics
             results_avg_time = dict(results_df.mean())
+            results_avg_time = {f"{k}_AOD":v for k, v in results_avg_time.items()}
             # Logging to W&B
             #TODO: Rename AOD to AOT (because time units can also be hours)
-            trainer.log({f"{k}_AOD":v for k, v in results_avg_time.items()})
+            trainer.log(results_avg_time)
 
             log_aod_metric_results(training_args.output_dir, results_df, results_avg_time)              
 
