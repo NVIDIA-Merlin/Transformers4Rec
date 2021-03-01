@@ -290,7 +290,10 @@ class ModelArguments:
     
     constrained_embeddings : bool = field(default=False, metadata={"help": "Use the weight matrix of the output layer as the embedding layer of item_ids. Requires the item id embedding to have the same dimension as the second-to-last layer."})	
     
-    mf_constrained_embeddings : bool = field(default=False, metadata={"help": "Performs a matrix factorization (element-wise multiplication) operation between the Transformers output and the item embeddings, to produce output logits for all items. Requires the item id embeddings to have the same dimension as the second-to-last layer."})	
+    mf_constrained_embeddings : bool = field(default=False, metadata={"help": "Performs a matrix factorization (dot product multiplication) operation between the Transformers output and the item embeddings, to produce output logits for all items. Requires the item id embeddings to have the same dimension as the second-to-last layer."})	
+
+    mf_constrained_embeddings_disable_bias: bool = field(default=False, metadata={"help": "Disable the bias addition for --mf_constrained_embeddings."})	
+    item_embedding_with_dmodel_dim: bool = field(default=False, metadata={"help": "Makes the item embedding have the same dimension of d_model (this is default for --constrained_embeddings and --mf_constrained_embeddings). Just to debug the effect of constrained embeddings"})	
     
     bpr_max_reg_lambda: Optional[float] = field(	
         default=0.0, metadata={"help": "regularization hyper-param of the loss function:  BPR-MAX"}	

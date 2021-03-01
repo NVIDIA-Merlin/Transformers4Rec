@@ -90,6 +90,11 @@ class RecSysMetaModel(PreTrainedModel):
         self.loss_scale_factor = model_args.loss_scale_factor
 
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
+        
+        #For the SIGIR paper experiments
+        self.mf_constrained_embeddings_disable_bias = model_args.mf_constrained_embeddings_disable_bias
+        self.item_embedding_with_dmodel_dim = model_args.item_embedding_with_dmodel_dim
+
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
 
@@ -118,10 +123,12 @@ class RecSysMetaModel(PreTrainedModel):
                             self.label_embedding_table_name = cinfo['emb_table']
 
                         if ('is_label' in cinfo and cinfo['is_label']) and \
-                           (model_args.constrained_embeddings or model_args.mf_constrained_embeddings):
+                           (model_args.constrained_embeddings or model_args.mf_constrained_embeddings or \
+                            model_args.item_embedding_with_dmodel_dim):
                             embedding_size = model_args.d_model
                         else:                      
-                            embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])
+                            embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])                        
+                        
 
                         feature_size = embedding_size
                         self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
@@ -133,9 +140,12 @@ class RecSysMetaModel(PreTrainedModel):
                         # Added to initialize embeddings to small weights
                         self.embedding_tables[cinfo['emb_table']].weight.data.normal_(0., 1./math.sqrt(embedding_size))
                     
+                    logger.info('Categ Feature: {} - Cardinality: {} - Feature Size: {}'.format(cname, cinfo['cardinality'], feature_size))
 
                     concat_input_dim += feature_size
                 elif cinfo['dtype'] in ['long', 'float']:
+                    logger.info('Numerical Feature: {} - Feature Size: 1'.format(cname))
+
                     concat_input_dim += 1
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
@@ -483,8 +493,11 @@ class RecSysMetaModel(PreTrainedModel):
                                                                             non_pad_mask)
 
         if self.mf_constrained_embeddings:
-            logits_all = F.linear(pos_emb_pred, weight = self.embedding_tables[self.label_embedding_table_name].weight,
-                                  bias = self.output_layer_bias)
+            if self.mf_constrained_embeddings_disable_bias:
+                logits_all = F.linear(pos_emb_pred, weight = self.embedding_tables[self.label_embedding_table_name].weight)
+            else:
+                logits_all = F.linear(pos_emb_pred, weight = self.embedding_tables[self.label_embedding_table_name].weight,
+                                    bias = self.output_layer_bias)
         else:
             logits_all = self.output_layer(pos_emb_pred)
 
