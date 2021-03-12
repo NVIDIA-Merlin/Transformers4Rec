@@ -93,7 +93,7 @@ class RecSysMetaModel(PreTrainedModel):
         
         #For the SIGIR paper experiments
         self.mf_constrained_embeddings_disable_bias = model_args.mf_constrained_embeddings_disable_bias
-        self.item_embedding_with_dmodel_dim = model_args.item_embedding_with_dmodel_dim
+        self.item_embedding_dim = model_args.item_embedding_dim
 
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
@@ -122,11 +122,16 @@ class RecSysMetaModel(PreTrainedModel):
                         if 'is_label' in cinfo and cinfo['is_label']:
                             self.label_embedding_table_name = cinfo['emb_table']
 
-                        if ('is_label' in cinfo and cinfo['is_label']) and \
-                           (model_args.constrained_embeddings or model_args.mf_constrained_embeddings or \
-                            model_args.item_embedding_with_dmodel_dim):
-                            embedding_size = model_args.d_model
-                        else:                      
+                        if ('is_label' in cinfo and cinfo['is_label']):
+                            if model_args.item_embedding_dim is not None:
+                                embedding_size = model_args.item_embedding_dim
+                            #This condition is just to keep compatibility with the experiments of SIGIR paper (where item embedding dim was equal to d_model)
+                            elif (model_args.constrained_embeddings or model_args.mf_constrained_embeddings):
+                                embedding_size = model_args.d_model                                
+                            else:
+                                embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])  
+                            self.item_embedding_dim = embedding_size
+                        else:                               
                             embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])                        
                         
 
@@ -234,7 +239,12 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             tf_out_size = model_args.d_model
 
-        self.transformer_output_project = nn.Linear(tf_out_size, model_args.d_model).to(self.device)
+        if (model_args.constrained_embeddings or model_args.mf_constrained_embeddings):
+            transformer_output_projection_dim = self.item_embedding_dim
+        else:
+            transformer_output_projection_dim = model_args.d_model
+
+        self.transformer_output_project = nn.Linear(tf_out_size, transformer_output_projection_dim).to(self.device)
 
         if self.similarity_type in ['concat_mlp', 'multi_mlp']:
             m_factor = 2 if self.similarity_type == 'concat_mlp' else 1

@@ -294,6 +294,13 @@ class ModelArguments:
 
     mf_constrained_embeddings_disable_bias: bool = field(default=False, metadata={"help": "Disable the bias addition for --mf_constrained_embeddings."})	
     item_embedding_with_dmodel_dim: bool = field(default=False, metadata={"help": "Makes the item embedding have the same dimension of d_model (this is default for --constrained_embeddings and --mf_constrained_embeddings). Just to debug the effect of constrained embeddings"})	
+
+    item_embedding_dim: Optional[int] = field(
+        default=None, metadata={"help": "Dimension of the item embedding. If it is None, a heuristic method used to define the dimension based on items cardinality. "
+                            "If --mf_constrained_embeddings or --constrained_embeddings are enabled, the output of transformers (dimension defined by --d_model) will "
+                            "be projected to the same dimension as the item embedding (tying embedding), just before the output layer."})
+
+
     
     bpr_max_reg_lambda: Optional[float] = field(	
         default=0.0, metadata={"help": "regularization hyper-param of the loss function:  BPR-MAX"}	
