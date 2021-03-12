@@ -235,6 +235,11 @@ class ModelArguments:
     dropout: Optional[float] = field(
         default=0.1, metadata={"help": "The dropout probability for all fully connected layers in the embeddings, encoder, and decoders for Transformers and RNNs"}
     )
+
+    input_dropout: Optional[float] = field(
+        default=0.5, metadata={"help": "The dropout probability of the input embeddings, before being combined with feed-forward layers"}
+    )
+
     all_rescale_factor: Optional[float] = field(
         default=1.0, metadata={"help": "rescale cross entropy loss to match with hinge-loss"}
     )

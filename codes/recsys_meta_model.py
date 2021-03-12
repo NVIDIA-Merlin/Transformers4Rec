@@ -269,7 +269,9 @@ class RecSysMetaModel(PreTrainedModel):
         elif model_args.tf_out_activation == 'relu':
             self.tf_out_act = torch.relu
 
-        self.disable_positional_embeddings = model_args.disable_positional_embeddings        
+        self.disable_positional_embeddings = model_args.disable_positional_embeddings    
+
+        self.input_dropout = nn.Dropout(model_args.input_dropout)    
 
     def forward(self, *args, **kwargs):
         inputs = kwargs
@@ -361,8 +363,11 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.inp_merge == 'mlp':
             # pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
-
+            
             pos_inp = self.layernorm1(pos_inp)
+
+            pos_inp = self.input_dropout(pos_inp)
+
             pos_emb = self.tf_out_act(self.layernorm2(self.mlp_merge(pos_inp)))
 
             # if self.loss_type != 'cross_entropy':
