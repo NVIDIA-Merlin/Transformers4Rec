@@ -86,6 +86,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.col_prefix_neg = data_args.feature_prefix_neg_sample
 
         self.use_ohe_item_ids_inputs = model_args.use_ohe_item_ids_inputs
+        self.stochastic_shared_embeddings_replacement_prob = model_args.stochastic_shared_embeddings_replacement_prob
 
         self.loss_scale_factor = model_args.loss_scale_factor
 
@@ -773,15 +774,36 @@ class RecSysMetaModel(PreTrainedModel):
                     label_seq = cdata
 
                 if cinfo['dtype'] == 'categorical':
+                    cdata = cdata.long()
+                    if self.stochastic_shared_embeddings_replacement_prob and \
+                       not self.use_ohe_item_ids_inputs:
+
+                        cdata_non_zero_mask = (cdata != self.pad_token)
+
+                        sse_prob_replacement_matrix = torch.full(cdata.shape, self.stochastic_shared_embeddings_replacement_prob, 
+                                                    device=self.device)            
+                        sse_replacement_mask = torch.bernoulli(sse_prob_replacement_matrix).bool() & cdata_non_zero_mask
+                        n_values_to_replace = sse_replacement_mask.sum()
+
+
+                        cdata_flattened_non_zero = torch.masked_select(cdata, cdata_non_zero_mask)
+                        
+                        sampled_values_to_replace = cdata_flattened_non_zero[torch.randperm(cdata_flattened_non_zero.shape[0])][:n_values_to_replace]
+
+                        cdata[sse_replacement_mask] = sampled_values_to_replace
+                        
+
+                        #cdata[sse_replacement_mask] = 
+
                     if 'is_label' in cinfo and cinfo['is_label']:
                         if self.use_ohe_item_ids_inputs:          
-                            cdata = torch.nn.functional.one_hot(cdata.long(), num_classes=self.target_dim).float()
+                            cdata = torch.nn.functional.one_hot(cdata, num_classes=self.target_dim).float()
                         elif self.constrained_embeddings: # use output layer for the embedding matrix
-                            cdata = self.output_layer.weight[cdata.long(), :]
+                            cdata = self.output_layer.weight[cdata, :]
                         else:
-                            cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())                    
+                            cdata = self.embedding_tables[cinfo['emb_table']](cdata)                    
                     else:
-                        cdata = self.embedding_tables[cinfo['emb_table']](cdata.long())                    
+                        cdata = self.embedding_tables[cinfo['emb_table']](cdata)                    
 
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)

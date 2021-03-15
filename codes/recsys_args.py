@@ -328,4 +328,10 @@ class ModelArguments:
         default=0.0, metadata={"help": "parameter of sampling: = 0 and = 1 are uniform and popularity-based sapling respectively "}
     )
 
+    stochastic_shared_embeddings_replacement_prob: Optional[float] = field(
+        default=0.0, metadata={"help": "Probability of the embedding of a categorical feature be replaced by another an embedding of the same batch"}
+    )
+
+
+
                                                            
