@@ -775,8 +775,11 @@ class RecSysMetaModel(PreTrainedModel):
 
                 if cinfo['dtype'] == 'categorical':
                     cdata = cdata.long()
-                    if self.stochastic_shared_embeddings_replacement_prob and \
-                       not self.use_ohe_item_ids_inputs:
+                    
+                    #Applies Stochastic Shared Embeddings if training
+                    if self.stochastic_shared_embeddings_replacement_prob > 0.0 and \
+                       not self.use_ohe_item_ids_inputs and \
+                       self.training: 
 
                         cdata_non_zero_mask = (cdata != self.pad_token)
 
