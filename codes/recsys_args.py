@@ -237,7 +237,7 @@ class ModelArguments:
     )
 
     input_dropout: Optional[float] = field(
-        default=0.5, metadata={"help": "The dropout probability of the input embeddings, before being combined with feed-forward layers"}
+        default=0.0, metadata={"help": "The dropout probability of the input embeddings, before being combined with feed-forward layers"}
     )
 
     all_rescale_factor: Optional[float] = field(
