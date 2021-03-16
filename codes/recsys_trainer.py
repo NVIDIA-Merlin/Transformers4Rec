@@ -324,12 +324,14 @@ class RecSysTrainer(Trainer):
             if labels is not None:
                 labels_host = labels if labels_host is None else nested_concat(labels_host, labels, padding_index=-100)
 
-            if preds is not None:
-                preds_sorted_item_scores, preds_sorted_item_ids = torch.sort(preds, axis=1, descending=True)
+            if preds is not None and self.args.predict_top_k > 0:
+                #preds_sorted_item_scores, preds_sorted_item_ids = torch.sort(preds, axis=1, descending=True)
 
-                if self.args.predict_top_k > 0:
-                    preds_sorted_item_scores = preds_sorted_item_scores[:, :self.args.predict_top_k]
-                    preds_sorted_item_ids = preds_sorted_item_ids[:, :self.args.predict_top_k]
+                #if self.args.predict_top_k > 0:
+                    #preds_sorted_item_scores = preds_sorted_item_scores[:, :self.args.predict_top_k]
+                    #preds_sorted_item_ids = preds_sorted_item_ids[:, :self.args.predict_top_k]
+
+                preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(preds, k=self.args.predict_top_k, dim=-1)
 
                 self._maybe_log_predictions(labels, preds_sorted_item_ids, preds_sorted_item_scores, outputs['pred_metadata'], 
                                     metrics_results_detailed, metric_key_prefix)
