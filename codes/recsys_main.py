@@ -173,7 +173,9 @@ def main():
 
     trainer = RecSysTrainer(
         model=rec_model,        
-        args=training_args
+        args=training_args,
+        model_args=model_args,
+        data_args=data_args
     )
 
     
@@ -257,14 +259,16 @@ def main():
             #Defining temporarily the the train data loader for evaluation
             trainer.set_eval_dataloader(train_loader)
 
+            
             train_metrics = trainer.evaluate(metric_key_prefix=DatasetType.train.value)
-
+            trainer.wipe_memory()
             log_metric_results(training_args.output_dir, train_metrics, prefix=DatasetType.train.value, time_index=time_index_eval)
             
             
             logger.info(f'Evaluating on test set (time index:{time_index_eval})....')
-            trainer.set_eval_dataloader(eval_loader)
+            trainer.set_eval_dataloader(eval_loader)            
             eval_metrics = trainer.evaluate(metric_key_prefix=DatasetType.eval.value)
+            trainer.wipe_memory()
 
             log_metric_results(training_args.output_dir, eval_metrics, prefix=DatasetType.eval.value, time_index=time_index_eval)
 
@@ -344,6 +348,7 @@ def set_log_attention_weights_callback(trainer, training_args):
         att_weights_logger = AttentionWeightsLogger(attention_output_path)
 
         trainer.log_attention_weights_callback = att_weights_logger.log 
+
 
 class AttentionWeightsLogger:
     """

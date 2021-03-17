@@ -132,8 +132,11 @@ class EvalMetrics(object):
         if self.use_torch:
             #with Timing("TORCH metrics"):
                 # compute metrics on PyTorch
-                for f_measure in self.f_measures_torch:
-                    results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)  
+                labels = torch.nn.functional.one_hot(labels.reshape(-1), preds.size(-1)).detach()
+                preds = preds.view(-1, preds.size(-1))
+                for f_measure in self.f_measures_torch:                                        
+                    #results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)
+                    results = f_measure.add(preds, labels, return_individual_metrics=return_individual_metrics)
                     # Merging metrics results
                     if return_individual_metrics:
                         metrics_results = {**metrics_results, **results}                  
@@ -208,10 +211,12 @@ class MetricWrapper(object):
     def add(self, predictions, labels, return_individual_metrics=False):
 
         # represent target class id as one-hot vector
-        labels = torch.nn.functional.one_hot(labels, predictions.size(-1))
+        #labels = torch.nn.functional.one_hot(labels, predictions.size(-1)).detach()
 
         #Computing the metrics at different cut-offs
         metric = self.f_metric(torch.LongTensor(self.topks), predictions, labels)
+
+        #del(labels)
 
         #Retrieving individual metric results (for each next-item recommendation list), to return for debug logging purposes
         if return_individual_metrics:

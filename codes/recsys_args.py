@@ -153,6 +153,13 @@ class DataArguments:
         },
     )
 
+    avg_session_length: int = field(
+        default=None, metadata={"help": "When --eval_on_last_item_seq_only False, this conservative estimate of "
+                                        "the avg. session length (rounded up to the next int) "
+                                        "is used to estimate the number of interactions from the batch_size (# sessions) "
+                                        "so that the tensor that accumulates all predictions is sufficient to concatenate all predictions"}
+    )      
+
 
     @property
     def total_seq_length(self) -> int:

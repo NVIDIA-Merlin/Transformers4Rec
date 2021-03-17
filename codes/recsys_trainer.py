@@ -25,6 +25,8 @@ from enum import Enum
 
 from recsys_metrics import EvalMetrics
 
+import gc
+
 
 from collections.abc import Sized
 
@@ -76,8 +78,10 @@ class RecSysTrainer(Trainer):
     including (session-based and session-aware recommendation)
     """
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, model_args, data_args, *args, **kwargs):
         self.past_global_steps = 0
+        self.model_args = model_args
+        self.data_args = data_args
 
         self.create_metrics()
 
@@ -154,12 +158,13 @@ class RecSysTrainer(Trainer):
         but the number of steps. So we estimate the dataset size here
         by multiplying the number of steps * batch size
         """
+        '''
         if dataloader == self.get_train_dataloader():
             batch_size = self.args.per_device_train_batch_size
         else:
             batch_size = self.args.per_device_eval_batch_size
-
-        return len(dataloader) * batch_size
+        '''
+        return len(dataloader) * dataloader.batch_size
 
     def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
@@ -263,10 +268,9 @@ class RecSysTrainer(Trainer):
 
         batch_size = dataloader.batch_size
         
-        num_examples = self.num_examples(dataloader)
+        #num_examples = self.num_examples(dataloader)
 
-        logger.info("***** Running %s *****", description)
-        logger.info("  Num examples = %d", num_examples)
+        logger.info("***** Running %s *****", description)        
         logger.info("  Batch size = %d", batch_size)
 
         
@@ -285,6 +289,18 @@ class RecSysTrainer(Trainer):
         PADDING_INDEX = -100
 
         if not prediction_loss_only:
+
+            if metric_key_prefix == DatasetType.train.value and self.args.eval_steps_on_train_set:
+                num_examples = self.args.eval_steps_on_train_set * batch_size
+            else:
+                num_examples = self.num_examples(dataloader)
+
+            logger.info("  Num sessions (examples) = %d", num_examples)
+
+            if not self.model_args.eval_on_last_item_seq_only and self.data_args.avg_session_length:
+                num_examples *= self.data_args.avg_session_length
+                logger.info("  Num interactions (estimated by avg session length) = %d", num_examples)
+
             preds_item_ids_scores_gatherer = DistributedTensorGatherer(world_size, num_examples, make_multiple_of=batch_size,
                                                                        padding_index=PADDING_INDEX)
             labels_gatherer = DistributedTensorGatherer(world_size, num_examples, make_multiple_of=batch_size,
@@ -340,7 +356,9 @@ class RecSysTrainer(Trainer):
                 preds_item_ids_scores = (preds_sorted_item_ids, preds_sorted_item_scores)                
 
                 preds_item_ids_scores_host = preds_item_ids_scores if preds_item_ids_scores_host is None \
-                                              else nested_concat(preds_item_ids_scores_host, preds_item_ids_scores, padding_index=-100)                
+                                              else nested_concat(preds_item_ids_scores_host, preds_item_ids_scores, padding_index=-100)
+
+                #del preds_item_ids_scores
             
             self.control = self.callback_handler.on_prediction_step(self.args, self.state, self.control)
 
@@ -483,3 +501,8 @@ class RecSysTrainer(Trainer):
                                             preds_metadata=preds_metadata, 
                                             metrics=metrics, 
                                             dataset_type=metric_key_prefix)
+
+    
+    def wipe_memory(self):
+        gc.collect()
+        torch.cuda.empty_cache()
