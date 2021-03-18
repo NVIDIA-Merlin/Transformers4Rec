@@ -1,0 +1,66 @@
+#Current session features
+sess_pid_seq:
+    dtype: categorical
+    cardinality: 390000
+    is_label: True
+    emb_table: product_id
+    log_with_preds_as_metadata: True
+sess_ccid_seq:
+    dtype: categorical
+    cardinality: 150
+    emb_table: category_id
+    log_with_preds_as_metadata: True
+sess_csid_seq:
+    dtype: categorical
+    cardinality: 1400
+    emb_table: category_s_id
+    log_with_preds_as_metadata: True
+sess_bid_seq:
+    dtype: categorical
+    cardinality: 7000
+    emb_table: brand
+    log_with_preds_as_metadata: True
+
+# sess_price_log_norm_seq:
+#     dtype: float  
+#     log_with_preds_as_metadata: True
+# sess_relative_price_to_avg_category_seq:
+#     dtype: float  
+#     log_with_preds_as_metadata: True
+# sess_dtime_secs_log_norm_seq:
+#     dtype: float 
+#     log_with_preds_as_metadata: True   
+# sess_prod_recency_days_log_norm_seq:
+#     dtype: float  
+#     log_with_preds_as_metadata: True 
+# sess_et_hour_sin_seq:
+#     dtype: float
+#     log_with_preds_as_metadata: True
+# sess_et_hour_cos_seq:
+#     dtype: float    
+#     log_with_preds_as_metadata: True
+# sess_et_dayofweek_sin_seq:
+#     dtype: float    
+#     log_with_preds_as_metadata: True
+# sess_et_dayofweek_cos_seq:
+#     dtype: float    
+#     log_with_preds_as_metadata: True  
+
+#sess_et_month_sin_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
+#sess_et_month_cos_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
+#sess_et_dayofmonth_sin_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
+#sess_et_dayofmonth_cos_seq:
+#    dtype: float
+#    log_with_preds_as_metadata: True
+
+#Control features
+sess_etime_seq:
+    dtype: timestamp
+    is_control: True #Control features are not uses as input features to the model
+    log_with_preds_as_metadata: True    
