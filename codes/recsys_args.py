@@ -197,6 +197,10 @@ class ModelArguments:
         default="mlp", metadata={"help": "input merge mechanism: 'mlp' OR 'attn'"}
     )
 
+    input_features_aggregation: Optional[str] = field(
+        default="concat", metadata={"help": "How input features are merged. Supported options: concat | elementwise_sum_multiply_item_embedding"}
+    )
+
     loss_type: Optional[str] = field(
         default="cross_entropy", metadata={"help": "Type of Loss function: either 'cross_entropy', 'top1', 'top1_max', 'bpr', 'bpr_max_reg'"}
     )
@@ -312,7 +316,8 @@ class ModelArguments:
                             "If --mf_constrained_embeddings or --constrained_embeddings are enabled, the output of transformers (dimension defined by --d_model) will "
                             "be projected to the same dimension as the item embedding (tying embedding), just before the output layer."})
 
-
+    
+    features_same_size_item_embedding: bool = field(default=False, metadata={"help": "Makes all features have the same embedding dim than the item embedding."})	
     
     bpr_max_reg_lambda: Optional[float] = field(	
         default=0.0, metadata={"help": "regularization hyper-param of the loss function:  BPR-MAX"}	

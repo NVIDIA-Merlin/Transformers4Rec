@@ -95,6 +95,7 @@ class RecSysMetaModel(PreTrainedModel):
         #For the SIGIR paper experiments
         self.mf_constrained_embeddings_disable_bias = model_args.mf_constrained_embeddings_disable_bias
         self.item_embedding_dim = model_args.item_embedding_dim
+        self.features_same_size_item_embedding = model_args.features_same_size_item_embedding
 
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
@@ -102,10 +103,12 @@ class RecSysMetaModel(PreTrainedModel):
         if self.mf_constrained_embeddings and self.constrained_embeddings:
             raise ValueError('You cannot enable both --mf_constrained_embeddings and --constrained_embeddings.')
 
-        concat_input_dim = 0
+        input_combined_dim = 0
         target_dim = -1
 
-        self.label_feature = None
+        self.label_feature_name = None
+        self.label_embedding_table_name = None
+        self.label_embedding_dim = None
 
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -120,9 +123,6 @@ class RecSysMetaModel(PreTrainedModel):
                     if self.use_ohe_item_ids_inputs:
                         feature_size = cinfo['cardinality']
                     else:
-                        if 'is_label' in cinfo and cinfo['is_label']:
-                            self.label_embedding_table_name = cinfo['emb_table']
-
                         if ('is_label' in cinfo and cinfo['is_label']):
                             if model_args.item_embedding_dim is not None:
                                 embedding_size = model_args.item_embedding_dim
@@ -132,9 +132,20 @@ class RecSysMetaModel(PreTrainedModel):
                             else:
                                 embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])  
                             self.item_embedding_dim = embedding_size
-                        else:                               
-                            embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])                        
-                        
+
+                            self.label_feature_name = cname
+                            self.label_embedding_table_name = cinfo['emb_table']
+                            self.label_embedding_dim = embedding_size
+                        else:         
+                            if self.features_same_size_item_embedding:                      
+                                if self.label_embedding_dim:
+                                    embedding_size = self.label_embedding_dim
+                                else:
+                                    raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
+                            else:
+                                embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])                        
+
+                            
 
                         feature_size = embedding_size
                         self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
@@ -148,11 +159,11 @@ class RecSysMetaModel(PreTrainedModel):
                     
                     logger.info('Categ Feature: {} - Cardinality: {} - Feature Size: {}'.format(cname, cinfo['cardinality'], feature_size))
 
-                    concat_input_dim += feature_size
+                    input_combined_dim += feature_size
                 elif cinfo['dtype'] in ['long', 'float']:
                     logger.info('Numerical Feature: {} - Feature Size: 1'.format(cname))
 
-                    concat_input_dim += 1
+                    input_combined_dim += 1
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
                     continue
@@ -169,15 +180,23 @@ class RecSysMetaModel(PreTrainedModel):
         self.neg_sampling_extra_samples_per_batch = model_args.neg_sampling_extra_samples_per_batch
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
+        self.input_features_aggregation = model_args.input_features_aggregation
+
+        if self.input_features_aggregation == 'elementwise_sum_multiply_item_embedding':
+            if not self.features_same_size_item_embedding:
+                raise ValueError("The arg --features_same_size_item_embedding is necessary when --input_features_aggregation elementwise_sum_multiply_item_embedding")
+            else:
+                input_combined_dim = self.item_embedding_dim
+
         self.inp_merge = model_args.inp_merge
         if self.inp_merge == 'mlp':
-            self.mlp_merge = nn.Linear(concat_input_dim, model_args.d_model).to(self.device)
+            self.mlp_merge = nn.Linear(input_combined_dim, model_args.d_model).to(self.device)
         elif self.inp_merge == 'attn':
-            self.attn_merge = AttnMerge(concat_input_dim, model_args.d_model).to(self.device)
+            self.attn_merge = AttnMerge(input_combined_dim, model_args.d_model).to(self.device)
         else:
             raise NotImplementedError
 
-        self.layernorm1 = nn.LayerNorm(normalized_shape = concat_input_dim)
+        self.layernorm1 = nn.LayerNorm(normalized_shape = input_combined_dim)
         self.layernorm2 = nn.LayerNorm(normalized_shape = model_args.d_model)
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
@@ -848,7 +867,19 @@ class RecSysMetaModel(PreTrainedModel):
                 del transformed_features[past_fname]
 
         if len(transformed_features) > 1:
-            output = torch.cat(list(transformed_features.values()), dim = -1)
+            if self.input_features_aggregation == 'concat':
+                output = torch.cat(list(transformed_features.values()), dim = -1)
+            elif self.input_features_aggregation == 'elementwise_sum_multiply_item_embedding':
+                additional_features_sum = torch.zeros_like(transformed_features[self.label_feature_name], device=self.device)
+                for k, v in transformed_features.items():
+                    if (self.feature_map[k]['dtype'] == 'categorical') and (k != self.label_feature_name):
+                        additional_features_sum += transformed_features[k]
+
+                item_id_embedding = transformed_features[self.label_feature_name]
+
+                output = item_id_embedding * (additional_features_sum + 1.0)
+            else:
+                raise ValueError("Invalid value for --input_features_aggregation.")
         else:
             output = list(transformed_features.values())[0]
 
