@@ -381,7 +381,10 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Step 2. Merge features
 
-        if self.inp_merge == 'mlp':
+        if self.inp_merge == 'identity':
+            pos_emb = pos_inp
+
+        elif self.inp_merge == 'mlp':
             # pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
             
             pos_inp = self.layernorm1(pos_inp)
