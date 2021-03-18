@@ -77,8 +77,7 @@ class RecSysMetaModel(PreTrainedModel):
         """
 
         self.pad_token = data_args.pad_token
-        self.mask_token = data_args.mask_token
-        self.embedding_tables = nn.ModuleDict()
+        self.mask_token = data_args.mask_token        
 
         self.session_aware = data_args.session_aware
         self.session_aware_features_prefix = data_args.session_aware_features_prefix
@@ -96,6 +95,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.mf_constrained_embeddings_disable_bias = model_args.mf_constrained_embeddings_disable_bias
         self.item_embedding_dim = model_args.item_embedding_dim
         self.features_same_size_item_embedding = model_args.features_same_size_item_embedding
+        self.numeric_features_project_to_embedding_dim = model_args.numeric_features_project_to_embedding_dim
 
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
@@ -109,6 +109,9 @@ class RecSysMetaModel(PreTrainedModel):
         self.label_feature_name = None
         self.label_embedding_table_name = None
         self.label_embedding_dim = None
+
+        self.embedding_tables = nn.ModuleDict()
+        self.numeric_to_embedding_layers = nn.ModuleDict()
 
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -161,9 +164,23 @@ class RecSysMetaModel(PreTrainedModel):
 
                     input_combined_dim += feature_size
                 elif cinfo['dtype'] in ['long', 'float']:
-                    logger.info('Numerical Feature: {} - Feature Size: 1'.format(cname))
+                                            
+                    if self.numeric_features_project_to_embedding_dim is not None:
+                        if not self.features_same_size_item_embedding:
+                            numeric_feature_size = self.numeric_features_project_to_embedding_dim                            
+                        else:
+                            if self.label_embedding_dim:                                
+                                numeric_feature_size = self.label_embedding_dim
+                            else:
+                                raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
 
-                    input_combined_dim += 1
+                        self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
+                    else:
+                        numeric_feature_size = 1
+
+                    logger.info('Numerical Feature: {} - Feature Size: {}'.format(cname, numeric_feature_size))
+
+                    input_combined_dim += numeric_feature_size
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
                     continue
@@ -833,10 +850,16 @@ class RecSysMetaModel(PreTrainedModel):
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)
 
-                elif cinfo['dtype'] == 'long':
-                    cdata = cdata.unsqueeze(-1).long()
-                elif cinfo['dtype'] == 'float':
-                    cdata = cdata.unsqueeze(-1).float()
+                
+                elif cinfo['dtype'] in ['long', 'float']:
+                    if cinfo['dtype'] == 'long':
+                        cdata = cdata.unsqueeze(-1).long()
+                    elif cinfo['dtype'] == 'float':
+                        cdata = cdata.unsqueeze(-1).float()
+
+                    if self.numeric_features_project_to_embedding_dim is not None:
+                        cdata = self.numeric_to_embedding_layers[cname](cdata)
+
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
                     continue
@@ -875,8 +898,11 @@ class RecSysMetaModel(PreTrainedModel):
             elif self.input_features_aggregation == 'elementwise_sum_multiply_item_embedding':
                 additional_features_sum = torch.zeros_like(transformed_features[self.label_feature_name], device=self.device)
                 for k, v in transformed_features.items():
-                    if (self.feature_map[k]['dtype'] == 'categorical') and (k != self.label_feature_name):
-                        additional_features_sum += transformed_features[k]
+                    if (k != self.label_feature_name):
+                        if (self.feature_map[k]['dtype'] == 'categorical') or \
+                           (self.feature_map[k]['dtype'] in ['long', 'float'] and \
+                            self.numeric_features_project_to_embedding_dim is not None):
+                            additional_features_sum += transformed_features[k]
 
                 item_id_embedding = transformed_features[self.label_feature_name]
 
