@@ -193,7 +193,7 @@ class RecSysMetaModel(PreTrainedModel):
             self.mlp_merge = nn.Linear(input_combined_dim, model_args.d_model).to(self.device)
         elif self.inp_merge == 'attn':
             self.attn_merge = AttnMerge(input_combined_dim, model_args.d_model).to(self.device)
-        else:
+        elif self.inp_merge != 'identity':
             raise NotImplementedError
 
         self.layernorm1 = nn.LayerNorm(normalized_shape = input_combined_dim)
