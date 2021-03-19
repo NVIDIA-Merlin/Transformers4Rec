@@ -114,8 +114,8 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.embedding_tables = nn.ModuleDict()
         self.numeric_to_embedding_layers = nn.ModuleDict()
-        self.numeric_to_embedding_norm_layers = nn.ModuleDict()
-        self.numeric_to_embedding_batch_norm_layers = nn.ModuleDict()
+        #self.numeric_to_embedding_norm_layers = nn.ModuleDict()
+        #self.numeric_to_embedding_batch_norm_layers = nn.ModuleDict()
 
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -179,11 +179,20 @@ class RecSysMetaModel(PreTrainedModel):
                         #        raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
                         numeric_feature_size = self.numeric_features_project_to_embedding_dim
 
-                        self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
-                        self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm(numeric_feature_size)
-                        #self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm([self.total_seq_length, numeric_feature_size])
+                        #self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
+                        self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=True)
 
-                        self.numeric_to_embedding_batch_norm_layers[cname] = nn.BatchNorm1d(numeric_feature_size)
+                        self.embedding_tables[cname] = nn.Embedding(
+                            numeric_feature_size, 
+                            numeric_feature_size,                             
+                        ).to(self.device)
+
+                        # Added to initialize embeddings to small weights
+                        self.embedding_tables[cname].weight.data.normal_(0., 1./math.sqrt(embedding_size))
+
+                        #self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm(numeric_feature_size)
+
+                        #self.numeric_to_embedding_batch_norm_layers[cname] = nn.BatchNorm1d(numeric_feature_size)
                          
                     else:
                         numeric_feature_size = 1
@@ -249,6 +258,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.output_layer = nn.Linear(model_args.d_model, target_dim).to(self.device)
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim = -1)
+        self.softmax = torch.nn.Softmax(dim=-1)
 
         self.output_layer_bias = nn.Parameter(torch.Tensor(target_dim)).to(self.device)
         nn.init.zeros_(self.output_layer_bias)
@@ -869,11 +879,19 @@ class RecSysMetaModel(PreTrainedModel):
 
                     if self.numeric_features_project_to_embedding_dim is not None:
                         cdata = self.numeric_to_embedding_layers[cname](cdata)
+
+                        #Soft-one hot encoding, from https://arxiv.org/pdf/1708.00065.pdf
+                        cdata_softmax = self.softmax(cdata)
+                        soft_one_hot_data = (cdata_softmax.unsqueeze(-1) * self.embedding_tables[cname].weight).sum(-2)
+                        cdata = soft_one_hot_data
+
+                        ##Layer norm
                         #cdata = self.numeric_to_embedding_norm_layers[cname] (cdata)
 
-                        cdata_reshaped = cdata.view(cdata.shape[0] * cdata.shape[1], cdata.shape[2])
-                        cdata_reshaped_norm = self.numeric_to_embedding_batch_norm_layers[cname](cdata_reshaped)
-                        cdata = cdata_reshaped_norm.view(cdata.shape)
+                        ##Batch norm
+                        #cdata_reshaped = cdata.view(cdata.shape[0] * cdata.shape[1], cdata.shape[2])
+                        #cdata_reshaped_norm = self.numeric_to_embedding_batch_norm_layers[cname](cdata_reshaped)
+                        #cdata = cdata_reshaped_norm.view(cdata.shape)
 
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
