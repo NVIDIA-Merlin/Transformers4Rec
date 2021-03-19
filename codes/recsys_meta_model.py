@@ -100,6 +100,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
 
+        self.total_seq_length = data_args.total_seq_length
+
         if self.mf_constrained_embeddings and self.constrained_embeddings:
             raise ValueError('You cannot enable both --mf_constrained_embeddings and --constrained_embeddings.')
 
@@ -112,6 +114,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.embedding_tables = nn.ModuleDict()
         self.numeric_to_embedding_layers = nn.ModuleDict()
+        self.numeric_to_embedding_norm_layers = nn.ModuleDict()
 
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -176,6 +179,9 @@ class RecSysMetaModel(PreTrainedModel):
                         numeric_feature_size = self.numeric_features_project_to_embedding_dim
 
                         self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
+                        self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm(numeric_feature_size)
+                        #self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm([self.total_seq_length, numeric_feature_size])
+                         
                     else:
                         numeric_feature_size = 1
 
@@ -220,7 +226,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
 
-        self.total_seq_length = data_args.total_seq_length
+        
         self.n_layer = model_args.n_layer
 
         self.mlm = model_args.mlm
@@ -860,6 +866,7 @@ class RecSysMetaModel(PreTrainedModel):
 
                     if self.numeric_features_project_to_embedding_dim is not None:
                         cdata = self.numeric_to_embedding_layers[cname](cdata)
+                        cdata = self.numeric_to_embedding_norm_layers[cname] (cdata)
 
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
