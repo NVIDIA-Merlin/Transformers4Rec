@@ -166,13 +166,14 @@ class RecSysMetaModel(PreTrainedModel):
                 elif cinfo['dtype'] in ['long', 'float']:
                                             
                     if self.numeric_features_project_to_embedding_dim is not None:
-                        if not self.features_same_size_item_embedding:
-                            numeric_feature_size = self.numeric_features_project_to_embedding_dim                            
-                        else:
-                            if self.label_embedding_dim:                                
-                                numeric_feature_size = self.label_embedding_dim
-                            else:
-                                raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
+                        #if not self.features_same_size_item_embedding:
+                        #    numeric_feature_size = self.numeric_features_project_to_embedding_dim
+                        #else:
+                        #    if self.label_embedding_dim:                                
+                        #        numeric_feature_size = self.label_embedding_dim
+                        #    else:
+                        #        raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
+                        numeric_feature_size = self.numeric_features_project_to_embedding_dim
 
                         self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
                     else:
