@@ -115,6 +115,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.embedding_tables = nn.ModuleDict()
         self.numeric_to_embedding_layers = nn.ModuleDict()
         self.numeric_to_embedding_norm_layers = nn.ModuleDict()
+        self.numeric_to_embedding_batch_norm_layers = nn.ModuleDict()
 
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -181,6 +182,8 @@ class RecSysMetaModel(PreTrainedModel):
                         self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
                         self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm(numeric_feature_size)
                         #self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm([self.total_seq_length, numeric_feature_size])
+
+                        self.numeric_to_embedding_batch_norm_layers[cname] = nn.BatchNorm1d(numeric_feature_size)
                          
                     else:
                         numeric_feature_size = 1
@@ -866,7 +869,11 @@ class RecSysMetaModel(PreTrainedModel):
 
                     if self.numeric_features_project_to_embedding_dim is not None:
                         cdata = self.numeric_to_embedding_layers[cname](cdata)
-                        cdata = self.numeric_to_embedding_norm_layers[cname] (cdata)
+                        #cdata = self.numeric_to_embedding_norm_layers[cname] (cdata)
+
+                        cdata_reshaped = cdata.view(cdata.shape[0] * cdata.shape[1], cdata.shape[2])
+                        cdata_reshaped_norm = self.numeric_to_embedding_batch_norm_layers[cname](cdata_reshaped)
+                        cdata = cdata_reshaped_norm.view(cdata.shape)
 
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
