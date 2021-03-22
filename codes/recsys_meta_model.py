@@ -10,6 +10,7 @@ import math
 import torch
 from torch import nn
 from torch.nn import functional as F
+from torch.nn.modules.loss import _WeightedLoss
 
 from transformers import (GPT2Model, PreTrainedModel)
 
@@ -88,6 +89,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.stochastic_shared_embeddings_replacement_prob = model_args.stochastic_shared_embeddings_replacement_prob
 
         self.loss_scale_factor = model_args.loss_scale_factor
+        self.softmax_temperature = model_args.softmax_temperature
 
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
         
@@ -277,6 +279,7 @@ class RecSysMetaModel(PreTrainedModel):
         nn.init.zeros_(self.output_layer_bias)
 
         self.loss_nll = nn.NLLLoss(ignore_index = self.pad_token)
+        #self.loss_nll = LabelSmoothCrossEntropyLoss(smoothing=0.3)
 
         if self.loss_type == 'cross_entropy_neg':
             self.loss_fn = nn.NLLLoss()
@@ -588,6 +591,9 @@ class RecSysMetaModel(PreTrainedModel):
                                     bias = self.output_layer_bias)
         else:
             logits_all = self.output_layer(pos_emb_pred)
+
+        #Softmax temperature to reduce model overconfidence and better calibrate probs and accuracy
+        logits_all = torch.div(logits_all, self.softmax_temperature)
 
         if not self.negative_sampling:
             predictions_all = self.log_softmax(logits_all)
@@ -1046,3 +1052,38 @@ def nll_1d(items_prob, _label=None):
     xe_loss = torch.log(positive_prob)
     cosine_sim_loss = - torch.mean(xe_loss)
     return cosine_sim_loss
+
+
+class LabelSmoothCrossEntropyLoss(_WeightedLoss):
+    def __init__(self, weight=None, reduction='mean', smoothing=0.0):
+        super().__init__(weight=weight, reduction=reduction)
+        self.smoothing = smoothing
+        self.weight = weight
+        self.reduction = reduction
+
+    @staticmethod
+    def _smooth_one_hot(targets: torch.Tensor, n_classes: int, smoothing=0.0):
+        assert 0 <= smoothing < 1
+        with torch.no_grad():
+            targets = torch.empty(size=(targets.size(0), n_classes),
+                                  device=targets.device) \
+                .fill_(smoothing / (n_classes - 1)) \
+                .scatter_(1, targets.data.unsqueeze(1), 1. - smoothing)
+        return targets
+
+    def forward(self, inputs, targets):
+        targets = LabelSmoothCrossEntropyLoss._smooth_one_hot(targets, inputs.size(-1),
+                                                              self.smoothing)
+        lsm = F.log_softmax(inputs, -1)
+
+        if self.weight is not None:
+            lsm = lsm * self.weight.unsqueeze(0)
+
+        loss = -(targets * lsm).sum(-1)
+
+        if self.reduction == 'sum':
+            loss = loss.sum()
+        elif self.reduction == 'mean':
+            loss = loss.mean()
+
+        return loss

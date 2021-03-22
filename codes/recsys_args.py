@@ -348,6 +348,10 @@ class ModelArguments:
         default=0.0, metadata={"help": "Probability of the embedding of a categorical feature be replaced by another an embedding of the same batch"}
     )
 
+    softmax_temperature: Optional[float] = field(	
+        default=1.0, metadata={"help": "Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T). Value 1.0 reduces to regular softmax."}	
+    )
+
 
 
                                                            
