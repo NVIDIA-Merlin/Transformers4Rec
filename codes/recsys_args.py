@@ -319,7 +319,9 @@ class ModelArguments:
     
     features_same_size_item_embedding: bool = field(default=False, metadata={"help": "Makes all features have the same embedding dim than the item embedding."})	
 
-    numeric_features_project_to_embedding_dim: Optional[int] = field(default=None, metadata={"help": "Uses a fully-connected layet to project a numeric scalar feature to an embedding with this dimension. If --features_same_size_item_embedding, the embedding will have the same size as the item embedding"})	
+    numeric_features_project_to_embedding_dim: Optional[int] = field(default=0, metadata={"help": "Uses a fully-connected layet to project a numeric scalar feature to an embedding with this dimension. If --features_same_size_item_embedding, the embedding will have the same size as the item embedding"})	
+
+    numeric_features_soft_one_hot_encoding_num_embeddings: Optional[int] = field(default=0, metadata={"help": "If greater than zero, enables soft one-hot encoding technique for numerical features (https://arxiv.org/pdf/1708.00065.pdf). It will be created an embedding table with dimension defined by (--numeric_features_soft_one_hot_encoding_num_embeddings, --numeric_features_project_to_embedding_dim)"})	
     
     bpr_max_reg_lambda: Optional[float] = field(	
         default=0.0, metadata={"help": "regularization hyper-param of the loss function:  BPR-MAX"}	

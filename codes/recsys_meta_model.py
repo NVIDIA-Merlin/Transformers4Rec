@@ -95,7 +95,15 @@ class RecSysMetaModel(PreTrainedModel):
         self.mf_constrained_embeddings_disable_bias = model_args.mf_constrained_embeddings_disable_bias
         self.item_embedding_dim = model_args.item_embedding_dim
         self.features_same_size_item_embedding = model_args.features_same_size_item_embedding
+
         self.numeric_features_project_to_embedding_dim = model_args.numeric_features_project_to_embedding_dim
+        self.numeric_features_soft_one_hot_encoding_num_embeddings = model_args.numeric_features_soft_one_hot_encoding_num_embeddings
+
+        if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0 and \
+           self.numeric_features_project_to_embedding_dim == 0:
+           raise ValueError("You must set --numeric_features_project_to_embedding_dim to a value greater than zero when using Soft One-Hot Encoding (--numeric_features_soft_one_hot_encoding_num_embeddings)")
+
+
 
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
@@ -169,7 +177,7 @@ class RecSysMetaModel(PreTrainedModel):
                     input_combined_dim += feature_size
                 elif cinfo['dtype'] in ['long', 'float']:
                                             
-                    if self.numeric_features_project_to_embedding_dim is not None:
+                    if self.numeric_features_project_to_embedding_dim > 0:
                         #if not self.features_same_size_item_embedding:
                         #    numeric_feature_size = self.numeric_features_project_to_embedding_dim
                         #else:
@@ -177,21 +185,26 @@ class RecSysMetaModel(PreTrainedModel):
                         #        numeric_feature_size = self.label_embedding_dim
                         #    else:
                         #        raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
+                        
                         numeric_feature_size = self.numeric_features_project_to_embedding_dim
 
-                        #self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
-                        self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=True)
+                        if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
+                            project_scalar_to_embedding_dim = self.numeric_features_soft_one_hot_encoding_num_embeddings
 
-                        self.embedding_tables[cname] = nn.Embedding(
-                            numeric_feature_size, 
-                            numeric_feature_size,                             
-                        ).to(self.device)
+                            self.embedding_tables[cname] = nn.Embedding(
+                                                                self.numeric_features_soft_one_hot_encoding_num_embeddings, 
+                                                                numeric_feature_size,                             
+                                                            ).to(self.device)
+                        else:
+                            project_scalar_to_embedding_dim = self.numeric_features_project_to_embedding_dim
+
+                        #self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
+                        self.numeric_to_embedding_layers[cname] = nn.Linear(1, project_scalar_to_embedding_dim, bias=True)
 
                         # Added to initialize embeddings to small weights
-                        self.embedding_tables[cname].weight.data.normal_(0., 1./math.sqrt(embedding_size))
+                        self.embedding_tables[cname].weight.data.normal_(0., 1./math.sqrt(numeric_feature_size))
 
                         #self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm(numeric_feature_size)
-
                         #self.numeric_to_embedding_batch_norm_layers[cname] = nn.BatchNorm1d(numeric_feature_size)
                          
                     else:
@@ -877,13 +890,14 @@ class RecSysMetaModel(PreTrainedModel):
                     elif cinfo['dtype'] == 'float':
                         cdata = cdata.unsqueeze(-1).float()
 
-                    if self.numeric_features_project_to_embedding_dim is not None:
+                    if self.numeric_features_project_to_embedding_dim > 0:
                         cdata = self.numeric_to_embedding_layers[cname](cdata)
 
-                        #Soft-one hot encoding, from https://arxiv.org/pdf/1708.00065.pdf
-                        cdata_softmax = self.softmax(cdata)
-                        soft_one_hot_data = (cdata_softmax.unsqueeze(-1) * self.embedding_tables[cname].weight).sum(-2)
-                        cdata = soft_one_hot_data
+                        if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
+                            #Soft-one hot encoding, from https://arxiv.org/pdf/1708.00065.pdf
+                            cdata_softmax = self.softmax(cdata)
+                            soft_one_hot_data = (cdata_softmax.unsqueeze(-1) * self.embedding_tables[cname].weight).sum(-2)
+                            cdata = soft_one_hot_data
 
                         ##Layer norm
                         #cdata = self.numeric_to_embedding_norm_layers[cname] (cdata)
