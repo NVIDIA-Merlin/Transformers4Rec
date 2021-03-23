@@ -107,7 +107,7 @@ class RecSysMetaModel(PreTrainedModel):
            self.numeric_features_project_to_embedding_dim == 0:
            raise ValueError("You must set --numeric_features_project_to_embedding_dim to a value greater than zero when using Soft One-Hot Encoding (--numeric_features_soft_one_hot_encoding_num_embeddings)")
 
-
+        self.input_features_aggregation = model_args.input_features_aggregation
 
         self.constrained_embeddings = model_args.constrained_embeddings
         self.negative_sampling = model_args.negative_sampling
@@ -126,6 +126,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.embedding_tables = nn.ModuleDict()
         self.numeric_to_embedding_layers = nn.ModuleDict()
+        self.features_embedding_projection_to_item_embedding_dim_layers = nn.ModuleDict()
 
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -149,24 +150,31 @@ class RecSysMetaModel(PreTrainedModel):
                             else:
                                 embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'], 
                                                         multiplier=self.embedding_dim_from_cardinality_multiplier)  
+                            feature_size = embedding_size
+
                             self.item_embedding_dim = embedding_size
 
                             self.label_feature_name = cname
                             self.label_embedding_table_name = cinfo['emb_table']
                             self.label_embedding_dim = embedding_size
+
                         else:         
                             if self.features_same_size_item_embedding:                      
                                 if self.label_embedding_dim:
                                     embedding_size = self.label_embedding_dim
+                                    feature_size = embedding_size
                                 else:
                                     raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
                             else:
                                 embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'], 
-                                                        multiplier=self.embedding_dim_from_cardinality_multiplier)                        
+                                                            multiplier=self.embedding_dim_from_cardinality_multiplier)
+                                feature_size = embedding_size                        
 
-                            
-
-                        feature_size = embedding_size
+                                if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+                                    self.features_embedding_projection_to_item_embedding_dim_layers[cname] = \
+                                        nn.Linear(embedding_size, self.label_embedding_dim, bias=True)
+                                    feature_size = self.label_embedding_dim
+                        
                         self.embedding_tables[cinfo['emb_table']] = nn.Embedding(
                             cinfo['cardinality'], 
                             embedding_size, 
@@ -188,7 +196,7 @@ class RecSysMetaModel(PreTrainedModel):
                            else:
                                raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")                           
                         else:
-                           numeric_feature_size = self.numeric_features_project_to_embedding_dim                        
+                            numeric_feature_size = self.numeric_features_project_to_embedding_dim
 
                         if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
                             project_scalar_to_embedding_dim = self.numeric_features_soft_one_hot_encoding_num_embeddings
@@ -197,13 +205,22 @@ class RecSysMetaModel(PreTrainedModel):
                                                                 self.numeric_features_soft_one_hot_encoding_num_embeddings, 
                                                                 numeric_feature_size,                             
                                                             ).to(self.device)
+
+                            # Added to initialize embeddings to small weights
+                            self.embedding_tables[cname].weight.data.normal_(0., 1./math.sqrt(numeric_feature_size))
+
+                            if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+                                self.features_embedding_projection_to_item_embedding_dim_layers[cname] = \
+                                    nn.Linear(numeric_feature_size, self.label_embedding_dim, bias=True)
+                                numeric_feature_size = self.label_embedding_dim
                         else:
-                            project_scalar_to_embedding_dim = self.numeric_features_project_to_embedding_dim
+                            if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+                                project_scalar_to_embedding_dim = self.label_embedding_dim
+                            else:
+                                project_scalar_to_embedding_dim = self.numeric_features_project_to_embedding_dim
+                            numeric_feature_size = project_scalar_to_embedding_dim
 
                         self.numeric_to_embedding_layers[cname] = nn.Linear(1, project_scalar_to_embedding_dim, bias=True)
-
-                        # Added to initialize embeddings to small weights
-                        self.embedding_tables[cname].weight.data.normal_(0., 1./math.sqrt(numeric_feature_size))
                          
                     else:
                         numeric_feature_size = 1
@@ -227,13 +244,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.neg_sampling_extra_samples_per_batch = model_args.neg_sampling_extra_samples_per_batch
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
-        self.input_features_aggregation = model_args.input_features_aggregation
-
         if self.input_features_aggregation == 'elementwise_sum_multiply_item_embedding':
-            if not self.features_same_size_item_embedding:
-                raise ValueError("The arg --features_same_size_item_embedding is necessary when --input_features_aggregation elementwise_sum_multiply_item_embedding")
-            else:
-                input_combined_dim = self.item_embedding_dim
+            input_combined_dim = self.item_embedding_dim
 
         self.inp_merge = model_args.inp_merge
         if self.inp_merge == 'mlp':
@@ -879,7 +891,11 @@ class RecSysMetaModel(PreTrainedModel):
                         else:
                             cdata = self.embedding_tables[cinfo['emb_table']](cdata)                    
                     else:
-                        cdata = self.embedding_tables[cinfo['emb_table']](cdata)                    
+                        cdata = self.embedding_tables[cinfo['emb_table']](cdata)      
+
+                        if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding" and \
+                           not self.features_same_size_item_embedding:
+                            cdata = self.features_embedding_projection_to_item_embedding_dim_layers[cname](cdata) 
 
                     if max_seq_len is None:
                         max_seq_len = cdata.size(1)
@@ -899,6 +915,10 @@ class RecSysMetaModel(PreTrainedModel):
                             cdata_softmax = self.softmax(cdata)
                             soft_one_hot_data = (cdata_softmax.unsqueeze(-1) * self.embedding_tables[cname].weight).sum(-2)
                             cdata = soft_one_hot_data
+
+                            if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding" and \
+                               not self.features_same_size_item_embedding:
+                                cdata = self.features_embedding_projection_to_item_embedding_dim_layers[cname](cdata)
 
 
                 elif cinfo['is_control']:
