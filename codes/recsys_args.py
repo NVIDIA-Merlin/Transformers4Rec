@@ -352,6 +352,9 @@ class ModelArguments:
         default=1.0, metadata={"help": "Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T). Value 1.0 reduces to regular softmax."}	
     )
 
+    label_smoothing: Optional[float] = field(
+        default=0.0, metadata={"help": "Applies label smoothing using as alpha this parameter value. It helps overconfidence of models and calibration of the predictions."}
+    )
 
 
                                                            

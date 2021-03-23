@@ -90,6 +90,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.loss_scale_factor = model_args.loss_scale_factor
         self.softmax_temperature = model_args.softmax_temperature
+        self.label_smoothing = model_args.label_smoothing
 
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
         
@@ -278,8 +279,10 @@ class RecSysMetaModel(PreTrainedModel):
         self.output_layer_bias = nn.Parameter(torch.Tensor(target_dim)).to(self.device)
         nn.init.zeros_(self.output_layer_bias)
 
-        self.loss_nll = nn.NLLLoss(ignore_index = self.pad_token)
-        #self.loss_nll = LabelSmoothCrossEntropyLoss(smoothing=0.3)
+        if self.label_smoothing > 0.0:
+            self.loss_nll = LabelSmoothCrossEntropyLoss(smoothing=self.label_smoothing)
+        else:
+            self.loss_nll = nn.NLLLoss(ignore_index = self.pad_token)    
 
         if self.loss_type == 'cross_entropy_neg':
             self.loss_fn = nn.NLLLoss()
@@ -1074,7 +1077,8 @@ class LabelSmoothCrossEntropyLoss(_WeightedLoss):
     def forward(self, inputs, targets):
         targets = LabelSmoothCrossEntropyLoss._smooth_one_hot(targets, inputs.size(-1),
                                                               self.smoothing)
-        lsm = F.log_softmax(inputs, -1)
+        #lsm = F.log_softmax(inputs, -1)
+        lsm = inputs
 
         if self.weight is not None:
             lsm = lsm * self.weight.unsqueeze(0)
