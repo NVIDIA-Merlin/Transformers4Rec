@@ -357,4 +357,9 @@ class ModelArguments:
     )
 
 
+    embedding_dim_from_cardinality_multiplier: Optional[float] = field(
+        default=2.0, metadata={"help": "Used to define the feature embedding dim based on its cardinality. The formula is embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))"}
+    )
+
+
                                                            

@@ -38,7 +38,7 @@ class AttnMerge(nn.Module):
         return torch.stack(out, dim=-1)
 
 
-def get_embedding_size_from_cardinality(cardinality, multiplier=2):
+def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
     # A rule-of-thumb from Google.
     embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
     return embedding_size
@@ -98,6 +98,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.mf_constrained_embeddings_disable_bias = model_args.mf_constrained_embeddings_disable_bias
         self.item_embedding_dim = model_args.item_embedding_dim
         self.features_same_size_item_embedding = model_args.features_same_size_item_embedding
+        self.embedding_dim_from_cardinality_multiplier = model_args.embedding_dim_from_cardinality_multiplier
 
         self.numeric_features_project_to_embedding_dim = model_args.numeric_features_project_to_embedding_dim
         self.numeric_features_soft_one_hot_encoding_num_embeddings = model_args.numeric_features_soft_one_hot_encoding_num_embeddings
@@ -125,8 +126,6 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.embedding_tables = nn.ModuleDict()
         self.numeric_to_embedding_layers = nn.ModuleDict()
-        #self.numeric_to_embedding_norm_layers = nn.ModuleDict()
-        #self.numeric_to_embedding_batch_norm_layers = nn.ModuleDict()
 
         # set embedding tables
         for cname, cinfo in self.feature_map.items():
@@ -148,7 +147,8 @@ class RecSysMetaModel(PreTrainedModel):
                             elif (model_args.constrained_embeddings or model_args.mf_constrained_embeddings):
                                 embedding_size = model_args.d_model                                
                             else:
-                                embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])  
+                                embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'], 
+                                                        multiplier=self.embedding_dim_from_cardinality_multiplier)  
                             self.item_embedding_dim = embedding_size
 
                             self.label_feature_name = cname
@@ -161,7 +161,8 @@ class RecSysMetaModel(PreTrainedModel):
                                 else:
                                     raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
                             else:
-                                embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'])                        
+                                embedding_size = get_embedding_size_from_cardinality(cinfo['cardinality'], 
+                                                        multiplier=self.embedding_dim_from_cardinality_multiplier)                        
 
                             
 
@@ -181,15 +182,13 @@ class RecSysMetaModel(PreTrainedModel):
                 elif cinfo['dtype'] in ['long', 'float']:
                                             
                     if self.numeric_features_project_to_embedding_dim > 0:
-                        #if not self.features_same_size_item_embedding:
-                        #    numeric_feature_size = self.numeric_features_project_to_embedding_dim
-                        #else:
-                        #    if self.label_embedding_dim:                                
-                        #        numeric_feature_size = self.label_embedding_dim
-                        #    else:
-                        #        raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")
-                        
-                        numeric_feature_size = self.numeric_features_project_to_embedding_dim
+                        if self.features_same_size_item_embedding:
+                           if self.label_embedding_dim:                                
+                               numeric_feature_size = self.label_embedding_dim
+                           else:
+                               raise ValueError("Make sure that the item id (label feature) is the first in the YAML features config file.")                           
+                        else:
+                           numeric_feature_size = self.numeric_features_project_to_embedding_dim                        
 
                         if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
                             project_scalar_to_embedding_dim = self.numeric_features_soft_one_hot_encoding_num_embeddings
@@ -201,14 +200,10 @@ class RecSysMetaModel(PreTrainedModel):
                         else:
                             project_scalar_to_embedding_dim = self.numeric_features_project_to_embedding_dim
 
-                        #self.numeric_to_embedding_layers[cname] = nn.Linear(1, numeric_feature_size, bias=False)
                         self.numeric_to_embedding_layers[cname] = nn.Linear(1, project_scalar_to_embedding_dim, bias=True)
 
                         # Added to initialize embeddings to small weights
                         self.embedding_tables[cname].weight.data.normal_(0., 1./math.sqrt(numeric_feature_size))
-
-                        #self.numeric_to_embedding_norm_layers[cname] = nn.LayerNorm(numeric_feature_size)
-                        #self.numeric_to_embedding_batch_norm_layers[cname] = nn.BatchNorm1d(numeric_feature_size)
                          
                     else:
                         numeric_feature_size = 1
@@ -875,9 +870,6 @@ class RecSysMetaModel(PreTrainedModel):
                         sampled_values_to_replace = cdata_flattened_non_zero[torch.randperm(cdata_flattened_non_zero.shape[0])][:n_values_to_replace]
 
                         cdata[sse_replacement_mask] = sampled_values_to_replace
-                        
-
-                        #cdata[sse_replacement_mask] = 
 
                     if 'is_label' in cinfo and cinfo['is_label']:
                         if self.use_ohe_item_ids_inputs:          
@@ -908,13 +900,6 @@ class RecSysMetaModel(PreTrainedModel):
                             soft_one_hot_data = (cdata_softmax.unsqueeze(-1) * self.embedding_tables[cname].weight).sum(-2)
                             cdata = soft_one_hot_data
 
-                        ##Layer norm
-                        #cdata = self.numeric_to_embedding_norm_layers[cname] (cdata)
-
-                        ##Batch norm
-                        #cdata_reshaped = cdata.view(cdata.shape[0] * cdata.shape[1], cdata.shape[2])
-                        #cdata_reshaped_norm = self.numeric_to_embedding_batch_norm_layers[cname](cdata_reshaped)
-                        #cdata = cdata_reshaped_norm.view(cdata.shape)
 
                 elif cinfo['is_control']:
                     #Control features are not used as input for the model
@@ -1056,7 +1041,7 @@ def nll_1d(items_prob, _label=None):
     cosine_sim_loss = - torch.mean(xe_loss)
     return cosine_sim_loss
 
-
+#From https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch
 class LabelSmoothCrossEntropyLoss(_WeightedLoss):
     def __init__(self, weight=None, reduction='mean', smoothing=0.0):
         super().__init__(weight=weight, reduction=reduction)
