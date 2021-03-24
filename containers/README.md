@@ -288,7 +288,7 @@ bash scripts/run_algorithm_ngc.bash $CUDA_VISIBLE_DEVICES $SCRIPT_MODULE $EXPERI
 ```
 
 ## Push image to NGC
-If you have not, you need to login Docker into NGC container registry (nvcr.io) using your [NGC API key(https://ngc.nvidia.com/setup/api-key)]. 
+If you have not, you need to login Docker into NGC container registry (nvcr.io) using your [NGC API key](https://ngc.nvidia.com/setup/api-key). 
 
 ```bash
 docker login -u \$oauthtoken -p <NGCAPI> nvcr.io 
