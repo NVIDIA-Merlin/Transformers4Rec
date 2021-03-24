@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, List, NewType, Optional, Tuple
+from typing import Optional
 
 from transformers import MODEL_WITH_LM_HEAD_MAPPING
 from transformers import TrainingArguments as HfTrainingArguments
@@ -309,13 +309,13 @@ class ModelArguments:
     loss_type: Optional[str] = field(
         default="cross_entropy",
         metadata={
-            "help": "Type of Loss function: either 'cross_entropy', 'top1', 'top1_max', 'bpr', 'bpr_max_reg'"
+            "help": "Type of Loss function: cross_entropy|top1|top1_max|bpr|bpr_max_reg"
         },
     )
     model_type: Optional[str] = field(
-        default="transfoxl",
+        default="gpt2",
         metadata={
-            "help": "If training from scratch, pass a model type from the list: "
+            "help": "Type of the sequential model. Can be: gpt2|transfoxl|xlnet|reformer|longformer|gru|lstm|rnn|avgseq"
             + ", ".join(MODEL_TYPES)
         },
     )
@@ -392,26 +392,10 @@ class ModelArguments:
         },
     )
 
-    all_rescale_factor: Optional[float] = field(
-        default=1.0,
-        metadata={"help": "rescale cross entropy loss to match with hinge-loss"},
-    )
-    neg_rescale_factor: Optional[float] = field(
-        default=0.0,
-        metadata={"help": "rescale hinge loss to match with cross entropy loss"},
-    )
-
     loss_scale_factor: Optional[float] = field(
         default=1.0,
         metadata={
             "help": "Rescale the loss. The scale of different losses types are very different (e.g. cross_entropy > bpr_max > top1_max) and this scaling might help to avoid underflow with fp16"
-        },
-    )
-
-    disable_positional_embeddings: bool = field(
-        default=False,
-        metadata={
-            "help": "Disable usage of (sum) positional embeddings with items embeddings."
         },
     )
 
@@ -491,28 +475,12 @@ class ModelArguments:
         },
     )
 
-    constrained_embeddings: bool = field(
-        default=False,
-        metadata={
-            "help": "Use the weight matrix of the output layer as the embedding layer of item_ids. Requires the item id embedding to have the same dimension as the second-to-last layer."
-        },
-    )
-
     mf_constrained_embeddings: bool = field(
         default=False,
         metadata={
-            "help": "Performs a matrix factorization (dot product multiplication) operation between the Transformers output and the item embeddings, to produce output logits for all items. Requires the item id embeddings to have the same dimension as the second-to-last layer."
-        },
-    )
-
-    mf_constrained_embeddings_disable_bias: bool = field(
-        default=False,
-        metadata={"help": "Disable the bias addition for --mf_constrained_embeddings."},
-    )
-    item_embedding_with_dmodel_dim: bool = field(
-        default=False,
-        metadata={
-            "help": "Makes the item embedding have the same dimension of d_model (this is default for --constrained_embeddings and --mf_constrained_embeddings). Just to debug the effect of constrained embeddings"
+            "help": "Implements the tying embeddings technique, in which the item id embedding table weights are shared with the last network layer which predicts over all items"
+            "This is equivalent of performing a matrix factorization (dot product multiplication) operation between the Transformers output and the item embeddings."
+            "This option requires the item id embeddings to have the same dimensions of the last network layer."
         },
     )
 
@@ -521,7 +489,8 @@ class ModelArguments:
         metadata={
             "help": "Dimension of the item embedding. If it is None, a heuristic method used to define the dimension based on items cardinality. "
             "If --mf_constrained_embeddings or --constrained_embeddings are enabled, the output of transformers (dimension defined by --d_model) will "
-            "be projected to the same dimension as the item embedding (tying embedding), just before the output layer."
+            "be projected to the same dimension as the item embedding (tying embedding), just before the output layer. "
+            "You can define the item embedding dim using --item_embedding_dim or let the size to be defined automatically based on its cardinality multiplied by the --embedding_dim_from_cardinality_multiplier factor."
         },
     )
 

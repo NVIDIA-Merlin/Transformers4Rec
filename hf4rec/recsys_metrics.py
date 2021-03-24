@@ -36,38 +36,6 @@ METRICS_MAPPING = {
 }
 
 
-def compute_accuracy_metrics(
-    preds: torch.Tensor,
-    labels: torch.Tensor,
-    metrics: str = ["ndcg", "map", "recall", "precision"],
-    top_k: List = [5, 10, 100, 1000],
-    average_metrics: bool = True,
-) -> Dict:
-
-    # flatten (n_batch , seq_len , n_events) to ((n_batch x seq_len), n_events)
-    n_labels = preds.size(-1)
-    preds = preds.view(-1, n_labels)
-    labels = labels.reshape(-1)
-    # represent target class id as one-hot vector
-    labels = torch.nn.functional.one_hot(labels, n_labels)
-
-    top_k = torch.LongTensor(top_k)
-    metric_results = {}
-    for metric_name in metrics:
-        metric = METRICS_MAPPING[metric_name]
-        # Computing the metrics at different cut-offs
-        results_by_topk = metric(top_k, preds, labels)
-
-        if average_metrics:
-            results_by_topk = results_by_topk.mean(0)
-
-        # Separating metrics for different top-k and converting to numpy
-        for k, measures in zip(top_k, results_by_topk.T):
-            metric_results[f"{metric_name}@{k}"] = measures.cpu().numpy()
-
-    return metric_results
-
-
 class EvalMetrics(object):
     def __init__(self, ks=[5, 10, 100, 1000], use_cpu=False, use_torch=True):
         self.ks = ks
@@ -106,14 +74,12 @@ class EvalMetrics(object):
     def update(self, preds, labels, return_individual_metrics=False):
         metrics_results = {}
         if self.use_torch:
-            # with Timing("TORCH metrics"):
             # compute metrics on PyTorch
             labels = torch.nn.functional.one_hot(
                 labels.reshape(-1), preds.size(-1)
             ).detach()
             preds = preds.view(-1, preds.size(-1))
             for f_measure in self.f_measures_torch:
-                # results = f_measure.add(*EvalMetrics.flatten(preds, labels), return_individual_metrics=return_individual_metrics)
                 results = f_measure.add(
                     preds, labels, return_individual_metrics=return_individual_metrics
                 )
@@ -128,9 +94,6 @@ class EvalMetrics(object):
             if type(preds_cpu) is torch.Tensor:
                 preds_cpu = preds_cpu.cpu().numpy()
                 labels_cpu = labels_cpu.cpu().numpy()
-
-            # Getting item ids sorted decreasingly by the pred scores (slow)
-            # pred_items_sorted = np.argsort(preds_cpu, axis=1)[:,::-1]
 
             # Gets only the top-k items (sorted by relevance) from the predictions for each label
             pred_items_sorted = np.argpartition(
@@ -161,14 +124,6 @@ class EvalMetrics(object):
         metrics.extend([f_measure.result() for f_measure in self.f_measures_torch])
 
         return {k: v for d in metrics for k, v in d.items()}
-
-    @staticmethod
-    def flatten(preds, labels):
-        # flatten (n_batch x seq_len x n_events) to ((n_batch x seq_len) x n_events)
-        preds = preds.view(-1, preds.size(-1))
-        labels = labels.reshape(-1)
-
-        return preds, labels
 
 
 class MetricWrapper(object):
@@ -210,3 +165,35 @@ class MetricWrapper(object):
 
     def result(self):
         return {f"{self.name}@{k}": np.mean(self.results[k]) for k in self.topks}
+
+
+def compute_accuracy_metrics(
+    preds: torch.Tensor,
+    labels: torch.Tensor,
+    metrics: str = ["ndcg", "map", "recall", "precision"],
+    top_k: List = [5, 10, 100, 1000],
+    average_metrics: bool = True,
+) -> Dict:
+
+    # flatten (n_batch , seq_len , n_events) to ((n_batch x seq_len), n_events)
+    n_labels = preds.size(-1)
+    preds = preds.view(-1, n_labels)
+    labels = labels.reshape(-1)
+    # represent target class id as one-hot vector
+    labels = torch.nn.functional.one_hot(labels, n_labels)
+
+    top_k = torch.LongTensor(top_k)
+    metric_results = {}
+    for metric_name in metrics:
+        metric = METRICS_MAPPING[metric_name]
+        # Computing the metrics at different cut-offs
+        results_by_topk = metric(top_k, preds, labels)
+
+        if average_metrics:
+            results_by_topk = results_by_topk.mean(0)
+
+        # Separating metrics for different top-k and converting to numpy
+        for k, measures in zip(top_k, results_by_topk.T):
+            metric_results[f"{metric_name}@{k}"] = measures.cpu().numpy()
+
+    return metric_results

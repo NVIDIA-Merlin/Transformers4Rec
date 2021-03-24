@@ -26,7 +26,7 @@ Differently from most implementations of Transformers for RecSys, which use only
 - [`hf4rec`](hf4rec/README.md) - Here are the main scripts for train and evaluating of Transformer-based RecSys models. The train and evaluation pipelines are PyTorch-based. 
 - [`containers`](containers/README.md) - Dockerfiles to get the development and deployment enviroments setup
 - [`datasets`](https://github.com/rapidsai/hf4rec/tree/main/datasets) - Resources for each dataset used in the experiments, including preprocessing scripts and config files of the available features for the models.
-- [`resources`](https://github.com/rapidsai/hf4rec/tree/main/datasets) - Additional resources, like examples of Visual Studio Code config files (launch.json, settings.json).
+- [`resources`](https://github.com/rapidsai/hf4rec/tree/main/resources) - Additional resources, like examples of Visual Studio Code config files (launch.json, settings.json).
 
 
 
