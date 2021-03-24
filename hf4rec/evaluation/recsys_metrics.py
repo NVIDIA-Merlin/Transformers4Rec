@@ -13,20 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Dict, List, NamedTuple
+from typing import Dict, List
 
 import numpy as np
 import torch
-from torch.utils.dlpack import to_dlpack
 
-from .chameleon_metrics import MRR as C_MRR
-from .chameleon_metrics import NDCG as C_NDCG
-from .chameleon_metrics import HitRate as C_HitRate
-from .chameleon_metrics import StreamingMetric
-from .ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
-from .ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
-from .ranking_metrics_torch_karlhigley.precision_recall import precision_at, recall_at
-from .recsys_utils import Timing
+from .ranking_metrics_cpu import MRR as C_MRR
+from .ranking_metrics_cpu import NDCG as C_NDCG
+from .ranking_metrics_cpu import HitRate as C_HitRate
+from .ranking_metrics_torch.avg_precision import avg_precision_at
+from .ranking_metrics_torch.cumulative_gain import ndcg_at
+from .ranking_metrics_torch.precision_recall import precision_at, recall_at
 
 METRICS_MAPPING = {
     "ndcg": ndcg_at,

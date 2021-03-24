@@ -41,9 +41,9 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 from transformers import HfArgumentParser
 
+from ..evaluation.recsys_metrics import EvalMetrics
 from ..recsys_args import DataArguments, ModelArguments, TrainingArguments
 from ..recsys_data import fetch_data_loader
-from ..recsys_metrics import EvalMetrics
 from ..recsys_utils import (
     get_label_feature_name,
     get_parquet_files_names,
