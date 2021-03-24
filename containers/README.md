@@ -101,14 +101,14 @@ build and locally run the containers documented in this README below.
 ## Build
 
 ```bash
-cd recsys/transformers4recsys/
-docker build --no-cache -t transf4rec_dev -f container/Dockerfile.dev_nvt .
+cd hf4rec/
+docker build --no-cache -t hf4rec_dev -f container/Dockerfile.dev_nvt .
 ```
 
 ## Run the container in interactive mode
 
 ```bash
-docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/recsys:/workspace -v ~/dataset/:/data --workdir /workspace/transformers4recsys/codes transf4rec_dev /bin/bash 
+docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/hf4rec:/workspace -v ~/dataset/:/data --workdir /workspace/ hf4rec_dev /bin/bash 
 ```
 
 ## Profile the model with NVIDIA DLProf and Nsight Systems
@@ -140,7 +140,7 @@ sudo sh -c 'echo kernel.perf_event_paranoid=1 > /etc/sysctl.d/local.conf'
 
 ```bash
 docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864  \
- -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/recsys:/workspace -v ~/dataset/:/data --workdir /workspace/transformers4recsys/codes transf4rec_dev /bin/bash 
+ -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/recsys:/workspace -v ~/dataset/:/data --workdir /workspace/ hf4rec_dev /bin/bash 
 ```
 
 ### Profiling the model with DLProf
@@ -166,11 +166,48 @@ dlprof --mode=pytorch \
        --reports=all \
        --nsys_opts="--sample=cpu --trace 'nvtx,cuda,osrt,cudnn'" \
        --iter_start=1 --iter_stop=10 \
-python recsys_main.py --output_dir ./tmp/ --do_train --do_eval --data_path /data/ --start_date 2019-10-01 --end_date 2019-10-02 --data_loader_engine nvtabular --per_device_train_batch_size 320 --per_device_eval_batch_size 512 --model_type gpt2 --loss_type cross_entropy --logging_steps 10 --d_model 256 --n_layer 2 --n_head 8 --dropout 0.1 --learning_rate 0.001 --similarity_type concat_mlp --num_train_epochs 1 --all_rescale_factor 1 --neg_rescale_factor 0 --feature_config ../datasets/ecommerce-large/config/features/session_based_features_pid.yaml --inp_merge mlp --tf_out_activation tanh --experiments_group local_test --weight_decay 1.3e-05 --learning_rate_schedule constant_with_warmup --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 1 --hidden_act gelu_new --save_steps 0 --eval_on_last_item_seq_only --fp16 --overwrite_output_dir --session_seq_length_max 20 --predict_top_k 1000 --eval_accumulation_steps 1 \
---max_steps 20 --pyprof
+python3 -m hf4rec.recsys_main \
+    --output_dir "./tmp/" \
+    --overwrite_output_dir \
+    --do_train \
+    --do_eval \
+    --data_path "/DATA_PATH/" \
+    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_pid.yaml \
+    --data_loader_engine nvtabular \
+    --fp16 \
+    --workers_count 2 \
+    --validate_every 10 \
+    --logging_steps 20 \
+    --save_steps 0 \
+    --start_time_window_index 1 \
+    --final_time_window_index 2 \
+    --time_window_folder_pad_digits 4 \
+    --model_type gpt2 \
+    --loss_type cross_entropy \
+    --similarity_type concat_mlp \
+    --tf_out_activation tanh \
+    --inp_merge mlp \
+    --hidden_act gelu_new \
+    --dataloader_drop_last \
+    --compute_metrics_each_n_steps 1 \
+    --session_seq_length_max 20 \
+    --eval_on_last_item_seq_only \
+    --num_train_epochs 10 \
+    --per_device_train_batch_size 192 \
+    --per_device_eval_batch_size 128 \
+    --learning_rate 0.00014969647714359603 \
+    --learning_rate_schedule linear_with_warmup \
+    --learning_rate_warmup_steps 0 \
+    --mf_constrained_embeddings \
+    --dropout 0.1 \
+    --weight_decay 6.211639773976265e-05 \
+    --d_model 320 \
+    --n_layer 1 \
+    --n_head 2 \
+    --pyprof
 ```
 
-After running this profiling, will be generated a folder in the path specified in `dlprof --output_path`. In that folder, there will be a file with the `.qdrep` extension, which you can open with the NVIDIA Nsights Systems app to check the usage of CPU and GPU processing and memory during the training steps. 
+After running this profiling, it will be generated a folder in the path specified in `dlprof --output_path`. In that folder, there will be a file with the `.qdrep` extension, which you can open with the NVIDIA Nsights Systems app to check the usage of CPU and GPU processing and memory during the training steps. 
 
 Additionally, it will be created a subfolder with the name defined in the `--tb_dir` argument, where it will be generated files that result in some reports for Tensorboard, which you can see by running `tensorboard --bind_all --logdir tensorboard_event_files_path`. Those reports highlight the slowest ops and also some hints for improving the performance of the model (e.g. using AMP and async data loaders).
 
@@ -198,25 +235,56 @@ docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvta
 ## Try locally
 
 ```bash
-docker run --gpus all -it -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/recsys:/workspace -v ~/dataset/:/data --workdir /workspace/transformers4recsys/codes -t nvcr.io/nvidian/prj-recsys/transf4rec_test:0.1.0 /bin/bash
+docker run --gpus all -it -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/hf4rec:/workspace -v ~/dataset/:/data --workdir /workspace/ -t nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3 /bin/bash
 ```
 
 Run inside the container
 
 ```bash
-cd /workspace/recsys/transformers4recsys/codes
+#cd /workspace/
 
-#Pulling the branch for NGC experimentation
-git pull origin experimentation
+#Pulling the main branch with the latest changes
+git pull origin main
 
-#Download the eCommerce preprocessed dataset
-bash script/dowload_dataset_from_gdrive.bash
 
 #Login into Weights&Biases
 wandb login <W&B API KEY here>
 
 #Run training script
-bash script/run_transformer_ngc.bash experiment_group_name --data_path ~/dataset/ --feature_config ../datasets/ecommerce-large/config/features/session_based_features_all.yaml --fp16 --data_loader_engine nvtabular --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 512 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --hidden_act gelu_new --dataloader_drop_last --compute_metrics_each_n_steps 1 --session_seq_length_max 20 --eval_on_last_item_seq_only --warmup_days 0 --num_train_epochs 2 --per_device_train_batch_size 512 --learning_rate 0.00019534113832496156 --learning_rate_schedule cosine_with_warmup --dropout 0.1 --weight_decay 8.81237861957528e-05 --d_model 448 --n_layer 4 --n_head 4
+export CUDA_VISIBLE_DEVICES="0"
+export SCRIPT_MODULE="hf4rec.recsys_main"
+export EXPERIMENT_GROUP_NAME="local_experiments"
+bash scripts/run_algorithm_ngc.bash $CUDA_VISIBLE_DEVICES $SCRIPT_MODULE $EXPERIMENT_GROUP_NAME \
+    --data_path "/data" \
+    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_pid.yaml \
+    --data_loader_engine nvtabular \
+    --workers_count 2 \
+    --start_time_window_index 1 \
+    --final_time_window_index 15 \
+    --time_window_folder_pad_digits 4 \
+    --model_type gpt2 \
+    --loss_type cross_entropy \
+    --similarity_type concat_mlp \
+    --tf_out_activation tanh \
+    --inp_merge mlp \
+    --hidden_act gelu_new \
+    --dataloader_drop_last \
+    --compute_metrics_each_n_steps 1 \
+    --session_seq_length_max 20 \
+    --eval_on_last_item_seq_only \
+    --num_train_epochs 10 \
+    --per_device_train_batch_size 192 \
+    --per_device_eval_batch_size 128 \
+    --learning_rate 0.00014969647714359603 \
+    --learning_rate_schedule linear_with_warmup \
+    --learning_rate_warmup_steps 0 \
+    --mf_constrained_embeddings \
+    --dropout 0.1 \
+    --weight_decay 6.211639773976265e-05 \
+    --d_model 320 \
+    --n_layer 1 \
+    --n_head 2 \
+    --fp16  #if GPU with fp16 support is available
 ```
 
 ## Push image to NGC
@@ -228,11 +296,15 @@ docker login -u \$oauthtoken -p <NGCAPI> nvcr.io
 
 Then you will be able to push your image to NGC
 ```bash
-docker push nvcr.io/nvidian/prj-recsys/transf4rec_test:0.1.0
+docker push nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3
 ```
 
 ## Run a Job on NGC
 
 ```bash
-ngc batch run --name "tranf4rec-job-$(date +%Y%m%d%H%M%S)" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.2.norm --result /results --image "nvidian/prj-recsys/transf4rec_test:0.1.0" --org nvidian --team prj-recsys --datasetid 71255:/data --commandline "bash -c 'nvidia-smi && source activate rapids && wandb login <W&B API KEY here> && date && git pull origin experimentation && date && bash script/run_transformer_ngc.bash experiment_group_name --data_path /data/with_repetitions/ --feature_config ../datasets/ecommerce-large/config/features/session_based_features_all.yaml --fp16 --data_loader_engine nvtabular --start_date 2019-10-01 --end_date 2019-10-15 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 512 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --hidden_act gelu_new --dataloader_drop_last --compute_metrics_each_n_steps 1 --session_seq_length_max 20 --eval_on_last_item_seq_only --warmup_days 0 --num_train_epochs 2 --per_device_train_batch_size 512 --learning_rate 0.00019534113832496156 --learning_rate_schedule cosine_with_warmup --dropout 0.1 --weight_decay 8.81237861957528e-05 --d_model 448 --n_layer 4 --n_head 4 && date'" 
+export CUDA_VISIBLE_DEVICES="0"
+export SCRIPT_MODULE="hf4rec.recsys_main"
+export EXPERIMENT_GROUP_NAME="<ngc_experiments>"
+export WANDB_API_KEY="<W&B API KEY here>"
+ngc batch run --name "ml-model.hg4rec-gpt2-$(date +%Y%m%d%H%M%S)" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.1.norm --commandline "bash -c 'nvidia-smi && source activate rapids && wandb login $WANDB_API_KEY && date && git pull origin main && date && scripts/run_algorithm_ngc.bash $CUDA_VISIBLE_DEVICES $SCRIPT_MODULE $EXPERIMENT_GROUP_NAME --data_path /data/with_repetitions/ --feature_config ../datasets/ecommerce-large/config/features/session_based_features_pid.yaml --fp16 --data_loader_engine nvtabular --start_time_window_index 1 --final_time_window_index 15 --time_window_folder_pad_digits 4 --model_type transfoxl --loss_type cross_entropy --per_device_eval_batch_size 512 --similarity_type concat_mlp --tf_out_activation tanh --all_rescale_factor 1.0 --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 1 --session_seq_length_max 20 --eval_on_last_item_seq_only --mf_constrained_embeddings --num_train_epochs 10 --per_device_train_batch_size 512 --learning_rate 0.00020505005005475648 --learning_rate_schedule linear_with_warmup --dropout 0.1 --weight_decay 3.0393589859266068e-05 --d_model 384 --n_layer 3 --n_head 8 && date'" --result /results --image "nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3" --org nvidian --team prj-recsys --datasetid 71255:/data
 ```
