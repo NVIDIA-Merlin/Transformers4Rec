@@ -45,8 +45,8 @@ from transformers.utils import logging
 
 from .evaluation.recsys_metrics import EvalMetrics
 
-if is_fairscale_available():
-    from fairscale.optim import OSS
+# if is_fairscale_available():
+#    from fairscale.optim import OSS
 
 logger = logging.get_logger(__name__)
 
@@ -206,21 +206,28 @@ class RecSysTrainer(Trainer):
                     "weight_decay": 0.0,
                 },
             ]
-            if self.sharded_dpp:
-                self.optimizer = OSS(
-                    params=optimizer_grouped_parameters,
-                    optim=AdamW,
-                    lr=self.args.learning_rate,
-                    betas=(self.args.adam_beta1, self.args.adam_beta2),
-                    eps=self.args.adam_epsilon,
-                )
-            else:
-                self.optimizer = AdamW(
-                    optimizer_grouped_parameters,
-                    lr=self.args.learning_rate,
-                    betas=(self.args.adam_beta1, self.args.adam_beta2),
-                    eps=self.args.adam_epsilon,
-                )
+            # if self.sharded_dpp:
+            #     self.optimizer = OSS(
+            #         params=optimizer_grouped_parameters,
+            #         optim=AdamW,
+            #         lr=self.args.learning_rate,
+            #         betas=(self.args.adam_beta1, self.args.adam_beta2),
+            #         eps=self.args.adam_epsilon,
+            #     )
+            # else:
+            #     self.optimizer = AdamW(
+            #         optimizer_grouped_parameters,
+            #         lr=self.args.learning_rate,
+            #         betas=(self.args.adam_beta1, self.args.adam_beta2),
+            #         eps=self.args.adam_epsilon,
+            #     )
+
+            self.optimizer = AdamW(
+                optimizer_grouped_parameters,
+                lr=self.args.learning_rate,
+                betas=(self.args.adam_beta1, self.args.adam_beta2),
+                eps=self.args.adam_epsilon,
+            )
 
         if self.lr_scheduler is None:
             if self.args.learning_rate_schedule == "constant_with_warmup":

@@ -26,15 +26,12 @@ import multiprocessing
 import os
 import random
 import sys
-from collections import Counter, defaultdict, namedtuple
+from collections import defaultdict
 from copy import deepcopy
-from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional, Tuple, Union
+from dataclasses import asdict
 
 import numpy as np
 import pandas as pd
-import pyarrow
-import pyarrow.parquet as pq
 import wandb
 import yaml
 from joblib import Parallel, delayed
@@ -432,14 +429,14 @@ def main():
             index=False,
         )
 
-        # Computing Average Over Time (AOD) metrics
+        # Computing Average Over Time (AOT) metrics
         results_avg_time = dict(results_df.mean())
-        results_avg_time = {f"{k}_AOD": v for k, v in results_avg_time.items()}
+        results_avg_time = {f"{k}_AOT": v for k, v in results_avg_time.items()}
         # Logging to W&B
         # TODO: Rename AOD to AOT (because time units can also be hours)
         wandb_logger.log(results_avg_time, step=time_index_eval)
 
-        log_aod_metric_results(training_args.output_dir, results_df, results_avg_time)
+        log_aot_metric_results(training_args.output_dir, results_avg_time)
 
 
 def parse_remaining_args(remaining_args):
@@ -694,7 +691,7 @@ def filter_kwargs(kwargs, thing_with_kwargs):
     return filtered_dict
 
 
-def log_aod_metric_results(output_dir, results_df, results_avg_time):
+def log_aot_metric_results(output_dir, results_avg_time):
     """
     Logs to a text file the final metric results (average over time), in a human-readable format
     """
