@@ -1,11 +1,6 @@
 import torch
 
-from ranking_metrics_torch_karlhigley.common import _check_inputs
-from ranking_metrics_torch_karlhigley.common import _extract_topk
-from ranking_metrics_torch_karlhigley.common import _create_output_placeholder
-# from common import _check_inputs
-# from common import _extract_topk
-# from common import _create_output_placeholder
+from .common import (_check_inputs, _extract_topk, _create_output_placeholder)
 
 
 def precision_at(

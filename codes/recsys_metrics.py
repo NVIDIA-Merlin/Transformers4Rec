@@ -3,17 +3,17 @@ from typing import Dict, NamedTuple, List
 import numpy as np
 import torch
 
-from chameleon_metrics import (
+from .chameleon_metrics import (
     NDCG as C_NDCG, 
     HitRate as C_HitRate, 
     MRR as C_MRR,
     StreamingMetric
 )
-from ranking_metrics_torch_karlhigley.precision_recall import precision_at, recall_at
-from ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
-from ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
+from .ranking_metrics_torch_karlhigley.precision_recall import precision_at, recall_at
+from .ranking_metrics_torch_karlhigley.avg_precision import avg_precision_at
+from .ranking_metrics_torch_karlhigley.cumulative_gain import ndcg_at
 
-from recsys_utils import Timing
+from .recsys_utils import Timing
 from torch.utils.dlpack import to_dlpack
 
 METRICS_MAPPING ={

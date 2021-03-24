@@ -26,17 +26,14 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
 
-from recsys_utils import safe_json, get_label_feature_name, get_timestamp_feature_name, get_parquet_files_names
-from recsys_args import DataArguments, ModelArguments, TrainingArguments
-from recsys_data import (
-    fetch_data_loader,
-    #get_avail_data_dates    
-)
 from tqdm import tqdm
 
-from recsys_metrics import EvalMetrics
+from ..recsys_utils import safe_json, get_label_feature_name, get_timestamp_feature_name, get_parquet_files_names
+from ..recsys_args import DataArguments, ModelArguments, TrainingArguments
+from ..recsys_data import fetch_data_loader
+from ..recsys_metrics import EvalMetrics
 
-from baselines.knn.vsknn import VMContextKNN
+from .knn.vsknn import VMContextKNN
 
 from transformers import HfArgumentParser
 

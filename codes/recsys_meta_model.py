@@ -14,7 +14,7 @@ from torch.nn.modules.loss import _WeightedLoss
 
 from transformers import (GPT2Model, PreTrainedModel)
 
-from loss_functions import TOP1, TOP1_max, BPR, BPR_max, BPR_max_reg
+from .loss_functions import TOP1, TOP1_max, BPR, BPR_max, BPR_max_reg
 
 import numpy as np
 

@@ -1,8 +1,6 @@
 import torch
 
-from ranking_metrics_torch_karlhigley.common import _check_inputs
-from ranking_metrics_torch_karlhigley.common import _create_output_placeholder
-from ranking_metrics_torch_karlhigley.common import _extract_topk
+from .common import (_check_inputs, _create_output_placeholder, _extract_topk)
 
 
 def dcg_at(

@@ -1,9 +1,7 @@
 import torch
 
-from ranking_metrics_torch_karlhigley.common import _check_inputs
-from ranking_metrics_torch_karlhigley.common import _extract_topk
-from ranking_metrics_torch_karlhigley.common import _create_output_placeholder
-from ranking_metrics_torch_karlhigley.precision_recall import precision_at
+from .common import (_check_inputs, _extract_topk, _create_output_placeholder)
+from .precision_recall import precision_at
 
 
 def avg_precision_at(

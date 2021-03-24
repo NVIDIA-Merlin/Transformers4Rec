@@ -23,7 +23,7 @@ from torch.utils.data import Dataset, IterableDataset, DataLoader as PyTorchData
 import torch
 
 
-from recsys_utils import get_filenames
+from .recsys_utils import get_filenames
 
 
 logger = logging.getLogger(__name__)

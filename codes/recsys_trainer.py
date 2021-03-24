@@ -23,7 +23,7 @@ from transformers.trainer_pt_utils import DistributedTensorGatherer, nested_conc
 from transformers.trainer_callback import TrainerCallback
 from enum import Enum
 
-from recsys_metrics import EvalMetrics
+from .recsys_metrics import EvalMetrics
 
 import gc
 
