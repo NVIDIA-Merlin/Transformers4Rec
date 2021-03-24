@@ -1,34 +1,45 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 import collections
-from typing import Dict, Optional, Tuple, List, Any, Union, Callable
-
-import torch
+import gc
 import math
-import numpy as np
-from torch.utils.data.dataset import Dataset
-from torch import nn
-from torch.utils.data.dataloader import DataLoader
-from torch.cuda.amp import autocast
+from collections.abc import Sized
 from copy import deepcopy
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from transformers.integrations import (  
-    is_fairscale_available
-)
-
-from transformers import (Trainer, PreTrainedModel, AdamW,
-                       get_constant_schedule_with_warmup, get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup,
-                       EvalPrediction, is_torch_tpu_available)
+import numpy as np
+import torch
+from torch import nn
+from torch.cuda.amp import autocast
+from torch.utils.data.dataloader import DataLoader
+from torch.utils.data.dataset import Dataset
+from transformers import (AdamW, EvalPrediction, PreTrainedModel, Trainer,
+                          get_constant_schedule_with_warmup,
+                          get_cosine_schedule_with_warmup,
+                          get_linear_schedule_with_warmup,
+                          is_torch_tpu_available)
+from transformers.integrations import is_fairscale_available
+from transformers.trainer_callback import TrainerCallback
+from transformers.trainer_pt_utils import (DistributedTensorGatherer,
+                                           nested_concat)
 from transformers.trainer_utils import PredictionOutput
 from transformers.utils import logging
-from transformers.trainer_pt_utils import DistributedTensorGatherer, nested_concat
-from transformers.trainer_callback import TrainerCallback
-from enum import Enum
 
 from .recsys_metrics import EvalMetrics
-
-import gc
-
-
-from collections.abc import Sized
 
 if is_fairscale_available():
     from fairscale.optim import OSS
