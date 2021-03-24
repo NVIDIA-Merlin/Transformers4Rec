@@ -187,11 +187,12 @@ This section has the instructions on how to build, run locally and push images t
 
 ## Build the image
 
-Please replace `prj-recsys` in the image name by your team on NGC.
+Replace `prj-recsys` in the image name by your team on NGC.  
+P.s. The GitHub repository must be cloned within the image. For that, you need to provide in the --build-arg the path of the private SSH key whose public SSH key was set as a Deploy Key in the private repo at GitHub.
 
 ```bash
-cd recsys/transformers4recsys/
-docker build --tag transf4rec_exp:0.1.0 --tag nvcr.io/nvidian/prj-recsys/transf4rec_test:0.1.0 --no-cache container/
+cd hf4rec/
+docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3 --build-arg SSH_KEY="$(cat ~/.ssh/hf4rec_repo_key)" -f containers/Dockerfile.ngc_nvt .
 ```
 
 ## Try locally

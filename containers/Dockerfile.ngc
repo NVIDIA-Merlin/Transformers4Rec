@@ -2,29 +2,30 @@ FROM nvcr.io/nvidia/pytorch:20.10-py3
 
 ################ Setup GitHub repo ################
 
-# Make ssh dir
-RUN echo "Setting up GitHub repo"; mkdir /root/.ssh/
+ARG SSH_KEY
 
-# Copying GitHub Deployment private key for the gabrielspmoreira/recsys repo
-ADD recsys_repo_key /root/.ssh/recsys_repo_key
+# Make ssh dir
+RUN echo "Setting up GitHub repo"
+RUN mkdir /root/.ssh/
+
+# "Copying" GitHub Deployment private key for the rapidsai/hf4rec repo
+# For that, you need to provide --build-arg SSH_KEY="$(cat ~/.ssh/hf4rec_repo_key)" when building, pointing to the path of the private SSH key 
+RUN echo "$SSH_KEY" > /root/.ssh/hf4rec_repo_key
 
 # Configures the SSH key
-RUN chmod 600 /root/.ssh/recsys_repo_key && \
-  echo "IdentityFile /root/.ssh/recsys_repo_key" >> /etc/ssh/ssh_config && \
+RUN apt-get update && apt-get install -y openssh-client
+RUN chmod 600 /root/.ssh/hf4rec_repo_key && \
+  echo "IdentityFile /root/.ssh/hf4rec_repo_key" >> /etc/ssh/ssh_config && \
   echo -e "StrictHostKeyChecking no" >> /etc/ssh/ssh_config
 
 WORKDIR /workspace
 
-# Clone repo
-RUN git clone git@github.com:gabrielspmoreira/recsys.git
+# Clone repo and checkout to the "main" branch
+RUN git clone --branch 'main' --single-branch --depth 1 git@github.com:rapidsai/hf4rec.git
 
-#Checkout the repo to the "experimentation" branch
-WORKDIR recsys
-RUN git checkout -b experimentation origin/experimentation
-
-WORKDIR /workspace/recsys/transformers4recsys/codes
 
 ################ Installing dependencies ################
+WORKDIR /workspace/hf4rec/
 
 #echo "Installing dependencies"
-RUN pip install -r requirements.txt;
+RUN pip install -r hf4rec/requirements.txt;

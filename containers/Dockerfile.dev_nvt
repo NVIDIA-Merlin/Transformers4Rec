@@ -2,7 +2,7 @@
 #Changed to Devel image because it includes NVCC, required for apex installation
 FROM rapidsai/rapidsai-dev:0.16-cuda10.2-devel-ubuntu18.04-py3.7
 
-ADD ./codes/requirements.txt requirements.txt
+ADD ./hf4rec/requirements.txt requirements.txt
 
 #Make RUN commands use the new environment:
 SHELL ["conda", "run", "-n", "rapids", "/bin/bash", "-c"]
