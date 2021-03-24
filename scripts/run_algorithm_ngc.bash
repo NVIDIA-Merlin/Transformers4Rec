@@ -2,11 +2,12 @@
 
 mkdir -p ./tmp/
 
-python_script=$1
-experiments_group=$2 # Name of the experiment group for this run. Used only to organize jobs in W&B
+cuda_visible_devices=$1 #GPU devices available for the program, separated by commas. Example: 0,1
+python_module=$2 #Can be: codes.recsys_main OR codes.baselines.recsys_baselines_main
+experiments_group=$3 # Name of the experiment group for this run. Used only to organize jobs in W&B
 
 echo "Running training script"
-TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python ${python_script} \
+TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=${cuda_visible_devices} python -m ${python_module} \
     --output_dir "./tmp/" \
     --overwrite_output_dir \
     --do_train \
@@ -17,7 +18,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0,1 python ${python_script} \
     --logging_steps 20 \
     --save_steps 0 \
     --experiments_group ${experiments_group} \
-    ${@:3} # Forwarding Remaining parameters to the script
+    ${@:4} # Forwarding Remaining parameters to the script
 
 train_exit_status=$?    
     
