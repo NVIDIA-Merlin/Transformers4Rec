@@ -185,6 +185,7 @@ You can also check plots of the timeseries and metrics in the [Weights & Biases 
 - `recsys_meta_model.py`: RecSys module that generates interaction embeddings from the available input features and feeds to Transformer blocks. Then it takes the output of the last Transformer block and predicts the scores for all items.
 - `recsys_trainer.py`: Extends Huggingface's Trainer class to enable customized dataset in training and evaluation loops.
 - `recsys_data.py`: Data loading functinos
-- `recsys_metrics.py`: Defines various accuracy metric  used for evaluation: NDCG@k, MAP@k, Recall@k, Precision@k
-- `recsys_args.py`: defines the command line arguments for the pipeline.
+- `recsys_args.py`: Defines the command line arguments for the pipeline.
+- `recsys_outputs.py`: Manages the logging and output files with metrics results, predicted items and attention weights
+- `evaluation/recsys_metrics.py`: Manages streaming recommendation accuracy metrics: NDCG@k, MAP@k, Recall@k, Precision@k
 - `baselines/recsys_baselines_main.py`: Main script to run the pipeline for the baseline methods (e.g. V-SkNN).

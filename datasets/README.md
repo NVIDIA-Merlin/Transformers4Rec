@@ -11,7 +11,7 @@ The raw dataset and more info can be found on [Kaggle Datasets](https://www.kagg
 
 As this is a large dataset, its pre-processing was implemented mostly using PySpark. In general, the user interactions are split into sessions, and sessions are saved in parquet files. The parquet files are split by day, to allow incremental training and evaluation.  
 
-The notebooks for pre-processing can be found in the [ecommerce_rees46/preprocessing](ecommerce_rees46/preprocessing/) folder and must be executed in the order of the notebooks prefixes (01, 02, and 03).
+The notebooks for pre-processing can be found in the [ecommerce_rees46/preprocessing/pyspark/](ecommerce_rees46/preprocessing/pyspark/) folder and must be executed in the order of the notebooks prefixes (01, 02, and 03).
 
 ### Preprocessed dataset
 
