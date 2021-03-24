@@ -1,6 +1,6 @@
 import torch
 
-from .common import (_check_inputs, _extract_topk, _create_output_placeholder)
+from .common import _check_inputs, _create_output_placeholder, _extract_topk
 
 
 def precision_at(
@@ -53,40 +53,42 @@ def recall_at(
     if rel_indices.shape[0] > 0:
         for index, k in enumerate(ks):
             rel_labels = topk_labels[rel_indices, : int(k)].squeeze()
-            
-            recalls[rel_indices, index] = torch.div(
-                torch.sum(rel_labels, dim=-1), rel_count
-            ).reshape(len(rel_indices), 1) \
-            .to(dtype=torch.float32) #Ensuring type is double, because it can be float if --fp16
+
+            recalls[rel_indices, index] = (
+                torch.div(torch.sum(rel_labels, dim=-1), rel_count)
+                .reshape(len(rel_indices), 1)
+                .to(dtype=torch.float32)
+            )  # Ensuring type is double, because it can be float if --fp16
 
     return recalls
 
+
 def _test_at():
-    scores = torch.arange(0,1,step=0.1).expand((1,10))
-    ks = torch.LongTensor([1,2,3,10])
-    print('scores:{}'.format(scores))
-    print('ks:{}'.format(ks))
+    scores = torch.arange(0, 1, step=0.1).expand((1, 10))
+    ks = torch.LongTensor([1, 2, 3, 10])
+    print("scores:{}".format(scores))
+    print("ks:{}".format(ks))
 
-    print('-'*10+'\ntest1')
-    labels = torch.LongTensor([1,0,0,0,0,0,0,0,0,1]).expand((1,10))
-    print('label: {}'.format(labels))
-
-    result = recall_at(ks, scores, labels)
-    print('recall:{}'.format(result))
-    
-    result = precision_at(ks, scores, labels)
-    print('precision:{}'.format(result))
-
-    print('-'*10+'\ntest2')
-    
-    labels = torch.LongTensor([0,0,0,0,0,0,0,0,1,0]).expand((1,10))
-    print('label: {}'.format(labels))
+    print("-" * 10 + "\ntest1")
+    labels = torch.LongTensor([1, 0, 0, 0, 0, 0, 0, 0, 0, 1]).expand((1, 10))
+    print("label: {}".format(labels))
 
     result = recall_at(ks, scores, labels)
-    print('recall:{}'.format(result))
-    
+    print("recall:{}".format(result))
+
     result = precision_at(ks, scores, labels)
-    print('precision:{}'.format(result))
+    print("precision:{}".format(result))
+
+    print("-" * 10 + "\ntest2")
+
+    labels = torch.LongTensor([0, 0, 0, 0, 0, 0, 0, 0, 1, 0]).expand((1, 10))
+    print("label: {}".format(labels))
+
+    result = recall_at(ks, scores, labels)
+    print("recall:{}".format(result))
+
+    result = precision_at(ks, scores, labels)
+    print("precision:{}".format(result))
 
 
 if __name__ == "__main__":

@@ -6,8 +6,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
-
 ########
 #   New losses: Handle the case where a session has a multiple labels
 ########
@@ -50,7 +48,7 @@ class BPR_max(nn.Module):
         positives = logits_scores.diag().view(-1, 1).expand_as(logits_scores)
         diff = positives - logits_scores
         loss = F.logsigmoid(diff)
-        logit_softmax = torch.softmax(logits_scores, dim = 1)
+        logit_softmax = torch.softmax(logits_scores, dim=1)
         loss = logit_softmax * loss
         # set to zeros the difference scores of positive targets of the same session
         loss = loss.masked_fill(positive_mask, 0)
@@ -75,9 +73,9 @@ class BPR_max_reg(nn.Module):
         positives = logits_scores.diag().view(-1, 1).expand_as(logits_scores)
         diff = positives - logits_scores
         loss = F.sigmoid(diff)
-        logit_softmax = torch.softmax(logits_scores, dim = 1)
+        logit_softmax = torch.softmax(logits_scores, dim=1)
         loss = logit_softmax * loss
-        reg = logit_softmax * (logits_scores**2)
+        reg = logit_softmax * (logits_scores ** 2)
         # set to zeros the diff scores of positive targets present in the same session
         loss = loss.masked_fill(positive_mask, 0)
         reg = reg.masked_fill(positive_mask, 0)
@@ -125,7 +123,7 @@ class TOP1_max(nn.Module):
         diff = positives - logits_scores
         penalization = torch.sigmoid(logits_scores ** 2)
         loss = torch.sigmoid(-diff) + penalization
-        logit_softmax = F.softmax(logits_scores, dim = 1)
+        logit_softmax = F.softmax(logits_scores, dim=1)
         loss = logit_softmax * loss
         # set to zeros the difference scores of positive targets of the same session
         loss = loss.masked_fill(positive_mask, 0)

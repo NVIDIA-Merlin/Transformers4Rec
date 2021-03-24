@@ -1,6 +1,6 @@
 import torch
 
-from .common import (_check_inputs, _extract_topk, _create_output_placeholder)
+from .common import _check_inputs, _create_output_placeholder, _extract_topk
 from .precision_recall import precision_at
 
 
@@ -29,8 +29,9 @@ def avg_precision_at(
     rel_precisions = precisions * topk_labels
 
     for index, k in enumerate(ks):
-        total_prec = rel_precisions[:, :int(k)].sum(dim=1)
-        avg_precisions[:, index] = total_prec / num_relevant.clamp(min=1, max=k) \
-        .to(dtype=torch.float32, device=scores.device) #Ensuring type is double, because it can be float if --fp16
+        total_prec = rel_precisions[:, : int(k)].sum(dim=1)
+        avg_precisions[:, index] = total_prec / num_relevant.clamp(min=1, max=k).to(
+            dtype=torch.float32, device=scores.device
+        )  # Ensuring type is double, because it can be float if --fp16
 
     return avg_precisions
