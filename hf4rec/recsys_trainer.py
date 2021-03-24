@@ -317,10 +317,11 @@ class RecSysTrainer(Trainer):
         losses = []
 
         world_size = 1
-        if is_torch_tpu_available():
-            world_size = xm.xrt_world_size()
-        elif self.args.local_rank != -1:
-            world_size = torch.distributed.get_world_size()
+        # if is_torch_tpu_available():
+        #    world_size = xm.xrt_world_size()
+        # elif self.args.local_rank != -1:
+        #    world_size = torch.distributed.get_world_size()
+        world_size = torch.distributed.get_world_size()
         world_size = max(1, world_size)
 
         PADDING_INDEX = -100
@@ -362,10 +363,10 @@ class RecSysTrainer(Trainer):
 
         model.eval()
 
-        if is_torch_tpu_available():
-            dataloader = pl.ParallelLoader(
-                dataloader, [self.args.device]
-            ).per_device_loader(self.args.device)
+        # if is_torch_tpu_available():
+        #    dataloader = pl.ParallelLoader(
+        #        dataloader, [self.args.device]
+        #    ).per_device_loader(self.args.device)
 
         if self.args.past_index >= 0:
             self._past = None
