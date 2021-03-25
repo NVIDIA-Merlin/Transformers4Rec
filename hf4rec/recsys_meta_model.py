@@ -27,9 +27,10 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.nn.modules.loss import _WeightedLoss
-from transformers import GPT2Model, PreTrainedModel
+from transformers import GPT2Model, PreTrainedModel, XLNetModel
 
 from .loss_functions import BPR, TOP1, BPR_max, BPR_max_reg, TOP1_max
+from .recsys_tasks import RecSysTask
 
 logger = logging.getLogger(__name__)
 
@@ -316,8 +317,15 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.n_layer = model_args.n_layer
 
+        # Args for Masked-LM task
         self.mlm = model_args.mlm
         self.mlm_probability = model_args.mlm_probability
+
+        # Args for Permuted-LM task
+        self.plm = model_args.plm
+        self.max_span_length = model_args.max_span_length
+        self.plm_probability = model_args.plm_probability
+        self.plm_mask_input = model_args.plm_mask_input
 
         # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(model_args.d_model)).to(
@@ -426,6 +434,9 @@ class RecSysMetaModel(PreTrainedModel):
 
         assert label_seq is not None, "label sequence is not declared in feature_map"
 
+        # Define pre-training task class
+        recsys_task = RecSysTask(self.pad_token, self.device, self.training)
+
         # To mark past sequence labels
         if self.session_aware:
             masked_past_session = torch.zeros_like(
@@ -436,7 +447,7 @@ class RecSysMetaModel(PreTrainedModel):
             """
             Masked Language Model
             """
-            label_seq_trg, label_mlm_mask = self.mask_tokens(
+            label_seq_trg, label_mlm_mask = recsys_task.mask_tokens(
                 label_seq, self.mlm_probability
             )
 
@@ -445,6 +456,26 @@ class RecSysMetaModel(PreTrainedModel):
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
                 label_mlm_mask = torch.cat(
                     [masked_past_session.bool(), label_mlm_mask], axis=1
+                )
+        elif self.plm:
+            """
+            Permutation Language Model
+            """
+            (
+                label_seq_trg,
+                label_plm_mask,
+                target_mapping,
+                perm_mask,
+            ) = recsys_task.plm_mask_tokens(
+                label_seq,
+                max_span_length=self.max_span_length,
+                plm_probability=self.plm_probability,
+            )
+            # To mark past sequence labels
+            if self.session_aware:
+                label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
+                label_plm_mask = torch.cat(
+                    [masked_past_session.bool(), label_plm_mask], axis=1
                 )
 
         else:
@@ -517,7 +548,7 @@ class RecSysMetaModel(PreTrainedModel):
             .repeat(1, label_seq.shape[1])
         )
         # Keeping only metadata features for the next-clicks (targets)
-        if not (self.mlm and self.training):
+        if not (self.mlm and self.training) and not (self.plm and self.training):
             for feat_name in metadata_for_pred_logging:
                 metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[
                     feat_name
@@ -559,7 +590,20 @@ class RecSysMetaModel(PreTrainedModel):
                 self.masked_item_embedding.to(pos_emb.dtype),
                 pos_emb,
             )
-
+        elif self.plm:
+            # The permutation attention mask will prevent to leak information about the masked item to predict
+            # So no need to corrupt input with masked token:
+            # Similar to the original XLNET tf implementation
+            if not self.plm_mask_input:
+                pos_emb_inp = pos_emb
+            # Masking span-based prediction inputs (with trainable [mask] embedding]) at masked label positions:
+            # Similar to HF implementation
+            else:
+                pos_emb_inp = torch.where(
+                    label_plm_mask.unsqueeze(-1).bool(),
+                    self.masked_item_embedding.to(pos_emb.dtype),
+                    pos_emb,
+                )
         else:
             # Truncating the input sequences length to -1
             pos_emb_inp = pos_emb[:, :-1]
@@ -618,6 +662,17 @@ class RecSysMetaModel(PreTrainedModel):
                 model_outputs = self.model(
                     inputs_embeds=pos_emb_inp, head_mask=head_mask,
                 )
+
+            elif self.plm:
+                assert (
+                    type(self.model) is XLNetModel
+                ), "Permutation language model is only supported for XLNET model "
+                model_outputs = self.model(
+                    inputs_embeds=pos_emb_inp,
+                    target_mapping=target_mapping,
+                    perm_mask=perm_mask,
+                )
+
             else:
                 model_outputs = self.model(inputs_embeds=pos_emb_inp,)
 
@@ -636,7 +691,7 @@ class RecSysMetaModel(PreTrainedModel):
         # remove zero padding elements
         pos_emb_pred = self.remove_pad_3d(pos_emb_pred, non_pad_mask)
 
-        if not self.mlm:
+        if not self.mlm and not self.plm:
 
             if self.session_aware:
                 non_pad_original_mask = (
@@ -736,82 +791,6 @@ class RecSysMetaModel(PreTrainedModel):
         }
 
         return outputs
-
-    def mask_tokens(self, itemid_seq, mlm_probability):
-        """
-        prepare sequence with mask for masked language modeling prediction
-        the function is based on HuggingFace's transformers/data/data_collator.py 
-
-        INPUT:
-        itemid_seq: sequence of input itemid (label) column
-        mlm_probability: probability of an item to be selected (masked) to be a label for this sequence. P.s. We enforce that at least one item is masked for each sequence, so that the network can learn something with it.
-
-        OUTPUT:
-        labels: item id sequence as label
-        masked_labels: bool mask with is true only for masked labels (targets)
-        """
-
-        # labels = itemid_seq.clone()
-        labels = torch.full(
-            itemid_seq.shape, self.pad_token, dtype=itemid_seq.dtype, device=self.device
-        )
-        non_padded_mask = itemid_seq != self.pad_token
-
-        rows_ids = torch.arange(
-            itemid_seq.size(0), dtype=torch.long, device=self.device
-        )
-
-        # During training, masks labels to be predicted according to a probability, ensuring that each session has at least one label to predict
-        if self.training:
-            # Selects a percentage of items to be masked (selected as labels)
-            probability_matrix = torch.full(
-                itemid_seq.shape, mlm_probability, device=self.device
-            )
-            masked_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
-            labels = torch.where(
-                masked_labels,
-                itemid_seq,
-                torch.Tensor(self.pad_token, device=self.device),
-            )
-
-            # Set at least one item in the sequence to mask, so that the network can learn something with this session
-            one_random_index_by_session = torch.multinomial(
-                non_padded_mask.float(), num_samples=1
-            ).squeeze()
-            labels[rows_ids, one_random_index_by_session] = itemid_seq[
-                rows_ids, one_random_index_by_session
-            ]
-            masked_labels = labels != self.pad_token
-
-            # If a sequence has only masked labels, unmasks one of the labels
-            sequences_with_only_labels = masked_labels.sum(
-                axis=1
-            ) == non_padded_mask.sum(axis=1)
-            sampled_labels_to_unmask = torch.multinomial(
-                masked_labels.float(), num_samples=1
-            ).squeeze()
-
-            labels_to_unmask = torch.masked_select(
-                sampled_labels_to_unmask, sequences_with_only_labels
-            )
-            rows_to_unmask = torch.masked_select(rows_ids, sequences_with_only_labels)
-
-            labels[rows_to_unmask, labels_to_unmask] = self.pad_token
-            masked_labels = labels != self.pad_token
-
-            # Logging the real percentage of masked items (labels)
-            # perc_masked_labels = masked_labels.sum() / non_padded_mask.sum().float()
-            # logger.info(f"  % Masked items as labels: {perc_masked_labels}")
-
-        # During evaluation always masks the last item of the session
-        else:
-            last_item_sessions = non_padded_mask.sum(axis=1) - 1
-            labels[rows_ids, last_item_sessions] = itemid_seq[
-                rows_ids, last_item_sessions
-            ]
-            masked_labels = labels != self.pad_token
-
-        return labels, masked_labels
 
     def feature_process(self, inputs):
 
