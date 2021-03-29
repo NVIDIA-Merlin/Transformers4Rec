@@ -432,7 +432,7 @@ class RecSysMetaModel(PreTrainedModel):
             transformer_output_projection_dim = self.item_embedding_dim
 
         else:
-            transformer_output_projection_dim = self.d_model
+            transformer_output_projection_dim = model_args.d_model
 
         self.transformer_output_project = nn.Linear(
             tf_out_size, transformer_output_projection_dim
