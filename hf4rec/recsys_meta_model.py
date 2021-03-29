@@ -27,7 +27,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torch.nn.modules.loss import _WeightedLoss
-from transformers import GPT2Model, PreTrainedModel, XLNetModel
+from transformers import ElectraModel, GPT2Model, PreTrainedModel, XLNetModel
 
 from .loss_functions import BPR, TOP1, BPR_max, BPR_max_reg, TOP1_max
 from .recsys_tasks import RecSysTask
@@ -67,7 +67,25 @@ class RecSysMetaModel(PreTrainedModel):
     def __init__(self, model, config, model_args, data_args, feature_map):
         super(RecSysMetaModel, self).__init__(config)
 
-        self.model = model
+        # Args for Masked-LM task
+        self.mlm = model_args.mlm
+        self.mlm_probability = model_args.mlm_probability
+
+        # Args for Permuted-LM task
+        self.plm = model_args.plm
+        self.max_span_length = model_args.max_span_length
+        self.plm_probability = model_args.plm_probability
+        self.plm_mask_input = model_args.plm_mask_input
+
+        # Args for Replacement Token Detection
+        self.rtd = model_args.rtd
+
+        # Load model
+        if self.rtd:
+            # Two electra models are needed for RTD
+            self.model, self.discriminator = model
+        else:
+            self.model = model
 
         self.feature_map = feature_map
 
@@ -346,6 +364,10 @@ class RecSysMetaModel(PreTrainedModel):
         self.output_layer_bias = nn.Parameter(torch.Tensor(target_dim)).to(self.device)
         nn.init.zeros_(self.output_layer_bias)
 
+        # create prediction module for electra discriminator: Two dense layers
+        self.dense_discriminator = nn.Linear(model_args.d_model, model_args.d_model)
+        self.discriminator_prediction = nn.Linear(model_args.d_model, 1)
+
         if self.label_smoothing > 0.0:
             self.loss_nll = LabelSmoothCrossEntropyLoss(smoothing=self.label_smoothing)
         else:
@@ -442,7 +464,6 @@ class RecSysMetaModel(PreTrainedModel):
             masked_past_session = torch.zeros_like(
                 label_seq, dtype=torch.long, device=self.device
             )
-
         if self.mlm:
             """
             Masked Language Model
@@ -673,8 +694,14 @@ class RecSysMetaModel(PreTrainedModel):
                     perm_mask=perm_mask,
                 )
 
+            elif self.rtd:
+                assert (
+                    type(self.model) is ElectraModel
+                ), "Replacement token detection is only supported for ELECTRA model"
+                model_outputs = self.model(inputs_embeds=pos_emb_inp)
+
             else:
-                model_outputs = self.model(inputs_embeds=pos_emb_inp,)
+                model_outputs = self.model(inputs_embeds=pos_emb_inp)
 
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
@@ -781,6 +808,51 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Scaling the loss
         loss = loss * self.loss_scale_factor
+
+        if self.rtd and self.training:
+            # Add discriminator binary classification task durining training
+            # Step 1. Generate fake data
+
+            fake_emb_inp, discriminator_labels = recsys_task.get_fake_data(
+                pos_inp,
+                trg_flat,
+                logits_all,
+                self.embedding_tables[self.label_embedding_table_name],
+            )
+
+            # Step 2. Merge features
+            if self.inp_merge == "identity":
+                pos_emb = fake_emb_inp
+
+            elif self.inp_merge == "mlp":
+
+                fake_emb_inp = self.layernorm1(fake_emb_inp)
+
+                fake_emb_inp = self.input_dropout(fake_emb_inp)
+
+                fake_pos_emb = self.tf_out_act(
+                    self.layernorm2(self.mlp_merge(fake_emb_inp))
+                )
+
+            elif self.inp_merge == "attn":
+                fake_pos_emb = self.attn_merge(fake_emb_inp)
+
+            # Step 3.
+            fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_pos_emb)[0]
+            # step 4. get binary logits pedictions
+            fake_pos_emb_pred = self.dense_discriminator(fake_pos_emb_pred)
+            fake_pos_emb_pred = self.tf_out_act(fake_pos_emb_pred)
+            binary_logits = self.discriminator_prediction(fake_pos_emb_pred).squeeze(-1)
+            # compute logits only for non-padded items
+            non_pad_mask = label_seq != self.pad_token
+            active_logits = binary_logits.view(-1, fake_pos_emb_pred.shape[1])[
+                non_pad_mask
+            ]
+            active_labels = discriminator_labels[non_pad_mask]
+            discriminator_loss = nn.BCEWithLogitsLoss()(
+                active_logits, active_labels.float()
+            )
+            loss += discriminator_loss
 
         outputs = {
             "loss": loss,
