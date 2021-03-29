@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import copy
 import logging
 
 import torch
@@ -223,7 +224,23 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         )
     else:
         logger.info("Training new model from scratch")
-        model = model_cls(config)
+        if model_args.model_type == "electra":
+            # define two transformers blocs for discriminator and generator model
+            if model_args.tied_generator:
+                # Using same model for generator and discriminator
+                model = (model_cls(config), ())
+            else:
+                # Using a smaller generator based on discriminator layers size
+                seq_model_disc = model_cls(config)
+                config_gen = copy.deepcopy(config)
+                config_gen.hidden_size = int(
+                    round(config_gen.hidden_size * model_args.generator_hidden_size)
+                )
+                config_gen.embedding_size = config_gen.hidden_size
+                seq_model_gen = model_cls(config_gen)
+                model = (seq_model_gen, seq_model_disc)
+        else:
+            model = model_cls(config)
 
     return model, config
 
