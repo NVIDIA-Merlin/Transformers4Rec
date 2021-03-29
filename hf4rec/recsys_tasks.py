@@ -39,7 +39,6 @@ class RecSysTask:
         rows_ids = torch.arange(
             itemid_seq.size(0), dtype=torch.long, device=self.device
         )
-
         # During training, masks labels to be predicted according to a probability, ensuring that each session has at least one label to predict
         if self.training:
             # Selects a percentage of items to be masked (selected as labels)
@@ -50,7 +49,7 @@ class RecSysTask:
             labels = torch.where(
                 masked_labels,
                 itemid_seq,
-                torch.Tensor(self.pad_token, device=self.device),
+                torch.tensor(self.pad_token, device=self.device),
             )
 
             # Set at least one item in the sequence to mask, so that the network can learn something with this session
@@ -229,3 +228,49 @@ class RecSysTask:
             ).expand((labels.size(0), labels.size(1), labels.size(1)))
 
         return labels, masked_labels, target_mapping, perm_mask
+
+    def sample_from_softmax(self, logits):
+        """
+        Sampling method for replacement token modeling (ELECTRA): 
+        Args:
+            logits: of shape (pos_item, vocab_size), mlm probabilities computed by the generator model 
+        """
+        # add noise to logits to prevent from the case where the generator learn to exactly retrieve the true
+        # item that was masked
+        uniform_noise = torch.rand(
+            logits.shape, dtype=torch.float32, device=self.device
+        )
+        gumbel_noise = -torch.log(-torch.log(uniform_noise + 1e-9) + 1e-9)
+        s = logits + gumbel_noise
+        return torch.argmax(torch.nn.functional.softmax(s, dim=-1), -1)
+
+    def get_fake_data(self, emb_inp, target_flat, logits, embedding_table):
+        """
+        Generate fake data by replacing [MASK] items to train ELECTRA discriminator 
+        Args:
+            emb_inp:
+            target_flat:
+            logits: of shape (pos_item, vocab_size), mlm probabilities computed by the generator model
+            embedding_table: Generator and discriminator shares the same item embedding table 
+        """
+        # Sample random item ids
+        updates = self.sample_from_softmax(logits).flatten()
+        # Replace only items that were masked during MLM
+        non_pad_mask = target_flat != self.pad_token
+        # Replace [MASK] by random item ids samples from mlm_logits
+        corrupted_labels = target_flat.scatter(
+            -1, non_pad_mask.nonzero().flatten(), updates
+        )
+        # Build discriminator label : distinguish orginal token from replaced one
+        discriminator_labels = (corrupted_labels != target_flat).view(
+            -1, emb_inp.size(1)
+        )
+        # Build corrupted item embedding input
+        emb_updates = embedding_table(updates)
+        corrupted_emb_inp = emb_inp.view(-1, emb_inp.size(2))
+        corrupted_emb_inp[non_pad_mask.nonzero().flatten(), :] = emb_updates
+        return (
+            corrupted_emb_inp.view(emb_inp.shape),
+            discriminator_labels,
+        )
+
