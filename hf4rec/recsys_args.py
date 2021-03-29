@@ -372,6 +372,13 @@ class ModelArguments:
         default=False, metadata={"help": "Mask input of XLNET as in AE models or not"}
     )
 
+    rtd: bool = field(
+        default=False,
+        metadata={
+            "help": "Use Replaced Token Detection (ELECTRA objective) for training."
+        },
+    )
+
     # args for Transformers or RNNs
 
     d_model: Optional[int] = field(
