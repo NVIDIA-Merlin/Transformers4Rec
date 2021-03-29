@@ -20,6 +20,8 @@ import torch.nn as nn
 
 # load transformer model and its configuration classes
 from transformers import (
+    ElectraConfig,
+    ElectraModel,
     GPT2Config,
     GPT2Model,
     LongformerConfig,
@@ -161,6 +163,22 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             max_position_embeddings=data_args.total_seq_length,
             pad_token_id=data_args.pad_token,
             vocab_size=1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
+        )
+
+    elif model_args.model_type == "electra":
+        model_cls = ElectraModel
+        config = ElectraConfig(
+            hidden_size=model_args.d_model,
+            embedding_size=model_args.d_model,
+            num_hidden_layers=model_args.n_layer,
+            num_attention_heads=model_args.n_head,
+            hidden_act=model_args.hidden_act,
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            hidden_dropout_prob=model_args.dropout,
+            max_position_embeddings=data_args.total_seq_length,
+            pad_token_id=data_args.pad_token,
+            vocab_size=1,
         )
 
     elif model_args.model_type == "gru":
