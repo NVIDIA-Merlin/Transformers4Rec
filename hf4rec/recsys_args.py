@@ -371,12 +371,28 @@ class ModelArguments:
     plm_mask_input: Optional[bool] = field(
         default=False, metadata={"help": "Mask input of XLNET as in AE models or not"}
     )
-
+    # args for RTD task
     rtd: bool = field(
         default=False,
         metadata={
             "help": "Use Replaced Token Detection (ELECTRA objective) for training."
         },
+    )
+
+    discriminator_weight: Optional[float] = field(
+        default=50, metadata={"help": "Weight coefficient for the discriminator loss"}
+    )
+
+    generator_weight: Optional[float] = field(
+        default=1, metadata={"help": "Weight coefficient for the generator loss"}
+    )
+
+    tied_generator: Optional[bool] = field(
+        default=False, metadata={"help": "Tie all generator/discriminator weights?"}
+    )
+    generator_hidden_size: Optional[float] = field(
+        default=0.25,
+        metadata={"help": "frac of discriminator hidden size for smaller generator"},
     )
 
     # args for Transformers or RNNs
