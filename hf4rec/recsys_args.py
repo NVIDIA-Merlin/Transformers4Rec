@@ -455,6 +455,21 @@ class ModelArguments:
         },
     )
 
+    # args for ALBERT
+
+    num_hidden_groups: Optional[int] = field(
+        default=1,
+        metadata={
+            "help": "(ALBERT) Number of groups for the hidden layers, parameters in the same group are shared."
+        },
+    )
+    inner_group_num: Optional[int] = field(
+        default=1,
+        metadata={
+            "help": "(ALBERT) The number of inner repetition of attention and ffn."
+        },
+    )
+
     eval_on_last_item_seq_only: bool = field(
         default=False,
         metadata={

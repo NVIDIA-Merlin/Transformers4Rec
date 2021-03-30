@@ -328,8 +328,8 @@ class RecSysTrainer(Trainer):
         #    world_size = xm.xrt_world_size()
         # elif self.args.local_rank != -1:
         #    world_size = torch.distributed.get_world_size()
-        world_size = torch.distributed.get_world_size()
-        world_size = max(1, world_size)
+
+        # world_size = max(1, world_size)
 
         PADDING_INDEX = -100
 
