@@ -75,14 +75,8 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Load model
         if self.rtd:
-            # Two electra models are needed for RTD
+            # Two electra models are needed for RTD task
             self.model, self.discriminator = model
-            if not self.tied_generator:
-                # dimension of the generator is a fraction of discrim size
-                self.gen_d_model = int(
-                    round(model_args.d_model * model_args.generator_hidden_size)
-                )
-
         else:
             self.model = model
 
@@ -315,38 +309,25 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.inp_merge = model_args.inp_merge
         if self.inp_merge == "mlp":
-
-            self.mlp_merge = nn.Linear(input_combined_dim, model_args.d_model).to(
+            self.mlp_merge = nn.Linear(input_combined_dim, config.hidden_size).to(
                 self.device
             )
 
-            if (not self.tied_generator) and self.rtd:
-                # merge input embedding into smaller generator hidden size
-                self.gen_mlp_merge = nn.Linear(input_combined_dim, self.gen_d_model).to(
-                    self.device
-                )
         elif self.inp_merge == "attn":
-            self.attn_merge = AttnMerge(input_combined_dim, model_args.d_model).to(
+            self.attn_merge = AttnMerge(input_combined_dim, config.hidden_size).to(
                 self.device
             )
-            if (not self.tied_generator) and self.rtd:
-                # merge input embedding into smaller generator hidden size
-                self.gen_attn_merge = AttnMerge(
-                    input_combined_dim, self.gen_d_model
-                ).to(self.device)
 
         elif self.inp_merge == "identity":
             if (not self.tied_generator) and self.rtd:
-                # project input into generator hidden siwze
-                self.gen_merge = nn.Linear(input_combined_dim, self.gen_d_model)
+                # project input embeddings into generator hidden size
+                self.gen_merge = nn.Linear(input_combined_dim, config.hidden_size)
 
         else:
             raise NotImplementedError
 
         self.layernorm1 = nn.LayerNorm(normalized_shape=input_combined_dim)
-        self.layernorm2 = nn.LayerNorm(normalized_shape=model_args.d_model)
-        if not self.tied_generator and self.rtd:
-            self.gen_layernorm2 = nn.LayerNorm(normalized_shape=self.gen_d_model)
+        self.layernorm2 = nn.LayerNorm(normalized_shape=config.hidden_size)
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
@@ -364,26 +345,18 @@ class RecSysMetaModel(PreTrainedModel):
         self.plm_mask_input = model_args.plm_mask_input
 
         # Creating a trainable embedding for masking inputs for Masked LM
-        if (not self.tied_generator) and self.rtd:
-            self.masked_item_embedding = nn.Parameter(
-                torch.Tensor(self.gen_d_model)
-            ).to(self.device)
-        else:
-            self.masked_item_embedding = nn.Parameter(
-                torch.Tensor(model_args.d_model)
-            ).to(self.device)
+        self.masked_item_embedding = nn.Parameter(torch.Tensor(config.hidden_size)).to(
+            self.device
+        )
 
         nn.init.normal_(self.masked_item_embedding, mean=0, std=0.01)
 
         self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
-        if self.rtd and not model_args.tied_generator:
-            self.output_layer = nn.Linear(self.gen_d_model, target_dim).to(self.device)
-        else:
-            self.output_layer = nn.Linear(model_args.d_model, target_dim).to(
-                self.device
-            )
+
+        self.output_layer = nn.Linear(config.hidden_size, target_dim).to(self.device)
+
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim=-1)
         self.softmax = torch.nn.Softmax(dim=-1)
@@ -421,18 +394,15 @@ class RecSysMetaModel(PreTrainedModel):
         if model_args.model_type == "reformer":
             tf_out_size = model_args.d_model * 2
         elif self.rtd and not model_args.tied_generator:
-            tf_out_size = self.gen_d_model
+            tf_out_size = config.hidden_size
         else:
             tf_out_size = model_args.d_model
 
-        if self.rtd and not model_args.tied_generator:
-            transformer_output_projection_dim = self.gen_d_model
-
-        elif model_args.mf_constrained_embeddings:
+        if model_args.mf_constrained_embeddings:
             transformer_output_projection_dim = self.item_embedding_dim
 
         else:
-            transformer_output_projection_dim = model_args.d_model
+            transformer_output_projection_dim = config.hidden_size
 
         self.transformer_output_project = nn.Linear(
             tf_out_size, transformer_output_projection_dim
@@ -631,21 +601,11 @@ class RecSysMetaModel(PreTrainedModel):
 
         elif self.inp_merge == "mlp":
             pos_inp = self.layernorm1(pos_inp)
-
             pos_inp = self.input_dropout(pos_inp)
-            if self.rtd and (not self.tied_generator):
-                pos_emb = self.tf_out_act(
-                    self.gen_layernorm2(self.gen_mlp_merge(pos_inp))
-                )
-
-            else:
-                pos_emb = self.tf_out_act(self.layernorm2(self.mlp_merge(pos_inp)))
+            pos_emb = self.tf_out_act(self.layernorm2(self.mlp_merge(pos_inp)))
 
         elif self.inp_merge == "attn":
-            if self.rtd and not (self.tied_generator):
-                pos_emb = self.gen_attn_merge(pos_inp)
-            else:
-                pos_emb = self.attn_merge(pos_inp)
+            pos_emb = self.attn_merge(pos_inp)
 
         if self.mlm:
             # Masking inputs (with trainable [mask] embedding]) at masked label positions
@@ -780,6 +740,7 @@ class RecSysMetaModel(PreTrainedModel):
                     )
 
         if self.mf_constrained_embeddings:
+
             logits_all = F.linear(
                 pos_emb_pred,
                 weight=self.embedding_tables[self.label_embedding_table_name].weight,
@@ -854,38 +815,20 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.rtd and self.training:
             # Add discriminator binary classification task durining training
-            # Step 1. Generate fake data
-
+            # Step 1. Generate fake data using shared embedding table
             fake_emb_inp, discriminator_labels = recsys_task.get_fake_data(
                 pos_inp,
                 trg_flat,
                 logits_all,
                 self.embedding_tables[self.label_embedding_table_name],
             )
-
-            # Step 2. Merge features
-            if self.inp_merge == "identity":
-                pos_emb = fake_emb_inp
-
-            elif self.inp_merge == "mlp":
-
-                fake_emb_inp = self.layernorm1(fake_emb_inp)
-
-                fake_emb_inp = self.input_dropout(fake_emb_inp)
-
-                fake_pos_emb = self.tf_out_act(
-                    self.layernorm2(self.mlp_merge(fake_emb_inp))
-                )
-
-            elif self.inp_merge == "attn":
-                fake_pos_emb = self.attn_merge(fake_emb_inp)
-
-            # Step 3.
+            # Step 2.
             if self.tied_generator:
                 # use the gen model for token classification
-                fake_pos_emb_pred = self.model(inputs_embeds=fake_pos_emb)[0]
+                fake_pos_emb_pred = self.model(inputs_embeds=fake_emb_inp)[0]
             else:
-                fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_pos_emb)[0]
+                # use larger disciminator electra model
+                fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_emb_inp)[0]
             # step 4. get binary logits pedictions
             fake_pos_emb_pred = self.dense_discriminator(fake_pos_emb_pred)
             fake_pos_emb_pred = self.tf_out_act(fake_pos_emb_pred)
@@ -899,6 +842,7 @@ class RecSysMetaModel(PreTrainedModel):
             discriminator_loss = nn.BCEWithLogitsLoss()(
                 active_logits, active_labels.float()
             )
+            # Compute weighted joint training loss
             loss = (discriminator_loss * self.discriminator_weight) + (
                 loss * self.generator_weight
             )

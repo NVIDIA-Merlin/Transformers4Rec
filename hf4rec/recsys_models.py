@@ -232,12 +232,12 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             else:
                 # Using a smaller generator based on discriminator layers size
                 seq_model_disc = model_cls(config)
-                config_gen = copy.deepcopy(config)
-                config_gen.hidden_size = int(
-                    round(config_gen.hidden_size * model_args.generator_hidden_size)
+                # re-define hidden_size parameters for small generator model
+                config.hidden_size = int(
+                    round(config.hidden_size * model_args.generator_hidden_size)
                 )
-                config_gen.embedding_size = config_gen.hidden_size
-                seq_model_gen = model_cls(config_gen)
+                config.embedding_size = config.hidden_size
+                seq_model_gen = model_cls(config)
                 model = (seq_model_gen, seq_model_disc)
         else:
             model = model_cls(config)
