@@ -159,7 +159,7 @@ class RecSysMetaModel(PreTrainedModel):
                             embedding_size = model_args.item_embedding_dim
                         # This condition is just to keep compatibility with the experiments of SIGIR paper
                         # (where item embedding dim was always equal to d_model)
-                        elif model_args.mf_constrained_embeddings:
+                        elif model_args.mf_constrained_embeddings or model_args.rtd:
                             embedding_size = model_args.d_model
                         else:
                             embedding_size = get_embedding_size_from_cardinality(
