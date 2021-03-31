@@ -47,9 +47,7 @@ class RecSysTask:
             )
             masked_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
             labels = torch.where(
-                masked_labels,
-                itemid_seq,
-                torch.tensor(self.pad_token, device=self.device),
+                masked_labels, itemid_seq, torch.zeros_like(itemid_seq),
             )
 
             # Set at least one item in the sequence to mask, so that the network can learn something with this session
@@ -104,7 +102,7 @@ class RecSysTask:
 
         OUTPUT:
         labels: item id sequence as labels
-        perm_mask: shape (bs, seq_len, seq_len) : Define  the random factorisation order attention mask for each target
+        perm_mask: shape (bs, seq_len, seq_len) : Define  the random factorization order attention mask for each target
         target_mapping: (bs, seq_len, seq_len)  : Binary mask to specify the items to predict
         """
 
@@ -248,9 +246,9 @@ class RecSysTask:
         """
         Generate fake data by replacing [MASK] items to train ELECTRA discriminator 
         Args:
-            emb_inp:
-            target_flat:
-            logits: of shape (pos_item, vocab_size), mlm probabilities computed by the generator model
+            emb_inp: (bs, seq_len, embedding_dim) The embeddings of the input items 
+            target_flat: (#pos_item,) The ids of positive items 
+            logits: of shape (#pos_item, vocab_size), mlm probabilities of positive items computed by the generator model 
             embedding_table: Generator and discriminator shares the same item embedding table 
         """
         # Sample random item ids
