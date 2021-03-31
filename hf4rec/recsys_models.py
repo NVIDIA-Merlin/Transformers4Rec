@@ -21,6 +21,8 @@ import torch.nn as nn
 
 # load transformer model and its configuration classes
 from transformers import (
+    AlbertConfig,
+    AlbertModel,
     ElectraConfig,
     ElectraModel,
     GPT2Config,
@@ -173,6 +175,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             embedding_size=model_args.d_model,
             num_hidden_layers=model_args.n_layer,
             num_attention_heads=model_args.n_head,
+            intermediate_size=model_args.d_model * 4,
             hidden_act=model_args.hidden_act,
             initializer_range=model_args.initializer_range,
             layer_norm_eps=model_args.layer_norm_eps,
@@ -180,6 +183,25 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             max_position_embeddings=data_args.total_seq_length,
             pad_token_id=data_args.pad_token,
             vocab_size=1,
+        )
+
+    elif model_args.model_type == "albert":
+        model_cls = AlbertModel
+        config = AlbertConfig(
+            hidden_size=model_args.d_model,
+            num_attention_heads=model_args.n_head,
+            num_hidden_layers=model_args.n_layer,
+            num_hidden_groups=model_args.num_hidden_groups,
+            inner_group_num=model_args.inner_group_num,
+            intermediate_size=model_args.d_model * 4,
+            hidden_act=model_args.hidden_act,
+            hidden_dropout_prob=model_args.dropout,
+            attention_probs_dropout_prob=model_args.dropout,
+            max_position_embeddings=data_args.total_seq_length,
+            embedding_size=model_args.d_model,  # should be same as dimension of the input to ALBERT
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            vocab_size=1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
     elif model_args.model_type == "gru":
