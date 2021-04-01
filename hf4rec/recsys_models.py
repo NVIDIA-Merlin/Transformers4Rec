@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import copy
 import logging
 
 import torch
@@ -22,6 +23,8 @@ import torch.nn as nn
 from transformers import (
     AlbertConfig,
     AlbertModel,
+    ElectraConfig,
+    ElectraModel,
     GPT2Config,
     GPT2Model,
     LongformerConfig,
@@ -165,6 +168,23 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             vocab_size=1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
         )
 
+    elif model_args.model_type == "electra":
+        model_cls = ElectraModel
+        config = ElectraConfig(
+            hidden_size=model_args.d_model,
+            embedding_size=model_args.d_model,
+            num_hidden_layers=model_args.n_layer,
+            num_attention_heads=model_args.n_head,
+            intermediate_size=model_args.d_model * 4,
+            hidden_act=model_args.hidden_act,
+            initializer_range=model_args.initializer_range,
+            layer_norm_eps=model_args.layer_norm_eps,
+            hidden_dropout_prob=model_args.dropout,
+            max_position_embeddings=data_args.total_seq_length,
+            pad_token_id=data_args.pad_token,
+            vocab_size=1,
+        )
+
     elif model_args.model_type == "albert":
         model_cls = AlbertModel
         config = AlbertConfig(
@@ -226,7 +246,23 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         )
     else:
         logger.info("Training new model from scratch")
-        model = model_cls(config)
+        if model_args.model_type == "electra":
+            # define two transformers blocs for discriminator and generator model
+            if model_args.tied_generator:
+                # Using same model for generator and discriminator
+                model = (model_cls(config), ())
+            else:
+                # Using a smaller generator based on discriminator layers size
+                seq_model_disc = model_cls(config)
+                # re-define hidden_size parameters for small generator model
+                config.hidden_size = int(
+                    round(config.hidden_size * model_args.generator_hidden_size)
+                )
+                config.embedding_size = config.hidden_size
+                seq_model_gen = model_cls(config)
+                model = (seq_model_gen, seq_model_disc)
+        else:
+            model = model_cls(config)
 
     return model, config
 

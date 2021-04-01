@@ -346,6 +346,55 @@ class ModelArguments:
         },
     )
 
+    # args for PLM task
+
+    plm: bool = field(
+        default=False,
+        metadata={
+            "help": "Use Permutation Language Modeling (XLNET objective) for training."
+        },
+    )
+
+    plm_probability: Optional[float] = field(
+        default=0.25,
+        metadata={
+            "help": "Ratio of tokens to unmask to form the surrounding context of the masked span"
+        },
+    )
+    max_span_length: Optional[int] = field(
+        default=5,
+        metadata={
+            "help": "the maximum length of segment to mask for partial prediction"
+        },
+    )
+
+    plm_mask_input: Optional[bool] = field(
+        default=False, metadata={"help": "Mask input of XLNET as in AE models or not"}
+    )
+    # args for RTD task
+    rtd: bool = field(
+        default=False,
+        metadata={
+            "help": "Use Replaced Token Detection (ELECTRA objective) for training."
+        },
+    )
+
+    discriminator_weight: Optional[float] = field(
+        default=50, metadata={"help": "Weight coefficient for the discriminator loss"}
+    )
+
+    generator_weight: Optional[float] = field(
+        default=1, metadata={"help": "Weight coefficient for the generator loss"}
+    )
+
+    tied_generator: Optional[bool] = field(
+        default=False, metadata={"help": "Tie all generator/discriminator weights?"}
+    )
+    generator_hidden_size: Optional[float] = field(
+        default=0.25,
+        metadata={"help": "frac of discriminator hidden size for smaller generator"},
+    )
+
     # args for Transformers or RNNs
 
     d_model: Optional[int] = field(
