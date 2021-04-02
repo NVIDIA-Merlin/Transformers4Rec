@@ -640,3 +640,10 @@ class ModelArguments:
             "help": "Standard deviation to be used in embeddings initialization normal distribution"
         },
     )
+
+    featurewise_layernorm: bool = field(
+        default=False,
+        metadata={
+            "help": "Enables layer norm for each feature individually, before their aggregation."
+        },
+    )
