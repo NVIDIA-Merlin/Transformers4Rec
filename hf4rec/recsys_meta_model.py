@@ -73,7 +73,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.rtd_generator_loss_weight = model_args.rtd_generator_loss_weight
         self.rtd_discriminator_loss_weight = model_args.rtd_discriminator_loss_weight
 
-        self.featurewise_layernorm = model_args.featurewise_layernorm
+        self.layer_norm_featurewise = model_args.layer_norm_featurewise
+        self.layer_norm_all_features = model_args.layer_norm_all_features
 
         self.items_ids_sorted_by_freq = None
         self.neg_samples = None
@@ -161,7 +162,10 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        self.layer_norm_input = nn.LayerNorm(normalized_shape=self.input_combined_dim)
+        if self.layer_norm_all_features:
+            self.layer_norm_all_input = nn.LayerNorm(
+                normalized_shape=self.input_combined_dim
+            )
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
@@ -435,7 +439,8 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb = pos_inp
 
         elif self.inp_merge == "mlp":
-            pos_inp = self.layer_norm_input(pos_inp)
+            if self.layer_norm_all_features:
+                pos_inp = self.layer_norm_all_input(pos_inp)
             pos_inp = self.input_dropout(pos_inp)
             pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
 
@@ -849,9 +854,10 @@ class RecSysMetaModel(PreTrainedModel):
 
             self.input_combined_dim += feature_size
 
-            self.features_layer_norm[cname] = nn.LayerNorm(
-                normalized_shape=feature_size
-            )
+            if self.layer_norm_featurewise:
+                self.features_layer_norm[cname] = nn.LayerNorm(
+                    normalized_shape=feature_size
+                )
 
             if "is_label" in cinfo and cinfo["is_label"]:
                 self.target_dim = cinfo["cardinality"]
@@ -959,7 +965,7 @@ class RecSysMetaModel(PreTrainedModel):
                 raise NotImplementedError
 
             # Applying layer norm for each feature
-            if self.featurewise_layernorm:
+            if self.layer_norm_featurewise:
                 cdata = self.features_layer_norm[cname](cdata)
 
             transformed_features[cname] = cdata

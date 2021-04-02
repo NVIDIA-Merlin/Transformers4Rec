@@ -326,7 +326,7 @@ class ModelArguments:
         },
     )
     tf_out_activation: Optional[str] = field(
-        default="relu",
+        default="tanh",
         metadata={"help": "transformer output activation: 'tanh' OR 'relu'"},
     )
     margin_loss: Optional[float] = field(
@@ -641,9 +641,15 @@ class ModelArguments:
         },
     )
 
-    featurewise_layernorm: bool = field(
+    layer_norm_featurewise: bool = field(
         default=False,
         metadata={
             "help": "Enables layer norm for each feature individually, before their aggregation."
         },
     )
+
+    layer_norm_all_features: bool = field(
+        default=False,
+        metadata={"help": "Enables layer norm after concatenating all features."},
+    )
+
