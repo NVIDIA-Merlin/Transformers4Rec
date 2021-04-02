@@ -634,3 +634,13 @@ class ModelArguments:
         },
     )
 
+    use_layer_norm_input_features: bool = field(
+        default=False,
+        metadata={"help": "Use layer norm after concatenating input features"},
+    )
+
+    use_layer_norm_after_mlp_input_features: bool = field(
+        default=False,
+        metadata={"help": "Use layer norm after MLP layer combining input features"},
+    )
+
