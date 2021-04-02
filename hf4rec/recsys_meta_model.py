@@ -87,6 +87,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.pad_token = data_args.pad_token
         self.mask_token = data_args.mask_token
+        self.rtd_project_discriminator = model_args.rtd_project_discriminator
 
         self.session_aware = data_args.session_aware
         self.session_aware_features_prefix = data_args.session_aware_features_prefix
@@ -656,7 +657,7 @@ class RecSysMetaModel(PreTrainedModel):
                 self.embedding_tables[self.label_embedding_table_name],
             )
             # Step 2. Projection layer for merged feature
-            if self.rtd_project_discriminator: 
+            if self.rtd_project_discriminator:
                 if self.inp_merge == "identity":
                     fake_pos_emb = fake_emb_inp
                 elif self.inp_merge == "mlp":
