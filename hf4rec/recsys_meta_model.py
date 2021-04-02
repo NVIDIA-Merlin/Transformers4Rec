@@ -131,175 +131,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.total_seq_length = data_args.total_seq_length
 
-        input_combined_dim = 0
-        target_dim = -1
-
-        self.label_feature_name = None
-        self.label_embedding_table_name = None
-        self.label_embedding_dim = None
-
-        self.embedding_tables = nn.ModuleDict()
-        self.numeric_to_embedding_layers = nn.ModuleDict()
-        self.features_embedding_projection_to_item_embedding_dim_layers = (
-            nn.ModuleDict()
-        )
-
-        # set embedding tables
-        for cname, cinfo in self.feature_map.items():
-
-            # Ignoring past features to define embedding tables
-            if self.session_aware and cname.startswith(
-                self.session_aware_features_prefix
-            ):
-                continue
-
-            if cinfo["dtype"] == "categorical":
-                if self.use_ohe_item_ids_inputs:
-                    feature_size = cinfo["cardinality"]
-                else:
-                    if "is_label" in cinfo and cinfo["is_label"]:
-                        if model_args.item_embedding_dim is not None:
-                            embedding_size = model_args.item_embedding_dim
-                        # This condition is just to keep compatibility with the experiments of SIGIR paper
-                        # (where item embedding dim was always equal to d_model)
-                        elif model_args.mf_constrained_embeddings or model_args.rtd:
-                            embedding_size = model_args.d_model
-                        else:
-                            embedding_size = get_embedding_size_from_cardinality(
-                                cinfo["cardinality"],
-                                multiplier=self.embedding_dim_from_cardinality_multiplier,
-                            )
-                        feature_size = embedding_size
-
-                        self.item_embedding_dim = embedding_size
-
-                        self.label_feature_name = cname
-                        self.label_embedding_table_name = cinfo["emb_table"]
-                        self.label_embedding_dim = embedding_size
-
-                    else:
-                        if self.features_same_size_item_embedding:
-                            if self.label_embedding_dim:
-                                embedding_size = self.label_embedding_dim
-                                feature_size = embedding_size
-                            else:
-                                raise ValueError(
-                                    "Make sure that the item id (label feature) is the first in the YAML features config file."
-                                )
-                        else:
-                            embedding_size = get_embedding_size_from_cardinality(
-                                cinfo["cardinality"],
-                                multiplier=self.embedding_dim_from_cardinality_multiplier,
-                            )
-                            feature_size = embedding_size
-
-                            if (
-                                self.input_features_aggregation
-                                == "elementwise_sum_multiply_item_embedding"
-                            ):
-                                self.features_embedding_projection_to_item_embedding_dim_layers[
-                                    cname
-                                ] = nn.Linear(
-                                    embedding_size, self.label_embedding_dim, bias=True,
-                                )
-                                feature_size = self.label_embedding_dim
-
-                    self.embedding_tables[cinfo["emb_table"]] = nn.Embedding(
-                        cinfo["cardinality"],
-                        embedding_size,
-                        padding_idx=self.pad_token,
-                    ).to(self.device)
-
-                    # Added to initialize embeddings to small weights
-                    self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
-                        0.0, 1.0 / math.sqrt(embedding_size)
-                    )
-
-                logger.info(
-                    "Categ Feature: {} - Cardinality: {} - Feature Size: {}".format(
-                        cname, cinfo["cardinality"], feature_size
-                    )
-                )
-
-                input_combined_dim += feature_size
-            elif cinfo["dtype"] in ["long", "float"]:
-
-                if self.numeric_features_project_to_embedding_dim > 0:
-                    if self.features_same_size_item_embedding:
-                        if self.label_embedding_dim:
-                            numeric_feature_size = self.label_embedding_dim
-                        else:
-                            raise ValueError(
-                                "Make sure that the item id (label feature) is the first in the YAML features config file."
-                            )
-                    else:
-                        numeric_feature_size = (
-                            self.numeric_features_project_to_embedding_dim
-                        )
-
-                    if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
-                        project_scalar_to_embedding_dim = (
-                            self.numeric_features_soft_one_hot_encoding_num_embeddings
-                        )
-
-                        self.embedding_tables[cname] = nn.Embedding(
-                            self.numeric_features_soft_one_hot_encoding_num_embeddings,
-                            numeric_feature_size,
-                        ).to(self.device)
-
-                        # Added to initialize embeddings to small weights
-                        self.embedding_tables[cname].weight.data.normal_(
-                            0.0, 1.0 / math.sqrt(numeric_feature_size)
-                        )
-
-                        if (
-                            self.input_features_aggregation
-                            == "elementwise_sum_multiply_item_embedding"
-                        ):
-                            self.features_embedding_projection_to_item_embedding_dim_layers[
-                                cname
-                            ] = nn.Linear(
-                                numeric_feature_size,
-                                self.label_embedding_dim,
-                                bias=True,
-                            )
-                            numeric_feature_size = self.label_embedding_dim
-                    else:
-                        if (
-                            self.input_features_aggregation
-                            == "elementwise_sum_multiply_item_embedding"
-                        ):
-                            project_scalar_to_embedding_dim = self.label_embedding_dim
-                        else:
-                            project_scalar_to_embedding_dim = (
-                                self.numeric_features_project_to_embedding_dim
-                            )
-                        numeric_feature_size = project_scalar_to_embedding_dim
-
-                    self.numeric_to_embedding_layers[cname] = nn.Linear(
-                        1, project_scalar_to_embedding_dim, bias=True
-                    )
-
-                else:
-                    numeric_feature_size = 1
-
-                logger.info(
-                    "Numerical Feature: {} - Feature Size: {}".format(
-                        cname, numeric_feature_size
-                    )
-                )
-                input_combined_dim += numeric_feature_size
-            elif cinfo["is_control"]:
-                # Control features are not used as input for the model
-                continue
-            else:
-                raise NotImplementedError
-
-            if "is_label" in cinfo and cinfo["is_label"]:
-                target_dim = cinfo["cardinality"]
-
-        if target_dim == -1:
-            raise RuntimeError("label column is not declared in feature map.")
+        self.define_features_layers(model_args)
 
         self.neg_sampling_store_size = model_args.neg_sampling_store_size
         self.neg_sampling_extra_samples_per_batch = (
@@ -307,17 +139,14 @@ class RecSysMetaModel(PreTrainedModel):
         )
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
-        if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
-            input_combined_dim = self.item_embedding_dim
-
         self.inp_merge = model_args.inp_merge
         if self.inp_merge == "mlp":
-            self.mlp_merge = nn.Linear(input_combined_dim, config.hidden_size).to(
+            self.mlp_merge = nn.Linear(self.input_combined_dim, config.hidden_size).to(
                 self.device
             )
 
         elif self.inp_merge == "attn":
-            self.attn_merge = AttnMerge(input_combined_dim, config.hidden_size).to(
+            self.attn_merge = AttnMerge(self.input_combined_dim, config.hidden_size).to(
                 self.device
             )
 
@@ -329,8 +158,15 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        self.layernorm1 = nn.LayerNorm(normalized_shape=input_combined_dim)
-        self.layernorm2 = nn.LayerNorm(normalized_shape=config.hidden_size)
+        self.use_layer_norm_input_features = model_args.use_layer_norm_input_features
+        self.use_layer_norm_after_mlp_input_features = (
+            model_args.use_layer_norm_after_mlp_input_features
+        )
+
+        if self.use_layer_norm_input_features:
+            self.layernorm1 = nn.LayerNorm(normalized_shape=self.input_combined_dim)
+        if self.use_layer_norm_after_mlp_input_features:
+            self.layernorm2 = nn.LayerNorm(normalized_shape=config.hidden_size)
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
@@ -354,17 +190,20 @@ class RecSysMetaModel(PreTrainedModel):
 
         nn.init.normal_(self.masked_item_embedding, mean=0, std=0.01)
 
-        self.target_dim = target_dim
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
 
-        self.output_layer = nn.Linear(config.hidden_size, target_dim).to(self.device)
+        self.output_layer = nn.Linear(config.hidden_size, self.target_dim).to(
+            self.device
+        )
 
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim=-1)
         self.softmax = torch.nn.Softmax(dim=-1)
 
-        self.output_layer_bias = nn.Parameter(torch.Tensor(target_dim)).to(self.device)
+        self.output_layer_bias = nn.Parameter(torch.Tensor(self.target_dim)).to(
+            self.device
+        )
         nn.init.zeros_(self.output_layer_bias)
 
         # create prediction module for electra discriminator: Two dense layers
@@ -507,7 +346,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         else:
             """
-            Predict Next token
+            Causal Language Modeling - Predict Next token
             """
 
             label_seq_inp = label_seq[:, :-1]
@@ -600,9 +439,13 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb = pos_inp
 
         elif self.inp_merge == "mlp":
-            pos_inp = self.layernorm1(pos_inp)
+            if self.use_layer_norm_input_features:
+                pos_inp = self.layernorm1(pos_inp)
             pos_inp = self.input_dropout(pos_inp)
-            pos_emb = self.tf_out_act(self.layernorm2(self.mlp_merge(pos_inp)))
+            pos_inp = self.mlp_merge(pos_inp)
+            if self.use_layer_norm_after_mlp_input_features:
+                pos_inp = self.layernorm2(pos_inp)
+            pos_emb = self.tf_out_act(pos_inp)
 
         elif self.inp_merge == "attn":
             pos_emb = self.attn_merge(pos_inp)
@@ -857,6 +700,173 @@ class RecSysMetaModel(PreTrainedModel):
 
         return outputs
 
+    def define_features_layers(self, model_args):
+        self.target_dim = None
+        self.label_feature_name = None
+        self.label_embedding_table_name = None
+        self.label_embedding_dim = None
+
+        self.embedding_tables = nn.ModuleDict()
+        self.numeric_to_embedding_layers = nn.ModuleDict()
+        self.numeric_soft_embeddings = nn.ModuleDict()
+        self.features_embedding_projection_to_item_embedding_dim_layers = (
+            nn.ModuleDict()
+        )
+
+        self.input_combined_dim = 0
+
+        # set embedding tables
+        for cname, cinfo in self.feature_map.items():
+
+            # Ignoring past features to define embedding tables
+            if self.session_aware and cname.startswith(
+                self.session_aware_features_prefix
+            ):
+                continue
+
+            if cinfo["dtype"] == "categorical":
+                if self.use_ohe_item_ids_inputs:
+                    feature_size = cinfo["cardinality"]
+                else:
+                    if "is_label" in cinfo and cinfo["is_label"]:
+                        if model_args.item_embedding_dim is not None:
+                            embedding_size = model_args.item_embedding_dim
+                        # This condition is just to keep compatibility with the experiments of SIGIR paper
+                        # (where item embedding dim was always equal to d_model)
+                        elif model_args.mf_constrained_embeddings or model_args.rtd:
+                            embedding_size = model_args.d_model
+                        else:
+                            embedding_size = get_embedding_size_from_cardinality(
+                                cinfo["cardinality"],
+                                multiplier=self.embedding_dim_from_cardinality_multiplier,
+                            )
+                        feature_size = embedding_size
+
+                        self.item_embedding_dim = embedding_size
+
+                        self.label_feature_name = cname
+                        self.label_embedding_table_name = cinfo["emb_table"]
+                        self.label_embedding_dim = embedding_size
+
+                    else:
+                        if self.features_same_size_item_embedding:
+                            if self.label_embedding_dim:
+                                embedding_size = self.label_embedding_dim
+                                feature_size = embedding_size
+                            else:
+                                raise ValueError(
+                                    "Make sure that the item id (label feature) is the first in the YAML features config file."
+                                )
+                        else:
+                            embedding_size = get_embedding_size_from_cardinality(
+                                cinfo["cardinality"],
+                                multiplier=self.embedding_dim_from_cardinality_multiplier,
+                            )
+                            feature_size = embedding_size
+
+                            if (
+                                self.input_features_aggregation
+                                == "elementwise_sum_multiply_item_embedding"
+                            ):
+                                self.features_embedding_projection_to_item_embedding_dim_layers[
+                                    cname
+                                ] = nn.Linear(
+                                    embedding_size, self.label_embedding_dim, bias=True,
+                                )
+                                feature_size = self.label_embedding_dim
+
+                    self.embedding_tables[cinfo["emb_table"]] = nn.Embedding(
+                        cinfo["cardinality"],
+                        embedding_size,
+                        padding_idx=self.pad_token,
+                    ).to(self.device)
+
+                    # Added to initialize embeddings to small weights
+                    self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
+                        0.0, 0.01
+                    )
+
+                logger.info(
+                    "Categ Feature: {} - Cardinality: {} - Feature Size: {}".format(
+                        cname, cinfo["cardinality"], feature_size
+                    )
+                )
+
+                self.input_combined_dim += feature_size
+
+            elif cinfo["dtype"] in ["long", "float"]:
+
+                if self.numeric_features_project_to_embedding_dim > 0:
+                    if self.features_same_size_item_embedding:
+                        if self.label_embedding_dim:
+                            numeric_feature_size = self.label_embedding_dim
+                        else:
+                            raise ValueError(
+                                "Make sure that the item id (label feature) is the first in the YAML features config file."
+                            )
+                    else:
+                        numeric_feature_size = (
+                            self.numeric_features_project_to_embedding_dim
+                        )
+
+                    if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
+                        self.numeric_soft_embeddings[cname] = SoftEmbedding(
+                            num_embeddings=self.numeric_features_soft_one_hot_encoding_num_embeddings,
+                            embeddings_dim=numeric_feature_size,
+                        )
+
+                        if (
+                            self.input_features_aggregation
+                            == "elementwise_sum_multiply_item_embedding"
+                        ):
+                            self.features_embedding_projection_to_item_embedding_dim_layers[
+                                cname
+                            ] = nn.Linear(
+                                numeric_feature_size,
+                                self.label_embedding_dim,
+                                bias=True,
+                            )
+                            numeric_feature_size = self.label_embedding_dim
+                    else:
+                        if (
+                            self.input_features_aggregation
+                            == "elementwise_sum_multiply_item_embedding"
+                        ):
+                            project_scalar_to_embedding_dim = self.label_embedding_dim
+                        else:
+                            project_scalar_to_embedding_dim = (
+                                self.numeric_features_project_to_embedding_dim
+                            )
+                        numeric_feature_size = project_scalar_to_embedding_dim
+
+                        self.numeric_to_embedding_layers[cname] = nn.Linear(
+                            1, project_scalar_to_embedding_dim, bias=True
+                        )
+
+                else:
+                    numeric_feature_size = 1
+
+                logger.info(
+                    "Numerical Feature: {} - Feature Size: {}".format(
+                        cname, numeric_feature_size
+                    )
+                )
+                self.input_combined_dim += numeric_feature_size
+            elif cinfo["is_control"]:
+                # Control features are not used as input for the model
+                continue
+            else:
+                raise NotImplementedError
+
+            if "is_label" in cinfo and cinfo["is_label"]:
+                self.target_dim = cinfo["cardinality"]
+
+        if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+            self.input_combined_dim = self.item_embedding_dim
+
+        if self.target_dim == None:
+            raise RuntimeError("label column is not declared in feature map.")
+
     def feature_process(self, inputs):
 
         label_seq, output = None, []
@@ -931,16 +941,8 @@ class RecSysMetaModel(PreTrainedModel):
                     cdata = cdata.unsqueeze(-1).float()
 
                 if self.numeric_features_project_to_embedding_dim > 0:
-                    cdata = self.numeric_to_embedding_layers[cname](cdata)
-
                     if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
-                        # Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
-                        cdata_softmax = self.softmax(cdata)
-                        soft_one_hot_data = (
-                            cdata_softmax.unsqueeze(-1)
-                            * self.embedding_tables[cname].weight
-                        ).sum(-2)
-                        cdata = soft_one_hot_data
+                        cdata = self.numeric_soft_embeddings[cname](cdata)
 
                         if (
                             self.input_features_aggregation
@@ -952,6 +954,8 @@ class RecSysMetaModel(PreTrainedModel):
                             ](
                                 cdata
                             )
+                    else:
+                        cdata = self.numeric_to_embedding_layers[cname](cdata)
 
             elif cinfo["is_control"]:
                 # Control features are not used as input for the model
@@ -1139,6 +1143,26 @@ def nll_1d(items_prob, _label=None):
     xe_loss = torch.log(positive_prob)
     cosine_sim_loss = -torch.mean(xe_loss)
     return cosine_sim_loss
+
+
+class SoftEmbedding(nn.Module):
+    """
+    Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
+    """
+
+    def __init__(self, num_embeddings, embeddings_dim):
+        super().__init__()
+        self.embedding_table = nn.Embedding(num_embeddings, embeddings_dim)
+        self.embedding_table.weight.data.normal_(0.0, 0.01)
+        self.projection_layer = nn.Linear(1, num_embeddings, bias=True)
+        self.softmax = torch.nn.Softmax(dim=-1)
+
+    def forward(self, input_numeric):
+        weights = self.softmax(self.projection_layer(input_numeric))
+        soft_one_hot_embeddings = (
+            weights.unsqueeze(-1) * self.embedding_table.weight
+        ).sum(-2)
+        return soft_one_hot_embeddings
 
 
 # From https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch
