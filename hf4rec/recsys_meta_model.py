@@ -656,14 +656,17 @@ class RecSysMetaModel(PreTrainedModel):
                 self.embedding_tables[self.label_embedding_table_name],
             )
             # Step 2. Projection layer for merged feature
-            if self.inp_merge == "identity":
+            if self.rtd_project_discriminator: 
+                if self.inp_merge == "identity":
+                    fake_pos_emb = fake_emb_inp
+                elif self.inp_merge == "mlp":
+                    fake_emb_inp = self.layer_norm_input(fake_emb_inp)
+                    fake_emb_inp = self.input_dropout(fake_emb_inp)
+                    fake_pos_emb = self.tf_out_act(self.mlp_merge(fake_emb_inp))
+                elif self.inp_merge == "attn":
+                    fake_pos_emb = self.attn_merge(fake_emb_inp)
+            else:
                 fake_pos_emb = fake_emb_inp
-            elif self.inp_merge == "mlp":
-                fake_emb_inp = self.layer_norm_input(fake_emb_inp)
-                fake_emb_inp = self.input_dropout(fake_emb_inp)
-                fake_pos_emb = self.tf_out_act(self.mlp_merge(fake_emb_inp))
-            elif self.inp_merge == "attn":
-                fake_pos_emb = self.attn_merge(fake_emb_inp)
             # Step 3. hidden representation of corrupted input
             if self.rtd_tied_generator:
                 # use the gen model for token classification
