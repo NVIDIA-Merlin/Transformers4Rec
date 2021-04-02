@@ -233,9 +233,7 @@ class RecSysTask:
         """
         # add noise to logits to prevent from the case where the generator learn to exactly retrieve the true
         # item that was masked
-        uniform_noise = torch.rand(
-            logits.shape, dtype=torch.float32, device=self.device
-        )
+        uniform_noise = torch.rand(logits.shape, dtype=logits.dtype, device=self.device)
         gumbel_noise = -torch.log(-torch.log(uniform_noise + 1e-9) + 1e-9)
         s = logits + gumbel_noise
         return torch.argmax(torch.nn.functional.softmax(s, dim=-1), -1)
@@ -262,7 +260,7 @@ class RecSysTask:
             -1, emb_inp.size(1)
         )
         # Build corrupted item embedding input
-        emb_updates = embedding_table(updates.long()).to(emb_inp.dtype)
+        emb_updates = embedding_table(updates).to(emb_inp.dtype)
         corrupted_emb_inp = emb_inp.view(-1, emb_inp.size(2))
         corrupted_emb_inp[non_pad_mask.nonzero().flatten(), :] = emb_updates
         return (
