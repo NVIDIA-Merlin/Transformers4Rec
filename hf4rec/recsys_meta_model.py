@@ -101,6 +101,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.label_smoothing = model_args.label_smoothing
 
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
+        self.embeddings_initialization_std = model_args.embeddings_initialization_std
 
         self.item_embedding_dim = model_args.item_embedding_dim
         self.features_same_size_item_embedding = (
@@ -158,15 +159,7 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        self.use_layer_norm_input_features = model_args.use_layer_norm_input_features
-        self.use_layer_norm_after_mlp_input_features = (
-            model_args.use_layer_norm_after_mlp_input_features
-        )
-
-        if self.use_layer_norm_input_features:
-            self.layernorm1 = nn.LayerNorm(normalized_shape=self.input_combined_dim)
-        if self.use_layer_norm_after_mlp_input_features:
-            self.layernorm2 = nn.LayerNorm(normalized_shape=config.hidden_size)
+        self.layer_norm_input = nn.LayerNorm(normalized_shape=self.input_combined_dim)
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
@@ -187,8 +180,9 @@ class RecSysMetaModel(PreTrainedModel):
         self.masked_item_embedding = nn.Parameter(torch.Tensor(config.hidden_size)).to(
             self.device
         )
-
-        nn.init.normal_(self.masked_item_embedding, mean=0, std=0.05)
+        nn.init.normal_(
+            self.masked_item_embedding, mean=0, std=0.001,
+        )
 
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
@@ -439,13 +433,9 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb = pos_inp
 
         elif self.inp_merge == "mlp":
-            if self.use_layer_norm_input_features:
-                pos_inp = self.layernorm1(pos_inp)
+            pos_inp = self.layer_norm_input(pos_inp)
             pos_inp = self.input_dropout(pos_inp)
-            pos_inp = self.mlp_merge(pos_inp)
-            if self.use_layer_norm_after_mlp_input_features:
-                pos_inp = self.layernorm2(pos_inp)
-            pos_emb = self.tf_out_act(pos_inp)
+            pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
 
         elif self.inp_merge == "attn":
             pos_emb = self.attn_merge(pos_inp)
@@ -783,7 +773,7 @@ class RecSysMetaModel(PreTrainedModel):
 
                     # Added to initialize embeddings to small weights
                     self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
-                        0.0, 0.05
+                        0.0, self.embeddings_initialization_std
                     )
 
                 logger.info(
@@ -813,6 +803,7 @@ class RecSysMetaModel(PreTrainedModel):
                         self.numeric_soft_embeddings[cname] = SoftEmbedding(
                             num_embeddings=self.numeric_features_soft_one_hot_encoding_num_embeddings,
                             embeddings_dim=numeric_feature_size,
+                            embeddings_initialization_std=self.embeddings_initialization_std,
                         )
 
                         if (
@@ -1005,8 +996,7 @@ class RecSysMetaModel(PreTrainedModel):
                     if k != self.label_feature_name:
                         if (self.feature_map[k]["dtype"] == "categorical") or (
                             self.feature_map[k]["dtype"] in ["long", "float"]
-                            and self.numeric_features_project_to_embedding_dim
-                            is not None
+                            and self.numeric_features_project_to_embedding_dim > 0
                         ):
                             additional_features_sum += v
 
@@ -1150,10 +1140,12 @@ class SoftEmbedding(nn.Module):
     Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
     """
 
-    def __init__(self, num_embeddings, embeddings_dim):
+    def __init__(
+        self, num_embeddings, embeddings_dim, embeddings_initialization_std=0.01
+    ):
         super().__init__()
         self.embedding_table = nn.Embedding(num_embeddings, embeddings_dim)
-        self.embedding_table.weight.data.normal_(0.0, 0.05)
+        self.embedding_table.weight.data.normal_(0.0, embeddings_initialization_std)
         self.projection_layer = nn.Linear(1, num_embeddings, bias=True)
         self.softmax = torch.nn.Softmax(dim=-1)
 
