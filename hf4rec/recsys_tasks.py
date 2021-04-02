@@ -262,7 +262,7 @@ class RecSysTask:
             -1, emb_inp.size(1)
         )
         # Build corrupted item embedding input
-        emb_updates = embedding_table(updates)
+        emb_updates = embedding_table(updates.long()).to(emb_inp.dtype)
         corrupted_emb_inp = emb_inp.view(-1, emb_inp.size(2))
         corrupted_emb_inp[non_pad_mask.nonzero().flatten(), :] = emb_updates
         return (
