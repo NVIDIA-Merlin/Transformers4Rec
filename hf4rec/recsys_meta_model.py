@@ -69,9 +69,12 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Args for Replacement Token Detection
         self.rtd = model_args.rtd
-        self.tied_generator = model_args.tied_generator
-        self.generator_weight = model_args.generator_weight
-        self.discriminator_weight = model_args.discriminator_weight
+        self.rtd_tied_generator = model_args.rtd_tied_generator
+        self.rtd_generator_loss_weight = model_args.rtd_generator_loss_weight
+        self.rtd_discriminator_loss_weight = model_args.rtd_discriminator_loss_weight
+
+        self.items_ids_sorted_by_freq = None
+        self.neg_samples = None
 
         # Load model
         if self.rtd:
@@ -319,10 +322,10 @@ class RecSysMetaModel(PreTrainedModel):
             )
 
         elif self.inp_merge == "identity":
-            if (not self.tied_generator) and self.rtd:
-                # project input embeddings into generator hidden size
-                self.gen_merge = nn.Linear(input_combined_dim, config.hidden_size)
-
+            if self.rtd and not self.rtd_tied_generator:
+                raise Exception(
+                    "When using --rtd and --rtd_tied_generator, the --inp_merge cannot be 'identity'"
+                )
         else:
             raise NotImplementedError
 
@@ -340,7 +343,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         # Args for Permuted-LM task
         self.plm = model_args.plm
-        self.max_span_length = model_args.max_span_length
+        self.plm_max_span_length = model_args.plm_max_span_length
         self.plm_probability = model_args.plm_probability
         self.plm_mask_input = model_args.plm_mask_input
 
@@ -393,7 +396,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         if model_args.model_type == "reformer":
             tf_out_size = model_args.d_model * 2
-        elif self.rtd and not model_args.tied_generator:
+        elif self.rtd and not self.rtd_tied_generator:
             tf_out_size = config.hidden_size
         else:
             tf_out_size = model_args.d_model
@@ -492,7 +495,7 @@ class RecSysMetaModel(PreTrainedModel):
                 perm_mask,
             ) = recsys_task.plm_mask_tokens(
                 label_seq,
-                max_span_length=self.max_span_length,
+                max_span_length=self.plm_max_span_length,
                 plm_probability=self.plm_probability,
             )
             # To mark past sequence labels
@@ -595,9 +598,6 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.inp_merge == "identity":
             pos_emb = pos_inp
-            if self.rtd and (not self.tied_generator):
-                # project to hidden size of small generator
-                pos_emb = self.gen_merge(pos_inp)
 
         elif self.inp_merge == "mlp":
             pos_inp = self.layernorm1(pos_inp)
@@ -823,7 +823,7 @@ class RecSysMetaModel(PreTrainedModel):
                 self.embedding_tables[self.label_embedding_table_name],
             )
             # Step 2.
-            if self.tied_generator:
+            if self.rtd_tied_generator:
                 # use the gen model for token classification
                 fake_pos_emb_pred = self.model(inputs_embeds=fake_emb_inp)[0]
             else:
@@ -843,8 +843,8 @@ class RecSysMetaModel(PreTrainedModel):
                 active_logits, active_labels.float()
             )
             # Compute weighted joint training loss
-            loss = (discriminator_loss * self.discriminator_weight) + (
-                loss * self.generator_weight
+            loss = (discriminator_loss * self.rtd_discriminator_loss_weight) + (
+                loss * self.rtd_generator_loss_weight
             )
 
         outputs = {

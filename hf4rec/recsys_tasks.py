@@ -47,7 +47,7 @@ class RecSysTask:
             )
             masked_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
             labels = torch.where(
-                masked_labels, itemid_seq, torch.zeros_like(itemid_seq),
+                masked_labels, itemid_seq, torch.full_like(itemid_seq, self.pad_token),
             )
 
             # Set at least one item in the sequence to mask, so that the network can learn something with this session
@@ -165,9 +165,7 @@ class RecSysTask:
                 target_mapping[i] = torch.eye(labels.size(1))
 
             labels = torch.where(
-                masked_labels,
-                itemid_seq,
-                torch.tensor(self.pad_token, device=self.device),
+                masked_labels, itemid_seq, torch.full_like(itemid_seq, self.pad_token)
             )
 
             for i in range(labels.size(0)):
