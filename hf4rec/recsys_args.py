@@ -396,6 +396,12 @@ class ModelArguments:
             "help": "Frac. of discriminator hidden size for smaller generator (only for --model_type electra)"
         },
     )
+    rtd_project_discriminator: Optional[bool] = field(
+        default=False,
+        metadata={
+            "help": "Project embedding into MLP layer before feeding to discriminator model"
+        },
+    )
 
     # args for Transformers or RNNs
 
