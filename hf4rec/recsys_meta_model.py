@@ -73,6 +73,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.rtd_generator_loss_weight = model_args.rtd_generator_loss_weight
         self.rtd_discriminator_loss_weight = model_args.rtd_discriminator_loss_weight
 
+        self.featurewise_layernorm = model_args.featurewise_layernorm
+
         self.items_ids_sorted_by_freq = None
         self.neg_samples = None
 
@@ -703,6 +705,8 @@ class RecSysMetaModel(PreTrainedModel):
             nn.ModuleDict()
         )
 
+        self.features_layer_norm = nn.ModuleDict()
+
         self.input_combined_dim = 0
 
         # set embedding tables
@@ -782,27 +786,23 @@ class RecSysMetaModel(PreTrainedModel):
                     )
                 )
 
-                self.input_combined_dim += feature_size
-
             elif cinfo["dtype"] in ["long", "float"]:
 
                 if self.numeric_features_project_to_embedding_dim > 0:
                     if self.features_same_size_item_embedding:
                         if self.label_embedding_dim:
-                            numeric_feature_size = self.label_embedding_dim
+                            feature_size = self.label_embedding_dim
                         else:
                             raise ValueError(
                                 "Make sure that the item id (label feature) is the first in the YAML features config file."
                             )
                     else:
-                        numeric_feature_size = (
-                            self.numeric_features_project_to_embedding_dim
-                        )
+                        feature_size = self.numeric_features_project_to_embedding_dim
 
                     if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
                         self.numeric_soft_embeddings[cname] = SoftEmbedding(
                             num_embeddings=self.numeric_features_soft_one_hot_encoding_num_embeddings,
-                            embeddings_dim=numeric_feature_size,
+                            embeddings_dim=feature_size,
                             embeddings_initialization_std=self.embeddings_initialization_std,
                         )
 
@@ -813,11 +813,9 @@ class RecSysMetaModel(PreTrainedModel):
                             self.features_embedding_projection_to_item_embedding_dim_layers[
                                 cname
                             ] = nn.Linear(
-                                numeric_feature_size,
-                                self.label_embedding_dim,
-                                bias=True,
+                                feature_size, self.label_embedding_dim, bias=True,
                             )
-                            numeric_feature_size = self.label_embedding_dim
+                            feature_size = self.label_embedding_dim
                     else:
                         if (
                             self.input_features_aggregation
@@ -828,26 +826,32 @@ class RecSysMetaModel(PreTrainedModel):
                             project_scalar_to_embedding_dim = (
                                 self.numeric_features_project_to_embedding_dim
                             )
-                        numeric_feature_size = project_scalar_to_embedding_dim
+                        feature_size = project_scalar_to_embedding_dim
 
                         self.numeric_to_embedding_layers[cname] = nn.Linear(
                             1, project_scalar_to_embedding_dim, bias=True
                         )
 
                 else:
-                    numeric_feature_size = 1
+                    feature_size = 1
 
                 logger.info(
                     "Numerical Feature: {} - Feature Size: {}".format(
-                        cname, numeric_feature_size
+                        cname, feature_size
                     )
                 )
-                self.input_combined_dim += numeric_feature_size
+
             elif cinfo["is_control"]:
                 # Control features are not used as input for the model
                 continue
             else:
                 raise NotImplementedError
+
+            self.input_combined_dim += feature_size
+
+            self.features_layer_norm[cname] = nn.LayerNorm(
+                normalized_shape=feature_size
+            )
 
             if "is_label" in cinfo and cinfo["is_label"]:
                 self.target_dim = cinfo["cardinality"]
@@ -954,14 +958,18 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 raise NotImplementedError
 
+            # Applying layer norm for each feature
+            if self.featurewise_layernorm:
+                cdata = self.features_layer_norm[cname](cdata)
+
+            transformed_features[cname] = cdata
+
             # Keeping item metadata features that will
             if (
                 "log_with_preds_as_metadata" in cinfo
                 and cinfo["log_with_preds_as_metadata"] == True
             ):
                 metadata_for_pred_logging[cname] = inputs[cname].detach()
-
-            transformed_features[cname] = cdata
 
         if self.session_aware:
             # Concatenates past sessions before the session with the current session, for each feature
