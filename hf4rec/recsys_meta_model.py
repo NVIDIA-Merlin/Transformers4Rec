@@ -188,7 +188,7 @@ class RecSysMetaModel(PreTrainedModel):
             self.device
         )
 
-        nn.init.normal_(self.masked_item_embedding, mean=0, std=0.01)
+        nn.init.normal_(self.masked_item_embedding, mean=0, std=0.05)
 
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
@@ -783,7 +783,7 @@ class RecSysMetaModel(PreTrainedModel):
 
                     # Added to initialize embeddings to small weights
                     self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
-                        0.0, 0.01
+                        0.0, 0.05
                     )
 
                 logger.info(
@@ -1153,7 +1153,7 @@ class SoftEmbedding(nn.Module):
     def __init__(self, num_embeddings, embeddings_dim):
         super().__init__()
         self.embedding_table = nn.Embedding(num_embeddings, embeddings_dim)
-        self.embedding_table.weight.data.normal_(0.0, 0.01)
+        self.embedding_table.weight.data.normal_(0.0, 0.05)
         self.projection_layer = nn.Linear(1, num_embeddings, bias=True)
         self.softmax = torch.nn.Softmax(dim=-1)
 
