@@ -655,13 +655,22 @@ class RecSysMetaModel(PreTrainedModel):
                 logits_all,
                 self.embedding_tables[self.label_embedding_table_name],
             )
-            # Step 2.
+            # Step 2. Projection layer for merged feature
+            if self.inp_merge == "identity":
+                fake_pos_emb = fake_emb_inp
+            elif self.inp_merge == "mlp":
+                fake_emb_inp = self.layer_norm_input(fake_emb_inp)
+                fake_emb_inp = self.input_dropout(fake_emb_inp)
+                fake_pos_emb = self.tf_out_act(self.mlp_merge(fake_emb_inp))
+            elif self.inp_merge == "attn":
+                fake_pos_emb = self.attn_merge(fake_emb_inp)
+            # Step 3. hidden representation of corrupted input
             if self.rtd_tied_generator:
                 # use the gen model for token classification
-                fake_pos_emb_pred = self.model(inputs_embeds=fake_emb_inp)[0]
+                fake_pos_emb_pred = self.model(inputs_embeds=fake_pos_emb)[0]
             else:
                 # use larger disciminator electra model
-                fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_emb_inp)[0]
+                fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_pos_emb)[0]
             # step 4. get binary logits pedictions
             fake_pos_emb_pred = self.dense_discriminator(fake_pos_emb_pred)
             fake_pos_emb_pred = self.tf_out_act(fake_pos_emb_pred)
@@ -723,7 +732,7 @@ class RecSysMetaModel(PreTrainedModel):
                             embedding_size = model_args.item_embedding_dim
                         # This condition is just to keep compatibility with the experiments of SIGIR paper
                         # (where item embedding dim was always equal to d_model)
-                        elif model_args.mf_constrained_embeddings or model_args.rtd:
+                        elif model_args.mf_constrained_embeddings:
                             embedding_size = model_args.d_model
                         else:
                             embedding_size = get_embedding_size_from_cardinality(
