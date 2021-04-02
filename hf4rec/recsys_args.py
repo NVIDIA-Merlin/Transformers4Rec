@@ -361,7 +361,7 @@ class ModelArguments:
             "help": "Ratio of tokens to unmask to form the surrounding context of the masked span"
         },
     )
-    max_span_length: Optional[int] = field(
+    plm_max_span_length: Optional[int] = field(
         default=5,
         metadata={
             "help": "the maximum length of segment to mask for partial prediction"
@@ -379,20 +379,22 @@ class ModelArguments:
         },
     )
 
-    discriminator_weight: Optional[float] = field(
+    rtd_discriminator_loss_weight: Optional[float] = field(
         default=50, metadata={"help": "Weight coefficient for the discriminator loss"}
     )
 
-    generator_weight: Optional[float] = field(
+    rtd_generator_loss_weight: Optional[float] = field(
         default=1, metadata={"help": "Weight coefficient for the generator loss"}
     )
 
-    tied_generator: Optional[bool] = field(
+    rtd_tied_generator: Optional[bool] = field(
         default=False, metadata={"help": "Tie all generator/discriminator weights?"}
     )
-    generator_hidden_size: Optional[float] = field(
+    electra_generator_hidden_size: Optional[float] = field(
         default=0.25,
-        metadata={"help": "frac of discriminator hidden size for smaller generator"},
+        metadata={
+            "help": "Frac. of discriminator hidden size for smaller generator (only for --model_type electra)"
+        },
     )
 
     # args for Transformers or RNNs
@@ -630,5 +632,15 @@ class ModelArguments:
         metadata={
             "help": "Used to define the feature embedding dim based on its cardinality. The formula is embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))"
         },
+    )
+
+    use_layer_norm_input_features: bool = field(
+        default=False,
+        metadata={"help": "Use layer norm after concatenating input features"},
+    )
+
+    use_layer_norm_after_mlp_input_features: bool = field(
+        default=False,
+        metadata={"help": "Use layer norm after MLP layer combining input features"},
     )
 
