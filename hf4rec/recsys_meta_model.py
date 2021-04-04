@@ -104,10 +104,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.label_smoothing = model_args.label_smoothing
 
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
-        self.embeddings_initialization_std = model_args.embeddings_initialization_std
-        self.embeddings_initialization_other_features_std = (
-            model_args.embeddings_initialization_other_features_std
-        )
+        self.item_id_embeddings_init_std = model_args.item_id_embeddings_init_std
+        self.other_embeddings_init_std = model_args.other_embeddings_init_std
 
         self.item_embedding_dim = model_args.item_embedding_dim
         self.features_same_size_item_embedding = (
@@ -785,25 +783,14 @@ class RecSysMetaModel(PreTrainedModel):
 
                     # Added to initialize embeddings
                     if "is_label" in cinfo and cinfo["is_label"]:
-                        # self.embedding_tables[cinfo["emb_table"]].weight.normal_(
-                        #    0.0, self.embeddings_initialization_std
-                        # )
-
-                        with torch.no_grad():
-                            scale = self.embeddings_initialization_std
-                            self.embedding_tables[cinfo["emb_table"]].weight.uniform_(
-                                -scale, scale
-                            )
+                        embedding_init_std = self.item_id_embeddings_init_std
                     else:
-                        # self.embedding_tables[cinfo["emb_table"]].weight.normal_(
-                        #    0.0, self.embeddings_initialization_other_features_std
-                        # )
+                        embedding_init_std = self.other_embeddings_init_std
 
-                        with torch.no_grad():
-                            scale = self.embeddings_initialization_other_features_std
-                            self.embedding_tables[cinfo["emb_table"]].weight.uniform_(
-                                -scale, scale
-                            )
+                    with torch.no_grad():
+                        self.embedding_tables[cinfo["emb_table"]].weight.normal_(
+                            0.0, embedding_init_std
+                        )
 
                 logger.info(
                     "Categ Feature: {} - Cardinality: {} - Feature Size: {}".format(
@@ -828,7 +815,7 @@ class RecSysMetaModel(PreTrainedModel):
                         self.numeric_soft_embeddings[cname] = SoftEmbedding(
                             num_embeddings=self.numeric_features_soft_one_hot_encoding_num_embeddings,
                             embeddings_dim=feature_size,
-                            embeddings_initialization_std=self.embeddings_initialization_other_features_std,
+                            embeddings_init_std=self.other_embeddings_init_std,
                         )
 
                         if (
@@ -1174,12 +1161,11 @@ class SoftEmbedding(nn.Module):
     Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
     """
 
-    def __init__(
-        self, num_embeddings, embeddings_dim, embeddings_initialization_std=0.01
-    ):
+    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
         super().__init__()
         self.embedding_table = nn.Embedding(num_embeddings, embeddings_dim)
-        self.embedding_table.weight.data.normal_(0.0, embeddings_initialization_std)
+        with torch.no_grad():
+            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
         self.projection_layer = nn.Linear(1, num_embeddings, bias=True)
         self.softmax = torch.nn.Softmax(dim=-1)
 
