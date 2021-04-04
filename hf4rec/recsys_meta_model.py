@@ -785,13 +785,25 @@ class RecSysMetaModel(PreTrainedModel):
 
                     # Added to initialize embeddings
                     if "is_label" in cinfo and cinfo["is_label"]:
-                        self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
-                            0.0, self.embeddings_initialization_std
-                        )
+                        # self.embedding_tables[cinfo["emb_table"]].weight.normal_(
+                        #    0.0, self.embeddings_initialization_std
+                        # )
+
+                        with torch.no_grad():
+                            scale = self.embeddings_initialization_std
+                            self.embedding_tables[cinfo["emb_table"]].weight.uniform_(
+                                -scale, scale
+                            )
                     else:
-                        self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
-                            0.0, self.embeddings_initialization_other_features_std
-                        )
+                        # self.embedding_tables[cinfo["emb_table"]].weight.normal_(
+                        #    0.0, self.embeddings_initialization_other_features_std
+                        # )
+
+                        with torch.no_grad():
+                            scale = self.embeddings_initialization_other_features_std
+                            self.embedding_tables[cinfo["emb_table"]].weight.uniform_(
+                                -scale, scale
+                            )
 
                 logger.info(
                     "Categ Feature: {} - Cardinality: {} - Feature Size: {}".format(
@@ -816,7 +828,7 @@ class RecSysMetaModel(PreTrainedModel):
                         self.numeric_soft_embeddings[cname] = SoftEmbedding(
                             num_embeddings=self.numeric_features_soft_one_hot_encoding_num_embeddings,
                             embeddings_dim=feature_size,
-                            embeddings_initialization_std=self.embeddings_initialization_std,
+                            embeddings_initialization_std=self.embeddings_initialization_other_features_std,
                         )
 
                         if (
