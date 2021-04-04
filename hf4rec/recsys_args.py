@@ -634,17 +634,17 @@ class ModelArguments:
         },
     )
 
-    embeddings_initialization_std: Optional[float] = field(
-        default=0.05,
+    item_id_embeddings_init_std: Optional[float] = field(
+        default=0.5,
         metadata={
-            "help": "Standard deviation to be used in embeddings initialization normal distribution"
+            "help": "Uniform distribution maximum and minimun (-bound) value to be used to initialize the item id embedding (usually must be higher than --categs_embeddings_init_uniform_bound, as those weights are also used as the output layer when --mf_constrained_embeddings)"
         },
     )
 
-    embeddings_initialization_other_features_std: Optional[float] = field(
+    other_embeddings_init_std: Optional[float] = field(
         default=0.05,
         metadata={
-            "help": "Standard deviation to be used in embeddings initialization normal distribution"
+            "help": "Uniform distribution maximum and minimun (-bound) value to be used to initialize the other feature embeddings (other than the item_id, which is defined by --item_id_embeddings_init_uniform_bound)"
         },
     )
 
