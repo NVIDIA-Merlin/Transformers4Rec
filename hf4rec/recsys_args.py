@@ -641,6 +641,13 @@ class ModelArguments:
         },
     )
 
+    embeddings_initialization_other_features_std: Optional[float] = field(
+        default=0.05,
+        metadata={
+            "help": "Standard deviation to be used in embeddings initialization normal distribution"
+        },
+    )
+
     layer_norm_featurewise: bool = field(
         default=False,
         metadata={

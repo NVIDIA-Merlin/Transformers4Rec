@@ -105,6 +105,9 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
         self.embeddings_initialization_std = model_args.embeddings_initialization_std
+        self.embeddings_initialization_other_features_std = (
+            model_args.embeddings_initialization_other_features_std
+        )
 
         self.item_embedding_dim = model_args.item_embedding_dim
         self.features_same_size_item_embedding = (
@@ -780,10 +783,15 @@ class RecSysMetaModel(PreTrainedModel):
                         padding_idx=self.pad_token,
                     ).to(self.device)
 
-                    # Added to initialize embeddings to small weights
-                    self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
-                        0.0, self.embeddings_initialization_std
-                    )
+                    # Added to initialize embeddings
+                    if "is_label" in cinfo and cinfo["is_label"]:
+                        self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
+                            0.0, self.embeddings_initialization_std
+                        )
+                    else:
+                        self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
+                            0.0, self.embeddings_initialization_other_features_std
+                        )
 
                 logger.info(
                     "Categ Feature: {} - Cardinality: {} - Feature Size: {}".format(
