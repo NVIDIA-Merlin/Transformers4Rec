@@ -185,6 +185,10 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         )
 
     elif model_args.model_type == "albert":
+        # If --num_hidden_groups -1 (used on hypertuning), uses --n_layer value
+        if model_args.num_hidden_groups == -1:
+            model_args.num_hidden_groups = model_args.n_layer
+
         model_cls = AlbertModel
         config = AlbertConfig(
             hidden_size=model_args.d_model,
