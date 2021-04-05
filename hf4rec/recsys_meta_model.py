@@ -73,6 +73,9 @@ class RecSysMetaModel(PreTrainedModel):
         self.rtd_generator_loss_weight = model_args.rtd_generator_loss_weight
         self.rtd_discriminator_loss_weight = model_args.rtd_discriminator_loss_weight
 
+        self.layer_norm_featurewise = model_args.layer_norm_featurewise
+        self.layer_norm_all_features = model_args.layer_norm_all_features
+
         self.items_ids_sorted_by_freq = None
         self.neg_samples = None
 
@@ -101,7 +104,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.label_smoothing = model_args.label_smoothing
 
         self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
-        self.embeddings_initialization_std = model_args.embeddings_initialization_std
+        self.item_id_embeddings_init_std = model_args.item_id_embeddings_init_std
+        self.other_embeddings_init_std = model_args.other_embeddings_init_std
 
         self.item_embedding_dim = model_args.item_embedding_dim
         self.features_same_size_item_embedding = (
@@ -159,7 +163,10 @@ class RecSysMetaModel(PreTrainedModel):
         else:
             raise NotImplementedError
 
-        self.layer_norm_input = nn.LayerNorm(normalized_shape=self.input_combined_dim)
+        if self.layer_norm_all_features:
+            self.layer_norm_all_input = nn.LayerNorm(
+                normalized_shape=self.input_combined_dim
+            )
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
         self.train_on_last_item_seq_only = model_args.train_on_last_item_seq_only
@@ -433,7 +440,8 @@ class RecSysMetaModel(PreTrainedModel):
             pos_emb = pos_inp
 
         elif self.inp_merge == "mlp":
-            pos_inp = self.layer_norm_input(pos_inp)
+            if self.layer_norm_all_features:
+                pos_inp = self.layer_norm_all_input(pos_inp)
             pos_inp = self.input_dropout(pos_inp)
             pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
 
@@ -703,6 +711,8 @@ class RecSysMetaModel(PreTrainedModel):
             nn.ModuleDict()
         )
 
+        self.features_layer_norm = nn.ModuleDict()
+
         self.input_combined_dim = 0
 
         # set embedding tables
@@ -771,10 +781,16 @@ class RecSysMetaModel(PreTrainedModel):
                         padding_idx=self.pad_token,
                     ).to(self.device)
 
-                    # Added to initialize embeddings to small weights
-                    self.embedding_tables[cinfo["emb_table"]].weight.data.normal_(
-                        0.0, self.embeddings_initialization_std
-                    )
+                    # Added to initialize embeddings
+                    if "is_label" in cinfo and cinfo["is_label"]:
+                        embedding_init_std = self.item_id_embeddings_init_std
+                    else:
+                        embedding_init_std = self.other_embeddings_init_std
+
+                    with torch.no_grad():
+                        self.embedding_tables[cinfo["emb_table"]].weight.normal_(
+                            0.0, embedding_init_std
+                        )
 
                 logger.info(
                     "Categ Feature: {} - Cardinality: {} - Feature Size: {}".format(
@@ -782,28 +798,24 @@ class RecSysMetaModel(PreTrainedModel):
                     )
                 )
 
-                self.input_combined_dim += feature_size
-
             elif cinfo["dtype"] in ["long", "float"]:
 
                 if self.numeric_features_project_to_embedding_dim > 0:
                     if self.features_same_size_item_embedding:
                         if self.label_embedding_dim:
-                            numeric_feature_size = self.label_embedding_dim
+                            feature_size = self.label_embedding_dim
                         else:
                             raise ValueError(
                                 "Make sure that the item id (label feature) is the first in the YAML features config file."
                             )
                     else:
-                        numeric_feature_size = (
-                            self.numeric_features_project_to_embedding_dim
-                        )
+                        feature_size = self.numeric_features_project_to_embedding_dim
 
                     if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
                         self.numeric_soft_embeddings[cname] = SoftEmbedding(
                             num_embeddings=self.numeric_features_soft_one_hot_encoding_num_embeddings,
-                            embeddings_dim=numeric_feature_size,
-                            embeddings_initialization_std=self.embeddings_initialization_std,
+                            embeddings_dim=feature_size,
+                            embeddings_init_std=self.other_embeddings_init_std,
                         )
 
                         if (
@@ -813,11 +825,9 @@ class RecSysMetaModel(PreTrainedModel):
                             self.features_embedding_projection_to_item_embedding_dim_layers[
                                 cname
                             ] = nn.Linear(
-                                numeric_feature_size,
-                                self.label_embedding_dim,
-                                bias=True,
+                                feature_size, self.label_embedding_dim, bias=True,
                             )
-                            numeric_feature_size = self.label_embedding_dim
+                            feature_size = self.label_embedding_dim
                     else:
                         if (
                             self.input_features_aggregation
@@ -828,26 +838,33 @@ class RecSysMetaModel(PreTrainedModel):
                             project_scalar_to_embedding_dim = (
                                 self.numeric_features_project_to_embedding_dim
                             )
-                        numeric_feature_size = project_scalar_to_embedding_dim
+                        feature_size = project_scalar_to_embedding_dim
 
                         self.numeric_to_embedding_layers[cname] = nn.Linear(
                             1, project_scalar_to_embedding_dim, bias=True
                         )
 
                 else:
-                    numeric_feature_size = 1
+                    feature_size = 1
 
                 logger.info(
                     "Numerical Feature: {} - Feature Size: {}".format(
-                        cname, numeric_feature_size
+                        cname, feature_size
                     )
                 )
-                self.input_combined_dim += numeric_feature_size
+
             elif cinfo["is_control"]:
                 # Control features are not used as input for the model
                 continue
             else:
                 raise NotImplementedError
+
+            self.input_combined_dim += feature_size
+
+            if self.layer_norm_featurewise:
+                self.features_layer_norm[cname] = nn.LayerNorm(
+                    normalized_shape=feature_size
+                )
 
             if "is_label" in cinfo and cinfo["is_label"]:
                 self.target_dim = cinfo["cardinality"]
@@ -954,14 +971,18 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 raise NotImplementedError
 
+            # Applying layer norm for each feature
+            if self.layer_norm_featurewise:
+                cdata = self.features_layer_norm[cname](cdata)
+
+            transformed_features[cname] = cdata
+
             # Keeping item metadata features that will
             if (
                 "log_with_preds_as_metadata" in cinfo
                 and cinfo["log_with_preds_as_metadata"] == True
             ):
                 metadata_for_pred_logging[cname] = inputs[cname].detach()
-
-            transformed_features[cname] = cdata
 
         if self.session_aware:
             # Concatenates past sessions before the session with the current session, for each feature
@@ -1140,12 +1161,11 @@ class SoftEmbedding(nn.Module):
     Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
     """
 
-    def __init__(
-        self, num_embeddings, embeddings_dim, embeddings_initialization_std=0.01
-    ):
+    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
         super().__init__()
         self.embedding_table = nn.Embedding(num_embeddings, embeddings_dim)
-        self.embedding_table.weight.data.normal_(0.0, embeddings_initialization_std)
+        with torch.no_grad():
+            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
         self.projection_layer = nn.Linear(1, num_embeddings, bias=True)
         self.softmax = torch.nn.Softmax(dim=-1)
 
