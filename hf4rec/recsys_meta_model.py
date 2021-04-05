@@ -52,6 +52,47 @@ class AttnMerge(nn.Module):
         return torch.stack(out, dim=-1)
 
 
+class ProjectionNetwork(nn.Module):
+    def __init__(
+        self,
+        input_dim,
+        output_dim,
+        inp_merge,
+        layer_norm_all_features,
+        input_dropout,
+        tf_out_act,
+    ):
+        super().__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.inp_merge = inp_merge
+        self.layer_norm_all_features = layer_norm_all_features
+        self.input_dropout = input_dropout
+        self.tf_out_act = tf_out_act
+        self.input_dropout = nn.Dropout(self.input_dropout)
+        if self.layer_norm_all_features:
+            self.layer_norm_all_input = nn.LayerNorm(normalized_shape=self.input_dim)
+        if self.inp_merge == "mlp":
+            self.merge = nn.Linear(self.input_dim, output_dim)
+
+        elif self.inp_merge == "attn":
+            self.merge = AttnMerge(self.input_dim, output_dim)
+
+        elif self.inp_merge == "identity":
+            self.merge = nn.Identity()
+        else:
+            raise NotImplementedError
+
+    def forward(self, inp):
+        if self.inp_merge == "mlp" and self.layer_norm_all_features:
+            return self.tf_out_act(
+                self.merge(self.layer_norm_all_input(self.input_dropout(inp)))
+            )
+        elif self.inp_merge == "mlp":
+            return self.tf_out_act(self.merge(self.input_dropout(inp)))
+        return self.merge(inp)
+
+
 def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
     # A rule-of-thumb from Google.
     embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
@@ -146,27 +187,28 @@ class RecSysMetaModel(PreTrainedModel):
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
         self.inp_merge = model_args.inp_merge
-        if self.inp_merge == "mlp":
-            self.mlp_merge = nn.Linear(self.input_combined_dim, config.hidden_size).to(
-                self.device
-            )
+        if model_args.tf_out_activation == "tanh":
+            self.tf_out_act = torch.tanh
+        elif model_args.tf_out_activation == "relu":
+            self.tf_out_act = torch.relu
 
-        elif self.inp_merge == "attn":
-            self.attn_merge = AttnMerge(self.input_combined_dim, config.hidden_size).to(
-                self.device
-            )
+        self.merge = ProjectionNetwork(
+            self.input_combined_dim,
+            config.hidden_size,
+            self.inp_merge,
+            self.layer_norm_all_features,
+            model_args.input_dropout,
+            self.tf_out_act,
+        )
 
-        elif self.inp_merge == "identity":
-            if self.rtd and not self.rtd_tied_generator:
-                raise Exception(
-                    "When using --rtd and --rtd_tied_generator, the --inp_merge cannot be 'identity'"
-                )
-        else:
-            raise NotImplementedError
-
-        if self.layer_norm_all_features:
-            self.layer_norm_all_input = nn.LayerNorm(
-                normalized_shape=self.input_combined_dim
+        if not self.rtd_tied_generator:
+            self.merge_disc = ProjectionNetwork(
+                self.input_combined_dim,
+                model_args.d_model,
+                self.inp_merge,
+                self.layer_norm_all_features,
+                model_args.input_dropout,
+                self.tf_out_act,
             )
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
@@ -286,13 +328,6 @@ class RecSysMetaModel(PreTrainedModel):
                     ]
                 )
             )
-
-        if model_args.tf_out_activation == "tanh":
-            self.tf_out_act = torch.tanh
-        elif model_args.tf_out_activation == "relu":
-            self.tf_out_act = torch.relu
-
-        self.input_dropout = nn.Dropout(model_args.input_dropout)
 
     def forward(self, *args, **kwargs):
         inputs = kwargs
@@ -436,18 +471,7 @@ class RecSysMetaModel(PreTrainedModel):
                 )
 
         # Step 2. Merge features
-
-        if self.inp_merge == "identity":
-            pos_emb = pos_inp
-
-        elif self.inp_merge == "mlp":
-            if self.layer_norm_all_features:
-                pos_inp = self.layer_norm_all_input(pos_inp)
-            pos_inp = self.input_dropout(pos_inp)
-            pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
-
-        elif self.inp_merge == "attn":
-            pos_emb = self.attn_merge(pos_inp)
+        pos_emb = self.merge(pos_inp)
 
         if self.mlm:
             # Masking inputs (with trainable [mask] embedding]) at masked label positions
@@ -665,17 +689,12 @@ class RecSysMetaModel(PreTrainedModel):
                 self.embedding_tables[self.label_embedding_table_name],
             )
             # Step 2. Projection layer for merged feature
-            if self.rtd_project_discriminator:
-                if self.inp_merge == "identity":
-                    fake_pos_emb = fake_emb_inp
-                elif self.inp_merge == "mlp":
-                    fake_emb_inp = self.layer_norm_input(fake_emb_inp)
-                    fake_emb_inp = self.input_dropout(fake_emb_inp)
-                    fake_pos_emb = self.tf_out_act(self.mlp_merge(fake_emb_inp))
-                elif self.inp_merge == "attn":
-                    fake_pos_emb = self.attn_merge(fake_emb_inp)
+            if self.rtd_tied_generator:
+                fake_pos_emb = self.merge(fake_emb_inp)
+
             else:
-                fake_pos_emb = fake_emb_inp
+                fake_pos_emb = self.merge_disc(fake_emb_inp)
+
             # Step 3. hidden representation of corrupted input
             if self.rtd_tied_generator:
                 # use the gen model for token classification
