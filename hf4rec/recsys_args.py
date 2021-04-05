@@ -326,7 +326,7 @@ class ModelArguments:
         },
     )
     tf_out_activation: Optional[str] = field(
-        default="relu",
+        default="tanh",
         metadata={"help": "transformer output activation: 'tanh' OR 'relu'"},
     )
     margin_loss: Optional[float] = field(
@@ -640,9 +640,29 @@ class ModelArguments:
         },
     )
 
-    embeddings_initialization_std: Optional[float] = field(
-        default=0.05,
+    item_id_embeddings_init_std: Optional[float] = field(
+        default=0.5,
         metadata={
-            "help": "Standard deviation to be used in embeddings initialization normal distribution"
+            "help": "Uniform distribution maximum and minimun (-bound) value to be used to initialize the item id embedding (usually must be higher than --categs_embeddings_init_uniform_bound, as those weights are also used as the output layer when --mf_constrained_embeddings)"
         },
     )
+
+    other_embeddings_init_std: Optional[float] = field(
+        default=0.05,
+        metadata={
+            "help": "Uniform distribution maximum and minimun (-bound) value to be used to initialize the other feature embeddings (other than the item_id, which is defined by --item_id_embeddings_init_uniform_bound)"
+        },
+    )
+
+    layer_norm_featurewise: bool = field(
+        default=False,
+        metadata={
+            "help": "Enables layer norm for each feature individually, before their aggregation."
+        },
+    )
+
+    layer_norm_all_features: bool = field(
+        default=False,
+        metadata={"help": "Enables layer norm after concatenating all features."},
+    )
+
