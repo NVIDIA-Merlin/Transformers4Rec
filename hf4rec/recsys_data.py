@@ -139,6 +139,7 @@ def fetch_data_loader(
             feature_map,
             data_paths,
             batch_size,
+            is_train_set,
             shuffle_dataloader,
         )
 
@@ -151,6 +152,7 @@ def get_nvtabular_dataloader(
     feature_map,
     data_paths,
     batch_size,
+    is_train_set,
     shuffle_dataloader=False,
 ):
     # NVTabular dependencies
@@ -179,7 +181,7 @@ def get_nvtabular_dataloader(
         def __len__(self):
             # TODO: The argument drop_last should be added to the NVTDataLoader (https://github.com/NVIDIA/NVTabular/issues/470), and instead of subtracting one step it should do len(dataset) // batch_size, to deal with cases when the length is multiple of batch size
             length = super(NVTDataLoaderWrapper, self).__len__()
-            if training_args.dataloader_drop_last:
+            if training_args.dataloader_drop_last and is_train_set:
                 length -= 1
             return length
 
@@ -189,7 +191,7 @@ def get_nvtabular_dataloader(
             ).__next__()
 
             # TODO: This code is an uggly workaround for this bug on NVT 0.3 data loader (https://github.com/NVIDIA/NVTabular/issues/513), just to ignore the "incomplete" batch, which turns out the be the first one in the second iteration over the dataloader
-            if training_args.dataloader_drop_last:
+            if training_args.dataloader_drop_last and is_train_set:
                 if cat_features is not None:
                     batch_size = cat_features[1][list(cat_features[1].keys())[0]][
                         1
