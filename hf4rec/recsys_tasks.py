@@ -238,14 +238,13 @@ class RecSysTask:
         s = logits + gumbel_noise
         return torch.argmax(torch.nn.functional.softmax(s, dim=-1), -1)
 
-    def get_fake_data(self, emb_inp, target_flat, logits, embedding_table):
+    def get_fake_data(self, input_ids, target_flat, logits):
         """
         Generate fake data by replacing [MASK] items to train ELECTRA discriminator 
         Args:
-            emb_inp: (bs, seq_len, embedding_dim) The embeddings of the input items 
+            input_ids: (bs, max_seq_len) input sequence of true item ids  
             target_flat: (#pos_item,) The ids of positive items 
             logits: of shape (#pos_item, vocab_size), mlm probabilities of positive items computed by the generator model 
-            embedding_table: Generator and discriminator shares the same item embedding table 
         """
         # Sample random item ids
         updates = self.sample_from_softmax(logits).flatten()
@@ -257,14 +256,14 @@ class RecSysTask:
         )
         # Build discriminator label : distinguish orginal token from replaced one
         discriminator_labels = (corrupted_labels != target_flat).view(
-            -1, emb_inp.size(1)
+            -1, input_ids.size(1)
         )
-        # Build corrupted item embedding input
-        emb_updates = embedding_table(updates).to(emb_inp.dtype)
-        corrupted_emb_inp = emb_inp.view(-1, emb_inp.size(2))
-        corrupted_emb_inp[non_pad_mask.nonzero().flatten(), :] = emb_updates
+        # Build corrupted inputs : replacing true ids by sampled items
+        corrupted_inputs = input_ids.view(-1).scatter(
+            -1, non_pad_mask.nonzero().flatten(), updates
+        )
         return (
-            corrupted_emb_inp.view(emb_inp.shape),
+            corrupted_inputs.view(-1, input_ids.size(1)),
             discriminator_labels,
         )
 

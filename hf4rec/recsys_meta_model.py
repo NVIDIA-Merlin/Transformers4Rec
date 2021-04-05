@@ -681,14 +681,17 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.rtd and self.training:
             # Add discriminator binary classification task durining training
-            # Step 1. Generate fake data using shared embedding table
-            fake_emb_inp, discriminator_labels = recsys_task.get_fake_data(
-                pos_inp,
-                trg_flat,
-                logits_all,
-                self.embedding_tables[self.label_embedding_table_name],
+            # Step 1. Generate fake data using genrator logits
+            fake_inputs, discriminator_labels = recsys_task.get_fake_data(
+                label_seq, trg_flat, logits_all,
             )
-            # Step 2. Projection layer for merged feature
+            # Step 1.1 Build interaction embeddings using new replaced items
+            # TODO: random replacing of side info as well
+            inputs[self.label_feature_name] = fake_inputs
+            (fake_emb_inp, label_seq, metadata_for_pred_logging) = self.feature_process(
+                inputs
+            )
+            # Step 2. Projection layer for interaction embedding
             if self.rtd_tied_generator:
                 fake_pos_emb = self.merge(fake_emb_inp)
 
