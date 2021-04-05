@@ -897,29 +897,29 @@ class RecSysMetaModel(PreTrainedModel):
                     and not self.use_ohe_item_ids_inputs
                     and self.training
                 ):
+                    with torch.no_grad():
+                        cdata_non_zero_mask = cdata != self.pad_token
 
-                    cdata_non_zero_mask = cdata != self.pad_token
+                        sse_prob_replacement_matrix = torch.full(
+                            cdata.shape,
+                            self.stochastic_shared_embeddings_replacement_prob,
+                            device=self.device,
+                        )
+                        sse_replacement_mask = (
+                            torch.bernoulli(sse_prob_replacement_matrix).bool()
+                            & cdata_non_zero_mask
+                        )
+                        n_values_to_replace = sse_replacement_mask.sum()
 
-                    sse_prob_replacement_matrix = torch.full(
-                        cdata.shape,
-                        self.stochastic_shared_embeddings_replacement_prob,
-                        device=self.device,
-                    )
-                    sse_replacement_mask = (
-                        torch.bernoulli(sse_prob_replacement_matrix).bool()
-                        & cdata_non_zero_mask
-                    )
-                    n_values_to_replace = sse_replacement_mask.sum()
+                        cdata_flattened_non_zero = torch.masked_select(
+                            cdata, cdata_non_zero_mask
+                        )
 
-                    cdata_flattened_non_zero = torch.masked_select(
-                        cdata, cdata_non_zero_mask
-                    )
+                        sampled_values_to_replace = cdata_flattened_non_zero[
+                            torch.randperm(cdata_flattened_non_zero.shape[0])
+                        ][:n_values_to_replace]
 
-                    sampled_values_to_replace = cdata_flattened_non_zero[
-                        torch.randperm(cdata_flattened_non_zero.shape[0])
-                    ][:n_values_to_replace]
-
-                    cdata[sse_replacement_mask] = sampled_values_to_replace
+                        cdata[sse_replacement_mask] = sampled_values_to_replace
 
                 if "is_label" in cinfo and cinfo["is_label"]:
                     if self.use_ohe_item_ids_inputs:
