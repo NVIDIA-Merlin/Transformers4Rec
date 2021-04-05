@@ -131,8 +131,6 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.pad_token = data_args.pad_token
         self.mask_token = data_args.mask_token
-        self.rtd_project_discriminator = model_args.rtd_project_discriminator
-
         self.session_aware = data_args.session_aware
         self.session_aware_features_prefix = data_args.session_aware_features_prefix
 
