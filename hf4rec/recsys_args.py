@@ -126,7 +126,8 @@ class TrainingArguments(HfTrainingArguments):
 @dataclass
 class DataArguments:
     data_path: Optional[str] = field(
-        default="", metadata={"help": "Path to dataset."},
+        default="",
+        metadata={"help": "Path to dataset."},
     )
 
     pad_token: Optional[int] = field(default=0, metadata={"help": "pad token"})
@@ -377,6 +378,18 @@ class ModelArguments:
         metadata={
             "help": "Use Replaced Token Detection (ELECTRA objective) for training."
         },
+    )
+
+    rtd_sample_from_batch: Optional[bool] = field(
+        default=False,
+        metadata={
+            "help": "Sample replacement items from the whole corpus or only from the current batch"
+        },
+    )
+
+    rtd_use_batch_interaction: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Use processed item interaction as replacement"},
     )
 
     rtd_discriminator_loss_weight: Optional[float] = field(

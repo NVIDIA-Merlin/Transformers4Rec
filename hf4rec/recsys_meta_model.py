@@ -231,13 +231,17 @@ class RecSysMetaModel(PreTrainedModel):
         self.plm_max_span_length = model_args.plm_max_span_length
         self.plm_probability = model_args.plm_probability
         self.plm_mask_input = model_args.plm_mask_input
+        self.rtd_sample_from_batch = model_args.rtd_sample_from_batch
+        self.rtd_use_batch_interaction = model_args.rtd_use_batch_interaction
 
         # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(config.hidden_size)).to(
             self.device
         )
         nn.init.normal_(
-            self.masked_item_embedding, mean=0, std=0.001,
+            self.masked_item_embedding,
+            mean=0,
+            std=0.001,
         )
 
         self.similarity_type = model_args.similarity_type
@@ -556,7 +560,8 @@ class RecSysMetaModel(PreTrainedModel):
                 )
 
                 model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp, head_mask=head_mask,
+                    inputs_embeds=pos_emb_inp,
+                    head_mask=head_mask,
                 )
 
             elif self.plm:
@@ -639,7 +644,7 @@ class RecSysMetaModel(PreTrainedModel):
             bs = label_seq_trg.shape[0]
             # build negative mask for each session (bs, #negatives):
             if self.mlm:
-                negatives = torch.masked_select(label_seq_trg, label_mlm_mask)
+
                 negative_mask = self.compute_neg_mask(label_mlm_mask)
             else:
                 negatives = torch.masked_select(label_seq_trg, mask_trg_pad)
@@ -688,21 +693,57 @@ class RecSysMetaModel(PreTrainedModel):
         if self.rtd and self.training:
             # Add discriminator binary classification task during training
             # Step 1. Generate fake data using genrator logits
-            fake_inputs, discriminator_labels = recsys_task.get_fake_data(
-                label_seq, trg_flat, logits_all,
-            )
+            if self.rtd_sample_from_batch:
+                # sample items from the current batch
+                (
+                    fake_inputs,
+                    discriminator_labels,
+                    batch_updates,
+                ) = recsys_task.get_fake_data(
+                    label_seq,
+                    trg_flat,
+                    logits_all[:, labels_all],
+                    self.rtd_sample_from_batch,
+                )
+            else:
+                # sample items from the whole corpus
+                fake_inputs, discriminator_labels, _ = recsys_task.get_fake_data(
+                    label_seq,
+                    trg_flat,
+                    logits_all,
+                    self.rtd_sample_from_batch,
+                )
+
             # Step 1.1 Build interaction embeddings using new replaced items
             # TODO: random replacing of side info as well
-            inputs[self.label_feature_name] = fake_inputs
-            (fake_emb_inp, label_seq, metadata_for_pred_logging) = self.feature_process(
-                inputs
-            )
-            # Step 2. Projection layer for interaction embedding
-            if self.rtd_tied_generator:
-                fake_pos_emb = self.merge(fake_emb_inp)
+            if self.rtd_use_batch_interaction:
+                # use processed interactions of the current batch
+                assert (
+                    self.rtd_sample_from_batch
+                ), "When rtd_use_batch_interaction, replacement items should be sampled from the current batch, you should set 'rtd_sample_from_batch' to True"
+                replacement_interaction = pos_emb.view(-1, pos_emb.size(2))[
+                    batch_updates
+                ]
+                fake_pos_emb = pos_emb.view(-1, pos_emb.size(2))
+                fake_pos_emb[
+                    non_pad_mask.nonzero().flatten(), :
+                ] = replacement_interaction
+                fake_pos_emb = fake_pos_emb.view(pos_emb.shape)
 
             else:
-                fake_pos_emb = self.merge_disc(fake_emb_inp)
+                # replace only the item ids
+                inputs[self.label_feature_name] = fake_inputs
+                (
+                    fake_emb_inp,
+                    label_seq,
+                    metadata_for_pred_logging,
+                ) = self.feature_process(inputs)
+                # Step 2. Projection layer for interaction embedding
+                if self.rtd_tied_generator:
+                    fake_pos_emb = self.merge(fake_emb_inp)
+
+                else:
+                    fake_pos_emb = self.merge_disc(fake_emb_inp)
 
             # Step 3. hidden representation of corrupted input
             if self.rtd_tied_generator:
@@ -812,7 +853,9 @@ class RecSysMetaModel(PreTrainedModel):
                                 self.features_embedding_projection_to_item_embedding_dim_layers[
                                     cname
                                 ] = nn.Linear(
-                                    embedding_size, self.label_embedding_dim, bias=True,
+                                    embedding_size,
+                                    self.label_embedding_dim,
+                                    bias=True,
                                 )
                                 feature_size = self.label_embedding_dim
 
@@ -866,7 +909,9 @@ class RecSysMetaModel(PreTrainedModel):
                             self.features_embedding_projection_to_item_embedding_dim_layers[
                                 cname
                             ] = nn.Linear(
-                                feature_size, self.label_embedding_dim, bias=True,
+                                feature_size,
+                                self.label_embedding_dim,
+                                bias=True,
                             )
                             feature_size = self.label_embedding_dim
                     else:

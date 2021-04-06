@@ -19,7 +19,7 @@ class RecSysTask:
     def mask_tokens(self, itemid_seq, mlm_probability):
         """
         prepare sequence with mask for masked language modeling prediction
-        the function is based on HuggingFace's transformers/data/data_collator.py 
+        the function is based on HuggingFace's transformers/data/data_collator.py
 
         INPUT:
         itemid_seq: sequence of input itemid (label) column
@@ -47,7 +47,9 @@ class RecSysTask:
             )
             masked_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
             labels = torch.where(
-                masked_labels, itemid_seq, torch.full_like(itemid_seq, self.pad_token),
+                masked_labels,
+                itemid_seq,
+                torch.full_like(itemid_seq, self.pad_token),
             )
 
             # Set at least one item in the sequence to mask, so that the network can learn something with this session
@@ -227,11 +229,11 @@ class RecSysTask:
 
     def sample_from_softmax(self, logits):
         """
-        Sampling method for replacement token modeling (ELECTRA): 
+        Sampling method for replacement token modeling (ELECTRA):
         INPUT:
-            logits: (pos_item, vocab_size), mlm probabilities computed by the generator model 
-        OUTPUT: 
-            samples: (#pos_item), ids of replacements items 
+            logits: (pos_item, vocab_size), mlm probabilities computed by the generator model
+        OUTPUT:
+            samples: (#pos_item), ids of replacements items
         """
         # add noise to logits to prevent from the case where the generator learn to exactly retrieve the true
         # item that was masked
@@ -240,22 +242,36 @@ class RecSysTask:
         s = logits + gumbel_noise
         return torch.argmax(torch.nn.functional.softmax(s, dim=-1), -1)
 
-    def get_fake_data(self, input_ids, target_flat, logits):
+    def get_fake_data(self, input_ids, target_flat, logits, sample_from_batch):
         """
-        Generate fake data by replacing [MASK] by random items to train ELECTRA discriminator 
+        Generate fake data by replacing [MASK] by random items to train ELECTRA discriminator
         INPUT:
             input_ids: (bs, max_seq_len), sequence of input itemid (label) column
-            target_flat: (#pos_item,), The ids of positive items (masked)
-            logits: of shape (#pos_item, vocab_size), mlm probabilities of positive items computed by the generator model 
+            target_flat: (bs*max_seq_len,), flattened label sequences
+            logits: of shape (#pos_item, vocab_size or #pos_item),
+                    mlm probabilities of positive items computed by the generator model.
+                    The logits are over the whole corpus if sample_from_batch = False,
+                        over the positive items (masked) of the current batch otherwise
         OUTPUT:
-            corrupted_inputs: (bs, max_seq_len) sequence of corrupted input itemid 
-            discriminator_labels: (bs, max_seq_len) binary labels to distinguish between original and replaced items 
+            corrupted_inputs: (bs, max_seq_len) sequence of corrupted input itemid
+            discriminator_labels: (bs, max_seq_len) binary labels to distinguish between original and replaced items
+            batch_updates: (#pos_item) the indices of replacement item within the current batch
         """
-        # Sample random item ids
-        updates = self.sample_from_softmax(logits).flatten()
         # Replace only items that were masked during MLM
         non_pad_mask = target_flat != self.pad_token
-        # Replace masked labels by random item ids sampled from mlm_logits
+        pos_labels = torch.masked_select(target_flat, non_pad_mask)
+        # Sample random item ids
+        if sample_from_batch:
+            # get batch indices for replacement items
+            batch_updates = self.sample_from_softmax(logits).flatten()
+            # get item ids based on batch indices
+            updates = pos_labels[batch_updates]
+        else:
+            # get replacement item ids directly from logits over the whole corpus
+            updates = self.sample_from_softmax(logits).flatten()
+            batch_updates = []
+
+        # Replace masked labels by replacement item ids
         corrupted_labels = target_flat.scatter(
             -1, non_pad_mask.nonzero().flatten(), updates
         )
@@ -270,4 +286,5 @@ class RecSysTask:
         return (
             corrupted_inputs.view(-1, input_ids.size(1)),
             discriminator_labels,
+            batch_updates,
         )

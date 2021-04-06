@@ -281,4 +281,3 @@ class AvgSeq(nn.Module):
             output.append(input[:, :i].mean(1))
 
         return (torch.stack(output).permute(1, 0, 2),)
-
