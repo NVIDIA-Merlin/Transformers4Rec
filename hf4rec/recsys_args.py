@@ -659,4 +659,3 @@ class ModelArguments:
         default=False,
         metadata={"help": "Enables layer norm after concatenating all features."},
     )
-
