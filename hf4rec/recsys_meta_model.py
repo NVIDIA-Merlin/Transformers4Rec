@@ -724,7 +724,7 @@ class RecSysMetaModel(PreTrainedModel):
                 replacement_interaction = pos_emb.view(-1, pos_emb.size(2))[
                     batch_updates
                 ]
-                fake_pos_emb = pos_emb.view(-1, pos_emb.size(2))
+                fake_pos_emb = pos_emb.clone().view(-1, pos_emb.size(2))
                 fake_pos_emb[
                     non_pad_mask.nonzero().flatten(), :
                 ] = replacement_interaction
