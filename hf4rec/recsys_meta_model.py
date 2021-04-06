@@ -53,6 +53,10 @@ class AttnMerge(nn.Module):
 
 
 class ProjectionNetwork(nn.Module):
+    """
+    Project item interaction embeddings into model's hidden size
+    """
+
     def __init__(
         self,
         input_dim,
@@ -79,6 +83,10 @@ class ProjectionNetwork(nn.Module):
             self.merge = AttnMerge(self.input_dim, output_dim)
 
         elif self.inp_merge == "identity":
+            assert self.input_dim == self.output_dim, (
+                "Input dim '%s' should be equal to the model's hidden size '%s' when inp_merge=='identity'"
+                % (self.input_dim, self.output_dim)
+            )
             self.merge = nn.Identity()
         else:
             raise NotImplementedError
@@ -678,7 +686,7 @@ class RecSysMetaModel(PreTrainedModel):
         loss = loss * self.loss_scale_factor
 
         if self.rtd and self.training:
-            # Add discriminator binary classification task durining training
+            # Add discriminator binary classification task during training
             # Step 1. Generate fake data using genrator logits
             fake_inputs, discriminator_labels = recsys_task.get_fake_data(
                 label_seq, trg_flat, logits_all,
@@ -698,16 +706,16 @@ class RecSysMetaModel(PreTrainedModel):
 
             # Step 3. hidden representation of corrupted input
             if self.rtd_tied_generator:
-                # use the gen model for token classification
+                # use the generator model for token classification
                 fake_pos_emb_pred = self.model(inputs_embeds=fake_pos_emb)[0]
             else:
                 # use larger disciminator electra model
                 fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_pos_emb)[0]
-            # step 4. get binary logits pedictions
+            # step 4. get logits for binary pedictions
             fake_pos_emb_pred = self.dense_discriminator(fake_pos_emb_pred)
             fake_pos_emb_pred = self.tf_out_act(fake_pos_emb_pred)
             binary_logits = self.discriminator_prediction(fake_pos_emb_pred).squeeze(-1)
-            # compute logits only for non-padded items
+            # compute logits for non-padded items
             non_pad_mask = label_seq != self.pad_token
             active_logits = binary_logits.view(-1, fake_pos_emb_pred.shape[1])[
                 non_pad_mask
