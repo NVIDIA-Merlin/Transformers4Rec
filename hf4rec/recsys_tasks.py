@@ -18,17 +18,17 @@ class RecSysTask:
 
     def mask_tokens(self, itemid_seq, mlm_probability):
         """
-            prepare sequence with mask for masked language modeling prediction
-            the function is based on HuggingFace's transformers/data/data_collator.py 
+        prepare sequence with mask for masked language modeling prediction
+        the function is based on HuggingFace's transformers/data/data_collator.py 
 
-            INPUT:
-            itemid_seq: sequence of input itemid (label) column
-            mlm_probability: probability of an item to be selected (masked) to be a label for this sequence. P.s. We enforce that at least one item is masked for each sequence, so that the network can learn something with it.
+        INPUT:
+        itemid_seq: sequence of input itemid (label) column
+        mlm_probability: probability of an item to be selected (masked) to be a label for this sequence. P.s. We enforce that at least one item is masked for each sequence, so that the network can learn something with it.
 
-            OUTPUT:
-            labels: item id sequence as label
-            masked_labels: bool mask with is true only for masked labels (targets)
-            """
+        OUTPUT:
+        labels: item id sequence as label
+        masked_labels: bool mask with is true only for masked labels (targets)
+        """
 
         # labels = itemid_seq.clone()
         labels = torch.full(
@@ -228,8 +228,10 @@ class RecSysTask:
     def sample_from_softmax(self, logits):
         """
         Sampling method for replacement token modeling (ELECTRA): 
-        Args:
-            logits: of shape (pos_item, vocab_size), mlm probabilities computed by the generator model 
+        INPUT:
+            logits: (pos_item, vocab_size), mlm probabilities computed by the generator model 
+        OUTPUT: 
+            samples: (#pos_item), ids of replacements items 
         """
         # add noise to logits to prevent from the case where the generator learn to exactly retrieve the true
         # item that was masked
@@ -240,17 +242,20 @@ class RecSysTask:
 
     def get_fake_data(self, input_ids, target_flat, logits):
         """
-        Generate fake data by replacing [MASK] items to train ELECTRA discriminator 
-        Args:
-            input_ids: (bs, max_seq_len) input sequence of true item ids  
-            target_flat: (#pos_item,) The ids of positive items 
+        Generate fake data by replacing [MASK] by random items to train ELECTRA discriminator 
+        INPUT:
+            input_ids: (bs, max_seq_len), sequence of input itemid (label) column
+            target_flat: (#pos_item,), The ids of positive items (masked)
             logits: of shape (#pos_item, vocab_size), mlm probabilities of positive items computed by the generator model 
+        OUTPUT:
+            corrupted_inputs: (bs, max_seq_len) sequence of corrupted input itemid 
+            discriminator_labels: (bs, max_seq_len) binary labels to distinguish between original and replaced items 
         """
         # Sample random item ids
         updates = self.sample_from_softmax(logits).flatten()
         # Replace only items that were masked during MLM
         non_pad_mask = target_flat != self.pad_token
-        # Replace [MASK] by random item ids samples from mlm_logits
+        # Replace masked labels by random item ids sampled from mlm_logits
         corrupted_labels = target_flat.scatter(
             -1, non_pad_mask.nonzero().flatten(), updates
         )
@@ -258,7 +263,7 @@ class RecSysTask:
         discriminator_labels = (corrupted_labels != target_flat).view(
             -1, input_ids.size(1)
         )
-        # Build corrupted inputs : replacing true ids by sampled items
+        # Build corrupted inputs : replacing [MASK] by sampled items
         corrupted_inputs = input_ids.view(-1).scatter(
             -1, non_pad_mask.nonzero().flatten(), updates
         )
@@ -266,4 +271,3 @@ class RecSysTask:
             corrupted_inputs.view(-1, input_ids.size(1)),
             discriminator_labels,
         )
-
