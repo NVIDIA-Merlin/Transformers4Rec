@@ -214,7 +214,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             hidden_size=model_args.d_model,
             dropout=model_args.dropout,
         )
-        config = PretrainedConfig()  # dummy config
+        config = PretrainedConfig(hidden_size=model_args.d_model,)  # dummy config
 
     elif model_args.model_type == "lstm":
         model_cls = nn.LSTM(
@@ -223,7 +223,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             hidden_size=model_args.d_model,
             dropout=model_args.dropout,
         )
-        config = PretrainedConfig()
+        config = PretrainedConfig(hidden_size=model_args.d_model,)
 
     elif model_args.model_type == "rnn":
         model_cls = nn.RNN(
@@ -232,7 +232,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
             hidden_size=model_args.d_model,
             dropout=model_args.dropout,
         )
-        config = PretrainedConfig()
+        config = PretrainedConfig(hidden_size=model_args.d_model,)
 
     else:
         raise NotImplementedError
