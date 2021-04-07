@@ -383,13 +383,14 @@ class ModelArguments:
     rtd_sample_from_batch: Optional[bool] = field(
         default=False,
         metadata={
-            "help": "Sample replacement items from the whole corpus or only from the current batch"
+            "help": "Sample replacement itemids from the whole corpus (False) or only from the current batch (True)"
         },
     )
 
     rtd_use_batch_interaction: Optional[bool] = field(
         default=False,
-        metadata={"help": "Use processed item interaction as replacement"},
+        metadata={"help": "Use batch processed item interactions for building the corrupted sequence of itemids to feed to the discriminator.\
+             This option is only available when rtd_sample_from_batch is set to True "},
     )
 
     rtd_discriminator_loss_weight: Optional[float] = field(

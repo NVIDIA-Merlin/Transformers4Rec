@@ -279,7 +279,7 @@ class RecSysTask:
         discriminator_labels = (corrupted_labels != target_flat).view(
             -1, input_ids.size(1)
         )
-        # Build corrupted inputs : replacing [MASK] by sampled items
+        # Build corrupted inputs : replacing [MASK] by sampled item
         corrupted_inputs = input_ids.view(-1).scatter(
             -1, non_pad_mask.nonzero().flatten(), updates
         )

@@ -692,7 +692,7 @@ class RecSysMetaModel(PreTrainedModel):
 
         if self.rtd and self.training:
             # Add discriminator binary classification task during training
-            # Step 1. Generate fake data using genrator logits
+            # Step 1. Generate fake data using generator logits
             if self.rtd_sample_from_batch:
                 # sample items from the current batch
                 (
@@ -714,8 +714,8 @@ class RecSysMetaModel(PreTrainedModel):
                     self.rtd_sample_from_batch,
                 )
 
-            # Step 1.1 Build interaction embeddings using new replaced items
-            # TODO: random replacing of side info as well
+            # Step 2. Build interaction embeddings using new replaced itemids
+            # TODO: sampling fake side info as well
             if self.rtd_use_batch_interaction:
                 # use processed interactions of the current batch
                 assert (
@@ -725,20 +725,21 @@ class RecSysMetaModel(PreTrainedModel):
                     batch_updates
                 ]
                 fake_pos_emb = pos_emb.clone().view(-1, pos_emb.size(2))
+                # replace original masked intercations by fake itemids' interactions
                 fake_pos_emb[
                     non_pad_mask.nonzero().flatten(), :
                 ] = replacement_interaction
                 fake_pos_emb = fake_pos_emb.view(pos_emb.shape)
 
             else:
-                # replace only the item ids
+                # re-compute interaction embeddings of corrupted sequence of itemids
                 inputs[self.label_feature_name] = fake_inputs
                 (
                     fake_emb_inp,
                     label_seq,
                     metadata_for_pred_logging,
                 ) = self.feature_process(inputs)
-                # Step 2. Projection layer for interaction embedding
+                #  Projection layer for corrupted interaction embedding
                 if self.rtd_tied_generator:
                     fake_pos_emb = self.merge(fake_emb_inp)
 
@@ -752,11 +753,11 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 # use larger disciminator electra model
                 fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_pos_emb)[0]
-            # step 4. get logits for binary pedictions
+            # Step 4. get logits for binary pedictions
             fake_pos_emb_pred = self.dense_discriminator(fake_pos_emb_pred)
             fake_pos_emb_pred = self.tf_out_act(fake_pos_emb_pred)
             binary_logits = self.discriminator_prediction(fake_pos_emb_pred).squeeze(-1)
-            # compute logits for non-padded items
+            # Step 5. Get logits for non-padded items
             non_pad_mask = label_seq != self.pad_token
             active_logits = binary_logits.view(-1, fake_pos_emb_pred.shape[1])[
                 non_pad_mask
@@ -765,7 +766,7 @@ class RecSysMetaModel(PreTrainedModel):
             discriminator_loss = nn.BCEWithLogitsLoss()(
                 active_logits, active_labels.float()
             )
-            # Compute weighted joint training loss
+            # Step 6. Compute weighted joint training loss
             loss = (discriminator_loss * self.rtd_discriminator_loss_weight) + (
                 loss * self.rtd_generator_loss_weight
             )
