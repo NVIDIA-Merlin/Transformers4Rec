@@ -280,11 +280,11 @@ class RecSysTask:
             -1, input_ids.size(1)
         )
         # Build corrupted inputs : replacing [MASK] by sampled item
-        corrupted_inputs = input_ids.view(-1).scatter(
+        corrupted_inputs = input_ids.reshape(-1).scatter(
             -1, non_pad_mask.nonzero().flatten(), updates
         )
         return (
-            corrupted_inputs.view(-1, input_ids.size(1)),
+            corrupted_inputs.reshape(-1, input_ids.size(1)),
             discriminator_labels,
             batch_updates,
         )
