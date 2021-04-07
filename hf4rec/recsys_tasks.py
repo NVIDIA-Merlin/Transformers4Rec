@@ -91,7 +91,9 @@ class RecSysTask:
 
         return labels, masked_labels
 
-    def plm_mask_tokens(self, itemid_seq, max_span_length, plm_probability):
+    def plm_mask_tokens(
+        self, itemid_seq, max_span_length, plm_probability, plm_permute_all
+    ):
 
         """
         Prepare the attention masks needed for partial-prediction permutation language modeling
@@ -101,6 +103,7 @@ class RecSysTask:
         itemid_seq: sequence of input itemid (label) column
         plm_probability: The ratio of surrounding items to unmask to define the context of the span-based prediction segment of items
         max_span_length:  The maximum length of the span of items to predict
+        plm_permute_all: compute permutation for all non paded itemids
 
         OUTPUT:
         labels: item id sequence as labels
@@ -132,39 +135,47 @@ class RecSysTask:
                 dtype=torch.float32,
                 device=self.device,
             )
-            # For each session select a span of consecutive item ids to be masked
-            for i in range(labels.size(0)):
-                # Start from the beginning of the sequence by setting `cur_len = 0` (number of tokens processed so far).
-                cur_len = 0
-                max_len = non_padded_mask.sum(1)[i]  # mask only non-padded items
-                while cur_len < max_len:
-                    # Sample a `span_length` from the interval `[1, max_span_length]` (length of span of tokens to be masked)
-                    span_length = torch.randint(1, max_span_length + 1, (1,)).item()
-                    # Reserve a context of length `context_length = span_length / plm_probability` to surround span to be masked
-                    context_length = int(span_length / plm_probability)
-                    # Sample a starting point `start_index` from the interval `[cur_len, cur_len + context_length - span_length]`
-                    start_index = (
-                        cur_len
-                        + torch.randint(context_length - span_length + 1, (1,)).item()
-                    )
-                    if start_index < max_len:
-                        # Mask the span of non-padded items `start_index:start_index + span_length`
-                        masked_labels[i, start_index : start_index + span_length] = 1
-                    # Set `cur_len = cur_len + context_length`
-                    cur_len += context_length
-                # if no item was masked:
-                if masked_labels[i].sum() == 0:
-                    # Set at least one item in the sequence to mask, so that the network can learn something with this session
-                    one_random_index_by_session = torch.multinomial(
-                        non_padded_mask[i].float(), num_samples=1
-                    ).squeeze()
-                    masked_labels[i, one_random_index_by_session] = itemid_seq[
-                        i, one_random_index_by_session
-                    ]
-                # Since we're replacing non-masked tokens with pad_tokens in the labels tensor instead of skipping them altogether,
-                # the i-th predict corresponds to the i-th token.
-                # N.B: the loss function will be computed only on non paded items
-                target_mapping[i] = torch.eye(labels.size(1))
+            if plm_permute_all:
+                # Permute all non padded items
+                masked_labels = non_padded_mask
+            else:
+                # For each session select a span of consecutive item ids to be masked
+                for i in range(labels.size(0)):
+                    # Start from the beginning of the sequence by setting `cur_len = 0` (number of tokens processed so far).
+                    cur_len = 0
+                    max_len = non_padded_mask.sum(1)[i]  # mask only non-padded items
+                    while cur_len < max_len:
+                        # Sample a `span_length` from the interval `[1, max_span_length]` (length of span of tokens to be masked)
+                        span_length = torch.randint(1, max_span_length + 1, (1,)).item()
+                        # Reserve a context of length `context_length = span_length / plm_probability` to surround span to be masked
+                        context_length = int(span_length / plm_probability)
+                        # Sample a starting point `start_index` from the interval `[cur_len, cur_len + context_length - span_length]`
+                        start_index = (
+                            cur_len
+                            + torch.randint(
+                                context_length - span_length + 1, (1,)
+                            ).item()
+                        )
+                        if start_index < max_len:
+                            # Mask the span of non-padded items `start_index:start_index + span_length`
+                            masked_labels[
+                                i, start_index : start_index + span_length
+                            ] = 1
+                        # Set `cur_len = cur_len + context_length`
+                        cur_len += context_length
+                    # if no item was masked:
+                    if masked_labels[i].sum() == 0:
+                        # Set at least one item in the sequence to mask, so that the network can learn something with this session
+                        one_random_index_by_session = torch.multinomial(
+                            non_padded_mask[i].float(), num_samples=1
+                        ).squeeze()
+                        masked_labels[i, one_random_index_by_session] = itemid_seq[
+                            i, one_random_index_by_session
+                        ]
+                    # Since we're replacing non-masked tokens with pad_tokens in the labels tensor instead of skipping them altogether,
+                    # the i-th predict corresponds to the i-th token.
+                    # N.B: the loss function will be computed only on non paded items
+                    target_mapping[i] = torch.eye(labels.size(1))
 
             labels = torch.where(
                 masked_labels, itemid_seq, torch.full_like(itemid_seq, self.pad_token)

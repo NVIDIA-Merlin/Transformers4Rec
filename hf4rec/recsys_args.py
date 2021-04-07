@@ -372,6 +372,11 @@ class ModelArguments:
     plm_mask_input: Optional[bool] = field(
         default=False, metadata={"help": "Mask input of XLNET as in AE models or not"}
     )
+
+    plm_permute_all: Optional[bool] = field(
+        default=False, metadata={"help": "Permute all non padded items"}
+    )
+
     # args for RTD task
     rtd: bool = field(
         default=False,
@@ -389,8 +394,10 @@ class ModelArguments:
 
     rtd_use_batch_interaction: Optional[bool] = field(
         default=False,
-        metadata={"help": "Use batch processed item interactions for building the corrupted sequence of itemids to feed to the discriminator.\
-             This option is only available when rtd_sample_from_batch is set to True "},
+        metadata={
+            "help": "Use batch processed item interactions for building the corrupted sequence of itemids to feed to the discriminator.\
+             This option is only available when rtd_sample_from_batch is set to True "
+        },
     )
 
     rtd_discriminator_loss_weight: Optional[float] = field(
