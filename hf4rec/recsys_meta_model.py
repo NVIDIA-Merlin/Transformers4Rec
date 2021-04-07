@@ -121,6 +121,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.rtd_tied_generator = model_args.rtd_tied_generator
         self.rtd_generator_loss_weight = model_args.rtd_generator_loss_weight
         self.rtd_discriminator_loss_weight = model_args.rtd_discriminator_loss_weight
+        self.rtd_sample_from_batch = model_args.rtd_sample_from_batch
+        self.rtd_use_batch_interaction = model_args.rtd_use_batch_interaction
 
         self.layer_norm_featurewise = model_args.layer_norm_featurewise
         self.layer_norm_all_features = model_args.layer_norm_all_features
@@ -193,6 +195,11 @@ class RecSysMetaModel(PreTrainedModel):
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
         self.inp_merge = model_args.inp_merge
+        if self.inp_merge == "identity":
+            if self.rtd and not self.rtd_tied_generator:
+                raise Exception(
+                    "When using --rtd and --rtd_tied_generator, the --inp_merge cannot be 'identity'"
+                )
         if model_args.tf_out_activation == "tanh":
             self.tf_out_act = torch.tanh
         elif model_args.tf_out_activation == "relu":
@@ -231,8 +238,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.plm_max_span_length = model_args.plm_max_span_length
         self.plm_probability = model_args.plm_probability
         self.plm_mask_input = model_args.plm_mask_input
-        self.rtd_sample_from_batch = model_args.rtd_sample_from_batch
-        self.rtd_use_batch_interaction = model_args.rtd_use_batch_interaction
+        self.plm_permute_all = model_args.plm_permute_all
 
         # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(config.hidden_size)).to(
@@ -383,6 +389,7 @@ class RecSysMetaModel(PreTrainedModel):
                 label_seq,
                 max_span_length=self.plm_max_span_length,
                 plm_probability=self.plm_probability,
+                plm_permute_all=self.plm_permute_all,
             )
             # To mark past sequence labels
             if self.session_aware:
