@@ -28,23 +28,15 @@ from .recsys_args import DataArguments, ModelArguments, TrainingArguments
 from .recsys_data import fetch_data_loader, get_items_sorted_freq
 from .recsys_meta_model import RecSysMetaModel
 from .recsys_models import get_recsys_model
-from .recsys_outputs import (
-    AttentionWeightsLogger,
-    PredictionLogger,
-    config_dllogger,
-    creates_output_dir,
-    log_aot_metric_results,
-    log_metric_results,
-    log_parameters,
-    set_log_attention_weights_callback,
-    set_log_predictions_callback,
-)
+from .recsys_outputs import (AttentionWeightsLogger, PredictionLogger,
+                             config_dllogger, creates_output_dir,
+                             log_aot_metric_results, log_metric_results,
+                             log_parameters,
+                             set_log_attention_weights_callback,
+                             set_log_predictions_callback)
 from .recsys_trainer import DatasetMock, DatasetType, RecSysTrainer
-from .recsys_utils import (
-    get_label_feature_name,
-    get_parquet_files_names,
-    get_timestamp_feature_name,
-)
+from .recsys_utils import (get_label_feature_name, get_parquet_files_names,
+                           get_timestamp_feature_name)
 
 logger = logging.getLogger(__name__)
 

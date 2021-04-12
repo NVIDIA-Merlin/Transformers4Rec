@@ -251,7 +251,7 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
         logger.info("Training new model from scratch")
         if model_args.model_type == "electra":
             # define two transformers blocks for discriminator and generator model
-            if model_args.tied_generator:
+            if model_args.rtd_tied_generator:
                 # Using same model for generator and discriminator
                 model = (model_cls(config), ())
             else:
@@ -281,4 +281,3 @@ class AvgSeq(nn.Module):
             output.append(input[:, :i].mean(1))
 
         return (torch.stack(output).permute(1, 0, 2),)
-

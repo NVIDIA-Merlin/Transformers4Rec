@@ -126,7 +126,8 @@ class TrainingArguments(HfTrainingArguments):
 @dataclass
 class DataArguments:
     data_path: Optional[str] = field(
-        default="", metadata={"help": "Path to dataset."},
+        default="",
+        metadata={"help": "Path to dataset."},
     )
 
     pad_token: Optional[int] = field(default=0, metadata={"help": "pad token"})
@@ -371,11 +372,31 @@ class ModelArguments:
     plm_mask_input: Optional[bool] = field(
         default=False, metadata={"help": "Mask input of XLNET as in AE models or not"}
     )
+
+    plm_permute_all: Optional[bool] = field(
+        default=False, metadata={"help": "Permute all non padded items"}
+    )
+
     # args for RTD task
     rtd: bool = field(
         default=False,
         metadata={
             "help": "Use Replaced Token Detection (ELECTRA objective) for training."
+        },
+    )
+
+    rtd_sample_from_batch: Optional[bool] = field(
+        default=False,
+        metadata={
+            "help": "Sample replacement itemids from the whole corpus (False) or only from the current batch (True)"
+        },
+    )
+
+    rtd_use_batch_interaction: Optional[bool] = field(
+        default=False,
+        metadata={
+            "help": "Use batch processed item interactions for building the corrupted sequence of itemids to feed to the discriminator.\
+             This option is only available when rtd_sample_from_batch is set to True "
         },
     )
 
@@ -659,4 +680,3 @@ class ModelArguments:
         default=False,
         metadata={"help": "Enables layer norm after concatenating all features."},
     )
-
