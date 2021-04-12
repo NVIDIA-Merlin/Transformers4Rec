@@ -52,6 +52,55 @@ class AttnMerge(nn.Module):
         return torch.stack(out, dim=-1)
 
 
+class ProjectionNetwork(nn.Module):
+    """
+    Project item interaction embeddings into model's hidden size
+    """
+
+    def __init__(
+        self,
+        input_dim,
+        output_dim,
+        inp_merge,
+        layer_norm_all_features,
+        input_dropout,
+        tf_out_act,
+    ):
+        super().__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.inp_merge = inp_merge
+        self.layer_norm_all_features = layer_norm_all_features
+        self.input_dropout = input_dropout
+        self.tf_out_act = tf_out_act
+        self.input_dropout = nn.Dropout(self.input_dropout)
+        if self.layer_norm_all_features:
+            self.layer_norm_all_input = nn.LayerNorm(normalized_shape=self.input_dim)
+        if self.inp_merge == "mlp":
+            self.merge = nn.Linear(self.input_dim, output_dim)
+
+        elif self.inp_merge == "attn":
+            self.merge = AttnMerge(self.input_dim, output_dim)
+
+        elif self.inp_merge == "identity":
+            assert self.input_dim == self.output_dim, (
+                "Input dim '%s' should be equal to the model's hidden size '%s' when inp_merge=='identity'"
+                % (self.input_dim, self.output_dim)
+            )
+            self.merge = nn.Identity()
+        else:
+            raise NotImplementedError
+
+    def forward(self, inp):
+        if self.inp_merge == "mlp" and self.layer_norm_all_features:
+            return self.tf_out_act(
+                self.merge(self.layer_norm_all_input(self.input_dropout(inp)))
+            )
+        elif self.inp_merge == "mlp":
+            return self.tf_out_act(self.merge(self.input_dropout(inp)))
+        return self.merge(inp)
+
+
 def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
     # A rule-of-thumb from Google.
     embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
@@ -72,6 +121,8 @@ class RecSysMetaModel(PreTrainedModel):
         self.rtd_tied_generator = model_args.rtd_tied_generator
         self.rtd_generator_loss_weight = model_args.rtd_generator_loss_weight
         self.rtd_discriminator_loss_weight = model_args.rtd_discriminator_loss_weight
+        self.rtd_sample_from_batch = model_args.rtd_sample_from_batch
+        self.rtd_use_batch_interaction = model_args.rtd_use_batch_interaction
 
         self.layer_norm_featurewise = model_args.layer_norm_featurewise
         self.layer_norm_all_features = model_args.layer_norm_all_features
@@ -90,7 +141,6 @@ class RecSysMetaModel(PreTrainedModel):
 
         self.pad_token = data_args.pad_token
         self.mask_token = data_args.mask_token
-
         self.session_aware = data_args.session_aware
         self.session_aware_features_prefix = data_args.session_aware_features_prefix
 
@@ -145,27 +195,33 @@ class RecSysMetaModel(PreTrainedModel):
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
         self.inp_merge = model_args.inp_merge
-        if self.inp_merge == "mlp":
-            self.mlp_merge = nn.Linear(self.input_combined_dim, config.hidden_size).to(
-                self.device
-            )
-
-        elif self.inp_merge == "attn":
-            self.attn_merge = AttnMerge(self.input_combined_dim, config.hidden_size).to(
-                self.device
-            )
-
-        elif self.inp_merge == "identity":
+        if self.inp_merge == "identity":
             if self.rtd and not self.rtd_tied_generator:
                 raise Exception(
                     "When using --rtd and --rtd_tied_generator, the --inp_merge cannot be 'identity'"
                 )
-        else:
-            raise NotImplementedError
+        if model_args.tf_out_activation == "tanh":
+            self.tf_out_act = torch.tanh
+        elif model_args.tf_out_activation == "relu":
+            self.tf_out_act = torch.relu
 
-        if self.layer_norm_all_features:
-            self.layer_norm_all_input = nn.LayerNorm(
-                normalized_shape=self.input_combined_dim
+        self.merge = ProjectionNetwork(
+            self.input_combined_dim,
+            config.hidden_size,
+            self.inp_merge,
+            self.layer_norm_all_features,
+            model_args.input_dropout,
+            self.tf_out_act,
+        )
+
+        if not self.rtd_tied_generator:
+            self.merge_disc = ProjectionNetwork(
+                self.input_combined_dim,
+                model_args.d_model,
+                self.inp_merge,
+                self.layer_norm_all_features,
+                model_args.input_dropout,
+                self.tf_out_act,
             )
 
         self.eval_on_last_item_seq_only = model_args.eval_on_last_item_seq_only
@@ -182,13 +238,16 @@ class RecSysMetaModel(PreTrainedModel):
         self.plm_max_span_length = model_args.plm_max_span_length
         self.plm_probability = model_args.plm_probability
         self.plm_mask_input = model_args.plm_mask_input
+        self.plm_permute_all = model_args.plm_permute_all
 
         # Creating a trainable embedding for masking inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(config.hidden_size)).to(
             self.device
         )
         nn.init.normal_(
-            self.masked_item_embedding, mean=0, std=0.001,
+            self.masked_item_embedding,
+            mean=0,
+            std=0.001,
         )
 
         self.similarity_type = model_args.similarity_type
@@ -286,13 +345,6 @@ class RecSysMetaModel(PreTrainedModel):
                 )
             )
 
-        if model_args.tf_out_activation == "tanh":
-            self.tf_out_act = torch.tanh
-        elif model_args.tf_out_activation == "relu":
-            self.tf_out_act = torch.relu
-
-        self.input_dropout = nn.Dropout(model_args.input_dropout)
-
     def forward(self, *args, **kwargs):
         inputs = kwargs
 
@@ -337,6 +389,7 @@ class RecSysMetaModel(PreTrainedModel):
                 label_seq,
                 max_span_length=self.plm_max_span_length,
                 plm_probability=self.plm_probability,
+                plm_permute_all=self.plm_permute_all,
             )
             # To mark past sequence labels
             if self.session_aware:
@@ -435,18 +488,7 @@ class RecSysMetaModel(PreTrainedModel):
                 )
 
         # Step 2. Merge features
-
-        if self.inp_merge == "identity":
-            pos_emb = pos_inp
-
-        elif self.inp_merge == "mlp":
-            if self.layer_norm_all_features:
-                pos_inp = self.layer_norm_all_input(pos_inp)
-            pos_inp = self.input_dropout(pos_inp)
-            pos_emb = self.tf_out_act(self.mlp_merge(pos_inp))
-
-        elif self.inp_merge == "attn":
-            pos_emb = self.attn_merge(pos_inp)
+        pos_emb = self.merge(pos_inp)
 
         if self.mlm:
             # Masking inputs (with trainable [mask] embedding]) at masked label positions
@@ -525,7 +567,8 @@ class RecSysMetaModel(PreTrainedModel):
                 )
 
                 model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp, head_mask=head_mask,
+                    inputs_embeds=pos_emb_inp,
+                    head_mask=head_mask,
                 )
 
             elif self.plm:
@@ -608,7 +651,7 @@ class RecSysMetaModel(PreTrainedModel):
             bs = label_seq_trg.shape[0]
             # build negative mask for each session (bs, #negatives):
             if self.mlm:
-                negatives = torch.masked_select(label_seq_trg, label_mlm_mask)
+
                 negative_mask = self.compute_neg_mask(label_mlm_mask)
             else:
                 negatives = torch.masked_select(label_seq_trg, mask_trg_pad)
@@ -655,26 +698,72 @@ class RecSysMetaModel(PreTrainedModel):
         loss = loss * self.loss_scale_factor
 
         if self.rtd and self.training:
-            # Add discriminator binary classification task durining training
-            # Step 1. Generate fake data using shared embedding table
-            fake_emb_inp, discriminator_labels = recsys_task.get_fake_data(
-                pos_inp,
-                trg_flat,
-                logits_all,
-                self.embedding_tables[self.label_embedding_table_name],
-            )
-            # Step 2.
+            # Add discriminator binary classification task during training
+            # Step 1. Generate fake data using generator logits
+            if self.rtd_sample_from_batch:
+                # sample items from the current batch
+                (
+                    fake_inputs,
+                    discriminator_labels,
+                    batch_updates,
+                ) = recsys_task.get_fake_data(
+                    label_seq,
+                    trg_flat,
+                    logits_all[:, labels_all],
+                    self.rtd_sample_from_batch,
+                )
+            else:
+                # sample items from the whole corpus
+                fake_inputs, discriminator_labels, _ = recsys_task.get_fake_data(
+                    label_seq,
+                    trg_flat,
+                    logits_all,
+                    self.rtd_sample_from_batch,
+                )
+
+            # Step 2. Build interaction embeddings using new replaced itemids
+            # TODO: sampling fake side info as well
+            if self.rtd_use_batch_interaction:
+                # use processed interactions of the current batch
+                assert (
+                    self.rtd_sample_from_batch
+                ), "When rtd_use_batch_interaction, replacement items should be sampled from the current batch, you should set 'rtd_sample_from_batch' to True"
+                # detach() is needed to not propagate the discriminator loss through generator
+                fake_pos_emb = pos_emb.clone().detach().view(-1, pos_emb.size(2))
+                replacement_interaction = fake_pos_emb[batch_updates]
+                # replace original masked interactions by fake itemids' interactions
+                fake_pos_emb[
+                    non_pad_mask.nonzero().flatten(), :
+                ] = replacement_interaction
+                fake_pos_emb = fake_pos_emb.view(pos_emb.shape)
+
+            else:
+                # re-compute interaction embeddings of corrupted sequence of itemids
+                inputs[self.label_feature_name] = fake_inputs
+                (
+                    fake_emb_inp,
+                    label_seq,
+                    metadata_for_pred_logging,
+                ) = self.feature_process(inputs)
+                #  Projection layer for corrupted interaction embedding
+                if self.rtd_tied_generator:
+                    fake_pos_emb = self.merge(fake_emb_inp)
+
+                else:
+                    fake_pos_emb = self.merge_disc(fake_emb_inp)
+
+            # Step 3. hidden representation of corrupted input
             if self.rtd_tied_generator:
-                # use the gen model for token classification
-                fake_pos_emb_pred = self.model(inputs_embeds=fake_emb_inp)[0]
+                # use the generator model for token classification
+                fake_pos_emb_pred = self.model(inputs_embeds=fake_pos_emb)[0]
             else:
                 # use larger disciminator electra model
-                fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_emb_inp)[0]
-            # step 4. get binary logits pedictions
+                fake_pos_emb_pred = self.discriminator(inputs_embeds=fake_pos_emb)[0]
+            # Step 4. get logits for binary pedictions
             fake_pos_emb_pred = self.dense_discriminator(fake_pos_emb_pred)
             fake_pos_emb_pred = self.tf_out_act(fake_pos_emb_pred)
             binary_logits = self.discriminator_prediction(fake_pos_emb_pred).squeeze(-1)
-            # compute logits only for non-padded items
+            # Step 5. Get logits for non-padded items
             non_pad_mask = label_seq != self.pad_token
             active_logits = binary_logits.view(-1, fake_pos_emb_pred.shape[1])[
                 non_pad_mask
@@ -683,7 +772,7 @@ class RecSysMetaModel(PreTrainedModel):
             discriminator_loss = nn.BCEWithLogitsLoss()(
                 active_logits, active_labels.float()
             )
-            # Compute weighted joint training loss
+            # Step 6. Compute weighted joint training loss
             loss = (discriminator_loss * self.rtd_discriminator_loss_weight) + (
                 loss * self.rtd_generator_loss_weight
             )
@@ -733,7 +822,7 @@ class RecSysMetaModel(PreTrainedModel):
                             embedding_size = model_args.item_embedding_dim
                         # This condition is just to keep compatibility with the experiments of SIGIR paper
                         # (where item embedding dim was always equal to d_model)
-                        elif model_args.mf_constrained_embeddings or model_args.rtd:
+                        elif model_args.mf_constrained_embeddings:
                             embedding_size = model_args.d_model
                         else:
                             embedding_size = get_embedding_size_from_cardinality(
@@ -771,7 +860,9 @@ class RecSysMetaModel(PreTrainedModel):
                                 self.features_embedding_projection_to_item_embedding_dim_layers[
                                     cname
                                 ] = nn.Linear(
-                                    embedding_size, self.label_embedding_dim, bias=True,
+                                    embedding_size,
+                                    self.label_embedding_dim,
+                                    bias=True,
                                 )
                                 feature_size = self.label_embedding_dim
 
@@ -825,7 +916,9 @@ class RecSysMetaModel(PreTrainedModel):
                             self.features_embedding_projection_to_item_embedding_dim_layers[
                                 cname
                             ] = nn.Linear(
-                                feature_size, self.label_embedding_dim, bias=True,
+                                feature_size,
+                                self.label_embedding_dim,
+                                bias=True,
                             )
                             feature_size = self.label_embedding_dim
                     else:
