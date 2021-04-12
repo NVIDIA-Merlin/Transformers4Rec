@@ -283,19 +283,25 @@ class RecSysTask:
             batch_updates = []
 
         # Replace masked labels by replacement item ids
-        corrupted_labels = target_flat.scatter(
-            -1, non_pad_mask.nonzero().flatten(), updates
+        # detach() is needed to not propagate the discriminator loss through generator
+        corrupted_labels = (
+            target_flat.clone()
+            .detach()
+            .scatter(-1, non_pad_mask.nonzero().flatten(), updates)
         )
         # Build discriminator label : distinguish orginal token from replaced one
         discriminator_labels = (corrupted_labels != target_flat).view(
             -1, input_ids.size(1)
         )
         # Build corrupted inputs : replacing [MASK] by sampled item
-        corrupted_inputs = input_ids.reshape(-1).scatter(
-            -1, non_pad_mask.nonzero().flatten(), updates
+        corrupted_inputs = (
+            input_ids.clone()
+            .detach()
+            .reshape(-1)
+            .scatter(-1, non_pad_mask.nonzero().flatten(), updates)
         )
         return (
-            corrupted_inputs.reshape(-1, input_ids.size(1)),
+            corrupted_inputs.view(-1, input_ids.size(1)),
             discriminator_labels,
             batch_updates,
         )

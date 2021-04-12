@@ -728,11 +728,10 @@ class RecSysMetaModel(PreTrainedModel):
                 assert (
                     self.rtd_sample_from_batch
                 ), "When rtd_use_batch_interaction, replacement items should be sampled from the current batch, you should set 'rtd_sample_from_batch' to True"
-                replacement_interaction = pos_emb.view(-1, pos_emb.size(2))[
-                    batch_updates
-                ]
-                fake_pos_emb = pos_emb.clone().view(-1, pos_emb.size(2))
-                # replace original masked intercations by fake itemids' interactions
+                # detach() is needed to not propagate the discriminator loss through generator
+                fake_pos_emb = pos_emb.clone().detach().view(-1, pos_emb.size(2))
+                replacement_interaction = fake_pos_emb[batch_updates]
+                # replace original masked interactions by fake itemids' interactions
                 fake_pos_emb[
                     non_pad_mask.nonzero().flatten(), :
                 ] = replacement_interaction
