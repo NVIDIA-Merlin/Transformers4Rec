@@ -1,0 +1,13 @@
+#Current session features
+article_id:
+    dtype: categorical
+    cardinality: 365000
+    is_label: True
+    emb_table: article_id
+    log_with_preds_as_metadata: True
+
+#Control features
+timestamp:
+    dtype: timestamp
+    is_control: True #Control features are not uses as input features to the model
+    log_with_preds_as_metadata: True        
