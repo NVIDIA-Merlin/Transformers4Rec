@@ -16,7 +16,7 @@ The notebooks for pre-processing can be found in the [ecommerce_rees46/preproces
 ### Preprocessed dataset
 
 An already pre-processed version of this dataset comprising 1 month of data (October 2019) is available in this [Google Drive](https://drive.google.com/drive/u/0/folders/1LK24lJYn2mLUM2710iS5L6Pq9gGyj2_s).  
-With this pre-processed dataset, you are able to run pipelines with HF4Rec.
+With this pre-processed dataset, you are able to run pipelines with Transformers4Rec.
 
 
 ## G1 news dataset
@@ -38,9 +38,9 @@ The preprocessing notebook can be found in the [news_g1/preprocessing/G1_news_pr
 ### Preprocessed dataset
 
 An already pre-processed version of this dataset is available in this [Google Drive](https://drive.google.com/drive/u/0/folders/1qSUWRqBflR8EvMKoyLIkSyB3JlwNPNTT).  
-With this pre-processed dataset, you are able to run pipelines with HF4Rec.
+With this pre-processed dataset, you are able to run pipelines with Transformers4Rec.
 
 
 ## Features config files
-The HF4Rec uses a features config file (YAML) to get to know which features are available for the model. The only required feature is the one that contains the sequence of item ids. But more features can be provided, like item metadata /content features and user contextual features, generally improving models accuracy.
+The Transformers4Rec uses a features config file (YAML) to get to know which features are available for the model. The only required feature is the one that contains the sequence of item ids. But more features can be provided, like item metadata /content features and user contextual features, generally improving models accuracy.
 You can find examples of features config files for the [REES46 eCommerce dataset](ecommerce_rees46/config/features/) and [G1 news](news_g1/config/features/) datasets.
