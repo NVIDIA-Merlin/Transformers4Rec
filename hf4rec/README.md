@@ -1,4 +1,4 @@
-# HF4Rec - How to setup and run
+# Transformers4Rec - How to setup and run
 
 This folder has the code for training and evaluating Transformer-based architectures for sequencial, session-based, and session-aware recommendation.
 
@@ -180,7 +180,7 @@ Additionally, the pipeline generates the following folders in the current folder
 You can also check plots of the timeseries and metrics in the [Weights & Biases (W&B) app](https://wandb.ai/)
 
 ## Code overview
-- `recsys_main.py`: Main script to run the train and evaluation pipeline of the HF4Rec framework
+- `recsys_main.py`: Main script to run the train and evaluation pipeline of the Transformers4Rec framework
 - `recsys_models.py`: Definition of various sequence models (Huggingface Transformers and PyTorch GRU)
 - `recsys_meta_model.py`: RecSys module that generates interaction embeddings from the available input features and feeds to Transformer blocks. Then it takes the output of the last Transformer block and predicts the scores for all items.
 - `recsys_trainer.py`: Extends Huggingface's Trainer class to enable customized dataset in training and evaluation loops.
