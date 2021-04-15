@@ -135,6 +135,8 @@ class GRU4Rec:
         time_key="Time",
     ):
         self.layers = layers
+        if not isinstance(self.layers, list):
+            self.layers = [self.layers]
         self.n_epochs = n_epochs
         self.batch_size = batch_size
         self.dropout_p_hidden = dropout_p_hidden

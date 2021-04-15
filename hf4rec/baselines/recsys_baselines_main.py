@@ -280,7 +280,6 @@ def main():
 
     start_session_id = 0
 
-    # for date_idx in range(1, len(data_dates)):
     for time_index in range(
         data_args.start_time_window_index, data_args.final_time_window_index
     ):
@@ -347,7 +346,6 @@ def main():
             )
 
             # eval_sessions_df = eval_sessions_df[:100]
-
             if not remaining_hparams["eval_baseline_cpu_parallel"]:
                 # Sequential approach
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
