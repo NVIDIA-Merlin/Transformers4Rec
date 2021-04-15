@@ -28,15 +28,23 @@ from .recsys_args import DataArguments, ModelArguments, TrainingArguments
 from .recsys_data import fetch_data_loader, get_items_sorted_freq
 from .recsys_meta_model import RecSysMetaModel
 from .recsys_models import get_recsys_model
-from .recsys_outputs import (AttentionWeightsLogger, PredictionLogger,
-                             config_dllogger, creates_output_dir,
-                             log_aot_metric_results, log_metric_results,
-                             log_parameters,
-                             set_log_attention_weights_callback,
-                             set_log_predictions_callback)
+from .recsys_outputs import (
+    AttentionWeightsLogger,
+    PredictionLogger,
+    config_dllogger,
+    creates_output_dir,
+    log_aot_metric_results,
+    log_metric_results,
+    log_parameters,
+    set_log_attention_weights_callback,
+    set_log_predictions_callback,
+)
 from .recsys_trainer import DatasetMock, DatasetType, RecSysTrainer
-from .recsys_utils import (get_label_feature_name, get_parquet_files_names,
-                           get_timestamp_feature_name)
+from .recsys_utils import (
+    get_label_feature_name,
+    get_parquet_files_names,
+    get_timestamp_feature_name,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,21 +104,27 @@ def main():
 
     results_over_time = {}
 
-    max_time_index = data_args.final_time_window_index
-    if data_args.no_incremental_training:
-        max_time_index = max_time_index - data_args.training_time_window_size + 1
-
-    # Iterating over the time windows for incremental training and evaluation
-    for time_index in range(data_args.start_time_window_index, max_time_index):
-
-        if data_args.no_incremental_training:
-            time_indices_train = list(
-                range(time_index, time_index + data_args.training_time_window_size,)
-            )
-            time_index_eval = time_index + data_args.training_time_window_size
-        else:
+    for time_index in range(
+        data_args.start_time_window_index, data_args.final_time_window_index
+    ):
+        if data_args.incremental_training:
             time_indices_train = time_index
             time_index_eval = time_index + 1
+        else:
+            if data_args.training_time_window_size > 0:
+                time_index_eval = time_index + 1
+                time_indices_train = list(
+                    range(
+                        max(
+                            time_index_eval - data_args.training_time_window_size,
+                            data_args.start_time_window_index,
+                        ),
+                        time_index_eval,
+                    )
+                )
+            else:
+                time_indices_train = list(range(1, time_index + 1))
+                time_index_eval = time_index + 1
 
         if (
             model_args.negative_sampling
