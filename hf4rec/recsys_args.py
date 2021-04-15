@@ -233,7 +233,7 @@ class DataArguments:
         },
     )
 
-    incremental_training: bool = field(
+    no_incremental_training: bool = field(
         default=False,
         metadata={
             "help": "Indicates whether the model should be trained incrementally over time (False) or trained using only the time window (True) defined in --training_time_window_size"

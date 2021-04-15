@@ -283,10 +283,7 @@ def main():
     for time_index in range(
         data_args.start_time_window_index, data_args.final_time_window_index
     ):
-        if data_args.incremental_training:
-            time_indices_train = time_index
-            time_index_eval = time_index + 1
-        else:
+        if data_args.no_incremental_training:
             if data_args.training_time_window_size > 0:
                 time_index_eval = time_index + 1
                 time_indices_train = list(
@@ -301,6 +298,9 @@ def main():
             else:
                 time_indices_train = list(range(1, time_index + 1))
                 time_index_eval = time_index + 1
+        else:
+            time_indices_train = time_index
+            time_index_eval = time_index + 1
 
         # Training
         if training_args.do_train:
