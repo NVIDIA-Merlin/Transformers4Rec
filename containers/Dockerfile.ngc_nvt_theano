@@ -1,0 +1,6 @@
+FROM nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3
+
+#echo "Installing dependencies"
+ADD ./hf4rec/baselines/requirements_theano.txt requirements_theano.txt
+
+RUN conda install --yes --file requirements_theano.txt 

@@ -232,6 +232,14 @@ cd hf4rec/
 docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3 --build-arg SSH_KEY="$(cat ~/.ssh/hf4rec_repo_key)" -f containers/Dockerfile.ngc_nvt .
 ```
 
+### Baselines
+
+```bash
+cd hf4rec/
+docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3-theano1.0.5 --build-arg SSH_KEY="$(cat ~/.ssh/hf4rec_repo_key)" -f containers/Dockerfile.ngc_nvt_theano .
+```
+
+
 ## Try locally
 
 ```bash
