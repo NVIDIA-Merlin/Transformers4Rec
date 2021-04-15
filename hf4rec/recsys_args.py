@@ -126,8 +126,7 @@ class TrainingArguments(HfTrainingArguments):
 @dataclass
 class DataArguments:
     data_path: Optional[str] = field(
-        default="",
-        metadata={"help": "Path to dataset."},
+        default="", metadata={"help": "Path to dataset."},
     )
 
     pad_token: Optional[int] = field(default=0, metadata={"help": "pad token"})
@@ -234,7 +233,7 @@ class DataArguments:
         },
     )
 
-    no_incremental_training: bool = field(
+    incremental_training: bool = field(
         default=False,
         metadata={
             "help": "Indicates whether the model should be trained incrementally over time (False) or trained using only the time window (True) defined in --training_time_window_size"
@@ -244,7 +243,8 @@ class DataArguments:
     training_time_window_size: Optional[int] = field(
         default=0,
         metadata={
-            "help": "Window size of time units (e.g. days or hours) to use for training, when --no_incremental_training."
+            "help": "Window size of time units (e.g. days or hours) to use for training, when not using --incremental_training. "
+            "If --training_time_window_size 0, the training window will start on index 1 and finish right before the current eval index (incremental evaluation)"
             "The framework expects data to be split in contiguous non-overlapping time windows, with fixed time units (e.g. days, hours)."
         },
     )
