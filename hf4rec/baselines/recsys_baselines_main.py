@@ -17,7 +17,6 @@
 Example arguments for command line: 
     CUDA_VISIBLE_DEVICES=0,1 TOKENIZERS_PARALLELISM=false python recsys_main.py --output_dir ./tmp/ --do_train --do_eval --data_path ~/dataset_path/ --start_date 2019-10-01 --end_date 2019-10-15 --data_loader_engine nvtabular --per_device_train_batch_size 320 --per_device_eval_batch_size 512 --model_type gpt2 --loss_type cross_entropy --logging_steps 10 --d_model 256 --n_layer 2 --n_head 8 --dropout 0.1 --learning_rate 0.001 --similarity_type concat_mlp --num_train_epochs 1 --all_rescale_factor 1 --neg_rescale_factor 0 --feature_config ../datasets/ecommerce-large/config/features/session_based_features_pid.yaml --inp_merge mlp --tf_out_activation tanh --experiments_group local_test --weight_decay 1.3e-05 --learning_rate_schedule constant_with_warmup --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 1 --hidden_act gelu_new --save_steps 0 --eval_on_last_item_seq_only --fp16 --overwrite_output_dir --session_seq_length_max 20 --predict_top_k 1000 --eval_accumulation_steps 10
 """
-
 import importlib
 import inspect
 import logging
@@ -47,6 +46,7 @@ from ..recsys_utils import (
     get_timestamp_feature_name,
     safe_json,
 )
+from .gru4rec.gru4rec import GRU4Rec
 from .knn.vsknn import VMContextKNN
 
 try:
@@ -69,7 +69,7 @@ SESSION_FNAME = "SessionId"
 ITEM_FNAME = "ItemId"
 TIMESTAMP_FNAME = "Time"
 
-ALGORITHMS = {"vsknn": VMContextKNN}
+ALGORITHMS = {"vsknn": VMContextKNN, "gru4rec": GRU4Rec}
 
 
 class WandbLogger:
@@ -274,35 +274,33 @@ def main():
             break
     """
 
-    # algorithm = VMContextKNN(#k=500, sample_size=5000,  weighting='quadratic', weighting_score='quadratic', idf_weighting=5,
-    #        #remind=True, push_reminders=True,
-    #        session_key = SESSION_FNAME, item_key= ITEM_FNAME, time_key= TIMESTAMP_FNAME,
-    #        **valid_kwargs)
-
     algorithm = get_algorithm(model_args.model_type, remaining_hparams)
 
-    # data_dates = get_avail_data_dates(data_args)
     results_times = {}
 
     start_session_id = 0
 
-    max_time_index = data_args.final_time_window_index
-    if data_args.no_incremental_training:
-        max_time_index = max_time_index - data_args.training_time_window_size + 1
-
-    # for date_idx in range(1, len(data_dates)):
-    for time_index in range(data_args.start_time_window_index, max_time_index):
-        # train_date, eval_date = data_dates[date_idx - 1], data_dates[date_idx]
-        # train_date_str, eval_date_str = train_date.strftime("%Y-%m-%d"), eval_date.strftime("%Y-%m-%d")
-
-        if data_args.no_incremental_training:
-            time_indices_train = list(
-                range(time_index, time_index + data_args.training_time_window_size)
-            )
-            time_index_eval = time_index + data_args.training_time_window_size
-        else:
+    for time_index in range(
+        data_args.start_time_window_index, data_args.final_time_window_index
+    ):
+        if data_args.incremental_training:
             time_indices_train = time_index
             time_index_eval = time_index + 1
+        else:
+            if data_args.training_time_window_size > 0:
+                time_index_eval = time_index + 1
+                time_indices_train = list(
+                    range(
+                        max(
+                            time_index_eval - data_args.training_time_window_size,
+                            data_args.start_time_window_index,
+                        ),
+                        time_index_eval,
+                    )
+                )
+            else:
+                time_indices_train = list(range(1, time_index + 1))
+                time_index_eval = time_index + 1
 
         # Training
         if training_args.do_train:
@@ -348,7 +346,6 @@ def main():
             )
 
             # eval_sessions_df = eval_sessions_df[:100]
-
             if not remaining_hparams["eval_baseline_cpu_parallel"]:
                 # Sequential approach
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
@@ -571,6 +568,7 @@ def evaluate_session(
     total_items,
     eval_on_last_item_seq_only,
 ):
+    last_valid_preds_all_items = None
     for pos, (item_id, ts) in enumerate(
         zip(session_row[ITEM_FNAME], session_row[TIMESTAMP_FNAME])
     ):
@@ -586,7 +584,21 @@ def evaluate_session(
 
             # preds_series.sort_values(ascending=False, inplace=True)
             preds_all_items = np.zeros(total_items)
-            preds_all_items[preds_series.index] = preds_series.values
+
+            # Checks if the algorithm was able to provide next-item recommendations after the given item.
+            # For example, GRU4Rec is unable to recommend after seing an item which was not seen during train
+            # In such cases, we use the last valid recommendation list for the session, if available.
+            # Otherwise, if there was no valid recommendation list for the session, we assume a wrong prediction
+            if preds_series is not None:
+                preds_all_items[preds_series.index] = preds_series.values
+                last_valid_preds_all_items = preds_all_items
+            else:
+                logger.debug("Item not found during prediction: {}".format(item_id))
+                if last_valid_preds_all_items is not None:
+                    preds_all_items = last_valid_preds_all_items
+                else:
+                    # This ensures that the recommendation is considered wrong
+                    label_next_item = -1
 
             if (
                 not eval_on_last_item_seq_only
@@ -596,9 +608,6 @@ def evaluate_session(
                     preds=preds_all_items.reshape(1, -1),
                     labels=np.array([label_next_item]),
                 )
-
-                # metrics.update(preds=preds_series.index.values.reshape(1,1,-1),
-                #            labels=np.array([[label_next_item]]))
 
 
 def dataframe_from_parquet_files(train_data_paths, cols_to_read):
