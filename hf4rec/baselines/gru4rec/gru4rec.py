@@ -17,9 +17,8 @@ from theano import function
 from theano import tensor as T
 from theano.sandbox.rng_mrg import MRG_RandomStreams
 
-import custom_opt
-import datatools
-from gpu_ops import gpu_diag, gpu_searchsorted
+from . import custom_opt, datatools
+from .gpu_ops import gpu_diag, gpu_searchsorted
 
 os.chdir(orig_cwd)
 import pickle

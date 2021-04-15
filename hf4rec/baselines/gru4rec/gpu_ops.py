@@ -9,7 +9,7 @@ import numpy as np
 import theano
 from theano import tensor as T
 
-import custom_theano_ops as cto
+from . import custom_theano_ops as cto
 
 disable_custom_op = False
 
