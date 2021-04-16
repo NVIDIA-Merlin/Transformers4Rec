@@ -46,8 +46,6 @@ from ..recsys_utils import (
     get_timestamp_feature_name,
     safe_json,
 )
-from .gru4rec.gru4rec import GRU4Rec
-from .knn.vsknn import VMContextKNN
 
 try:
     import cPickle as pickle
@@ -69,7 +67,18 @@ SESSION_FNAME = "SessionId"
 ITEM_FNAME = "ItemId"
 TIMESTAMP_FNAME = "Time"
 
-ALGORITHMS = {"vsknn": VMContextKNN, "gru4rec": GRU4Rec}
+
+def get_algorithm_class(alg_name):
+    if alg_name == "vsknn":
+        from .knn.vsknn import VMContextKNN
+
+        return VMContextKNN
+    elif alg_name == "gru4rec":
+        from .gru4rec.gru4rec import GRU4Rec
+
+        return GRU4Rec
+    else:
+        raise ValueError(f"The '{alg_name}' algorithm is not supported")
 
 
 class WandbLogger:
@@ -280,6 +289,10 @@ def main():
 
     start_session_id = 0
 
+    train_interactions_cumulative_df = pd.DataFrame()
+
+    items_to_predict_set = set()
+
     for time_index in range(
         data_args.start_time_window_index, data_args.final_time_window_index
     ):
@@ -307,6 +320,15 @@ def main():
             logger.info(
                 f"************* Training (time indices:{time_indices_train}) *************"
             )
+
+            # If trains with all past available training data (since time index 1)
+            if (
+                data_args.no_incremental_training
+                and data_args.training_time_window_size == 0
+            ):
+                # Loads only the last time index, because other past data is already available for concatenation
+                time_indices_train = time_indices_train[-1]
+
             train_data_paths = get_parquet_files_names(
                 data_args, time_indices_train, is_train=True
             )
@@ -322,9 +344,25 @@ def main():
             train_interactions_df = sessions_to_interactions_dataframe(
                 train_sessions_df
             )
+
+            # If trains with all past available training data (since time index 1)
+            if (
+                data_args.no_incremental_training
+                and data_args.training_time_window_size == 0
+            ):
+                # Concatenating with data already preprocessed from past time units
+                train_interactions_cumulative_df = pd.concat(
+                    [train_interactions_cumulative_df, train_interactions_df]
+                )
+                train_interactions_df = train_interactions_cumulative_df
+
             algorithm.fit(train_interactions_df)
 
-            items_to_predict = train_interactions_df[ITEM_FNAME].unique()
+            unique_items = train_interactions_df[ITEM_FNAME].unique()
+            if data_args.no_incremental_training:
+                items_to_predict_set = set(unique_items)
+            else:
+                items_to_predict_set.update(unique_items)
 
         # Evaluation
         if training_args.do_eval:
@@ -345,7 +383,9 @@ def main():
                 start_session_id=start_session_id,
             )
 
-            eval_sessions_df = eval_sessions_df[:100]
+            items_to_predict = np.array(list(items_to_predict_set))
+
+            # eval_sessions_df = eval_sessions_df[:100]
             if not remaining_hparams["eval_baseline_cpu_parallel"]:
                 # Sequential approach
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
@@ -510,7 +550,7 @@ def get_algorithm(model_type, remaining_hparams):
         if k.startswith(f"{model_type}-")
     }
 
-    alg_cls = ALGORITHMS[model_type]
+    alg_cls = get_algorithm_class(model_type)
     # Removing not existing model args in the class constructor
     # model_hparms = filter_kwargs(model_hparms, alg_cls)
 
