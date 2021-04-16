@@ -46,8 +46,6 @@ from ..recsys_utils import (
     get_timestamp_feature_name,
     safe_json,
 )
-from .gru4rec.gru4rec import GRU4Rec
-from .knn.vsknn import VMContextKNN
 
 try:
     import cPickle as pickle
@@ -69,7 +67,18 @@ SESSION_FNAME = "SessionId"
 ITEM_FNAME = "ItemId"
 TIMESTAMP_FNAME = "Time"
 
-ALGORITHMS = {"vsknn": VMContextKNN, "gru4rec": GRU4Rec}
+
+def get_algorithm_class(alg_name):
+    if alg_name == "vsknn":
+        from .knn.vsknn import VMContextKNN
+
+        return VMContextKNN
+    elif alg_name == "gru4rec":
+        from .gru4rec.gru4rec import GRU4Rec
+
+        return GRU4Rec
+    else:
+        raise ValueError(f"The '{alg_name}' algorithm is not supported")
 
 
 class WandbLogger:
@@ -510,7 +519,7 @@ def get_algorithm(model_type, remaining_hparams):
         if k.startswith(f"{model_type}-")
     }
 
-    alg_cls = ALGORITHMS[model_type]
+    alg_cls = get_algorithm_class(model_type)
     # Removing not existing model args in the class constructor
     # model_hparms = filter_kwargs(model_hparms, alg_cls)
 
