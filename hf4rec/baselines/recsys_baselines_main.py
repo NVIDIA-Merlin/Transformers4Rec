@@ -345,7 +345,7 @@ def main():
                 start_session_id=start_session_id,
             )
 
-            # eval_sessions_df = eval_sessions_df[:100]
+            eval_sessions_df = eval_sessions_df[:100]
             if not remaining_hparams["eval_baseline_cpu_parallel"]:
                 # Sequential approach
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
@@ -369,8 +369,6 @@ def main():
 
                 n_workers = max(data_args.workers_count, 1)
                 logger.info(f"Number of workers (--workers_count): {n_workers}")
-
-                # eval_sessions_df = eval_sessions_df[:1000]
 
                 logger.info(
                     "Eval dataset - # sessions: {}".format(len(eval_sessions_df))
@@ -413,8 +411,10 @@ def main():
             )
 
             # Logging to W&B
-            # eval_metrics_results_wandb = {k.replace('eval_', 'eval/'): v for k,v in eval_metrics_results.items()}
-            wandb_logger.log(eval_metrics_results, step=time_index_eval)
+            eval_metrics_results_wandb = {
+                k.replace("eval_", "eval/"): v for k, v in eval_metrics_results.items()
+            }
+            wandb_logger.log(eval_metrics_results_wandb, step=time_index_eval)
 
     logger.info("Training and evaluation loops are finished")
 
@@ -430,8 +430,10 @@ def main():
         results_avg_time = dict(results_df.mean())
         results_avg_time = {f"{k}_AOT": v for k, v in results_avg_time.items()}
         # Logging to W&B
-        # TODO: Rename AOD to AOT (because time units can also be hours)
-        wandb_logger.log(results_avg_time, step=time_index_eval)
+        results_avg_time_wandb = {
+            k.replace("eval_", "eval/"): v for k, v in results_avg_time.items()
+        }
+        wandb_logger.log(results_avg_time_wandb, step=time_index_eval)
 
         log_aot_metric_results(training_args.output_dir, results_avg_time)
 
