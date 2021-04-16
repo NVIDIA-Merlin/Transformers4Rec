@@ -1,4 +1,4 @@
-# HF4Rec
+# Transformers4Rec
 ## Transformer-based neural architectures and pipelines for sequential, session-based and session-aware recommendations
 
 
@@ -16,7 +16,7 @@ To deal with sequential recommendation, many sequence learning techniques previo
 As many of the inspirations for sequential recommendation come from NLP, this research project aims to build a bridge between those research areas.
 The [HuggingFace transformers project](https://github.com/huggingface/transformers) is by far the most popular framework on the Transformers Architecture, where top researchers have been contributing with their new fancy Transformers architectures for NLP.
 
-The HF4Rec framework uses the HuggingFace Tranformers library to **leverage the increasing number of Transformer architectures for sequential recommendation**.
+The Transformers4Rec framework uses the HuggingFace Transformers library to **leverage the increasing number of Transformer architectures for sequential recommendation**.
 With such an approach, the RecSys community is now able to easily compare different neural architectures for sequential / session-based / session-aware recommendation and investigate those that perform better for different use cases and datasets.
 
 Differently from most implementations of Transformers for RecSys, which use only the sequence of interacted item ids to model users preferences over time, this framework allows to use **multiple input features** (side information) to represent the item (e.g. product category and price, news content embedding) and the user context (e.g. time, location, device), for more accurate recommendations.
