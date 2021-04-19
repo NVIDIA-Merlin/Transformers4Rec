@@ -34,6 +34,7 @@ import pandas as pd
 import wandb
 import yaml
 from joblib import Parallel, delayed
+from pandas.api.types import is_datetime64_any_dtype as is_datetime
 from tqdm import tqdm
 from transformers import HfArgumentParser
 
@@ -686,7 +687,49 @@ def sessions_to_interactions_dataframe(sessions_df):
     # Converts from the representation of one row per session to one row by interaction
     interactions_df = explode_multiple_cols(sessions_df, [ITEM_FNAME, TIMESTAMP_FNAME])
 
+    convert_timestamps(interactions_df)
+
     return interactions_df
+
+
+def convert_timestamps(interactions_df):
+    # TODO: This condition is TEMPORARY and only the YOOCHOOSE ecommerce dataset, for which
+    # the timestamp column is datetime and not timestamp (in ms) as the other datasets.
+    # P.s. The YOOCHOOSE preprocessed dataset was already fixed to output timestamps,
+    # but will generate a new dataset later after finishing the paper experiments already started
+    if is_datetime(interactions_df[TIMESTAMP_FNAME].dtype):
+        interactions_df[TIMESTAMP_FNAME] = (
+            interactions_df[TIMESTAMP_FNAME].astype("int64") // 1e6
+        )
+
+    # Convert timestamps to seconds
+    ts_lengh_series = interactions_df[TIMESTAMP_FNAME].astype(str).apply(len)
+
+    ts_lenght_min = ts_lengh_series.min()
+    ts_lenght_max = ts_lengh_series.max()
+
+    # Timestamp in nanoseconds
+    if ts_lenght_min >= 18 and ts_lenght_min < 21:
+        interactions_df[TIMESTAMP_FNAME] = (
+            interactions_df[TIMESTAMP_FNAME] / 1e9
+        ).astype("int64")
+    # Timestamp in microseconds
+    if ts_lenght_min >= 15:
+        interactions_df[TIMESTAMP_FNAME] = (
+            interactions_df[TIMESTAMP_FNAME] / 1e6
+        ).astype("int64")
+    # Timestamp in miliseconds
+    if ts_lenght_min >= 12:
+        interactions_df[TIMESTAMP_FNAME] = (
+            interactions_df[TIMESTAMP_FNAME] / 1e3
+        ).astype("int64")
+    # Timestamp in seconds
+    elif ts_lenght_min >= 9:
+        pass
+    else:
+        raise Exception(
+            f"The timestamps have invalid length (min: {ts_lenght_min}, max: {ts_lenght_max})."
+        )
 
 
 def explode_multiple_cols(df, lst_cols, fill_value=""):
