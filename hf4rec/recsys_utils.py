@@ -15,6 +15,7 @@
 #
 import glob
 import itertools
+import logging
 import os
 import subprocess
 import sys
@@ -22,6 +23,8 @@ import time
 from typing import Any, Dict, NamedTuple
 
 import torch
+
+logger = logging.getLogger(__name__)
 
 
 def safe_json(data):
@@ -69,13 +72,14 @@ def get_timestamp_feature_name(feature_map: Dict[str, Any]) -> str:
     )
 
     if len(timestamp_feature_name) == 0:
-        raise ValueError(
+        raise Exception(
             'No feature have be configured as timestamp (dtype = "timestamp")'
         )
     if len(timestamp_feature_name) > 1:
-        raise ValueError(
+        raise Exception(
             'Only one feature can be configured as timestamp (dtype = "timestamp")'
         )
+
     timestamp_fname = timestamp_feature_name[0]
     return timestamp_fname
 
