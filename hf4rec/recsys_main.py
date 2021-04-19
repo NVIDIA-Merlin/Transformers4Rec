@@ -123,7 +123,7 @@ def main():
                 time_indices_train = list(range(1, time_index + 1))
                 time_index_eval = time_index + 1
         else:
-            time_indices_train = time_index
+            time_indices_train = [time_index]
             time_index_eval = time_index + 1
 
         if (
@@ -148,7 +148,7 @@ def main():
         # Training
         if training_args.do_train:
             logger.info(
-                f"************* Training (time indices:{time_indices_train}) *************"
+                f"************* Training (time indices:{time_indices_train[0]}-{time_indices_train[-1]}) *************"
             )
 
             train_loader, eval_loader = get_dataloaders(
