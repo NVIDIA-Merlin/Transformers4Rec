@@ -339,6 +339,7 @@ def main():
                 item_id_fname=item_id_fname,
                 timestamp_fname=timestamp_fname,
                 start_session_id=start_session_id,
+                session_seq_length_max=data_args.session_seq_length_max,
             )
 
             # train_sessions_df = train_sessions_df[:100]
@@ -382,6 +383,7 @@ def main():
                 item_id_fname=item_id_fname,
                 timestamp_fname=timestamp_fname,
                 start_session_id=start_session_id,
+                session_seq_length_max=data_args.session_seq_length_max,
             )
 
             items_to_predict = np.array(list(items_to_predict_set))
@@ -664,7 +666,11 @@ def dataframe_from_parquet_files(train_data_paths, cols_to_read):
 
 
 def prepare_sessions_data(
-    train_data_paths, item_id_fname, timestamp_fname, start_session_id=0
+    train_data_paths,
+    item_id_fname,
+    timestamp_fname,
+    start_session_id,
+    session_seq_length_max,
 ):
     concat_df = dataframe_from_parquet_files(
         train_data_paths, cols_to_read=[item_id_fname, timestamp_fname]
@@ -672,12 +678,20 @@ def prepare_sessions_data(
 
     # TODO: Ensure data is sorted by time
 
-    # Generating contiguous item ids
+    # Generating contiguous session ids
     concat_df[SESSION_FNAME] = start_session_id + np.arange(len(concat_df))
     last_session_id = concat_df[SESSION_FNAME].max()
 
-    concat_df = concat_df.rename(
+    concat_df = concat_df[[item_id_fname, timestamp_fname]].rename(
         {item_id_fname: ITEM_FNAME, timestamp_fname: TIMESTAMP_FNAME}, axis=1
+    )
+
+    # Truncating long sessions
+    concat_df[ITEM_FNAME] = concat_df[ITEM_FNAME].apply(
+        lambda x: x[:session_seq_length_max]
+    )
+    concat_df[TIMESTAMP_FNAME] = concat_df[TIMESTAMP_FNAME].apply(
+        lambda x: x[:session_seq_length_max]
     )
 
     return concat_df, last_session_id
