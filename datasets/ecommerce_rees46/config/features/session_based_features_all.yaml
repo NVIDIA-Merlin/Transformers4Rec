@@ -26,9 +26,9 @@ sess_price_log_norm_seq:
 sess_relative_price_to_avg_category_seq:
     dtype: float  
     log_with_preds_as_metadata: True
-sess_dtime_secs_log_norm_seq:
-    dtype: float 
-    log_with_preds_as_metadata: True   
+#sess_dtime_secs_log_norm_seq:
+#    dtype: float 
+#    log_with_preds_as_metadata: True   
 sess_prod_recency_days_log_norm_seq:
     dtype: float  
     log_with_preds_as_metadata: True 
