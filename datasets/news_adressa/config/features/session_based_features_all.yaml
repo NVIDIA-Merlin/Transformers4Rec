@@ -73,6 +73,9 @@ weekday_sin:
 weekday_cos:
     dtype: float    
     log_with_preds_as_metadata: True
+item_age_hours_norm:
+    dtype: float    
+    log_with_preds_as_metadata: True
 
 #Control features
 timestamp:
