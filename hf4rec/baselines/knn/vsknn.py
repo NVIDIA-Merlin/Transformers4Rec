@@ -165,6 +165,8 @@ class VMContextKNN:
 
         #Making the IDF computing incremental
         self.idf = {k: log(self.sessions_count / v) for k, v in self.item_freq.items()}
+
+        print(f"session_item_map: {len(self.session_item_map)} - item_session_map: {len(self.item_session_map)}")
         
         
     def predict_next(self, session_id, input_item_id, predict_for_item_ids, timestamp=0, skip=False, mode_type='view'):
