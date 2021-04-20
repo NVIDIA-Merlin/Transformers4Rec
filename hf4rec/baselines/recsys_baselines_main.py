@@ -682,11 +682,14 @@ def prepare_sessions_data(
     concat_df[SESSION_FNAME] = start_session_id + np.arange(len(concat_df))
     last_session_id = concat_df[SESSION_FNAME].max()
 
-    concat_df = concat_df[[item_id_fname, timestamp_fname]].rename(
+    concat_df = concat_df.rename(
         {item_id_fname: ITEM_FNAME, timestamp_fname: TIMESTAMP_FNAME}, axis=1
     )
 
+    concat_df = concat_df[[SESSION_FNAME, ITEM_FNAME, TIMESTAMP_FNAME]]
+
     # Truncating long sessions
+
     concat_df[ITEM_FNAME] = concat_df[ITEM_FNAME].apply(
         lambda x: x[:session_seq_length_max]
     )
