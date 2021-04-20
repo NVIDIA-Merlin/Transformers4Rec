@@ -43,6 +43,7 @@ from ..recsys_args import DataArguments, ModelArguments, TrainingArguments
 from ..recsys_data import fetch_data_loader
 from ..recsys_utils import (
     get_label_feature_name,
+    get_object_size,
     get_parquet_files_names,
     get_timestamp_feature_name,
     safe_json,
@@ -360,6 +361,8 @@ def main():
 
             algorithm.fit(train_interactions_df)
 
+            # logger.info(f"The algorithm memory size: {get_object_size(algorithm)}")
+
             unique_items = train_interactions_df[ITEM_FNAME].unique()
             if data_args.no_incremental_training:
                 items_to_predict_set = set(unique_items)
@@ -420,15 +423,18 @@ def main():
                 logger.info(f"# sessions by worker: {chunk_size}")
                 eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=chunk_size)
 
-                chunks_metrics_results = Parallel(n_jobs=n_workers, batch_size=1)(
+                chunks_metrics_results = Parallel(
+                    n_jobs=n_workers, batch_size=1, verbose=100,
+                )(
                     delayed(evaluate_sessions_parallel)(
                         sessions_chunk_df,
-                        deepcopy(algorithm),
+                        algorithm,  # deepcopy(algorithm),
                         items_to_predict,
                         target_size,
                         model_args.eval_on_last_item_seq_only,
+                        job_id,
                     )
-                    for sessions_chunk_df in eval_sessions_df_chunks
+                    for job_id, sessions_chunk_df in enumerate(eval_sessions_df_chunks)
                 )
 
                 # Averaging metrics by chunk
@@ -586,12 +592,12 @@ def evaluate_sessions_parallel(
     items_to_predict,
     target_size,
     eval_on_last_item_seq_only,
+    job_id,
 ):
-
     # TODO: Make the metric top-k a hyperparameter
     metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
 
-    for idx, session_row in tqdm(sessions_chuck_df.iterrows()):
+    for idx, session_row in sessions_chuck_df.iterrows():
         evaluate_session(
             algorithm,
             metrics,
