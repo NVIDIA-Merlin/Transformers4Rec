@@ -75,6 +75,10 @@ def get_algorithm_class(alg_name):
         from .knn.vsknn import VMContextKNN
 
         return VMContextKNN
+    if alg_name == "vstan":
+        from .knn.vstan import VSKNN_STAN
+
+        return VSKNN_STAN
     elif alg_name == "gru4rec":
         from .gru4rec.gru4rec import GRU4Rec
 
@@ -389,14 +393,23 @@ def main():
                 session_seq_length_max=data_args.session_seq_length_max,
             )
 
+            eval_interactions_df = sessions_to_interactions_dataframe(eval_sessions_df)
+
+            eval_sessions_preproc_df = (
+                eval_interactions_df.groupby(SESSION_FNAME)
+                .agg({ITEM_FNAME: list, TIMESTAMP_FNAME: list})
+                .reset_index()
+            )
+
             items_to_predict = np.array(list(items_to_predict_set))
 
-            # eval_sessions_df = eval_sessions_df[:100]
+            # eval_sessions_preproc_df = eval_sessions_preproc_df[:100]
             if not remaining_hparams["eval_baseline_cpu_parallel"]:
                 # Sequential approach
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
                 for idx, session_row in tqdm(
-                    eval_sessions_df.iterrows(), total=len(eval_sessions_df)
+                    eval_sessions_preproc_df.iterrows(),
+                    total=len(eval_sessions_preproc_df),
                 ):
                     evaluate_session(
                         algorithm,
@@ -717,13 +730,13 @@ def sessions_to_interactions_dataframe(sessions_df):
 
 def convert_timestamps(interactions_df):
     # TODO: This condition is TEMPORARY and only the YOOCHOOSE ecommerce dataset, for which
-    # the timestamp column is datetime and not timestamp (in ms) as the other datasets.
+    # the timestamp column is datetime[ns] and not timestamp (in ms) as the other datasets.
     # P.s. The YOOCHOOSE preprocessed dataset was already fixed to output timestamps,
     # but will generate a new dataset later after finishing the paper experiments already started
     if is_datetime(interactions_df[TIMESTAMP_FNAME].dtype):
         interactions_df[TIMESTAMP_FNAME] = (
             interactions_df[TIMESTAMP_FNAME].astype("int64") // 1e6
-        )
+        ).astype("int64")
 
     # Convert timestamps to seconds
     ts_lengh_series = interactions_df[TIMESTAMP_FNAME].astype(str).apply(len)
