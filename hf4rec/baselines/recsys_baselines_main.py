@@ -401,7 +401,8 @@ def main():
 
             eval_interactions_df = sessions_to_interactions_dataframe(eval_sessions_df)
 
-            eval_sessions_preproc_df = (
+            # Grouping the sessions again after preprocessing
+            eval_sessions_df = (
                 eval_interactions_df.groupby(SESSION_FNAME)
                 .agg({ITEM_FNAME: list, TIMESTAMP_FNAME: list})
                 .reset_index()
@@ -414,8 +415,7 @@ def main():
                 # Sequential approach
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
                 for idx, session_row in tqdm(
-                    eval_sessions_preproc_df.iterrows(),
-                    total=len(eval_sessions_preproc_df),
+                    eval_sessions_df.iterrows(), total=len(eval_sessions_df),
                 ):
                     evaluate_session(
                         algorithm,
