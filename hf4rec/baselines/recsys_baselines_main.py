@@ -75,6 +75,7 @@ def get_algorithm_class(alg_name):
         from .knn.vsknn import VMContextKNN
 
         return VMContextKNN
+
     if alg_name == "vstan":
         from .knn.vstan import VSKNN_STAN
 
@@ -83,6 +84,11 @@ def get_algorithm_class(alg_name):
         from .gru4rec.gru4rec import GRU4Rec
 
         return GRU4Rec
+
+    elif alg_name == "narm":
+        from .narm.narm import NARM
+
+        return NARM
     else:
         raise ValueError(f"The '{alg_name}' algorithm is not supported")
 
@@ -646,28 +652,28 @@ def evaluate_session(
                 timestamp=ts,
             )
 
-            # preds_series.sort_values(ascending=False, inplace=True)
-            preds_all_items = np.zeros(total_items)
-
-            # Checks if the algorithm was able to provide next-item recommendations after the given item.
-            # For example, GRU4Rec is unable to recommend after seing an item which was not seen during train
-            # In such cases, we use the last valid recommendation list for the session, if available.
-            # Otherwise, if there was no valid recommendation list for the session, we assume a wrong prediction
-            if preds_series is not None:
-                preds_all_items[preds_series.index] = preds_series.values
-                last_valid_preds_all_items = preds_all_items
-            else:
-                logger.debug("Item not found during prediction: {}".format(item_id))
-                if last_valid_preds_all_items is not None:
-                    preds_all_items = last_valid_preds_all_items
-                else:
-                    # This ensures that the recommendation is considered wrong
-                    label_next_item = -1
-
             if (
                 not eval_on_last_item_seq_only
                 or pos == len(session_row[ITEM_FNAME]) - 2
             ):
+                # preds_series.sort_values(ascending=False, inplace=True)
+                preds_all_items = np.zeros(total_items)
+
+                # Checks if the algorithm was able to provide next-item recommendations after the given item.
+                # For example, GRU4Rec is unable to recommend after seing an item which was not seen during train
+                # In such cases, we use the last valid recommendation list for the session, if available.
+                # Otherwise, if there was no valid recommendation list for the session, we assume a wrong prediction
+                if preds_series is not None:
+                    preds_all_items[preds_series.index] = preds_series.values
+                    last_valid_preds_all_items = preds_all_items
+                else:
+                    logger.debug("Item not found during prediction: {}".format(item_id))
+                    if last_valid_preds_all_items is not None:
+                        preds_all_items = last_valid_preds_all_items
+                    else:
+                        # This ensures that the recommendation is considered wrong
+                        label_next_item = -1
+
                 metrics.update(
                     preds=preds_all_items.reshape(1, -1),
                     labels=np.array([label_next_item]),
