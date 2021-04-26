@@ -80,6 +80,12 @@ def get_algorithm_class(alg_name):
         from .knn.vstan import VSKNN_STAN
 
         return VSKNN_STAN
+
+    if alg_name == "stan":
+        from .knn.stan import STAN
+
+        return STAN
+
     elif alg_name == "gru4rec":
         from .gru4rec.gru4rec import GRU4Rec
 
