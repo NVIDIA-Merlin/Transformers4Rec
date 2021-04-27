@@ -132,6 +132,7 @@ class GRU4Rec:
         session_key="SessionId",
         item_key="ItemId",
         time_key="Time",
+        seed=42
     ):
         self.layers = layers
         if not isinstance(self.layers, list):
@@ -166,6 +167,7 @@ class GRU4Rec:
         self.n_sample = n_sample
         self.sample_alpha = sample_alpha
         self.smoothing = smoothing
+        self.seed = seed
 
     def set_loss_function(self, loss):
         if loss == "cross-entropy":
@@ -420,7 +422,7 @@ class GRU4Rec:
     def init(self, data):
         datatools.sort_if_needed(data, [self.session_key, self.time_key])
         offset_sessions = datatools.compute_offset(data, self.session_key)
-        np.random.seed(42)
+        np.random.seed(self.seed)
         self.Wx, self.Wh, self.Wrz, self.Bh, self.H = [], [], [], [], []
         if self.constrained_embedding:
             n_features = self.layers[-1]

@@ -7,8 +7,6 @@ from theano.tensor.shared_randomstreams import RandomStreams
 import time
 import sys
 
-SEED = 42
-np.random.seed(SEED)
 
 class NARM:
     '''
@@ -35,13 +33,14 @@ class NARM:
     
     def __init__(self, factors=100, hidden_units=100, epochs=30, lr=0.001, 
                  batch_size=512, use_dropout=True,
-                 session_key='SessionId', item_key='ItemId', time_key=None):
+                 session_key='SessionId', item_key='ItemId', time_key=None, seed=42):
         self.factors = factors
         self.hidden_units = hidden_units
         self.epochs = epochs
         self.lr = lr
         self.batch_size=batch_size
         self.use_dropout=use_dropout
+        self.seed=seed
         
         self.session_key = session_key
         self.item_key = item_key
@@ -611,7 +610,8 @@ class NARM:
     
     
     def build_model(self, tparams, options):
-        trng = RandomStreams(SEED)
+        np.random.seed(self.seed)
+        trng = RandomStreams(self.seed)
     
         # Used for dropout.
         use_noise = theano.shared(self.numpy_floatX(0.))
