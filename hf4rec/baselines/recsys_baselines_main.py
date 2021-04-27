@@ -301,7 +301,9 @@ def main():
             break
     """
 
-    algorithm = get_algorithm(model_args.model_type, remaining_hparams)
+    algorithm = get_algorithm(
+        model_args.model_type, remaining_hparams, training_args.seed
+    )
 
     results_times = {}
 
@@ -577,7 +579,7 @@ def cast_str_argument(arg_value):
             return str(arg_value)
 
 
-def get_algorithm(model_type, remaining_hparams):
+def get_algorithm(model_type, remaining_hparams, seed):
     model_hparms = {
         k.replace(f"{model_type}-", ""): v
         for k, v in remaining_hparams.items()
@@ -587,6 +589,11 @@ def get_algorithm(model_type, remaining_hparams):
     alg_cls = get_algorithm_class(model_type)
     # Removing not existing model args in the class constructor
     # model_hparms = filter_kwargs(model_hparms, alg_cls)
+
+    constructor_args = inspect.getargspec(alg_cls.__init__)
+    # Sets the seed if the model class accepts it
+    if "seed" in constructor_args.args:
+        model_hparms["seed"] = seed
 
     logger.info(
         f"Instantiating the algorithm {model_type} with these arguments: {model_hparms}"
