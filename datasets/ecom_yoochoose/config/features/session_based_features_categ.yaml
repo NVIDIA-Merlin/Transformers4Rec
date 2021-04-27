@@ -1,0 +1,13 @@
+#Current session features
+item_id-list:
+    dtype: categorical
+    cardinality: 52740
+    is_label: True
+    emb_table: item_id-list
+    log_with_preds_as_metadata: True
+category-list:
+    dtype: categorical
+    cardinality: 336
+    is_label: False
+    emb_table: category-list
+    log_with_preds_as_metadata: True
