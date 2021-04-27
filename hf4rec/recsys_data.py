@@ -240,6 +240,7 @@ def get_nvtabular_dataloader(
             # Infering the number of cols based on the maximum sequence length
             max_seq_len = int(diff_offsets.max())
 
+            """
             if max_seq_len > self.seq_features_len_pad_trim:
                 logger.warn(
                     "The default sequence length has been configured to {}, "
@@ -249,6 +250,7 @@ def get_nvtabular_dataloader(
                         self.seq_features_len_pad_trim,
                     )
                 )
+            """
 
             # Building the indices to reconstruct the sparse tensors
             row_ids = torch.arange(len(offsets) - 1).to(offsets.device)
