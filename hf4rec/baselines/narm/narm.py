@@ -31,12 +31,13 @@ class NARM:
     
     '''
     
-    def __init__(self, factors=100, hidden_units=100, epochs=30, lr=0.001, 
+    def __init__(self, factors=100, hidden_units=100, epochs=30, epochs_patience=5, lr=0.001, 
                  batch_size=512, use_dropout=True,
                  session_key='SessionId', item_key='ItemId', time_key=None, seed=42):
         self.factors = factors
         self.hidden_units = hidden_units
         self.epochs = epochs
+        self.epochs_patience = epochs_patience
         self.lr = lr
         self.batch_size=batch_size
         self.use_dropout=use_dropout
@@ -72,7 +73,7 @@ class NARM:
         self.dataload = (self.load_data, self.prepare_data)
         self.layers = {'gru': (self.param_init_gru, self.gru_layer)}
         
-        self.train_gru(self.factors, self.hidden_units, max_epochs=self.epochs, lrate=self.lr, n_items=nis+1,
+        self.train_gru(self.factors, self.hidden_units, max_epochs=self.epochs, patience=self.epochs_patience, lrate=self.lr, n_items=nis+1,
                        batch_size=self.batch_size, use_dropout=self.use_dropout)
     
     def train_gru(self, 
