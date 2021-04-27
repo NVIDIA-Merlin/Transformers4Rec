@@ -590,7 +590,7 @@ def get_algorithm(model_type, remaining_hparams, seed):
     # Removing not existing model args in the class constructor
     # model_hparms = filter_kwargs(model_hparms, alg_cls)
 
-    constructor_args = inspect.getargspec(alg_cls.__init__)
+    constructor_args = inspect.getfullargspec(alg_cls.__init__)
     # Sets the seed if the model class accepts it
     if "seed" in constructor_args.args:
         model_hparms["seed"] = seed
