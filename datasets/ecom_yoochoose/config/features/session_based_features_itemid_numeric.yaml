@@ -1,0 +1,22 @@
+#Current session features
+item_id-list:
+    dtype: categorical
+    cardinality: 52740
+    is_label: True
+    emb_table: item_id-list
+    log_with_preds_as_metadata: True
+timestamp_hour_cos-list:
+    dtype: float  
+    log_with_preds_as_metadata: True
+timestamp_hour_sin-list:
+    dtype: float  
+    log_with_preds_as_metadata: True
+timestamp_wd_sin-list:
+    dtype: float  
+    log_with_preds_as_metadata: True
+timestamp_wd_cos-list:
+    dtype: float  
+    log_with_preds_as_metadata: True
+timestamp_age_days_norm-list:
+    dtype: float  
+    log_with_preds_as_metadata: True      
