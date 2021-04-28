@@ -2,6 +2,6 @@
 [global]
 device=cuda0
 floatX=float32
-allow_gc=False
+allow_gc=True
 mode=FAST_RUN
 optimizer_excluding=local_dnn_reduction:local_cudnn_maxandargmax:local_dnn_argmax
