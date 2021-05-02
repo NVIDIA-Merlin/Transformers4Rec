@@ -1197,3 +1197,16 @@ class GRU4Rec:
             np.array([session_id]), np.array([input_item_id]), predict_for_item_ids, 1
         )[0]
 
+
+    def free_memory(self):
+        if not self.constrained_embedding and \
+           self.embedding:
+            self.E.set_value([[]])
+        for i in range(len(self.layers)):
+            self.Wx[i].set_value([[]])
+            self.Wh[i].set_value([[]])
+            self.Wrz[i].set_value([[]])
+            self.H[i].set_value([[]])
+            self.Bh[i].set_value([])
+        self.Wy.set_value([[]])
+        self.By.set_value([[]])
