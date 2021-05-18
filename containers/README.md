@@ -101,15 +101,76 @@ build and locally run the containers documented in this README below.
 ## Build
 
 ```bash
-cd hf4rec/
-docker build --no-cache -t hf4rec_dev -f container/Dockerfile.dev_nvt .
+cd Transformers4Rec/
+docker build --no-cache -t transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5  -f containers/Dockerfile.dev .
 ```
 
 ## Run the container in interactive mode
 
 ```bash
-docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/hf4rec:/workspace -v ~/dataset/:/data --workdir /workspace/ hf4rec_dev /bin/bash 
+PROJECT_PATH=~/projects/nvidia/Transformers4Rec
+DATA_PATH=~/dataset/
+docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v $PROJECT_PATH:/workspace -v $DATA_PATH:/data --workdir /workspace/ transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5 /bin/bash 
 ```
+
+
+#### Run inside the container
+
+```bash
+cd /workspace/
+
+#source activate merlin
+
+#Login into Weights&Biases
+wandb login 
+Access https://wandb.ai/authorize
+Paste your W&B API key
+
+#Or disable WANDB login
+export WANDB_MODE=dryrun
+
+
+DATA_PATH="/data/ecommerce_dataset/ecommerce_preproc_v5_with_repetitions_day_folders"
+
+#Run training script
+TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0 python3 -m transformers4rec.recsys_main \
+    --output_dir "./tmp/" \
+    --overwrite_output_dir \
+    --do_train \
+    --do_eval \
+    --data_path $DATA_PATH \
+    --validate_every 10 \
+    --logging_steps 20 \
+    --save_steps 0 \
+    --experiments_group "local_experiments" \
+    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_itemid.yaml \
+    --data_loader_engine nvtabular \
+    --start_time_window_index 1 \
+    --final_time_window_index 5 \
+    --time_window_folder_pad_digits 4 \
+    --model_type transfoxl \
+    --loss_type cross_entropy \
+    --similarity_type concat_mlp \
+    --tf_out_activation tanh \
+    --inp_merge mlp \
+    --hidden_act gelu_new \
+    --dataloader_drop_last \
+    --compute_metrics_each_n_steps 1 \
+    --session_seq_length_max 20 \
+    --eval_on_last_item_seq_only \
+    --num_train_epochs 10 \
+    --per_device_train_batch_size 192 \
+    --per_device_eval_batch_size 128 \
+    --learning_rate 0.00014969647714359603 \
+    --learning_rate_schedule linear_with_warmup \
+    --learning_rate_warmup_steps 0 \
+    --mf_constrained_embeddings \
+    --dropout 0.1 \
+    --weight_decay 6.211639773976265e-05 \
+    --d_model 320 \
+    --n_layer 1 \
+    --n_head 2 \
+    --fp16  #if GPU with fp16 support is available
 
 ## Profile the model with NVIDIA DLProf and Nsight Systems
 It is possible to use the [NVIDIA Deep Learning Profiler (DLProf)](https://docs.nvidia.com/deeplearning/frameworks/dlprof-user-guide/index.html) and [NVIDIA Nsight Systems](https://developer.nvidia.com/nsight-systems) tools to profile the training / evaluation loop, identify bottlenecks and get some performance hints (e.g. getting to know if all TensorCores eligible ops are being used when using AMP (--fp16) or whether the data loaders are consuming a large time or letting the GPUs idle while reading).
@@ -139,9 +200,15 @@ sudo sh -c 'echo kernel.perf_event_paranoid=1 > /etc/sysctl.d/local.conf'
 ### Run the container for profiling
 
 ```bash
+PROJECT_PATH=~/projects/nvidia/Transformers4Rec
+DATA_PATH=~/dataset/
+
+#source activate merlin
+
 docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864  \
- -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/recsys:/workspace -v ~/dataset/:/data --workdir /workspace/ hf4rec_dev /bin/bash 
+ -p 6006:6006 -p 8888:8888 -v $PROJECT_PATH:/workspace -v $DATA_PATH/:/data --workdir /workspace/ transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5 /bin/bash 
 ```
+
 
 ### Profiling the model with DLProf
 
@@ -158,6 +225,10 @@ export WANDB_MODE=dryrun
 export CUDA_VISIBLE_DEVICES=0
 export TOKENIZERS_PARALLELISM=false
 
+#source activate merlin
+
+DATA_PATH=/data
+
 dlprof --mode=pytorch \
        --force=true \
        --output_path=nsights_files/output_path \
@@ -166,16 +237,15 @@ dlprof --mode=pytorch \
        --reports=all \
        --nsys_opts="--sample=cpu --trace 'nvtx,cuda,osrt,cudnn'" \
        --iter_start=1 --iter_stop=10 \
-python3 -m hf4rec.recsys_main \
+python3 -m transformers4rec.recsys_main \
     --output_dir "./tmp/" \
     --overwrite_output_dir \
     --do_train \
     --do_eval \
-    --data_path "/DATA_PATH/" \
-    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_pid.yaml \
+    --data_path $DATA_PATH \
+    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_itemid.yaml \
     --data_loader_engine nvtabular \
     --fp16 \
-    --workers_count 2 \
     --validate_every 10 \
     --logging_steps 20 \
     --save_steps 0 \
@@ -217,102 +287,4 @@ These instructions are based in the article [Profiling and Optimizing Deep Neura
 
 
 
-
-# NGC image
-
-This section has the instructions on how to build, run locally and push images to NGC.
-
-## Build the image
-
-Replace `prj-recsys` in the image name by your team on NGC.  
-P.s. The GitHub repository must be cloned within the image. For that, you need to provide in the --build-arg the path of the private SSH key whose public SSH key was set as a Deploy Key in the private repo at GitHub.
-
-```bash
-cd hf4rec/
-docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3 --build-arg SSH_KEY="$(cat ~/.ssh/hf4rec_repo_key)" -f containers/Dockerfile.ngc_nvt .
-```
-
-### Baselines
-
-```bash
-cd hf4rec/
-docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3-theano1.0.5 --build-arg SSH_KEY="$(cat ~/.ssh/hf4rec_repo_key)" -f containers/Dockerfile.ngc_nvt_theano .
-```
-
-
-## Try locally
-
-```bash
-docker run --gpus all -it -p 6006:6006 -p 8888:8888 -v ~/projects/nvidia/hf4rec:/workspace -v ~/dataset/:/data --workdir /workspace/ -t nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3 /bin/bash
-```
-
-Run inside the container
-
-```bash
-#cd /workspace/
-
-#Pulling the main branch with the latest changes
-git pull origin main
-
-
-#Login into Weights&Biases
-wandb login <W&B API KEY here>
-
-#Run training script
-export CUDA_VISIBLE_DEVICES="0"
-export SCRIPT_MODULE="hf4rec.recsys_main"
-export EXPERIMENT_GROUP_NAME="local_experiments"
-bash scripts/run_algorithm_ngc.bash $CUDA_VISIBLE_DEVICES $SCRIPT_MODULE $EXPERIMENT_GROUP_NAME \
-    --data_path "/data" \
-    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_pid.yaml \
-    --data_loader_engine nvtabular \
-    --workers_count 2 \
-    --start_time_window_index 1 \
-    --final_time_window_index 15 \
-    --time_window_folder_pad_digits 4 \
-    --model_type gpt2 \
-    --loss_type cross_entropy \
-    --similarity_type concat_mlp \
-    --tf_out_activation tanh \
-    --inp_merge mlp \
-    --hidden_act gelu_new \
-    --dataloader_drop_last \
-    --compute_metrics_each_n_steps 1 \
-    --session_seq_length_max 20 \
-    --eval_on_last_item_seq_only \
-    --num_train_epochs 10 \
-    --per_device_train_batch_size 192 \
-    --per_device_eval_batch_size 128 \
-    --learning_rate 0.00014969647714359603 \
-    --learning_rate_schedule linear_with_warmup \
-    --learning_rate_warmup_steps 0 \
-    --mf_constrained_embeddings \
-    --dropout 0.1 \
-    --weight_decay 6.211639773976265e-05 \
-    --d_model 320 \
-    --n_layer 1 \
-    --n_head 2 \
-    --fp16  #if GPU with fp16 support is available
-```
-
-## Push image to NGC
-If you have not, you need to login Docker into NGC container registry (nvcr.io) using your [NGC API key](https://ngc.nvidia.com/setup/api-key). 
-
-```bash
-docker login -u \$oauthtoken -p <NGCAPI> nvcr.io 
-```
-
-Then you will be able to push your image to NGC
-```bash
-docker push nvcr.io/nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3
-```
-
-## Run a Job on NGC
-
-```bash
-export CUDA_VISIBLE_DEVICES="0"
-export SCRIPT_MODULE="hf4rec.recsys_main"
-export EXPERIMENT_GROUP_NAME="<EXPERIMENT GROUP NAME>"
-export WANDB_API_KEY="<W&B API KEY here>"
-ngc batch run --name "ml-model.hg4rec-gpt2-$(date +%Y%m%d%H%M%S)" --preempt RUNONCE --ace nv-us-west-2 --instance dgx1v.32g.1.norm --commandline "bash -c 'nvidia-smi && source activate rapids && wandb login $WANDB_API_KEY && date && git pull origin main && date && bash scripts/run_algorithm_ngc.bash $CUDA_VISIBLE_DEVICES $SCRIPT_MODULE $EXPERIMENT_GROUP_NAME --data_path /data/ --feature_config datasets/ecommerce_rees46/config/features/session_based_features_pid.yaml --fp16 --data_loader_engine nvtabular --start_time_window_index 1 --final_time_window_index 15 --time_window_folder_pad_digits 4 --model_type transfoxl --loss_type cross_entropy --per_device_eval_batch_size 512 --similarity_type concat_mlp --tf_out_activation tanh --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_num_cosine_cycles 1.25 --dataloader_drop_last --compute_metrics_each_n_steps 1 --session_seq_length_max 20 --eval_on_last_item_seq_only --mf_constrained_embeddings --num_train_epochs 10 --per_device_train_batch_size 512 --learning_rate 0.00020505005005475648 --learning_rate_schedule linear_with_warmup --dropout 0.1 --weight_decay 3.0393589859266068e-05 --d_model 384 --n_layer 3 --n_head 8 && date'" --result /results --image "nvidian/prj-recsys/hf4rec:0.1-hf4.1.1-nvtabular0.3" --org nvidian --team prj-recsys --datasetid 74861:/data
 ```
