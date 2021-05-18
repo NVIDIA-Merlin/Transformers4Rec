@@ -176,6 +176,7 @@ def get_nvtabular_dataloader(
     shuffle_dataloader=False,
 ):
     # NVTabular dependencies
+    import nvtabular
     from nvtabular import Dataset as NVTDataset
     from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
@@ -319,9 +320,11 @@ def get_nvtabular_dataloader(
         "cats": categ_features,
         "conts": continuous_features,
         "labels": [],
-        # TODO: Investigate how to use multi-GPU with NVTabular
-        "devices": "0",  # list(range(training_args.n_gpu)),
     }
+
+    # TODO: Investigate how to use multi-GPU with NVTabular
+    device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
+    data_loader_config[device_key] = "0"  # list(range(training_args.n_gpu))
 
     dataset = NVTDatasetWrapper(
         data_paths, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction,
