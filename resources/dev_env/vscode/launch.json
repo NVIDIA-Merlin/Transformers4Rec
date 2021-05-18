@@ -8,7 +8,7 @@
             "name": "eCommerce - GPT-2 - Session-based",
             "type": "python",
             "request": "launch",
-            "module": "hf4rec.recsys_main",
+            "module": "transformers4rec.recsys_main",
             "env": {
                 "CUDA_VISIBLE_DEVICES": "0",
                 "TOKENIZERS_PARALLELISM": "false",
@@ -117,7 +117,7 @@
             "name": "G1 news - XLNet - Session-based",
             "type": "python",
             "request": "launch",
-            "module": "hf4rec.recsys_main",
+            "module": "transformers4rec.recsys_main",
             "env": {
                 "CUDA_VISIBLE_DEVICES": "0",
                 "TOKENIZERS_PARALLELISM": "false",
@@ -207,7 +207,7 @@
             "name": "eCommerce - Baselines - V-SkNN",
             "type": "python",
             "request": "launch",
-            "module": "hf4rec.baselines.recsys_baselines_main",
+            "module": "transformers4rec.baselines.recsys_baselines_main",
             "env": {
                 "CUDA_VISIBLE_DEVICES": "0",
                 "TOKENIZERS_PARALLELISM": "false"
@@ -274,7 +274,7 @@
             "name": "G1 News - Baselines - VS-kNN",
             "type": "python",
             "request": "launch",
-            "module": "hf4rec.baselines.recsys_baselines_main",
+            "module": "transformers4rec.baselines.recsys_baselines_main",
             "env": {
                 "CUDA_VISIBLE_DEVICES": "0",
                 "TOKENIZERS_PARALLELISM": "false"
