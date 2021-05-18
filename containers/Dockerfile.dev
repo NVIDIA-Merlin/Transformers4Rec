@@ -1,6 +1,14 @@
-FROM nvcr.io/nvidia/pytorch:20.10-py3
+FROM nvcr.io/nvidia/merlin/merlin-pytorch-training:0.5
 
-ADD ./hf4rec/requirements.txt requirements.txt
+ADD ./transformers4rec/requirements.txt requirements.txt
+
+#Make RUN commands use the new environment:
+SHELL ["conda", "run", "-n", "merlin", "/bin/bash", "-c"]
 
 #Installing framework dependencies
 RUN pip install -r requirements.txt;
+
+#DLProf (for profiling training loops with NVIDIA Nsights Systems)
+RUN pip install tensorboard && pip install nvidia-pyindex && pip install nvidia-pyprof && pip install nvidia-dlprof && pip install nvidia-tensorboard-plugin-dlprof
+
+

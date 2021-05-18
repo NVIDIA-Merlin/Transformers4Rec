@@ -16,7 +16,7 @@ ARG SSH_KEY
 RUN echo "Setting up GitHub repo"
 RUN mkdir /root/.ssh/
 
-# "Copying" GitHub Deployment private key for the NVIDIA-Merlin/Transformers4Recrepo
+# "Copying" GitHub Deployment private key for the NVIDIA-Merlin/Transformers4Rec repo
 # For that, you need to provide --build-arg SSH_KEY="$(cat ~/.ssh/transf4rec_ngc_repo_key)" when building, pointing to the path of the private SSH key 
 RUN echo "$SSH_KEY" > /root/.ssh/transf4rec_ngc_repo_key
 
