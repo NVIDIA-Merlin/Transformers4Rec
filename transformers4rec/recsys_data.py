@@ -28,10 +28,7 @@ import pandas as pd
 import pyarrow.parquet as pq
 import torch
 
-# Petastorm data loader dependencies
-from petastorm import make_batch_reader
-from petastorm.pytorch import DataLoader as PetaStormDataLoader
-from petastorm.unischema import UnischemaField
+
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
@@ -92,6 +89,34 @@ def fetch_data_loader(
     )
 
     if data_args.data_loader_engine == "petastorm":
+        # Petastorm data loader dependencies
+        from petastorm import make_batch_reader
+        from petastorm.pytorch import DataLoader as PetaStormDataLoader
+        from petastorm.unischema import UnischemaField
+
+        class DataLoaderWithLen(PetaStormDataLoader):
+            def __init__(self, *args, **kwargs):
+                if "len" not in kwargs:
+                    self.len = 0
+                else:
+                    self.len = kwargs.pop("len")
+
+                super(DataLoaderWithLen, self).__init__(*args, **kwargs)
+
+            def __len__(self):
+                return self.len
+
+
+        def transform_petastorm_schema(feature_map):
+            schema = []
+            for cname, cinfo in feature_map.items():
+                if cinfo["dtype"] in ["categorical", "int", "timestamp"]:
+                    dtype = np.int64
+                elif cinfo["dtype"] == "float":
+                    dtype = np.float
+                schema.append(UnischemaField(cname, dtype, (None,), None, True))
+            return schema
+
         # eval_data_path = transform_petastorm_schema(feature_map)
 
         data_len = get_dataset_len(data_paths)
@@ -297,7 +322,8 @@ def get_nvtabular_dataloader(
         "cats": categ_features,
         "conts": continuous_features,
         "labels": [],
-        "devices": list(range(training_args.n_gpu)),
+        #TODO: Investigate how to use multi-GPU with NVTabular
+        "device": "0", #list(range(training_args.n_gpu)),
     }
 
     dataset = NVTDatasetWrapper(
@@ -311,30 +337,6 @@ def get_nvtabular_dataloader(
         **data_loader_config
     )
     return loader
-
-
-class DataLoaderWithLen(PetaStormDataLoader):
-    def __init__(self, *args, **kwargs):
-        if "len" not in kwargs:
-            self.len = 0
-        else:
-            self.len = kwargs.pop("len")
-
-        super(DataLoaderWithLen, self).__init__(*args, **kwargs)
-
-    def __len__(self):
-        return self.len
-
-
-def transform_petastorm_schema(feature_map):
-    schema = []
-    for cname, cinfo in feature_map.items():
-        if cinfo["dtype"] in ["categorical", "int", "timestamp"]:
-            dtype = np.int64
-        elif cinfo["dtype"] == "float":
-            dtype = np.float
-        schema.append(UnischemaField(cname, dtype, (None,), None, True))
-    return schema
 
 
 def get_items_sorted_freq(train_data_paths, item_id_feature_name):

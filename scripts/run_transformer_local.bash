@@ -1,19 +1,18 @@
 #!/bin/bash
 
+#source ~/miniconda3/etc/profile.d/conda.sh
+#conda activate merlin
 
-source ~/miniconda3/etc/profile.d/conda.sh
-conda activate transf4rec
-
-cd hf4rec/
-TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0 python3 -m hf4rec.recsys_main \
+DATA_PATH="/DATA_PATH/" 
+cd Transformers4Rec/
+TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0 python3 -m transformers4rec.recsys_main \
     --output_dir "./tmp/" \
     --overwrite_output_dir \
     --do_train \
     --do_eval \
-    --data_path "/DATA_PATH/" \
-    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_pid.yaml \
+    --data_path $DATA_PATH \
+    --feature_config datasets/ecommerce_rees46/config/features/session_based_features_itemid.yaml \
     --data_loader_engine nvtabular \
-    --workers_count 2 \
     --validate_every 10 \
     --logging_steps 20 \
     --save_steps 0 \

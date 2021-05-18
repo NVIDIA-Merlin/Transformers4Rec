@@ -1,0 +1,6 @@
+FROM nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5
+
+#echo "Installing dependencies"
+ADD ./transformers4rec/baselines/requirements_theano.txt requirements_theano.txt
+
+RUN conda install --yes --file requirements_theano.txt 
