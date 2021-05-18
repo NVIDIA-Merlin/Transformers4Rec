@@ -40,7 +40,7 @@ from transformers import (
 from transformers.integrations import is_fairscale_available
 from transformers.trainer_callback import TrainerCallback
 from transformers.trainer_pt_utils import DistributedTensorGatherer, nested_concat
-from transformers.trainer_utils import PredictionOutput
+from transformers.trainer_utils import EvalLoopOutput
 from transformers.utils import logging
 
 from .evaluation.recsys_metrics import EvalMetrics
@@ -280,7 +280,7 @@ class RecSysTrainer(Trainer):
         prediction_loss_only: Optional[bool] = None,
         ignore_keys: Optional[List[str]] = None,
         metric_key_prefix: str = "eval",
-    ) -> PredictionOutput:
+    ) -> EvalLoopOutput:
         """
         Overriding :obj:`Trainer.prediction_loop()` (shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`) 
         to provide more flexibility to work with streaming metrics (computed at each eval batch) and
@@ -530,8 +530,11 @@ class RecSysTrainer(Trainer):
             if not key.startswith(f"{metric_key_prefix}_"):
                 metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key)
 
-        return PredictionOutput(
-            predictions=preds_item_ids_scores, label_ids=label_ids, metrics=metrics
+        return EvalLoopOutput(
+            predictions=preds_item_ids_scores,
+            label_ids=label_ids,
+            metrics=metrics,
+            num_samples=num_examples,
         )
 
     def prediction_step(
