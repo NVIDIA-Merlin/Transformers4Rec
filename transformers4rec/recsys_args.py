@@ -121,6 +121,12 @@ class TrainingArguments(HfTrainingArguments):
             "help": "Number of steps to evaluate on train set (which is usually large)"
         },
     )
+    use_legacy_prediction_loop: bool = field(
+        default=True,
+        metadata={
+            "help": "Whether or not to use the legacy prediction_loop in the Trainer."
+        },
+    )
 
 
 @dataclass

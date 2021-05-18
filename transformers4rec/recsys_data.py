@@ -27,8 +27,6 @@ import pandas as pd
 # Pyarrow dependencies
 import pyarrow.parquet as pq
 import torch
-
-
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
@@ -105,7 +103,6 @@ def fetch_data_loader(
 
             def __len__(self):
                 return self.len
-
 
         def transform_petastorm_schema(feature_map):
             schema = []
@@ -322,8 +319,8 @@ def get_nvtabular_dataloader(
         "cats": categ_features,
         "conts": continuous_features,
         "labels": [],
-        #TODO: Investigate how to use multi-GPU with NVTabular
-        "device": "0", #list(range(training_args.n_gpu)),
+        # TODO: Investigate how to use multi-GPU with NVTabular
+        "devices": "0",  # list(range(training_args.n_gpu)),
     }
 
     dataset = NVTDatasetWrapper(
