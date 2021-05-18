@@ -102,7 +102,7 @@ build and locally run the containers documented in this README below.
 
 ```bash
 cd Transformers4Rec/
-docker build --no-cache -t transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5  -f containers/Dockerfile.dev .
+docker build --no-cache -t transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5.1 -f containers/Dockerfile.dev: .
 ```
 
 ## Run the container in interactive mode
@@ -110,7 +110,7 @@ docker build --no-cache -t transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5  -f c
 ```bash
 PROJECT_PATH=~/projects/nvidia/Transformers4Rec
 DATA_PATH=~/dataset/
-docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v $PROJECT_PATH:/workspace -v $DATA_PATH:/data --workdir /workspace/ transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5 /bin/bash 
+docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v $PROJECT_PATH:/workspace -v $DATA_PATH:/data --workdir /workspace/ transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5.1 /bin/bash 
 ```
 
 
@@ -206,7 +206,7 @@ DATA_PATH=~/dataset/
 #source activate merlin
 
 docker run --gpus all --ipc=host -it --rm --cap-add=SYS_ADMIN --shm-size=2g --ulimit memlock=-1 --ulimit stack=67108864  \
- -p 6006:6006 -p 8888:8888 -v $PROJECT_PATH:/workspace -v $DATA_PATH/:/data --workdir /workspace/ transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5 /bin/bash 
+ -p 6006:6006 -p 8888:8888 -v $PROJECT_PATH:/workspace -v $DATA_PATH/:/data --workdir /workspace/ transformers4rec_dev:0.2-hf-4.6.0-nvtabular-0.5.1 /bin/bash 
 ```
 
 

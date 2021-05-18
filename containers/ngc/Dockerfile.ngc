@@ -1,9 +1,9 @@
-FROM nvcr.io/nvidia/merlin/merlin-pytorch-training:0.5
+FROM nvcr.io/nvidia/merlin/merlin-pytorch-training:0.5.1
 
 ADD ./transformers4rec/requirements.txt requirements.txt
 
 #Make RUN commands use the new environment:
-SHELL ["conda", "run", "-n", "merlin", "/bin/bash", "-c"]
+#SHELL ["conda", "run", "-n", "merlin", "/bin/bash", "-c"]
 
 #echo "Installing dependencies"
 RUN pip install -r requirements.txt
