@@ -245,9 +245,7 @@ class RecSysMetaModel(PreTrainedModel):
             self.device
         )
         nn.init.normal_(
-            self.masked_item_embedding,
-            mean=0,
-            std=0.001,
+            self.masked_item_embedding, mean=0, std=0.001,
         )
 
         self.similarity_type = model_args.similarity_type
@@ -567,8 +565,7 @@ class RecSysMetaModel(PreTrainedModel):
                 )
 
                 model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp,
-                    head_mask=head_mask,
+                    inputs_embeds=pos_emb_inp, head_mask=head_mask,
                 )
 
             elif self.plm:
@@ -715,10 +712,7 @@ class RecSysMetaModel(PreTrainedModel):
             else:
                 # sample items from the whole corpus
                 fake_inputs, discriminator_labels, _ = recsys_task.get_fake_data(
-                    label_seq,
-                    trg_flat,
-                    logits_all,
-                    self.rtd_sample_from_batch,
+                    label_seq, trg_flat, logits_all, self.rtd_sample_from_batch,
                 )
 
             # Step 2. Build interaction embeddings using new replaced itemids
@@ -860,9 +854,7 @@ class RecSysMetaModel(PreTrainedModel):
                                 self.features_embedding_projection_to_item_embedding_dim_layers[
                                     cname
                                 ] = nn.Linear(
-                                    embedding_size,
-                                    self.label_embedding_dim,
-                                    bias=True,
+                                    embedding_size, self.label_embedding_dim, bias=True,
                                 )
                                 feature_size = self.label_embedding_dim
 
@@ -916,9 +908,7 @@ class RecSysMetaModel(PreTrainedModel):
                             self.features_embedding_projection_to_item_embedding_dim_layers[
                                 cname
                             ] = nn.Linear(
-                                feature_size,
-                                self.label_embedding_dim,
-                                bias=True,
+                                feature_size, self.label_embedding_dim, bias=True,
                             )
                             feature_size = self.label_embedding_dim
                     else:

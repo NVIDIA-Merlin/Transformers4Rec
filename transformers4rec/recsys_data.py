@@ -27,6 +27,7 @@ import pandas as pd
 # Pyarrow dependencies
 import pyarrow.parquet as pq
 import torch
+from torch.distributed import get_world_size
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
@@ -322,20 +323,36 @@ def get_nvtabular_dataloader(
         "labels": [],
     }
 
-    # TODO: Investigate how to use multi-GPU with NVTabular
     device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
-    data_loader_config[device_key] = "0"  # list(range(training_args.n_gpu))
+    data_loader_config[device_key] = (
+        0 if training_args.local_rank == -1 else training_args.local_rank
+    )
 
     dataset = NVTDatasetWrapper(
-        data_paths, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction,
+        data_paths,
+        engine="parquet",
+        part_mem_fraction=data_args.nvt_part_mem_fraction,
+        part_size=data_args.nvt_part_size,
     )
+
+    global_size = None
+    global_rank = None
+    # If using DistributedDataParallel, gets the global number of GPUs (world_size) and the GPU for this process (local_rank).
+    # Each GPU will be assigned to one process and the data loader will read different chunks of data for each GPU
+    if training_args.local_rank != -1:
+        global_size = get_world_size()
+        global_rank = training_args.local_rank
+
     loader = NVTDataLoaderWrapper(
         dataset=dataset,
         seq_features_len_pad_trim=data_args.session_seq_length_max,
         batch_size=batch_size,
         shuffle=shuffle_dataloader,
+        global_size=global_size,
+        global_rank=global_rank,
         **data_loader_config
     )
+
     return loader
 
 
