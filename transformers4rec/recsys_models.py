@@ -270,6 +270,19 @@ def get_recsys_model(model_args, data_args, training_args, target_size=None):
     return model, config
 
 
+def get_model_and_trainer(model_args, data_args, training_args):
+    from transformers4rec.recsys_meta_model import RecSysMetaModel
+    from transformers4rec.recsys_trainer import RecSysTrainer
+
+    seq_model, config = get_recsys_model(model_args, data_args, training_args)
+    rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, data_args.feature_map)
+    trainer = RecSysTrainer(
+        model=rec_model, args=training_args, model_args=model_args, data_args=data_args,
+    )
+
+    return rec_model, trainer
+
+
 class AvgSeq(nn.Module):
     def __init__(self):
         super().__init__()

@@ -18,6 +18,8 @@ from typing import Optional
 
 from transformers import MODEL_WITH_LM_HEAD_MAPPING
 from transformers import TrainingArguments as HfTrainingArguments
+import yaml
+from transformers4rec.recsys_utils import get_label_feature_name, get_parquet_files_names
 
 MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
@@ -275,6 +277,65 @@ class DataArguments:
         if self.session_aware:
             total_sequence_length += self.session_aware_past_seq_length_max
         return total_sequence_length
+
+    @property
+    def feature_map(self):
+        with open(self.feature_config) as yaml_file:
+            feature_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+        return feature_map
+    
+    @property
+    def target_properties(self):
+        feature_map = self.feature_map
+        label_name = get_label_feature_name(feature_map)
+        target_size = feature_map[label_name]["cardinality"]
+
+        return label_name, target_size
+
+    def train_test_paths(self, training_args):
+         for time_index in range(
+            self.start_time_window_index, self.final_time_window_index
+        ):
+            if self.no_incremental_training:
+                if self.training_time_window_size > 0:
+                    time_index_eval = time_index + 1
+                    time_indices_train = list(
+                        range(
+                            max(
+                                time_index_eval - self.training_time_window_size,
+                                self.start_time_window_index,
+                            ),
+                            time_index_eval,
+                        )
+                    )
+                else:
+                    time_indices_train = list(range(1, time_index + 1))
+                    time_index_eval = time_index + 1
+            else:
+                time_indices_train = [time_index]
+                time_index_eval = time_index + 1
+
+            # if (
+            #     model_args.negative_sampling
+            #     and model_args.neg_sampling_extra_samples_per_batch > 0
+            # ):
+            #     items_sorted_freq_series = get_items_sorted_freq(
+            #         train_data_paths, item_id_feature_name=label_name
+            #     )
+            #     trainer.model.set_items_freq_for_sampling(items_sorted_freq_series)
+
+            train_data_paths = get_parquet_files_names(
+                self, time_indices_train, is_train=True
+            )
+            eval_data_paths = get_parquet_files_names(
+                self,
+                [time_index_eval],
+                is_train=False,
+                eval_on_test_set=training_args.eval_on_test_set,
+            )
+
+            return train_data_paths, eval_data_paths
 
 
 @dataclass

@@ -3,8 +3,8 @@
 #source ~/miniconda3/etc/profile.d/conda.sh
 #conda activate merlin
 
-DATA_PATH="/DATA_PATH/" 
-cd Transformers4Rec/
+DATA_PATH="/data/" 
+# cd Transformers4Rec/
 TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0 python3 -m transformers4rec.recsys_main \
     --output_dir "./tmp/" \
     --overwrite_output_dir \
@@ -14,7 +14,7 @@ TOKENIZERS_PARALLELISM=false CUDA_VISIBLE_DEVICES=0 python3 -m transformers4rec.
     --feature_config datasets/ecommerce_rees46/config/features/session_based_features_itemid.yaml \
     --data_loader_engine nvtabular \
     --validate_every 10 \
-    --logging_steps 20 \
+    --logging_steps 1000 \
     --save_steps 0 \
     --start_time_window_index 1 \
     --final_time_window_index 15 \

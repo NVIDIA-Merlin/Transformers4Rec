@@ -44,6 +44,7 @@ from transformers.trainer_utils import EvalLoopOutput
 from transformers.utils import logging
 
 from .evaluation.recsys_metrics import EvalMetrics
+from .recsys_data import get_dataloaders
 
 # if is_fairscale_available():
 #    from fairscale.optim import OSS
@@ -110,6 +111,7 @@ class RecSysTrainer(Trainer):
             *args,
             **kwargs,
         )
+        self.set_dataloaders()
 
     def _increment_past_global_steps(self, current_global_step: int):
         self.past_global_steps += current_global_step
@@ -141,6 +143,19 @@ class RecSysTrainer(Trainer):
 
     def set_eval_dataloader(self, dataloader: DataLoader):
         self.eval_dataloader = dataloader
+
+    def set_dataloaders(self):
+        train_data_paths, eval_data_paths = self.data_args.train_test_paths(self.args)
+        train_loader, eval_loader = get_dataloaders(
+            self.data_args,
+            self.args,
+            train_data_paths,
+            eval_data_paths,
+            self.data_args.feature_map,
+        )
+
+        self.set_train_dataloader(train_loader)
+        self.set_eval_dataloader(eval_loader)
 
     @property
     def log_attention_weights_callback(self) -> Callable:

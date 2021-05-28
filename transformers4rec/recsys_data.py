@@ -409,3 +409,16 @@ class ShuffleDataset(IterableDataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+def get_dataloaders(
+    data_args, training_args, train_data_paths, eval_data_paths, feature_map
+):
+    train_loader = fetch_data_loader(
+        data_args, training_args, feature_map, train_data_paths, is_train_set=True,
+    )
+    eval_loader = fetch_data_loader(
+        data_args, training_args, feature_map, eval_data_paths, is_train_set=False,
+    )
+
+    return train_loader, eval_loader
