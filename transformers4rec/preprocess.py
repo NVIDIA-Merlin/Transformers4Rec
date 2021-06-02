@@ -117,6 +117,10 @@ class Ops(object):
         return self._ops_by_name[key]
 
     @property
+    def ops(self):
+        return self._ops
+    
+    @property
     def namespace(self):
         return "/".join(self._namespace_items)
 
@@ -230,10 +234,10 @@ class TimestampFeatures(Ops):
             )
 
         if add_cycled:
-            self.add(Ops(*hour._ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col, 24)), nvt.ops.Rename(postfix="_sin")))
-            self.add(Ops(*hour._ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col, 24)), nvt.ops.Rename(postfix="_cos")))
-            self.add(Ops(*weekday._ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col + 1, 7)), nvt.ops.Rename(postfix="_sin")))
-            self.add(Ops(*weekday._ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col + 1, 7)), nvt.ops.Rename(postfix="_cos")))
+            self.add(Ops(*hour.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col, 24)), nvt.ops.Rename(postfix="_sin")))
+            self.add(Ops(*hour.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col, 24)), nvt.ops.Rename(postfix="_cos")))
+            self.add(Ops(*weekday.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col + 1, 7)), nvt.ops.Rename(postfix="_sin")))
+            self.add(Ops(*weekday.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col + 1, 7)), nvt.ops.Rename(postfix="_cos")))
 
     @staticmethod
     def get_cycled_feature_value_sin(col, max_value):
@@ -258,78 +262,6 @@ class SessionDay(Ops):
             nvt.ops.LambdaOp(lambda col: col.astype(str).str.pad(padding, fillchar='0')),
             nvt.ops.Rename(f=lambda col: name)
         ])
-
-
-def create_timestap_features(column_name, add_cycled=True, add_timestamp=True):
-    hour = (
-        column_name
-        >>
-        # nvt.ops.LambdaOp(lambda col: cudf.to_datetime(col, unit='ms').dt.hour) >>
-        nvt.ops.LambdaOp(lambda col: col.dt.hour)
-        >> nvt.ops.Rename(postfix="_hour")
-    )
-    weekday = (
-        column_name
-        >>
-        # nvt.ops.LambdaOp(lambda col: cudf.to_datetime(col, unit='ms').dt.weekday) >>
-        nvt.ops.LambdaOp(lambda col: col.dt.weekday)
-        >> nvt.ops.Rename(postfix="_wd")
-    )
-    day = column_name >> nvt.ops.LambdaOp(lambda col: col.dt.day) >> nvt.ops.Rename(postfix="_day")
-    month = (
-        column_name
-        >> nvt.ops.LambdaOp(lambda col: col.dt.month)
-        >> nvt.ops.Rename(postfix="_month")
-    )
-    year = (
-        column_name >> nvt.ops.LambdaOp(lambda col: col.dt.year) >> nvt.ops.Rename(postfix="_year")
-    )
-
-    outputs = hour + weekday + day + month + year
-
-    if add_timestamp:
-        outputs += (
-            column_name
-            >> nvt.ops.LambdaOp(lambda col: (col.astype(int) / 1e6).astype(int))
-            >> nvt.ops.Rename(f=lambda col: "ts")
-        )
-
-    if add_cycled:
-
-        def get_cycled_feature_value_sin(col, max_value):
-            value_scaled = (col + 0.000001) / max_value
-            value_sin = np.sin(2 * np.pi * value_scaled)
-            return value_sin
-
-        def get_cycled_feature_value_cos(col, max_value):
-            value_scaled = (col + 0.000001) / max_value
-            value_cos = np.cos(2 * np.pi * value_scaled)
-            return value_cos
-
-        hour_sin = (
-            hour
-            >> (lambda col: get_cycled_feature_value_sin(col, 24))
-            >> nvt.ops.Rename(postfix="_sin")
-        )
-        hour_cos = (
-            hour
-            >> (lambda col: get_cycled_feature_value_cos(col, 24))
-            >> nvt.ops.Rename(postfix="_cos")
-        )
-        weekday_sin = (
-            weekday
-            >> (lambda col: get_cycled_feature_value_sin(col + 1, 7))
-            >> nvt.ops.Rename(postfix="_sin")
-        )
-        weekday_cos = (
-            weekday
-            >> (lambda col: get_cycled_feature_value_cos(col + 1, 7))
-            >> nvt.ops.Rename(postfix="_cos")
-        )
-
-        outputs += hour_sin + hour_cos + weekday_sin + weekday_cos
-
-    return outputs
 
 
 def save_time_based_splits(data, output_dir, partition_col="day_idx", timestamp_col="ts/first", test_size=0.1, val_size=0.1, overwrite=True):
