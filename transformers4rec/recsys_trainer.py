@@ -16,6 +16,7 @@
 import collections
 import gc
 import math
+import os
 from collections.abc import Sized
 from copy import deepcopy
 from enum import Enum
@@ -45,11 +46,14 @@ from transformers.utils import logging
 
 from .evaluation.recsys_metrics import EvalMetrics
 from .recsys_data import get_dataloaders
+from transformers4rec.recsys_outputs import AttentionWeightsLogger
 
 # if is_fairscale_available():
 #    from fairscale.optim import OSS
 
 logger = logging.get_logger(__name__)
+
+ATTENTION_LOG_FOLDER = "attention_weights"
 
 
 class DatasetType(Enum):
@@ -112,6 +116,18 @@ class RecSysTrainer(Trainer):
             **kwargs,
         )
         self.set_dataloaders()
+
+        self.log_attention_weights_callback = None
+        if self.args.log_attention_weights:
+            attention_output_path = os.path.join(
+                self.args.output_dir, ATTENTION_LOG_FOLDER
+            )
+            logger.info(
+                f"Will output attention weights (and inputs) logs to {attention_output_path}"
+            )
+            att_weights_logger = AttentionWeightsLogger(attention_output_path)
+
+            self.log_attention_weights_callback = att_weights_logger.log
 
     def _increment_past_global_steps(self, current_global_step: int):
         self.past_global_steps += current_global_step

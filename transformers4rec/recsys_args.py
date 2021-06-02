@@ -21,6 +21,9 @@ from transformers import TrainingArguments as HfTrainingArguments
 import yaml
 from transformers4rec.recsys_utils import get_label_feature_name, get_parquet_files_names
 
+from cudf.core.dtypes import ListDtype
+import nvtabular as nvt
+
 MODEL_CONFIG_CLASSES = list(MODEL_WITH_LM_HEAD_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
 
@@ -176,13 +179,19 @@ class DataArguments:
     feature_config: Optional[str] = field(
         default="config/recsys_input_feature.yaml",
         metadata={
-            "help": "yaml file that contains feature information (columns to be read from Parquet file, its dtype, etc)"
+            "help": "yaml file that contains feature information (columns to be read from Parquet file, its dtype, etc) or instance of nvt.Workflow"
         },
     )
     feature_prefix_neg_sample: Optional[str] = field(
         default="_neg_",
         metadata={
             "help": "prefix of the column name in input parquet file for negative samples"
+        },
+    )
+    label_name: Optional[str] = field(
+        default=None,
+        metadata={
+            "help": "Only needed if feature_config is an instance of nvt.Workflow"
         },
     )
 
@@ -280,6 +289,11 @@ class DataArguments:
 
     @property
     def feature_map(self):
+        if isinstance(self.feature_config, nvt.Workflow):
+            assert(self.label_name), "Please provide the label name"
+
+            return feature_map_from_workflow(self.feature_config, self.label_name)
+        
         with open(self.feature_config) as yaml_file:
             feature_map = yaml.load(yaml_file, Loader=yaml.FullLoader)
 
@@ -747,3 +761,30 @@ class ModelArguments:
         default=False,
         metadata={"help": "Enables layer norm after concatenating all features."},
     )
+
+
+def feature_map_from_workflow(workflow, label_name, log_with_preds_as_metadata=True, delimiter="/"):
+    outputs = {}
+    
+    nodes = list(set(nvt.column_group.iter_nodes([workflow.column_group])))
+    nodes_categorical = [node for node in nodes if isinstance(node.op, nvt.ops.Categorify)]
+
+    categorical = {}
+    for n in nodes_categorical:
+        categorical.update(n.op.get_embedding_sizes(n.columns))
+
+    for name, f_type in workflow.output_dtypes.items():
+        if isinstance(f_type, ListDtype):
+            base_name = name.replace(f"{delimiter}list", "")
+            if f_type.leaf_type == "float32":
+                outputs[name] = dict(dtype="float", log_with_preds_as_metadata=log_with_preds_as_metadata)
+            elif base_name in categorical:
+                outputs[name] = dict(
+                    dtype="categorical", 
+                    cardinality=categorical[base_name][0],
+                    is_label=name==label_name,
+                    emb_table=name,
+                    log_with_preds_as_metadata=log_with_preds_as_metadata
+                )
+                
+    return outputs
