@@ -148,9 +148,23 @@ class DataArguments:
     )
 
     nvt_part_mem_fraction: Optional[float] = field(
-        default=0.1,
+        default=0.01,
         metadata={
-            "help": "Percentage of GPU to allocate for NVTabular dataset / dataloader"
+            "help": "When using the NVTabular dataloader, fractional size (percentage) of desired dask partitions (relative "
+            "to GPU memory capacity). Ignored if --nvt_part_size is passed directly. If using CPU this value will be relative to the total "
+            "host memory detected by the client process. "
+            "To be able to use multi-GPU data loading you should have your data split into number of partitions equal or larger than the number of processes (GPU). "
+            "That happens when you use either multiple parquet files or a parquet file with multiple row groups, because a row group cannot be partitioned in multiple partitions."
+        },
+    )
+
+    nvt_part_size: Optional[float] = field(
+        default=None,
+        metadata={
+            "help": "When using the NVTabular dataloader, this is the desired size (e.g. 100MB, 1.5GB) of each Dask partition. "
+            "If None, --nvt_part_mem_fraction will be used to calculate the partition size. "
+            "To be able to use multi-GPU data loading you should have your data split into number of partitions equal or larger than the number of processes (GPU). "
+            "That happens when you use either multiple parquet files or a parquet file with multiple row groups, because a row group cannot be partitioned in multiple partitions."
         },
     )
 
