@@ -177,25 +177,14 @@ def get_nvtabular_dataloader(
     shuffle_dataloader=False,
 ):
     # NVTabular dependencies
-    import nvtabular
     from nvtabular import Dataset as NVTDataset
+    from nvtabular.loader.torch import DLDataLoader
     from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
-    class NVTDatasetWrapper(NVTDataset):
-        def __init__(self, *args, **kwargs):
-            super(NVTDatasetWrapper, self).__init__(*args, **kwargs)
-
-        def __len__(self):
-            return self.num_rows
-
-    class NVTDataLoaderWrapper(NVTDataLoader):
-        def __init__(self, *args, **kwargs):
-            self.dataset = kwargs["dataset"]
-            super(NVTDataLoaderWrapper, self).__init__(*args, **kwargs)
-
-        def __next__(self):
-            inputs = super(NVTDataLoaderWrapper, self).__next__()
-            return inputs[0]
+    def dataloader_collate(inputs):
+        # Gets only the features dict
+        inputs = inputs[0][0]
+        return inputs
 
     categ_features = []
     continuous_features = []
@@ -210,8 +199,10 @@ def get_nvtabular_dataloader(
             )
 
     sparse_features_max = {
-        seq_column: data_args.session_seq_length_max
-        for seq_column in categ_features + continuous_features
+        fname: feature_map[fname]["pad_trim_length"]
+        if fname in feature_map and "pad_trim_length" in feature_map[fname]
+        else data_args.session_seq_length_max
+        for fname in categ_features + continuous_features
     }
 
     # device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
@@ -219,7 +210,7 @@ def get_nvtabular_dataloader(
         0 if training_args.local_rank == -1 else training_args.local_rank
     )
 
-    dataset = NVTDatasetWrapper(
+    dataset = NVTDataset(
         data_paths,
         engine="parquet",
         part_mem_fraction=data_args.nvt_part_mem_fraction,
@@ -234,19 +225,7 @@ def get_nvtabular_dataloader(
         global_size = get_world_size()
         global_rank = training_args.local_rank
 
-    """
-    loader = NVTDataLoaderWrapper(
-        dataset=dataset,
-        seq_features_len_pad_trim=data_args.session_seq_length_max,
-        batch_size=batch_size,
-        shuffle=shuffle_dataloader,
-        global_size=global_size,
-        global_rank=global_rank,
-        **data_loader_config
-    )
-    """
-
-    loader = NVTDataLoaderWrapper(
+    loader = NVTDataLoader(
         dataset=dataset,
         batch_size=batch_size,
         shuffle=shuffle_dataloader,
@@ -262,7 +241,9 @@ def get_nvtabular_dataloader(
         drop_last=training_args.dataloader_drop_last,
     )
 
-    return loader
+    dl_loader = DLDataLoader(loader, collate_fn=dataloader_collate)
+
+    return dl_loader
 
 
 def get_items_sorted_freq(train_data_paths, item_id_feature_name):
