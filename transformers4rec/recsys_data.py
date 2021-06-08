@@ -27,6 +27,7 @@ import pandas as pd
 # Pyarrow dependencies
 import pyarrow.parquet as pq
 import torch
+from torch.distributed import get_world_size
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
@@ -189,120 +190,12 @@ def get_nvtabular_dataloader(
 
     class NVTDataLoaderWrapper(NVTDataLoader):
         def __init__(self, *args, **kwargs):
-            if "seq_features_len_pad_trim" in kwargs:
-                self.seq_features_len_pad_trim = kwargs.pop("seq_features_len_pad_trim")
-            else:
-                raise ValueError(
-                    'NVTabular data loader requires the "seq_features_len_pad_trim" argument "'
-                    + "to create the sparse tensors for list columns"
-                )
             self.dataset = kwargs["dataset"]
             super(NVTDataLoaderWrapper, self).__init__(*args, **kwargs)
 
-        def __len__(self):
-            # TODO: The argument drop_last should be added to the NVTDataLoader (https://github.com/NVIDIA/NVTabular/issues/470), and instead of subtracting one step it should do len(dataset) // batch_size, to deal with cases when the length is multiple of batch size
-            length = super(NVTDataLoaderWrapper, self).__len__()
-            if training_args.dataloader_drop_last:
-                length -= 1
-            return length
-
         def __next__(self):
-            cat_features, cont_features, label_features = super(
-                NVTDataLoaderWrapper, self
-            ).__next__()
-
-            # TODO: This code is an uggly workaround for this bug on NVT 0.3 data loader (https://github.com/NVIDIA/NVTabular/issues/513), just to ignore the "incomplete" batch, which turns out the be the first one in the second iteration over the dataloader
-            if training_args.dataloader_drop_last:
-                if cat_features is not None:
-                    batch_size = cat_features[1][list(cat_features[1].keys())[0]][
-                        1
-                    ].shape[0]
-                    if batch_size != self.batch_size:
-                        cat_features, cont_features, label_features = super(
-                            NVTDataLoaderWrapper, self
-                        ).__next__()
-
-            cat_sequence_features_transf = {}
-            cont_sequence_features_transf = {}
-            if cat_features is not None:
-                cat_single_features, cat_sequence_features = cat_features
-                cat_sequence_features_transf = {
-                    fname: self.get_sparse_tensor_list_column(
-                        cat_sequence_features[fname], "categorical"
-                    ).to_dense()[:, : self.seq_features_len_pad_trim]
-                    for fname in cat_sequence_features
-                }
-
-            if cont_features is not None:
-                cont_single_features, cont_sequence_features = cont_features
-
-                cont_sequence_features_transf = {
-                    fname: self.get_sparse_tensor_list_column(
-                        cont_sequence_features[fname], "continuous"
-                    ).to_dense()[:, : self.seq_features_len_pad_trim]
-                    for fname in cont_sequence_features
-                }
-
-            inputs = {
-                **cat_sequence_features_transf,
-                **cont_sequence_features_transf,
-            }
-            return inputs
-
-        def get_sparse_tensor_list_column(self, values_offset, feature_group):
-            values = values_offset[0].flatten()
-            offsets = values_offset[1].flatten()
-            num_rows = len(offsets)
-
-            # Appending the values length to the end of the offset vector, to be able to compute diff of the last sequence
-            offsets = torch.cat(
-                [offsets, torch.LongTensor([len(values)]).to(offsets.device)]
-            )
-            # Computing the difference between consecutive offsets, to get the sequence lengths
-            diff_offsets = offsets[1:] - offsets[:-1]
-            # Infering the number of cols based on the maximum sequence length
-            max_seq_len = int(diff_offsets.max())
-
-            """
-            if max_seq_len > self.seq_features_len_pad_trim:
-                logger.warn(
-                    "The default sequence length has been configured to {}, "
-                    "but the largest sequence in this batch have {} length. Truncating to {}.".format(
-                        self.seq_features_len_pad_trim,
-                        max_seq_len,
-                        self.seq_features_len_pad_trim,
-                    )
-                )
-            """
-
-            # Building the indices to reconstruct the sparse tensors
-            row_ids = torch.arange(len(offsets) - 1).to(offsets.device)
-            row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
-            row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
-            col_ids = torch.arange(len(row_offset_repeated)).to(
-                offsets.device
-            ) - row_offset_repeated.to(offsets.device)
-            indices = torch.cat(
-                [row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1
-            )
-
-            if feature_group == "categorical":
-                sparse_tensor_class = torch.sparse.LongTensor
-            elif feature_group == "continuous":
-                sparse_tensor_class = torch.sparse.FloatTensor
-            else:
-                raise NotImplementedError(
-                    "Invalid feature group from NVTabular: {}".format(feature_group)
-                )
-
-            sparse_tensor = sparse_tensor_class(
-                indices.T,
-                values,
-                torch.Size(
-                    [num_rows, max(max_seq_len, self.seq_features_len_pad_trim)]
-                ),
-            )
-            return sparse_tensor
+            inputs = super(NVTDataLoaderWrapper, self).__next__()
+            return inputs[0]
 
     categ_features = []
     continuous_features = []
@@ -316,26 +209,59 @@ def get_nvtabular_dataloader(
                 "The dtype {} is not currently supported.".format(fprops["dtype"])
             )
 
-    data_loader_config = {
-        "cats": categ_features,
-        "conts": continuous_features,
-        "labels": [],
+    sparse_features_max = {
+        seq_column: data_args.session_seq_length_max
+        for seq_column in categ_features + continuous_features
     }
 
-    # TODO: Investigate how to use multi-GPU with NVTabular
-    device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
-    data_loader_config[device_key] = "0"  # list(range(training_args.n_gpu))
+    # device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
+    dataloader_device = (
+        0 if training_args.local_rank == -1 else training_args.local_rank
+    )
 
     dataset = NVTDatasetWrapper(
-        data_paths, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction,
+        data_paths,
+        engine="parquet",
+        part_mem_fraction=data_args.nvt_part_mem_fraction,
+        part_size=data_args.nvt_part_size,
     )
+
+    global_size = None
+    global_rank = None
+    # If using DistributedDataParallel, gets the global number of GPUs (world_size) and the GPU for this process (local_rank).
+    # Each GPU will be assigned to one process and the data loader will read different chunks of data for each GPU
+    if training_args.local_rank != -1:
+        global_size = get_world_size()
+        global_rank = training_args.local_rank
+
+    """
     loader = NVTDataLoaderWrapper(
         dataset=dataset,
         seq_features_len_pad_trim=data_args.session_seq_length_max,
         batch_size=batch_size,
         shuffle=shuffle_dataloader,
+        global_size=global_size,
+        global_rank=global_rank,
         **data_loader_config
     )
+    """
+
+    loader = NVTDataLoaderWrapper(
+        dataset=dataset,
+        batch_size=batch_size,
+        shuffle=shuffle_dataloader,
+        global_size=global_size,
+        global_rank=global_rank,
+        device=dataloader_device,
+        cats=categ_features,
+        conts=continuous_features,
+        labels=[],
+        sparse_names=categ_features + continuous_features,
+        sparse_max=sparse_features_max,
+        sparse_as_dense=True,
+        drop_last=training_args.dataloader_drop_last,
+    )
+
     return loader
 
 
