@@ -181,6 +181,13 @@ def get_nvtabular_dataloader(
     from nvtabular.loader.torch import DLDataLoader
     from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
+    class DLDataLoaderWrapper(DLDataLoader):
+        def __init__(self, *args, **kwargs) -> None:
+            if "batch_size" in kwargs:
+                # Setting the batch size directly to DLDataLoader makes it 3x slower. So we set as an alternative attribute and use it within RecSysTrainer during evaluation
+                self._batch_size = kwargs.pop("batch_size")
+            super().__init__(*args, **kwargs)
+
     def dataloader_collate(inputs):
         # Gets only the features dict
         inputs = inputs[0][0]
@@ -241,7 +248,9 @@ def get_nvtabular_dataloader(
         drop_last=training_args.dataloader_drop_last,
     )
 
-    dl_loader = DLDataLoader(loader, collate_fn=dataloader_collate)
+    dl_loader = DLDataLoaderWrapper(
+        loader, collate_fn=dataloader_collate, batch_size=batch_size
+    )
 
     return dl_loader
 
