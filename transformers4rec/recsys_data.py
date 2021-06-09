@@ -181,6 +181,7 @@ def get_nvtabular_dataloader(
     from nvtabular.loader.torch import DLDataLoader
     from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
+<<<<<<< HEAD
     class DLDataLoaderWrapper(DLDataLoader):
         def __init__(self, *args, **kwargs) -> None:
             if "batch_size" in kwargs:
@@ -188,6 +189,8 @@ def get_nvtabular_dataloader(
                 self._batch_size = kwargs.pop("batch_size")
             super().__init__(*args, **kwargs)
 
+=======
+>>>>>>> 06214458d6cbb0dca7b7914e3190e713697bb7e8
     def dataloader_collate(inputs):
         # Gets only the features dict
         inputs = inputs[0][0]
@@ -248,9 +251,13 @@ def get_nvtabular_dataloader(
         drop_last=training_args.dataloader_drop_last,
     )
 
+<<<<<<< HEAD
     dl_loader = DLDataLoaderWrapper(
         loader, collate_fn=dataloader_collate, batch_size=batch_size
     )
+=======
+    dl_loader = DLDataLoader(loader, collate_fn=dataloader_collate)
+>>>>>>> 06214458d6cbb0dca7b7914e3190e713697bb7e8
 
     return dl_loader
 
