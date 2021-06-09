@@ -179,7 +179,7 @@ class RecSysTrainer(Trainer):
         else:
             batch_size = self.args.per_device_eval_batch_size
         """
-        return len(dataloader) * dataloader.batch_size
+        return len(dataloader) * dataloader._batch_size
 
     def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
@@ -311,7 +311,7 @@ class RecSysTrainer(Trainer):
         # Note: in torch.distributed mode, there's no point in wrapping the model
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
-        batch_size = dataloader.batch_size
+        batch_size = dataloader._batch_size
 
         # num_examples = self.num_examples(dataloader)
 
