@@ -580,8 +580,8 @@ class RecSysMetaModel(PreTrainedModel):
 
             elif self.rtd:
                 assert (
-                    type(self.model) is ElectraModel
-                ), "Replacement token detection is only supported for ELECTRA model"
+                    type(self.model) is ElectraModel or type(self.model) is XLNetModel
+                ), "Replacement token detection is only supported for ELECTRA or XLNET model"
                 model_outputs = self.model(inputs_embeds=pos_emb_inp)
 
             else:
