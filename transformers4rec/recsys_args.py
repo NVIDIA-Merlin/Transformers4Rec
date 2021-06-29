@@ -293,6 +293,22 @@ class DataArguments:
 
 @dataclass
 class ModelArguments:
+    
+    # args for prediction task 
+    classification_task: bool = field(
+    default=False,
+    metadata={
+        "help": "Define a classification prediction head"
+        },
+    )
+        
+    item_prediction_task: bool = field(
+    default=False,
+    metadata={
+        "help": "Define item prediction head"
+        },
+    )
+            
 
     # args for Hugginface default ones
 
