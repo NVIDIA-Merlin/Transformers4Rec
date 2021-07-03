@@ -1,3 +1,4 @@
+from typing import Optional, Callable, Any, Dict, List 
 import logging
 import math
 from collections import OrderedDict
@@ -15,33 +16,188 @@ from .recsys_tasks import RecSysTask
 
 logger = logging.getLogger(__name__)
 
-def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
-    # A rule-of-thumb from Google.
-    embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
-    return embedding_size
 
-class SoftEmbedding(nn.Module):
+###############################################################
+#                                                             #
+#         Object classes for Transformers4rec inputs          #
+#                                                             #
+###############################################################
+
+class Categorical(object): 
     """
-    Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
+    Class to build the embedding representation of categorical variable  
     """
+    def __init__(self, 
+        	    name : str, 
+                cardinality : int, 
+                is_itemid: bool = False,
+                is_seq_label: bool =  False,
+                is_classification_label: bool = False,
+                is_regression_label: bool = False,
+                log_with_preds_as_metadata: bool = True
+    )
+    self.name = name 
+    self.cardinality = cardinality 
+    self.is_itemid = is_itemid
+    self.is_seq_label = is_seq_label
+    self.is_classification_label = is_classification_label
+    self.log_with_preds_as_metadata = log_with_preds_as_metadata
 
-    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
-        super().__init__()
-        self.embedding_table = nn.Embedding(num_embeddings, embeddings_dim)
-        with torch.no_grad():
-            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
-        self.projection_layer = nn.Linear(1, num_embeddings, bias=True)
-        self.softmax = torch.nn.Softmax(dim=-1)
 
-    def forward(self, input_numeric):
-        weights = self.softmax(self.projection_layer(input_numeric))
-        soft_one_hot_embeddings = (
-            weights.unsqueeze(-1) * self.embedding_table.weight
-        ).sum(-2)
-        return soft_one_hot_embeddings
+    def get_embedding_table(self, embedding_size, pad_token):
+        self.feature_size = embedding_size
+        self.table = nn.Embedding(
+                        self.cardinality,
+                        embedding_size,
+                        padding_idx=pad_token,
+                    ) 
+    
+    def get_layer_norm(self): 
+        self.layer_norm = nn.LayerNorm(
+                    normalized_shape=self.feature_size
+                )
+
+    def init_embedding_table(self, embeddings_init_std):
+            with torch.no_grad():
+                self.table.weight.normal_( 0.0,
+                 embeddings_init_std)
+    
+    def get_projection_layer(self, output_dim, bias=True):
+        self.project_layer = nn.Linear(self.feature_size,
+                                   output_dim, bias=bias)
+
+    
 
 
-class FeatureProcess(PreTrainedModel): 
+class Conitnuous(object): 
+    """
+    Class to build the embedding representation of categorical variable  
+    """
+    def __init__(self, 
+        	    name : str, 
+                dtype : str, 
+                representation_type: bool = False,
+                log_with_preds_as_metadata: bool =  True,
+    )
+    self.name = name 
+    self.dtype = cardinality 
+    self.representation_type = representation_type
+    self.log_with_preds_as_metadata = log_with_preds_as_metadata
+
+
+    def get_representation_layer(self, 
+                            feature_size, 
+                            embeddings_init_std,
+                            numeric_features_soft_one_hot_encoding_num_embeddings=None):
+        self.feature_size = feature_size
+        if self.representation_type == 'soft_one_hot_encoding_num_embeddings':
+            self.table = SoftEmbedding(
+                            num_embeddings=numeric_features_soft_one_hot_encoding_num_embeddings,
+                            embeddings_dim=feature_size,
+                            embeddings_init_std=embeddings_init_std,
+                        )
+        else: 
+            self.table = nn.Linear(1, feature_size, bias=True)
+
+        
+    def get_layer_norm(self): 
+        self.layer_norm = nn.LayerNorm(
+                    normalized_shape=self.feature_size
+                )
+    
+    def get_projection_layer(self, output_dim, bias=True):
+        self.project_layer = nn.Linear(self.feature_size,
+                                   output_dim, bias=bias)
+
+
+class FeatureProcessConfig(object):
+    """
+    Config to define how to represent an input sequence of group of features 
+    """
+    def __init__(self,
+                 pad_token: str,
+                 use_ohe_item_ids_inputs: bool,
+                 item_embedding_dim: int, 
+                 embedding_dim_from_cardinality_multiplier: float,
+                 features_same_size_item_embedding: bool, 
+                 mf_constrained_embeddings: bool, 
+                 layer_norm_featurewise: bool,
+                 layer_norm_all_features: bool,
+                 item_id_embeddings_init_std: float,
+                 other_embeddings_init_std: float,
+                 numeric_features_project_to_embedding_dim: int, 
+                 numeric_features_soft_one_hot_encoding_num_embeddings: int,
+                 stochastic_shared_embeddings_replacement_prob: float,
+                 input_features_aggregation: str,
+                 tasks: List[str]=None, 
+                 ):
+        self.feature_map = feature_map
+        self.pad_token = pad_token
+        self.item_embedding_dim = item_embedding_dim
+        self.use_ohe_item_ids_inputs =use_ohe_item_ids_inputs
+        self.features_same_size_item_embedding = features_same_size_item_embedding
+        self.embedding_dim_from_cardinality_multiplier = embedding_dim_from_cardinality_multiplier
+        self.layer_norm_featurewise = layer_norm_featurewise
+        self.layer_norm_all_features = layer_norm_all_features
+        self.item_id_embeddings_init_std = item_id_embeddings_init_std
+        self.other_embeddings_init_std = other_embeddings_init_std
+        self.input_features_aggregation = input_features_aggregation
+        self.mf_constrained_embeddings = .mf_constrained_embeddings
+        self.numeric_features_project_to_embedding_dim =numeric_features_project_to_embedding_dim
+        self.numeric_features_soft_one_hot_encoding_num_embeddings = numeric_features_soft_one_hot_encoding_num_embeddings
+        self.tasks = tasks
+
+
+class FeatureGroup(object):
+    """
+    Class to store the aggregated Tensor of of a group of categoricals and continuous
+    defined in the same featuremap 
+    Args: 
+    """
+    def __init__(self,
+                 name: str,
+                 Values: Torch.Tensor,
+                 Metadata: List[str])
+    self.name = name
+    self.value = value
+    self.metadata = metadata
+
+    
+class LabelFeature(object):
+    """
+    Class to store label column name of the prediction head
+    Args: 
+        type: type of the prediction head:  item_prediction | classification | regression
+        label column: label column name
+    """
+    def __init__(self, 
+                 type: str
+                 label_column: str
+                 dimension: int)
+        self.type = type
+        self.label_column = label_column
+        self.dimension = dimension
+
+        
+class FeatureProcessOutput(object):
+    """
+    Class returned by FeatureProcess module with the group of sequences representations and prediction heads labels
+    """
+    def __init__(self, 
+                 feature_groups: List[FeatureGroup],
+                 label_groups: List[LabelFeature],
+                 metadata_features: List[str],
+                )
+    
+      
+
+####################################################################################
+#                                                                                  #
+# FeatureProcess module : prepare multiples FeatureGroups for session-based tasks  #
+#                                                                                  #
+####################################################################################
+
+class FeatureGroupProcess(PreTrainedModel): 
     """
     Process the dictionary of input tensors to prepare the sequence of interactions embeddings for Transformer blocks 
     
@@ -58,368 +214,252 @@ class FeatureProcess(PreTrainedModel):
         metadata_for_pred_logging: dictionary with item metadata features for prediction logging 
     """
 
+    def __init__(self,
+                name: str,
+                feature_config: FeatureProcessConfig,
+                feature_map: dict): 
+        super(FeatureGroupProcess, self).__init__()
 
-    def __init__(self, config, model_args, data_args, feature_map): 
-        super(FeatureProcess, self).__init__(config)
-
-        # Init the information of the output layer with respect to the prediction task: item prediction, classification or both 
-        self.target_dim = None
-        self.num_classes = None
-        self.label_feature_name = None
-        self.label_embedding_table_name = None
-        self.label_embedding_dim = None
-
-        # Init variables from model and data arguments 
+        # Init configs
+        self.name = name 
         self.feature_map = feature_map
-        self.pad_token = data_args.pad_token
-        self.item_embedding_dim = model_args.item_embedding_dim
-        self.use_ohe_item_ids_inputs = model_args.use_ohe_item_ids_inputs
-        self.features_same_size_item_embedding = (
-            model_args.features_same_size_item_embedding
-        )
-        self.embedding_dim_from_cardinality_multiplier = (
-            model_args.embedding_dim_from_cardinality_multiplier
-        )
-        self.layer_norm_featurewise = model_args.layer_norm_featurewise
-        self.layer_norm_all_features = model_args.layer_norm_all_features
-        self.item_id_embeddings_init_std = model_args.item_id_embeddings_init_std
-        self.other_embeddings_init_std = model_args.other_embeddings_init_std
-        self.input_features_aggregation = model_args.input_features_aggregation
-        self.mf_constrained_embeddings = model_args.mf_constrained_embeddings
-        self.numeric_features_project_to_embedding_dim = (
-            model_args.numeric_features_project_to_embedding_dim
-        )
-        self.numeric_features_soft_one_hot_encoding_num_embeddings = (
-            model_args.numeric_features_soft_one_hot_encoding_num_embeddings
-        )
+        self.feature_config = feature_config
 
-        if (
-            self.numeric_features_soft_one_hot_encoding_num_embeddings > 0
-            and self.numeric_features_project_to_embedding_dim == 0
-        ):
-            raise ValueError(
-                "You must set --numeric_features_project_to_embedding_dim to a value greater than zero when using Soft One-Hot Encoding (--numeric_features_soft_one_hot_encoding_num_embeddings)"
-            )
-        self.stochastic_shared_embeddings_replacement_prob = (
-            model_args.stochastic_shared_embeddings_replacement_prob
-        )
-        
-        # Define dictionary of representation modules for categorical and continuous features 
-        self.embedding_tables = nn.ModuleDict()
-        self.numeric_to_embedding_layers = nn.ModuleDict()
-        self.numeric_soft_embeddings = nn.ModuleDict()
-        self.features_embedding_projection_to_item_embedding_dim_layers = (
-            nn.ModuleDict()
-        )
-        self.features_layer_norm = nn.ModuleDict()
+        # Init input classes
+        self.categoricals, self.continuous = init_from_featuremap(feature_map)
 
-        self.input_combined_dim = 0
+        # Init outputs 
+        self.labels = []
+        self.FeatureGroup = None
+        self.metadata_for_pred_logging = {}
 
+        # compute item embedding dim : 
+        self.item_embedding_dim, self.itemid_name = self.get_itemid_embedding_dim(self.categoricals) 
 
-        # Init embedding tables
-        for cname, cinfo in self.feature_map.items():
-            # Define embedding table of categorical feature 
-            if cinfo["dtype"] == "categorical":
-                if self.use_ohe_item_ids_inputs:
-                    feature_size = cinfo["cardinality"]
+        # Get label columns 
+        for variable in self.categoricals + self.continuous: 
+            if variable.is_classification_label : 
+                self.labels.append(LabelFeature(type='classification', label_column=variable.name, dimension=variable.cardinality))
+            elif variable.is_seq_label: 
+                self.labels.append(LabelFeature(type='item_prediction', label_column=variable.name, dimension=variable.cardinality))
+            elif variable.is_regression_label: 
+                self.labels.append(LabelFeature(type='regression', label_column=variable.name, dimension=variable.cardinality))
+
+        # Get representation tables of input features 
+        for cat in self.categoricals:
+            if cat.is_itemid: 
+                cat.get_embedding_table(self.item_embedding_dim, self.feature_config.pad_token)
+                cat.init_embedding_table(self.item_id_embeddings_init_std)
+            else: 
+                if self.feature_config.features_same_size_item_embedding:
+                        cat.get_embedding_table(self.item_embedding_dim, self.feature_config.pad_token)
                 else:
-                    if "is_itemid" in cinfo and cinfo["is_itemid"]:
-                        # Set itemid embeddings table
-                        if model_args.item_embedding_dim is not None:
-                            embedding_size = model_args.item_embedding_dim
-                        # When using tying embeddings, items embeddings dimension is equal to the Transformer model output dimension
-                        elif model_args.mf_constrained_embeddings:
-                            embedding_size = model_args.d_model
-                        else:
-                            # Compute embedding dimension from the feature cardinality 
-                            embedding_size = get_embedding_size_from_cardinality(
-                                cinfo["cardinality"],
-                                multiplier=self.embedding_dim_from_cardinality_multiplier,
-                            )
-                        
-                        feature_size = embedding_size
-                        self.item_embedding_dim = embedding_size
-
-                        # Set itemid feature as prediction labels for item prediction task.
-                        if "is_label" in cinfo and cinfo['is_label']: 
-                            self.label_feature_name = cname
-                            self.label_embedding_table_name = cinfo["emb_table"]
-                            self.label_embedding_dim = embedding_size
-                    
-                    elif "is_classification_label" in cinfo and cinfo["is_classification_label"]:
-                        # Get num classes for classification head  
-                        self.num_classes =  cinfo["cardinality"]
-
-                    else:
-                        # Set embeddings table of other categorical features 
-                        if self.features_same_size_item_embedding:
-                            if self.item_embedding_dim:
-                                embedding_size = self.item_embedding_dim
-                                feature_size = embedding_size
-                            else:
-                                raise ValueError(
-                                    "Make sure that the item id is the first in the YAML features config file."
-                                )
-                        else:
-                            embedding_size = get_embedding_size_from_cardinality(
-                                cinfo["cardinality"],
-                                multiplier=self.embedding_dim_from_cardinality_multiplier,
-                            )
-                            feature_size = embedding_size
-
-                            if (
-                                self.input_features_aggregation
-                                == "elementwise_sum_multiply_item_embedding"
-                            ):
-                                self.features_embedding_projection_to_item_embedding_dim_layers[
-                                    cname
-                                ] = nn.Linear(
-                                    embedding_size, self.label_embedding_dim, bias=True,
-                                )
-                                feature_size = self.label_embedding_dim
-
-
-                    self.embedding_tables[cinfo["emb_table"]] = nn.Embedding(
-                        cinfo["cardinality"],
-                        embedding_size,
-                        padding_idx=self.pad_token,
-                    )
-
-                    # Added to initialize embeddings
-                    if "is_itemid" in cinfo and cinfo["is_itemid"]:
-                        embedding_init_std = self.item_id_embeddings_init_std
-                    else:
-                        embedding_init_std = self.other_embeddings_init_std
-
-                    with torch.no_grad():
-                        self.embedding_tables[cinfo["emb_table"]].weight.normal_(
-                            0.0, embedding_init_std
+                    embedding_size = get_embedding_size_from_cardinality(
+                            cat.cardinality
+                            multiplier=self.feature_config.embedding_dim_from_cardinality_multiplier,
                         )
-
-                logger.info(
-                    "Categ Feature: {} - Cardinality: {} - Feature Size: {}".format(
-                        cname, cinfo["cardinality"], feature_size
-                    )
-                )
-                
-            # Define deep representation of continuous feature 
-            elif cinfo["dtype"] in ["long", "float"]:
-                if self.numeric_features_project_to_embedding_dim > 0:
-                    if self.features_same_size_item_embedding:
-                        if self.label_embedding_dim:
-                            feature_size = self.label_embedding_dim
-                        else:
-                            raise ValueError(
-                                "Make sure that the item id (label feature) is the first in the YAML features config file."
-                            )
-                    else:
-                        feature_size = self.numeric_features_project_to_embedding_dim
-
-                    if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
-                        self.numeric_soft_embeddings[cname] = SoftEmbedding(
-                            num_embeddings=self.numeric_features_soft_one_hot_encoding_num_embeddings,
-                            embeddings_dim=feature_size,
-                            embeddings_init_std=self.other_embeddings_init_std,
-                        )
-
-                        if (
-                            self.input_features_aggregation
-                            == "elementwise_sum_multiply_item_embedding"
-                        ):
-                            self.features_embedding_projection_to_item_embedding_dim_layers[
-                                cname
-                            ] = nn.Linear(
-                                feature_size, self.label_embedding_dim, bias=True,
-                            )
-                            feature_size = self.label_embedding_dim
-                    else:
-                        if (
-                            self.input_features_aggregation
-                            == "elementwise_sum_multiply_item_embedding"
-                        ):
-                            project_scalar_to_embedding_dim = self.label_embedding_dim
-                        else:
-                            project_scalar_to_embedding_dim = (
-                                self.numeric_features_project_to_embedding_dim
-                            )
-                        feature_size = project_scalar_to_embedding_dim
-
-                        self.numeric_to_embedding_layers[cname] = nn.Linear(
-                            1, project_scalar_to_embedding_dim, bias=True
-                        )
-
-                else:
-                    feature_size = 1
-
-                logger.info(
-                    "Numerical Feature: {} - Feature Size: {}".format(
-                        cname, feature_size
-                    )
-                )
-
-            elif cinfo["is_control"]:
-                # Control features are not used as input for the model
-                continue
-            else:
-                raise NotImplementedError
-
-            self.input_combined_dim += feature_size
-
-            if self.layer_norm_featurewise:
-                self.features_layer_norm[cname] = nn.LayerNorm(
-                    normalized_shape=feature_size
-                )
-
-            if "is_label" in cinfo and cinfo["is_label"]:
-                self.target_dim = cinfo["cardinality"]
+                    cat.get_embedding_table(self.item_embedding_dim, self.feature_config.pad_token)
+                cat.init_embedding_table(self.feature_config.other_embeddings_init_std)
+                if  self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+                    cat.get_projection_layer(self.item_embedding_dim)
         
-        if self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+        for cont in self.continuous:
+            if self.feature_config.numeric_features_project_to_embedding_dim > 0 :
+                if self.features_same_size_item_embedding:
+                    cont.get_representation_layer(self.item_embedding_dim, 
+                                                self.feature_config.other_embeddings_init_std,
+                                                self.feature_config.numeric_features_soft_one_hot_encoding_num_embeddings)
+                if  self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+                    cont.get_projection_layer(self.item_embedding_dim)
+                                                
+        if self.layer_norm_featurewise: 
+            for variable in self.continuous + self.categoricals:
+                variable.get_layer_norm() 
+        
+        # get name of  for meta_data 
+        self.metadata_for_pred_logging = []
+        for variable in self.continuous + self.categoricals:
+            if variable.log_with_preds_as_metadata:
+                self.metadata_for_pred_logging.append(variable.name)
+        
+        # compute combined_dim 
+        if self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
             self.input_combined_dim = self.item_embedding_dim
+        else: 
+            self.input_combined_dim = np.sum(cat.feature_size for cat in self.continuous + self.categoricals)
 
-        if self.target_dim == None and self.num_classes == None:
-            raise RuntimeError("label column is not declared in feature map.")
-
+        # Init aggregation module 
+        self.aggregate = Aggregation(self.feature_config.input_features_aggregation, self.itemid_name)
 
     def forward(self, inputs):
-        label_seq, output = None, []
-        metadata_for_pred_logging = {}
-        classification_labels = None
-
         transformed_features = OrderedDict()
-        for cname, cinfo in self.feature_map.items():
-
-            cdata = inputs[cname]
-
-            if "is_label" in cinfo and cinfo["is_label"]:
-                label_seq = cdata
-
-            if cinfo["dtype"] == "categorical":
-                cdata = cdata.long()
-
-                # Applies Stochastic Shared Embeddings if training
-                if (
-                    self.stochastic_shared_embeddings_replacement_prob > 0.0
-                    and not self.use_ohe_item_ids_inputs
-                    and self.training
-                ):
-                    with torch.no_grad():
-                        cdata_non_zero_mask = cdata != self.pad_token
-
-                        sse_prob_replacement_matrix = torch.full(
-                            cdata.shape,
-                            self.stochastic_shared_embeddings_replacement_prob,
-                            device=self.device,
-                        )
-                        sse_replacement_mask = (
-                            torch.bernoulli(sse_prob_replacement_matrix).bool()
-                            & cdata_non_zero_mask
-                        )
-                        n_values_to_replace = sse_replacement_mask.sum()
-
-                        cdata_flattened_non_zero = torch.masked_select(
-                            cdata, cdata_non_zero_mask
-                        )
-
-                        sampled_values_to_replace = cdata_flattened_non_zero[
-                            torch.randperm(cdata_flattened_non_zero.shape[0])
-                        ][:n_values_to_replace]
-
-                        cdata[sse_replacement_mask] = sampled_values_to_replace
-
-                if "is_label" in cinfo and cinfo["is_label"]:
-                    if self.use_ohe_item_ids_inputs:
-                        cdata = torch.nn.functional.one_hot(
-                            cdata, num_classes=self.target_dim
-                        ).float()
-                    else:
-                        cdata = self.embedding_tables[cinfo["emb_table"]](cdata)
-
-                elif  "is_classification_label" in cinfo and cinfo["is_classification_label"]:
-                    # keep the original tensor of classification target  
-                    classification_labels = cdata 
-
-                else:
-                    cdata = self.embedding_tables[cinfo["emb_table"]](cdata)
-
-                    if (
-                        self.input_features_aggregation
-                        == "elementwise_sum_multiply_item_embedding"
-                        and not self.features_same_size_item_embedding
-                    ):
-                        cdata = self.features_embedding_projection_to_item_embedding_dim_layers[
-                            cname
-                        ](
-                            cdata
-                        )
-
-            elif cinfo["dtype"] in ["long", "float"]:
-                if cinfo["dtype"] == "long":
-                    cdata = cdata.unsqueeze(-1).long()
-                elif cinfo["dtype"] == "float":
-                    cdata = cdata.unsqueeze(-1).float()
-
-                if self.numeric_features_project_to_embedding_dim > 0:
-                    if self.numeric_features_soft_one_hot_encoding_num_embeddings > 0:
-                        cdata = self.numeric_soft_embeddings[cname](cdata)
-
-                        if (
-                            self.input_features_aggregation
-                            == "elementwise_sum_multiply_item_embedding"
-                            and not self.features_same_size_item_embedding
-                        ):
-                            cdata = self.features_embedding_projection_to_item_embedding_dim_layers[
-                                cname
-                            ](
-                                cdata
-                            )
-                    else:
-                        cdata = self.numeric_to_embedding_layers[cname](cdata)
-
-            elif cinfo["is_control"]:
-                # Control features are not used as input for the model
-                continue
-            else:
-                raise NotImplementedError
-
-            # Applying layer norm for each feature
-            if self.layer_norm_featurewise:
-                cdata = self.features_layer_norm[cname](cdata)
-
-            transformed_features[cname] = cdata
-
-            # Keeping item metadata features
+        metadata_for_pred_logging =  OrderedDict()
+        for variable in self.categoricals + self.continuous: 
+            cdata = inputs[variable.name]
             if (
-                "log_with_preds_as_metadata" in cinfo
-                and cinfo["log_with_preds_as_metadata"] == True
-            ):
-                metadata_for_pred_logging[cname] = inputs[cname].detach()
+                self.feature_config.stochastic_shared_embeddings_replacement_prob > 0.0 and 
+                self.training
+                ):
+                cdata = stochastic_swap_noise(cdata, self.feature_config.pad_token, self.feature_config.stochastic_shared_embeddings_replacement_prob)
+                cdata = variable.table(cdata)
+            
+            if self.layer_norm_featurewise:
+                cdata = variable.layer_norm(cdata)
+            transformed_features[variable.name] = cdata
+
+        
+        # Create aggregated FeatureGroup class 
+        output = self.aggregate(transformed_features)
+        return FeatureGroup(self.name, 
+                            output, 
+                            metadata_for_pred_logging)
 
 
+class FeatureProcess(PreTrainedModel): 
+    """
+    Process multiple  groups of features and return a list of classes: FeatureGroup and LabelFeature 
+    """
 
+    def __init__(self,
+                names: List[str],
+                feature_configs: FeatureProcessConfig,
+                feature_maps: dict): 
+        super(FeatureGroupProcess, self).__init__()
+
+        # Init configs
+        self.names = names
+        self.feature_maps = feature_maps
+        self.feature_configs = feature_configs
+
+        # Init Feature groups 
+        self.feature_groups = [FeatureGroupProcess(name, feature_config, feature_map) for 
+                                (name, feature_map, feature_config) in zip(
+                                    self.names, self.feature_maps, self.feature_configs
+                                     )
+                            ]
+    def forward(self, inputs):
+        feature_groups = [feat_group(inputs) for feat_group in self.feature_groups]
+        labels_features = [feat_group.labels for feat_group in feature_groups]
+        labels_features = sum(labels_features, [])
+        metadata_for_pred_logging = [feat_group.metadata_for_pred_logging for feat_group in feature_groups]
+        metadata_for_pred_logging = sum(metadata_for_pred_logging, [])
+    return FeatureProcessOutput(feature_groups, 
+                                labels_features,
+                                metadata_for_pred_logging)
+
+
+##########################################
+# utils needed by FeatureProcess modules #
+##########################################
+
+def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
+    # A rule-of-thumb from Google.
+    embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
+    return embedding_size
+
+class SoftEmbedding(nn.Module):
+    """
+    Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
+    """
+
+    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
+        super(SoftEmbedding, self).__init__()
+        self.embedding_table = nn.Embedding(num_embeddings, embeddings_dim)
+        with torch.no_grad():
+            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
+        self.projection_layer = nn.Linear(1, num_embeddings, bias=True)
+        self.softmax = torch.nn.Softmax(dim=-1)
+
+    def forward(self, input_numeric):
+        weights = self.softmax(self.projection_layer(input_numeric))
+        soft_one_hot_embeddings = (
+            weights.unsqueeze(-1) * self.embedding_table.weight
+        ).sum(-2)
+        return soft_one_hot_embeddings
+
+class Projection(nn.Module): 
+    """
+    Project continuous variable to higher dimension space 
+    to have the same dimension as other categoricals
+    """
+    def __init__(self, input_dim, output_dim, bias=True):
+    super(Projection, self).__init__()
+    self.project_layer = nn.Linear(input_dim,
+                                   output_dim, bias=bias)
+
+    def forward(self, input_numeric):
+        return self.project_layer(input_numeric)                          
+         
+    
+
+class Aggregation(nn.Module):
+    def __init__(self, input_features_aggregation, itemid_name):
+        self.input_features_aggregation = input_features_aggregation
+        self.itemid_name = itemid_name
+        
+        
+    def forward(transformed_features):
         if len(transformed_features) > 1:
-            if self.input_features_aggregation == "concat":
-                output = torch.cat(list(transformed_features.values()), dim=-1)
-            elif (
-                self.input_features_aggregation
-                == "elementwise_sum_multiply_item_embedding"
-            ):
-                additional_features_sum = torch.zeros_like(
-                    transformed_features[self.label_feature_name], device=self.device
-                )
-                for k, v in transformed_features.items():
-                    if k != self.label_feature_name:
-                        if (self.feature_map[k]["dtype"] == "categorical") or (
-                            self.feature_map[k]["dtype"] in ["long", "float"]
-                            and self.numeric_features_project_to_embedding_dim > 0
-                        ):
-                            additional_features_sum += v
+                if self.input_features_aggregation == "concat":
+                    output = torch.cat(list(transformed_features.values()), dim=-1)
+                elif (
+                    self.input_features_aggregation
+                    == "elementwise_sum_multiply_item_embedding"
+                ):
+                    additional_features_sum = torch.zeros_like(
+                        transformed_features[self.label_feature_name], device=self.device
+                    )
+                    for k, v in transformed_features.items():
+                        if k != self.itemid_name:
+                            if (self.feature_map[k]["dtype"] == "categorical") or (
+                                self.feature_map[k]["dtype"] in ["long", "float"]
+                                and self.numeric_features_project_to_embedding_dim > 0
+                            ):
+                                additional_features_sum += v
 
-                item_id_embedding = transformed_features[self.label_feature_name]
+                    item_id_embedding = transformed_features[self.itemid_name]
 
-                output = item_id_embedding * (additional_features_sum + 1.0)
+                    output = item_id_embedding * (additional_features_sum + 1.0)
+                else:
+                    raise ValueError("Invalid value for --input_features_aggregation.")
             else:
-                raise ValueError("Invalid value for --input_features_aggregation.")
-        else:
-            output = list(transformed_features.values())[0]
+                output = list(transformed_features.values())[0]
+        return output 
 
-        return output, label_seq, classification_labels, metadata_for_pred_logging
+
+def stochastic_swap_noise(cdata: torch.Tensor, 
+                          pad_token: int,
+                          stochastic_shared_embeddings_replacement_prob: float,
+                          
+                         )
+    """
+    Applies Stochastic replacement of sequence features 
+    """ 
+    with torch.no_grad():
+        cdata_non_zero_mask = cdata != pad_token
+        sse_prob_replacement_matrix = torch.full(
+            cdata.shape,
+            stochastic_shared_embeddings_replacement_prob,
+            device=cdata.device,
+        )
+        sse_replacement_mask = (
+            torch.bernoulli(sse_prob_replacement_matrix).bool()
+            & cdata_non_zero_mask
+        )
+        n_values_to_replace = sse_replacement_mask.sum()
+        
+        cdata_flattened_non_zero = torch.masked_select(
+            cdata, cdata_non_zero_mask
+        )
+
+        sampled_values_to_replace = cdata_flattened_non_zero[
+            torch.randperm(cdata_flattened_non_zero.shape[0])
+        ][:n_values_to_replace]
+
+        cdata[sse_replacement_mask] = sampled_values_to_replace
+    return cdata
+
+
+
+
+    
