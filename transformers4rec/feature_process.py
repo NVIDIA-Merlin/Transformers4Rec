@@ -1,4 +1,5 @@
 from typing import Optional, Callable, Any, Dict, List 
+from dataclasses import dataclass
 import logging
 import math
 from collections import OrderedDict
@@ -25,7 +26,17 @@ logger = logging.getLogger(__name__)
 
 class Categorical(object): 
     """
-    Class to build the embedding representation of categorical variable  
+    Class to build the embedding representation of categorical variables 
+
+    Parameters
+    ---------- 
+        name: name of the variable
+        cardinality: the number of unique values 
+        is_itemid: flag for the sequence of item-id column
+        is_seq_label: flag for item prediction target
+        is_classification_label: flag for classification target
+        is_regression_label: flage for regression target
+        log_with_preds_as_metadata: whether to log the raw values of the column as metadata
     """
     def __init__(self, 
         	    name : str, 
@@ -71,7 +82,14 @@ class Categorical(object):
 
 class Conitnuous(object): 
     """
-    Class to build the embedding representation of categorical variable  
+    Class to build the embedding representation of continuous variables  
+
+    Parameters
+    ----------
+        name: name of the variable
+        dtype: type of column : float or long 
+        representation_type: vector representation of the scalar; soft one-hot encoding or MLP projection. 
+        log_with_preds_as_metadata: whether to log the raw values of the column as metadata
     """
     def __init__(self, 
         	    name : str, 
@@ -112,7 +130,7 @@ class Conitnuous(object):
 
 class FeatureProcessConfig(object):
     """
-    Config to define how to represent an input sequence of group of features 
+    Config arguments for the FeatureGroupProcess module 
     """
     def __init__(self,
                  pad_token: str,
@@ -147,48 +165,55 @@ class FeatureProcessConfig(object):
         self.numeric_features_soft_one_hot_encoding_num_embeddings = numeric_features_soft_one_hot_encoding_num_embeddings
         self.tasks = tasks
 
-
-class FeatureGroup(object):
+@dataclass
+class FeatureGroup:
     """
-    Class to store the aggregated Tensor of of a group of categoricals and continuous
-    defined in the same featuremap 
-    Args: 
-    """
-    def __init__(self,
-                 name: str,
-                 Values: Torch.Tensor,
-                 Metadata: List[str])
-    self.name = name
-    self.value = value
-    self.metadata = metadata
+    Class to store the Tensor resulting from the aggregation of a group of
+    categorical and continuous variables defined in the same featuremap 
 
-    
-class LabelFeature(object):
+    Parameters
+    ----------
+        name: name to give to the featuregroup
+        values: the aggregated pytorch tensor 
+        metadata: list of columns names to log as metadata 
+    """
+    name: str,
+    values: Torch.Tensor,
+    metadata: List[str])
+
+
+@dataclass 
+class LabelFeature:
     """
     Class to store label column name of the prediction head
-    Args: 
+
+    Parameters
+    ---------- 
         type: type of the prediction head:  item_prediction | classification | regression
         label column: label column name
+        dimension: cardinality of targets 
     """
-    def __init__(self, 
-                 type: str
-                 label_column: str
-                 dimension: int)
-        self.type = type
-        self.label_column = label_column
-        self.dimension = dimension
 
-        
-class FeatureProcessOutput(object):
+    type: str
+    label_column: str
+    dimension: int
+
+@dataclass      
+class FeatureProcessOutput:
     """
-    Class returned by FeatureProcess module with the group of sequences representations and prediction heads labels
+    Class returned by FeatureProcess module with : 
+    the list of interaction representations and prediction heads labels
+
+    Parameters
+    ---------- 
+        feature_groups: list of FeatureGroup for multi-input 
+        label_groups: list of LabelFeatures for multi-task 
+        metadata_features: List of columns name to log as metadata
     """
-    def __init__(self, 
-                 feature_groups: List[FeatureGroup],
-                 label_groups: List[LabelFeature],
-                 metadata_features: List[str],
-                )
-    
+    feature_groups: List[FeatureGroup]
+    label_groups: List[LabelFeature]
+    metadata_features: List[str]
+
       
 
 ####################################################################################
@@ -200,18 +225,15 @@ class FeatureProcessOutput(object):
 class FeatureGroupProcess(PreTrainedModel): 
     """
     Process the dictionary of input tensors to prepare the sequence of interactions embeddings for Transformer blocks 
-    
-    Args: 
-        config: HuggingFace configuration class 
-        model_args: ModelArguments class specifying parameters of the neural network architecture 
-        data_args: DataArguments class specifying arguments for data loading and preparation  
-        feature_map: dictionary loaded from feature config yaml file specifying the name and characteristics of input and label features. 
+
+    Parameters
+    ---------- 
+        name: HuggingFace configuration class 
+        feature_config: config class to define how to represent and group features 
+        feature_map: dictionary specifying the categorical and continuous columns to group together 
     
     Outputs: 
-        output: sequence of item interaction embeddings
-        label_seq: sequence of item ids 
-        classification_labels: tensor of classification targets 
-        metadata_for_pred_logging: dictionary with item metadata features for prediction logging 
+        FeatureGroup : a FeatureGroup class that stores the interaction embedding representation 
     """
 
     def __init__(self,
@@ -233,8 +255,8 @@ class FeatureGroupProcess(PreTrainedModel):
         self.FeatureGroup = None
         self.metadata_for_pred_logging = {}
 
-        # compute item embedding dim : 
-        self.item_embedding_dim, self.itemid_name = self.get_itemid_embedding_dim(self.categoricals) 
+        # Init itemid embedding dim and itemid column name : 
+        self.get_itemid_embedding_dim() 
 
         # Get label columns 
         for variable in self.categoricals + self.continuous: 
@@ -314,17 +336,42 @@ class FeatureGroupProcess(PreTrainedModel):
                             output, 
                             metadata_for_pred_logging)
 
+    def get_itemid_embedding_dim(self):
+        """
+        Method to compute the itemid dimension 
+        """
+        # select itemid column 
+        categorical_itemid = [cat for cat in self.categoricals if cet.is_itemid][0]
+        if self.feature_config.item_embedding_dim is not None:
+            embedding_size = self.feature_config.item_embedding_dim.item_embedding_dim
+
+        elif self.feature_config.mf_constrained_embeddings:
+            embedding_size = self.feature_config.d_model
+        else:
+            embedding_size = get_embedding_size_from_cardinality(
+                categorical_itemid.cardinality,
+                multiplier=self.feature_config.embedding_dim_from_cardinality_multiplier,
+            )
+        self.item_embedding_dim = embedding_size
+        self.itemid_name = categorical_itemid.name
+
 
 class FeatureProcess(PreTrainedModel): 
     """
-    Process multiple  groups of features and return a list of classes: FeatureGroup and LabelFeature 
+    Process multiple  groups of features and return a list of the classes: FeatureGroup and LabelFeature 
+    
+    Parameters
+    ---------- 
+        names: list of feature groups names 
+        feature_configs: config class for each feature group 
+        fature_maps: list of feature maps defining the group of columns to aggregate 
     """
 
     def __init__(self,
                 names: List[str],
-                feature_configs: FeatureProcessConfig,
+                feature_configs: List[FeatureProcessConfig],
                 feature_maps: dict): 
-        super(FeatureGroupProcess, self).__init__()
+        super(FeatureProcess, self).__init__()
 
         # Init configs
         self.names = names
@@ -459,6 +506,13 @@ def stochastic_swap_noise(cdata: torch.Tensor,
         cdata[sse_replacement_mask] = sampled_values_to_replace
     return cdata
 
+
+def init_from_featuremap(featuremap: dict):
+    """
+    Convert the featuremap to list of Categorical and Continuous classes
+    """
+    #TODO
+    pass
 
 
 
