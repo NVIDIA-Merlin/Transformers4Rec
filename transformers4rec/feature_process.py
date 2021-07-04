@@ -218,7 +218,7 @@ class FeatureProcessOutput:
 
 ####################################################################################
 #                                                                                  #
-# FeatureProcess module : prepare multiples FeatureGroups for session-based tasks  #
+# FeatureProcess module : prepare multiple FeatureGroups for session-based tasks  #
 #                                                                                  #
 ####################################################################################
 
@@ -228,7 +228,7 @@ class FeatureGroupProcess(PreTrainedModel):
 
     Parameters
     ---------- 
-        name: HuggingFace configuration class 
+        name: name of the Feature Group
         feature_config: config class to define how to represent and group features 
         feature_map: dictionary specifying the categorical and continuous columns to group together 
     
