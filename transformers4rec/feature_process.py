@@ -447,6 +447,7 @@ class Projection(nn.Module):
 
 class Aggregation(nn.Module):
     def __init__(self, input_features_aggregation, itemid_name):
+        super(Aggregation, self).__init__()
         self.input_features_aggregation = input_features_aggregation
         self.itemid_name = itemid_name
         
