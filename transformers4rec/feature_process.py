@@ -1,19 +1,13 @@
-from typing import Optional, Callable, Any, Dict, List 
-from dataclasses import dataclass
-import logging
-import math
 from collections import OrderedDict
+from dataclasses import dataclass
+from typing import Optional, Callable, Any, Dict, List 
+import logging
 
+import math
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional as F
-from torch.nn.modules.loss import _WeightedLoss
-from transformers import ElectraModel, GPT2Model, PreTrainedModel, XLNetModel
-
-from .loss_functions import BPR, TOP1, BPR_max, BPR_max_reg, TOP1_max
-from .recsys_tasks import RecSysTask
-
+from transformers import PreTrainedModel, PretrainedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -35,27 +29,28 @@ class Categorical(object):
         is_itemid: flag for the sequence of item-id column
         is_seq_label: flag for item prediction target
         is_classification_label: flag for classification target
-        is_regression_label: flage for regression target
         log_with_preds_as_metadata: whether to log the raw values of the column as metadata
     """
     def __init__(self, 
-        	    name : str, 
+                name : str, 
+                emb_table: str,
                 cardinality : int, 
                 is_itemid: bool = False,
                 is_seq_label: bool =  False,
                 is_classification_label: bool = False,
-                is_regression_label: bool = False,
                 log_with_preds_as_metadata: bool = True
-    )
-    self.name = name 
-    self.cardinality = cardinality 
-    self.is_itemid = is_itemid
-    self.is_seq_label = is_seq_label
-    self.is_classification_label = is_classification_label
-    self.log_with_preds_as_metadata = log_with_preds_as_metadata
+    ):
+        self.name = name 
+        self.cardinality = cardinality 
+        self.is_itemid = is_itemid
+        self.is_seq_label = is_seq_label
+        self.is_classification_label = is_classification_label
+        self.log_with_preds_as_metadata = log_with_preds_as_metadata
+        self.emb_table = emb_table
+        self.feature_size = None
 
 
-    def get_embedding_table(self, embedding_size, pad_token):
+    def setup_embedding_table(self, embedding_size, pad_token):
         self.feature_size = embedding_size
         self.table = nn.Embedding(
                         self.cardinality,
@@ -63,7 +58,7 @@ class Categorical(object):
                         padding_idx=pad_token,
                     ) 
     
-    def get_layer_norm(self): 
+    def setup_layer_norm(self): 
         self.layer_norm = nn.LayerNorm(
                     normalized_shape=self.feature_size
                 )
@@ -73,7 +68,7 @@ class Categorical(object):
                 self.table.weight.normal_( 0.0,
                  embeddings_init_std)
     
-    def get_projection_layer(self, output_dim, bias=True):
+    def setup_projection_layer(self, output_dim, bias=True):
         self.project_layer = nn.Linear(self.feature_size,
                                    output_dim, bias=bias)
 
@@ -89,21 +84,25 @@ class Conitnuous(object):
         name: name of the variable
         dtype: type of column : float or long 
         representation_type: vector representation of the scalar; soft one-hot encoding or MLP projection. 
-        log_with_preds_as_metadata: whether to log the raw values of the column as metadata
+        log_with_preds_as_metadata: whether to log the raw values of the column as metadata.
+        is_regression_label: flag for regression target
     """
     def __init__(self, 
-        	    name : str, 
+                name : str, 
                 dtype : str, 
                 representation_type: bool = False,
                 log_with_preds_as_metadata: bool =  True,
-    )
-    self.name = name 
-    self.dtype = cardinality 
-    self.representation_type = representation_type
-    self.log_with_preds_as_metadata = log_with_preds_as_metadata
+                is_regression_label: bool = False,
+    ):
+        self.name = name 
+        self.dtype = dtype 
+        self.representation_type = representation_type
+        self.log_with_preds_as_metadata = log_with_preds_as_metadata
+        self.is_regression_label = is_regression_label
+        self.feature_size = None
 
 
-    def get_representation_layer(self, 
+    def setup_representation_layer(self, 
                             feature_size, 
                             embeddings_init_std,
                             numeric_features_soft_one_hot_encoding_num_embeddings=None):
@@ -114,16 +113,21 @@ class Conitnuous(object):
                             embeddings_dim=feature_size,
                             embeddings_init_std=embeddings_init_std,
                         )
-        else: 
+        elif self.representation_type == 'identity':
+            self.table = nn.Identity()
+        elif self.representation_type == 'linear': 
             self.table = nn.Linear(1, feature_size, bias=True)
+        else: 
+            raise ValueError("Invalid value for --representation_type of column %s" %self.name)
+            
 
         
-    def get_layer_norm(self): 
+    def setup_layer_norm(self): 
         self.layer_norm = nn.LayerNorm(
                     normalized_shape=self.feature_size
                 )
     
-    def get_projection_layer(self, output_dim, bias=True):
+    def setup_projection_layer(self, output_dim, bias=True):
         self.project_layer = nn.Linear(self.feature_size,
                                    output_dim, bias=bias)
 
@@ -133,34 +137,31 @@ class FeatureProcessConfig(object):
     Config arguments for the FeatureGroupProcess module 
     """
     def __init__(self,
-                 pad_token: str,
-                 use_ohe_item_ids_inputs: bool,
-                 item_embedding_dim: int, 
-                 embedding_dim_from_cardinality_multiplier: float,
-                 features_same_size_item_embedding: bool, 
-                 mf_constrained_embeddings: bool, 
-                 layer_norm_featurewise: bool,
-                 layer_norm_all_features: bool,
-                 item_id_embeddings_init_std: float,
-                 other_embeddings_init_std: float,
-                 numeric_features_project_to_embedding_dim: int, 
-                 numeric_features_soft_one_hot_encoding_num_embeddings: int,
-                 stochastic_shared_embeddings_replacement_prob: float,
-                 input_features_aggregation: str,
-                 tasks: List[str]=None, 
+                 pad_token: int = 0,
+                 use_ohe_item_ids_inputs: bool = False,
+                 item_embedding_dim: int = 128, 
+                 embedding_dim_from_cardinality_multiplier: float = 0,
+                 features_same_size_item_embedding: bool = True, 
+                 mf_constrained_embeddings: bool = True , 
+                 layer_norm_featurewise: bool = True,
+                 item_id_embeddings_init_std: float = 0.01,
+                 other_embeddings_init_std: float = 0.01,
+                 numeric_features_project_to_embedding_dim: int = 128, 
+                 numeric_features_soft_one_hot_encoding_num_embeddings: int = 128,
+                 stochastic_shared_embeddings_replacement_prob: float = False,
+                 input_features_aggregation: str = 'elementwise_sum_multiply_item_embedding',
+                 tasks: List[str]=['item_prediction'], 
                  ):
-        self.feature_map = feature_map
         self.pad_token = pad_token
         self.item_embedding_dim = item_embedding_dim
         self.use_ohe_item_ids_inputs =use_ohe_item_ids_inputs
         self.features_same_size_item_embedding = features_same_size_item_embedding
         self.embedding_dim_from_cardinality_multiplier = embedding_dim_from_cardinality_multiplier
         self.layer_norm_featurewise = layer_norm_featurewise
-        self.layer_norm_all_features = layer_norm_all_features
         self.item_id_embeddings_init_std = item_id_embeddings_init_std
         self.other_embeddings_init_std = other_embeddings_init_std
         self.input_features_aggregation = input_features_aggregation
-        self.mf_constrained_embeddings = .mf_constrained_embeddings
+        self.mf_constrained_embeddings = mf_constrained_embeddings
         self.numeric_features_project_to_embedding_dim =numeric_features_project_to_embedding_dim
         self.numeric_features_soft_one_hot_encoding_num_embeddings = numeric_features_soft_one_hot_encoding_num_embeddings
         self.tasks = tasks
@@ -177,9 +178,9 @@ class FeatureGroup:
         values: the aggregated pytorch tensor 
         metadata: list of columns names to log as metadata 
     """
-    name: str,
-    values: Torch.Tensor,
-    metadata: List[str])
+    name: str
+    values: torch.Tensor
+    metadata: List[str]
 
 
 @dataclass 
@@ -214,7 +215,6 @@ class FeatureProcessOutput:
     label_groups: List[LabelFeature]
     metadata_features: List[str]
 
-      
 
 ####################################################################################
 #                                                                                  #
@@ -230,7 +230,7 @@ class FeatureGroupProcess(PreTrainedModel):
     ---------- 
         name: name of the Feature Group
         feature_config: config class to define how to represent and group features 
-        feature_map: dictionary specifying the categorical and continuous columns to group together 
+        feature_map: path to yaml file containing the config for the group of features
     
     Outputs: 
         FeatureGroup : a FeatureGroup class that stores the interaction embedding representation 
@@ -239,8 +239,9 @@ class FeatureGroupProcess(PreTrainedModel):
     def __init__(self,
                 name: str,
                 feature_config: FeatureProcessConfig,
-                feature_map: dict): 
-        super(FeatureGroupProcess, self).__init__()
+                feature_map: str, 
+                config = PretrainedConfig()): 
+        super(FeatureGroupProcess, self).__init__(config)
 
         # Init configs
         self.name = name 
@@ -256,49 +257,55 @@ class FeatureGroupProcess(PreTrainedModel):
         self.metadata_for_pred_logging = {}
 
         # Init itemid embedding dim and itemid column name : 
-        self.get_itemid_embedding_dim() 
-
+        self.setup_itemid_embedding_dim() 
+    
         # Get label columns 
-        for variable in self.categoricals + self.continuous: 
+        for variable in self.categoricals: 
             if variable.is_classification_label : 
                 self.labels.append(LabelFeature(type='classification', label_column=variable.name, dimension=variable.cardinality))
             elif variable.is_seq_label: 
                 self.labels.append(LabelFeature(type='item_prediction', label_column=variable.name, dimension=variable.cardinality))
-            elif variable.is_regression_label: 
+        for variable in self.continuous:
+            if variable.is_regression_label: 
                 self.labels.append(LabelFeature(type='regression', label_column=variable.name, dimension=variable.cardinality))
 
-        # Get representation tables of input features 
+        # Get representation tables of input features: continuous and categorical
         for cat in self.categoricals:
             if cat.is_itemid: 
-                cat.get_embedding_table(self.item_embedding_dim, self.feature_config.pad_token)
-                cat.init_embedding_table(self.item_id_embeddings_init_std)
+                cat.feature_size = self.item_embedding_dim
             else: 
                 if self.feature_config.features_same_size_item_embedding:
-                        cat.get_embedding_table(self.item_embedding_dim, self.feature_config.pad_token)
+                        cat.feature_size = self.item_embedding_dim
                 else:
-                    embedding_size = get_embedding_size_from_cardinality(
-                            cat.cardinality
+                    cat.feature_size = get_embedding_size_from_cardinality(
+                            cat.cardinality,
                             multiplier=self.feature_config.embedding_dim_from_cardinality_multiplier,
                         )
-                    cat.get_embedding_table(self.item_embedding_dim, self.feature_config.pad_token)
-                cat.init_embedding_table(self.feature_config.other_embeddings_init_std)
-                if  self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
-                    cat.get_projection_layer(self.item_embedding_dim)
+                if self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+                    cat.setup_projection_layer(self.item_embedding_dim)
+            cat.setup_embedding_table(cat.feature_size, self.feature_config.pad_token)
+            cat.init_embedding_table(self.feature_config.item_id_embeddings_init_std) 
         
         for cont in self.continuous:
             if self.feature_config.numeric_features_project_to_embedding_dim > 0 :
-                if self.features_same_size_item_embedding:
-                    cont.get_representation_layer(self.item_embedding_dim, 
+                if self.feature_config.features_same_size_item_embedding:
+                    cont.feature_size = self.item_embedding_dim
+                else: 
+                    cont.feature_size = self.feature_config.numeric_features_project_to_embedding_dim
+                    
+                cont.setup_representation_layer(cont.feature_size,
                                                 self.feature_config.other_embeddings_init_std,
                                                 self.feature_config.numeric_features_soft_one_hot_encoding_num_embeddings)
                 if  self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
-                    cont.get_projection_layer(self.item_embedding_dim)
-                                                
-        if self.layer_norm_featurewise: 
+                    cont.setup_projection_layer(self.item_embedding_dim)
+            else: 
+                cont.featuresize = 1 
+                
+        if self.feature_config.layer_norm_featurewise: 
             for variable in self.continuous + self.categoricals:
-                variable.get_layer_norm() 
+                variable.setup_layer_norm() 
         
-        # get name of  for meta_data 
+        # get name of feautres for meta_data 
         self.metadata_for_pred_logging = []
         for variable in self.continuous + self.categoricals:
             if variable.log_with_preds_as_metadata:
@@ -308,7 +315,7 @@ class FeatureGroupProcess(PreTrainedModel):
         if self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
             self.input_combined_dim = self.item_embedding_dim
         else: 
-            self.input_combined_dim = np.sum(cat.feature_size for cat in self.continuous + self.categoricals)
+            self.input_combined_dim = np.sum(var.feature_size for var in self.continuous + self.categoricals)
 
         # Init aggregation module 
         self.aggregate = Aggregation(self.feature_config.input_features_aggregation, self.itemid_name)
@@ -328,22 +335,20 @@ class FeatureGroupProcess(PreTrainedModel):
             if self.layer_norm_featurewise:
                 cdata = variable.layer_norm(cdata)
             transformed_features[variable.name] = cdata
-
-        
         # Create aggregated FeatureGroup class 
         output = self.aggregate(transformed_features)
         return FeatureGroup(self.name, 
                             output, 
                             metadata_for_pred_logging)
 
-    def get_itemid_embedding_dim(self):
+    def setup_itemid_embedding_dim(self):
         """
-        Method to compute the itemid dimension 
+        Method to set the itemid dimension
         """
         # select itemid column 
-        categorical_itemid = [cat for cat in self.categoricals if cet.is_itemid][0]
+        categorical_itemid = [cat for cat in self.categoricals if cat.is_itemid][0]
         if self.feature_config.item_embedding_dim is not None:
-            embedding_size = self.feature_config.item_embedding_dim.item_embedding_dim
+            embedding_size = self.feature_config.item_embedding_dim
 
         elif self.feature_config.mf_constrained_embeddings:
             embedding_size = self.feature_config.d_model
@@ -370,8 +375,9 @@ class FeatureProcess(PreTrainedModel):
     def __init__(self,
                 names: List[str],
                 feature_configs: List[FeatureProcessConfig],
-                feature_maps: dict): 
-        super(FeatureProcess, self).__init__()
+                feature_maps: List[str], 
+                config = PretrainedConfig()): 
+        super(FeatureProcess, self).__init__(config)
 
         # Init configs
         self.names = names
@@ -390,9 +396,9 @@ class FeatureProcess(PreTrainedModel):
         labels_features = sum(labels_features, [])
         metadata_for_pred_logging = [feat_group.metadata_for_pred_logging for feat_group in feature_groups]
         metadata_for_pred_logging = sum(metadata_for_pred_logging, [])
-    return FeatureProcessOutput(feature_groups, 
-                                labels_features,
-                                metadata_for_pred_logging)
+        return FeatureProcessOutput(feature_groups, 
+                                    labels_features,
+                                    metadata_for_pred_logging)
 
 
 ##########################################
@@ -430,9 +436,9 @@ class Projection(nn.Module):
     to have the same dimension as other categoricals
     """
     def __init__(self, input_dim, output_dim, bias=True):
-    super(Projection, self).__init__()
-    self.project_layer = nn.Linear(input_dim,
-                                   output_dim, bias=bias)
+        super(Projection, self).__init__()
+        self.project_layer = nn.Linear(input_dim,
+                                       output_dim, bias=bias)
 
     def forward(self, input_numeric):
         return self.project_layer(input_numeric)                          
@@ -469,8 +475,8 @@ class Aggregation(nn.Module):
                     output = item_id_embedding * (additional_features_sum + 1.0)
                 else:
                     raise ValueError("Invalid value for --input_features_aggregation.")
-            else:
-                output = list(transformed_features.values())[0]
+        else:
+            output = list(transformed_features.values())[0]
         return output 
 
 
@@ -478,7 +484,7 @@ def stochastic_swap_noise(cdata: torch.Tensor,
                           pad_token: int,
                           stochastic_shared_embeddings_replacement_prob: float,
                           
-                         )
+                         ):
     """
     Applies Stochastic replacement of sequence features 
     """ 
@@ -511,9 +517,15 @@ def init_from_featuremap(featuremap: dict):
     """
     Convert the featuremap to list of Categorical and Continuous classes
     """
-    #TODO
-    pass
-
-
-
-    
+    categoricals = []
+    continuous = []
+    for name, config in featuremap.items(): 
+        if config['dtype'] == 'categorical': 
+            config.pop('dtype')
+            config['name'] = name
+            categoricals.append(Categorical(**config))
+            
+        elif config['dtype'] in ['float', 'long']: 
+            config['name'] = name
+            continuous.append(Conitnuous(**config))
+    return categoricals, continuous
