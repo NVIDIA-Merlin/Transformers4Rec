@@ -306,7 +306,6 @@ class FeatureGroupProcess(PreTrainedModel):
                 variable.setup_layer_norm() 
         
         # get name of feautres for meta_data 
-        self.metadata_for_pred_logging = []
         for variable in self.continuous + self.categoricals:
             if variable.log_with_preds_as_metadata:
                 self.metadata_for_pred_logging.append(variable.name)
