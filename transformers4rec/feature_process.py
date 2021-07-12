@@ -254,7 +254,7 @@ class FeatureGroupProcess(PreTrainedModel):
         # Init outputs 
         self.labels = []
         self.FeatureGroup = None
-        self.metadata_for_pred_logging = {}
+        self.metadata_for_pred_logging = []
 
         # Init itemid embedding dim and itemid column name : 
         self.setup_itemid_embedding_dim() 
