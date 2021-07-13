@@ -2,6 +2,7 @@ from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Optional, Callable, Any, Dict, List 
 import logging
+import yaml 
 
 import math
 import numpy as np
@@ -38,7 +39,8 @@ class Categorical(object):
                 is_itemid: bool = False,
                 is_seq_label: bool =  False,
                 is_classification_label: bool = False,
-                log_with_preds_as_metadata: bool = True
+                log_with_preds_as_metadata: bool = True,
+                dtype: str = 'categorical'
     ):
         self.name = name 
         self.cardinality = cardinality 
@@ -48,15 +50,17 @@ class Categorical(object):
         self.log_with_preds_as_metadata = log_with_preds_as_metadata
         self.emb_table = emb_table
         self.feature_size = None
+        self.dtype = dtype
 
 
-    def setup_embedding_table(self, embedding_size, pad_token):
+    def setup_embedding_table(self, embedding_size, pad_token, device):
         self.feature_size = embedding_size
         self.table = nn.Embedding(
                         self.cardinality,
                         embedding_size,
                         padding_idx=pad_token,
-                    ) 
+                    ) .to(device)
+        self.table = self.table.to(device)
     
     def setup_layer_norm(self): 
         self.layer_norm = nn.LayerNorm(
@@ -105,6 +109,7 @@ class Conitnuous(object):
     def setup_representation_layer(self, 
                             feature_size, 
                             embeddings_init_std,
+                            device,
                             numeric_features_soft_one_hot_encoding_num_embeddings=None):
         self.feature_size = feature_size
         if self.representation_type == 'soft_one_hot_encoding_num_embeddings':
@@ -112,13 +117,14 @@ class Conitnuous(object):
                             num_embeddings=numeric_features_soft_one_hot_encoding_num_embeddings,
                             embeddings_dim=feature_size,
                             embeddings_init_std=embeddings_init_std,
-                        )
+                        ).to('cuda')
         elif self.representation_type == 'identity':
             self.table = nn.Identity()
         elif self.representation_type == 'linear': 
             self.table = nn.Linear(1, feature_size, bias=True)
         else: 
             raise ValueError("Invalid value for --representation_type of column %s" %self.name)
+        self.table = self.table.to(device)
             
 
         
@@ -143,14 +149,15 @@ class FeatureProcessConfig(object):
                  embedding_dim_from_cardinality_multiplier: float = 0,
                  features_same_size_item_embedding: bool = True, 
                  mf_constrained_embeddings: bool = True , 
-                 layer_norm_featurewise: bool = True,
+                 layer_norm_featurewise: bool = False,
                  item_id_embeddings_init_std: float = 0.01,
                  other_embeddings_init_std: float = 0.01,
                  numeric_features_project_to_embedding_dim: int = 128, 
                  numeric_features_soft_one_hot_encoding_num_embeddings: int = 128,
-                 stochastic_shared_embeddings_replacement_prob: float = False,
-                 input_features_aggregation: str = 'elementwise_sum_multiply_item_embedding',
+                 stochastic_shared_embeddings_replacement_prob: float = 0,
+                 input_features_aggregation: str = 'concat',
                  tasks: List[str]=['item_prediction'], 
+                 device: str= 'cuda', 
                  ):
         self.pad_token = pad_token
         self.item_embedding_dim = item_embedding_dim
@@ -164,7 +171,9 @@ class FeatureProcessConfig(object):
         self.mf_constrained_embeddings = mf_constrained_embeddings
         self.numeric_features_project_to_embedding_dim =numeric_features_project_to_embedding_dim
         self.numeric_features_soft_one_hot_encoding_num_embeddings = numeric_features_soft_one_hot_encoding_num_embeddings
+        self.stochastic_shared_embeddings_replacement_prob = stochastic_shared_embeddings_replacement_prob
         self.tasks = tasks
+        self.device = device
 
 @dataclass
 class FeatureGroup:
@@ -254,7 +263,8 @@ class FeatureGroupProcess(PreTrainedModel):
         # Init outputs 
         self.labels = []
         self.FeatureGroup = None
-        self.metadata_for_pred_logging = []
+        self.metadata_for_pred_logging = {}
+        self.item_embedding_dim = None
 
         # Init itemid embedding dim and itemid column name : 
         self.setup_itemid_embedding_dim() 
@@ -269,10 +279,12 @@ class FeatureGroupProcess(PreTrainedModel):
             if variable.is_regression_label: 
                 self.labels.append(LabelFeature(type='regression', label_column=variable.name, dimension=variable.cardinality))
 
-        # Get representation tables of input features: continuous and categorical
+        # Get representation tables of categorical features: 
         for cat in self.categoricals:
             if cat.is_itemid: 
                 cat.feature_size = self.item_embedding_dim
+                embedding_init_std = self.feature_config.item_id_embeddings_init_std
+               
             else: 
                 if self.feature_config.features_same_size_item_embedding:
                         cat.feature_size = self.item_embedding_dim
@@ -281,11 +293,16 @@ class FeatureGroupProcess(PreTrainedModel):
                             cat.cardinality,
                             multiplier=self.feature_config.embedding_dim_from_cardinality_multiplier,
                         )
-                if self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
-                    cat.setup_projection_layer(self.item_embedding_dim)
-            cat.setup_embedding_table(cat.feature_size, self.feature_config.pad_token)
+                    if self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
+                        cat.setup_projection_layer(self.item_embedding_dim)
+                        cat.feature_size = self.item_embedding_dim
+                embedding_init_std = self.feature_config.other_embeddings_init_std
+                
+            # setup and init embedding table 
+            cat.setup_embedding_table(cat.feature_size, self.feature_config.pad_token, self.feature_config.device)
             cat.init_embedding_table(self.feature_config.item_id_embeddings_init_std) 
         
+        # Get representation tables of continuous features: 
         for cont in self.continuous:
             if self.feature_config.numeric_features_project_to_embedding_dim > 0 :
                 if self.feature_config.features_same_size_item_embedding:
@@ -295,9 +312,13 @@ class FeatureGroupProcess(PreTrainedModel):
                     
                 cont.setup_representation_layer(cont.feature_size,
                                                 self.feature_config.other_embeddings_init_std,
+                                                self.feature_config.device,
                                                 self.feature_config.numeric_features_soft_one_hot_encoding_num_embeddings)
+                
                 if  self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
                     cont.setup_projection_layer(self.item_embedding_dim)
+                    cont.feature_size = self.item_embedding_dim
+                    
             else: 
                 cont.featuresize = 1 
                 
@@ -305,35 +326,54 @@ class FeatureGroupProcess(PreTrainedModel):
             for variable in self.continuous + self.categoricals:
                 variable.setup_layer_norm() 
         
-        # get name of feautres for meta_data 
+        # get name of features for meta_data 
+        self.metadata_for_pred_logging = []
         for variable in self.continuous + self.categoricals:
             if variable.log_with_preds_as_metadata:
                 self.metadata_for_pred_logging.append(variable.name)
         
-        # compute combined_dim 
+        # compute combined dimension
         if self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
             self.input_combined_dim = self.item_embedding_dim
         else: 
             self.input_combined_dim = np.sum(var.feature_size for var in self.continuous + self.categoricals)
 
         # Init aggregation module 
-        self.aggregate = Aggregation(self.feature_config.input_features_aggregation, self.itemid_name)
+        self.aggregate = Aggregation(self.feature_config.input_features_aggregation, self.itemid_name, self.feature_map, self.feature_config.numeric_features_project_to_embedding_dim,  self.feature_config.device)
 
     def forward(self, inputs):
         transformed_features = OrderedDict()
         metadata_for_pred_logging =  OrderedDict()
         for variable in self.categoricals + self.continuous: 
             cdata = inputs[variable.name]
+            
+            # prepare  data types types 
+            if variable.dtype == 'categorical': 
+                cdata = cdata.long()
+            elif variable.dtype  == "long":
+                cdata = cdata.unsqueeze(-1).long()
+            elif variable.dtype == "float":
+                cdata = cdata.unsqueeze(-1).float()
+            else:
+                raise NotImplementedError
+            
             if (
                 self.feature_config.stochastic_shared_embeddings_replacement_prob > 0.0 and 
                 self.training
                 ):
                 cdata = stochastic_swap_noise(cdata, self.feature_config.pad_token, self.feature_config.stochastic_shared_embeddings_replacement_prob)
-                cdata = variable.table(cdata)
             
-            if self.layer_norm_featurewise:
+            cdata = variable.table(cdata)
+            
+            if (self.feature_config.input_features_aggregation == "elementwise_sum_multiply_item_embedding") and (not self.feature_config.features_same_size_item_embedding): 
+                if (variable.dtype != 'categorical') or (not variable.is_itemid) :
+                    cdata = variable.project_layer(cdata)
+            
+            
+            if self.feature_config.layer_norm_featurewise:
                 cdata = variable.layer_norm(cdata)
-            transformed_features[variable.name] = cdata
+
+            transformed_features[variable.name] = cdata.to(self.feature_config.device)
         # Create aggregated FeatureGroup class 
         output = self.aggregate(transformed_features)
         return FeatureGroup(self.name, 
@@ -391,9 +431,9 @@ class FeatureProcess(PreTrainedModel):
                             ]
     def forward(self, inputs):
         feature_groups = [feat_group(inputs) for feat_group in self.feature_groups]
-        labels_features = [feat_group.labels for feat_group in feature_groups]
+        labels_features = [feat_group.labels for feat_group in self.feature_groups]
         labels_features = sum(labels_features, [])
-        metadata_for_pred_logging = [feat_group.metadata_for_pred_logging for feat_group in feature_groups]
+        metadata_for_pred_logging = [feat_group.metadata_for_pred_logging for feat_group in self.feature_groups]
         metadata_for_pred_logging = sum(metadata_for_pred_logging, [])
         return FeatureProcessOutput(feature_groups, 
                                     labels_features,
@@ -445,13 +485,15 @@ class Projection(nn.Module):
     
 
 class Aggregation(nn.Module):
-    def __init__(self, input_features_aggregation, itemid_name):
+    def __init__(self, input_features_aggregation, itemid_name, feature_map, numeric_features_project_to_embedding_dim,  device):
         super(Aggregation, self).__init__()
         self.input_features_aggregation = input_features_aggregation
         self.itemid_name = itemid_name
+        self.device = device
+        self.feature_map = feature_map
+        self.numeric_features_project_to_embedding_dim = numeric_features_project_to_embedding_dim
         
-        
-    def forward(transformed_features):
+    def forward(self, transformed_features):
         if len(transformed_features) > 1:
                 if self.input_features_aggregation == "concat":
                     output = torch.cat(list(transformed_features.values()), dim=-1)
@@ -460,7 +502,7 @@ class Aggregation(nn.Module):
                     == "elementwise_sum_multiply_item_embedding"
                 ):
                     additional_features_sum = torch.zeros_like(
-                        transformed_features[self.label_feature_name], device=self.device
+                        transformed_features[self.itemid_name], device=self.device
                     )
                     for k, v in transformed_features.items():
                         if k != self.itemid_name:
@@ -468,7 +510,7 @@ class Aggregation(nn.Module):
                                 self.feature_map[k]["dtype"] in ["long", "float"]
                                 and self.numeric_features_project_to_embedding_dim > 0
                             ):
-                                additional_features_sum += v
+                                additional_features_sum += v.long()
 
                     item_id_embedding = transformed_features[self.itemid_name]
 
@@ -521,7 +563,6 @@ def init_from_featuremap(featuremap: dict):
     continuous = []
     for name, config in featuremap.items(): 
         if config['dtype'] == 'categorical': 
-            config.pop('dtype')
             config['name'] = name
             categoricals.append(Categorical(**config))
             
@@ -529,3 +570,15 @@ def init_from_featuremap(featuremap: dict):
             config['name'] = name
             continuous.append(Conitnuous(**config))
     return categoricals, continuous
+
+
+def get_feature_process(feature_group_configs): 
+    names = []
+    configs = []
+    feature_maps = []
+    for config in feature_group_configs: 
+        names.append(config['name'])
+        configs.append(FeatureProcessConfig())
+        with open(config['feature_map']) as yaml_file:
+            feature_maps.append(yaml.load(yaml_file, Loader=yaml.FullLoader))
+    return FeatureProcess(names=names, feature_configs=configs, feature_maps=feature_maps)
