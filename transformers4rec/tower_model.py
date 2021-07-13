@@ -14,7 +14,8 @@
 # limitations under the License.
 #
 import logging
-from typing import Optional, Callable, Any, Dict, List 
+from dataclasses import dataclass
+from typing import Optional, Callable, Any, Dict, List, Tuple
 
 import torch
 import torch.nn as nn
@@ -39,32 +40,75 @@ from transformers import (
     XLNetModel,
 )
 
+from feature_process import FeatureGroup
+from mask_sequence import MaskOutput
 
+
+# to override the default values of HF config classes with paramters fixed in the recsys paper 
+extra_config = {'reformer' : {'is_decoder': False, 'axial_pos_embds':True, 'axial_pos_shape_first_dim': 4,
+                              'lsh_num_chunks_before': 3, 'lsh_num_chunks_after':3, 'num_buckets': None, 
+                              'lsh_num_hashes': 5, 'attn_chunk_length': 20 , 'chunk_size_feed_forward': 1},
+                
+                'transfoxl':  {'mem_len': 1},
+                
+                'xlnet': {'untie_r':True,  'bi_data':False,  'attn_type':"bi",  'use_mems_train':True,   'mem_len':1, 
+                          'use_rtd': False, 'rtd_tied_generator': True, 'electra_generator_hidden_size': 0.4},
+                
+                'albert': {'num_hidden_groups':1,  'inner_group_num':1},
+                
+                'electra': {'rtd_tied_generator': True, 'electra_generator_hidden_size': 0.4 },
+                'gpt2': {},
+                'rnn': {},
+                'gru': {},
+                'lstm': {},
+                "avgseq": {}
+               }
+
+@dataclass
+class TowerOutput:
+    hidden_rep: torch.tensor 
+    model_outputs: Tuple[torch.tensor]
+
+        
 class TowerModel(nn.Module): 
     def __init__(self,
-                 model_args: List[List] = [['xlnet', 128, 2, 4, 20]],
+                 max_seq_length: int ,
+                 model_type: str = 'xlnet',
+                 hidden_size: int = 128,
+                 n_head: int = 2,
+                 n_layer: int = 4, 
                  device: str = 'cuda',
                  
                 ):
         super(TowerModel, self).__init__()
-        self.model_args = model_args
+        self.model_type = model_type
+        self.max_seq_length = max_seq_length
+        self.hidden_size = hidden_size
+        self.n_head = n_head 
+        self.n_layer = n_layer
         self.device = device
         
-        self.models = [get_recsys_model(*model,  **extra_config[model[0]]).to(device) for model in self.model_args]
+        self.model = get_recsys_model(model_type, hidden_size, n_head, n_layer, max_seq_length,
+                                      **extra_config[model_type]).to(device)
         
         
     def forward(self, inputs, **kwargs):
-        return [self.get_output(self.models[i], x, **map_mask) for i, (x,  map_mask) in enumerate(inputs)]
+        
+        if isinstance(inputs, FeatureGroup): 
+            pos_emb_inp = inputs.values   
+        elif isinstance(inputs, MaskOutput): 
+            pos_emb_inp = inputs.masked_input
+        elif isinstance(inputs, torh.tensor):
+            pos_emb_inp = inputs 
+        else :
+            raise NotImplementedError
             
-    
-    
-    def get_output(self, model, pos_emb_inp, **kwargs): 
-        if not isinstance(model, PreTrainedModel):  # Checks if its a transformer
+        if not isinstance(self.model, PreTrainedModel):  # Checks if its a transformer
             """
             RNN Models
             """
 
-            results = model(input=pos_emb_inp)
+            results = self.model(input=pos_emb_inp)
 
             if type(results) is tuple or type(results) is list:
                 pos_emb_pred = results[0]
@@ -78,7 +122,7 @@ class TowerModel(nn.Module):
             Transformer Models
             """
 
-            if type(model) is GPT2Model:
+            if type(self.model) is GPT2Model:
                 seq_len = pos_emb_inp.shape[1]
                 # head_mask has shape n_layer x batch x n_heads x N x N
                 head_mask = (
@@ -91,45 +135,29 @@ class TowerModel(nn.Module):
                     .repeat(self.n_layer, 1, 1, 1, 1)
                 )
 
-                model_outputs = model(
+                model_outputs = self.model(
                     inputs_embeds=pos_emb_inp, head_mask=head_mask,
                 )
                
             elif 'task' in kwargs and kwargs['task']=='plm':
                 assert (
-                    type(model) is XLNetModel
+                    type(self.model) is XLNetModel
                 ), "Permutation language model is only supported for XLNET model "
-                model_outputs = model(
+                model_outputs = self.model(
                     inputs_embeds=pos_emb_inp,
-                    target_mapping=kwargs['target_mapping'],
-                    perm_mask=kwargs['perm_mask'],
+                    target_mapping=pos_emb_inp.plm_target_mapping,
+                    perm_mask=pos_emb_inp.plm_perm_mask,
                 )
 
             else:
-                model_outputs = model(inputs_embeds=pos_emb_inp)
+                model_outputs = self.model(inputs_embeds=pos_emb_inp)
 
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
-        return (pos_emb_pred,model_outputs)
+        return TowerOutput(hidden_rep = pos_emb_pred, model_outputs = model_outputs)
             
             
-extra_config = {'reformer' : {'is_decoder': False, 'axial_pos_embds':True, 'axial_pos_shape_first_dim': 4,
-                              'lsh_num_chunks_before': 3, 'lsh_num_chunks_after':3, 'num_buckets': None, 
-                              'lsh_num_hashes': 5, 'attn_chunk_length': 20 , 'chunk_size_feed_forward': 1},
-                
-                'transformer_xl':  {'mem_len': 1},
-                
-                'xlnet': {'untie_r':True,  'bi_data':False,  'attn_type':"bi",  'use_mems_train':True,   'mem_len':1, 
-                          'use_rtd': False, 'rtd_tied_generator': True, 'electra_generator_hidden_size': 0.4},
-                
-                'albert': {'num_hidden_groups':1,  'inner_group_num':1},
-                
-                'electra': {'rtd_tied_generator': True, 'electra_generator_hidden_size': 0.4 },
-                'rnn': {},
-                'gru': {},
-                'lstm': {},
-                "avgseq": {}
-               }
+
         
 def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
                     hidden_act='gelu', initializer_range=0.01,
