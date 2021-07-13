@@ -1,3 +1,18 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Optional, Callable, Any, Dict, List 
@@ -8,7 +23,6 @@ import math
 import numpy as np
 import torch
 from torch import nn
-from transformers import PreTrainedModel, PretrainedConfig
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +41,7 @@ class Categorical(object):
     ---------- 
         name: name of the variable
         cardinality: the number of unique values 
-        is_itemid: flag for the sequence of item-id column
+        is_itemid: flag for to keep track of item-id column
         is_seq_label: flag for item prediction target
         is_classification_label: flag for classification target
         log_with_preds_as_metadata: whether to log the raw values of the column as metadata
@@ -59,7 +73,7 @@ class Categorical(object):
                         self.cardinality,
                         embedding_size,
                         padding_idx=pad_token,
-                    ) .to(device)
+                    ).to(device)
         self.table = self.table.to(device)
     
     def setup_layer_norm(self): 
@@ -231,7 +245,7 @@ class FeatureProcessOutput:
 #                                                                                  #
 ####################################################################################
 
-class FeatureGroupProcess(PreTrainedModel): 
+class FeatureGroupProcess(nn.Module): 
     """
     Process the dictionary of input tensors to prepare the sequence of interactions embeddings for Transformer blocks 
 
@@ -248,9 +262,8 @@ class FeatureGroupProcess(PreTrainedModel):
     def __init__(self,
                 name: str,
                 feature_config: FeatureProcessConfig,
-                feature_map: str, 
-                config = PretrainedConfig()): 
-        super(FeatureGroupProcess, self).__init__(config)
+                feature_map: str): 
+        super(FeatureGroupProcess, self).__init__()
 
         # Init configs
         self.name = name 
@@ -341,7 +354,7 @@ class FeatureGroupProcess(PreTrainedModel):
         # Init aggregation module 
         self.aggregate = Aggregation(self.feature_config.input_features_aggregation, self.itemid_name, self.feature_map, self.feature_config.numeric_features_project_to_embedding_dim,  self.feature_config.device)
 
-    def forward(self, inputs):
+    def forward(self, inputs, training=False):
         transformed_features = OrderedDict()
         metadata_for_pred_logging =  OrderedDict()
         for variable in self.categoricals + self.continuous: 
@@ -400,7 +413,7 @@ class FeatureGroupProcess(PreTrainedModel):
         self.itemid_name = categorical_itemid.name
 
 
-class FeatureProcess(PreTrainedModel): 
+class FeatureProcess(nn.Module): 
     """
     Process multiple  groups of features and return a list of the classes: FeatureGroup and LabelFeature 
     
@@ -414,9 +427,8 @@ class FeatureProcess(PreTrainedModel):
     def __init__(self,
                 names: List[str],
                 feature_configs: List[FeatureProcessConfig],
-                feature_maps: List[str], 
-                config = PretrainedConfig()): 
-        super(FeatureProcess, self).__init__(config)
+                feature_maps: List[str]): 
+        super(FeatureProcess, self).__init__()
 
         # Init configs
         self.names = names

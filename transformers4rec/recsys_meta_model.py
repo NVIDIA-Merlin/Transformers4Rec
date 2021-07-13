@@ -115,6 +115,8 @@ class RecSysMetaModel(PreTrainedModel):
         # Load FeatureProcess class for item interaction embeddings definition
         self.feature_process = FeatureProcess(config, model_args, data_args, feature_map)
 
+        
+        
         # Specify prediction tasks 
         self.classification_task = model_args.classification_task
         self.item_prediction_task = model_args.item_prediction_task

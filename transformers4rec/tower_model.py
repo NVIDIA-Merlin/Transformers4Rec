@@ -78,7 +78,6 @@ class TowerModel(nn.Module):
                  n_head: int = 2,
                  n_layer: int = 4, 
                  device: str = 'cuda',
-                 
                 ):
         super(TowerModel, self).__init__()
         self.model_type = model_type
