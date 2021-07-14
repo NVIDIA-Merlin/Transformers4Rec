@@ -24,6 +24,7 @@ import numpy as np
 import torch
 from torch import nn
 
+from aggregator import SequenceAggregator
 logger = logging.getLogger(__name__)
 
 
@@ -152,6 +153,7 @@ class Conitnuous(object):
                                    output_dim, bias=bias)
 
 
+        
 class FeatureProcessConfig(object):
     """
     Config arguments for the FeatureGroupProcess module 
@@ -169,7 +171,7 @@ class FeatureProcessConfig(object):
                  numeric_features_project_to_embedding_dim: int = 128, 
                  numeric_features_soft_one_hot_encoding_num_embeddings: int = 128,
                  stochastic_shared_embeddings_replacement_prob: float = 0,
-                 input_features_aggregation: str = 'concat',
+                 input_features_aggregation: str = 'elementwise_sum_multiply_item_embedding',
                  tasks: List[str]=['item_prediction'], 
                  device: str= 'cuda', 
                  ):
@@ -189,6 +191,7 @@ class FeatureProcessConfig(object):
         self.tasks = tasks
         self.device = device
 
+        
 @dataclass
 class FeatureGroup:
     """
@@ -260,7 +263,7 @@ class FeatureGroupProcess(nn.Module):
     """
 
     def __init__(self,
-                name: str,
+                 name,
                 feature_config: FeatureProcessConfig,
                 feature_map: str): 
         super(FeatureGroupProcess, self).__init__()
@@ -352,7 +355,7 @@ class FeatureGroupProcess(nn.Module):
             self.input_combined_dim = np.sum(var.feature_size for var in self.continuous + self.categoricals)
 
         # Init aggregation module 
-        self.aggregate = Aggregation(self.feature_config.input_features_aggregation, self.itemid_name, self.feature_map, self.feature_config.numeric_features_project_to_embedding_dim,  self.feature_config.device)
+        self.aggregate = SequenceAggregator(self.feature_config.input_features_aggregation, self.itemid_name, self.feature_map, self.feature_config.numeric_features_project_to_embedding_dim,  self.feature_config.device)
 
     def forward(self, inputs, training=False):
         transformed_features = OrderedDict()
@@ -494,45 +497,8 @@ class Projection(nn.Module):
     def forward(self, input_numeric):
         return self.project_layer(input_numeric)                          
          
-    
 
-class Aggregation(nn.Module):
-    def __init__(self, input_features_aggregation, itemid_name, feature_map, numeric_features_project_to_embedding_dim,  device):
-        super(Aggregation, self).__init__()
-        self.input_features_aggregation = input_features_aggregation
-        self.itemid_name = itemid_name
-        self.device = device
-        self.feature_map = feature_map
-        self.numeric_features_project_to_embedding_dim = numeric_features_project_to_embedding_dim
         
-    def forward(self, transformed_features):
-        if len(transformed_features) > 1:
-                if self.input_features_aggregation == "concat":
-                    output = torch.cat(list(transformed_features.values()), dim=-1)
-                elif (
-                    self.input_features_aggregation
-                    == "elementwise_sum_multiply_item_embedding"
-                ):
-                    additional_features_sum = torch.zeros_like(
-                        transformed_features[self.itemid_name], device=self.device
-                    )
-                    for k, v in transformed_features.items():
-                        if k != self.itemid_name:
-                            if (self.feature_map[k]["dtype"] == "categorical") or (
-                                self.feature_map[k]["dtype"] in ["long", "float"]
-                                and self.numeric_features_project_to_embedding_dim > 0
-                            ):
-                                additional_features_sum += v.long()
-
-                    item_id_embedding = transformed_features[self.itemid_name]
-
-                    output = item_id_embedding * (additional_features_sum + 1.0)
-                else:
-                    raise ValueError("Invalid value for --input_features_aggregation.")
-        else:
-            output = list(transformed_features.values())[0]
-        return output 
-
 
 def stochastic_swap_noise(cdata: torch.Tensor, 
                           pad_token: int,
