@@ -50,7 +50,7 @@ class DLRMBlock(Block):
 
         self.stack_features = embedding_layer.merge(continuous_embedding, aggregation="stack")
 
-        from merlin_models.tf.layers import DotProductInteraction
+        from..layers import DotProductInteraction
 
         self.interaction_layer = interaction_layer or DotProductInteraction()
 
