@@ -1,4 +1,5 @@
 numpy
 tensorflow
 torch
+torchmetrics
 transformers

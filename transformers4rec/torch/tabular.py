@@ -47,15 +47,15 @@ class TabularMixin:
 
 
 class FilterFeatures(TabularMixin, torch.nn.Module):
-    def __init__(self, columns, pop=False):
+    def __init__(self, to_include, pop=False):
         super().__init__()
-        self.columns = columns
+        self.to_include = to_include
         self.pop = pop
 
     def forward(self, inputs):
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
-        outputs = {k: v for k, v in inputs.items() if k in self.columns}
+        outputs = {k: v for k, v in inputs.items() if k in self.to_include}
         if self.pop:
             for key in outputs.keys():
                 inputs.pop(key)
@@ -63,7 +63,7 @@ class FilterFeatures(TabularMixin, torch.nn.Module):
         return outputs
 
     def forward_output_shape(self, input_shape):
-        return {k: v for k, v in input_shape.items() if k in self.columns}
+        return {k: v for k, v in input_shape.items() if k in self.to_include}
 
 
 class AsTabular(torch.nn.Module):
@@ -141,7 +141,7 @@ class MergeTabular(TabularModule):
         self.to_merge = list(to_merge)
         super().__init__(aggregation)
 
-    def call(self, inputs, **kwargs):
+    def forward(self, inputs):
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
         outputs = {}
