@@ -29,8 +29,6 @@ from .recsys_data import fetch_data_loader, get_items_sorted_freq
 from .recsys_meta_model import RecSysMetaModel
 from .recsys_models import get_recsys_model
 from .recsys_outputs import (
-    AttentionWeightsLogger,
-    PredictionLogger,
     config_dllogger,
     creates_output_dir,
     log_aot_metric_results,
@@ -39,11 +37,10 @@ from .recsys_outputs import (
     set_log_attention_weights_callback,
     set_log_predictions_callback,
 )
-from .recsys_trainer import DatasetMock, DatasetType, RecSysTrainer
-from .recsys_utils import (
+from .recsys_trainer import DatasetType, RecSysTrainer
+from transformers4rec.utils.misc_utils import (
     get_label_feature_name,
     get_parquet_files_names,
-    get_timestamp_feature_name,
 )
 
 logger = logging.getLogger(__name__)

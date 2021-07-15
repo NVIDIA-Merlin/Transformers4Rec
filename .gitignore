@@ -94,3 +94,7 @@ target/
 runs/
 wandb/
 tmp/
+
+# PyCharm
+.idea
+
