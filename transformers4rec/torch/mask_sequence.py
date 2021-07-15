@@ -39,11 +39,11 @@ class MaskedSequence:
         plm_target_mapping: boolean mapping needed by XLNET-PLM
         plm_perm_mask:  boolean mapping needed by XLNET-PLM
     """
-    masked_input: torch.tensor
-    masked_label: torch.tensor
-    mask_schema: torch.tensor
-    plm_target_mapping: torch.tensor = None
-    plm_perm_mask: torch.tensor = None
+    masked_input: torch.Tensor
+    masked_label: torch.Tensor
+    mask_schema: torch.Tensor
+    plm_target_mapping: torch.Tensor = None
+    plm_perm_mask: torch.Tensor = None
 
 
 class MaskSequence(_MaskSequence, nn.Module):
