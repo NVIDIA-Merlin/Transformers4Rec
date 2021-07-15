@@ -1,32 +1,57 @@
 import torch
-from torch import nn
+
+from ..utils.registry import Registry
+from .typing import TabularData
+from .utils.torch_utils import calculate_batch_size_from_input_size
+
+aggregators = Registry.class_registry("torch.aggregators")
 
 
-class ConcatFeatures(nn.Module):
+class FeatureAggregator(torch.nn.Module):
+    def forward(self, inputs: TabularData) -> torch.tensor:
+        return super(FeatureAggregator, self).forward(inputs)
+
+
+@aggregators.register("concat")
+class ConcatFeatures(FeatureAggregator):
     def __init__(self, axis=-1):
-        super(ConcatFeatures, self).__init__()
+        super().__init__()
         self.axis = axis
 
     def forward(self, inputs):
         tensors = []
         for name in sorted(inputs.keys()):
             tensors.append(inputs[name])
+
         return torch.cat(tensors, dim=self.axis)
 
+    def forward_output_size(self, input_size):
+        batch_size = calculate_batch_size_from_input_size(input_size)
+        return batch_size, sum([i[1] for i in input_size.values()])
 
-class StackFeature(nn.Module):
+
+@aggregators.register("stack")
+class StackFeatures(FeatureAggregator):
     def __init__(self, axis=-1):
-        super(StackFeature, self).__init__()
+        super().__init__()
         self.axis = axis
 
     def forward(self, inputs):
         tensors = []
         for name in sorted(inputs.keys()):
             tensors.append(inputs[name])
+
         return torch.stack(tensors, dim=self.axis)
 
+    def forward_output_size(self, input_size):
+        batch_size = calculate_batch_size_from_input_size(input_size)
+        last_dim = [i for i in input_size.values()][0][-1]
 
-class ElementwiseSum(nn.Module):
+        return batch_size, len(input_size), last_dim
+
+
+@aggregators.register("element-wise-sum")
+class ElementwiseSum(torch.nn.Module):
     def __init__(self):
         super(ElementwiseSum, self).__init__()
 
@@ -38,7 +63,8 @@ class ElementwiseSum(nn.Module):
         return torch.stack(tensors, dim=0).sum(dim=0)
 
 
-class SequenceAggregator(nn.Module):
+@aggregators.register("sequential")
+class SequenceAggregator(torch.nn.Module):
     """
     Receive a dictionary of sequential tensors and output their aggregation as a 3d tensor.
     It supports two types of aggregation: concat and elementwise_sum_multiply_item_embedding
@@ -62,7 +88,8 @@ class SequenceAggregator(nn.Module):
             self.aggegator = ConcatFeatures()
         elif self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
             self.aggregator = ElementwiseSum()
-            # features to sum are all categorical and projected continuous embeddings exluding itemid
+            # features to sum are all categorical and projected continuous embeddings
+            # exluding itemid
             self.other_features = [
                 k
                 for k in feature_map.keys()
