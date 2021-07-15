@@ -1,8 +1,8 @@
+from ...types import ColumnGroup, Tag
+from ..tabular import MergeTabular
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
 from .text import TextEmbeddingFeaturesWithTransformers
-from ..tabular import MergeTabular
-from ...types import ColumnGroup, Tag
 
 
 class TabularFeatures(MergeTabular):

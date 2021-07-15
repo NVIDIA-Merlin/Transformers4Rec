@@ -3,6 +3,7 @@ from typing import Dict, Optional, Text
 import torch
 
 from transformers4rec.types import ColumnGroup
+
 from ..tabular import FilterFeatures, TabularModule
 
 

@@ -2,9 +2,10 @@ from typing import List
 
 import tensorflow as tf
 
+from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
+
 from ..utils.registry import Registry
 from .typing import TabularData
-from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
 
 aggregators = Registry.class_registry("tf.aggregators")
 
