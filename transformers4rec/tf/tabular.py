@@ -11,16 +11,16 @@ from .typing import TabularData
 
 class FilterFeatures(tf.keras.layers.Layer):
     def __init__(
-        self, columns, trainable=False, name=None, dtype=None, dynamic=False, pop=False, **kwargs
+        self, to_include, trainable=False, name=None, dtype=None, dynamic=False, pop=False, **kwargs
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
-        self.columns = columns
+        self.to_include = to_include
         self.pop = pop
 
     def call(self, inputs, **kwargs):
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
-        outputs = {k: v for k, v in inputs.items() if k in self.columns}
+        outputs = {k: v for k, v in inputs.items() if k in self.to_include}
         if self.pop:
             for key in outputs.keys():
                 inputs.pop(key)
@@ -28,11 +28,11 @@ class FilterFeatures(tf.keras.layers.Layer):
         return outputs
 
     def compute_output_shape(self, input_shape):
-        return {k: v for k, v in input_shape.items() if k in self.columns}
+        return {k: v for k, v in input_shape.items() if k in self.to_include}
 
     def get_config(self):
         return {
-            "columns": self.columns,
+            "columns": self.to_include,
         }
 
 

@@ -53,7 +53,7 @@ class StackFeatures(FeatureAggregator):
 @aggregators.register("element-wise-sum")
 class ElementwiseSum(torch.nn.Module):
     def __init__(self):
-        super(ElementwiseSum, self).__init__()
+        super().__init__()
 
     def forward(self, inputs):
         tensors = []
