@@ -161,7 +161,11 @@ class Head(torch.nn.Module):
         return to_return
 
     def add_task(
-        self, target_name, task: PredictionTask, pre: Optional[torch.nn.Module] = None, task_weight=1
+        self,
+        target_name,
+        task: PredictionTask,
+        pre: Optional[torch.nn.Module] = None,
+        task_weight=1,
     ):
         self.tasks[target_name] = task
         if pre:

@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import torch 
-from torch import nn 
+from typing import Any, Callable, Dict, List, Optional
+
+import torch
+from feature_process import FeatureGroupProcess
+from torch import nn
 from torch.nn import functional as F
 
-from typing import Optional, Callable, Any, Dict, List 
-from feature_process import FeatureGroupProcess
 
 class ItemPrediction(torch.nn.Module):
     def __init__(
@@ -29,10 +30,9 @@ class ItemPrediction(torch.nn.Module):
         body: Optional[torch.nn.Module] = None,
         forward_to_prediction_fn=lambda x: x,
         pre: Optional[torch.nn.Module] = None,
-        mf_constrained_embeddings: bool = True, 
-        feature_process: FeatureGroupProcess = None, 
-        device: str='cuda'
-        
+        mf_constrained_embeddings: bool = True,
+        feature_process: FeatureGroupProcess = None,
+        device: str = "cuda",
     ):
         super().__init__()
         self.forward_to_prediction_fn = forward_to_prediction_fn
@@ -41,17 +41,19 @@ class ItemPrediction(torch.nn.Module):
         self.body = body
         self.pre = pre
         self.mf_constrained_embeddings = mf_constrained_embeddings
-        self.target_dim = task.dimension 
+        self.target_dim = task.dimension
         self.item_name = task.label_column
-        self.device = device 
+        self.device = device
 
-        if self.mf_constrained_embeddings: 
+        if self.mf_constrained_embeddings:
             self.output_layer_bias = nn.Parameter(torch.Tensor(self.target_dim)).to(self.device)
             nn.init.zeros_(self.output_layer_bias)
 
-            categorical_item = [x for x in feature_process.categoricals if x.name==self.item_name]
-            if not categorical_item: 
-                raise ValueError("When mf_constrained_embeddings is enbaled, feature_process class have to contain itemid column ")
+            categorical_item = [x for x in feature_process.categoricals if x.name == self.item_name]
+            if not categorical_item:
+                raise ValueError(
+                    "When mf_constrained_embeddings is enbaled, feature_process class have to contain itemid column "
+                )
             self.item_embedding_table = categorical_item[0].table
 
     def build(self, input_size, device=None):
@@ -66,10 +68,10 @@ class ItemPrediction(torch.nn.Module):
         if self.body:
             x = self.body(x)
 
-        if self.mf_constrained_embeddings: 
+        if self.mf_constrained_embeddings:
             x = F.linear(
                 x,
-                weight= self.item_embedding_table.weight,
+                weight=self.item_embedding_table.weight,
                 bias=self.output_layer_bias,
             )
         if self.pre:
@@ -96,12 +98,9 @@ class ItemPrediction(torch.nn.Module):
     ) -> Dict[str, torch.Tensor]:
         raise NotImplementedError
 
-
     def compute_metrics(self):
         return {f"{metric.__class__.__name__.lower()}": metric.compute() for metric in self.metrics}
 
     def reset_metrics(self):
         for metric in self.metrics:
             metric.reset()
-            
-    

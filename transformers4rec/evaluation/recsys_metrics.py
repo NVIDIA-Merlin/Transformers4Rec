@@ -54,9 +54,7 @@ class EvalMetrics(object):
             f_recall_kh = MetricWrapper("recall", recall_at, ks)
             f_avgp_kh = MetricWrapper("avg_precision", avg_precision_at, ks)
             f_ndcg_kh = MetricWrapper("ndcg", ndcg_at, ks)
-            self.f_measures_torch.extend(
-                [f_precision_kh, f_recall_kh, f_avgp_kh, f_ndcg_kh]
-            )
+            self.f_measures_torch.extend([f_precision_kh, f_recall_kh, f_avgp_kh, f_ndcg_kh])
 
     def reset(self):
         if self.use_torch:
@@ -72,9 +70,7 @@ class EvalMetrics(object):
         metrics_results = {}
         if self.use_torch:
             # compute metrics on PyTorch
-            labels = torch.nn.functional.one_hot(
-                labels.reshape(-1), preds.size(-1)
-            ).detach()
+            labels = torch.nn.functional.one_hot(labels.reshape(-1), preds.size(-1)).detach()
             preds = preds.view(-1, preds.size(-1))
             for f_measure in self.f_measures_torch:
                 results = f_measure.add(

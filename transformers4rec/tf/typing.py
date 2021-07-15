@@ -1,8 +1,8 @@
 import sys
+import typing
 from typing import Dict
 
 import tensorflow as tf
-import typing
 
 if sys.version_info < (3, 7):
     ForwardRef = typing._ForwardRef  # pylint: disable=protected-access
@@ -28,15 +28,12 @@ PredictionTask = ForwardRef("transformers4rec.tf.head.PredictionTask")
 __all__ = [
     "TabularData",
     "TabularModule",
-
     "FeatureAggregator",
     "MaskSequence",
-
     "Block",
     "SequentialBlock",
     "BuildableBlock",
     "BlockWithHead",
-
     "Head",
-    "PredictionTask"
+    "PredictionTask",
 ]

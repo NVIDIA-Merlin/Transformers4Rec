@@ -20,10 +20,9 @@ from typing import Dict
 import numpy as np
 import tensorflow as tf
 from nvtabular.io.dataset import Dataset
+from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tf_utils import configure_tensorflow, get_dataset_schema_from_feature_columns
 from nvtabular.ops import _get_embedding_order
-
-from nvtabular.loader.backend import DataLoader as BaseDataLoader
 
 from_dlpack = configure_tensorflow()
 

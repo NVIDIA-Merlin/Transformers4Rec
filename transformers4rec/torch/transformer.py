@@ -18,15 +18,23 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
     _model = transformers.ReformerModel
 
     @classmethod
-    def for_rec(cls, d_model, n_head, n_layer, total_seq_length,
-                hidden_act='gelu', initializer_range=0.01,
-                layer_norm_eps=0.03, dropout=0.3, pad_token=0,
-                log_attention_weights=True, **kwargs):
+    def for_rec(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
         return cls(
             attention_head_size=d_model,
-            attn_layers=["local", "lsh"] * (n_layer // 2)
-            if n_layer > 2
-            else ["local"],
+            attn_layers=["local", "lsh"] * (n_layer // 2) if n_layer > 2 else ["local"],
             feed_forward_size=d_model * 4,
             hidden_size=d_model,
             num_attention_heads=n_head,
@@ -51,10 +59,20 @@ class GPT2Config(T4RecConfig, transformers.GPT2Config):
     _model = transformers.GPT2Model
 
     @classmethod
-    def for_rec(cls, d_model, n_head, n_layer, total_seq_length,
-                hidden_act='gelu', initializer_range=0.01,
-                layer_norm_eps=0.03, dropout=0.3, pad_token=0,
-                log_attention_weights=True, **kwargs):
+    def for_rec(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
         return cls(
             n_embd=d_model,
             n_inner=d_model * 4,
@@ -78,10 +96,20 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
     _model = transformers.LongformerModel
 
     @classmethod
-    def for_rec(cls, d_model, n_head, n_layer, total_seq_length,
-                hidden_act='gelu', initializer_range=0.01,
-                layer_norm_eps=0.03, dropout=0.3, pad_token=0,
-                log_attention_weights=True, **kwargs):
+    def for_rec(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
         return cls(
             hidden_size=d_model,
             num_hidden_layers=n_layer,
@@ -102,10 +130,20 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
     _model = transformers.ElectraModel
 
     @classmethod
-    def for_rec(cls, d_model, n_head, n_layer, total_seq_length,
-                hidden_act='gelu', initializer_range=0.01,
-                layer_norm_eps=0.03, dropout=0.3, pad_token=0,
-                log_attention_weights=True, **kwargs):
+    def for_rec(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
         return cls(
             hidden_size=d_model,
             embedding_size=d_model,
@@ -128,10 +166,20 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
     _model = transformers.AlbertModel
 
     @classmethod
-    def for_rec(cls, d_model, n_head, n_layer, total_seq_length,
-                hidden_act='gelu', initializer_range=0.01,
-                layer_norm_eps=0.03, dropout=0.3, pad_token=0,
-                log_attention_weights=True, **kwargs):
+    def for_rec(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
         return cls(
             hidden_size=d_model,
             num_attention_heads=n_head,
@@ -157,10 +205,19 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
         pass
 
     @classmethod
-    def for_rec(cls, d_model, n_head, n_layer,
-                hidden_act='gelu', initializer_range=0.01,
-                layer_norm_eps=0.03, dropout=0.3, pad_token=0,
-                log_attention_weights=True, **kwargs):
+    def for_rec(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
         return cls(
             d_model=d_model,
             d_inner=d_model * 4,

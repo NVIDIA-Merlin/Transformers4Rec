@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from .base import BlockType
 from ..head import Head
+from .base import BlockType
 
 
 class ModelWithLoss(tf.keras.Model):

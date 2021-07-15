@@ -37,9 +37,7 @@ logger = logging.getLogger(__name__)
 class ParquetDataset(Dataset):
     def __init__(self, parquet_file, cols_to_read, seq_features_len_pad_trim):
         self.cols_to_read = cols_to_read
-        self.data = (
-            pq.ParquetDataset(parquet_file).read(columns=self.cols_to_read).to_pandas()
-        )
+        self.data = pq.ParquetDataset(parquet_file).read(columns=self.cols_to_read).to_pandas()
         self.seq_features_len_pad_trim = seq_features_len_pad_trim
 
     def __len__(self):
@@ -53,9 +51,7 @@ class ParquetDataset(Dataset):
         if type(values) is np.ndarray:
             values = values[: self.seq_features_len_pad_trim]
             if len(values) < self.seq_features_len_pad_trim:
-                placeholder = np.zeros(
-                    self.seq_features_len_pad_trim, dtype=values.dtype
-                )
+                placeholder = np.zeros(self.seq_features_len_pad_trim, dtype=values.dtype)
                 placeholder[: len(values)] = values
                 values = placeholder
             if isinstance(values[0], np.floating) and values.dtype is not np.float32:
@@ -143,9 +139,7 @@ def fetch_data_loader(
             seq_features_len_pad_trim=data_args.session_seq_length_max,
         )
         if shuffle_dataloader and training_args.shuffle_buffer_size > 0:
-            dataset = ShuffleDataset(
-                dataset, buffer_size=training_args.shuffle_buffer_size
-            )
+            dataset = ShuffleDataset(dataset, buffer_size=training_args.shuffle_buffer_size)
         loader = PyTorchDataLoader(
             dataset,
             batch_size=batch_size,
@@ -213,9 +207,7 @@ def get_nvtabular_dataloader(
     }
 
     # device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
-    dataloader_device = (
-        0 if training_args.local_rank == -1 else training_args.local_rank
-    )
+    dataloader_device = 0 if training_args.local_rank == -1 else training_args.local_rank
 
     dataset = NVTDataset(
         data_paths,
@@ -248,9 +240,7 @@ def get_nvtabular_dataloader(
         drop_last=training_args.dataloader_drop_last,
     )
 
-    dl_loader = DLDataLoaderWrapper(
-        loader, collate_fn=dataloader_collate, batch_size=batch_size
-    )
+    dl_loader = DLDataLoaderWrapper(loader, collate_fn=dataloader_collate, batch_size=batch_size)
 
     return dl_loader
 
@@ -309,11 +299,7 @@ class ShuffleDataset(IterableDataset):
                     logger.info("[SHUFFLE] StopIteration EXCEPTION: {}".format(e))
                     break
 
-            logger.info(
-                "[SHUFFLE] STARTING TO RETRIEVE ONLY FROM BUFFER: {}".format(
-                    len(shufbuf)
-                )
-            )
+            logger.info("[SHUFFLE] STARTING TO RETRIEVE ONLY FROM BUFFER: {}".format(len(shufbuf)))
 
             while len(shufbuf) > 0:
                 yield shufbuf.pop()

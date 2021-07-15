@@ -36,14 +36,16 @@ class GaussRankScaler(BaseEstimator, TransformerMixin):
         ----------
         interp_func_ : list
             The interpolation function for each feature in the training set.
-        """
+    """
 
-    def __init__(self, epsilon=1e-4, copy=True, n_jobs=None, interp_kind='linear', interp_copy=False):
+    def __init__(
+        self, epsilon=1e-4, copy=True, n_jobs=None, interp_kind="linear", interp_copy=False
+    ):
         self.epsilon = epsilon
         self.copy = copy
         self.interp_kind = interp_kind
         self.interp_copy = interp_copy
-        self.fill_value = 'extrapolate'
+        self.fill_value = "extrapolate"
         self.n_jobs = n_jobs
 
     def fit(self, X, y=None):
@@ -55,7 +57,9 @@ class GaussRankScaler(BaseEstimator, TransformerMixin):
         y
             Ignored
         """
-        X = check_array(X, copy=self.copy, estimator=self, dtype=FLOAT_DTYPES, force_all_finite=True)
+        X = check_array(
+            X, copy=self.copy, estimator=self, dtype=FLOAT_DTYPES, force_all_finite=True
+        )
 
         self.interp_func_ = Parallel(n_jobs=self.n_jobs)(delayed(self._fit)(x) for x in X.T)
         return self
@@ -67,7 +71,8 @@ class GaussRankScaler(BaseEstimator, TransformerMixin):
         factor = np.max(rank) / 2.0 * bound
         scaled_rank = np.clip(rank / factor - bound, -bound, bound)
         return interp1d(
-            x, scaled_rank, kind=self.interp_kind, copy=self.interp_copy, fill_value=self.fill_value)
+            x, scaled_rank, kind=self.interp_kind, copy=self.interp_copy, fill_value=self.fill_value
+        )
 
     def transform(self, X, copy=None):
         """Scale the data with the Gauss Rank algorithm
@@ -78,12 +83,14 @@ class GaussRankScaler(BaseEstimator, TransformerMixin):
         copy : bool, optional (default: None)
             Copy the input X or not.
         """
-        check_is_fitted(self, 'interp_func_')
+        check_is_fitted(self, "interp_func_")
 
         copy = copy if copy is not None else self.copy
         X = check_array(X, copy=copy, estimator=self, dtype=FLOAT_DTYPES, force_all_finite=True)
 
-        X = np.array(Parallel(n_jobs=self.n_jobs)(delayed(self._transform)(i, x) for i, x in enumerate(X.T))).T
+        X = np.array(
+            Parallel(n_jobs=self.n_jobs)(delayed(self._transform)(i, x) for i, x in enumerate(X.T))
+        ).T
         return X
 
     def _transform(self, i, x):
@@ -98,17 +105,26 @@ class GaussRankScaler(BaseEstimator, TransformerMixin):
         copy : bool, optional (default: None)
             Copy the input X or not.
         """
-        check_is_fitted(self, 'interp_func_')
+        check_is_fitted(self, "interp_func_")
 
         copy = copy if copy is not None else self.copy
         X = check_array(X, copy=copy, estimator=self, dtype=FLOAT_DTYPES, force_all_finite=True)
 
-        X = np.array(Parallel(n_jobs=self.n_jobs)(delayed(self._inverse_transform)(i, x) for i, x in enumerate(X.T))).T
+        X = np.array(
+            Parallel(n_jobs=self.n_jobs)(
+                delayed(self._inverse_transform)(i, x) for i, x in enumerate(X.T)
+            )
+        ).T
         return X
 
     def _inverse_transform(self, i, x):
-        inv_interp_func = interp1d(self.interp_func_[i].y, self.interp_func_[i].x, kind=self.interp_kind,
-                                   copy=self.interp_copy, fill_value=self.fill_value)
+        inv_interp_func = interp1d(
+            self.interp_func_[i].y,
+            self.interp_func_[i].x,
+            kind=self.interp_kind,
+            copy=self.interp_copy,
+            fill_value=self.fill_value,
+        )
         return inv_interp_func(erf(x))
 
     @staticmethod

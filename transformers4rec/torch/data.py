@@ -18,10 +18,9 @@ from typing import Dict
 
 import pandas as pd
 import torch
+from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tensorflow import _validate_dataset
 from torch.utils.dlpack import from_dlpack
-
-from nvtabular.loader.backend import DataLoader as BaseDataLoader
 
 
 class IterDL(torch.utils.data.IterableDataset):

@@ -19,7 +19,7 @@ from tensorflow.python.keras.metrics import Metric
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.training.tracking.data_structures import ListWrapper, _DictWrapper
 
-from .utils import repr_utils
+from .aggregator import ConcatFeatures, StackFeatures, aggregators
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
@@ -37,7 +37,7 @@ from .tabular import (
     MergeTabular,
     TabularLayer,
 )
-from .aggregator import ConcatFeatures, StackFeatures, aggregators
+from .utils import repr_utils
 
 ListWrapper.__repr__ = repr_utils.list_wrapper_repr
 _DictWrapper.__repr__ = repr_utils.dict_wrapper_repr
@@ -68,6 +68,7 @@ __all__ = [
     "AsTabular",
     "ConcatFeatures",
     "FilterFeatures",
+    "aggregators",
     "MergeTabular",
     "StackFeatures",
     "TabularLayer",

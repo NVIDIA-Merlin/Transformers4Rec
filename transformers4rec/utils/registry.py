@@ -1,4 +1,3 @@
-import pprint
 import re
 
 # Camel case to snake case utils
@@ -27,7 +26,8 @@ def default_name(class_or_fn):
     return camelcase_to_snakecase(class_or_fn.__name__)
 
 
-default_object_name = lambda obj: default_name(type(obj))
+def default_object_name(obj):
+    return default_name(type(obj))
 
 
 class Registry(object):
@@ -60,12 +60,14 @@ class Registry(object):
     See `__init__` doc.
     """
 
-    def __init__(self,
-                 registry_name,
-                 default_key_fn=default_name,
-                 validator=None,
-                 on_set=None,
-                 value_transformer=(lambda k, v: v)):
+    def __init__(
+        self,
+        registry_name,
+        default_key_fn=default_name,
+        validator=None,
+        on_set=None,
+        value_transformer=(lambda k, v: v),
+    ):
         """Construct a new registry.
         Args:
           registry_name: str identifier for the given registry. Used in error msgs.
@@ -88,17 +90,15 @@ class Registry(object):
         self._value_transformer = value_transformer
 
     @classmethod
-    def class_registry(cls,
-                       registry_name,
-                       default_key_fn=default_name,
-                       validator=None,
-                       on_set=None):
+    def class_registry(
+        cls, registry_name, default_key_fn=default_name, validator=None, on_set=None
+    ):
         return cls(
             registry_name=registry_name,
             default_key_fn=default_key_fn,
             validator=validator,
             on_set=on_set,
-            value_transformer=(lambda k, v: v())
+            value_transformer=(lambda k, v: v()),
         )
 
     def default_key(self, value):
@@ -131,8 +131,7 @@ class Registry(object):
         if key is None:
             key = self.default_key(value)
         if key in self:
-            raise KeyError(
-                "key %s already registered in registry %s" % (key, self._name))
+            raise KeyError("key %s already registered in registry %s" % (key, self._name))
         if not callable(value):
             raise ValueError("value must be callable")
         self.validate(key, value)
@@ -192,8 +191,10 @@ class Registry(object):
 
     def __getitem__(self, key):
         if key not in self:
-            raise KeyError("%s never registered with registry %s. Available:\n %s" %
-                           (key, self.name, display_list_by_prefix(sorted(self), 4)))
+            raise KeyError(
+                "%s never registered with registry %s. Available:\n %s"
+                % (key, self.name, display_list_by_prefix(sorted(self), 4))
+            )
         value = self._registry[key]
         return self._value_transformer(key, value)
 
