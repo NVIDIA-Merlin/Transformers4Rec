@@ -35,16 +35,12 @@ class TrainingArguments(HfTrainingArguments):
 
     eval_on_test_set: bool = field(
         default=False,
-        metadata={
-            "help": "Evaluate on test set (by default, evaluates on the validation set)."
-        },
+        metadata={"help": "Evaluate on test set (by default, evaluates on the validation set)."},
     )
 
     compute_metrics_each_n_steps: int = field(
         default=1,
-        metadata={
-            "help": "Log metrics each n steps (for train, validation and test sets)"
-        },
+        metadata={"help": "Log metrics each n steps (for train, validation and test sets)"},
     )
 
     log_predictions: bool = field(
@@ -62,9 +58,7 @@ class TrainingArguments(HfTrainingArguments):
 
     experiments_group: str = field(
         default="default",
-        metadata={
-            "help": "Name of the Experiments Group, for organizing job runs logged on W&B"
-        },
+        metadata={"help": "Name of the Experiments Group, for organizing job runs logged on W&B"},
     )
 
     learning_rate_schedule: str = field(
@@ -104,9 +98,7 @@ class TrainingArguments(HfTrainingArguments):
     pyprof_start_step: int = field(
         default=0, metadata={"help": "Start step to profile with PyProf"}
     )
-    pyprof_stop_step: int = field(
-        default=0, metadata={"help": "Stop step to profile with PyProf"}
-    )
+    pyprof_stop_step: int = field(default=0, metadata={"help": "Stop step to profile with PyProf"})
 
     predict_top_k: int = field(
         default=10,
@@ -117,22 +109,19 @@ class TrainingArguments(HfTrainingArguments):
 
     eval_steps_on_train_set: int = field(
         default=20,
-        metadata={
-            "help": "Number of steps to evaluate on train set (which is usually large)"
-        },
+        metadata={"help": "Number of steps to evaluate on train set (which is usually large)"},
     )
     use_legacy_prediction_loop: bool = field(
         default=True,
-        metadata={
-            "help": "Whether or not to use the legacy prediction_loop in the Trainer."
-        },
+        metadata={"help": "Whether or not to use the legacy prediction_loop in the Trainer."},
     )
 
 
 @dataclass
 class DataArguments:
     data_path: Optional[str] = field(
-        default="", metadata={"help": "Path to dataset."},
+        default="",
+        metadata={"help": "Path to dataset."},
     )
 
     pad_token: Optional[int] = field(default=0, metadata={"help": "pad token"})
@@ -193,9 +182,7 @@ class DataArguments:
     )
     feature_prefix_neg_sample: Optional[str] = field(
         default="_neg_",
-        metadata={
-            "help": "prefix of the column name in input parquet file for negative samples"
-        },
+        metadata={"help": "prefix of the column name in input parquet file for negative samples"},
     )
 
     session_seq_length_max: Optional[int] = field(
@@ -304,15 +291,11 @@ class ModelArguments:
     )
     config_name: Optional[str] = field(
         default=None,
-        metadata={
-            "help": "Pretrained config name or path if not the same as model_name"
-        },
+        metadata={"help": "Pretrained config name or path if not the same as model_name"},
     )
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={
-            "help": "Where do you want to store the pretrained models downloaded from s3"
-        },
+        metadata={"help": "Where do you want to store the pretrained models downloaded from s3"},
     )
 
     # args for RecSys Meta model
@@ -329,9 +312,7 @@ class ModelArguments:
 
     loss_type: Optional[str] = field(
         default="cross_entropy",
-        metadata={
-            "help": "Type of Loss function: cross_entropy|top1|top1_max|bpr|bpr_max_reg"
-        },
+        metadata={"help": "Type of Loss function: cross_entropy|top1|top1_max|bpr|bpr_max_reg"},
     )
     model_type: Optional[str] = field(
         default="gpt2",
@@ -355,9 +336,7 @@ class ModelArguments:
     )
     mlm: bool = field(
         default=False,
-        metadata={
-            "help": "Use Masked Language Modeling (Cloze objective) for training."
-        },
+        metadata={"help": "Use Masked Language Modeling (Cloze objective) for training."},
     )
 
     mlm_probability: Optional[float] = field(
@@ -371,9 +350,7 @@ class ModelArguments:
 
     plm: bool = field(
         default=False,
-        metadata={
-            "help": "Use Permutation Language Modeling (XLNET objective) for training."
-        },
+        metadata={"help": "Use Permutation Language Modeling (XLNET objective) for training."},
     )
 
     plm_probability: Optional[float] = field(
@@ -384,9 +361,7 @@ class ModelArguments:
     )
     plm_max_span_length: Optional[int] = field(
         default=5,
-        metadata={
-            "help": "the maximum length of segment to mask for partial prediction"
-        },
+        metadata={"help": "the maximum length of segment to mask for partial prediction"},
     )
 
     plm_mask_input: Optional[bool] = field(
@@ -400,9 +375,7 @@ class ModelArguments:
     # args for RTD task
     rtd: bool = field(
         default=False,
-        metadata={
-            "help": "Use Replaced Token Detection (ELECTRA objective) for training."
-        },
+        metadata={"help": "Use Replaced Token Detection (ELECTRA objective) for training."},
     )
 
     rtd_sample_from_batch: Optional[bool] = field(
@@ -442,9 +415,7 @@ class ModelArguments:
 
     d_model: Optional[int] = field(
         default=256,
-        metadata={
-            "help": "size of hidden states (or internal states) for RNNs and Transformers"
-        },
+        metadata={"help": "size of hidden states (or internal states) for RNNs and Transformers"},
     )
     n_layer: Optional[int] = field(
         default=12, metadata={"help": "number of layers for RNNs and Transformers"}
@@ -454,9 +425,7 @@ class ModelArguments:
     )
     layer_norm_eps: Optional[float] = field(
         default=1e-12,
-        metadata={
-            "help": "The epsilon used by the layer normalization layers for Transformers"
-        },
+        metadata={"help": "The epsilon used by the layer normalization layers for Transformers"},
     )
     initializer_range: Optional[float] = field(
         default=0.02,
@@ -493,9 +462,7 @@ class ModelArguments:
 
     attn_type: str = field(
         default="uni",
-        metadata={
-            "help": "The type of attention. Use 'uni' for Causal LM and 'bi' for Masked LM"
-        },
+        metadata={"help": "The type of attention. Use 'uni' for Causal LM and 'bi' for Masked LM"},
     )
 
     # args for XLNET
@@ -557,9 +524,7 @@ class ModelArguments:
     )
     inner_group_num: Optional[int] = field(
         default=1,
-        metadata={
-            "help": "(ALBERT) The number of inner repetition of attention and ffn."
-        },
+        metadata={"help": "(ALBERT) The number of inner repetition of attention and ffn."},
     )
 
     eval_on_last_item_seq_only: bool = field(

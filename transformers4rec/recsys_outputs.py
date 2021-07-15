@@ -60,7 +60,8 @@ def config_dllogger(output_dir):
         backends=[
             StdOutBackend(Verbosity.DEFAULT),
             JSONStreamBackend(
-                Verbosity.VERBOSE, os.path.join(output_dir, DLLOGGER_FILENAME),
+                Verbosity.VERBOSE,
+                os.path.join(output_dir, DLLOGGER_FILENAME),
             ),
         ]
     )
@@ -84,9 +85,7 @@ def log_parameters(trainer, data_args, model_args, training_args):
     # Enforcing init of W&B  before begin_train callback (where it is originally initiated)
     for callback in trainer.callback_handler.callbacks:
         if isinstance(callback, WandbCallback):
-            callback.setup(
-                all_hparams_aggregated, trainer.state, trainer.model, reinit=False
-            )
+            callback.setup(all_hparams_aggregated, trainer.state, trainer.model, reinit=False)
 
             # Saving Weights & Biases run name to DLLogger
             wandb_run_name = wandb.run.name
@@ -142,12 +141,8 @@ def set_log_attention_weights_callback(trainer, training_args):
     """
     trainer.log_attention_weights_callback = None
     if training_args.log_attention_weights:
-        attention_output_path = os.path.join(
-            training_args.output_dir, ATTENTION_LOG_FOLDER
-        )
-        logger.info(
-            f"Will output attention weights (and inputs) logs to {attention_output_path}"
-        )
+        attention_output_path = os.path.join(training_args.output_dir, ATTENTION_LOG_FOLDER)
+        logger.info(f"Will output attention weights (and inputs) logs to {attention_output_path}")
         att_weights_logger = AttentionWeightsLogger(attention_output_path)
 
         trainer.log_attention_weights_callback = att_weights_logger.log
@@ -203,9 +198,7 @@ class PredictionLogger:
             if not os.path.exists(parent_folder):
                 os.makedirs(parent_folder)
             # Creating parquet file
-            self.pq_writer = pq.ParquetWriter(
-                self.output_parquet_path, new_rows_pa.schema
-            )
+            self.pq_writer = pq.ParquetWriter(self.output_parquet_path, new_rows_pa.schema)
 
     def _append_new_rows_to_parquet(self, new_rows_df):
         new_rows_pa = pyarrow.Table.from_pandas(new_rows_df)

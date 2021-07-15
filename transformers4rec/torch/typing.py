@@ -1,8 +1,8 @@
 import sys
+import typing
 from typing import Dict
 
 import torch
-import typing
 
 if sys.version_info < (3, 7):
     ForwardRef = typing._ForwardRef  # pylint: disable=protected-access
@@ -32,19 +32,14 @@ PredictionTask = ForwardRef("transformers4rec.torch.head.PredictionTask")
 __all__ = [
     "TabularData",
     "TabularModule",
-
     "ProcessedSequence",
-
     "FeatureAggregator",
-
     "MaskSequence",
     "MaskedSequence",
-
     "Block",
     "SequentialBlock",
     "BuildableBlock",
     "BlockWithHead",
-
     "Head",
-    "PredictionTask"
+    "PredictionTask",
 ]

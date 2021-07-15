@@ -1,20 +1,20 @@
 from typing import Union
 
-from transformers import PreTrainedModel
 import torch
 from torch import nn
+from transformers import PreTrainedModel
 
-from .base import BuildableBlock, SequentialBlock
 from ..transformer import T4RecConfig
-from ..typing import MaskSequence, MaskedOutput, ProcessedSequence
+from ..typing import MaskedOutput, MaskSequence, ProcessedSequence
+from .base import BuildableBlock, SequentialBlock
 
 RecurrentBody = Union[str, PreTrainedModel, T4RecConfig, nn.Module]
 
 
 class RecurrentBlock(BuildableBlock):
-    def __init__(self,
-                 masking: Union[str, MaskSequence] = "clm",
-                 body: RecurrentBody = "xlnet") -> None:
+    def __init__(
+        self, masking: Union[str, MaskSequence] = "clm", body: RecurrentBody = "xlnet"
+    ) -> None:
         super().__init__()
         if isinstance(body, T4RecConfig):
             body = body.to_model()

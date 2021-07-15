@@ -1,9 +1,11 @@
-from theano import tensor, gof, Op, config
-from theano.gof import ParamsType
-from theano.gradient import grad_not_implemented
 import theano.tensor as T
+from theano import Op, config, gof, tensor
+from theano.gof import ParamsType
 from theano.gpuarray.subtensor import GpuAdvancedSubtensor1
-from theano.scalar import bool as bool_t, int32 as int_t, uint32 as size_t
+from theano.gradient import grad_not_implemented
+from theano.scalar import bool as bool_t
+from theano.scalar import int32 as int_t
+from theano.scalar import uint32 as size_t
 
 try:
     import pygpu
@@ -11,16 +13,26 @@ try:
 except ImportError:
     pass
 
-from theano.gpuarray.type import GpuArrayType, gpu_context_type, get_context
-from theano.gpuarray.basic_ops import (as_gpuarray_variable, HideC, GpuKernelBase, Kernel, gpuarray_helper_inc_dir, infer_context_name, gpu_contiguous)
-from theano.gpuarray.fp16_help import write_w, load_w, work_dtype
+from theano.gpuarray.basic_ops import (
+    GpuKernelBase,
+    HideC,
+    Kernel,
+    as_gpuarray_variable,
+    gpu_contiguous,
+    gpuarray_helper_inc_dir,
+    infer_context_name,
+)
+from theano.gpuarray.fp16_help import load_w, work_dtype, write_w
+from theano.gpuarray.type import GpuArrayType, get_context, gpu_context_type
+
 
 class GpuExtractDiag2D(GpuKernelBase, Op):
     """
     Extracting diagonal of a 2D matrix on the GPU.
 
     """
-    __props__ = ('context_name', 'keepdims')
+
+    __props__ = ("context_name", "keepdims")
     _f16_ok = True
     params_type = ParamsType(context=gpu_context_type, keepdims=bool_t)
 
@@ -29,15 +41,19 @@ class GpuExtractDiag2D(GpuKernelBase, Op):
         self.keepdims = keepdims
 
     def get_params(self, node):
-        return self.params_type.get_params(self, context=get_context(self.context_name), keepdims=self.keepdims)
+        return self.params_type.get_params(
+            self, context=get_context(self.context_name), keepdims=self.keepdims
+        )
 
-    def make_node(self, x, k=0): #TODO: dtype check
+    def make_node(self, x, k=0):  # TODO: dtype check
         x = as_gpuarray_variable(x, context_name=self.context_name)
         k = tensor.as_tensor_variable(k)
         assert x.ndim == 2
         assert k.ndim == 0
-        broadcastable = (False,True) if self.keepdims else (False,)
-        otype = GpuArrayType(dtype=x.type.dtype, broadcastable=broadcastable, context_name=self.context_name)
+        broadcastable = (False, True) if self.keepdims else (False,)
+        otype = GpuArrayType(
+            dtype=x.type.dtype, broadcastable=broadcastable, context_name=self.context_name
+        )
         return gof.Apply(self, [x, k], [otype()])
 
     def infer_shape(self, node, in_shapes):
@@ -53,7 +69,10 @@ class GpuExtractDiag2D(GpuKernelBase, Op):
         return [diag_size]
 
     def grad(self, inp, grads):
-        return [GpuAllocDiag2D()(grads[0], inp[1], *(inp[0].shape)), grad_not_implemented(self, 1, inp[1])]
+        return [
+            GpuAllocDiag2D()(grads[0], inp[1], *(inp[0].shape)),
+            grad_not_implemented(self, 1, inp[1]),
+        ]
 
     def gpu_kernels(self, node, name):
         dtype_x = node.inputs[0].dtype
@@ -75,27 +94,44 @@ class GpuExtractDiag2D(GpuKernelBase, Op):
                 %(work_x)s t = %(load_x)s(x[(index + roff) * stridesX0 + (index + coff) * stridesX1]);
                 y[index * stridesY0] = %(write_y)s(t);
             }
-        }""" % dict(type_x=type_x, type_y=type_y, work_x=work_x, load_x=load_x, write_y=write_y, name=name)
-        return [Kernel(
-                code=code, name="extract",
-                params=[gpuarray.SSIZE, gpuarray.SSIZE, gpuarray.GpuArray, gpuarray.SIZE, gpuarray.SSIZE, gpuarray.GpuArray, gpuarray.SIZE, gpuarray.SSIZE, gpuarray.SIZE],
+        }""" % dict(
+            type_x=type_x, type_y=type_y, work_x=work_x, load_x=load_x, write_y=write_y, name=name
+        )
+        return [
+            Kernel(
+                code=code,
+                name="extract",
+                params=[
+                    gpuarray.SSIZE,
+                    gpuarray.SSIZE,
+                    gpuarray.GpuArray,
+                    gpuarray.SIZE,
+                    gpuarray.SSIZE,
+                    gpuarray.GpuArray,
+                    gpuarray.SIZE,
+                    gpuarray.SSIZE,
+                    gpuarray.SIZE,
+                ],
                 flags=Kernel.get_flags(dtype_x, dtype_y),
-                objvar='k_extract_' + name)]
+                objvar="k_extract_" + name,
+            )
+        ]
 
     def c_headers(self):
-        return ['<numpy_compat.h>', '<gpuarray_helper.h>', '<gpuarray/types.h>']
+        return ["<numpy_compat.h>", "<gpuarray_helper.h>", "<gpuarray/types.h>"]
 
     def c_header_dirs(self):
         return [gpuarray_helper_inc_dir()]
 
-    def c_code(self, node, name, inp, out, sub): #TODO: fix error msg
+    def c_code(self, node, name, inp, out, sub):  # TODO: fix error msg
         x, k = inp
-        y, = out
-        fail = sub['fail']
-        params = sub['params']
+        (y,) = out
+        fail = sub["fail"]
+        params = sub["params"]
         typecode = pygpu.gpuarray.dtype_to_typecode(node.inputs[0].dtype)
         kname = self.gpu_kernels(node, name)[0].objvar
-        s = """
+        s = (
+            """
         int err;
         size_t* dims = (size_t*)PyGpuArray_DIMS((PyGpuArrayObject*)%(x)s);
         size_t k = ((dtype_%(k)s*)PyArray_DATA(%(k)s))[0];
@@ -140,18 +176,22 @@ class GpuExtractDiag2D(GpuKernelBase, Op):
         } else {
             %(fail)s;
         }
-        """ % locals()
+        """
+            % locals()
+        )
         return s
 
     def c_code_cache_version(self):
         return (1,)
+
 
 class GpuAllocDiag2D(GpuKernelBase, Op):
     """
     Making a diagonal matrix from a vector on GPU
 
     """
-    __props__ = ('context_name',)
+
+    __props__ = ("context_name",)
     _f16_ok = True
 
     def __init__(self, context_name=None):
@@ -160,7 +200,7 @@ class GpuAllocDiag2D(GpuKernelBase, Op):
     def get_params(self, node):
         return get_context(self.context_name)
 
-    def make_node(self, x, k=0, n=0, m=0): #TODO: dtype check
+    def make_node(self, x, k=0, n=0, m=0):  # TODO: dtype check
         x = as_gpuarray_variable(x, context_name=self.context_name)
         k = tensor.as_tensor_variable(k)
         n = tensor.as_tensor_variable(n)
@@ -169,19 +209,23 @@ class GpuAllocDiag2D(GpuKernelBase, Op):
         assert k.ndim == 0
         assert n.ndim == 0
         assert m.ndim == 0
-        otype = GpuArrayType(dtype=x.type.dtype, broadcastable=(False,False), context_name=self.context_name)
+        otype = GpuArrayType(
+            dtype=x.type.dtype, broadcastable=(False, False), context_name=self.context_name
+        )
         return gof.Apply(self, [x, k, n, m], [otype()])
 
     def infer_shape(self, node, in_shapes):
         in_shape, _, _, _ = in_shapes
         k, n, m = node.inputs[1:]
         dim_in = in_shape[0]
-        dim_out1 = T.maximum(T.switch(T.ge(k,0), dim_in, dim_in-k), n)
-        dim_out2 = T.maximum(T.switch(T.ge(k,0), dim_in+k, dim_in), m)
+        dim_out1 = T.maximum(T.switch(T.ge(k, 0), dim_in, dim_in - k), n)
+        dim_out2 = T.maximum(T.switch(T.ge(k, 0), dim_in + k, dim_in), m)
         return [(dim_out1, dim_out2)]
 
     def grad(self, inp, grads):
-        return [GpuExtractDiag2D(keepdims=(inp[0].ndim==2))(grads[0], inp[1])] + [grad_not_implemented(self, i, inp[i]) for i in range(1,4)]
+        return [GpuExtractDiag2D(keepdims=(inp[0].ndim == 2))(grads[0], inp[1])] + [
+            grad_not_implemented(self, i, inp[i]) for i in range(1, 4)
+        ]
 
     def gpu_kernels(self, node, name):
         dtype_x = node.inputs[0].dtype
@@ -203,27 +247,44 @@ class GpuAllocDiag2D(GpuKernelBase, Op):
                 %(work_x)s t = %(load_x)s(x[index * stridesX0]);
                 y[(index + roff) * stridesY0 + (index + coff) * stridesY1] = %(write_y)s(t);
             }
-        }""" % dict(type_x=type_x, type_y=type_y, work_x=work_x, load_x=load_x, write_y=write_y, name=name)
-        return [Kernel(
-                code=code, name="dalloc",
-                params=[gpuarray.SSIZE, gpuarray.GpuArray, gpuarray.SIZE, gpuarray.SSIZE, gpuarray.SSIZE, gpuarray.GpuArray, gpuarray.SIZE, gpuarray.SIZE, gpuarray.SIZE],
+        }""" % dict(
+            type_x=type_x, type_y=type_y, work_x=work_x, load_x=load_x, write_y=write_y, name=name
+        )
+        return [
+            Kernel(
+                code=code,
+                name="dalloc",
+                params=[
+                    gpuarray.SSIZE,
+                    gpuarray.GpuArray,
+                    gpuarray.SIZE,
+                    gpuarray.SSIZE,
+                    gpuarray.SSIZE,
+                    gpuarray.GpuArray,
+                    gpuarray.SIZE,
+                    gpuarray.SIZE,
+                    gpuarray.SIZE,
+                ],
                 flags=Kernel.get_flags(dtype_x, dtype_y),
-                objvar='k_dalloc_' + name)]
+                objvar="k_dalloc_" + name,
+            )
+        ]
 
     def c_headers(self):
-        return ['<numpy_compat.h>', '<gpuarray_helper.h>', '<gpuarray/types.h>']
+        return ["<numpy_compat.h>", "<gpuarray_helper.h>", "<gpuarray/types.h>"]
 
     def c_header_dirs(self):
         return [gpuarray_helper_inc_dir()]
 
-    def c_code(self, node, name, inp, out, sub):  #TODO: fix error msgs
+    def c_code(self, node, name, inp, out, sub):  # TODO: fix error msgs
         x, k, n, m = inp
-        y, = out
-        fail = sub['fail']
-        ctx = sub['params']
+        (y,) = out
+        fail = sub["fail"]
+        ctx = sub["params"]
         typecode = pygpu.gpuarray.dtype_to_typecode(node.inputs[0].dtype)
         kname = self.gpu_kernels(node, name)[0].objvar
-        s = """
+        s = (
+            """
         int err;
         size_t ndims = (size_t)PyGpuArray_NDIM((PyGpuArrayObject*)%(x)s);
         size_t* in_dims = (size_t*)PyGpuArray_DIMS((PyGpuArrayObject*)%(x)s);
@@ -266,18 +327,22 @@ class GpuAllocDiag2D(GpuKernelBase, Op):
             %(fail)s;
         }
 
-        """ % locals()
+        """
+            % locals()
+        )
         return s
 
     def c_code_cache_version(self):
         return (1,)
+
 
 class GpuBinarySearchSorted(GpuKernelBase, Op):
     """
     Searchsorted on GPU
 
     """
-    __props__ = ('context_name', 'dtype_int64')
+
+    __props__ = ("context_name", "dtype_int64")
     _f16_ok = True
     params_type = ParamsType(context=gpu_context_type, dtype_int64=bool_t)
 
@@ -286,7 +351,9 @@ class GpuBinarySearchSorted(GpuKernelBase, Op):
         self.dtype_int64 = dtype_int64
 
     def get_params(self, node):
-        return self.params_type.get_params(self, context=get_context(self.context_name), dtype_int64=self.dtype_int64)
+        return self.params_type.get_params(
+            self, context=get_context(self.context_name), dtype_int64=self.dtype_int64
+        )
 
     def make_node(self, d, x):
         d = as_gpuarray_variable(d, context_name=self.context_name)
@@ -294,7 +361,11 @@ class GpuBinarySearchSorted(GpuKernelBase, Op):
         assert d.ndim == 1
         assert x.ndim == 1
         broadcastable = (False,)
-        otype = GpuArrayType(dtype='int64' if self.dtype_int64 else 'int32', broadcastable=broadcastable, context_name=self.context_name)
+        otype = GpuArrayType(
+            dtype="int64" if self.dtype_int64 else "int32",
+            broadcastable=broadcastable,
+            context_name=self.context_name,
+        )
         return gof.Apply(self, [d, x], [otype()])
 
     def infer_shape(self, node, in_shapes):
@@ -346,27 +417,53 @@ class GpuBinarySearchSorted(GpuKernelBase, Op):
                 }
                 y[index * stridesY0] = b;
             }
-        }""" % dict(type_d=type_d, type_x=type_x, type_y=type_y, work_d=work_d, load_d=load_d, work_x=work_x, load_x=load_x, name=name)
-        return [Kernel(
-                code=code, name="binsearchsorted",
-                params=[gpuarray.SSIZE, gpuarray.GpuArray, gpuarray.SIZE, gpuarray.SSIZE, gpuarray.GpuArray, gpuarray.SIZE, gpuarray.SSIZE, gpuarray.GpuArray, gpuarray.SIZE, gpuarray.SIZE, gpuarray.SSIZE],
+        }""" % dict(
+            type_d=type_d,
+            type_x=type_x,
+            type_y=type_y,
+            work_d=work_d,
+            load_d=load_d,
+            work_x=work_x,
+            load_x=load_x,
+            name=name,
+        )
+        return [
+            Kernel(
+                code=code,
+                name="binsearchsorted",
+                params=[
+                    gpuarray.SSIZE,
+                    gpuarray.GpuArray,
+                    gpuarray.SIZE,
+                    gpuarray.SSIZE,
+                    gpuarray.GpuArray,
+                    gpuarray.SIZE,
+                    gpuarray.SSIZE,
+                    gpuarray.GpuArray,
+                    gpuarray.SIZE,
+                    gpuarray.SIZE,
+                    gpuarray.SSIZE,
+                ],
                 flags=Kernel.get_flags(dtype_d, dtype_x, dtype_y),
-                objvar='k_binsearchsorted_' + name)]
+                objvar="k_binsearchsorted_" + name,
+            )
+        ]
 
     def c_headers(self):
-        return ['<numpy_compat.h>', '<gpuarray_helper.h>', '<gpuarray/types.h>']
+        return ["<numpy_compat.h>", "<gpuarray_helper.h>", "<gpuarray/types.h>"]
 
     def c_header_dirs(self):
         return [gpuarray_helper_inc_dir()]
 
-    def c_code(self, node, name, inp, out, sub): #TODO: fix error msg
+    def c_code(self, node, name, inp, out, sub):  # TODO: fix error msg
         d, x = inp
-        y, = out
-        fail = sub['fail']
-        params = sub['params']
+        (y,) = out
+        fail = sub["fail"]
+        params = sub["params"]
         typecode = pygpu.gpuarray.dtype_to_typecode(node.outputs[0].dtype)
         kname = self.gpu_kernels(node, name)[0].objvar
-        s = """
+        s = (
+            """
         int err;
         size_t dimd = ((size_t*)PyGpuArray_DIMS((PyGpuArrayObject*)%(d)s))[0];
         size_t dimx = ((size_t*)PyGpuArray_DIMS((PyGpuArrayObject*)%(x)s))[0];
@@ -400,17 +497,21 @@ class GpuBinarySearchSorted(GpuKernelBase, Op):
             PyErr_Format(PyExc_RuntimeError, "gpuarray error: kExtract: %%s. n%%lu, m=%%lu.", GpuKernel_error(&%(kname)s, err), (unsigned long)dimx, (unsigned long)dimd);
             %(fail)s;
         }
-        """ % locals()
+        """
+            % locals()
+        )
         return s
 
     def c_code_cache_version(self):
         return (1,)
+
 
 class GpuAdvancedSubtensor1_fast(GpuKernelBase, GpuAdvancedSubtensor1):
     """
     Implement a faster version AdvancedSubtensor1 on the gpu for 2D tensors
 
     """
+
     _f16_ok = True
 
     def make_node(self, x, ilist):
@@ -419,11 +520,11 @@ class GpuAdvancedSubtensor1_fast(GpuKernelBase, GpuAdvancedSubtensor1):
         ilist_ = as_gpuarray_variable(ilist, ctx_name)
 
         if ilist_.type.dtype not in tensor.integer_dtypes:
-            raise TypeError('index must be integers')
+            raise TypeError("index must be integers")
         if ilist_.type.ndim != 1:
-            raise TypeError('index must be vector')
+            raise TypeError("index must be vector")
         if x_.type.ndim == 0:
-            raise TypeError('cannot index into a scalar')
+            raise TypeError("cannot index into a scalar")
         return gof.Apply(self, [x_, ilist_], [x_.type()])
 
     def perform(self, node, inp, out, params):
@@ -433,14 +534,13 @@ class GpuAdvancedSubtensor1_fast(GpuKernelBase, GpuAdvancedSubtensor1):
         return (1,)
 
     def c_headers(self):
-        return ['<numpy_compat.h>', '<gpuarray_helper.h>',
-                '<gpuarray/types.h>']
+        return ["<numpy_compat.h>", "<gpuarray_helper.h>", "<gpuarray/types.h>"]
 
     def c_header_dirs(self):
         return [gpuarray_helper_inc_dir()]
 
     def c_code(self, node, name, inputs, outputs, sub):
-        if (node.inputs[0].ndim != 2):
+        if node.inputs[0].ndim != 2:
             raise NotImplementedError("This case does not have C code yet.")
 
         return """
@@ -464,12 +564,14 @@ if (%(out)s == NULL || !GpuArray_IS_C_CONTIGUOUS(&%(out)s->ga) ||
 if (GpuArray_vector_select_fast(%(out)s, %(v)s, %(idx)s)) {
   %(fail)s
 }
-        """ % dict(v=inputs[0], idx=inputs[1], out=outputs[0], fail=sub['fail'])
+        """ % dict(
+            v=inputs[0], idx=inputs[1], out=outputs[0], fail=sub["fail"]
+        )
 
     def gpu_kernels(self, node, nodename):
-        CHARMAP = dict(int32='i', uint32='I',
-                       int64='l', uint64='L',
-                       float16='e', float32='f', float64='d')
+        CHARMAP = dict(
+            int32="i", uint32="I", int64="l", uint64="L", float16="e", float32="f", float64="d"
+        )
         dtype_in = node.inputs[0].dtype
         dtype_out = node.outputs[0].dtype
         dtype_idx = node.inputs[1].dtype
@@ -519,19 +621,36 @@ if (GpuArray_vector_select_fast(%(out)s, %(v)s, %(idx)s)) {
              }
              return;
         }
-        """ % dict(type_in=type_in, type_out=type_out, type_idx=type_idx,
-                   tc=CHARMAP[dtype_in])
+        """ % dict(
+            type_in=type_in, type_out=type_out, type_idx=type_idx, tc=CHARMAP[dtype_in]
+        )
         from pygpu.gpuarray import SIZE, SSIZE
+
         params = [
-            SIZE, SIZE, SSIZE, SSIZE, gpuarray.GpuArray, SIZE,
-            SIZE, SIZE, SSIZE, SSIZE, gpuarray.GpuArray, SIZE,
-            SIZE, SSIZE, gpuarray.GpuArray, SIZE,
-            gpuarray.GpuArray]
-        return [Kernel(code=code, name=kname, params=params,
-                       flags=flags, objvar=k_var)]
+            SIZE,
+            SIZE,
+            SSIZE,
+            SSIZE,
+            gpuarray.GpuArray,
+            SIZE,
+            SIZE,
+            SIZE,
+            SSIZE,
+            SSIZE,
+            gpuarray.GpuArray,
+            SIZE,
+            SIZE,
+            SSIZE,
+            gpuarray.GpuArray,
+            SIZE,
+            gpuarray.GpuArray,
+        ]
+        return [Kernel(code=code, name=kname, params=params, flags=flags, objvar=k_var)]
 
     def c_support_code_struct(self, node, nodename):
-        return super(GpuAdvancedSubtensor1_fast, self).c_support_code_struct(node, nodename) + """
+        return (
+            super(GpuAdvancedSubtensor1_fast, self).c_support_code_struct(node, nodename)
+            + """
         int GpuArray_vector_select_fast(PyGpuArrayObject* py_out,
                                      PyGpuArrayObject* py_in,
                                      PyGpuArrayObject* indices_arr)
@@ -592,4 +711,6 @@ if (GpuArray_vector_select_fast(%(out)s, %(v)s, %(idx)s)) {
             }
           return 0;
         }
-        """ % dict(k_var="k_vector_select_fast_" + nodename)
+        """
+            % dict(k_var="k_vector_select_fast_" + nodename)
+        )

@@ -8,17 +8,17 @@ from . import aggregator as agg
 
 class TabularMixin:
     def __call__(
-            self,
-            inputs,
-            *args,
-            pre=None,
-            post=None,
-            merge_with=None,
-            stack_outputs=False,
-            concat_outputs=False,
-            aggregation=None,
-            filter_columns=None,
-            **kwargs
+        self,
+        inputs,
+        *args,
+        pre=None,
+        post=None,
+        merge_with=None,
+        stack_outputs=False,
+        concat_outputs=False,
+        aggregation=None,
+        filter_columns=None,
+        **kwargs
     ):
         post_op = getattr(self, "aggregation", None)
         if concat_outputs:
@@ -85,7 +85,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
     @classmethod
     def from_column_group(
-            cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
+        cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
     ) -> Optional["TabularModule"]:
         if tags:
             column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
@@ -97,7 +97,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
     @classmethod
     def from_schema(
-            cls, schema, tags=None, tags_to_filter=None, **kwargs
+        cls, schema, tags=None, tags_to_filter=None, **kwargs
     ) -> Optional["TabularModule"]:
         from nvtabular.column_group import ColumnGroup
 

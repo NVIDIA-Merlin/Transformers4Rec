@@ -4,9 +4,7 @@ from .common import _check_inputs, _create_output_placeholder, _extract_topk
 from .precision_recall import precision_at
 
 
-def avg_precision_at(
-    ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor
-) -> torch.Tensor:
+def avg_precision_at(ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
     """Compute average precision at K for provided cutoffs
 
     Args:

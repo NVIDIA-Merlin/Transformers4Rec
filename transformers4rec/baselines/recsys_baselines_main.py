@@ -37,15 +37,16 @@ from pandas.api.types import is_datetime64_any_dtype as is_datetime
 from tqdm import tqdm
 from transformers import HfArgumentParser
 
-from ..evaluation.recsys_metrics import EvalMetrics
-from ..recsys_args import DataArguments, ModelArguments, TrainingArguments
-from ..recsys_data import fetch_data_loader
 from transformers4rec.utils.misc_utils import (
     get_label_feature_name,
     get_parquet_files_names,
     get_timestamp_feature_name,
     safe_json,
 )
+
+from ..evaluation.recsys_metrics import EvalMetrics
+from ..recsys_args import DataArguments, ModelArguments, TrainingArguments
+from ..recsys_data import fetch_data_loader
 
 try:
     import cPickle as pickle
@@ -112,9 +113,7 @@ class WandbLogger:
             else:
                 self._wandb = wandb
         else:
-            logger.warning(
-                "WandbCallback requires wandb to be installed. Run `pip install wandb`."
-            )
+            logger.warning("WandbCallback requires wandb to be installed. Run `pip install wandb`.")
 
         self._initialized = False
 
@@ -176,9 +175,7 @@ class AllHparams:
         return result
 
 
-def get_dataloaders(
-    data_args, training_args, train_data_paths, eval_data_paths, feature_map
-):
+def get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map):
     train_loader = fetch_data_loader(
         data_args, training_args, feature_map, train_data_paths, is_train_set=True
     )
@@ -300,9 +297,7 @@ def main():
     """
 
     if not data_args.no_incremental_training:
-        algorithm = get_algorithm(
-            model_args.model_type, remaining_hparams, training_args.seed
-        )
+        algorithm = get_algorithm(model_args.model_type, remaining_hparams, training_args.seed)
 
     results_times = {}
 
@@ -312,9 +307,7 @@ def main():
 
     items_to_predict_set = set()
 
-    for time_index in range(
-        data_args.start_time_window_index, data_args.final_time_window_index
-    ):
+    for time_index in range(data_args.start_time_window_index, data_args.final_time_window_index):
         if data_args.no_incremental_training:
             if data_args.training_time_window_size > 0:
                 time_index_eval = time_index + 1
@@ -336,9 +329,7 @@ def main():
 
         # Training
         if training_args.do_train:
-            logger.info(
-                f"************* Training (time indices:{time_indices_train}) *************"
-            )
+            logger.info(f"************* Training (time indices:{time_indices_train}) *************")
 
             if data_args.no_incremental_training:
 
@@ -352,16 +343,11 @@ def main():
                 )
 
             # If trains with all past available training data (since time index 1)
-            if (
-                data_args.no_incremental_training
-                and data_args.training_time_window_size == 0
-            ):
+            if data_args.no_incremental_training and data_args.training_time_window_size == 0:
                 # Loads only the last time index, because other past data is already available for concatenation
                 time_indices_train = time_indices_train[-1]
 
-            train_data_paths = get_parquet_files_names(
-                data_args, time_indices_train, is_train=True
-            )
+            train_data_paths = get_parquet_files_names(data_args, time_indices_train, is_train=True)
 
             train_sessions_df, start_session_id = prepare_sessions_data(
                 train_data_paths,
@@ -372,15 +358,10 @@ def main():
             )
 
             # train_sessions_df = train_sessions_df[:100]
-            train_interactions_df = sessions_to_interactions_dataframe(
-                train_sessions_df
-            )
+            train_interactions_df = sessions_to_interactions_dataframe(train_sessions_df)
 
             # If trains with all past available training data (since time index 1)
-            if (
-                data_args.no_incremental_training
-                and data_args.training_time_window_size == 0
-            ):
+            if data_args.no_incremental_training and data_args.training_time_window_size == 0:
                 # Concatenating with data already preprocessed from past time units
                 train_interactions_cumulative_df = pd.concat(
                     [train_interactions_cumulative_df, train_interactions_df]
@@ -399,9 +380,7 @@ def main():
 
         # Evaluation
         if training_args.do_eval:
-            logger.info(
-                f"************* Evaluation (time index:{time_index_eval}) *************"
-            )
+            logger.info(f"************* Evaluation (time index:{time_index_eval}) *************")
             eval_data_paths = get_parquet_files_names(
                 data_args,
                 [time_index_eval],
@@ -433,7 +412,8 @@ def main():
                 # Sequential approach
                 metrics = EvalMetrics(ks=[10, 20], use_cpu=True, use_torch=False)
                 for idx, session_row in tqdm(
-                    eval_sessions_df.iterrows(), total=len(eval_sessions_df),
+                    eval_sessions_df.iterrows(),
+                    total=len(eval_sessions_df),
                 ):
                     evaluate_session(
                         algorithm,
@@ -453,16 +433,12 @@ def main():
                 n_workers = max(data_args.workers_count, 1)
                 logger.info(f"Number of workers (--workers_count): {n_workers}")
 
-                logger.info(
-                    "Eval dataset - # sessions: {}".format(len(eval_sessions_df))
-                )
+                logger.info("Eval dataset - # sessions: {}".format(len(eval_sessions_df)))
                 chunk_size = (len(eval_sessions_df) // n_workers) + 1
                 logger.info(f"# sessions by worker: {chunk_size}")
                 eval_sessions_df_chunks = split(eval_sessions_df, chunk_size=chunk_size)
 
-                chunks_metrics_results = Parallel(
-                    n_jobs=n_workers, batch_size=1, verbose=100,
-                )(
+                chunks_metrics_results = Parallel(n_jobs=n_workers, batch_size=1, verbose=100,)(
                     delayed(evaluate_sessions_parallel)(
                         sessions_chunk_df,
                         algorithm,  # deepcopy(algorithm),
@@ -479,9 +455,7 @@ def main():
                 eval_metrics_results = chunks_metrics_df.mean(axis=0).to_dict()
 
             # Adding prefix to make them compatible with the Transformers metrics
-            eval_metrics_results = {
-                f"eval_{k}": v for k, v in eval_metrics_results.items()
-            }
+            eval_metrics_results = {f"eval_{k}": v for k, v in eval_metrics_results.items()}
             results_times[time_index_eval] = eval_metrics_results
 
             # Logging metrics with DLLogger
@@ -492,9 +466,7 @@ def main():
             )
             DLLogger.flush()
 
-            logger.info(
-                f"Eval metrics for time index {time_index_eval}: {eval_metrics_results}"
-            )
+            logger.info(f"Eval metrics for time index {time_index_eval}: {eval_metrics_results}")
 
             # Logging to W&B
             eval_metrics_results_wandb = {
@@ -532,9 +504,7 @@ def parse_remaining_args(remaining_args):
             elif len(args_buffer) == 2:
                 hparams[args_buffer[0]] = args_buffer[1]
             else:
-                raise ValueError(
-                    "Could not parse these arguments: {}".format(args_buffer)
-                )
+                raise ValueError("Could not parse these arguments: {}".format(args_buffer))
 
     hparams = {}
     args_buffer = []
@@ -605,9 +575,7 @@ def get_algorithm(model_type, remaining_hparams, seed):
     if "seed" in constructor_args.args:
         model_hparms["seed"] = seed
 
-    logger.info(
-        f"Instantiating the algorithm {model_type} with these arguments: {model_hparms}"
-    )
+    logger.info(f"Instantiating the algorithm {model_type} with these arguments: {model_hparms}")
 
     algorithm_obj = alg_cls(
         session_key=SESSION_FNAME,
@@ -662,9 +630,7 @@ def evaluate_session(
     eval_on_last_item_seq_only,
 ):
     last_valid_preds_all_items = None
-    for pos, (item_id, ts) in enumerate(
-        zip(session_row[ITEM_FNAME], session_row[TIMESTAMP_FNAME])
-    ):
+    for pos, (item_id, ts) in enumerate(zip(session_row[ITEM_FNAME], session_row[TIMESTAMP_FNAME])):
         if pos < len(session_row[ITEM_FNAME]) - 1:
             label_next_item = session_row[ITEM_FNAME][pos + 1]
 
@@ -675,10 +641,7 @@ def evaluate_session(
                 timestamp=ts,
             )
 
-            if (
-                not eval_on_last_item_seq_only
-                or pos == len(session_row[ITEM_FNAME]) - 2
-            ):
+            if not eval_on_last_item_seq_only or pos == len(session_row[ITEM_FNAME]) - 2:
                 # preds_series.sort_values(ascending=False, inplace=True)
                 preds_all_items = np.zeros(total_items)
 
@@ -738,9 +701,7 @@ def prepare_sessions_data(
 
     # Truncating long sessions
 
-    concat_df[ITEM_FNAME] = concat_df[ITEM_FNAME].apply(
-        lambda x: x[:session_seq_length_max]
-    )
+    concat_df[ITEM_FNAME] = concat_df[ITEM_FNAME].apply(lambda x: x[:session_seq_length_max])
     concat_df[TIMESTAMP_FNAME] = concat_df[TIMESTAMP_FNAME].apply(
         lambda x: x[:session_seq_length_max]
     )
@@ -775,19 +736,13 @@ def convert_timestamps(interactions_df):
 
     # Timestamp in nanoseconds
     if ts_lenght_min >= 18 and ts_lenght_min < 21:
-        interactions_df[TIMESTAMP_FNAME] = (
-            interactions_df[TIMESTAMP_FNAME] / 1e9
-        ).astype("int64")
+        interactions_df[TIMESTAMP_FNAME] = (interactions_df[TIMESTAMP_FNAME] / 1e9).astype("int64")
     # Timestamp in microseconds
     if ts_lenght_min >= 15:
-        interactions_df[TIMESTAMP_FNAME] = (
-            interactions_df[TIMESTAMP_FNAME] / 1e6
-        ).astype("int64")
+        interactions_df[TIMESTAMP_FNAME] = (interactions_df[TIMESTAMP_FNAME] / 1e6).astype("int64")
     # Timestamp in miliseconds
     if ts_lenght_min >= 12:
-        interactions_df[TIMESTAMP_FNAME] = (
-            interactions_df[TIMESTAMP_FNAME] / 1e3
-        ).astype("int64")
+        interactions_df[TIMESTAMP_FNAME] = (interactions_df[TIMESTAMP_FNAME] / 1e3).astype("int64")
     # Timestamp in seconds
     elif ts_lenght_min >= 9:
         pass
@@ -811,10 +766,7 @@ def explode_multiple_cols(df, lst_cols, fill_value=""):
         # ALL lists in cells aren't empty
         return (
             pd.DataFrame(
-                {
-                    col: np.repeat(df[col].values, df[lst_cols[0]].str.len())
-                    for col in idx_cols
-                }
+                {col: np.repeat(df[col].values, df[lst_cols[0]].str.len()) for col in idx_cols}
             )
             .assign(**{col: np.concatenate(df[col].values) for col in lst_cols})
             .loc[:, df.columns]
@@ -823,10 +775,7 @@ def explode_multiple_cols(df, lst_cols, fill_value=""):
         # at least one list in cells is empty
         return (
             pd.DataFrame(
-                {
-                    col: np.repeat(df[col].values, df[lst_cols[0]].str.len())
-                    for col in idx_cols
-                }
+                {col: np.repeat(df[col].values, df[lst_cols[0]].str.len()) for col in idx_cols}
             )
             .assign(**{col: np.concatenate(df[col].values) for col in lst_cols})
             .append(df.loc[lens == 0, idx_cols])
@@ -838,14 +787,10 @@ def explode_multiple_cols(df, lst_cols, fill_value=""):
 def filter_kwargs(kwargs, thing_with_kwargs):
     sig = inspect.signature(thing_with_kwargs)
     filter_keys = [
-        param.name
-        for param in sig.parameters.values()
-        if param.kind == param.POSITIONAL_OR_KEYWORD
+        param.name for param in sig.parameters.values() if param.kind == param.POSITIONAL_OR_KEYWORD
     ]
     filtered_dict = {
-        filter_key: kwargs[filter_key]
-        for filter_key in filter_keys
-        if filter_key in kwargs
+        filter_key: kwargs[filter_key] for filter_key in filter_keys if filter_key in kwargs
     }
     return filtered_dict
 
@@ -871,4 +816,3 @@ def log_aot_metric_results(output_dir, results_avg_time):
 
 if __name__ == "__main__":
     main()
-

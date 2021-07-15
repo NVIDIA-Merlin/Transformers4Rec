@@ -16,11 +16,11 @@ repos:
 #        rev: pylint-2.7.4
 #        hooks:
 #        - id: pylint
-      - repo: https://github.com/PyCQA/bandit
-        rev: 1.7.0
-        hooks:
-        - id: bandit
-          args: [--verbose, -ll, -x, tests,examples,bench]
+#      - repo: https://github.com/PyCQA/bandit
+#        rev: 1.7.0
+#        hooks:
+#        - id: bandit
+#          args: [--verbose, -ll, -x, tests,examples,bench]
 #      - repo: https://github.com/s-weigand/flake8-nb
 #        rev: v0.2.7
 #        hooks:

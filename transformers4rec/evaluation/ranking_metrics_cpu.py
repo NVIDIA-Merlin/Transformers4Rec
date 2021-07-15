@@ -70,9 +70,7 @@ class NDCG(StreamingMetric):
         for row_idx, session_labels in enumerate(labels):
             for col_idx, item_label in enumerate(session_labels):
                 if item_label != 0:
-                    correct_preds = (
-                        item_label == predictions[row_idx, col_idx]
-                    ).astype(np.int32)
+                    correct_preds = (item_label == predictions[row_idx, col_idx]).astype(np.int32)
                     ndcg = NDCG._ndcg_at_k(correct_preds, self.topn)
                     measures.append(ndcg)
         self.ndcg_results.extend(measures)
