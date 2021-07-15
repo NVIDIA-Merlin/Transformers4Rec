@@ -9,7 +9,7 @@ masking_tasks = Registry("tf.masking")
 
 
 @dataclass
-class MaskOutput:
+class MaskedSequence:
     """
     Class to store the masked inputs, labels and boolean masking scheme
     resulting from the related LM task.
@@ -22,6 +22,7 @@ class MaskOutput:
         plm_target_mapping: boolean mapping needed by XLNET-PLM
         plm_perm_mask:  boolean mapping needed by XLNET-PLM
     """
+
     masked_input: tf.Tensor
     masked_label: tf.Tensor
     mask_schema: tf.Tensor
@@ -34,7 +35,7 @@ class MaskSequence(_MaskSequence, tf.keras.layers.Layer):
         super().__init__(hidden_size, pad_token)
         tf.keras.layers.Layer.__init__(**kwargs)
 
-    def call(self, pos_emb, itemid_seq, training, **kwargs) -> MaskOutput:
+    def call(self, pos_emb, itemid_seq, training, **kwargs) -> MaskedSequence:
         raise NotImplementedError()
 
 
