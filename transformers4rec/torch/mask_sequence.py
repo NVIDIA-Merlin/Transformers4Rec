@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 from dataclasses import dataclass
-from typing import Optional, Callable, Any, Dict, List
 
 import torch
 from torch import nn
@@ -49,6 +48,7 @@ class MaskedSequence:
 class MaskSequence(_MaskSequence, nn.Module):
     def __init__(self, hidden_size: int, pad_token: int = 0):
         super().__init__(hidden_size, pad_token)
+        nn.Module.__init__(self)
 
     def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
         raise NotImplementedError()
@@ -56,8 +56,11 @@ class MaskSequence(_MaskSequence, nn.Module):
 
 @masking_tasks.register_with_multiple_names("clm", "causal")
 class CausalLanguageModeling(MaskSequence):
-    def __init__(self, hidden_size, train_on_last_item_seq_only=False,
-                 eval_on_last_item_seq_only=True, **kwargs):
+    def __init__(self,
+                 hidden_size,
+                 train_on_last_item_seq_only=False,
+                 eval_on_last_item_seq_only=True,
+                 **kwargs):
         """
         Causal Language Modeling class - Prepare labels for Next token predictions 
         
@@ -65,7 +68,7 @@ class CausalLanguageModeling(MaskSequence):
             train_on_last_item_seq_only: predict last item only during training
             eval_on_last_item_seq_only: predict last item only during evaluation
         """
-        super(CLM, self).__init__(hidden_size, **kwargs)
+        super(CausalLanguageModeling, self).__init__(hidden_size, **kwargs)
         self.train_on_last_item_seq_only = train_on_last_item_seq_only
         self.eval_on_last_item_seq_only = eval_on_last_item_seq_only
 
@@ -75,10 +78,11 @@ class CausalLanguageModeling(MaskSequence):
             self.masked_item_embedding, mean=0, std=0.001,
         )
 
-    def forward(self, pos_emb, itemid_seq, training):
+    def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
         labels = itemid_seq[:, 1:]
         # As after shifting the sequence length will be subtracted by one, adding a masked item in
-        # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
+        # the sequence to return to the initial sequence.
+        # This is important for ReformerModel(), for example
         labels = torch.cat(
             [
                 labels,
@@ -112,7 +116,8 @@ class CausalLanguageModeling(MaskSequence):
 
         pos_emb_inp = pos_emb[:, :-1]
         # As after shifting the sequence length will be subtracted by one, adding a masked item in
-        # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
+        # the sequence to return to the initial sequence.
+        # This is important for ReformerModel(), for example
         pos_emb_inp = torch.cat(
             [
                 pos_emb_inp,
@@ -131,7 +136,11 @@ class CausalLanguageModeling(MaskSequence):
             self.masked_item_embedding.to(pos_emb_inp.dtype),
         )
 
-        return MaskOutput(masked_input=pos_emb_inp, masked_label=labels, mask_schema=mask_labels)
+        return MaskedSequence(
+            masked_input=pos_emb_inp,
+            masked_label=labels,
+            mask_schema=mask_labels
+        )
 
 
 @masking_tasks.register_with_multiple_names("mlm", "masked")
@@ -143,7 +152,7 @@ class MaskedLanguageModeling(MaskSequence):
         Parameters: 
             mlm_probability: probability to mask an item 
         """
-        super(MLM, self).__init__(hidden_size, **kwargs)
+        super(MaskedLanguageModeling, self).__init__(hidden_size, **kwargs)
         self.mlm_probability = mlm_probability
 
         # Creating a trainable embedding for masking inputs for Masked LM
@@ -152,14 +161,18 @@ class MaskedLanguageModeling(MaskSequence):
             self.masked_item_embedding, mean=0, std=0.001,
         )
 
-    def forward(self, pos_emb, itemid_seq, training):
+    def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
         labels, mask_labels = self.mlm_mask_tokens(itemid_seq, training, self.mlm_probability)
         pos_emb_inp = torch.where(
             mask_labels.unsqueeze(-1).bool(),
             self.masked_item_embedding.to(pos_emb.dtype),
             pos_emb,
         )
-        return MaskOutput(masked_input=pos_emb_inp, masked_label=labels, mask_schema=mask_labels)
+        return MaskedSequence(
+            masked_input=pos_emb_inp,
+            masked_label=labels,
+            mask_schema=mask_labels
+        )
 
     def mlm_mask_tokens(self, itemid_seq, training, mlm_probability):
         """
@@ -169,7 +182,8 @@ class MaskedLanguageModeling(MaskSequence):
         INPUTS:
         -----
         itemid_seq: sequence of input itemid (label) column
-        mlm_probability: probability of an item to be selected (masked) to be a label for this sequence. P.s. We enforce that at 
+        mlm_probability: probability of an item to be selected (masked) to be a label for this
+            sequence. P.s. We enforce that at
         least one item is masked for each sequence, so that the network can learn something with it.
 
         OUTPUTS:
@@ -187,7 +201,8 @@ class MaskedLanguageModeling(MaskSequence):
         rows_ids = torch.arange(
             itemid_seq.size(0), dtype=torch.long, device=self.device
         )
-        # During training, masks labels to be predicted according to a probability, ensuring that each session has at least one label to predict
+        # During training, masks labels to be predicted according to a probability, ensuring that
+        #   each session has at least one label to predict
         if training:
             # Selects a percentage of items to be masked (selected as labels)
             probability_matrix = torch.full(
@@ -200,7 +215,8 @@ class MaskedLanguageModeling(MaskSequence):
                 torch.full_like(itemid_seq, self.pad_token),
             )
 
-            # Set at least one item in the sequence to mask, so that the network can learn something with this session
+            # Set at least one item in the sequence to mask, so that the network
+            # can learn something with this session
             one_random_index_by_session = torch.multinomial(
                 non_padded_mask.float(), num_samples=1
             ).squeeze()
@@ -238,8 +254,12 @@ class MaskedLanguageModeling(MaskSequence):
 
 @masking_tasks.register_with_multiple_names("mlm", "permutation")
 class PermutationLanguageModeling(MaskSequence):
-    def __init__(self, hidden_size, max_span_length: int = 5, plm_probability: float = 1 / 6,
-                 plm_permute_all: bool = False, **kwargs):
+    def __init__(self,
+                 hidden_size,
+                 max_span_length: int = 5,
+                 plm_probability: float = 1 / 6,
+                 plm_permute_all: bool = False,
+                 **kwargs):
         """
         Masked Language Modeling class - Prepare labels for masked item prediction  
         
@@ -247,7 +267,7 @@ class PermutationLanguageModeling(MaskSequence):
             train_on_last_item_seq_only: predict last item only during training
             eval_on_last_item_seq_only: predict last item only during evaluation
         """
-        super(PLM, self).__init__(hidden_size, **kwargs)
+        super(PermutationLanguageModeling, self).__init__(hidden_size, **kwargs)
         self.max_span_length = max_span_length
         self.plm_probability = plm_probability
         self.plm_permute_all = plm_permute_all
@@ -258,22 +278,27 @@ class PermutationLanguageModeling(MaskSequence):
             self.masked_item_embedding, mean=0, std=0.001,
         )
 
-    def forward(self, pos_emb, itemid_seq, training):
-        labels, mask_labels, plm_target_mapping, plm_perm_mask = self.plm_mask_tokens(itemid_seq,
-                                                                                      training,
-                                                                                      self.max_span_length,
-                                                                                      self.plm_probability,
-                                                                                      self.plm_permute_all
-                                                                                      )
+    def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
+        labels, mask_labels, plm_target_mapping, plm_perm_mask = self.plm_mask_tokens(
+            itemid_seq,
+            training,
+            self.max_span_length,
+            self.plm_probability,
+            self.plm_permute_all
+        )
         pos_emb_inp = torch.where(
             mask_labels.unsqueeze(-1).bool(),
             self.masked_item_embedding.to(pos_emb.dtype),
             pos_emb,
         )
 
-        return MaskOutput(masked_input=pos_emb_inp, masked_label=labels, mask_schema=mask_labels,
-                          plm_target_mapping=plm_target_mapping, plm_perm_mask=plm_perm_mask
-                          )
+        return MaskedSequence(
+            masked_input=pos_emb_inp,
+            masked_label=labels,
+            mask_schema=mask_labels,
+            plm_target_mapping=plm_target_mapping,
+            plm_perm_mask=plm_perm_mask
+        )
 
     def plm_mask_tokens(self, itemid_seq, training, max_span_length,
                         plm_probability, plm_permute_all):
@@ -283,13 +308,15 @@ class PermutationLanguageModeling(MaskSequence):
 
         INPUT:
         itemid_seq: sequence of input itemid (label) column
-        plm_probability: The ratio of surrounding items to unmask to define the context of the span-based prediction segment of items
+        plm_probability: The ratio of surrounding items to unmask to define the context of the
+            span-based prediction segment of items
         max_span_length:  The maximum length of the span of items to predict
         plm_permute_all: compute permutation for all non paded itemids
 
         OUTPUT:
         labels: item id sequence as labels
-        perm_mask: shape (bs, seq_len, seq_len) : Define  the random factorization order attention mask for each target
+        perm_mask: shape (bs, seq_len, seq_len) : Define  the random factorization order attention
+            mask for each target
         target_mapping: (bs, seq_len, seq_len)  : Binary mask to specify the items to predict
         """
 
@@ -304,8 +331,9 @@ class PermutationLanguageModeling(MaskSequence):
         masked_labels = torch.full(
             labels.shape, 0, dtype=torch.bool, device=self.device
         )
-        # During training, masks a span of consecutive items to be predicted according to plm_probability,
-        # While  ensuring that each session has at least one  item to predict
+        # During training:
+        #   Masks a span of consecutive items to be predicted according to plm_probability,
+        # While ensuring that each session has at least one  item to predict
         if training:
             target_mapping = torch.zeros(
                 (labels.size(0), labels.size(1), labels.size(1)),
@@ -323,15 +351,20 @@ class PermutationLanguageModeling(MaskSequence):
             else:
                 # For each session select a span of consecutive item ids to be masked
                 for i in range(labels.size(0)):
-                    # Start from the beginning of the sequence by setting `cur_len = 0` (number of tokens processed so far).
+                    # Start from the beginning of the sequence by setting `cur_len = 0`
+                    # (number of tokens processed so far).
                     cur_len = 0
                     max_len = non_padded_mask.sum(1)[i]  # mask only non-padded items
                     while cur_len < max_len:
-                        # Sample a `span_length` from the interval `[1, max_span_length]` (length of span of tokens to be masked)
+                        # Sample a `span_length` from the interval `[1, max_span_length]`
+                        # (length of span of tokens to be masked)
                         span_length = torch.randint(1, max_span_length + 1, (1,)).item()
-                        # Reserve a context of length `context_length = span_length / plm_probability` to surround span to be masked
+                        # Reserve a context of length
+                        # `context_length = span_length / plm_probability`
+                        # to surround span to be masked
                         context_length = int(span_length / plm_probability)
-                        # Sample a starting point `start_index` from the interval `[cur_len, cur_len + context_length - span_length]`
+                        # Sample a starting point `start_index`
+                        # from the interval `[cur_len, cur_len + context_length - span_length]`
                         start_index = (
                                 cur_len
                                 + torch.randint(
@@ -339,7 +372,8 @@ class PermutationLanguageModeling(MaskSequence):
                         ).item()
                         )
                         if start_index < max_len:
-                            # Mask the span of non-padded items `start_index:start_index + span_length`
+                            # Mask the span of non-padded items
+                            #   `start_index:start_index + span_length`
                             masked_labels[
                             i, start_index: start_index + span_length
                             ] = 1
@@ -347,14 +381,16 @@ class PermutationLanguageModeling(MaskSequence):
                         cur_len += context_length
                     # if no item was masked:
                     if masked_labels[i].sum() == 0:
-                        # Set at least one item in the sequence to mask, so that the network can learn something with this session
+                        # Set at least one item in the sequence to mask, so that the network can
+                        # learn something with this session
                         one_random_index_by_session = torch.multinomial(
                             non_padded_mask[i].float(), num_samples=1
                         ).squeeze()
                         masked_labels[i, one_random_index_by_session] = itemid_seq[
                             i, one_random_index_by_session
                         ]
-                    # Since we're replacing non-masked tokens with pad_tokens in the labels tensor instead of skipping them altogether,
+                    # Since we're replacing non-masked tokens with pad_tokens in the labels tensor
+                    # instead of skipping them altogether,
                     # the i-th predict corresponds to the i-th token.
                     # N.B: the loss function will be computed only on non paded items
                     target_mapping[i] = torch.eye(labels.size(1))
@@ -423,8 +459,12 @@ class PermutationLanguageModeling(MaskSequence):
 
 @masking_tasks.register_with_multiple_names("mlm", "replacement")
 class ReplacementLanguageModeling(MaskSequence):
-    def __init__(self, hidden_size, mlm_probability: float = 0.15, sample_from_batch: bool = False,
-                 plm_permute_all: bool = False, **kwargs):
+    def __init__(self,
+                 hidden_size,
+                 mlm_probability: float = 0.15,
+                 sample_from_batch: bool = False,
+                 plm_permute_all: bool = False,
+                 **kwargs):
         """
         Masked Language Modeling class - Prepare labels for masked item prediction  
         
@@ -432,7 +472,7 @@ class ReplacementLanguageModeling(MaskSequence):
             train_on_last_item_seq_only: predict last item only during training
             eval_on_last_item_seq_only: predict last item only during evaluation
         """
-        super(RTD, self).__init__(hidden_size, **kwargs)
+        super(ReplacementLanguageModeling, self).__init__(hidden_size, **kwargs)
         self.mlm_probability = mlm_probability
         self.sample_from_batch = sample_from_batch
 
@@ -442,7 +482,7 @@ class ReplacementLanguageModeling(MaskSequence):
             self.masked_item_embedding, mean=0, std=0.001,
         )
 
-    def forward(self, pos_emb, itemid_seq, training):
+    def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
         """First task of RTD is mlm to train the generator"""
         labels, mask_labels = self.mlm_mask_tokens(itemid_seq, training, self.mlm_probability)
         pos_emb_inp = torch.where(
@@ -450,12 +490,18 @@ class ReplacementLanguageModeling(MaskSequence):
             self.masked_item_embedding.to(pos_emb.dtype),
             pos_emb,
         )
-        return MaskOutput(masked_input=pos_emb_inp, masked_label=labels, mask_schema=mask_labels)
+
+        return MaskedSequence(
+            masked_input=pos_emb_inp,
+            masked_label=labels,
+            mask_schema=mask_labels
+        )
 
     def get_fake_tokens(self, itemid_seq, target_flat, logits):
         """
         Second task of RTD is binary classification to train the discriminator 
-        ==> Generate fake data by replacing [MASK] positions by random items to train ELECTRA discriminator
+        ==> Generate fake data by replacing [MASK] positions by random items to train
+            ELECTRA discriminator
         
         INPUT:
         -----
@@ -467,9 +513,11 @@ class ReplacementLanguageModeling(MaskSequence):
                     over the positive items (masked) of the current batch otherwise
         OUTPUT:
         ------
-            corrupted_inputs: (bs, max_seq_len) input sequence of item ids with fake reprelacement
-            discriminator_labels: (bs, max_seq_len) binary labels to distinguish between original and replaced items
-            batch_updates: (#pos_item) the indices of replacement item within the current batch if sample_from_batch is enabled
+            corrupted_inputs: (bs, max_seq_len) input sequence of item ids with fake replacement
+            discriminator_labels: (bs, max_seq_len) binary labels to distinguish between original
+                and replaced items
+            batch_updates: (#pos_item) the indices of replacement item within the current batch
+                if sample_from_batch is enabled
         """
         # Replace only items that were masked during MLM
         non_pad_mask = target_flat != self.pad_token
@@ -494,17 +542,18 @@ class ReplacementLanguageModeling(MaskSequence):
         )
         # Build discriminator label : distinguish orginal token from replaced one
         discriminator_labels = (corrupted_labels != target_flat).view(
-            -1, input_ids.size(1)
+            -1, itemid_seq.size(1)
         )
         # Build corrupted inputs : replacing [MASK] by sampled item
         corrupted_inputs = (
-            input_ids.clone()
+            itemid_seq.clone()
                 .detach()
                 .reshape(-1)
                 .scatter(-1, non_pad_mask.nonzero().flatten(), updates)
         )
+
         return (
-            corrupted_inputs.view(-1, input_ids.size(1)),
+            corrupted_inputs.view(-1, itemid_seq.size(1)),
             discriminator_labels,
             batch_updates,
         )
@@ -517,9 +566,10 @@ class ReplacementLanguageModeling(MaskSequence):
         OUTPUT:
             samples: (#pos_item), ids of replacements items
         """
-        # add noise to logits to prevent from the case where the generator learn to exactly retrieve the true
-        # item that was masked
+        # add noise to logits to prevent from the case where the generator learn to exactly
+        # retrieve the true item that was masked
         uniform_noise = torch.rand(logits.shape, dtype=logits.dtype, device=self.device)
         gumbel_noise = -torch.log(-torch.log(uniform_noise + 1e-9) + 1e-9)
         s = logits + gumbel_noise
+
         return torch.argmax(torch.nn.functional.softmax(s, dim=-1), -1)
