@@ -1,5 +1,3 @@
-
-
 class T4RecConfig:
     def to_torch_model(self):
         from transformers import MODEL_MAPPING
