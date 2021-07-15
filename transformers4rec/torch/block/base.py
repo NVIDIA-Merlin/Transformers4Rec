@@ -4,7 +4,7 @@ from typing import Union
 import torch
 
 from ..head import Head
-from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule
+from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule, merge_tabular
 
 
 class BlockMixin:
@@ -50,6 +50,9 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
 
         return self >> AsTabular(name)
 
+    def __add__(self, other):
+        return merge_tabular(self, other)
+
 
 class BuildableBlock(abc.ABC):
     @abc.abstractmethod
@@ -91,4 +94,7 @@ def right_shift_block(self, other):
 
 
 def _check_gpu(module):
-    return next(module.parameters()).is_cuda
+    try:
+        return next(module.parameters()).is_cuda
+    except StopIteration:
+        return False
