@@ -1,8 +1,8 @@
 import torch
 
+from ..utils.registry import Registry
 from .typing import TabularData
 from .utils.torch_utils import calculate_batch_size_from_input_size
-from ..utils.registry import Registry
 
 aggregators = Registry.class_registry("torch.aggregators")
 

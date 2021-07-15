@@ -3,9 +3,7 @@ import torch
 from .common import _check_inputs, _create_output_placeholder, _extract_topk
 
 
-def precision_at(
-    ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor
-) -> torch.Tensor:
+def precision_at(ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
     """Compute precision@K for each of the provided cutoffs
 
     Args:
@@ -27,9 +25,7 @@ def precision_at(
     return precisions
 
 
-def recall_at(
-    ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor
-) -> torch.Tensor:
+def recall_at(ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
     """Compute recall@K for each of the provided cutoffs
 
     Args:

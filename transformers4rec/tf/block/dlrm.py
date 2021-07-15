@@ -2,11 +2,11 @@ from typing import List, Optional, Union
 
 import tensorflow as tf
 
+from ...types import ColumnGroup
 from .. import tabular
-from .base import Block, BlockType
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
-from ...types import ColumnGroup
+from .base import Block, BlockType
 
 
 class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
@@ -50,7 +50,7 @@ class DLRMBlock(Block):
 
         self.stack_features = embedding_layer.merge(continuous_embedding, aggregation="stack")
 
-        from..layers import DotProductInteraction
+        from ..layers import DotProductInteraction
 
         self.interaction_layer = interaction_layer or DotProductInteraction()
 

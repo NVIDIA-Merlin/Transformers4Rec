@@ -15,14 +15,15 @@
 #
 import logging
 from dataclasses import dataclass
-from typing import Optional, Callable, Any, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
+from feature_process import FeatureGroup
+from mask_sequence import MaskOutput
 
 # load transformer model and its configuration classes
 from transformers import (
-    PreTrainedModel,
     AlbertConfig,
     AlbertModel,
     ElectraConfig,
@@ -32,6 +33,7 @@ from transformers import (
     LongformerConfig,
     LongformerModel,
     PretrainedConfig,
+    PreTrainedModel,
     ReformerConfig,
     ReformerModel,
     TransfoXLConfig,
@@ -40,68 +42,79 @@ from transformers import (
     XLNetModel,
 )
 
-from feature_process import FeatureGroup
-from mask_sequence import MaskOutput
+# to override the default values of HF config classes with paramters fixed in the recsys paper
+extra_config = {
+    "reformer": {
+        "is_decoder": False,
+        "axial_pos_embds": True,
+        "axial_pos_shape_first_dim": 4,
+        "lsh_num_chunks_before": 3,
+        "lsh_num_chunks_after": 3,
+        "num_buckets": None,
+        "lsh_num_hashes": 5,
+        "attn_chunk_length": 20,
+        "chunk_size_feed_forward": 1,
+    },
+    "transfoxl": {"mem_len": 1},
+    "xlnet": {
+        "untie_r": True,
+        "bi_data": False,
+        "attn_type": "bi",
+        "use_mems_train": True,
+        "mem_len": 1,
+        "use_rtd": False,
+        "rtd_tied_generator": True,
+        "electra_generator_hidden_size": 0.4,
+    },
+    "albert": {"num_hidden_groups": 1, "inner_group_num": 1},
+    "electra": {"rtd_tied_generator": True, "electra_generator_hidden_size": 0.4},
+    "gpt2": {},
+    "rnn": {},
+    "gru": {},
+    "lstm": {},
+    "avgseq": {},
+}
 
-
-# to override the default values of HF config classes with paramters fixed in the recsys paper 
-extra_config = {'reformer' : {'is_decoder': False, 'axial_pos_embds':True, 'axial_pos_shape_first_dim': 4,
-                              'lsh_num_chunks_before': 3, 'lsh_num_chunks_after':3, 'num_buckets': None, 
-                              'lsh_num_hashes': 5, 'attn_chunk_length': 20 , 'chunk_size_feed_forward': 1},
-                
-                'transfoxl':  {'mem_len': 1},
-                
-                'xlnet': {'untie_r':True,  'bi_data':False,  'attn_type':"bi",  'use_mems_train':True,   'mem_len':1, 
-                          'use_rtd': False, 'rtd_tied_generator': True, 'electra_generator_hidden_size': 0.4},
-                
-                'albert': {'num_hidden_groups':1,  'inner_group_num':1},
-                
-                'electra': {'rtd_tied_generator': True, 'electra_generator_hidden_size': 0.4 },
-                'gpt2': {},
-                'rnn': {},
-                'gru': {},
-                'lstm': {},
-                "avgseq": {}
-               }
 
 @dataclass
 class TowerOutput:
-    hidden_rep: torch.tensor 
+    hidden_rep: torch.tensor
     model_outputs: Tuple[torch.tensor]
 
-        
-class TowerModel(nn.Module): 
-    def __init__(self,
-                 max_seq_length: int ,
-                 model_type: str = 'xlnet',
-                 hidden_size: int = 128,
-                 n_head: int = 2,
-                 n_layer: int = 4, 
-                 device: str = 'cuda',
-                ):
+
+class TowerModel(nn.Module):
+    def __init__(
+        self,
+        max_seq_length: int,
+        model_type: str = "xlnet",
+        hidden_size: int = 128,
+        n_head: int = 2,
+        n_layer: int = 4,
+        device: str = "cuda",
+    ):
         super(TowerModel, self).__init__()
         self.model_type = model_type
         self.max_seq_length = max_seq_length
         self.hidden_size = hidden_size
-        self.n_head = n_head 
+        self.n_head = n_head
         self.n_layer = n_layer
         self.device = device
-        
-        self.model = get_recsys_model(model_type, hidden_size, n_head, n_layer, max_seq_length,
-                                      **extra_config[model_type]).to(device)
-        
-        
+
+        self.model = get_recsys_model(
+            model_type, hidden_size, n_head, n_layer, max_seq_length, **extra_config[model_type]
+        ).to(device)
+
     def forward(self, inputs, **kwargs):
-        
-        if isinstance(inputs, FeatureGroup): 
-            pos_emb_inp = inputs.values   
-        elif isinstance(inputs, MaskOutput): 
+
+        if isinstance(inputs, FeatureGroup):
+            pos_emb_inp = inputs.values
+        elif isinstance(inputs, MaskOutput):
             pos_emb_inp = inputs.masked_input
         elif isinstance(inputs, torh.tensor):
-            pos_emb_inp = inputs 
-        else :
+            pos_emb_inp = inputs
+        else:
             raise NotImplementedError
-            
+
         if not isinstance(self.model, PreTrainedModel):  # Checks if its a transformer
             """
             RNN Models
@@ -126,19 +139,18 @@ class TowerModel(nn.Module):
                 # head_mask has shape n_layer x batch x n_heads x N x N
                 head_mask = (
                     torch.tril(
-                        torch.ones(
-                            (seq_len, seq_len), dtype=torch.uint8, device=self.device
-                        )
+                        torch.ones((seq_len, seq_len), dtype=torch.uint8, device=self.device)
                     )
                     .view(1, 1, 1, seq_len, seq_len)
                     .repeat(self.n_layer, 1, 1, 1, 1)
                 )
 
                 model_outputs = self.model(
-                    inputs_embeds=pos_emb_inp, head_mask=head_mask,
+                    inputs_embeds=pos_emb_inp,
+                    head_mask=head_mask,
                 )
-               
-            elif 'task' in kwargs and kwargs['task']=='plm':
+
+            elif "task" in kwargs and kwargs["task"] == "plm":
                 assert (
                     type(self.model) is XLNetModel
                 ), "Permutation language model is only supported for XLNET model "
@@ -153,31 +165,41 @@ class TowerModel(nn.Module):
 
             pos_emb_pred = model_outputs[0]
             model_outputs = tuple(model_outputs[1:])
-        return TowerOutput(hidden_rep = pos_emb_pred, model_outputs = model_outputs)
-            
-            
+        return TowerOutput(hidden_rep=pos_emb_pred, model_outputs=model_outputs)
 
-        
-def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
-                    hidden_act='gelu', initializer_range=0.01,
-                    layer_norm_eps=0.03, dropout=0.3,  pad_token=0,
-                    log_attention_weights=True, target_size=None, 
-                    model_name_or_path=None, cache_dir=None,
-                     **kwargs):
+
+def get_recsys_model(
+    model_type,
+    d_model,
+    n_head,
+    n_layer,
+    total_seq_length,
+    hidden_act="gelu",
+    initializer_range=0.01,
+    layer_norm_eps=0.03,
+    dropout=0.3,
+    pad_token=0,
+    log_attention_weights=True,
+    target_size=None,
+    model_name_or_path=None,
+    cache_dir=None,
+    **kwargs
+):
     if model_type == "avgseq":
         model_cls = AvgSeq()
         config = PretrainedConfig()
 
     elif model_type == "reformer":
         model_cls = ReformerModel
-        kwargs['axial_pos_shape']=[kwargs['axial_pos_shape_first_dim'],
-                                   total_seq_length //kwargs['axial_pos_shape_first_dim']
-                                  ],
+        kwargs["axial_pos_shape"] = (
+            [
+                kwargs["axial_pos_shape_first_dim"],
+                total_seq_length // kwargs["axial_pos_shape_first_dim"],
+            ],
+        )
         config = ReformerConfig(
             attention_head_size=d_model,
-            attn_layers=["local", "lsh"] * (n_layer // 2)
-            if n_layer > 2
-            else ["local"],
+            attn_layers=["local", "lsh"] * (n_layer // 2) if n_layer > 2 else ["local"],
             feed_forward_size=d_model * 4,
             hidden_size=d_model,
             num_attention_heads=n_head,
@@ -193,8 +215,9 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
                 d_model // 2,
                 d_model // 2,
             ],
-            vocab_size=1,  
-            **kwargs)
+            vocab_size=1,
+            **kwargs
+        )
 
     elif model_type == "transfoxl":
         model_cls = TransfoXLModel
@@ -212,7 +235,7 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             div_val=1,  # Disables adaptative input (embeddings), because the embeddings are managed by RecSysMetaModel
-            vocab_size=1, 
+            vocab_size=1,
             **kwargs
         )
 
@@ -223,7 +246,7 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
             d_inner=d_model * 4,
             n_layer=n_layer,
             n_head=n_head,
-            ff_activation=hidden_act,            
+            ff_activation=hidden_act,
             initializer_range=initializer_range,
             layer_norm_eps=layer_norm_eps,
             dropout=dropout,
@@ -249,7 +272,7 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
             n_positions=total_seq_length,
             n_ctx=total_seq_length,
             output_attentions=log_attention_weights,
-            vocab_size=1,  
+            vocab_size=1,
             **kwargs
         )
 
@@ -266,7 +289,7 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
             max_position_embeddings=total_seq_length,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
-            vocab_size=1, 
+            vocab_size=1,
             **kwargs
         )
 
@@ -291,8 +314,8 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
 
     elif model_type == "albert":
         # If --num_hidden_groups -1 (used on hypertuning), uses --n_layer value
-        if kwargs['num_hidden_groups'] == -1:
-            kwargs['num_hidden_groups'] = n_layer
+        if kwargs["num_hidden_groups"] == -1:
+            kwargs["num_hidden_groups"] = n_layer
 
         model_cls = AlbertModel
         config = AlbertConfig(
@@ -308,7 +331,7 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
             initializer_range=initializer_range,
             layer_norm_eps=layer_norm_eps,
             output_attentions=log_attention_weights,
-            vocab_size=1, 
+            vocab_size=1,
             **kwargs
         )
 
@@ -328,7 +351,9 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
             hidden_size=d_model,
             dropout=dropout,
         )
-        config = PretrainedConfig(hidden_size=d_model,)
+        config = PretrainedConfig(
+            hidden_size=d_model,
+        )
 
     elif model_type == "rnn":
         model_cls = nn.RNN(
@@ -353,9 +378,9 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
             cache_dir=cache_dir,
         )
     else:
-        if model_type == 'electra' or (model_type == 'xlnet' and kwargs['use_rtd']): 
+        if model_type == "electra" or (model_type == "xlnet" and kwargs["use_rtd"]):
             # Define two transformers blocks for discriminator and generator model
-            if kwargs['rtd_tied_generator']:
+            if kwargs["rtd_tied_generator"]:
                 # Using same model for generator and discriminator
                 model = (model_cls(config), ())
             else:
@@ -363,7 +388,7 @@ def get_recsys_model(model_type, d_model, n_head, n_layer,  total_seq_length,
                 discriminator = model_cls(config)
                 # update hidden_size parameters for small generator model
                 config.hidden_size = int(
-                    round(config.hidden_size * kwargs['electra_generator_hidden_size'])
+                    round(config.hidden_size * kwargs["electra_generator_hidden_size"])
                 )
                 config.embedding_size = config.hidden_size
                 generator = model_cls(config)

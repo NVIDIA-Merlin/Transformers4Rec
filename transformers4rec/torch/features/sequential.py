@@ -15,6 +15,7 @@ class ProcessedSequence:
         values: the aggregated pytorch tensor
         metadata: list of columns names to log as metadata
     """
+
     name: str
     values: torch.Tensor
     metadata: List[str]

@@ -5,8 +5,8 @@ import tensorflow as tf
 from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
 from ...types import ColumnGroup
+from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
 
 
 class EmbeddingFeatures(TabularLayer):
@@ -18,15 +18,15 @@ class EmbeddingFeatures(TabularLayer):
 
     @classmethod
     def from_column_group(
-            cls,
-            column_group: ColumnGroup,
-            embedding_dims=None,
-            default_embedding_dim=64,
-            infer_embedding_sizes=True,
-            combiner="mean",
-            tags=None,
-            tags_to_filter=None,
-            **kwargs
+        cls,
+        column_group: ColumnGroup,
+        embedding_dims=None,
+        default_embedding_dim=64,
+        infer_embedding_sizes=True,
+        combiner="mean",
+        tags=None,
+        tags_to_filter=None,
+        **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         if tags:
             column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)

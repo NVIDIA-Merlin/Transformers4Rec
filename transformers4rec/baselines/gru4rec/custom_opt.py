@@ -24,14 +24,10 @@ def get_tags(optimizer, name):
 
 
 tags = get_tags(theano.gpuarray.opt.gpu_optimizer, "local_gpua_advanced_subtensor1")
-remove_optimization(
-    theano.gpuarray.opt.gpu_optimizer, "local_gpua_advanced_subtensor1", *tags
-)
+remove_optimization(theano.gpuarray.opt.gpu_optimizer, "local_gpua_advanced_subtensor1", *tags)
 
 tags = get_tags(theano.gpuarray.opt.gpu_optimizer2, "local_gpua_advanced_subtensor1")
-remove_optimization(
-    theano.gpuarray.opt.gpu_optimizer2, "local_gpua_advanced_subtensor1", *tags
-)
+remove_optimization(theano.gpuarray.opt.gpu_optimizer2, "local_gpua_advanced_subtensor1", *tags)
 
 
 @register_opt("fast_compile")

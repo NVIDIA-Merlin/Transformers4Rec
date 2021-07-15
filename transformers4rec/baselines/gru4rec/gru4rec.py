@@ -132,7 +132,7 @@ class GRU4Rec:
         session_key="SessionId",
         item_key="ItemId",
         time_key="Time",
-        seed=42
+        seed=42,
     ):
         self.layers = layers
         if not isinstance(self.layers, list):
@@ -197,15 +197,11 @@ class GRU4Rec:
         elif final_act == "softmax_logit":
             self.final_activation = self.softmax_logit
         elif final_act.startswith("leaky-"):
-            self.final_activation = self.LeakyReLU(
-                float(final_act.split("-")[1])
-            ).execute
+            self.final_activation = self.LeakyReLU(float(final_act.split("-")[1])).execute
         elif final_act.startswith("elu-"):
             self.final_activation = self.Elu(float(final_act.split("-")[1])).execute
         elif final_act.startswith("selu-"):
-            self.final_activation = self.Selu(
-                *[float(x) for x in final_act.split("-")[1:]]
-            ).execute
+            self.final_activation = self.Selu(*[float(x) for x in final_act.split("-")[1:]]).execute
         else:
             raise NotImplementedError
 
@@ -217,9 +213,7 @@ class GRU4Rec:
         elif hidden_act == "linear":
             self.hidden_activation = self.linear
         elif hidden_act.startswith("leaky-"):
-            self.hidden_activation = self.LeakyReLU(
-                float(hidden_act.split("-")[1])
-            ).execute
+            self.hidden_activation = self.LeakyReLU(float(hidden_act.split("-")[1])).execute
         elif hidden_act.startswith("elu-"):
             self.hidden_activation = self.Elu(float(hidden_act.split("-")[1])).execute
         elif hidden_act.startswith("selu-"):
@@ -323,8 +317,7 @@ class GRU4Rec:
                 T.sum(
                     (1.0 - (n_out / (n_out - 1)) * self.smoothing)
                     * (-T.log(gpu_diag(yhat) + 1e-24))
-                    + (self.smoothing / (n_out - 1))
-                    * T.sum(-T.log(yhat + 1e-24), axis=1)
+                    + (self.smoothing / (n_out - 1)) * T.sum(-T.log(yhat + 1e-24), axis=1)
                 ),
                 theano.config.floatX,
             )
@@ -356,8 +349,7 @@ class GRU4Rec:
             T.sum(
                 -T.log(
                     T.sum(
-                        T.nnet.sigmoid(gpu_diag(yhat, keepdims=True) - yhat)
-                        * softmax_scores,
+                        T.nnet.sigmoid(gpu_diag(yhat, keepdims=True) - yhat) * softmax_scores,
                         axis=1,
                     )
                     + 1e-24
@@ -371,9 +363,7 @@ class GRU4Rec:
         ydiag = gpu_diag(yhat, keepdims=True)
         return T.cast(
             T.sum(
-                T.mean(
-                    T.nnet.sigmoid(-ydiag + yhat) + T.nnet.sigmoid(yhat ** 2), axis=1
-                )
+                T.mean(T.nnet.sigmoid(-ydiag + yhat) + T.nnet.sigmoid(yhat ** 2), axis=1)
                 - T.nnet.sigmoid(ydiag ** 2) / (M + self.n_sample)
             ),
             theano.config.floatX,
@@ -382,8 +372,7 @@ class GRU4Rec:
     def top1_max(self, yhat, M):
         softmax_scores = self.softmax_neg(yhat)
         y = softmax_scores * (
-            T.nnet.sigmoid(-gpu_diag(yhat, keepdims=True) + yhat)
-            + T.nnet.sigmoid(yhat ** 2)
+            T.nnet.sigmoid(-gpu_diag(yhat, keepdims=True) + yhat) + T.nnet.sigmoid(yhat ** 2)
         )
         return T.cast(T.sum(T.sum(y, axis=1)), theano.config.floatX)
 
@@ -414,9 +403,7 @@ class GRU4Rec:
         if self.init_as_normal:
             new_rows = self.floatX(np.random.randn(n_new, matrix.shape[1]) * sigma)
         else:
-            new_rows = self.floatX(
-                np.random.rand(n_new, matrix.shape[1]) * sigma * 2 - sigma
-            )
+            new_rows = self.floatX(np.random.rand(n_new, matrix.shape[1]) * sigma * 2 - sigma)
         W.set_value(np.vstack([matrix, new_rows]))
 
     def init(self, data):
@@ -434,27 +421,19 @@ class GRU4Rec:
         for i in range(len(self.layers)):
             m = []
             m.append(
-                self.init_matrix(
-                    (self.layers[i - 1] if i > 0 else n_features, self.layers[i])
-                )
+                self.init_matrix((self.layers[i - 1] if i > 0 else n_features, self.layers[i]))
             )
             m.append(
-                self.init_matrix(
-                    (self.layers[i - 1] if i > 0 else n_features, self.layers[i])
-                )
+                self.init_matrix((self.layers[i - 1] if i > 0 else n_features, self.layers[i]))
             )
             m.append(
-                self.init_matrix(
-                    (self.layers[i - 1] if i > 0 else n_features, self.layers[i])
-                )
+                self.init_matrix((self.layers[i - 1] if i > 0 else n_features, self.layers[i]))
             )
             self.Wx.append(
                 theano.shared(value=np.hstack(m), borrow=True, name="Wx{}".format(i))
             )  # For compatibility's sake
             self.Wh.append(
-                self.init_weights(
-                    (self.layers[i], self.layers[i]), name="Wh{}".format(i)
-                )
+                self.init_weights((self.layers[i], self.layers[i]), name="Wh{}".format(i))
             )
             m2 = []
             m2.append(self.init_matrix((self.layers[i], self.layers[i])))
@@ -471,9 +450,7 @@ class GRU4Rec:
             )
             self.H.append(
                 theano.shared(
-                    value=np.zeros(
-                        (self.batch_size, self.layers[i]), dtype=theano.config.floatX
-                    ),
+                    value=np.zeros((self.batch_size, self.layers[i]), dtype=theano.config.floatX),
                     borrow=True,
                     name="H{}".format(i),
                 )
@@ -489,10 +466,7 @@ class GRU4Rec:
     def dropout(self, X, drop_p):
         if drop_p > 0:
             retain_prob = 1 - drop_p
-            X *= (
-                mrng.binomial(X.shape, p=retain_prob, dtype=theano.config.floatX)
-                / retain_prob
-            )
+            X *= mrng.binomial(X.shape, p=retain_prob, dtype=theano.config.floatX) / retain_prob
         return X
 
     def adam(self, param, grad, updates, sample_idx=None, epsilon=1e-6):
@@ -617,15 +591,11 @@ class GRU4Rec:
                 theano.config.floatX,
             )
             grads = [
-                [
-                    T.switch(T.ge(norm, self.grad_cap), g * self.grad_cap / norm, g)
-                    for g in g_list
-                ]
+                [T.switch(T.ge(norm, self.grad_cap), g * self.grad_cap / norm, g) for g in g_list]
                 for g_list in grads
             ]
             sgrads = [
-                T.switch(T.ge(norm, self.grad_cap), g * self.grad_cap / norm, g)
-                for g in sgrads
+                T.switch(T.ge(norm, self.grad_cap), g * self.grad_cap / norm, g) for g in sgrads
             ]
         for p_list, g_list in zip(params, grads):
             for p, g in zip(p_list, g_list):
@@ -638,19 +608,12 @@ class GRU4Rec:
                 elif self.adapt == "adam":
                     g = self.adam(p, g, updates)
                 if self.momentum > 0:
-                    velocity = theano.shared(
-                        p.get_value(borrow=False) * 0.0, borrow=True
-                    )
-                    velocity2 = self.momentum * velocity - self.learning_rate * (
-                        g + self.lmbd * p
-                    )
+                    velocity = theano.shared(p.get_value(borrow=False) * 0.0, borrow=True)
+                    velocity2 = self.momentum * velocity - self.learning_rate * (g + self.lmbd * p)
                     updates[velocity] = velocity2
                     updates[p] = p + velocity2
                 else:
-                    updates[p] = (
-                        p * (1.0 - self.learning_rate * self.lmbd)
-                        - self.learning_rate * g
-                    )
+                    updates[p] = p * (1.0 - self.learning_rate * self.lmbd) - self.learning_rate * g
         for i in range(len(sgrads)):
             g = sgrads[i]
             fullP = full_params[i]
@@ -669,9 +632,7 @@ class GRU4Rec:
             else:
                 delta = self.learning_rate * g
             if self.momentum > 0:
-                velocity = theano.shared(
-                    fullP.get_value(borrow=False) * 0.0, borrow=True
-                )
+                velocity = theano.shared(fullP.get_value(borrow=False) * 0.0, borrow=True)
                 vs = velocity[sample_idx]
                 velocity2 = self.momentum * vs - delta
                 updates[velocity] = T.set_subtensor(vs, velocity2)
@@ -692,12 +653,7 @@ class GRU4Rec:
         predict=False,
     ):
         sparams, full_params, sidxs = [], [], []
-        if (
-            (hasattr(self, "ST"))
-            and (Y is not None)
-            and (not predict)
-            and (self.n_sample > 0)
-        ):
+        if (hasattr(self, "ST")) and (Y is not None) and (not predict) and (self.n_sample > 0):
             A = self.ST[self.STI]
             Y = T.concatenate([Y, A], axis=0)
         if self.constrained_embedding:
@@ -725,8 +681,7 @@ class GRU4Rec:
             vec = Sx + self.Bh[0]
             rz = T.nnet.sigmoid(vec[:, self.layers[0] :] + T.dot(H[0], self.Wrz[0]))
             h = self.hidden_activation(
-                T.dot(H[0] * rz[:, : self.layers[0]], self.Wh[0])
-                + vec[:, : self.layers[0]]
+                T.dot(H[0] * rz[:, : self.layers[0]], self.Wh[0]) + vec[:, : self.layers[0]]
             )
             z = rz[:, self.layers[0] :]
             h = (1.0 - z) * H[0] + z * h
@@ -741,8 +696,7 @@ class GRU4Rec:
             vec = T.dot(y, self.Wx[i]) + self.Bh[i]
             rz = T.nnet.sigmoid(vec[:, self.layers[i] :] + T.dot(H[i], self.Wrz[i]))
             h = self.hidden_activation(
-                T.dot(H[i] * rz[:, : self.layers[i]], self.Wh[i])
-                + vec[:, : self.layers[i]]
+                T.dot(H[i] * rz[:, : self.layers[i]], self.Wh[i]) + vec[:, : self.layers[i]]
             )
             z = rz[:, self.layers[i] :]
             h = (1.0 - z) * H[i] + z * h
@@ -812,9 +766,7 @@ class GRU4Rec:
         self.error_during_train = False
         itemids = data[self.item_key].unique()
         self.n_items = len(itemids)
-        self.itemidmap = pd.Series(
-            data=np.arange(self.n_items), index=itemids, name="ItemIdx"
-        )
+        self.itemidmap = pd.Series(data=np.arange(self.n_items), index=itemids, name="ItemIdx")
         data["ItemIdx"] = self.itemidmap[data[self.item_key].values].values
         offset_sessions = self.init(data)
         pop = data.groupby(self.item_key).size()
@@ -849,9 +801,9 @@ class GRU4Rec:
                     self.STI = theano.shared(np.asarray(0, dtype="int64"))
                     X = mrng.uniform((generate_length * self.n_sample,))
                     updates_st = OrderedDict()
-                    updates_st[self.ST] = gpu_searchsorted(
-                        P, X, dtype_int64=True
-                    ).reshape((generate_length, self.n_sample))
+                    updates_st[self.ST] = gpu_searchsorted(P, X, dtype_int64=True).reshape(
+                        (generate_length, self.n_sample)
+                    )
                     updates_st[self.STI] = np.asarray(0, dtype="int64")
                     generate_samples = theano.function([], updates=updates_st)
                     generate_samples()
@@ -902,9 +854,7 @@ class GRU4Rec:
             t0 = time.time()
             for i in range(len(self.layers)):
                 self.H[i].set_value(
-                    np.zeros(
-                        (self.batch_size, self.layers[i]), dtype=theano.config.floatX
-                    ),
+                    np.zeros((self.batch_size, self.layers[i]), dtype=theano.config.floatX),
                     borrow=True,
                 )
             c = []
@@ -928,9 +878,7 @@ class GRU4Rec:
                     if self.n_sample and store_type == "cpu":
                         if sample_store:
                             if sample_pointer == generate_length:
-                                neg_samples = self.generate_neg_samples(
-                                    pop, generate_length
-                                )
+                                neg_samples = self.generate_neg_samples(pop, generate_length)
                                 sample_pointer = 0
                             sample = neg_samples[sample_pointer]
                             sample_pointer += 1
@@ -945,9 +893,7 @@ class GRU4Rec:
                                 sample_pointer = 0
                             sample_pointer += 1
                     reset = start + i + 1 == end - 1
-                    cost = train_function(
-                        in_idx, y, len(iters), reset.reshape(len(reset), 1)
-                    )
+                    cost = train_function(in_idx, y, len(iters), reset.reshape(len(reset), 1))
                     c.append(cost)
                     cc.append(len(iters))
                     if np.isnan(cost):
@@ -994,9 +940,7 @@ class GRU4Rec:
             del self.ST
             del self.STI
 
-    def predict_next_batch(
-        self, session_ids, input_item_ids, predict_for_item_ids=None, batch=100
-    ):
+    def predict_next_batch(self, session_ids, input_item_ids, predict_for_item_ids=None, batch=100):
         """
         Gives predicton scores for a selected set of items. Can be used in batch mode to predict for multiple independent events (i.e. events of different sessions) at once and thus speed up evaluation.
 
@@ -1103,9 +1047,7 @@ class GRU4Rec:
         H = []
         for i in range(len(self.layers)):
             H.append(
-                theano.shared(
-                    np.zeros((batch_size, self.layers[i]), dtype=theano.config.floatX)
-                )
+                theano.shared(np.zeros((batch_size, self.layers[i]), dtype=theano.config.floatX))
             )
         if items is not None:
             H_new, yhat, _, _, _ = self.model(X, H, M, Y=Y, predict=True)
@@ -1136,9 +1078,7 @@ class GRU4Rec:
             self.E = theano.shared(self.E, borrow=True, name="E")
         for i in range(len(self.layers)):
             self.Wx[i] = theano.shared(self.Wx[i], borrow=True, name="Wx{}".format(i))
-            self.Wrz[i] = theano.shared(
-                self.Wrz[i], borrow=True, name="Wrz{}".format(i)
-            )
+            self.Wrz[i] = theano.shared(self.Wrz[i], borrow=True, name="Wrz{}".format(i))
             self.Wh[i] = theano.shared(self.Wh[i], borrow=True, name="Wh{}".format(i))
             self.Bh[i] = theano.shared(self.Bh[i], borrow=True, name="Bh{}".format(i))
             self.H[i] = theano.shared(self.H[i], borrow=True, name="H{}".format(i))
@@ -1197,10 +1137,8 @@ class GRU4Rec:
             np.array([session_id]), np.array([input_item_id]), predict_for_item_ids, 1
         )[0]
 
-
     def free_memory(self):
-        if not self.constrained_embedding and \
-           self.embedding:
+        if not self.constrained_embedding and self.embedding:
             self.E.set_value([[]])
         for i in range(len(self.layers)):
             self.Wx[i].set_value([[]])

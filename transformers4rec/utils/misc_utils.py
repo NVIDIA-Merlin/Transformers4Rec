@@ -17,12 +17,9 @@ import glob
 import itertools
 import logging
 import os
-import subprocess
 import sys
 import time
-from typing import Any, Dict, NamedTuple
-
-import torch
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -41,15 +38,14 @@ def safe_json(data):
 
 def get_filenames(data_paths, files_filter_pattern="*"):
     paths = [
-        [p for p in glob.glob(os.path.join(path, files_filter_pattern))]
-        for path in data_paths
+        [p for p in glob.glob(os.path.join(path, files_filter_pattern))] for path in data_paths
     ]
     return list(itertools.chain.from_iterable(paths))
 
 
 def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
     """
-        Analyses the feature map config and returns the name of the label feature (e.g. item_id)
+    Analyses the feature map config and returns the name of the label feature (e.g. item_id)
     """
     label_feature_config = list(
         [k for k, v in feature_map.items() if "is_label" in v and v["is_label"]]
@@ -65,20 +61,14 @@ def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
 
 def get_timestamp_feature_name(feature_map: Dict[str, Any]) -> str:
     """
-        Analyses the feature map config and returns the name of the label feature (e.g. item_id)
+    Analyses the feature map config and returns the name of the label feature (e.g. item_id)
     """
-    timestamp_feature_name = list(
-        [k for k, v in feature_map.items() if v["dtype"] == "timestamp"]
-    )
+    timestamp_feature_name = list([k for k, v in feature_map.items() if v["dtype"] == "timestamp"])
 
     if len(timestamp_feature_name) == 0:
-        raise Exception(
-            'No feature have be configured as timestamp (dtype = "timestamp")'
-        )
+        raise Exception('No feature have be configured as timestamp (dtype = "timestamp")')
     if len(timestamp_feature_name) > 1:
-        raise Exception(
-            'Only one feature can be configured as timestamp (dtype = "timestamp")'
-        )
+        raise Exception('Only one feature can be configured as timestamp (dtype = "timestamp")')
 
     timestamp_fname = timestamp_feature_name[0]
     return timestamp_fname
@@ -103,11 +93,9 @@ def get_parquet_files_names(data_args, time_indices, is_train, eval_on_test_set=
         else:
             data_filename = "valid.parquet"
 
-    parquet_paths = [
-        os.path.join(folder, data_filename) for folder in time_window_folders
-    ]
+    parquet_paths = [os.path.join(folder, data_filename) for folder in time_window_folders]
 
-    ##If paths are folders, list the parquet file within the folders
+    # If paths are folders, list the parquet file within the folders
     # parquet_paths = get_filenames(parquet_paths, files_filter_pattern="*.parquet"
 
     return parquet_paths
@@ -133,7 +121,7 @@ class Timing(object):
             print(message, end="\n" if newline else "", file=self.file)
             try:
                 self.file.flush()
-            except:
+            except Exception:
                 pass
         else:
             self.logger.info(message)

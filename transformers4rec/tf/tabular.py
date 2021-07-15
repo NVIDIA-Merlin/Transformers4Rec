@@ -2,16 +2,16 @@ from typing import Optional
 
 import tensorflow as tf
 
-from . import aggregator as agg
-from ..types import ColumnGroup
-from .typing import TabularData
 from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
+
+from ..types import ColumnGroup
+from . import aggregator as agg
+from .typing import TabularData
 
 
 class FilterFeatures(tf.keras.layers.Layer):
     def __init__(
-            self, columns, trainable=False, name=None, dtype=None, dynamic=False, pop=False,
-            **kwargs
+        self, columns, trainable=False, name=None, dtype=None, dynamic=False, pop=False, **kwargs
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.columns = columns
@@ -38,7 +38,7 @@ class FilterFeatures(tf.keras.layers.Layer):
 
 class AsTabular(tf.keras.layers.Layer):
     def __init__(
-            self, output_name, trainable=False, name=None, dtype=None, dynamic=False, **kwargs
+        self, output_name, trainable=False, name=None, dtype=None, dynamic=False, **kwargs
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.output_name = output_name
@@ -54,7 +54,7 @@ class AsTabular(tf.keras.layers.Layer):
 
 class TabularLayer(tf.keras.layers.Layer):
     def __init__(
-            self, aggregation=None, trainable=True, name=None, dtype=None, dynamic=False, **kwargs
+        self, aggregation=None, trainable=True, name=None, dtype=None, dynamic=False, **kwargs
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.aggregation = None
@@ -65,17 +65,17 @@ class TabularLayer(tf.keras.layers.Layer):
         return super().call(inputs, *args, **kwargs)
 
     def __call__(
-            self,
-            inputs,
-            pre=None,
-            post=None,
-            merge_with=None,
-            stack_outputs=False,
-            concat_outputs=False,
-            aggregation=None,
-            filter_columns=None,
-            training=False,
-            **kwargs
+        self,
+        inputs,
+        pre=None,
+        post=None,
+        merge_with=None,
+        stack_outputs=False,
+        concat_outputs=False,
+        aggregation=None,
+        filter_columns=None,
+        training=False,
+        **kwargs
     ):
         post_op = getattr(self, "aggregation", None)
         if concat_outputs:
@@ -134,7 +134,7 @@ class TabularLayer(tf.keras.layers.Layer):
 
     @classmethod
     def from_column_group(
-            cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
+        cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
     ) -> Optional["TabularLayer"]:
         if tags:
             column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
@@ -156,14 +156,14 @@ class TabularLayer(tf.keras.layers.Layer):
 
 class MergeTabular(TabularLayer):
     def __init__(
-            self,
-            *to_merge,
-            aggregation=None,
-            trainable=True,
-            name=None,
-            dtype=None,
-            dynamic=False,
-            **kwargs
+        self,
+        *to_merge,
+        aggregation=None,
+        trainable=True,
+        name=None,
+        dtype=None,
+        dynamic=False,
+        **kwargs
     ):
         self.to_merge = list(to_merge)
         super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
@@ -230,14 +230,14 @@ class AsDenseFeatures(TabularLayer):
 
 class ParseTokenizedText(TabularLayer):
     def __init__(
-            self,
-            max_text_length=None,
-            aggregation=None,
-            trainable=True,
-            name=None,
-            dtype=None,
-            dynamic=False,
-            **kwargs
+        self,
+        max_text_length=None,
+        aggregation=None,
+        trainable=True,
+        name=None,
+        dtype=None,
+        dynamic=False,
+        **kwargs
     ):
         super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
         self.max_text_length = max_text_length

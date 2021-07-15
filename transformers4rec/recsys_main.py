@@ -24,6 +24,8 @@ import yaml
 from transformers import HfArgumentParser, set_seed
 from transformers.trainer_utils import is_main_process
 
+from transformers4rec.utils.misc_utils import get_label_feature_name, get_parquet_files_names
+
 from .recsys_args import DataArguments, ModelArguments, TrainingArguments
 from .recsys_data import fetch_data_loader, get_items_sorted_freq
 from .recsys_meta_model import RecSysMetaModel
@@ -38,10 +40,6 @@ from .recsys_outputs import (
     set_log_predictions_callback,
 )
 from .recsys_trainer import DatasetType, RecSysTrainer
-from transformers4rec.utils.misc_utils import (
-    get_label_feature_name,
-    get_parquet_files_names,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +58,11 @@ def main():
             json_file=os.path.abspath(sys.argv[1])
         )
     else:
-        (data_args, model_args, training_args,) = parser.parse_args_into_dataclasses()
+        (
+            data_args,
+            model_args,
+            training_args,
+        ) = parser.parse_args_into_dataclasses()
 
     # Ensuring to set W&B run name to null, so that a nice run name is generated
     training_args.run_name = None
@@ -81,9 +83,7 @@ def main():
     set_seed(training_args.seed)
 
     # Instantiates the model defined in --model_type
-    seq_model, config = get_recsys_model(
-        model_args, data_args, training_args, target_size
-    )
+    seq_model, config = get_recsys_model(model_args, data_args, training_args, target_size)
     # Instantiate the RecSys Meta Model
     rec_model = RecSysMetaModel(seq_model, config, model_args, data_args, feature_map)
 
@@ -92,7 +92,10 @@ def main():
 
     # Instantiate the RecSysTrainer, which manages training and evaluation
     trainer = RecSysTrainer(
-        model=rec_model, args=training_args, model_args=model_args, data_args=data_args,
+        model=rec_model,
+        args=training_args,
+        model_args=model_args,
+        data_args=data_args,
     )
 
     log_parameters(trainer, data_args, model_args, training_args)
@@ -101,9 +104,7 @@ def main():
 
     results_over_time = {}
 
-    for time_index in range(
-        data_args.start_time_window_index, data_args.final_time_window_index
-    ):
+    for time_index in range(data_args.start_time_window_index, data_args.final_time_window_index):
         if data_args.no_incremental_training:
             if data_args.training_time_window_size > 0:
                 time_index_eval = time_index + 1
@@ -123,18 +124,13 @@ def main():
             time_indices_train = [time_index]
             time_index_eval = time_index + 1
 
-        if (
-            model_args.negative_sampling
-            and model_args.neg_sampling_extra_samples_per_batch > 0
-        ):
+        if model_args.negative_sampling and model_args.neg_sampling_extra_samples_per_batch > 0:
             items_sorted_freq_series = get_items_sorted_freq(
                 train_data_paths, item_id_feature_name=label_name
             )
             trainer.model.set_items_freq_for_sampling(items_sorted_freq_series)
 
-        train_data_paths = get_parquet_files_names(
-            data_args, time_indices_train, is_train=True
-        )
+        train_data_paths = get_parquet_files_names(data_args, time_indices_train, is_train=True)
         eval_data_paths = get_parquet_files_names(
             data_args,
             [time_index_eval],
@@ -184,9 +180,7 @@ def main():
                 feature_map,
             )
 
-            logger.info(
-                f"Evaluating on train set (time index:{time_indices_train})...."
-            )
+            logger.info(f"Evaluating on train set (time index:{time_indices_train})....")
             trainer.set_train_dataloader(train_loader)
             # Defining temporarily the the train data loader for evaluation
             trainer.set_eval_dataloader(train_loader)
@@ -224,9 +218,7 @@ def main():
         logger.info("Saving model...")
         trainer.save_model()
         # Need to save the state, since Trainer.save_model saves only the tokenizer with the model
-        trainer.state.save_to_json(
-            os.path.join(training_args.output_dir, "trainer_state.json")
-        )
+        trainer.state.save_to_json(os.path.join(training_args.output_dir, "trainer_state.json"))
 
         if training_args.do_eval:
             logger.info("Computing and loging AOT metrics")
@@ -245,14 +237,20 @@ def main():
             log_aot_metric_results(training_args.output_dir, results_avg_time)
 
 
-def get_dataloaders(
-    data_args, training_args, train_data_paths, eval_data_paths, feature_map
-):
+def get_dataloaders(data_args, training_args, train_data_paths, eval_data_paths, feature_map):
     train_loader = fetch_data_loader(
-        data_args, training_args, feature_map, train_data_paths, is_train_set=True,
+        data_args,
+        training_args,
+        feature_map,
+        train_data_paths,
+        is_train_set=True,
     )
     eval_loader = fetch_data_loader(
-        data_args, training_args, feature_map, eval_data_paths, is_train_set=False,
+        data_args,
+        training_args,
+        feature_map,
+        eval_data_paths,
+        is_train_set=False,
     )
 
     return train_loader, eval_loader
@@ -297,4 +295,3 @@ def config_logging(training_args):
 
 if __name__ == "__main__":
     main()
-
