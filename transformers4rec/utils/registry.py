@@ -87,6 +87,20 @@ class Registry(object):
         self._on_set = on_set
         self._value_transformer = value_transformer
 
+    @classmethod
+    def class_registry(cls,
+                       registry_name,
+                       default_key_fn=default_name,
+                       validator=None,
+                       on_set=None):
+        return cls(
+            registry_name=registry_name,
+            default_key_fn=default_key_fn,
+            validator=validator,
+            on_set=on_set,
+            value_transformer=(lambda k, v: v())
+        )
+
     def default_key(self, value):
         """Default key used when key not provided. Uses function from __init__."""
         return self._default_key_fn(value)
@@ -206,6 +220,12 @@ class Registry(object):
 
     def get(self, key, default=None):
         return self[key] if key in self else default
+
+    def parse(self, class_or_str):
+        if isinstance(class_or_str, str):
+            return self[class_or_str]
+
+        return class_or_str
 
 
 def display_list_by_prefix(names_list, starting_spaces=0):

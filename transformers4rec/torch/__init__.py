@@ -19,13 +19,12 @@ from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.tabular import TabularFeatures
-from .head import Head, Task
+from .head import Head, PredictionTask
+from .aggregator import ConcatFeatures, StackFeatures
 from .tabular import (
     AsTabular,
-    ConcatFeatures,
     FilterFeatures,
     MergeTabular,
-    StackFeatures,
     TabularModule,
 )
 
@@ -40,7 +39,7 @@ __all__ = [
     "TableConfig",
     "TabularFeatures",
     "Head",
-    "Task",
+    "PredictionTask",
     "AsTabular",
     "ConcatFeatures",
     "FilterFeatures",

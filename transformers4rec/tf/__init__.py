@@ -19,36 +19,35 @@ from tensorflow.python.keras.metrics import Metric
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.training.tracking.data_structures import ListWrapper, _DictWrapper
 
-from . import repr as _repr
-from .blocks.base import Block, SequentialBlock, right_shift_layer
-from .blocks.dlrm import DLRMBlock
-from .blocks.mlp import MLPBlock
-from .blocks.with_head import BlockWithHead
+from .utils import repr_utils
+from .block.base import Block, SequentialBlock, right_shift_layer
+from .block.dlrm import DLRMBlock
+from .block.mlp import MLPBlock
+from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
-from .heads import Head
+from .head import Head
 from .tabular import (
     AsDenseFeatures,
     AsSparseFeatures,
     AsTabular,
-    ConcatFeatures,
     FilterFeatures,
     MergeTabular,
-    StackFeatures,
     TabularLayer,
 )
+from .aggregator import ConcatFeatures, StackFeatures, aggregators
 
-ListWrapper.__repr__ = _repr.list_wrapper_repr
-_DictWrapper.__repr__ = _repr.dict_wrapper_repr
+ListWrapper.__repr__ = repr_utils.list_wrapper_repr
+_DictWrapper.__repr__ = repr_utils.dict_wrapper_repr
 
-Dense.repr_extra = _repr.dense_extra_repr
+Dense.repr_extra = repr_utils.dense_extra_repr
 Layer.__rrshift__ = right_shift_layer
-Layer.__repr__ = _repr.layer_repr
-Loss.__repr__ = _repr.layer_repr_no_children
-Metric.__repr__ = _repr.layer_repr_no_children
-OptimizerV2.__repr__ = _repr.layer_repr_no_children
+Layer.__repr__ = repr_utils.layer_repr
+Loss.__repr__ = repr_utils.layer_repr_no_children
+Metric.__repr__ = repr_utils.layer_repr_no_children
+OptimizerV2.__repr__ = repr_utils.layer_repr_no_children
 
 __all__ = [
     "Block",
