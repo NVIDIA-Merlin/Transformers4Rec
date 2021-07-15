@@ -27,12 +27,10 @@ import os
 import random
 import sys
 from collections import defaultdict
-from copy import deepcopy
 from dataclasses import asdict
 
 import numpy as np
 import pandas as pd
-import wandb
 import yaml
 from joblib import Parallel, delayed
 from pandas.api.types import is_datetime64_any_dtype as is_datetime
@@ -42,9 +40,8 @@ from transformers import HfArgumentParser
 from ..evaluation.recsys_metrics import EvalMetrics
 from ..recsys_args import DataArguments, ModelArguments, TrainingArguments
 from ..recsys_data import fetch_data_loader
-from ..recsys_utils import (
+from transformers4rec.utils.misc_utils import (
     get_label_feature_name,
-    get_object_size,
     get_parquet_files_names,
     get_timestamp_feature_name,
     safe_json,

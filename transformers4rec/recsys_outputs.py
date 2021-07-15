@@ -26,7 +26,7 @@ import wandb
 from dllogger import JSONStreamBackend, StdOutBackend, Verbosity
 from transformers.integrations import WandbCallback
 
-from .recsys_utils import safe_json
+from transformers4rec.utils.misc_utils import safe_json
 
 try:
     import cPickle as pickle
