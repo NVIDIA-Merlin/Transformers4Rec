@@ -7,7 +7,7 @@ import torchmetrics as tm
 from ..types import ColumnGroup
 
 
-class Task(torch.nn.Module):
+class PredictionTask(torch.nn.Module):
     def __init__(
         self,
         loss,
@@ -161,7 +161,7 @@ class Head(torch.nn.Module):
         return to_return
 
     def add_task(
-        self, target_name, task: Task, pre: Optional[torch.nn.Module] = None, task_weight=1
+        self, target_name, task: PredictionTask, pre: Optional[torch.nn.Module] = None, task_weight=1
     ):
         self.tasks[target_name] = task
         if pre:
@@ -172,7 +172,7 @@ class Head(torch.nn.Module):
         return self
 
     def add_binary_classification_task(self, target_name, add_logit_layer=True, task_weight=1):
-        self.tasks[target_name] = Task.binary_classification()
+        self.tasks[target_name] = PredictionTask.binary_classification()
 
         if add_logit_layer:
             self.tasks[target_name].pre = torch.nn.Sequential(
@@ -187,7 +187,7 @@ class Head(torch.nn.Module):
         return self
 
     def add_regression_task(self, target_name, add_logit_layer=True, task_weight=1):
-        self.tasks[target_name] = Task.regression()
+        self.tasks[target_name] = PredictionTask.regression()
 
         if add_logit_layer:
             self.tasks[target_name].pre = torch.nn.Sequential(

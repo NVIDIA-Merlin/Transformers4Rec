@@ -4,7 +4,7 @@ from typing import Union
 import tensorflow as tf
 
 from .. import tabular
-from ..heads import Head
+from ..head import Head
 
 
 class BlockMixin:

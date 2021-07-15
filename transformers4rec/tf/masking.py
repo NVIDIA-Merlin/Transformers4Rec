@@ -1,16 +1,15 @@
 from dataclasses import dataclass
 
-import torch
-from torch import nn
+import tensorflow as tf
 
 from ..utils.masking import MaskSequence as _MaskSequence
 from ..utils.registry import Registry
 
-masking_tasks = Registry("torch.masking")
+masking_tasks = Registry("tf.masking")
 
 
 @dataclass
-class MaskedSequence:
+class MaskOutput:
     """
     Class to store the masked inputs, labels and boolean masking scheme
     resulting from the related LM task.
@@ -23,18 +22,19 @@ class MaskedSequence:
         plm_target_mapping: boolean mapping needed by XLNET-PLM
         plm_perm_mask:  boolean mapping needed by XLNET-PLM
     """
-    masked_input: torch.tensor
-    masked_label: torch.tensor
-    mask_schema: torch.tensor
-    plm_target_mapping: torch.tensor = None
-    plm_perm_mask: torch.tensor = None
+    masked_input: tf.Tensor
+    masked_label: tf.Tensor
+    mask_schema: tf.Tensor
+    plm_target_mapping: tf.Tensor = None
+    plm_perm_mask: tf.Tensor = None
 
 
-class MaskSequence(_MaskSequence, nn.Module):
-    def __init__(self, hidden_size: int, pad_token: int = 0):
+class MaskSequence(_MaskSequence, tf.keras.layers.Layer):
+    def __init__(self, hidden_size: int, pad_token: int = 0, **kwargs):
         super().__init__(hidden_size, pad_token)
+        tf.keras.layers.Layer.__init__(**kwargs)
 
-    def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
+    def call(self, pos_emb, itemid_seq, training, **kwargs) -> MaskOutput:
         raise NotImplementedError()
 
 

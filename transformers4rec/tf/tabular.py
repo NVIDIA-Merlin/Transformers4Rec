@@ -1,14 +1,11 @@
-from typing import List, Optional, Dict
+from typing import Optional
 
 import tensorflow as tf
 
+from . import aggregator as agg
 from ..types import ColumnGroup
-
-TabularData = Dict[str, tf.Tensor]
-
-
-def calculate_batch_size_from_input_shapes(input_shapes):
-    return [i for i in input_shapes.values() if not isinstance(i, tuple)][0][0]
+from .typing import TabularData
+from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
 
 
 class FilterFeatures(tf.keras.layers.Layer):
@@ -39,85 +36,6 @@ class FilterFeatures(tf.keras.layers.Layer):
         }
 
 
-_Aggregators: Dict[str, "FeatureAggregator"] = {}
-
-
-def register_aggregator(name):
-    def decorator(cls):
-        _Aggregators[name] = cls
-
-        return cls
-
-    return decorator
-
-
-class FeatureAggregator(tf.keras.layers.Layer):
-    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        return super(FeatureAggregator, self).call(inputs, **kwargs)
-
-    @classmethod
-    def parse(cls, aggregation) -> Optional["FeatureAggregator"]:
-        if isinstance(aggregation, FeatureAggregator):
-            return aggregation
-        elif isinstance(aggregation, str):
-            return _Aggregators[aggregation]()
-
-        return None
-
-
-@register_aggregator("concat")
-class ConcatFeatures(FeatureAggregator):
-    def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
-        super().__init__(trainable, name, dtype, dynamic, **kwargs)
-        self.axis = axis
-        self.flatten = tf.keras.layers.Flatten()
-
-    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        return tf.concat(
-            tf.nest.flatten(tf.nest.map_structure(self.flatten, inputs)), axis=self.axis
-        )
-
-    def compute_output_shape(self, input_shapes):
-        batch_size = calculate_batch_size_from_input_shapes(input_shapes)
-
-        return batch_size, sum([i[1] for i in input_shapes.values()])
-
-    def repr_ignore(self) -> List[str]:
-        return ["flatten"]
-
-    def get_config(self):
-        return {
-            "axis": self.axis,
-        }
-
-
-@register_aggregator("stack")
-class StackFeatures(FeatureAggregator):
-    def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
-        super().__init__(trainable, name, dtype, dynamic, **kwargs)
-        self.axis = axis
-        self.flatten = tf.keras.layers.Flatten()
-
-    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        return tf.stack(
-            tf.nest.flatten(tf.nest.map_structure(self.flatten, inputs)), axis=self.axis
-        )
-
-    def compute_output_shape(self, input_shapes):
-        batch_size = calculate_batch_size_from_input_shapes(input_shapes)
-        last_dim = [i for i in input_shapes.values()][0][-1]
-
-        return batch_size, len(input_shapes), last_dim
-
-    def repr_ignore(self) -> List[str]:
-        return ["flatten"]
-
-    def get_config(self):
-        return {
-            "axis": self.axis,
-        }
-
-
 class AsTabular(tf.keras.layers.Layer):
     def __init__(
             self, output_name, trainable=False, name=None, dtype=None, dynamic=False, **kwargs
@@ -139,7 +57,9 @@ class TabularLayer(tf.keras.layers.Layer):
             self, aggregation=None, trainable=True, name=None, dtype=None, dynamic=False, **kwargs
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
-        self.aggregation = FeatureAggregator.parse(aggregation)
+        self.aggregation = None
+        if aggregation:
+            self.aggregation = agg.aggregators.parse(aggregation)
 
     def call(self, inputs: TabularData, *args, **kwargs) -> TabularData:
         return super().call(inputs, *args, **kwargs)
@@ -159,11 +79,11 @@ class TabularLayer(tf.keras.layers.Layer):
     ):
         post_op = getattr(self, "aggregation", None)
         if concat_outputs:
-            post_op = ConcatFeatures()
+            post_op = agg.ConcatFeatures()
         if stack_outputs:
-            post_op = StackFeatures()
+            post_op = agg.StackFeatures()
         if aggregation:
-            post_op = FeatureAggregator.parse(aggregation)
+            post_op = agg.aggregators.parse(aggregation)
         if filter_columns:
             pre = FilterFeatures(filter_columns)
         if pre:
@@ -208,7 +128,8 @@ class TabularLayer(tf.keras.layers.Layer):
     def repr_add(self):
         return []
 
-    def calculate_batch_size_from_input_shapes(self, input_shapes):
+    @staticmethod
+    def calculate_batch_size_from_input_shapes(input_shapes):
         return calculate_batch_size_from_input_shapes(input_shapes)
 
     @classmethod
@@ -228,7 +149,7 @@ class TabularLayer(tf.keras.layers.Layer):
         return features >> cls(**kwargs)
 
     def __rrshift__(self, other):
-        from merlin_models.tf.blocks.base import right_shift_layer
+        from .block.base import right_shift_layer
 
         return right_shift_layer(self, other)
 
