@@ -109,7 +109,8 @@ class CausalLanguageModeling(MaskSequence):
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
-            mask_labels = label_seq_trg != self.pad_token
+            # TODO @srabhi: Fix this line, `label_seq_trg` doesn't exist here.
+            # mask_labels = label_seq_trg != self.pad_token
 
         pos_emb_inp = pos_emb[:, :-1]
         # As after shifting the sequence length will be subtracted by one, adding a masked item in

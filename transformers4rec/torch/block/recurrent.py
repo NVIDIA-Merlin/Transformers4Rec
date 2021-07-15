@@ -5,7 +5,7 @@ from torch import nn
 from transformers import PreTrainedModel
 
 from ..transformer import T4RecConfig
-from ..typing import MaskedOutput, MaskSequence, ProcessedSequence
+from ..typing import MaskedSequence, MaskSequence, ProcessedSequence
 from .base import BuildableBlock, SequentialBlock
 
 RecurrentBody = Union[str, PreTrainedModel, T4RecConfig, nn.Module]
@@ -30,12 +30,14 @@ class _RecurrentBlock(SequentialBlock):
     def parse_inputs(self, inputs):
         if isinstance(inputs, ProcessedSequence):
             parsed = inputs.values
-        elif isinstance(inputs, MaskedOutput):
+        elif isinstance(inputs, MaskedSequence):
             parsed = inputs.masked_input
         elif isinstance(inputs, torch.Tensor):
             parsed = inputs
         else:
             raise ValueError("Unrecognized inputs")
+
+        return parsed
 
     def forward(self, inputs):
         pass

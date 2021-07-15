@@ -1,4 +1,3 @@
-import pprint
 import re
 
 # Camel case to snake case utils
@@ -27,7 +26,8 @@ def default_name(class_or_fn):
     return camelcase_to_snakecase(class_or_fn.__name__)
 
 
-default_object_name = lambda obj: default_name(type(obj))
+def default_object_name(obj):
+    return default_name(type(obj))
 
 
 class Registry(object):

@@ -17,12 +17,9 @@ import glob
 import itertools
 import logging
 import os
-import subprocess
 import sys
 import time
-from typing import Any, Dict, NamedTuple
-
-import torch
+from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +95,7 @@ def get_parquet_files_names(data_args, time_indices, is_train, eval_on_test_set=
 
     parquet_paths = [os.path.join(folder, data_filename) for folder in time_window_folders]
 
-    ##If paths are folders, list the parquet file within the folders
+    # If paths are folders, list the parquet file within the folders
     # parquet_paths = get_filenames(parquet_paths, files_filter_pattern="*.parquet"
 
     return parquet_paths
@@ -124,7 +121,7 @@ class Timing(object):
             print(message, end="\n" if newline else "", file=self.file)
             try:
                 self.file.flush()
-            except:
+            except Exception:
                 pass
         else:
             self.logger.info(message)
