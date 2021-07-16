@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from transformers import PreTrainedModel
 
-from ..transformer import T4RecConfig
+from ...config.transformer import T4RecConfig
 from ..typing import MaskedSequence, MaskSequence, ProcessedSequence
 from .base import BuildableBlock, SequentialBlock
 
@@ -17,7 +17,7 @@ class RecurrentBlock(BuildableBlock):
     ) -> None:
         super().__init__()
         if isinstance(body, T4RecConfig):
-            body = body.to_model()
+            body = body.to_torch_model()
 
         self.masking = masking
         self.body = body
