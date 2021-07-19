@@ -11,6 +11,7 @@ NUM_EXAMPLES = 8
 PAD_TOKEN = 0
 VOCAB_SIZE = 100
 
+
 # Test output shapes
 @pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
 def test_task_output_shape(task):
@@ -22,6 +23,7 @@ def test_task_output_shape(task):
     assert out.masked_label.shape[0] == NUM_EXAMPLES
     assert out.masked_label.shape[1] == MAX_LEN
     assert out.masked_input.size(2) == hidden_dim
+
 
 # Test only last item is masked when evaluating
 @pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
@@ -42,6 +44,7 @@ def test_mlm_eval(task):
     out_last = out.masked_label[trgt_pad].flatten().numpy()
     assert all(last_labels == out_last)
 
+
 # Test at least one item is masked when training
 @pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
 def test_at_least_one_masked_item_mlm(task):
@@ -52,6 +55,7 @@ def test_at_least_one_masked_item_mlm(task):
     out = lm(input_tensor, labels, training=True)
     trgt_mask = out.masked_label != PAD_TOKEN
     assert all(trgt_mask.sum(axis=1).numpy() > 0)
+
 
 # Check that not all items are masked when training
 @pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
