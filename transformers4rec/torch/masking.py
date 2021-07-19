@@ -47,8 +47,19 @@ class MaskedSequence:
 
 
 class MaskSequence(_MaskSequence, nn.Module):
-    def __init__(self, hidden_size: int, pad_token: int = 0):
-        super().__init__(hidden_size, pad_token)
+    """
+    Base class to define masked inputs for LM tasks 
+    
+    Parameters
+    ----------
+        hidden_size: The hidden dimension of input tensors,
+                    needed to initialize trainable vector of 
+                    masked positions.
+        pad_token: Index of the padding token used for getting
+                  batch of sequences with the same length 
+    """
+    def __init__(self, hidden_size: int, device: str = 'cpu', pad_token: int = 0):
+        super().__init__(hidden_size, device, pad_token)
         nn.Module.__init__(self)
 
     def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
@@ -109,8 +120,7 @@ class CausalLanguageModeling(MaskSequence):
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
-            # TODO @srabhi: Fix this line, `label_seq_trg` doesn't exist here.
-            # mask_labels = label_seq_trg != self.pad_token
+            mask_labels = label_seq_trg_eval != self.pad_token
 
         pos_emb_inp = pos_emb[:, :-1]
         # As after shifting the sequence length will be subtracted by one, adding a masked item in
@@ -240,7 +250,7 @@ class MaskedLanguageModeling(MaskSequence):
         return labels, masked_labels
 
 
-@masking_tasks.register_with_multiple_names("mlm", "permutation")
+@masking_tasks.register_with_multiple_names("plm", "permutation")
 class PermutationLanguageModeling(MaskSequence):
     def __init__(
         self,
@@ -428,7 +438,7 @@ class PermutationLanguageModeling(MaskSequence):
         return labels, masked_labels, target_mapping, perm_mask
 
 
-@masking_tasks.register_with_multiple_names("mlm", "replacement")
+@masking_tasks.register_with_multiple_names("rtd", "replacement")
 class ReplacementLanguageModeling(MaskSequence):
     def __init__(
         self,
