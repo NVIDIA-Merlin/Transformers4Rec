@@ -1,7 +1,7 @@
-import pytest
 import numpy as np
-from transformers4rec.torch.masking import masking_tasks
-from transformers4rec.torch.masking import PermutationLanguageModeling
+import pytest
+
+from transformers4rec.torch.masking import PermutationLanguageModeling, masking_tasks
 
 torch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
