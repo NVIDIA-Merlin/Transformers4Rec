@@ -48,17 +48,18 @@ class MaskedSequence:
 
 class MaskSequence(_MaskSequence, nn.Module):
     """
-    Base class to define masked inputs for LM tasks 
-    
+    Base class to define masked inputs for LM tasks
+
     Parameters
     ----------
         hidden_size: The hidden dimension of input tensors,
-                    needed to initialize trainable vector of 
+                    needed to initialize trainable vector of
                     masked positions.
         pad_token: Index of the padding token used for getting
-                  batch of sequences with the same length 
+                  batch of sequences with the same length
     """
-    def __init__(self, hidden_size: int, device: str = 'cpu', pad_token: int = 0):
+
+    def __init__(self, hidden_size: int, device: str = "cpu", pad_token: int = 0):
         super().__init__(hidden_size, device, pad_token)
         nn.Module.__init__(self)
 
@@ -261,7 +262,7 @@ class PermutationLanguageModeling(MaskSequence):
         **kwargs
     ):
         """
-        Masked Language Modeling class - Prepare labels for masked item prediction
+        Masked Language Modeling class - Prepare labels for permuted item prediction
 
         Parameters:
             train_on_last_item_seq_only: predict last item only during training
@@ -439,7 +440,7 @@ class PermutationLanguageModeling(MaskSequence):
 
 
 @masking_tasks.register_with_multiple_names("rtd", "replacement")
-class ReplacementLanguageModeling(MaskSequence):
+class ReplacementLanguageModeling(MaskedLanguageModeling):
     def __init__(
         self,
         hidden_size,
@@ -450,6 +451,7 @@ class ReplacementLanguageModeling(MaskSequence):
     ):
         """
         Masked Language Modeling class - Prepare labels for masked item prediction
+        and token replacement detection
 
         Parameters:
             train_on_last_item_seq_only: predict last item only during training

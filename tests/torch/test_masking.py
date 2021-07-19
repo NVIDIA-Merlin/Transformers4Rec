@@ -2,10 +2,7 @@ import pytest
 import torch
 import numpy as np 
 from transformers4rec.torch.masking import masking_tasks
-from transformers4rec.torch.masking import MaskedLanguageModeling
 from transformers4rec.torch.masking import PermutationLanguageModeling
-from transformers4rec.torch.masking import ReplacementLanguageModeling
-from transformers4rec.torch.masking import CausalLanguageModeling
 
 
 
