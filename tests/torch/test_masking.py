@@ -13,7 +13,7 @@ VOCAB_SIZE = 100
 
 
 # Test output shapes
-@pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
+@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
 def test_task_output_shape(task):
     hidden_dim = 16
     input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
@@ -26,7 +26,7 @@ def test_task_output_shape(task):
 
 
 # Test only last item is masked when evaluating
-@pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
+@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
 def test_mlm_eval(task):
     hidden_dim = 16
     input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
@@ -46,7 +46,7 @@ def test_mlm_eval(task):
 
 
 # Test at least one item is masked when training
-@pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
+@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
 def test_at_least_one_masked_item_mlm(task):
     hidden_dim = 16
     input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
@@ -58,7 +58,7 @@ def test_at_least_one_masked_item_mlm(task):
 
 
 # Check that not all items are masked when training
-@pytest.mark.parametrize("task", ['masked', 'causal', 'permutation', 'replacement'])
+@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
 def test_not_all_masked_mlm(task):
     hidden_dim = 16
     input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
