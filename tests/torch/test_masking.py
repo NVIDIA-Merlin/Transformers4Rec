@@ -11,7 +11,7 @@ torch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 # fixed parameters for tests
-MAX_LEN = 10
+MAX_LEN = 5
 NUM_EXAMPLES = 8
 PAD_TOKEN = 0
 VOCAB_SIZE = 100
@@ -53,6 +53,22 @@ def test_mlm_eval(task):
     assert all(last_labels == out_last)
 
 
+# Test only last item is masked when training clm on last item
+def test_clm_training_on_last_item():
+    lm = masking_tasks["causal"](hidden_dim, pad_token=PAD_TOKEN, train_on_last_item_seq_only=True)
+    out = lm(input_tensor, labels, training=True)
+    assert out.mask_schema.sum() == NUM_EXAMPLES
+    # get non padded last items
+    non_padded_mask = labels != PAD_TOKEN
+    rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=labels.device)
+    last_item_sessions = non_padded_mask.sum(axis=1) - 1
+    last_labels = labels[rows_ids, last_item_sessions].flatten().numpy()
+    # last labels from output
+    trgt_pad = out.masked_label != PAD_TOKEN
+    out_last = out.masked_label[trgt_pad].flatten().numpy()
+    assert all(last_labels == out_last)
+
+
 # Test at least one item is masked when training
 @pytest.mark.parametrize("task", masking_taks)
 def test_at_least_one_masked_item_mlm(task):
@@ -70,6 +86,15 @@ def test_not_all_masked_mlm(task):
     trgt_mask = out.masked_label != PAD_TOKEN
     non_padded_mask = labels != PAD_TOKEN
     assert all(trgt_mask.sum(axis=1).numpy() != non_padded_mask.sum(axis=1).numpy())
+
+
+# Check number of masked positions equal to number of targets
+@pytest.mark.parametrize("task", ["masked", "causal", "replacement"])
+def test_task_masked_cardinality(task):
+    lm = masking_tasks[task](hidden_dim, pad_token=PAD_TOKEN)
+    out = lm(input_tensor, labels, training=True)
+    trgt_pad = out.masked_label != PAD_TOKEN
+    assert out.mask_schema.sum() == trgt_pad.sum()
 
 
 # Check target mapping are not None when PLM
