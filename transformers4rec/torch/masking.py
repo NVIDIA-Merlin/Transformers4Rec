@@ -390,6 +390,20 @@ class PermutationLanguageModeling(MaskSequence):
                 masked_labels, itemid_seq, torch.full_like(itemid_seq, self.pad_token)
             )
 
+            # If a sequence has only masked labels, unmasks one of the labels
+            sequences_with_only_labels = masked_labels.sum(axis=1) == non_padded_mask.sum(axis=1)
+            sampled_labels_to_unmask = torch.multinomial(
+                masked_labels.float(), num_samples=1
+            ).squeeze()
+
+            labels_to_unmask = torch.masked_select(
+                sampled_labels_to_unmask, sequences_with_only_labels
+            )
+            rows_to_unmask = torch.masked_select(rows_ids, sequences_with_only_labels)
+
+            labels[rows_to_unmask, labels_to_unmask] = self.pad_token
+            masked_labels = labels != self.pad_token
+
             for i in range(labels.size(0)):
                 # Generate permutation indices i.e.
                 #  sample a random factorisation order for the sequence.

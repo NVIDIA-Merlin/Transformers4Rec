@@ -11,7 +11,7 @@ torch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 # fixed parameters for tests
-MAX_LEN = 5
+MAX_LEN = 10
 NUM_EXAMPLES = 8
 PAD_TOKEN = 0
 VOCAB_SIZE = 100
