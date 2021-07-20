@@ -1,23 +1,34 @@
 import numpy as np
 import pytest
 
-from transformers4rec.torch.masking import PermutationLanguageModeling, masking_tasks
+from transformers4rec.torch.masking import (
+    PermutationLanguageModeling,
+    ReplacementLanguageModeling,
+    masking_tasks,
+)
 
 torch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
-MAX_LEN = 5
+# fixed parameters for tests
+MAX_LEN = 10
 NUM_EXAMPLES = 8
 PAD_TOKEN = 0
 VOCAB_SIZE = 100
+hidden_dim = 16
+masking_taks = ["masked", "causal", "permutation", "replacement"]
+
+# generate random tensors for test
+input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
+# create sequences
+labels = torch.tensor(np.random.randint(1, VOCAB_SIZE, (NUM_EXAMPLES, MAX_LEN)))
+# replace last 2 items by zeros to mimic padding
+labels[:, MAX_LEN - 2 :] = 0
 
 
 # Test output shapes
-@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
+@pytest.mark.parametrize("task", masking_taks)
 def test_task_output_shape(task):
-    hidden_dim = 16
-    input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
-    labels = torch.tensor(np.random.randint(0, VOCAB_SIZE, (NUM_EXAMPLES, MAX_LEN)))
     lm = masking_tasks[task](hidden_dim, pad_token=PAD_TOKEN)
     out = lm(input_tensor, labels, training=True)
     assert out.masked_label.shape[0] == NUM_EXAMPLES
@@ -26,11 +37,8 @@ def test_task_output_shape(task):
 
 
 # Test only last item is masked when evaluating
-@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
+@pytest.mark.parametrize("task", masking_taks)
 def test_mlm_eval(task):
-    hidden_dim = 16
-    input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
-    labels = torch.tensor(np.random.randint(0, VOCAB_SIZE, (NUM_EXAMPLES, MAX_LEN)))
     lm = masking_tasks[task](hidden_dim, pad_token=PAD_TOKEN)
     out = lm(input_tensor, labels, training=False)
     assert out.mask_schema.sum() == NUM_EXAMPLES
@@ -46,11 +54,8 @@ def test_mlm_eval(task):
 
 
 # Test at least one item is masked when training
-@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
+@pytest.mark.parametrize("task", masking_taks)
 def test_at_least_one_masked_item_mlm(task):
-    hidden_dim = 16
-    input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
-    labels = torch.tensor(np.random.randint(0, VOCAB_SIZE, (NUM_EXAMPLES, MAX_LEN)))
     lm = masking_tasks[task](hidden_dim, pad_token=PAD_TOKEN)
     out = lm(input_tensor, labels, training=True)
     trgt_mask = out.masked_label != PAD_TOKEN
@@ -58,11 +63,8 @@ def test_at_least_one_masked_item_mlm(task):
 
 
 # Check that not all items are masked when training
-@pytest.mark.parametrize("task", ["masked", "causal", "permutation", "replacement"])
+@pytest.mark.parametrize("task", masking_taks)
 def test_not_all_masked_mlm(task):
-    hidden_dim = 16
-    input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
-    labels = torch.tensor(np.random.randint(0, VOCAB_SIZE, (NUM_EXAMPLES, MAX_LEN)))
     lm = masking_tasks[task](hidden_dim, pad_token=PAD_TOKEN)
     out = lm(input_tensor, labels, training=True)
     trgt_mask = out.masked_label != PAD_TOKEN
@@ -72,10 +74,51 @@ def test_not_all_masked_mlm(task):
 
 # Check target mapping are not None when PLM
 def test_plm_output_shape():
-    hidden_dim = 16
-    input_tensor = torch.tensor(np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim)))
-    labels = torch.tensor(np.random.randint(0, VOCAB_SIZE, (NUM_EXAMPLES, MAX_LEN)))
     lm = PermutationLanguageModeling(hidden_dim, pad_token=PAD_TOKEN)
     out = lm(input_tensor, labels, training=True)
     assert out.plm_target_mapping is not None
     assert out.plm_perm_mask is not None
+
+
+# Check that only masked items are replaced
+def test_replaced_fake_tokens():
+    lm = ReplacementLanguageModeling(hidden_dim, pad_token=PAD_TOKEN)
+    out = lm(input_tensor, labels, training=True)
+    trg_flat = out.masked_label.flatten()
+    non_pad_mask = trg_flat != PAD_TOKEN
+    # Nb of pos items
+    pos_items = non_pad_mask.sum()
+    # generate random logits
+    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, VOCAB_SIZE)))
+    corrupted_inputs, discriminator_labels, _ = lm.get_fake_tokens(labels, trg_flat, logits)
+    replacement_mask = discriminator_labels != 0
+    assert all(out.mask_schema[replacement_mask] == 1)
+
+
+# check fake replacement are from items of same batch
+def test_replacement_from_batch():
+    lm = ReplacementLanguageModeling(hidden_dim, pad_token=PAD_TOKEN, sample_from_batch=True)
+    out = lm(input_tensor, labels, training=True)
+    trg_flat = out.masked_label.flatten()
+    non_pad_mask = trg_flat != PAD_TOKEN
+    # Nb of pos items
+    pos_items = non_pad_mask.sum()
+    # generate random logits
+    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
+    corrupted_inputs, discriminator_labels, updates = lm.get_fake_tokens(labels, trg_flat, logits)
+    replacement_mask = discriminator_labels != 0
+    assert set(corrupted_inputs[replacement_mask].numpy()).issubset(trg_flat[non_pad_mask].numpy())
+
+
+# check output shape of sample_from_softmax
+def test_sample_from_softmax_output():
+    lm = ReplacementLanguageModeling(hidden_dim, pad_token=PAD_TOKEN, sample_from_batch=True)
+    out = lm(input_tensor, labels, training=True)
+    trg_flat = out.masked_label.flatten()
+    non_pad_mask = trg_flat != PAD_TOKEN
+    # Nb of pos items
+    pos_items = non_pad_mask.sum()
+    # generate random logits
+    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
+    updates = lm.sample_from_softmax(logits)
+    assert updates.size(0) == pos_items

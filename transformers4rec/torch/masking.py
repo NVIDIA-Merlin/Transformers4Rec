@@ -442,12 +442,7 @@ class PermutationLanguageModeling(MaskSequence):
 @masking_tasks.register_with_multiple_names("rtd", "replacement")
 class ReplacementLanguageModeling(MaskedLanguageModeling):
     def __init__(
-        self,
-        hidden_size,
-        mlm_probability: float = 0.15,
-        sample_from_batch: bool = False,
-        plm_permute_all: bool = False,
-        **kwargs
+        self, hidden_size, mlm_probability: float = 0.15, sample_from_batch: bool = False, **kwargs
     ):
         """
         Masked Language Modeling class - Prepare labels for masked item prediction
@@ -488,6 +483,8 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
         ==> Generate fake data by replacing [MASK] positions by random items to train
             ELECTRA discriminator
 
+        #TODO: Generate fake interactions embeddings using metadatainfo in addition to
+            item ids.
         INPUT:
         -----
             itemid_seq: (bs, max_seq_len), input sequence of item ids
