@@ -76,7 +76,7 @@ class TabularLayer(tf.keras.layers.Layer):
         training=False,
         **kwargs
     ):
-        post_op = getattr(self, "aggregation_registry", None)
+        post_op = getattr(self, "aggregation", None)
         if concat_outputs:
             post_op = agg.ConcatFeatures()
         if stack_outputs:
