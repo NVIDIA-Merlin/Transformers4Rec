@@ -2,11 +2,10 @@ from typing import Optional
 
 import tensorflow as tf
 
-from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
-
 from ..types import ColumnGroup
-from . import aggregator as agg
+from . import aggregation as agg
 from .typing import TabularData
+from .utils.tf_utils import calculate_batch_size_from_input_shapes
 
 
 class FilterFeatures(tf.keras.layers.Layer):
@@ -59,7 +58,7 @@ class TabularLayer(tf.keras.layers.Layer):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.aggregation = None
         if aggregation:
-            self.aggregation = agg.aggregators.parse(aggregation)
+            self.aggregation = agg.aggregation.parse(aggregation)
 
     def call(self, inputs: TabularData, *args, **kwargs) -> TabularData:
         return super().call(inputs, *args, **kwargs)
@@ -83,7 +82,7 @@ class TabularLayer(tf.keras.layers.Layer):
         if stack_outputs:
             post_op = agg.StackFeatures()
         if aggregation:
-            post_op = agg.aggregators.parse(aggregation)
+            post_op = agg.aggregation.parse(aggregation)
         if filter_columns:
             pre = FilterFeatures(filter_columns)
         if pre:

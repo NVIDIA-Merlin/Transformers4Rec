@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .aggregator import ConcatFeatures, StackFeatures
+from .aggregation import ConcatFeatures, StackFeatures
 from .block.base import SequentialBlock, right_shift_block
 from .block.mlp import MLPBlock
 from .block.with_head import BlockWithHead
