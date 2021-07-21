@@ -18,7 +18,7 @@ from .block.base import SequentialBlock, right_shift_block
 from .block.mlp import MLPBlock
 from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
-from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
+from .features.embedding import EmbeddingFeatures, FeatureConfig, SoftEmbeddingFeatures, TableConfig
 from .features.tabular import TabularFeatures
 from .head import Head, PredictionTask
 from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
@@ -30,6 +30,7 @@ __all__ = [
     "BlockWithHead",
     "ContinuousFeatures",
     "EmbeddingFeatures",
+    "SoftEmbeddingFeatures",
     "FeatureConfig",
     "TableConfig",
     "TabularFeatures",
