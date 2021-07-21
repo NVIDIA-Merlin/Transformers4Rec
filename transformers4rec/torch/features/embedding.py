@@ -172,6 +172,3 @@ class EmbeddingFeatures(TabularModule):
 class SoftEmbeddingFeatures(EmbeddingFeatures):
     def table_to_embedding_module(self, table: TableConfig) -> SoftEmbedding:
         return SoftEmbedding(table.vocabulary_size, table.dim)
-
-    def forward(self, inputs, **kwargs):
-        return super().forward(inputs, **kwargs)
