@@ -194,7 +194,7 @@ class FeatureProcessConfig(object):
 @dataclass
 class FeatureGroup:
     """
-    Class to store the Tensor resulting from the aggregation of a group of
+    Class to store the Tensor resulting from the aggregation_registry of a group of
     categorical and continuous variables defined in the same featuremap
 
     Parameters
@@ -389,7 +389,7 @@ class FeatureGroupProcess(nn.Module):
                 var.feature_size for var in self.continuous + self.categoricals
             )
 
-        # Init aggregation module
+        # Init aggregation_registry module
         self.aggregate = SequenceAggregator(
             self.feature_config.input_features_aggregation,
             self.itemid_name,

@@ -6,7 +6,7 @@ from ..utils.registry import Registry
 from .typing import TabularData
 from .utils.tf_utils import calculate_batch_size_from_input_shapes
 
-aggregation: Registry = Registry.class_registry("tf.aggregation")
+aggregation_registry: Registry = Registry.class_registry("tf.aggregation_registry")
 
 
 class FeatureAggregation(tf.keras.layers.Layer):
@@ -14,7 +14,7 @@ class FeatureAggregation(tf.keras.layers.Layer):
         return super(FeatureAggregation, self).call(inputs, **kwargs)
 
 
-@aggregation.register("concat")
+@aggregation_registry.register("concat")
 class ConcatFeatures(FeatureAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
@@ -40,7 +40,7 @@ class ConcatFeatures(FeatureAggregation):
         }
 
 
-@aggregation.register("stack")
+@aggregation_registry.register("stack")
 class StackFeatures(FeatureAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)

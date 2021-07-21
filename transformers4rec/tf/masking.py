@@ -5,7 +5,7 @@ import tensorflow as tf
 from ..utils.masking import MaskSequence as _MaskSequence
 from ..utils.registry import Registry
 
-masking_tasks = Registry("tf.masking")
+masking_registry = Registry("tf.masking")
 
 
 @dataclass
@@ -39,21 +39,21 @@ class MaskSequence(_MaskSequence, tf.keras.layers.Layer):
         raise NotImplementedError()
 
 
-@masking_tasks.register_with_multiple_names("clm", "causal")
+@masking_registry.register_with_multiple_names("clm", "causal")
 class CausalLanguageModeling(MaskSequence):
     pass
 
 
-@masking_tasks.register_with_multiple_names("mlm", "masked")
+@masking_registry.register_with_multiple_names("mlm", "masked")
 class MaskedLanguageModeling(MaskSequence):
     pass
 
 
-@masking_tasks.register_with_multiple_names("mlm", "permutation")
+@masking_registry.register_with_multiple_names("mlm", "permutation")
 class PermutationLanguageModeling(MaskSequence):
     pass
 
 
-@masking_tasks.register_with_multiple_names("mlm", "replacement")
+@masking_registry.register_with_multiple_names("mlm", "replacement")
 class ReplacementLanguageModeling(MaskSequence):
     pass

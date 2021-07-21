@@ -4,7 +4,7 @@ from ..utils.registry import Registry
 from .tabular import TabularModule
 from .typing import TensorOrTabularData
 
-augmentation: Registry = Registry.class_registry("torch.augmentation")
+augmentation_registry: Registry = Registry.class_registry("torch.augmentation_registry")
 
 
 class DataAugmentation(TabularModule):
@@ -21,7 +21,7 @@ class DataAugmentation(TabularModule):
         return input_size
 
 
-@augmentation.register_with_multiple_names("stochastic-swap-noise", "ssn")
+@augmentation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")
 class StochasticSwapNoise(TabularModule):
     """
     Applies Stochastic replacement of sequence features

@@ -40,8 +40,8 @@ class ElementwiseSum(nn.Module):
 
 class SequenceAggregator(nn.Module):
     """
-    Receive a dictionary of sequential tensors and output their aggregation as a 3d tensor.
-    It supports two types of aggregation: concat and elementwise_sum_multiply_item_embedding
+    Receive a dictionary of sequential tensors and output their aggregation_registry as a 3d tensor.
+    It supports two types of aggregation_registry: concat and elementwise_sum_multiply_item_embedding
     """
 
     def __init__(

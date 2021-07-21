@@ -20,13 +20,13 @@ class TabularMixin:
         filter_columns=None,
         **kwargs
     ):
-        post_op = getattr(self, "aggregation", None)
+        post_op = getattr(self, "aggregation_registry", None)
         if concat_outputs:
             post_op = agg.ConcatFeatures()
         if stack_outputs:
             post_op = agg.StackFeatures()
         if aggregation:
-            post_op = agg.aggregation.parse(aggregation)
+            post_op = agg.aggregation_registry.parse(aggregation)
         if filter_columns:
             pre = FilterFeatures(filter_columns)
         if pre:
@@ -80,7 +80,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
         super().__init__()
         self.aggregation = aggregation
         if aggregation:
-            self.aggregation = agg.aggregators.parse(aggregation)
+            self.aggregation = agg.aggregation_registry.parse(aggregation)
         self.input_size = None
 
     @classmethod

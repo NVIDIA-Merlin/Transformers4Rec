@@ -58,7 +58,7 @@ class TabularLayer(tf.keras.layers.Layer):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.aggregation = None
         if aggregation:
-            self.aggregation = agg.aggregation.parse(aggregation)
+            self.aggregation = agg.aggregation_registry.parse(aggregation)
 
     def call(self, inputs: TabularData, *args, **kwargs) -> TabularData:
         return super().call(inputs, *args, **kwargs)
@@ -76,13 +76,13 @@ class TabularLayer(tf.keras.layers.Layer):
         training=False,
         **kwargs
     ):
-        post_op = getattr(self, "aggregation", None)
+        post_op = getattr(self, "aggregation_registry", None)
         if concat_outputs:
             post_op = agg.ConcatFeatures()
         if stack_outputs:
             post_op = agg.StackFeatures()
         if aggregation:
-            post_op = agg.aggregation.parse(aggregation)
+            post_op = agg.aggregation_registry.parse(aggregation)
         if filter_columns:
             pre = FilterFeatures(filter_columns)
         if pre:

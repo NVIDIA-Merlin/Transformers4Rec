@@ -4,7 +4,7 @@ from ..utils.registry import Registry
 from .typing import TabularData
 from .utils.torch_utils import calculate_batch_size_from_input_size
 
-aggregation: Registry = Registry.class_registry("torch.aggregation")
+aggregation_registry: Registry = Registry.class_registry("torch.aggregation_registry")
 
 
 class FeatureAggregation(torch.nn.Module):
@@ -12,7 +12,7 @@ class FeatureAggregation(torch.nn.Module):
         return super(FeatureAggregation, self).forward(inputs)
 
 
-@aggregation.register("concat")
+@aggregation_registry.register("concat")
 class ConcatFeatures(FeatureAggregation):
     def __init__(self, axis=-1):
         super().__init__()
@@ -30,7 +30,7 @@ class ConcatFeatures(FeatureAggregation):
         return batch_size, sum([i[1] for i in input_size.values()])
 
 
-@aggregation.register("stack")
+@aggregation_registry.register("stack")
 class StackFeatures(FeatureAggregation):
     def __init__(self, axis=-1):
         super().__init__()
@@ -50,7 +50,7 @@ class StackFeatures(FeatureAggregation):
         return batch_size, len(input_size), last_dim
 
 
-@aggregation.register("element-wise-sum")
+@aggregation_registry.register("element-wise-sum")
 class ElementwiseSum(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -63,11 +63,12 @@ class ElementwiseSum(torch.nn.Module):
         return torch.stack(tensors, dim=0).sum(dim=0)
 
 
-@aggregation.register("sequential")
+@aggregation_registry.register("sequential")
 class SequenceAggregator(torch.nn.Module):
     """
-    Receive a dictionary of sequential tensors and output their aggregation as a 3d tensor.
-    It supports two types of aggregation: concat and elementwise_sum_multiply_item_embedding
+    Receive a dictionary of sequential tensors and output their aggregation_registry as a 3d tensor.
+    It supports two types of aggregation_registry:
+        concat and elementwise_sum_multiply_item_embedding
     """
 
     def __init__(
