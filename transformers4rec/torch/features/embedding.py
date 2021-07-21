@@ -65,6 +65,15 @@ class SoftEmbedding(torch.nn.Module):
     """
 
     def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
+        """
+
+        Parameters
+        ----------
+        num_embeddings: Number of embeddings to use.
+        embeddings_dim: The dimension of the vector space for projecting the scalar value.
+        embeddings_init_std: The standard deviation factor for normal initialization of the
+            embedding matrix weights.
+        """
         super(SoftEmbedding, self).__init__()
         self.embedding_table = torch.nn.Embedding(num_embeddings, embeddings_dim)
         with torch.no_grad():
