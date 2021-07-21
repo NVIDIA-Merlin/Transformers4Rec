@@ -1,14 +1,16 @@
 import pytest
 
+torch = pytest.importorskip("torch")
+np = pytest.importorskip("numpy")
+
 NUM_EXAMPLES = 1000
+MAX_CARDINALITY = 100
 
 
 @pytest.fixture
 def torch_con_features():
-    torch = pytest.importorskip("torch")
-
     features = {}
-    keys = "abcdef"
+    keys = [f"con_{f}" for f in "abcdef"]
 
     for key in keys:
         features[key] = torch.rand((NUM_EXAMPLES, 1))
@@ -17,9 +19,19 @@ def torch_con_features():
 
 
 @pytest.fixture
+def torch_cat_features():
+
+    features = {}
+    keys = [f"cat_{f}" for f in "abcdef"]
+
+    for key in keys:
+        features[key] = torch.randint(MAX_CARDINALITY, (NUM_EXAMPLES,))
+
+    return features
+
+
+@pytest.fixture
 def torch_masking_inputs():
-    torch = pytest.importorskip("torch")
-    np = pytest.importorskip("numpy")
     # fixed parameters for tests
     MAX_LEN = 10
     NUM_EXAMPLES = 8
@@ -38,4 +50,5 @@ def torch_masking_inputs():
     features["labels"] = labels
     features["pad_token"] = PAD_TOKEN
     features["vocab_size"] = VOCAB_SIZE
+
     return features
