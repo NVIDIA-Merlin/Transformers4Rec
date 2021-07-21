@@ -2,8 +2,7 @@ from typing import Dict, Optional, Text
 
 import torch
 
-from transformers4rec.types import ColumnGroup
-
+from ...types import ColumnGroup
 from ..tabular import FilterFeatures, TabularModule
 
 
@@ -60,6 +59,35 @@ class FeatureConfig(object):
         )
 
 
+class SoftEmbedding(torch.nn.Module):
+    """
+    Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
+    """
+
+    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
+        """
+
+        Parameters
+        ----------
+        num_embeddings: Number of embeddings to use.
+        embeddings_dim: The dimension of the vector space for projecting the scalar value.
+        embeddings_init_std: The standard deviation factor for normal initialization of the
+            embedding matrix weights.
+        """
+        super(SoftEmbedding, self).__init__()
+        self.embedding_table = torch.nn.Embedding(num_embeddings, embeddings_dim)
+        with torch.no_grad():
+            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
+        self.projection_layer = torch.nn.Linear(1, num_embeddings, bias=True)
+        self.softmax = torch.nn.Softmax(dim=-1)
+
+    def forward(self, input_numeric):
+        weights = self.softmax(self.projection_layer(input_numeric))
+        soft_one_hot_embeddings = (weights.unsqueeze(-1) * self.embedding_table.weight).sum(-2)
+
+        return soft_one_hot_embeddings
+
+
 class EmbeddingFeatures(TabularModule):
     def __init__(self, feature_config: Dict[str, FeatureConfig], **kwargs):
         super().__init__(**kwargs)
@@ -74,11 +102,12 @@ class EmbeddingFeatures(TabularModule):
                 tables[table.name] = table
 
         for name, table in tables.items():
-            embedding_tables[name] = torch.nn.EmbeddingBag(
-                table.vocabulary_size, table.dim, mode=table.combiner
-            )
+            embedding_tables[name] = self.table_to_embedding_module(table)
 
         self.embedding_tables = torch.nn.ModuleDict(embedding_tables)
+
+    def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Module:
+        return torch.nn.EmbeddingBag(table.vocabulary_size, table.dim, mode=table.combiner)
 
     @classmethod
     def from_column_group(
@@ -86,7 +115,7 @@ class EmbeddingFeatures(TabularModule):
         column_group: ColumnGroup,
         embedding_dims=None,
         default_embedding_dim=64,
-        infer_embedding_sizes=True,
+        infer_embedding_sizes=False,
         combiner="mean",
         tags=None,
         tags_to_filter=None,
@@ -147,3 +176,8 @@ class EmbeddingFeatures(TabularModule):
             sizes[name] = torch.Size([batch_size, feature.table.dim])
 
         return super().forward_output_size(sizes)
+
+
+class SoftEmbeddingFeatures(EmbeddingFeatures):
+    def table_to_embedding_module(self, table: TableConfig) -> SoftEmbedding:
+        return SoftEmbedding(table.vocabulary_size, table.dim)
