@@ -47,11 +47,30 @@ class MaskedSequence:
 
 
 class MaskSequence(_MaskSequence, nn.Module):
-    def __init__(self, hidden_size: int, pad_token: int = 0):
-        super().__init__(hidden_size, pad_token)
+    """
+    Base class to define masked inputs for LM tasks
+
+    Parameters
+    ----------
+        hidden_size: The hidden dimension of input tensors,
+                    needed to initialize trainable vector of
+                    masked positions.
+        pad_token: Index of the padding token used for getting
+                  batch of sequences with the same length
+    """
+
+    def __init__(self, hidden_size: int, device: str = "cpu", pad_token: int = 0):
+        super().__init__(hidden_size, device, pad_token)
         nn.Module.__init__(self)
 
     def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
+        """
+        INPUTS:
+        ------
+            pos_emb: sequence of interactions embeddings of shape (bs, max_len, hidden_dim).
+            itemid_seq: sequence of item ids (labels) of shape (bs, max_len).
+            training: whether to use the module in training mode (==True) or evaluation mode.
+        """
         raise NotImplementedError()
 
 
@@ -109,8 +128,7 @@ class CausalLanguageModeling(MaskSequence):
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
-            # TODO @srabhi: Fix this line, `label_seq_trg` doesn't exist here.
-            # mask_labels = label_seq_trg != self.pad_token
+            mask_labels = label_seq_trg_eval != self.pad_token
 
         pos_emb_inp = pos_emb[:, :-1]
         # As after shifting the sequence length will be subtracted by one, adding a masked item in
@@ -240,7 +258,7 @@ class MaskedLanguageModeling(MaskSequence):
         return labels, masked_labels
 
 
-@masking_tasks.register_with_multiple_names("mlm", "permutation")
+@masking_tasks.register_with_multiple_names("plm", "permutation")
 class PermutationLanguageModeling(MaskSequence):
     def __init__(
         self,
@@ -251,7 +269,7 @@ class PermutationLanguageModeling(MaskSequence):
         **kwargs
     ):
         """
-        Masked Language Modeling class - Prepare labels for masked item prediction
+        Masked Language Modeling class - Prepare labels for permuted item prediction
 
         Parameters:
             train_on_last_item_seq_only: predict last item only during training
@@ -379,6 +397,20 @@ class PermutationLanguageModeling(MaskSequence):
                 masked_labels, itemid_seq, torch.full_like(itemid_seq, self.pad_token)
             )
 
+            # If a sequence has only masked labels, unmasks one of the labels
+            sequences_with_only_labels = masked_labels.sum(axis=1) == non_padded_mask.sum(axis=1)
+            sampled_labels_to_unmask = torch.multinomial(
+                masked_labels.float(), num_samples=1
+            ).squeeze()
+
+            labels_to_unmask = torch.masked_select(
+                sampled_labels_to_unmask, sequences_with_only_labels
+            )
+            rows_to_unmask = torch.masked_select(rows_ids, sequences_with_only_labels)
+
+            labels[rows_to_unmask, labels_to_unmask] = self.pad_token
+            masked_labels = labels != self.pad_token
+
             for i in range(labels.size(0)):
                 # Generate permutation indices i.e.
                 #  sample a random factorisation order for the sequence.
@@ -428,18 +460,14 @@ class PermutationLanguageModeling(MaskSequence):
         return labels, masked_labels, target_mapping, perm_mask
 
 
-@masking_tasks.register_with_multiple_names("mlm", "replacement")
-class ReplacementLanguageModeling(MaskSequence):
+@masking_tasks.register_with_multiple_names("rtd", "replacement")
+class ReplacementLanguageModeling(MaskedLanguageModeling):
     def __init__(
-        self,
-        hidden_size,
-        mlm_probability: float = 0.15,
-        sample_from_batch: bool = False,
-        plm_permute_all: bool = False,
-        **kwargs
+        self, hidden_size, mlm_probability: float = 0.15, sample_from_batch: bool = False, **kwargs
     ):
         """
         Masked Language Modeling class - Prepare labels for masked item prediction
+        and token replacement detection
 
         Parameters:
             train_on_last_item_seq_only: predict last item only during training
@@ -476,6 +504,8 @@ class ReplacementLanguageModeling(MaskSequence):
         ==> Generate fake data by replacing [MASK] positions by random items to train
             ELECTRA discriminator
 
+        #TODO: Generate fake interactions embeddings using metadatainfo in addition to
+            item ids.
         INPUT:
         -----
             itemid_seq: (bs, max_seq_len), input sequence of item ids
