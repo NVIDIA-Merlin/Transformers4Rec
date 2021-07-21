@@ -64,6 +64,13 @@ class MaskSequence(_MaskSequence, nn.Module):
         nn.Module.__init__(self)
 
     def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
+        """
+        INPUTS:
+        ------
+            pos_emb: sequence of interactions embeddings of shape (bs, max_len, hidden_dim).
+            itemid_seq: sequence of item ids (labels) of shape (bs, max_len).
+            training: whether to use the module in training mode (==True) or evaluation mode.
+        """
         raise NotImplementedError()
 
 
