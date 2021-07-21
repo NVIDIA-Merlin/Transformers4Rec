@@ -1,5 +1,6 @@
 import pytest
-from src.Transformers4Rec.tests.torch.conftest import MAX_CARDINALITY
+
+from ..conftest import MAX_CARDINALITY
 
 torch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")

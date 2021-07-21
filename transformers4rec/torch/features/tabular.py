@@ -1,5 +1,4 @@
-from transformers4rec.types import ColumnGroup, Tag
-
+from ...types import ColumnGroup, Tag
 from ..tabular import MergeTabular
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
