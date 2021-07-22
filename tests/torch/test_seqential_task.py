@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 torch = pytest.importorskip("torch")
@@ -11,6 +10,7 @@ METRICS = [
     torch_metric.NDCGAt(top_ks=[2, 5, 10], labels_onehot=True),
     torch_metric.AvgPrecisionAt(top_ks=[2, 5, 10], labels_onehot=True),
 ]
+
 
 # Test of output of sequential_task when mf_constrained_embeddings is disabled
 def test_sequential_task_output(torch_seq_prediction_head_inputs):

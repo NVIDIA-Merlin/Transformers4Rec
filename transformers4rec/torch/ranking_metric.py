@@ -213,7 +213,7 @@ class NDCGAt(RankingMetric):
         """
         ks, scores, labels = _check_inputs(ks, scores, labels)
         topk_scores, topk_indices, topk_labels = _extract_topk(ks, scores, labels)
-        ndcgs = _create_output_placeholder(scores, ks)
+        # ndcgs = _create_output_placeholder(scores, ks) #TODO track if this line is needed
 
         # Compute discounted cumulative gains
         gains = self.dcg_at(ks, topk_scores, topk_labels)

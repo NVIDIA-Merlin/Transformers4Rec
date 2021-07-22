@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 torch = pytest.importorskip("torch")
@@ -7,6 +6,7 @@ torch_metric = pytest.importorskip("transformers4rec.torch.ranking_metric")
 
 # fixed parameters for tests
 list_metrics = list(torch_metric.ranking_metrics_registry.keys())
+
 
 # Test length of output equal to number of cutoffs
 @pytest.mark.parametrize("metric", list_metrics)
