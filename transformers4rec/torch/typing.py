@@ -11,12 +11,13 @@ else:
 
 # TODO: Make this more generic and work with multi-hot features
 TabularData = Dict[str, torch.tensor]
+TensorOrTabularData = typing.Union[torch.Tensor, TabularData]
 
 TabularModule = ForwardRef("transformers4rec.torch.tabular.TabularModule")
 
 ProcessedSequence = ForwardRef("transformers4rec.torch.features.ProcessedSequence")
 
-FeatureAggregator = ForwardRef("transformers4rec.torch.aggregator.FeatureAggregator")
+FeatureAggregator = ForwardRef("transformers4rec.torch.aggregator.FeatureAggregation")
 
 MaskSequence = ForwardRef("transformers4rec.torch.masking.MaskSequence")
 MaskedSequence = ForwardRef("transformers4rec.torch.masking.MaskedSequence")
@@ -31,6 +32,7 @@ PredictionTask = ForwardRef("transformers4rec.torch.head.PredictionTask")
 
 __all__ = [
     "TabularData",
+    "TensorOrTabularData",
     "TabularModule",
     "ProcessedSequence",
     "FeatureAggregator",

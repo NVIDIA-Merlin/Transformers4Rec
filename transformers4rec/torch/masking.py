@@ -21,7 +21,7 @@ from torch import nn
 from ..utils.masking import MaskSequence as _MaskSequence
 from ..utils.registry import Registry
 
-masking_tasks = Registry("torch.masking")
+masking_registry = Registry("torch.masking")
 
 
 @dataclass
@@ -74,7 +74,7 @@ class MaskSequence(_MaskSequence, nn.Module):
         raise NotImplementedError()
 
 
-@masking_tasks.register_with_multiple_names("clm", "causal")
+@masking_registry.register_with_multiple_names("clm", "causal")
 class CausalLanguageModeling(MaskSequence):
     def __init__(
         self,
@@ -157,7 +157,7 @@ class CausalLanguageModeling(MaskSequence):
         )
 
 
-@masking_tasks.register_with_multiple_names("mlm", "masked")
+@masking_registry.register_with_multiple_names("mlm", "masked")
 class MaskedLanguageModeling(MaskSequence):
     def __init__(self, hidden_size, mlm_probability: float = 0.15, **kwargs):
         """
@@ -258,7 +258,7 @@ class MaskedLanguageModeling(MaskSequence):
         return labels, masked_labels
 
 
-@masking_tasks.register_with_multiple_names("plm", "permutation")
+@masking_registry.register_with_multiple_names("plm", "permutation")
 class PermutationLanguageModeling(MaskSequence):
     def __init__(
         self,
@@ -460,7 +460,7 @@ class PermutationLanguageModeling(MaskSequence):
         return labels, masked_labels, target_mapping, perm_mask
 
 
-@masking_tasks.register_with_multiple_names("rtd", "replacement")
+@masking_registry.register_with_multiple_names("rtd", "replacement")
 class ReplacementLanguageModeling(MaskedLanguageModeling):
     def __init__(
         self, hidden_size, mlm_probability: float = 0.15, sample_from_batch: bool = False, **kwargs

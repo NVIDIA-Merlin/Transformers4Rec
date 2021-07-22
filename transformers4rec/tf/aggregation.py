@@ -2,21 +2,20 @@ from typing import List
 
 import tensorflow as tf
 
-from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
-
 from ..utils.registry import Registry
 from .typing import TabularData
+from .utils.tf_utils import calculate_batch_size_from_input_shapes
 
-aggregators = Registry.class_registry("tf.aggregators")
+aggregation_registry: Registry = Registry.class_registry("tf.aggregation_registry")
 
 
-class FeatureAggregator(tf.keras.layers.Layer):
+class FeatureAggregation(tf.keras.layers.Layer):
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        return super(FeatureAggregator, self).call(inputs, **kwargs)
+        return super(FeatureAggregation, self).call(inputs, **kwargs)
 
 
-@aggregators.register("concat")
-class ConcatFeatures(FeatureAggregator):
+@aggregation_registry.register("concat")
+class ConcatFeatures(FeatureAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.axis = axis
@@ -41,8 +40,8 @@ class ConcatFeatures(FeatureAggregator):
         }
 
 
-@aggregators.register("stack")
-class StackFeatures(FeatureAggregator):
+@aggregation_registry.register("stack")
+class StackFeatures(FeatureAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.axis = axis

@@ -3,7 +3,7 @@ from typing import Optional
 import torch
 
 from ..types import ColumnGroup
-from . import aggregator as agg
+from . import aggregation as agg
 
 
 class TabularMixin:
@@ -26,7 +26,7 @@ class TabularMixin:
         if stack_outputs:
             post_op = agg.StackFeatures()
         if aggregation:
-            post_op = agg.aggregators.parse(aggregation)
+            post_op = agg.aggregation_registry.parse(aggregation)
         if filter_columns:
             pre = FilterFeatures(filter_columns)
         if pre:
@@ -80,7 +80,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
         super().__init__()
         self.aggregation = aggregation
         if aggregation:
-            self.aggregation = agg.aggregators.parse(aggregation)
+            self.aggregation = agg.aggregation_registry.parse(aggregation)
         self.input_size = None
 
     @classmethod

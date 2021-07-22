@@ -14,7 +14,7 @@ TabularData = Dict[str, tf.Tensor]
 
 TabularModule = ForwardRef("transformers4rec.tf.tabular.TabularModule")
 
-FeatureAggregator = ForwardRef("transformers4rec.tf.aggregator.FeatureAggregator")
+FeatureAggregator = ForwardRef("transformers4rec.tf.aggregator.FeatureAggregation")
 MaskSequence = ForwardRef("transformers4rec.tf.masking.MaskSequence")
 
 Block = ForwardRef("transformers4rec.tf.block.base.Block")

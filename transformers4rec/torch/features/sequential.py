@@ -7,7 +7,7 @@ import torch
 @dataclass
 class ProcessedSequence:
     """
-    Class to store the Tensor resulting from the aggregation of a group of
+    Class to store the Tensor resulting from the aggregation_registry of a group of
     categorical and continuous variables defined in the same featuremap
     Parameters
     ----------
