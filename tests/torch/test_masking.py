@@ -6,14 +6,16 @@ torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_masking = pytest.importorskip("transformers4rec.torch.masking")
 
 # fixed parameters for tests
-lm_tasks = list(torch_masking.masking_tasks.keys())
+lm_tasks = list(torch_masking.masking_registry.keys())
 
 
 # Test output shapes
 @pytest.mark.parametrize("task", lm_tasks)
 def test_task_output_shape(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_tasks[task](hidden_dim, pad_token=torch_masking_inputs["pad_token"])
+    lm = torch_masking.masking_registry[task](
+        hidden_dim, pad_token=torch_masking_inputs["pad_token"]
+    )
     out = lm(torch_masking_inputs["input_tensor"], torch_masking_inputs["labels"], training=True)
     assert out.masked_label.shape[0] == torch_masking_inputs["input_tensor"].size(0)
     assert out.masked_label.shape[1] == torch_masking_inputs["input_tensor"].size(1)
@@ -24,7 +26,9 @@ def test_task_output_shape(torch_masking_inputs, task):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_mlm_eval(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_tasks[task](hidden_dim, pad_token=torch_masking_inputs["pad_token"])
+    lm = torch_masking.masking_registry[task](
+        hidden_dim, pad_token=torch_masking_inputs["pad_token"]
+    )
     out = lm(torch_masking_inputs["input_tensor"], torch_masking_inputs["labels"], training=False)
     assert out.mask_schema.sum() == torch_masking_inputs["input_tensor"].size(0)
     # get non padded last items
@@ -45,7 +49,7 @@ def test_mlm_eval(torch_masking_inputs, task):
 # Test only last item is masked when training clm on last item
 def test_clm_training_on_last_item(torch_masking_inputs):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_tasks["causal"](
+    lm = torch_masking.masking_registry["causal"](
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], train_on_last_item_seq_only=True
     )
     out = lm(torch_masking_inputs["input_tensor"], torch_masking_inputs["labels"], training=True)
@@ -69,7 +73,7 @@ def test_clm_training_on_last_item(torch_masking_inputs):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_at_least_one_masked_item_mlm(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_tasks["causal"](
+    lm = torch_masking.masking_registry["causal"](
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], train_on_last_item_seq_only=True
     )
     out = lm(torch_masking_inputs["input_tensor"], torch_masking_inputs["labels"], training=True)
@@ -81,7 +85,9 @@ def test_at_least_one_masked_item_mlm(torch_masking_inputs, task):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_not_all_masked_mlm(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_tasks[task](hidden_dim, pad_token=torch_masking_inputs["pad_token"])
+    lm = torch_masking.masking_registry[task](
+        hidden_dim, pad_token=torch_masking_inputs["pad_token"]
+    )
     out = lm(torch_masking_inputs["input_tensor"], torch_masking_inputs["labels"], training=True)
     trgt_mask = out.masked_label != torch_masking_inputs["pad_token"]
     non_padded_mask = torch_masking_inputs["labels"] != torch_masking_inputs["pad_token"]
@@ -92,7 +98,9 @@ def test_not_all_masked_mlm(torch_masking_inputs, task):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_task_masked_cardinality(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_tasks[task](hidden_dim, pad_token=torch_masking_inputs["pad_token"])
+    lm = torch_masking.masking_registry[task](
+        hidden_dim, pad_token=torch_masking_inputs["pad_token"]
+    )
     out = lm(torch_masking_inputs["input_tensor"], torch_masking_inputs["labels"], training=True)
     trgt_pad = out.masked_label != torch_masking_inputs["pad_token"]
     assert out.mask_schema.sum() == trgt_pad.sum()

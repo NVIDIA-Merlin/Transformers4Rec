@@ -657,7 +657,7 @@ class ModelArguments:
     layer_norm_featurewise: bool = field(
         default=False,
         metadata={
-            "help": "Enables layer norm for each feature individually, before their aggregation."
+            "help": "Enables layer norm for each feature individually, before their aggregation_registry."
         },
     )
 

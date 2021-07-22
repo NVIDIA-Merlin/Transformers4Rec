@@ -4,16 +4,16 @@ from ..utils.registry import Registry
 from .typing import TabularData
 from .utils.torch_utils import calculate_batch_size_from_input_size
 
-aggregators = Registry.class_registry("torch.aggregators")
+aggregation_registry: Registry = Registry.class_registry("torch.aggregation_registry")
 
 
-class FeatureAggregator(torch.nn.Module):
+class FeatureAggregation(torch.nn.Module):
     def forward(self, inputs: TabularData) -> torch.tensor:
-        return super(FeatureAggregator, self).forward(inputs)
+        return super(FeatureAggregation, self).forward(inputs)
 
 
-@aggregators.register("concat")
-class ConcatFeatures(FeatureAggregator):
+@aggregation_registry.register("concat")
+class ConcatFeatures(FeatureAggregation):
     def __init__(self, axis=-1):
         super().__init__()
         self.axis = axis
@@ -30,8 +30,8 @@ class ConcatFeatures(FeatureAggregator):
         return batch_size, sum([i[1] for i in input_size.values()])
 
 
-@aggregators.register("stack")
-class StackFeatures(FeatureAggregator):
+@aggregation_registry.register("stack")
+class StackFeatures(FeatureAggregation):
     def __init__(self, axis=-1):
         super().__init__()
         self.axis = axis
@@ -50,7 +50,7 @@ class StackFeatures(FeatureAggregator):
         return batch_size, len(input_size), last_dim
 
 
-@aggregators.register("element-wise-sum")
+@aggregation_registry.register("element-wise-sum")
 class ElementwiseSum(torch.nn.Module):
     def __init__(self):
         super().__init__()
@@ -63,11 +63,12 @@ class ElementwiseSum(torch.nn.Module):
         return torch.stack(tensors, dim=0).sum(dim=0)
 
 
-@aggregators.register("sequential")
+@aggregation_registry.register("sequential")
 class SequenceAggregator(torch.nn.Module):
     """
-    Receive a dictionary of sequential tensors and output their aggregation as a 3d tensor.
-    It supports two types of aggregation: concat and elementwise_sum_multiply_item_embedding
+    Receive a dictionary of sequential tensors and output their aggregation_registry as a 3d tensor.
+    It supports two types of aggregation_registry:
+        concat and elementwise_sum_multiply_item_embedding
     """
 
     def __init__(

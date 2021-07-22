@@ -43,10 +43,10 @@ class DLRMBlock(Block):
         continuous_embedding.block_name = "ContinuousEmbedding"
 
         # self.stack_features = tabular.MergeTabular(embedding_layer, continuous_embedding,
-        #                                            aggregation="stack")
+        #                                            aggregation_registry="stack")
 
         # self.stack_features = embedding_layer + continuous_embedding
-        # self.stack_features.aggregation = "stack"
+        # self.stack_features.aggregation_registry = "stack"
 
         self.stack_features = embedding_layer.merge(continuous_embedding, aggregation="stack")
 
