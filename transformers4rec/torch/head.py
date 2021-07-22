@@ -104,9 +104,9 @@ class PredictionTask(torch.nn.Module):
         metrics = metrics or [tm.regression.MeanSquaredError()]
 
         return cls(loss=torch.nn.MSELoss(), metrics=metrics)
-        
-                 
-class SequentialPredictionTask(PredictionTask): 
+
+
+class SequentialPredictionTask(PredictionTask):
     def __init__(
         self,
         loss,
@@ -114,15 +114,16 @@ class SequentialPredictionTask(PredictionTask):
         body: Optional[torch.nn.Module] = None,
         forward_to_prediction_fn=lambda x: x,
         mf_constrained_embeddings: bool = True,
-        item_embedding_table_weight: torch.Tensor = None, 
+        item_embedding_table_weight: torch.Tensor = None,
         input_size: int = None,
         vocab_size: int = None,
     ):
-        super(SequentialPredictionTask, self).__init__(loss=loss, 
-                                                       metrics=metrics,
-                                                       body=body,
-                                                       forward_to_prediction_fn=forward_to_prediction_fn,
-                                                      )
+        super(SequentialPredictionTask, self).__init__(
+            loss=loss,
+            metrics=metrics,
+            body=body,
+            forward_to_prediction_fn=forward_to_prediction_fn,
+        )
 
         self.mf_constrained_embeddings = mf_constrained_embeddings
         self.vocab_size = vocab_size
@@ -132,8 +133,8 @@ class SequentialPredictionTask(PredictionTask):
             self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.vocab_size))
             torch.nn.init.zeros_(self.output_layer_bias)
             self.item_embedding_table_weight = item_embedding_table_weight
-            
-        else: 
+
+        else:
             self.pre = torch.nn.Linear(self.input_size, vocab_size)
 
     def forward(self, inputs, **kwargs):
@@ -150,9 +151,8 @@ class SequentialPredictionTask(PredictionTask):
         if self.pre:
             x = self.pre(x)
         return x
-           
-    
-    
+
+
 class LambdaModule(torch.nn.Module):
     def __init__(self, lambd):
         super().__init__()

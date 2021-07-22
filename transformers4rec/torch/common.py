@@ -31,8 +31,6 @@ def _extract_topk(ks, scores, labels):
 def _create_output_placeholder(scores, ks):
     return torch.zeros(scores.shape[0], len(ks)).to(device=scores.device, dtype=torch.float32)
 
-def _tranform_label_to_onehot(labels, vocab_size):    
-    return torch.nn.functional.one_hot(
-                labels.reshape(-1), vocab_size
-            ).detach()
-            
+
+def _tranform_label_to_onehot(labels, vocab_size):
+    return torch.nn.functional.one_hot(labels.reshape(-1), vocab_size).detach()

@@ -1,59 +1,62 @@
 # Adapted from source code: https://github.com/karlhigley/ranking-metrics-torch
 from abc import abstractmethod
-from .common import _check_inputs, _create_output_placeholder, _extract_topk, _tranform_label_to_onehot
 
 import torch
+import torchmetrics as tm
 
 from ..utils.registry import Registry
-
-import torchmetrics as tm
+from .common import (
+    _check_inputs,
+    _create_output_placeholder,
+    _extract_topk,
+    _tranform_label_to_onehot,
+)
 
 ranking_metrics_registry = Registry.class_registry("torch.ranking_metrics")
 
 
 class RankingMetric(tm.Metric):
     """
-    Metric wrapper for computing ranking metrics@K for session-based task. 
-    
+    Metric wrapper for computing ranking metrics@K for session-based task.
+
     Parameters:
     ----------
-        - top_ks (List): list of cuctoffs 
-        - labels_onehot (bool): Enable transform the labels to one-hot representation 
+        - top_ks (List): list of cuctoffs
+        - labels_onehot (bool): Enable transform the labels to one-hot representation
     """
-    def __init__(self, top_ks, labels_onehot): 
+
+    def __init__(self, top_ks, labels_onehot):
         super(RankingMetric, self).__init__()
         self.top_ks = top_ks
         self.labels_onehot = labels_onehot
         # Store the mean of the batch metrics (for each cut-off at topk)
         self.add_state("metric_mean", default=[], dist_reduce_fx="cat")
-    
+
     def update(self, preds: torch.Tensor, target: torch.Tensor, **kwargs):
         # Computing the metrics at different cut-offs
-        if self.labels_onehot: 
+        if self.labels_onehot:
             target = _tranform_label_to_onehot(target, preds.size(-1))
         metric = self._metric(torch.LongTensor(self.top_ks), preds.view(-1, preds.size(-1)), target)
         self.metric_mean.append(metric)
-    
-    def compute(self): 
+
+    def compute(self):
         # Computing the mean of the batch metrics (for each cut-off at topk)
         return torch.cat(self.metric_mean, axis=0).mean(0)
-        
+
     @abstractmethod
     def _metric(self, ks: torch.Tensor, preds: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         """
         Compute a ranking metric over a predictions and one-hot targets.
         This method should be overridden by subclasses.
         """
-    
+
 
 @ranking_metrics_registry.register_with_multiple_names("precision_at", "precision")
 class PrecisionAt(RankingMetric):
     def __init__(self, top_ks=[2, 5], labels_onehot=False):
-        super(PrecisionAt, self).__init__(top_ks = top_ks, labels_onehot=labels_onehot)
-    
-    def _metric(self,
-        ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor
-    ) -> torch.Tensor:
+        super(PrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+
+    def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Compute precision@K for each of the provided cutoffs
         Args:
             ks (torch.Tensor or list): list of cutoffs
@@ -72,14 +75,13 @@ class PrecisionAt(RankingMetric):
 
         return precisions
 
-    
+
 @ranking_metrics_registry.register_with_multiple_names("recall_at", "recall")
 class RecallAt(RankingMetric):
     def __init__(self, top_ks=[2, 5], labels_onehot=False):
-        super(RecallAt, self).__init__(top_ks = top_ks, labels_onehot=labels_onehot)
-    
-    def _metric(self, 
-                ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        super(RecallAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+
+    def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Compute recall@K for each of the provided cutoffs
         Args:
             ks (torch.Tensor or list): list of cutoffs
@@ -109,16 +111,15 @@ class RecallAt(RankingMetric):
                 )  # Ensuring type is double, because it can be float if --fp16
 
         return recalls
-    
-    
+
+
 @ranking_metrics_registry.register_with_multiple_names("avg_precision_at", "avg_precision", "map")
 class AvgPrecisionAt(RankingMetric):
     def __init__(self, top_ks=[2, 5], labels_onehot=False):
-        super(AvgPrecisionAt, self).__init__(top_ks = top_ks, labels_onehot=labels_onehot)
+        super(AvgPrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
         self.precision_at = PrecisionAt(top_ks)._metric
-    
-    def _metric(self, 
-                ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+
+    def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Compute average precision at K for provided cutoffs
 
         Args:
@@ -148,14 +149,15 @@ class AvgPrecisionAt(RankingMetric):
 
         return avg_precisions
 
-    
+
 @ranking_metrics_registry.register_with_multiple_names("dcg_at", "dcg")
 class DCGAt(RankingMetric):
     def __init__(self, top_ks=[2, 5], labels_onehot=False):
-        super(DCGAt, self).__init__(top_ks = top_ks, labels_onehot=labels_onehot)
-    
-    def _metric(self, 
-                ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2) -> torch.Tensor:
+        super(DCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+
+    def _metric(
+        self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
+    ) -> torch.Tensor:
 
         """Compute discounted cumulative gain at K for provided cutoffs (ignoring ties)
         Args:
@@ -189,16 +191,17 @@ class DCGAt(RankingMetric):
             )  # Ensuring type is double, because it can be float if --fp16
 
         return dcgs
-    
-    
+
+
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
 class NDCGAt(RankingMetric):
     def __init__(self, top_ks=[2, 5], labels_onehot=False):
-        super(NDCGAt, self).__init__(top_ks = top_ks, labels_onehot=labels_onehot)
+        super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
         self.dcg_at = DCGAt(top_ks)._metric
-    
-    def _metric(self, 
-                ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2) -> torch.Tensor:
+
+    def _metric(
+        self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
+    ) -> torch.Tensor:
 
         """Compute normalized discounted cumulative gain at K for provided cutoffs (ignoring ties)
         Args:
@@ -222,5 +225,5 @@ class NDCGAt(RankingMetric):
 
         gains[irrelevant_pos] = 0
         gains[relevant_pos] /= normalizing_gains[relevant_pos]
-        
+
         return gains

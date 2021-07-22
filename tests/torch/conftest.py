@@ -52,36 +52,32 @@ def torch_masking_inputs():
 
     return features
 
-@pytest.fixture 
+
+@pytest.fixture
 def torch_seq_prediction_head_inputs():
     ITEM_DIM = 128
     POS_EXAMPLE = 25
     features = {}
-    features['seq_model_output'] = torch.tensor(
-        np.random.uniform(0, 1, (POS_EXAMPLE, ITEM_DIM))
-    )
-    features['item_embedding_table_weight'] = torch.tensor(
+    features["seq_model_output"] = torch.tensor(np.random.uniform(0, 1, (POS_EXAMPLE, ITEM_DIM)))
+    features["item_embedding_table_weight"] = torch.tensor(
         np.random.uniform(0, 1, (MAX_CARDINALITY, ITEM_DIM))
     )
-    features['labels_all'] = torch.tensor(np.random.randint(1, MAX_CARDINALITY, (POS_EXAMPLE,)))
-    features['vocab_size'] = MAX_CARDINALITY
-    features['item_dim'] = ITEM_DIM
-    return features 
+    features["labels_all"] = torch.tensor(np.random.randint(1, MAX_CARDINALITY, (POS_EXAMPLE,)))
+    features["vocab_size"] = MAX_CARDINALITY
+    features["item_dim"] = ITEM_DIM
+    return features
 
-@pytest.fixture 
+
+@pytest.fixture
 def torch_ranking_metrics_inputs():
     POS_EXAMPLE = 30
     VOCAB_SIZE = 40
     features = {}
-    features['scores'] = torch.tensor(
-        np.random.uniform(0, 1, (POS_EXAMPLE, VOCAB_SIZE))
-    )
-    features['ks'] = torch.LongTensor([1, 2, 3, 5, 10, 20])
-    features['labels_one_hot'] = torch.LongTensor(
+    features["scores"] = torch.tensor(np.random.uniform(0, 1, (POS_EXAMPLE, VOCAB_SIZE)))
+    features["ks"] = torch.LongTensor([1, 2, 3, 5, 10, 20])
+    features["labels_one_hot"] = torch.LongTensor(
         np.random.choice(a=[0, 1], size=(POS_EXAMPLE, VOCAB_SIZE))
     )
 
-    features['labels'] = torch.tensor(
-        np.random.randint(1, VOCAB_SIZE, (POS_EXAMPLE,))
-    )
+    features["labels"] = torch.tensor(np.random.randint(1, VOCAB_SIZE, (POS_EXAMPLE,)))
     return features
