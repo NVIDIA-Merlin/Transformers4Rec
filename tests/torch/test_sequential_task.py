@@ -39,7 +39,7 @@ def test_sequential_task_output_constrained(torch_seq_prediction_head_inputs):
         loss=torch.nn.NLLLoss(ignore_index=0),
         metrics=METRICS,
         mf_constrained_embeddings=True,
-        item_embedding_table_weight=torch_seq_prediction_head_inputs["item_embedding_table_weight"],
+        item_embedding_table=torch_seq_prediction_head_inputs["item_embedding_table"],
         input_size=torch_seq_prediction_head_inputs["item_dim"],
         vocab_size=torch_seq_prediction_head_inputs["vocab_size"],
     )
@@ -50,6 +50,32 @@ def test_sequential_task_output_constrained(torch_seq_prediction_head_inputs):
     metrics = task.calculate_metrics(
         predictions=torch_seq_prediction_head_inputs["seq_model_output"],
         labels=torch_seq_prediction_head_inputs["labels_all"],
+    )
+    assert all(len(m) == 3 for m in metrics.values())
+    assert loss != 0
+
+
+# Test of output of sequential_task when mf_constrained_embeddings is enabled
+def test_link_to_block_sequential_task(torch_seq_prediction_head_link_to_block):
+    inputs = torch4rec.features.tabular.TabularFeatures.from_config(
+        torch_seq_prediction_head_link_to_block["config"]
+    )
+    block = torch.nn.Sequential(*[inputs, torch.nn.Linear(64, 64)])
+    task = torch_head.SequentialPredictionTask.link_to_block(
+        block=block,
+        itemid_name="item",
+        loss=torch.nn.NLLLoss(ignore_index=0),
+        metrics=METRICS,
+        mf_constrained_embeddings=True,
+        input_size=torch_seq_prediction_head_link_to_block["item_dim"],
+    )
+    loss = task.compute_loss(
+        inputs=torch_seq_prediction_head_link_to_block["seq_model_output"],
+        targets=torch_seq_prediction_head_link_to_block["labels_all"],
+    )
+    metrics = task.calculate_metrics(
+        predictions=torch_seq_prediction_head_link_to_block["seq_model_output"],
+        labels=torch_seq_prediction_head_link_to_block["labels_all"],
     )
     assert all(len(m) == 3 for m in metrics.values())
     assert loss != 0

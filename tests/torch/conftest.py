@@ -2,6 +2,7 @@ import pytest
 
 torch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
+nvt = pytest.importorskip("nvtabular")
 
 NUM_EXAMPLES = 1000
 MAX_CARDINALITY = 100
@@ -59,9 +60,7 @@ def torch_seq_prediction_head_inputs():
     POS_EXAMPLE = 25
     features = {}
     features["seq_model_output"] = torch.tensor(np.random.uniform(0, 1, (POS_EXAMPLE, ITEM_DIM)))
-    features["item_embedding_table_weight"] = torch.tensor(
-        np.random.uniform(0, 1, (MAX_CARDINALITY, ITEM_DIM))
-    )
+    features["item_embedding_table"] = torch.nn.Embedding(MAX_CARDINALITY, ITEM_DIM)
     features["labels_all"] = torch.tensor(np.random.randint(1, MAX_CARDINALITY, (POS_EXAMPLE,)))
     features["vocab_size"] = MAX_CARDINALITY
     features["item_dim"] = ITEM_DIM
@@ -80,4 +79,26 @@ def torch_ranking_metrics_inputs():
     )
 
     features["labels"] = torch.tensor(np.random.randint(1, VOCAB_SIZE, (POS_EXAMPLE,)))
+    return features
+
+
+@pytest.fixture
+def torch_seq_prediction_head_link_to_block():
+    ITEM_DIM = 64
+    POS_EXAMPLE = 25
+    features = {}
+    features["seq_model_output"] = torch.tensor(np.random.uniform(0, 1, (POS_EXAMPLE, ITEM_DIM)))
+    features["item_embedding_table"] = torch.nn.Embedding(MAX_CARDINALITY, ITEM_DIM)
+    features["labels_all"] = torch.tensor(np.random.randint(1, MAX_CARDINALITY, (POS_EXAMPLE,)))
+    features["vocab_size"] = MAX_CARDINALITY
+    features["item_dim"] = ITEM_DIM
+    features["config"] = {
+        "item": {
+            "dtype": "categorical",
+            "cardinality": MAX_CARDINALITY,
+            "tags": ["categorical", "item"],
+            "log_as_metadata": True,
+        }
+    }
+
     return features
