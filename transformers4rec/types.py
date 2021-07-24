@@ -2,7 +2,7 @@ from typing import Any
 
 try:
     import nvtabular as nvt
-    from nvtabular.tag import Tag
+    from nvtabular.tag import DefaultTags, Tag
 
     ColumnGroup = nvt.ColumnGroup
 except ImportError:
@@ -62,4 +62,4 @@ except ImportError:
                 return tag
 
 
-__all__ = ["ColumnGroup", "Tag"]
+__all__ = ["ColumnGroup", "Tag", "DefaultTags"]
