@@ -2,7 +2,6 @@ import pytest
 
 torch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
-nvt = pytest.importorskip("nvtabular")
 
 NUM_EXAMPLES = 1000
 MAX_CARDINALITY = 100
