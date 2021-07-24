@@ -5,6 +5,8 @@ import torch
 import torchmetrics as tm
 
 from ..types import ColumnGroup
+from .features.embedding import EmbeddingFeatures
+from .tabular import MergeTabular
 
 
 class PredictionTask(torch.nn.Module):
@@ -114,7 +116,7 @@ class SequentialPredictionTask(PredictionTask):
         body: Optional[torch.nn.Module] = None,
         forward_to_prediction_fn=lambda x: x,
         mf_constrained_embeddings: bool = True,
-        item_embedding_table_weight: torch.Tensor = None,
+        item_embedding_table: torch.nn.Module = None,
         input_size: int = None,
         vocab_size: int = None,
     ):
@@ -132,10 +134,46 @@ class SequentialPredictionTask(PredictionTask):
         if self.mf_constrained_embeddings:
             self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.vocab_size))
             torch.nn.init.zeros_(self.output_layer_bias)
-            self.item_embedding_table_weight = item_embedding_table_weight
+            self.item_embedding_table = item_embedding_table
 
         else:
             self.pre = torch.nn.Linear(self.input_size, vocab_size)
+
+    @classmethod
+    def link_to_block(
+        cls,
+        block,
+        itemid_name: str,
+        loss,
+        input_size,
+        metrics=None,
+        body: Optional[torch.nn.Module] = None,
+        forward_to_prediction_fn=lambda x: x,
+        mf_constrained_embeddings: bool = True,
+    ):
+        """
+        Get embedding table from the sequential block based on itemid column name
+        """
+        embedding_table = None
+        for layer in block.children():
+            if isinstance(layer, MergeTabular):
+                for feature in layer.to_merge:
+                    if isinstance(feature, EmbeddingFeatures):
+                        if itemid_name in feature.embedding_tables:
+                            embedding_table = feature.embedding_tables[itemid_name]
+        if not embedding_table:
+            raise ValueError("item-id column %s not found in inputs" % itemid_name)
+        vocab_size = embedding_table.weight.size(0)
+        return cls(
+            loss=loss,
+            metrics=metrics,
+            body=body,
+            forward_to_prediction_fn=forward_to_prediction_fn,
+            mf_constrained_embeddings=mf_constrained_embeddings,
+            item_embedding_table=embedding_table,
+            input_size=input_size,
+            vocab_size=vocab_size,
+        )
 
     def forward(self, inputs, **kwargs):
         x = inputs.float()
@@ -145,7 +183,7 @@ class SequentialPredictionTask(PredictionTask):
         if self.mf_constrained_embeddings:
             x = torch.nn.functional.linear(
                 x,
-                weight=self.item_embedding_table_weight.float(),
+                weight=self.item_embedding_table.weight.float(),
                 bias=self.output_layer_bias,
             )
         if self.pre:
