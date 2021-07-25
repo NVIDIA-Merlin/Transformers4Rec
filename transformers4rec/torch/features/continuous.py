@@ -11,11 +11,11 @@ class ContinuousFeatures(TabularModule):
         return cls(features, **kwargs)
 
     @classmethod
-    def from_config(cls, column_group, tags=None, tags_to_filter=None):
+    def from_config(cls, config, tags=None, tags_to_filter=None):
         pass
 
     @classmethod
-    def from_column_group(cls, config, tags=None, tags_to_filter=None):
+    def from_column_group(cls, column_group, tags=None, tags_to_filter=None):
         pass
 
     def forward(self, inputs):
