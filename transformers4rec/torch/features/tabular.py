@@ -29,8 +29,8 @@ class TabularFeatures(MergeTabular):
     def from_column_group(
         cls,
         column_group: ColumnGroup,
-        continuous_tags=[],
-        continuous_tags_to_filter=Tag.CONTINUOUS,
+        continuous_tags=Tag.CONTINUOUS,
+        continuous_tags_to_filter=None,
         categorical_tags=Tag.CATEGORICAL,
         categorical_tags_to_filter=None,
         text_model=None,
@@ -69,8 +69,8 @@ class TabularFeatures(MergeTabular):
     def from_config(
         cls,
         config: Union[Dict[str, dict], str],
-        continuous_tags=[],
-        continuous_tags_to_filter=Tag.CONTINUOUS,
+        continuous_tags=Tag.CONTINUOUS,
+        continuous_tags_to_filter=None,
         categorical_tags=Tag.CATEGORICAL,
         categorical_tags_to_filter=None,
         text_model=None,

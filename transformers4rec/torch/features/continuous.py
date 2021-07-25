@@ -10,6 +10,14 @@ class ContinuousFeatures(TabularModule):
     def from_features(cls, features, **kwargs):
         return cls(features, **kwargs)
 
+    @classmethod
+    def from_config(cls, column_group, tags=None, tags_to_filter=None):
+        pass
+
+    @classmethod
+    def from_column_group(cls, config, tags=None, tags_to_filter=None):
+        pass
+
     def forward(self, inputs):
         return self.filter_features(inputs)
 
