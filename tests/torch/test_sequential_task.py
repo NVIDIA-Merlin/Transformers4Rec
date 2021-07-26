@@ -60,7 +60,7 @@ def test_link_to_block_sequential_task(torch_seq_prediction_head_link_to_block):
     inputs = torch4rec.features.tabular.TabularFeatures.from_config(
         torch_seq_prediction_head_link_to_block["config"]
     )
-    block = torch.nn.Sequential(*[inputs, torch.nn.Linear(64, 64)])
+    block = torch.nn.Sequential(inputs, torch.nn.Linear(64, 64))
     task = torch_head.SequentialPredictionTask.link_to_block(
         block=block,
         itemid_name="item",
