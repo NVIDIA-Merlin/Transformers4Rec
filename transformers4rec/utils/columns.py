@@ -152,22 +152,6 @@ class ColumnGroup:
     def __getitem__(self, columns):
         return self.select_by_name(columns)
 
-    def filter_columns(self, filter_fn, by_name=True):
-        if by_name:
-            filtered = [c for c in self.columns if filter_fn(c.name)]
-        else:
-            filtered = [c for c in self.columns if filter_fn(c)]
-
-        return self[filtered]
-
-    def filter_by_namespace(self, namespace):
-        return self.filter_columns(lambda c: c.startswith(namespace))
-
-    def remove_by_tag(self, tags):
-        to_remove = self.select_by_tag(tags)
-
-        return self - to_remove
-
     def select_by_tag(self, tags, tags_to_filter=None):
         column_names_to_filter = (
             self.select_by_tag(tags_to_filter, output_list=True) if tags_to_filter else []
@@ -208,14 +192,6 @@ class ColumnGroup:
         self.children.append(child)
         child.kind = str(names)
         return child
-
-    def tags_by_column(self):
-        outputs = {}
-
-        for col in self.columns:
-            outputs[col.name] = col.tags
-
-        return outputs
 
 
 def _convert_col(col, tags=None):
