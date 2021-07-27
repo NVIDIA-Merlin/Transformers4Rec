@@ -56,19 +56,18 @@ def test_sequential_task_output_constrained(torch_seq_prediction_head_inputs):
 
 
 # Test of output of sequential_task when mf_constrained_embeddings is enabled
-def test_link_to_block_sequential_task(torch_seq_prediction_head_link_to_block):
+def test_build_sequential_task_from_block(torch_seq_prediction_head_link_to_block):
     inputs = torch4rec.features.tabular.TabularFeatures.from_config(
         torch_seq_prediction_head_link_to_block["config"]
     )
-    block = torch.nn.Sequential(inputs, torch.nn.Linear(64, 64))
-    task = torch_head.SequentialPredictionTask.link_to_block(
-        block=block,
-        itemid_name="item",
-        loss=torch.nn.NLLLoss(ignore_index=0),
-        metrics=METRICS,
-        mf_constrained_embeddings=True,
-        input_size=torch_seq_prediction_head_link_to_block["item_dim"],
+    block = torch4rec.block.base.SequentialBlock(inputs, torch.nn.Linear(64, 64))
+
+    task = torch_head.SequentialPredictionTask(
+        loss=torch.nn.NLLLoss(ignore_index=0), metrics=METRICS, mf_constrained_embeddings=True
     )
+
+    task.build(block, "item")
+
     loss = task.compute_loss(
         inputs=torch_seq_prediction_head_link_to_block["seq_model_output"],
         targets=torch_seq_prediction_head_link_to_block["labels_all"],
