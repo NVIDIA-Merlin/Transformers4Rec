@@ -6,7 +6,6 @@ class DefaultTags(Enum):
     CATEGORICAL = ["categorical"]
     CONTINUOUS = ["continuous"]
     LIST = ["list"]
-    IMAGE = ["image"]
     TEXT = ["text"]
     TEXT_TOKENIZED = ["text_tokenized"]
 
@@ -19,14 +18,12 @@ class DefaultTags(Enum):
     TARGETS = ["target"]
     TARGETS_BINARY = ["target", "binary"]
     TARGETS_REGRESSION = ["target", "regression"]
-    TARGETS_MULTI_CLASS = ["target", "multi_class"]
 
 
 class Tag:
     CATEGORICAL = DefaultTags.CATEGORICAL
     CONTINUOUS = DefaultTags.CONTINUOUS
     LIST = DefaultTags.LIST
-    IMAGE = DefaultTags.IMAGE
     TEXT = DefaultTags.TEXT
     TEXT_TOKENIZED = DefaultTags.TEXT_TOKENIZED
 
@@ -39,7 +36,6 @@ class Tag:
     TARGETS = DefaultTags.TARGETS
     TARGETS_BINARY = DefaultTags.TARGETS_BINARY
     TARGETS_REGRESSION = DefaultTags.TARGETS_REGRESSION
-    TARGETS_MULTI_CLASS = DefaultTags.TARGETS_MULTI_CLASS
 
     def __init__(self, *tag):
         self.tags = tag
