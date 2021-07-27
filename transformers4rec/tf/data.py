@@ -280,9 +280,9 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
 
         col_group = ColumnGroup.from_schema(schema_path)
 
-        categorical_features = categorical_features or col_group.categorical_columns
-        continuous_features = continuous_features or col_group.continuous_columns
-        targets = targets or col_group.targets_columns
+        categorical_features = categorical_features or col_group.get_tagged(Tag.CATEGORICAL).column_names
+        continuous_features = continuous_features or col_group.get_tagged(Tag.CONTINUOUS).column_names
+        targets = targets or col_group.get_tagged(Tag.TARGETS).column_names
 
         tf_dataset = cls(
             directory,

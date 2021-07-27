@@ -3,6 +3,7 @@ from typing import List, Optional, Union
 import tensorflow as tf
 
 from ...types import ColumnGroup
+from ...utils.columns import Tag
 from .. import tabular
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
@@ -65,13 +66,13 @@ class DLRMBlock(Block):
         **kwargs
     ):
         embedding_layer = EmbeddingFeatures.from_column_group(
-            column_group.categorical_column_group,
+            column_group.select_by_tag(Tag.CATEGORICAL),
             infer_embedding_sizes=False,
             default_embedding_dim=bottom_mlp.layers[-1].units,
         )
 
         continuous_features = ContinuousFeatures.from_column_group(
-            column_group.continuous_column_group, aggregation="concat"
+            column_group.select_by_tag(Tag.CONTINUOUS), aggregation="concat"
         )
 
         return cls(continuous_features, embedding_layer, bottom_mlp, top_mlp=top_mlp, **kwargs)

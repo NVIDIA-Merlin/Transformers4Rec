@@ -162,25 +162,7 @@ class ColumnGroup:
         return child
 
     def __getitem__(self, columns):
-        """Selects certain columns from this ColumnGroup, and returns a new Columngroup with only
-        those columns
-        Parameters
-        -----------
-        columns: str or list of str
-            Columns to select
-        Returns
-        -------
-        ColumnGroup
-        """
-        if isinstance(columns, str):
-            columns = [columns]
-        if isinstance(columns, int):
-            return self.column_names[columns]
-
-        filtered_columns = [col for col in _convert_col(columns) if col.name in self.column_names]
-        child = ColumnGroup(filtered_columns)
-
-        return child
+        return self.select_by_name(columns)
 
     def filter_columns(self, filter_fn, by_name=True):
         if by_name:
@@ -193,9 +175,14 @@ class ColumnGroup:
     def filter_by_namespace(self, namespace):
         return self.filter_columns(lambda c: c.startswith(namespace))
 
-    def get_tagged(self, tags, output_list=False, tags_to_filter=None):
+    def remove_by_tag(self, tags):
+        to_remove = self.select_by_tag(tags)
+
+        return self - to_remove
+
+    def select_by_tag(self, tags, tags_to_filter=None):
         column_names_to_filter = (
-            self.get_tagged(tags_to_filter, output_list=True) if tags_to_filter else []
+            self.select_by_tag(tags_to_filter, output_list=True) if tags_to_filter else []
         )
 
         if isinstance(tags, DefaultTags):
@@ -210,11 +197,28 @@ class ColumnGroup:
 
         columns = [col for col in output_cols if col.name not in column_names_to_filter]
 
-        if output_list:
-            return [col.name for col in columns]
-
         child = ColumnGroup(columns, tags=tags)
 
+        return child
+
+    def select_by_name(self, names):
+        """Selects certain columns from this ColumnGroup, and returns a new Columngroup with only
+        those columns
+        Parameters
+        -----------
+        columns: str or list of str
+            Columns to select
+        Returns
+        -------
+        ColumnGroup
+        """
+        if isinstance(names, str):
+            names = [names]
+
+        child = ColumnGroup(names)
+        child.parents = [self]
+        self.children.append(child)
+        child.kind = str(names)
         return child
 
     def tags_by_column(self):
@@ -224,53 +228,6 @@ class ColumnGroup:
             outputs[col.name] = col.tags
 
         return outputs
-
-    def targets_columns(self):
-        return self.get_tagged(Tag.TARGETS, output_list=True)
-
-    def targets_column_group(self):
-        return self.get_tagged(Tag.TARGETS, output_list=False)
-
-    def binary_targets_columns(self):
-        return self.get_tagged(Tag.TARGETS_BINARY, output_list=True)
-
-    def binary_targets_column_group(self):
-        return self.get_tagged(Tag.TARGETS_BINARY, output_list=False)
-
-    def regression_targets_columns(self):
-        return self.get_tagged(Tag.TARGETS_REGRESSION, output_list=True)
-
-    def regression_targets_column_group(self):
-        return self.get_tagged(Tag.TARGETS_REGRESSION, output_list=False)
-
-    def continuous_columns(self):
-        return self.get_tagged(Tag.CONTINUOUS, output_list=True)
-
-    def continuous_column_group(self):
-        return self.get_tagged(Tag.CONTINUOUS, output_list=False)
-
-    def categorical_columns(self):
-        return self.get_tagged(Tag.CATEGORICAL, output_list=True)
-
-    def categorical_column_group(self):
-        return self.get_tagged(Tag.CATEGORICAL, output_list=False)
-
-    def text_columns(self):
-        return self.get_tagged(Tag.TEXT, output_list=True)
-
-    def text_column_group(self):
-        return self.get_tagged(Tag.TEXT, output_list=False)
-
-    def text_tokenized_columns(self):
-        return self.get_tagged(Tag.TEXT_TOKENIZED, output_list=True)
-
-    def text_tokenized_column_group(self):
-        return self.get_tagged(Tag.TEXT_TOKENIZED, output_list=False)
-
-    def remove_tagged(self, tags):
-        to_remove = self.get_tagged(tags)
-
-        return self - to_remove
 
 
 def _convert_col(col, tags=None, properties=None):

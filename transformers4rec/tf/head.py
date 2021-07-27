@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Text
 import tensorflow as tf
 
 from ..types import ColumnGroup
+from ..utils.columns import Tag
 
 
 class TaskMixin:
@@ -143,14 +144,14 @@ class Head(tf.keras.layers.Layer):
             task_weights = {}
         to_return = cls()
 
-        for binary_target in column_group.binary_targets_columns:
+        for binary_target in column_group.select_by_tag(Tag.TARGETS_BINARY).column_names:
             to_return = to_return.add_binary_classification_task(
                 binary_target,
                 add_logit_layer=add_logits,
                 task_weight=task_weights.get(binary_target, 1),
             )
 
-        for regression_target in column_group.regression_targets_columns:
+        for regression_target in column_group.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
             to_return = to_return.add_regression_task(
                 regression_target,
                 add_logit_layer=add_logits,
