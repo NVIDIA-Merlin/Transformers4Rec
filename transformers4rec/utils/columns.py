@@ -1,6 +1,6 @@
 import collections.abc
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Text, Union
+from typing import List, Optional, Text, Union
 
 from google.protobuf import text_format
 from tensorflow_metadata.proto.v0 import schema_pb2
@@ -14,7 +14,6 @@ class Column:
 
     name: Text
     tags: Optional[List[Text]] = field(default_factory=list)
-    properties: Optional[Dict[Text, Text]] = field(default_factory=dict)
 
     def __post_init__(self):
         if isinstance(self.tags, DefaultTags):
@@ -31,17 +30,10 @@ class Column:
 
         tags = list(set(list(self.tags) + list(tags))) if add else tags
 
-        return Column(self.name, tags=tags, properties=self.properties)
+        return Column(self.name, tags=tags)
 
     def with_name(self, name) -> "Column":
-        return Column(name, tags=self.tags, properties=self.properties)
-
-    def with_properties(self, add=True, **properties) -> "Column":
-        if not properties:
-            return self
-        properties = {**self.properties, **properties} if add else properties
-
-        return Column(self.name, tags=self.tags, properties=properties)
+        return Column(name, tags=self.tags)
 
 
 class ColumnGroup:
@@ -61,7 +53,6 @@ class ColumnGroup:
         self,
         columns: Union[Text, List[Text], Column, List[Column], "ColumnGroup"],
         tags: Optional[Union[List[Text], DefaultTags]] = None,
-        properties: Optional[Dict[Text, Text]] = None,
     ):
         if isinstance(columns, str):
             columns = [columns]
@@ -72,11 +63,8 @@ class ColumnGroup:
             tags = tags.value
 
         self.tags = tags
-        self.properties = properties
 
-        self.columns: List[Column] = [
-            _convert_col(col, tags=tags, properties=properties) for col in columns
-        ]
+        self.columns: List[Column] = [_convert_col(col, tags=tags) for col in columns]
 
     @staticmethod
     def read_schema(schema_path):
@@ -230,14 +218,12 @@ class ColumnGroup:
         return outputs
 
 
-def _convert_col(col, tags=None, properties=None):
-    if not properties:
-        properties = {}
+def _convert_col(col, tags=None):
     if isinstance(col, Column):
-        return col.with_tags(tags).with_properties(**properties)
+        return col.with_tags(tags)
     elif isinstance(col, str):
-        return Column(col, tags=tags, properties=properties)
+        return Column(col, tags=tags)
     elif isinstance(col, (tuple, list)):
-        return [tuple(_convert_col(c, tags=tags, properties=properties) for c in col)]
+        return [tuple(_convert_col(c, tags=tags) for c in col)]
     else:
         raise ValueError(f"Invalid column value for ColumnGroup: {col} (type: {type(col)})")
