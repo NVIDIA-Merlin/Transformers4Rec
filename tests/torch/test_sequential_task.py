@@ -63,10 +63,12 @@ def test_build_sequential_task_from_block(torch_seq_prediction_head_link_to_bloc
     block = torch4rec.block.base.SequentialBlock(inputs, torch.nn.Linear(64, 64))
 
     task = torch_head.SequentialPredictionTask(
-        loss=torch.nn.NLLLoss(ignore_index=0), metrics=METRICS, mf_constrained_embeddings=True
+        loss=torch.nn.NLLLoss(ignore_index=0),
+        item_id_name="item",
+        metrics=METRICS,
+        mf_constrained_embeddings=True,
     )
-
-    task.build(block, "item")
+    task.build(block)
 
     loss = task.compute_loss(
         inputs=torch_seq_prediction_head_link_to_block["seq_model_output"],

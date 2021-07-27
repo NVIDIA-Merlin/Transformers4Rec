@@ -25,12 +25,19 @@ class PredictionTask(torch.nn.Module):
         self.body = body
         self.pre = pre
 
-    def build(self, input_size, device=None):
+    def build(self, block, device=None):
+        """
+        The method will be called when block is convert to_model,
+        i.e when linked to prediction head
+        Inputs:
+            block: (BlockType) the model block to link with head
+            device: set the device for the metrics and layers of the task
+        """
         if device:
             self.to(device)
             for metric in self.metrics:
                 metric.to(device)
-        self.input_size = input_size
+        self.built = True
 
     def forward(self, inputs, **kwargs):
         x = inputs
@@ -117,6 +124,7 @@ class SequentialPredictionTask(PredictionTask):
         pre: Optional[torch.nn.Module] = None,
         forward_to_prediction_fn=lambda x: x,
         mf_constrained_embeddings: bool = True,
+        item_id_name: str = None,
         item_embedding_table: Optional[torch.nn.Module] = None,
         output_layer_bias: Optional[torch.nn.Parameter] = None,
         input_size: int = None,
@@ -137,33 +145,22 @@ class SequentialPredictionTask(PredictionTask):
         self.output_layer_bias = output_layer_bias
 
         self.pre = pre
+        self.itemid_name = item_id_name
 
-    def build(self, block, itemid_name, block_output_size=None, device=None):
-        if device:
-            self.to(device)
-
-        # Retrieve the input size from block when block_output_size is None
-        if not block_output_size:
-            if getattr(self, "input_size", None) and getattr(self, "forward_output_size", None):
-                block_output_size = self.forward_output_size(self.input_size)
-        if block_output_size:
-            self.input_size = block_output_size
-
+    def build(self, block, device=None):
         # Retrieve item embedding table
         for layer in block.children():
             if isinstance(layer, MergeTabular):
                 for feature in layer.to_merge:
                     if isinstance(feature, EmbeddingFeatures):
-                        if itemid_name in feature.embedding_tables:
-                            item_embedding_table = feature.embedding_tables[itemid_name]
-        self.vocab_size = item_embedding_table.weight.size(0)
-
-        if self.mf_constrained_embeddings:
-            self.item_embedding_table = item_embedding_table
-            self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.vocab_size))
-            torch.nn.init.zeros_(self.output_layer_bias)
-        else:
-            self.pre = torch.nn.Linear(self.input_size, self.vocab_size)
+                        if self.itemid_name in feature.embedding_tables:
+                            item_embedding_table = feature.embedding_tables[self.itemid_name]
+        if not self.vocab_size:
+            self.vocab_size = item_embedding_table.weight.size(0)
+        self.item_embedding_table = item_embedding_table
+        self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.vocab_size))
+        torch.nn.init.zeros_(self.output_layer_bias)
+        super(SequentialPredictionTask, self).build(block)
 
     def forward(self, inputs, **kwargs):
         x = inputs.float()
