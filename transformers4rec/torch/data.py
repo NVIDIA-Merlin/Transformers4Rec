@@ -22,6 +22,8 @@ from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tensorflow import _validate_dataset
 from torch.utils.dlpack import from_dlpack
 
+from ..utils.tags import Tag
+
 
 class IterDL(torch.utils.data.IterableDataset):
     def __init__(self, file_paths, batch_size=1, shuffle=False):
@@ -141,9 +143,13 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
 
         col_group = ColumnGroup.from_schema(schema_path)
 
-        categorical_features = categorical_features or col_group.get_tagged(Tag.CATEGORICAL).column_names
-        continuous_features = continuous_features or col_group.get_tagged(Tag.CONTINUOUS).column_names
-        targets = targets or col_group.get_tagged(Tag.TARGETS).column_names
+        categorical_features = (
+            categorical_features or col_group.select_by_tag(Tag.CATEGORICAL).column_names
+        )
+        continuous_features = (
+            continuous_features or col_group.select_by_tag(Tag.CONTINUOUS).column_names
+        )
+        targets = targets or col_group.select_by_tag(Tag.TARGETS).column_names
 
         torch_dataset = cls(
             directory,
