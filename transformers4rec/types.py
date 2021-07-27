@@ -5,6 +5,6 @@ try:
     ColumnGroup = nvt.ColumnGroup
 except ImportError:
     from .utils.columns import ColumnGroup
-    from .utils.tags import Tag
+    from .utils.tags import DefaultTags, Tag
 
 __all__ = ["ColumnGroup", "Tag", "DefaultTags"]
