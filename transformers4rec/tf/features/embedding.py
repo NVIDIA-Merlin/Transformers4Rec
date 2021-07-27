@@ -29,7 +29,7 @@ class EmbeddingFeatures(TabularLayer):
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         if tags:
-            column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
+            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
 
         if infer_embedding_sizes:
             sizes = column_group.embedding_sizes()

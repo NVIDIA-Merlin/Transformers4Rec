@@ -88,7 +88,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
         cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
     ) -> Optional["TabularModule"]:
         if tags:
-            column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
+            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
 
         if not column_group.columns:
             return None
