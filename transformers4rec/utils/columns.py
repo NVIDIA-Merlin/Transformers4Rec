@@ -215,6 +215,9 @@ class ColumnGroup:
 
         child = ColumnGroup(columns, tags=tags)
 
+        if self._schema:
+            child._schema = self.filter_schema(child.column_names)
+
         return child
 
     def tags_by_column(self):
@@ -271,6 +274,38 @@ class ColumnGroup:
         to_remove = self.get_tagged(tags)
 
         return self - to_remove
+
+    def embedding_sizes(self):
+        if self._schema:
+            cardinalities = self.cardinalities()
+
+            from nvtabular.ops.categorify import _emb_sz_rule
+
+            return {key: _emb_sz_rule(val) for key, val in cardinalities.items()}
+
+    def cardinalities(self):
+        if self._schema:
+            outputs = {}
+            for feature in self._schema.feature:
+                if feature.int_domain and feature.int_domain.is_categorical:
+                    outputs[feature.name] = feature.int_domain.max
+
+            return outputs
+
+    def filter_schema(self, columns):
+        if not self._schema:
+            return None
+
+        from tensorflow_metadata.proto.v0 import schema_pb2
+
+        schema = schema_pb2.Schema()
+
+        for feat in self._schema.feature:
+            if feat.name in columns:
+                f = schema.feature.add()
+                f.CopyFrom(feat)
+
+        return schema
 
 
 def _convert_col(col, tags=None, properties=None):
