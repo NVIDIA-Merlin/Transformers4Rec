@@ -7,7 +7,6 @@ from transformers4rec.utils.columns import ColumnGroup
 
 torch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
-pd = pytest.importorskip("pandas")
 
 
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets"

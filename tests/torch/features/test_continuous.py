@@ -2,7 +2,6 @@ import pytest
 
 from transformers4rec.utils.columns import ColumnGroup
 
-torch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
