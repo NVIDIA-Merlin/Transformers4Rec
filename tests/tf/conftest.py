@@ -1,12 +1,12 @@
 import pytest
 
+tf = pytest.importorskip("tensorflow")
+
 NUM_EXAMPLES = 1000
 
 
 @pytest.fixture
 def tf_con_features():
-    tf = pytest.importorskip("tensorflow")
-
     features = {}
     keys = "abcdef"
 
