@@ -16,3 +16,13 @@ def assets():
 @pytest.fixture
 def schema_file():
     return ASSETS_DIR / "schema.pbtxt"
+
+
+@pytest.fixture
+def yoochoose_schema_file():
+    return ASSETS_DIR / "yoochoose" / "schema.pbtxt"
+
+
+@pytest.fixture
+def yoochoose_data_file():
+    return ASSETS_DIR / "yoochoose" / "data.parquet"

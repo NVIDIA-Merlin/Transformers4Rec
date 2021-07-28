@@ -1,21 +1,20 @@
-from dataclasses import dataclass
-from typing import List
-
-import torch
+from ..tabular import FilterFeatures, TabularModule
 
 
-@dataclass
-class ProcessedSequence:
-    """
-    Class to store the Tensor resulting from the aggregation_registry of a group of
-    categorical and continuous variables defined in the same featuremap
-    Parameters
-    ----------
-        name: name to give to the featuregroup
-        values: the aggregated pytorch tensor
-        metadata: list of columns names to log as metadata
-    """
+class SequentialFeatures(TabularModule):
+    def __init__(self, features, aggregation=None, augmentation=None):
+        super().__init__(aggregation)
+        self.augmentation = augmentation
+        self.filter_features = FilterFeatures(features)
 
-    name: str
-    values: torch.Tensor
-    metadata: List[str]
+    @classmethod
+    def from_features(cls, features, **kwargs):
+        return cls(features, **kwargs)
+
+    def forward(self, inputs, **kwargs):
+        return self.filter_features(inputs)
+
+    def forward_output_size(self, input_shapes):
+        filtered = self.filter_features.forward_output_size(input_shapes)
+
+        return super().forward_output_size(filtered)
