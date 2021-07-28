@@ -78,6 +78,9 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# MAC
+**/.DS_Store
+
 **/.keras
 **/__pycache__
 **/.config

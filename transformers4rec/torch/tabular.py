@@ -93,7 +93,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
         if not column_group.columns:
             return None
 
-        return cls.from_features(column_group.columns, **kwargs)
+        return cls.from_features(column_group.column_names, **kwargs)
 
     @classmethod
     def from_schema(

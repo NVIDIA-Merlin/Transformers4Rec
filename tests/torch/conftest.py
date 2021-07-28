@@ -1,7 +1,16 @@
+import pathlib
+import random
+
 import pytest
+
+from transformers4rec.utils.columns import ColumnGroup
 
 torch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
+pd = pytest.importorskip("pandas")
+
+
+ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets"
 
 NUM_EXAMPLES = 1000
 MAX_CARDINALITY = 100
@@ -20,7 +29,6 @@ def torch_con_features():
 
 @pytest.fixture
 def torch_cat_features():
-
     features = {}
     keys = [f"cat_{f}" for f in "abcdef"]
 
@@ -101,3 +109,94 @@ def torch_seq_prediction_head_link_to_block():
     }
 
     return features
+
+
+@pytest.fixture
+def torch_yoochoose_like():
+    NUM_ROWS = 100
+    MAX_CARDINALITY = 100
+    MAX_SESSION_LENGTH = 20
+
+    schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
+
+    schema = ColumnGroup.read_schema(str(schema_file))
+    data = {}
+
+    for i in range(NUM_ROWS):
+        session_length = random.randint(5, MAX_SESSION_LENGTH)
+
+        for feature in schema.feature[2:]:
+            is_session_feature = feature.HasField("value_count")
+            is_int_feature = feature.HasField("int_domain")
+
+            if is_int_feature:
+                if is_session_feature:
+                    max_num = MAX_CARDINALITY
+                    if not feature.int_domain.is_categorical:
+                        max_num = feature.int_domain.max
+                    row = torch.randint(max_num, (session_length,))
+                else:
+                    row = torch.randint(max_num, (1,))
+            else:
+                if is_session_feature:
+                    row = torch.rand((session_length,))
+                else:
+                    row = torch.rand((1,))
+
+            if is_session_feature:
+                row = (row, [len(row)])
+
+            if feature.name in data:
+                if is_session_feature:
+                    data[feature.name] = (
+                        torch.cat((data[feature.name][0], row[0])),
+                        data[feature.name][1] + row[1],
+                    )
+                else:
+                    data[feature.name] = torch.cat((data[feature.name], row))
+            else:
+                data[feature.name] = row
+
+    outputs = {}
+    for key, val in data.items():
+        if isinstance(val, tuple):
+            offsets = [0]
+            for length in val[1][:-1]:
+                offsets.append(offsets[-1] + length)
+            vals = (val[0], torch.tensor(offsets).unsqueeze(dim=1))
+            values, offsets, diff_offsets, num_rows = _pull_values_offsets(vals)
+            indices = _get_indices(offsets, diff_offsets)
+            outputs[key] = _get_sparse_tensor(values, indices, num_rows, MAX_SESSION_LENGTH)
+        else:
+            outputs[key] = data[key]
+
+    return outputs
+
+
+def _pull_values_offsets(values_offset):
+    # pull_values_offsets, return values offsets diff_offsets
+    if isinstance(values_offset, tuple):
+        values = values_offset[0].flatten()
+        offsets = values_offset[1].flatten()
+    else:
+        values = values_offset.flatten()
+        offsets = torch.arange(values.size()[0])
+    num_rows = len(offsets)
+    offsets = torch.cat([offsets, torch.tensor([len(values)])])
+    diff_offsets = offsets[1:] - offsets[:-1]
+    return values, offsets, diff_offsets, num_rows
+
+
+def _get_indices(offsets, diff_offsets):
+    row_ids = torch.arange(len(offsets) - 1)
+    row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
+    row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
+    col_ids = torch.arange(len(row_offset_repeated)) - row_offset_repeated
+    indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1)
+    return indices
+
+
+def _get_sparse_tensor(values, indices, num_rows, seq_limit):
+    sparse_tensor = torch.sparse_coo_tensor(indices.T, values, torch.Size([num_rows, seq_limit]))
+
+    return sparse_tensor.to_dense()
