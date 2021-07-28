@@ -1,7 +1,5 @@
 import pytest
 
-from transformers4rec.utils.columns import ColumnGroup
-
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
@@ -18,8 +16,8 @@ def test_embedding_features(torch_cat_features):
     assert all([emb.shape[-1] == dim for emb in embeddings.values()])
 
 
-def test_embedding_features_yoochoose(yoochoose_schema_file, torch_yoochoose_like):
-    col_group = ColumnGroup.from_schema(str(yoochoose_schema_file))
+def test_embedding_features_yoochoose(yoochoose_column_group, torch_yoochoose_like):
+    col_group = yoochoose_column_group
 
     emb_module = torch4rec.EmbeddingFeatures.from_column_group(col_group.categorical_column_group())
     embeddings = emb_module(torch_yoochoose_like)
