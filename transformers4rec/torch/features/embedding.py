@@ -1,8 +1,10 @@
-from typing import Dict, Optional, Text
+import math
+from typing import Dict, Optional, Text, Union
 
 import torch
+import yaml
 
-from ...types import ColumnGroup
+from ...types import ColumnGroup, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
 
 
@@ -151,6 +153,75 @@ class EmbeddingFeatures(TabularModule):
 
         return cls(feature_config, **kwargs)
 
+    @classmethod
+    def from_config(
+        cls,
+        config: Union[Dict[str, dict], str],
+        embedding_dims=None,
+        default_embedding_dim=64,
+        infer_embedding_sizes=False,
+        combiner="mean",
+        tags=None,
+        tags_to_filter=None,
+        **kwargs
+    ) -> Optional["EmbeddingFeatures"]:
+        if isinstance(config, str):
+            # load config from specified path
+            with open(config) as yaml_file:
+                config = yaml.load(yaml_file, Loader=yaml.FullLoader)
+
+        if isinstance(tags, DefaultTags):
+            tags = tags.value
+        if not isinstance(tags, list):
+            tags = [tags]
+
+        column_names_to_filter = []
+        if tags_to_filter:
+            column_names_to_filter = [
+                key for key, val in config.items() if all(x in val["tags"] for x in tags_to_filter)
+            ]
+        if tags:
+            output_cols = [
+                {key: val} for key, val in config.items() if all(x in val["tags"] for x in tags)
+            ]
+        output_cols = {
+            k: v for d in output_cols for k, v in d.items() if k not in column_names_to_filter
+        }
+
+        if infer_embedding_sizes:
+            sizes = [
+                {
+                    key: (
+                        val["cardinality"],
+                        cls.get_embedding_size_from_cardinality(val["cardinality"]),
+                    )
+                }
+                for key, val in output_cols.items()
+            ]
+        else:
+            if not embedding_dims:
+                embedding_dims = {}
+            sizes = {}
+            cardinalities = {key: val["cardinality"] for key, val in output_cols.items()}
+            for key, cardinality in cardinalities.items():
+                embedding_size = embedding_dims.get(key, default_embedding_dim)
+                sizes[key] = (cardinality, embedding_size)
+
+        feature_config: Dict[str, FeatureConfig] = {}
+        for name, (vocab_size, dim) in sizes.items():
+            feature_config[name] = FeatureConfig(
+                TableConfig(
+                    vocabulary_size=vocab_size,
+                    dim=dim,
+                    name=name,
+                    combiner=combiner,
+                )
+            )
+        if not feature_config:
+            return None
+
+        return cls(feature_config, **kwargs)
+
     def forward(self, inputs, **kwargs):
         embedded_outputs = {}
         filtered_inputs = self.filter_features(inputs)
@@ -176,6 +247,12 @@ class EmbeddingFeatures(TabularModule):
             sizes[name] = torch.Size([batch_size, feature.table.dim])
 
         return super().forward_output_size(sizes)
+
+    @staticmethod
+    def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
+        # A rule-of-thumb from Google.
+        embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
+        return embedding_size
 
 
 class SoftEmbeddingFeatures(EmbeddingFeatures):
