@@ -1,17 +1,17 @@
 import collections
-from contextlib import contextmanager
-import tempfile
 import os
 import shutil
+import tempfile
+from contextlib import contextmanager
 
-from tqdm import tqdm
-import numpy as np
-import cupy
 import cudf
+import cupy
 import dask_cudf
+import numpy as np
 import nvtabular as nvt
-from nvtabular.ops import Operator
 from cudf.core.dtypes import ListDtype
+from nvtabular.ops import Operator
+from tqdm import tqdm
 
 
 def get_from_col_group(self, to_get):
@@ -23,30 +23,27 @@ def get_from_col_group(self, to_get):
         to_get = set(to_get)
     else:
         raise ValueError(f"Expected ColumnGroup, str, or list of str. Got {to_get.__class__}")
-    
+
     new_columns = [c for c in self.columns if c in to_get]
     child = nvt.ColumnGroup(new_columns)
     child.parents = [self]
     self.children.append(child)
     child.kind = f"- {[c for c in self.columns if c not in to_get]}"
-    
+
     return child
 
 
-
-def remove_consecutive_interactions(df, session_id_col="session_id", item_id_col="item_id", timestamp_col="timestamp"):
+def remove_consecutive_interactions(
+    df, session_id_col="session_id", item_id_col="item_id", timestamp_col="timestamp"
+):
     print("Count with in-session repeated interactions: {}".format(len(df)))
     # Sorts the dataframe by session and timestamp, to remove consective repetitions
     df = df.sort_values([session_id_col, timestamp_col])
-    df['item_id_past'] = df[item_id_col].shift(1)
-    df['session_id_past'] = df[session_id_col].shift(1)
-    #Keeping only no consectutive repeated in session interactions
-    df = df[~((df[session_id_col] == df['session_id_past']) & \
-                    (df[item_id_col] == df['item_id_past']))]
+    past_ids = df[item_id_col].shift(1)
+    session_past_ids = df[session_id_col].shift(1)
+    # Keeping only no consectutive repeated in session interactions
+    df = df[~((df[session_id_col] == session_past_ids) & (df[item_id_col] == past_ids))]
     print("Count after removed in-session repeated interactions: {}".format(len(df)))
-
-    del(df['item_id_past'])
-    del(df['session_id_past'])
 
     return df
 
@@ -56,7 +53,7 @@ def create_session_aggs(column_group, default_agg="list", extra_aggs=None, to_ig
         extra_aggs = {}
     if not to_ignore:
         to_ignore = []
-    
+
     aggs = {col.name: [default_agg] for col in column_group.columns if col.name not in to_ignore}
     for key, val in extra_aggs.items():
         if key in aggs:
@@ -66,7 +63,7 @@ def create_session_aggs(column_group, default_agg="list", extra_aggs=None, to_ig
                 aggs[key].append(val)
         else:
             aggs[key] = val
-            
+
     return aggs
 
 
@@ -115,7 +112,7 @@ class Ops(object):
     @property
     def ops(self):
         return self._ops
-    
+
     @property
     def namespace(self):
         return "/".join(self._namespace_items)
@@ -196,9 +193,7 @@ class TimestampFeatures(Ops):
         super().__init__(auto_renaming=auto_renaming, sequential=False)
         del_fn = lambda x: f"{delimiter}{x}"
         hour = self.add(
-            Ops(
-                nvt.ops.LambdaOp(lambda col: col.dt.hour), nvt.ops.Rename(postfix=del_fn("hour"))
-            )
+            Ops(nvt.ops.LambdaOp(lambda col: col.dt.hour), nvt.ops.Rename(postfix=del_fn("hour")))
         )
         weekday = self.add(
             Ops(
@@ -216,9 +211,7 @@ class TimestampFeatures(Ops):
             )
         )
         self.add(
-            Ops(
-                nvt.ops.LambdaOp(lambda col: col.dt.year), nvt.ops.Rename(postfix=del_fn("year"))
-            )
+            Ops(nvt.ops.LambdaOp(lambda col: col.dt.year), nvt.ops.Rename(postfix=del_fn("year")))
         )
 
         if add_timestamp:
@@ -230,10 +223,34 @@ class TimestampFeatures(Ops):
             )
 
         if add_cycled:
-            self.add(Ops(*hour.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col, 24)), nvt.ops.Rename(postfix="_sin")))
-            self.add(Ops(*hour.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col, 24)), nvt.ops.Rename(postfix="_cos")))
-            self.add(Ops(*weekday.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col + 1, 7)), nvt.ops.Rename(postfix="_sin")))
-            self.add(Ops(*weekday.ops, nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col + 1, 7)), nvt.ops.Rename(postfix="_cos")))
+            self.add(
+                Ops(
+                    *hour.ops,
+                    nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col, 24)),
+                    nvt.ops.Rename(postfix="_sin"),
+                )
+            )
+            self.add(
+                Ops(
+                    *hour.ops,
+                    nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col, 24)),
+                    nvt.ops.Rename(postfix="_cos"),
+                )
+            )
+            self.add(
+                Ops(
+                    *weekday.ops,
+                    nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_sin(col + 1, 7)),
+                    nvt.ops.Rename(postfix="_sin"),
+                )
+            )
+            self.add(
+                Ops(
+                    *weekday.ops,
+                    nvt.ops.LambdaOp(lambda col: self.get_cycled_feature_value_cos(col + 1, 7)),
+                    nvt.ops.Rename(postfix="_cos"),
+                )
+            )
 
     @staticmethod
     def get_cycled_feature_value_sin(col, max_value):
@@ -253,14 +270,24 @@ class TimestampFeatures(Ops):
 class SessionDay(Ops):
     def __init__(self, name="day_idx", padding=4):
         super().__init__()
-        self.extend([
-            nvt.ops.LambdaOp(lambda x: (x - x.min()).dt.days + 1),
-            nvt.ops.LambdaOp(lambda col: col.astype(str).str.pad(padding, fillchar='0')),
-            nvt.ops.Rename(f=lambda col: name)
-        ])
+        self.extend(
+            [
+                nvt.ops.LambdaOp(lambda x: (x - x.min()).dt.days + 1),
+                nvt.ops.LambdaOp(lambda col: col.astype(str).str.pad(padding, fillchar="0")),
+                nvt.ops.Rename(f=lambda col: name),
+            ]
+        )
 
 
-def save_time_based_splits(data, output_dir, partition_col="day_idx", timestamp_col="ts/first", test_size=0.1, val_size=0.1, overwrite=True):
+def save_time_based_splits(
+    data,
+    output_dir,
+    partition_col="day_idx",
+    timestamp_col="ts/first",
+    test_size=0.1,
+    val_size=0.1,
+    overwrite=True,
+):
     if isinstance(data, dask_cudf.DataFrame):
         data = nvt.Dataset(data)
     if not isinstance(partition_col, list):
@@ -273,21 +300,21 @@ def save_time_based_splits(data, output_dir, partition_col="day_idx", timestamp_
         data.to_parquet(tmpdirname, partition_on=partition_col)
         time_dirs = [f for f in sorted(os.listdir(tmpdirname)) if f.startswith(partition_col[0])]
         for d in tqdm(time_dirs, desc="Creating time-based splits"):
-            path = os.path.join(tmpdirname, d, 'part.0')
+            path = os.path.join(tmpdirname, d, "part.0")
             df = cudf.read_parquet(path)
             df = df.sort_values(timestamp_col)
-            
+
             split_name = d.replace(f"{partition_col[0]}=", "")
             out_dir = os.path.join(output_dir, split_name)
             os.makedirs(out_dir, exist_ok=True)
-            df.to_parquet(os.path.join(out_dir, 'train.parquet'))
-            
+            df.to_parquet(os.path.join(out_dir, "train.parquet"))
+
             random_values = cupy.random.rand(len(df))
-            
-            #Extracts 10% for valid and test set. Those sessions are also in the train set, but as evaluation
-            #happens only for the subsequent day of training, that is not an issue, and we can keep the train set larger.
+
+            # Extracts 10% for valid and test set. Those sessions are also in the train set, but as evaluation
+            # happens only for the subsequent day of training, that is not an issue, and we can keep the train set larger.
             valid_set = df[random_values <= val_size]
-            valid_set.to_parquet(os.path.join(out_dir, 'valid.parquet'))
-            
+            valid_set.to_parquet(os.path.join(out_dir, "valid.parquet"))
+
             test_set = df[random_values >= 1 - test_size]
-            test_set.to_parquet(os.path.join(out_dir, 'test.parquet'))
+            test_set.to_parquet(os.path.join(out_dir, "test.parquet"))

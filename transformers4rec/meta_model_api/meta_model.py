@@ -70,7 +70,7 @@ class MetaModel(nn.Module):
             feature_process=self.feature_group,
         )
 
-    def forward(self,  training=False, *args, **kwargs):
+    def forward(self, training=False, *args, **kwargs):
         inputs = kwargs
         out = self.feature_group(inputs)
         input_sequence = out.values
