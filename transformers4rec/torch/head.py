@@ -5,6 +5,8 @@ import torch
 import torchmetrics as tm
 
 from ..types import ColumnGroup
+from .features.embedding import EmbeddingFeatures
+from .tabular import MergeTabular
 
 
 class PredictionTask(torch.nn.Module):
@@ -23,12 +25,19 @@ class PredictionTask(torch.nn.Module):
         self.body = body
         self.pre = pre
 
-    def build(self, input_size, device=None):
+    def build(self, block, device=None):
+        """
+        The method will be called when block is convert to_model,
+        i.e when linked to prediction head
+        Inputs:
+            block: (BlockType) the model block to link with head
+            device: set the device for the metrics and layers of the task
+        """
         if device:
             self.to(device)
             for metric in self.metrics:
                 metric.to(device)
-        self.input_size = input_size
+        self.built = True
 
     def forward(self, inputs, **kwargs):
         x = inputs
@@ -104,6 +113,70 @@ class PredictionTask(torch.nn.Module):
         metrics = metrics or [tm.regression.MeanSquaredError()]
 
         return cls(loss=torch.nn.MSELoss(), metrics=metrics)
+
+
+class SequentialPredictionTask(PredictionTask):
+    def __init__(
+        self,
+        loss,
+        metrics=None,
+        body: Optional[torch.nn.Module] = None,
+        pre: Optional[torch.nn.Module] = None,
+        forward_to_prediction_fn=lambda x: x,
+        mf_constrained_embeddings: bool = True,
+        item_id_name: str = None,
+        item_embedding_table: Optional[torch.nn.Module] = None,
+        output_layer_bias: Optional[torch.nn.Parameter] = None,
+        input_size: int = None,
+        vocab_size: int = None,
+    ):
+        super(SequentialPredictionTask, self).__init__(
+            loss=loss,
+            metrics=metrics,
+            body=body,
+            forward_to_prediction_fn=forward_to_prediction_fn,
+        )
+
+        self.mf_constrained_embeddings = mf_constrained_embeddings
+        self.vocab_size = vocab_size
+        self.input_size = input_size
+
+        self.item_embedding_table = item_embedding_table
+        self.output_layer_bias = output_layer_bias
+
+        self.pre = pre
+        self.itemid_name = item_id_name
+
+    def build(self, block, device=None):
+        # Retrieve item embedding table
+        for layer in block.children():
+            if isinstance(layer, MergeTabular):
+                for feature in layer.to_merge:
+                    if isinstance(feature, EmbeddingFeatures):
+                        if self.itemid_name in feature.embedding_tables:
+                            item_embedding_table = feature.embedding_tables[self.itemid_name]
+        if not self.vocab_size:
+            self.vocab_size = item_embedding_table.weight.size(0)
+        self.item_embedding_table = item_embedding_table
+        self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.vocab_size))
+        torch.nn.init.zeros_(self.output_layer_bias)
+        super(SequentialPredictionTask, self).build(block)
+
+    def forward(self, inputs, **kwargs):
+        x = inputs.float()
+        if self.body:
+            x = self.body(x)
+
+        if self.mf_constrained_embeddings:
+            x = torch.nn.functional.linear(
+                x,
+                weight=self.item_embedding_table.weight.float(),
+                bias=self.output_layer_bias,
+            )
+
+        if self.pre:
+            x = self.pre(x)
+        return x
 
 
 class LambdaModule(torch.nn.Module):
