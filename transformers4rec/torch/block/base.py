@@ -119,12 +119,12 @@ def right_shift_block(self, other):
     right_side = list(self) if isinstance(self, SequentialBlock) else [self]
 
     # Maybe build right-side
-    if getattr(left_side[-1], "output_size", None) and left_side[-1].output_size():
+    if hasattr(left_side[-1], "output_size") and left_side[-1].output_size():
         _right_side = []
         x = left_side[-1].output_size()
         for module in right_side:
             if getattr(module, "build", None):
-                if len(inspect.signature(module.build).parameters) == 2:
+                if "parents" in inspect.signature(module.build).parameters:
                     build = module.build(x, left_side)
                 else:
                     build = module.build(x)

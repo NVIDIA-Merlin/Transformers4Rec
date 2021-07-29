@@ -4,7 +4,10 @@ from typing import Dict, Optional, Text, Union
 import torch
 import yaml
 
-from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
+from transformers4rec.torch.utils.torch_utils import (
+    calculate_batch_size_from_input_size,
+    get_output_sizes_from_schema,
+)
 
 from ...types import ColumnGroup, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
@@ -130,6 +133,8 @@ class EmbeddingFeatures(TabularModule):
         combiner="mean",
         tags=None,
         tags_to_filter=None,
+        automatic_build=True,
+        max_sequence_length=None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         # TODO: propogate item-id from ITEM_ID tag
@@ -161,7 +166,18 @@ class EmbeddingFeatures(TabularModule):
         if not feature_config:
             return None
 
-        return cls(feature_config, **kwargs)
+        output = cls(feature_config, **kwargs)
+
+        if automatic_build and column_group._schema:
+            output.build(
+                get_output_sizes_from_schema(
+                    column_group._schema,
+                    kwargs.get("batch_size", -1),
+                    max_sequence_length=max_sequence_length,
+                )
+            )
+
+        return output
 
     @classmethod
     def from_config(

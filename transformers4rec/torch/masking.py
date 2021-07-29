@@ -42,7 +42,7 @@ class MaskedSequence:
     """
 
     masked_input: torch.Tensor
-    # masked_label: torch.Tensor
+    masked_label: torch.Tensor
     mask_schema: torch.Tensor
     plm_target_mapping: torch.Tensor = None
     plm_perm_mask: torch.Tensor = None

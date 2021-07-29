@@ -1,3 +1,5 @@
+import abc
+
 import torch
 
 from ..utils.registry import Registry
@@ -16,6 +18,24 @@ class FeatureAggregation(torch.nn.Module):
     def forward(self, inputs: TabularData) -> torch.tensor:
         return super(FeatureAggregation, self).forward(inputs)
 
+    @abc.abstractmethod
+    def forward_output_size(self, input_size):
+        raise NotImplementedError
+
+    def build(self, input_size, device=None):
+        if device:
+            self.to(device)
+        self.input_size = input_size
+
+        return self
+
+    def output_size(self):
+        if not self.input_size:
+            # TODO: log warning here
+            pass
+
+        return self.forward_output_size(self.input_size)
+
 
 @aggregation_registry.register("concat")
 class ConcatFeatures(FeatureAggregation):
@@ -32,6 +52,7 @@ class ConcatFeatures(FeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
+
         return batch_size, sum([i[1] for i in input_size.values()])
 
 
@@ -91,3 +112,9 @@ class ElementwiseSum(FeatureAggregation):
 
     def forward(self, inputs):
         return self.stack(inputs).sum(dim=0)
+
+    def forward_output_size(self, input_size):
+        batch_size = calculate_batch_size_from_input_size(input_size)
+        last_dim = [i for i in input_size.values()][0][-1]
+
+        return batch_size, last_dim
