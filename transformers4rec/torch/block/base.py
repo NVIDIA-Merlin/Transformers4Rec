@@ -53,6 +53,24 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
     def __add__(self, other):
         return merge_tabular(self, other)
 
+    def forward_output_size(self, input_size):
+        x = input_size
+        for module in list(self):
+            if getattr(module, "forward_output_size", None):
+                x = module.forward_output_size(x)
+            else:
+                # TODO log warning here
+                return None
+
+        return x
+
+    def output_size(self):
+        if not getattr(self, "input_size", None):
+            # TODO: log warning here
+            pass
+
+        return self.forward_output_size(self.input_size)
+
 
 class BuildableBlock(abc.ABC):
     @abc.abstractmethod
@@ -60,12 +78,7 @@ class BuildableBlock(abc.ABC):
         raise NotImplementedError
 
     def __rrshift__(self, other):
-        module = self.build(other.output_size())
-
-        return right_shift_block(module, other)
-
-    def __rshift__(self, other):
-        print("__rshift__")
+        return right_shift_block(self, other)
 
 
 BlockType = Union[torch.nn.Module, Block]
@@ -77,6 +90,20 @@ def right_shift_block(self, other):
     else:
         left_side = list(other) if isinstance(other, SequentialBlock) else [other]
     right_side = list(self) if isinstance(self, SequentialBlock) else [self]
+
+    # Maybe build right-side
+    if getattr(left_side[-1], "output_size", None) and left_side[-1].output_size():
+        _right_side = []
+        x = left_side[-1].output_size()
+        for module in right_side:
+            if getattr(module, "build", None):
+                build = module.build(x)
+                if build:
+                    module = build
+                x = module.output_size()
+            _right_side.append(module)
+        right_side = _right_side
+
     sequential = left_side + right_side
 
     need_moving_to_gpu = False

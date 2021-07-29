@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import Optional
 
 import torch
@@ -62,7 +63,7 @@ class FilterFeatures(TabularMixin, torch.nn.Module):
 
         return outputs
 
-    def forward_output_shape(self, input_shape):
+    def forward_output_size(self, input_shape):
         return {k: v for k, v in input_shape.items() if k in self.to_include}
 
 
@@ -74,14 +75,40 @@ class AsTabular(torch.nn.Module):
     def forward(self, inputs):
         return {self.output_name: inputs}
 
+    def build(self, input_size, device=None):
+        if device:
+            self.to(device)
+        self.input_size = input_size
+
+        return self
+
+    def forward_output_size(self, input_size):
+        return {self.output_name: input_size}
+
+    def output_size(self):
+        if not self.input_size:
+            # TODO: log warning here
+            pass
+
+        return self.forward_output_size(self.input_size)
+
 
 class TabularModule(TabularMixin, torch.nn.Module):
     def __init__(self, aggregation=None):
         super().__init__()
-        self.aggregation = aggregation
-        if aggregation:
-            self.aggregation = agg.aggregation_registry.parse(aggregation)
         self.input_size = None
+        self.aggregation = aggregation
+
+    @property
+    def aggregation(self):
+        return self._aggregation
+
+    @aggregation.setter
+    def aggregation(self, value):
+        if value:
+            self._aggregation = agg.aggregation_registry.parse(value)
+        else:
+            self._aggregation = None
 
     @classmethod
     def from_column_group(
@@ -117,6 +144,8 @@ class TabularModule(TabularMixin, torch.nn.Module):
             self.to(device)
         self.input_size = input_size
 
+        return self
+
     def forward_output_size(self, input_size):
         if self.aggregation:
             return self.aggregation.forward_output_size(input_size)
@@ -138,14 +167,24 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
 class MergeTabular(TabularModule):
     def __init__(self, *to_merge, aggregation=None):
-        self.to_merge = list(to_merge)
+        if all(isinstance(x, dict) for x in to_merge):
+            self.to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
+        else:
+            self.to_merge = list(to_merge)
         super().__init__(aggregation)
+
+    @property
+    def merge_values(self):
+        if isinstance(self.to_merge, dict):
+            return list(self.to_merge.values())
+
+        return self.to_merge
 
     def forward(self, inputs):
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
         outputs = {}
-        for layer in self.to_merge:
+        for layer in self.merge_values:
             outputs.update(layer(inputs))
 
         return outputs
@@ -153,10 +192,18 @@ class MergeTabular(TabularModule):
     def forward_output_size(self, input_size):
         output_shapes = {}
 
-        for layer in self.to_merge:
+        for layer in self.merge_values:
             output_shapes.update(layer.forward_output_size(input_size))
 
         return output_shapes
+
+    def build(self, input_size, device=None):
+        super().build(input_size, device)
+
+        for layer in self.merge_values:
+            layer.build(input_size, device)
+
+        return self
 
 
 def merge_tabular(self, other, **kwargs):
