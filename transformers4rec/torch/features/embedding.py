@@ -93,8 +93,9 @@ class SoftEmbedding(torch.nn.Module):
 
 
 class EmbeddingFeatures(TabularModule):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], **kwargs):
+    def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
         super().__init__(**kwargs)
+        self.item_id = item_id
         self.feature_config = feature_config
         self.filter_features = FilterFeatures(list(feature_config.keys()))
 
@@ -109,6 +110,12 @@ class EmbeddingFeatures(TabularModule):
             embedding_tables[name] = self.table_to_embedding_module(table)
 
         self.embedding_tables = torch.nn.ModuleDict(embedding_tables)
+
+    @property
+    def item_embedding_table(self):
+        assert self.item_id is not None
+
+        return self.embedding_tables[self.item_id]
 
     def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Module:
         return torch.nn.EmbeddingBag(table.vocabulary_size, table.dim, mode=table.combiner)
@@ -125,6 +132,7 @@ class EmbeddingFeatures(TabularModule):
         tags_to_filter=None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
+        # TODO: propogate item-id from ITEM_ID tag
         if tags:
             column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
 
@@ -223,6 +231,9 @@ class EmbeddingFeatures(TabularModule):
             return None
 
         return cls(feature_config, **kwargs)
+
+    def item_ids(self, inputs) -> torch.Tensor:
+        return inputs[self.item_id]
 
     def forward(self, inputs, **kwargs):
         embedded_outputs = {}

@@ -23,6 +23,8 @@ from ..utils.registry import Registry
 
 masking_registry = Registry("torch.masking")
 
+MaskingSchema = torch.Tensor
+
 
 @dataclass
 class MaskedSequence:
@@ -40,7 +42,7 @@ class MaskedSequence:
     """
 
     masked_input: torch.Tensor
-    masked_label: torch.Tensor
+    # masked_label: torch.Tensor
     mask_schema: torch.Tensor
     plm_target_mapping: torch.Tensor = None
     plm_perm_mask: torch.Tensor = None
@@ -62,16 +64,26 @@ class MaskSequence(_MaskSequence, nn.Module):
     def __init__(self, hidden_size: int, device: str = "cpu", pad_token: int = 0):
         super().__init__(hidden_size, device, pad_token)
         nn.Module.__init__(self)
+        self.schema = None
 
-    def forward(self, pos_emb, itemid_seq, training) -> MaskedSequence:
-        """
-        INPUTS:
-        ------
-            pos_emb: sequence of interactions embeddings of shape (bs, max_len, hidden_dim).
-            itemid_seq: sequence of item ids (labels) of shape (bs, max_len).
-            training: whether to use the module in training mode (==True) or evaluation mode.
-        """
-        raise NotImplementedError()
+    def compute_mask(self, item_ids: torch.Tensor, training=False) -> MaskingSchema:
+        # TODO: assert inputs has 3 dims
+        raise NotImplementedError
+
+    def set_masking_schema(self, item_ids: torch.Tensor, training=False):
+        self.schema = self.compute_mask(item_ids, training=training)
+
+    def apply_mask_to_inputs(self, inputs: torch.Tensor, schema: MaskingSchema):
+        raise NotImplementedError
+
+    def apply_mask_to_targets(self, target: torch.Tensor, schema: MaskingSchema):
+        raise NotImplementedError
+
+    def forward(self, inputs: torch.Tensor, for_inputs=True) -> torch.Tensor:
+        if for_inputs:
+            return self.apply_mask_to_inputs(inputs, self.schema)
+
+        return self.apply_mask_to_targets(inputs, self.schema)
 
 
 @masking_registry.register_with_multiple_names("clm", "causal")

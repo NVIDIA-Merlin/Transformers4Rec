@@ -1,3 +1,5 @@
+from typing import List
+
 from ...types import ColumnGroup, Tag
 from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular, TabularModule
@@ -28,7 +30,7 @@ class TabularFeatures(MergeTabular):
         assert to_merge is not [], "Please provide at least one input layer"
         super(TabularFeatures, self).__init__(to_merge, aggregation=aggregation)
 
-    def project_continuous_features(self, dimensions):
+    def project_continuous_features(self, dimensions: List[int]):
         if isinstance(dimensions, int):
             dimensions = [dimensions]
 
@@ -72,7 +74,7 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
         )
 
-        if column_group._schema:
+        if automatic_build and column_group._schema:
             output.build(
                 get_output_sizes_from_schema(
                     column_group._schema,
@@ -82,6 +84,10 @@ class TabularFeatures(MergeTabular):
             )
 
         if continuous_projection:
+            if not automatic_build:
+                raise ValueError(
+                    "Continuous feature projection can only be done with automatic_build"
+                )
             output = output.project_continuous_features(continuous_projection)
 
         return output

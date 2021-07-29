@@ -1,17 +1,26 @@
 import inspect
-from typing import Dict
+from typing import Dict, Optional, Union
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
 from ..head import Head
+from ..typing import MaskSequence
 from .base import BlockType
 
 
 class BlockWithHead(torch.nn.Module):
-    def __init__(self, block: BlockType, head: Head, optimizer=torch.optim.Adam, model_name=None):
+    def __init__(
+        self,
+        block: BlockType,
+        head: Head,
+        masking: Optional[Union[MaskSequence, str]] = None,
+        optimizer=torch.optim.Adam,
+        model_name=None,
+    ):
         super().__init__()
+        self.masking = masking
         self.model_name = model_name
         self.block = block
         self.head = head
@@ -22,6 +31,10 @@ class BlockWithHead(torch.nn.Module):
 
     def compute_loss(self, inputs, targets) -> torch.Tensor:
         block_outputs = self.block(inputs)
+        maybe_masking = self.block.get_children_by_class_name("_RecurrentBlock")
+        if maybe_masking:
+            targets = maybe_masking[0].masking(inputs, for_inputs=False)
+
         return self.head.compute_loss(block_outputs, targets)
 
     def calculate_metrics(self, inputs, targets, mode="val") -> Dict[str, torch.Tensor]:
