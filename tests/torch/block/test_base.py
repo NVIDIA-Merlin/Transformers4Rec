@@ -10,6 +10,6 @@ def test_base_block(yoochoose_column_group):
 
     block = tab_module >> torch4rec.MLPBlock([64, 32])
 
-    embedding_block = block.get_children_by_class_name("EmbeddingFeatures")[0]
+    embedding_block = block.get_children_by_class_name(list(block), "EmbeddingFeatures")[0]
 
     assert isinstance(embedding_block, torch4rec.EmbeddingFeatures)
