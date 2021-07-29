@@ -31,9 +31,10 @@ class BlockWithHead(torch.nn.Module):
 
     def compute_loss(self, inputs, targets) -> torch.Tensor:
         block_outputs = self.block(inputs)
-        maybe_masking = self.block.get_children_by_class_name("_RecurrentBlock")
-        if maybe_masking:
-            targets = maybe_masking[0].masking(inputs, for_inputs=False)
+        if getattr(self.block, "get_children_by_class_name"):
+            maybe_masking = self.block.get_children_by_class_name("_RecurrentBlock")
+            if maybe_masking:
+                targets = maybe_masking[0].masking(inputs, for_inputs=False)
 
         return self.head.compute_loss(block_outputs, targets)
 
