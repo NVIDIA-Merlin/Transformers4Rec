@@ -13,7 +13,6 @@ def test_recurrent_block(yoochoose_column_group, torch_yoochoose_like):
     )
 
     transformer_config = XLNetConfig.for_rec(64, 4, 2)
-    # transformer = transformer_config.to_torch_model()
 
     block = (
         tab_module
