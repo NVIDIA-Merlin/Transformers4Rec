@@ -1,6 +1,6 @@
 from ...types import ColumnGroup, Tag
 from ..block.mlp import MLPBlock
-from ..tabular import AsTabular, MergeTabular
+from ..tabular import AsTabular, MergeTabular, TabularModule
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
@@ -88,7 +88,7 @@ class TabularFeatures(MergeTabular):
 
     def forward_output_size(self, input_size):
         output_sizes = {}
-        for in_layer in self.to_apply:
+        for in_layer in self.merge_values:
             output_sizes.update(in_layer.forward_output_size(input_size))
 
-        return super().forward_output_size(output_sizes)
+        return TabularModule.forward_output_size(self, output_sizes)

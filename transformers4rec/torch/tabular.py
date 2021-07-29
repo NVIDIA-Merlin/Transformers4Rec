@@ -195,7 +195,7 @@ class MergeTabular(TabularModule):
         for layer in self.merge_values:
             output_shapes.update(layer.forward_output_size(input_size))
 
-        return output_shapes
+        return super(MergeTabular, self).forward_output_size(output_shapes)
 
     def build(self, input_size, device=None):
         super().build(input_size, device)

@@ -2,7 +2,10 @@ from typing import Dict
 
 import torch
 
+from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
+
 from ..block.mlp import MLPBlock
+from ..tabular import TabularModule
 from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .tabular import AsTabular, TabularFeatures
 
@@ -14,6 +17,15 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
 
     def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Embedding:
         return torch.nn.Embedding(table.vocabulary_size, table.dim, padding_idx=self.padding_idx)
+
+    def forward_output_size(self, input_sizes):
+        sizes = {}
+        batch_size = calculate_batch_size_from_input_size(input_sizes)
+        sequence_length = input_sizes[list(self.feature_config.keys())[0]][1]
+        for name, feature in self.feature_config.items():
+            sizes[name] = torch.Size([batch_size, sequence_length, feature.table.dim])
+
+        return TabularModule.forward_output_size(self, sizes)
 
 
 class SequentialTabularFeatures(TabularFeatures):

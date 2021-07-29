@@ -113,6 +113,8 @@ def right_shift_block(self, other):
         need_moving_to_gpu = need_moving_to_gpu or _check_gpu(other)
 
     out = SequentialBlock(*sequential)
+    if getattr(left_side[-1], "input_size", None) and left_side[-1].input_size:
+        out.input_size = left_side[-1].input_size
 
     if need_moving_to_gpu:
         out.to("cuda")

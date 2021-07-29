@@ -1,7 +1,6 @@
 import pytest
 
 torch4rec = pytest.importorskip("transformers4rec.torch")
-torch_utils = pytest.importorskip("transformers4rec.torch.utils.torch_utils")
 
 
 def test_sequential_tabular_features(yoochoose_column_group, torch_yoochoose_like):
@@ -18,8 +17,6 @@ def test_sequential_tabular_features_with_projection(yoochoose_column_group, tor
     tab_module = torch4rec.SequentialTabularFeatures.from_column_group(
         col_group, max_sequence_length=20, continuous_projection=64
     )
-
-    tab_module.merge_values[0](torch_yoochoose_like)
 
     outputs = tab_module(torch_yoochoose_like)
 

@@ -4,6 +4,8 @@ from typing import Dict, Optional, Text, Union
 import torch
 import yaml
 
+from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
+
 from ...types import ColumnGroup, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
 
@@ -242,7 +244,7 @@ class EmbeddingFeatures(TabularModule):
 
     def forward_output_size(self, input_sizes):
         sizes = {}
-        batch_size = self.calculate_batch_size_from_input_size(input_sizes)
+        batch_size = calculate_batch_size_from_input_size(input_sizes)
         for name, feature in self.feature_config.items():
             sizes[name] = torch.Size([batch_size, feature.table.dim])
 

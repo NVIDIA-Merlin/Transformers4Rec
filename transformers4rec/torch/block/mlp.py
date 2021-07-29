@@ -16,6 +16,10 @@ class MLPBlock(BuildableBlock):
         filter_features=None,
     ) -> None:
         super().__init__()
+
+        if isinstance(dimensions, int):
+            dimensions = [dimensions]
+
         self.normalization = normalization
         self.dropout = dropout
         self.filter_features = filter_features
@@ -27,7 +31,7 @@ class MLPBlock(BuildableBlock):
         layer_input_sizes = list(input_shape[-1:]) + list(self.dimensions[:-1])
         layer_output_sizes = self.dimensions
         sequential = [
-            self._create_layer(input_size, output_size, input_shape[0])
+            self._create_layer(input_size, output_size, input_shape)
             for input_size, output_size in zip(layer_input_sizes, layer_output_sizes)
         ]
 
@@ -36,7 +40,7 @@ class MLPBlock(BuildableBlock):
 
         return output
 
-    def _create_layer(self, dense_input_size, dense_output_size, batch_size):
+    def _create_layer(self, dense_input_size, dense_output_size, input_shape):
         out = [torch.nn.Linear(dense_input_size, dense_output_size, bias=self.use_bias)]
         if self.activation:
             out.append(self.activation(inplace=True))
@@ -52,9 +56,15 @@ class MLPBlock(BuildableBlock):
             return "DenseBlock"
 
         def output_size(self):
-            return torch.Size([batch_size, dense_output_size])
+            if len(input_shape) == 3:
+                return torch.Size([input_shape[0], input_shape[1], dense_output_size])
+
+            return torch.Size([input_shape[0], dense_output_size])
 
         def forward_output_size(self, input_size):
+            if len(input_size) == 3:
+                return torch.Size([input_size[0], input_size[1], dense_output_size])
+
             return torch.Size([input_size[0], dense_output_size])
 
         output._get_name = types.MethodType(_get_name, output)

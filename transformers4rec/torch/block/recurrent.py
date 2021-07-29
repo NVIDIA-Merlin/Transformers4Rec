@@ -1,17 +1,18 @@
 from typing import Union
 
 import torch
-from torch import nn
 from transformers import PreTrainedModel
 
 from ...config.transformer import T4RecConfig
-from ..typing import MaskedSequence, MaskSequence, ProcessedSequence
-from .base import BuildableBlock, SequentialBlock
+from .. import masking
+from ..typing import MaskSequence
 
-RecurrentBody = Union[str, PreTrainedModel, T4RecConfig, nn.Module]
+# from .base import BuildableBlock, SequentialBlock
+
+RecurrentBody = Union[str, PreTrainedModel, T4RecConfig, torch.nn.Module]
 
 
-class RecurrentBlock(BuildableBlock):
+class RecurrentBlock(torch.nn.Module):
     def __init__(
         self, masking: Union[str, MaskSequence] = "clm", body: RecurrentBody = "xlnet"
     ) -> None:
@@ -22,22 +23,21 @@ class RecurrentBlock(BuildableBlock):
         self.masking = masking
         self.body = body
 
-    def build(self, input_shape) -> "_RecurrentBlock":
-        pass
+    @property
+    def masking(self):
+        return self._masking
 
-
-class _RecurrentBlock(SequentialBlock):
-    def parse_inputs(self, inputs):
-        if isinstance(inputs, ProcessedSequence):
-            parsed = inputs.values
-        elif isinstance(inputs, MaskedSequence):
-            parsed = inputs.masked_input
-        elif isinstance(inputs, torch.Tensor):
-            parsed = inputs
+    @masking.setter
+    def masking(self, value):
+        if value:
+            self._masking = masking.masking_registry.parse(value)
         else:
-            raise ValueError("Unrecognized inputs")
+            self._masking = None
 
-        return parsed
-
-    def forward(self, inputs):
+    def forward(self, inputs, training=True, **kwargs):
+        # mask_out = self.masking(inputs, itemid_seq, training=training)
         pass
+
+    def build(self, input_shape) -> torch.nn.Module:
+        if isinstance(self.body, torch.nn.Module):
+            return self.body
