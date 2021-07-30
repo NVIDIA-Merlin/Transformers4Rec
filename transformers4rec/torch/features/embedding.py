@@ -132,6 +132,7 @@ class EmbeddingFeatures(TabularModule):
         infer_embedding_sizes=False,
         combiner="mean",
         tags=None,
+        item_id=None,
         tags_to_filter=None,
         automatic_build=True,
         max_sequence_length=None,
@@ -141,6 +142,9 @@ class EmbeddingFeatures(TabularModule):
 
         if tags:
             column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
+
+        if not item_id and column_group.get_tagged(["item_id"]).column_names:
+            item_id = column_group.get_tagged(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
             sizes = column_group.embedding_sizes()
@@ -163,7 +167,6 @@ class EmbeddingFeatures(TabularModule):
                     combiner=combiner,
                 )
             )
-        item_id = "item_id/list"
 
         if not feature_config:
             return None
@@ -268,9 +271,10 @@ class EmbeddingFeatures(TabularModule):
                 if len(val.shape) <= 1:
                     val = val.unsqueeze(0)
                 embedded_outputs[name] = self.embedding_tables[name](val)
-        # store raw item ids for masking and/or negative sampling
+        # Store raw item ids for masking and/or negative sampling
+        # This makes this module stateful.
         if self.item_id:
-            self.item_seq = inputs[self.item_id]
+            self.item_seq = self.item_ids(inputs)
 
         return embedded_outputs
 

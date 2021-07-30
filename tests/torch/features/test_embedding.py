@@ -24,6 +24,8 @@ def test_embedding_features_yoochoose(yoochoose_column_group, torch_yoochoose_li
 
     assert list(embeddings.keys()) == col_group.categorical_columns()
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
+    assert emb_module.item_id == "item_id/list"
+    assert emb_module.item_embedding_table.num_embeddings == 51996
 
 
 def test_soft_continuous_features(torch_con_features):
