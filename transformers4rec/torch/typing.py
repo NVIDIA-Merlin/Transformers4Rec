@@ -10,7 +10,7 @@ else:
     ForwardRef = typing.ForwardRef
 
 # TODO: Make this more generic and work with multi-hot features
-TabularData = Dict[str, torch.tensor]
+TabularData = Dict[str, torch.Tensor]
 TensorOrTabularData = typing.Union[torch.Tensor, TabularData]
 
 TabularModule = ForwardRef("transformers4rec.torch.tabular.TabularModule")

@@ -1,6 +1,5 @@
 import pytest
 
-torch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_metric = pytest.importorskip("transformers4rec.torch.ranking_metric")
 

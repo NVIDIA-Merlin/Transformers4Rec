@@ -4,6 +4,11 @@ from typing import Dict, Optional, Text, Union
 import torch
 import yaml
 
+from transformers4rec.torch.utils.torch_utils import (
+    calculate_batch_size_from_input_size,
+    get_output_sizes_from_schema,
+)
+
 from ...types import ColumnGroup, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
 
@@ -91,8 +96,9 @@ class SoftEmbedding(torch.nn.Module):
 
 
 class EmbeddingFeatures(TabularModule):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], **kwargs):
+    def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
         super().__init__(**kwargs)
+        self.item_id = item_id
         self.feature_config = feature_config
         self.filter_features = FilterFeatures(list(feature_config.keys()))
 
@@ -108,6 +114,12 @@ class EmbeddingFeatures(TabularModule):
 
         self.embedding_tables = torch.nn.ModuleDict(embedding_tables)
 
+    @property
+    def item_embedding_table(self):
+        assert self.item_id is not None
+
+        return self.embedding_tables[self.item_id]
+
     def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Module:
         return torch.nn.EmbeddingBag(table.vocabulary_size, table.dim, mode=table.combiner)
 
@@ -120,11 +132,19 @@ class EmbeddingFeatures(TabularModule):
         infer_embedding_sizes=False,
         combiner="mean",
         tags=None,
+        item_id=None,
         tags_to_filter=None,
+        automatic_build=True,
+        max_sequence_length=None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
+        # TODO: propogate item-id from ITEM_ID tag
+
         if tags:
             column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
+
+        if not item_id and column_group.get_tagged(["item_id"]).column_names:
+            item_id = column_group.get_tagged(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
             sizes = column_group.embedding_sizes()
@@ -151,7 +171,18 @@ class EmbeddingFeatures(TabularModule):
         if not feature_config:
             return None
 
-        return cls(feature_config, **kwargs)
+        output = cls(feature_config, item_id=item_id, **kwargs)
+
+        if automatic_build and column_group._schema:
+            output.build(
+                get_output_sizes_from_schema(
+                    column_group._schema,
+                    kwargs.get("batch_size", -1),
+                    max_sequence_length=max_sequence_length,
+                )
+            )
+
+        return output
 
     @classmethod
     def from_config(
@@ -222,6 +253,9 @@ class EmbeddingFeatures(TabularModule):
 
         return cls(feature_config, **kwargs)
 
+    def item_ids(self, inputs) -> torch.Tensor:
+        return inputs[self.item_id]
+
     def forward(self, inputs, **kwargs):
         embedded_outputs = {}
         filtered_inputs = self.filter_features(inputs)
@@ -237,12 +271,16 @@ class EmbeddingFeatures(TabularModule):
                 if len(val.shape) <= 1:
                     val = val.unsqueeze(0)
                 embedded_outputs[name] = self.embedding_tables[name](val)
+        # Store raw item ids for masking and/or negative sampling
+        # This makes this module stateful.
+        if self.item_id:
+            self.item_seq = self.item_ids(inputs)
 
         return embedded_outputs
 
     def forward_output_size(self, input_sizes):
         sizes = {}
-        batch_size = self.calculate_batch_size_from_input_size(input_sizes)
+        batch_size = calculate_batch_size_from_input_size(input_sizes)
         for name, feature in self.feature_config.items():
             sizes[name] = torch.Size([batch_size, feature.table.dim])
 
