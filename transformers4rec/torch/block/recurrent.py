@@ -50,9 +50,9 @@ class _RecurrentBlock(torch.nn.Module):
         self.masking = masking
 
     def forward(self, inputs, training=True, **kwargs):
-        input_ids = self.embedding_module(inputs)
-        inputs = self.masking(input_ids, for_inputs=True)
-
+        item_seq = self.embedding_module[0].item_seq
+        self.masking.set_masking_schema(item_seq, training=training)
+        inputs = self.masking(inputs, for_inputs=True)
         # TODO Call body here
 
         return inputs

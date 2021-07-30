@@ -138,6 +138,7 @@ class EmbeddingFeatures(TabularModule):
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         # TODO: propogate item-id from ITEM_ID tag
+
         if tags:
             column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
 
@@ -162,11 +163,12 @@ class EmbeddingFeatures(TabularModule):
                     combiner=combiner,
                 )
             )
+        item_id = "item_id/list"
 
         if not feature_config:
             return None
 
-        output = cls(feature_config, **kwargs)
+        output = cls(feature_config, item_id=item_id, **kwargs)
 
         if automatic_build and column_group._schema:
             output.build(
@@ -266,6 +268,9 @@ class EmbeddingFeatures(TabularModule):
                 if len(val.shape) <= 1:
                     val = val.unsqueeze(0)
                 embedded_outputs[name] = self.embedding_tables[name](val)
+        # store raw item ids for masking and/or negative sampling
+        if self.item_id:
+            self.item_seq = inputs[self.item_id]
 
         return embedded_outputs
 
