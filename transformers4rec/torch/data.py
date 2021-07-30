@@ -22,6 +22,8 @@ from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tensorflow import _validate_dataset
 from torch.utils.dlpack import from_dlpack
 
+from .utils.torch_utils import get_output_sizes_from_schema
+
 
 class IterDL(torch.utils.data.IterableDataset):
     def __init__(self, file_paths, batch_size=1, shuffle=False):
@@ -171,18 +173,7 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
 
     @property
     def output_sizes(self) -> Dict[str, torch.Size]:
-        sizes = {}
-
-        for feature in self.schema.feature:
-            name = feature.name
-            if feature.HasField("value_count"):
-                sizes[name] = torch.Size([self.batch_size, feature.value_count.max])
-            elif feature.HasField("shape"):
-                sizes[name] = torch.Size([self.batch_size] + [d.size for d in feature.shape.dim])
-            else:
-                sizes[name] = torch.Size([self.batch_size, 1])
-
-        return sizes
+        return get_output_sizes_from_schema(self.schema, self.batch_size)
 
     def __iter__(self):
         return BaseDataLoader.__iter__(self)

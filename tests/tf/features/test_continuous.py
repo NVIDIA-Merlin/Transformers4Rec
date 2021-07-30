@@ -1,6 +1,5 @@
 import pytest
 
-tf = pytest.importorskip("tensorflow")
 tf4rec = pytest.importorskip("transformers4rec.tf")
 
 

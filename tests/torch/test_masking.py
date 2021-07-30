@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-torch = pytest.importorskip("torch")
+pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_masking = pytest.importorskip("transformers4rec.torch.masking")
 
@@ -33,9 +33,9 @@ def test_mlm_eval(torch_masking_inputs, task):
     assert out.mask_schema.sum() == torch_masking_inputs["input_tensor"].size(0)
     # get non padded last items
     non_padded_mask = torch_masking_inputs["labels"] != torch_masking_inputs["pad_token"]
-    rows_ids = torch.arange(
+    rows_ids = pytorch.arange(
         torch_masking_inputs["labels"].size(0),
-        dtype=torch.long,
+        dtype=pytorch.long,
         device=torch_masking_inputs["labels"].device,
     )
     last_item_sessions = non_padded_mask.sum(axis=1) - 1
@@ -56,9 +56,9 @@ def test_clm_training_on_last_item(torch_masking_inputs):
     assert out.mask_schema.sum() == torch_masking_inputs["input_tensor"].size(0)
     # get non padded last items
     non_padded_mask = torch_masking_inputs["labels"] != torch_masking_inputs["pad_token"]
-    rows_ids = torch.arange(
+    rows_ids = pytorch.arange(
         torch_masking_inputs["labels"].size(0),
-        dtype=torch.long,
+        dtype=pytorch.long,
         device=torch_masking_inputs["labels"].device,
     )
     last_item_sessions = non_padded_mask.sum(axis=1) - 1
@@ -129,7 +129,9 @@ def test_replaced_fake_tokens(torch_masking_inputs):
     # Nb of pos items
     pos_items = non_pad_mask.sum()
     # generate random logits
-    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, torch_masking_inputs["vocab_size"])))
+    logits = pytorch.tensor(
+        np.random.uniform(0, 1, (pos_items, torch_masking_inputs["vocab_size"]))
+    )
     corrupted_inputs, discriminator_labels, _ = lm.get_fake_tokens(
         torch_masking_inputs["labels"], trg_flat, logits
     )
@@ -149,7 +151,7 @@ def test_replacement_from_batch(torch_masking_inputs):
     # Nb of pos items
     pos_items = non_pad_mask.sum()
     # generate random logits
-    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
+    logits = pytorch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
     corrupted_inputs, discriminator_labels, updates = lm.get_fake_tokens(
         torch_masking_inputs["labels"], trg_flat, logits
     )
@@ -169,6 +171,6 @@ def test_sample_from_softmax_output(torch_masking_inputs):
     # Nb of pos items
     pos_items = non_pad_mask.sum()
     # generate random logits
-    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
+    logits = pytorch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
     updates = lm.sample_from_softmax(logits)
     assert updates.size(0) == pos_items
