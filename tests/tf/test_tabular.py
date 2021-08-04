@@ -1,6 +1,5 @@
 import pytest
 
-torch = pytest.importorskip("torch")
 tf4rec = pytest.importorskip("transformers4rec.tf")
 
 

@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .aggregation import ConcatFeatures, StackFeatures
+from .aggregation import ConcatFeatures, ElementwiseSum, StackFeatures
 from .block.base import SequentialBlock, right_shift_block
 from .block.mlp import MLPBlock
+from .block.recurrent import RecurrentBlock
 from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, SoftEmbeddingFeatures, TableConfig
+from .features.sequential import SequentialEmbeddingFeatures, SequentialTabularFeatures
 from .features.tabular import TabularFeatures
 from .head import Head, PredictionTask
 from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
@@ -28,9 +30,12 @@ __all__ = [
     "right_shift_block",
     "MLPBlock",
     "BlockWithHead",
+    "RecurrentBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SoftEmbeddingFeatures",
+    "SequentialTabularFeatures",
+    "SequentialEmbeddingFeatures",
     "FeatureConfig",
     "TableConfig",
     "TabularFeatures",
@@ -39,6 +44,7 @@ __all__ = [
     "AsTabular",
     "ConcatFeatures",
     "FilterFeatures",
+    "ElementwiseSum",
     "MergeTabular",
     "StackFeatures",
     "TabularModule",
