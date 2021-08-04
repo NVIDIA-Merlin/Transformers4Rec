@@ -208,11 +208,11 @@ def get_nvtabular_dataloader(
 
     # device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
     dataloader_device = 0 if training_args.local_rank == -1 else training_args.local_rank
-
+   # Use either part_mem_fraction or part_size (default None) arguments. Each can be set with model training script. 
+   # If using part_mem_fraction param, replace "part_size" line with "part_mem_fraction=data_args.nvt_part_mem_fraction". 
     dataset = NVTDataset(
         data_paths,
         engine="parquet",
-        part_mem_fraction=data_args.nvt_part_mem_fraction,
         part_size=data_args.nvt_part_size,
     )
 
