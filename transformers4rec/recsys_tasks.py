@@ -36,15 +36,11 @@ class RecSysTask:
         )
         non_padded_mask = itemid_seq != self.pad_token
 
-        rows_ids = torch.arange(
-            itemid_seq.size(0), dtype=torch.long, device=self.device
-        )
+        rows_ids = torch.arange(itemid_seq.size(0), dtype=torch.long, device=self.device)
         # During training, masks labels to be predicted according to a probability, ensuring that each session has at least one label to predict
         if self.training:
             # Selects a percentage of items to be masked (selected as labels)
-            probability_matrix = torch.full(
-                itemid_seq.shape, mlm_probability, device=self.device
-            )
+            probability_matrix = torch.full(itemid_seq.shape, mlm_probability, device=self.device)
             masked_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
             labels = torch.where(
                 masked_labels,
@@ -62,9 +58,7 @@ class RecSysTask:
             masked_labels = labels != self.pad_token
 
             # If a sequence has only masked labels, unmasks one of the labels
-            sequences_with_only_labels = masked_labels.sum(
-                axis=1
-            ) == non_padded_mask.sum(axis=1)
+            sequences_with_only_labels = masked_labels.sum(axis=1) == non_padded_mask.sum(axis=1)
             sampled_labels_to_unmask = torch.multinomial(
                 masked_labels.float(), num_samples=1
             ).squeeze()
@@ -84,16 +78,12 @@ class RecSysTask:
         # During evaluation always masks the last item of the session
         else:
             last_item_sessions = non_padded_mask.sum(axis=1) - 1
-            labels[rows_ids, last_item_sessions] = itemid_seq[
-                rows_ids, last_item_sessions
-            ]
+            labels[rows_ids, last_item_sessions] = itemid_seq[rows_ids, last_item_sessions]
             masked_labels = labels != self.pad_token
 
         return labels, masked_labels
 
-    def plm_mask_tokens(
-        self, itemid_seq, max_span_length, plm_probability, plm_permute_all
-    ):
+    def plm_mask_tokens(self, itemid_seq, max_span_length, plm_probability, plm_permute_all):
 
         """
         Prepare the attention masks needed for partial-prediction permutation language modeling
@@ -116,12 +106,8 @@ class RecSysTask:
         )
         non_padded_mask = itemid_seq != self.pad_token
 
-        rows_ids = torch.arange(
-            itemid_seq.size(0), dtype=torch.long, device=self.device
-        )
-        masked_labels = torch.full(
-            labels.shape, 0, dtype=torch.bool, device=self.device
-        )
+        rows_ids = torch.arange(itemid_seq.size(0), dtype=torch.long, device=self.device)
+        masked_labels = torch.full(labels.shape, 0, dtype=torch.bool, device=self.device)
         # During training, masks a span of consecutive items to be predicted according to plm_probability,
         # While  ensuring that each session has at least one  item to predict
         if self.training:
@@ -151,16 +137,11 @@ class RecSysTask:
                         context_length = int(span_length / plm_probability)
                         # Sample a starting point `start_index` from the interval `[cur_len, cur_len + context_length - span_length]`
                         start_index = (
-                            cur_len
-                            + torch.randint(
-                                context_length - span_length + 1, (1,)
-                            ).item()
+                            cur_len + torch.randint(context_length - span_length + 1, (1,)).item()
                         )
                         if start_index < max_len:
                             # Mask the span of non-padded items `start_index:start_index + span_length`
-                            masked_labels[
-                                i, start_index : start_index + span_length
-                            ] = 1
+                            masked_labels[i, start_index : start_index + span_length] = 1
                         # Set `cur_len = cur_len + context_length`
                         cur_len += context_length
                     # if no item was masked:
@@ -187,9 +168,7 @@ class RecSysTask:
                 #  This will determine which tokens a given token can attend to
                 # (encoded in `perm_mask`).
                 # Create a linear factorisation order
-                perm_index = torch.arange(
-                    labels.size(1), dtype=torch.long, device=self.device
-                )
+                perm_index = torch.arange(labels.size(1), dtype=torch.long, device=self.device)
                 # randomly permute indices of each session
                 perm_index = perm_index[torch.randperm(labels.size(1))]
                 # Set the permutation indices of non-masked (non-functional) tokens to the
@@ -210,9 +189,7 @@ class RecSysTask:
         # During evaluation always mask the last item of the session
         else:
             last_item_sessions = non_padded_mask.sum(axis=1) - 1
-            labels[rows_ids, last_item_sessions] = itemid_seq[
-                rows_ids, last_item_sessions
-            ]
+            labels[rows_ids, last_item_sessions] = itemid_seq[rows_ids, last_item_sessions]
             masked_labels = labels != self.pad_token
             perm_mask = torch.zeros(
                 (labels.size(0), labels.size(1), labels.size(1)),
@@ -222,14 +199,9 @@ class RecSysTask:
             # Previous tokens don't see last non-padded token
             perm_mask[rows_ids, :, last_item_sessions] = 1
             # add causal mask to avoid attending to future when evaluating
-            causal_mask = torch.ones(
-                [labels.size(1), labels.size(1)], device=self.device
-            )
+            causal_mask = torch.ones([labels.size(1), labels.size(1)], device=self.device)
             mask_up = torch.triu(causal_mask, diagonal=1)
-            temp_perm = (
-                mask_up.expand((labels.size(0), labels.size(1), labels.size(1)))
-                + perm_mask
-            )
+            temp_perm = mask_up.expand((labels.size(0), labels.size(1), labels.size(1))) + perm_mask
             perm_mask = (temp_perm > 0).long()
             # the i-th predict corresponds to the i-th token.
             target_mapping = torch.diag(
@@ -285,14 +257,10 @@ class RecSysTask:
         # Replace masked labels by replacement item ids
         # detach() is needed to not propagate the discriminator loss through generator
         corrupted_labels = (
-            target_flat.clone()
-            .detach()
-            .scatter(-1, non_pad_mask.nonzero().flatten(), updates)
+            target_flat.clone().detach().scatter(-1, non_pad_mask.nonzero().flatten(), updates)
         )
         # Build discriminator label : distinguish orginal token from replaced one
-        discriminator_labels = (corrupted_labels != target_flat).view(
-            -1, input_ids.size(1)
-        )
+        discriminator_labels = (corrupted_labels != target_flat).view(-1, input_ids.size(1))
         # Build corrupted inputs : replacing [MASK] by sampled item
         corrupted_inputs = (
             input_ids.clone()

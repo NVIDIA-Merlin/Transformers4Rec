@@ -15,7 +15,6 @@
 #
 """
 A meta class supports various (Huggingface) transformer models for RecSys tasks.
-
 """
 
 import logging
@@ -93,9 +92,7 @@ class ProjectionNetwork(nn.Module):
 
     def forward(self, inp):
         if self.inp_merge == "mlp" and self.layer_norm_all_features:
-            return self.tf_out_act(
-                self.merge(self.layer_norm_all_input(self.input_dropout(inp)))
-            )
+            return self.tf_out_act(self.merge(self.layer_norm_all_input(self.input_dropout(inp))))
         elif self.inp_merge == "mlp":
             return self.tf_out_act(self.merge(self.input_dropout(inp)))
         return self.merge(inp)
@@ -158,9 +155,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.other_embeddings_init_std = model_args.other_embeddings_init_std
 
         self.item_embedding_dim = model_args.item_embedding_dim
-        self.features_same_size_item_embedding = (
-            model_args.features_same_size_item_embedding
-        )
+        self.features_same_size_item_embedding = model_args.features_same_size_item_embedding
         self.embedding_dim_from_cardinality_multiplier = (
             model_args.embedding_dim_from_cardinality_multiplier
         )
@@ -189,9 +184,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.define_features_layers(model_args)
 
         self.neg_sampling_store_size = model_args.neg_sampling_store_size
-        self.neg_sampling_extra_samples_per_batch = (
-            model_args.neg_sampling_extra_samples_per_batch
-        )
+        self.neg_sampling_extra_samples_per_batch = model_args.neg_sampling_extra_samples_per_batch
         self.neg_sampling_alpha = model_args.neg_sampling_alpha
 
         self.inp_merge = model_args.inp_merge
@@ -241,9 +234,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.plm_permute_all = model_args.plm_permute_all
 
         # Creating a trainable embedding for masking inputs for Masked LM
-        self.masked_item_embedding = nn.Parameter(torch.Tensor(config.hidden_size)).to(
-            self.device
-        )
+        self.masked_item_embedding = nn.Parameter(torch.Tensor(config.hidden_size)).to(self.device)
         nn.init.normal_(
             self.masked_item_embedding,
             mean=0,
@@ -253,17 +244,13 @@ class RecSysMetaModel(PreTrainedModel):
         self.similarity_type = model_args.similarity_type
         self.margin_loss = model_args.margin_loss
 
-        self.output_layer = nn.Linear(config.hidden_size, self.target_dim).to(
-            self.device
-        )
+        self.output_layer = nn.Linear(config.hidden_size, self.target_dim).to(self.device)
 
         self.loss_type = model_args.loss_type
         self.log_softmax = nn.LogSoftmax(dim=-1)
         self.softmax = torch.nn.Softmax(dim=-1)
 
-        self.output_layer_bias = nn.Parameter(torch.Tensor(self.target_dim)).to(
-            self.device
-        )
+        self.output_layer_bias = nn.Parameter(torch.Tensor(self.target_dim)).to(self.device)
         nn.init.zeros_(self.output_layer_bias)
 
         # create prediction module for electra discriminator: Two dense layers
@@ -317,23 +304,21 @@ class RecSysMetaModel(PreTrainedModel):
                     [
                         (
                             "linear0",
-                            nn.Linear(
-                                model_args.d_model * m_factor, model_args.d_model
-                            ).to(self.device),
+                            nn.Linear(model_args.d_model * m_factor, model_args.d_model).to(
+                                self.device
+                            ),
                         ),
                         ("relu0", nn.LeakyReLU()),
                         (
                             "linear1",
-                            nn.Linear(model_args.d_model, model_args.d_model // 2).to(
-                                self.device
-                            ),
+                            nn.Linear(model_args.d_model, model_args.d_model // 2).to(self.device),
                         ),
                         ("relu1", nn.LeakyReLU()),
                         (
                             "linear2",
-                            nn.Linear(
-                                model_args.d_model // 2, model_args.d_model // 4
-                            ).to(self.device),
+                            nn.Linear(model_args.d_model // 2, model_args.d_model // 4).to(
+                                self.device
+                            ),
                         ),
                         ("relu2", nn.LeakyReLU()),
                         (
@@ -359,23 +344,17 @@ class RecSysMetaModel(PreTrainedModel):
 
         # To mark past sequence labels
         if self.session_aware:
-            masked_past_session = torch.zeros_like(
-                label_seq, dtype=torch.long, device=self.device
-            )
+            masked_past_session = torch.zeros_like(label_seq, dtype=torch.long, device=self.device)
         if self.mlm:
             """
             Masked Language Model
             """
-            label_seq_trg, label_mlm_mask = recsys_task.mask_tokens(
-                label_seq, self.mlm_probability
-            )
+            label_seq_trg, label_mlm_mask = recsys_task.mask_tokens(label_seq, self.mlm_probability)
 
             # To mark past sequence labels
             if self.session_aware:
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
-                label_mlm_mask = torch.cat(
-                    [masked_past_session.bool(), label_mlm_mask], axis=1
-                )
+                label_mlm_mask = torch.cat([masked_past_session.bool(), label_mlm_mask], axis=1)
         elif self.plm:
             """
             Permutation Language Model
@@ -394,9 +373,7 @@ class RecSysMetaModel(PreTrainedModel):
             # To mark past sequence labels
             if self.session_aware:
                 label_seq_trg = torch.cat([masked_past_session, label_seq_trg], axis=1)
-                label_plm_mask = torch.cat(
-                    [masked_past_session.bool(), label_plm_mask], axis=1
-                )
+                label_plm_mask = torch.cat([masked_past_session.bool(), label_plm_mask], axis=1)
 
         else:
             """
@@ -411,18 +388,18 @@ class RecSysMetaModel(PreTrainedModel):
             label_seq_inp = torch.cat(
                 [
                     label_seq_inp,
-                    torch.zeros(
-                        (label_seq_inp.shape[0], 1), dtype=label_seq_inp.dtype
-                    ).to(self.device),
+                    torch.zeros((label_seq_inp.shape[0], 1), dtype=label_seq_inp.dtype).to(
+                        self.device
+                    ),
                 ],
                 axis=-1,
             )
             label_seq_trg = torch.cat(
                 [
                     label_seq_trg,
-                    torch.zeros(
-                        (label_seq_trg.shape[0], 1), dtype=label_seq_trg.dtype
-                    ).to(self.device),
+                    torch.zeros((label_seq_trg.shape[0], 1), dtype=label_seq_trg.dtype).to(
+                        self.device
+                    ),
                 ],
                 axis=-1,
             )
@@ -436,9 +413,7 @@ class RecSysMetaModel(PreTrainedModel):
             if (self.eval_on_last_item_seq_only and not self.training) or (
                 self.train_on_last_item_seq_only and self.training
             ):
-                rows_ids = torch.arange(
-                    label_seq_inp.size(0), dtype=torch.long, device=self.device
-                )
+                rows_ids = torch.arange(label_seq_inp.size(0), dtype=torch.long, device=self.device)
                 last_item_sessions = mask_trg_pad.sum(axis=1) - 1
                 label_seq_trg_eval = torch.zeros(
                     label_seq_trg.shape, dtype=torch.long, device=self.device
@@ -470,9 +445,7 @@ class RecSysMetaModel(PreTrainedModel):
         # Keeping only metadata features for the next-clicks (targets)
         if not (self.mlm and self.training) and not (self.plm and self.training):
             for feat_name in metadata_for_pred_logging:
-                metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[
-                    feat_name
-                ][:, 1:]
+                metadata_for_pred_logging[feat_name] = metadata_for_pred_logging[feat_name][:, 1:]
 
                 # As after shifting the sequence length will be subtracted by one, adding a masked item in
                 # the sequence to return to the initial sequence. This is important for ReformerModel(), for example
@@ -558,9 +531,7 @@ class RecSysMetaModel(PreTrainedModel):
                 # head_mask has shape n_layer x batch x n_heads x N x N
                 head_mask = (
                     torch.tril(
-                        torch.ones(
-                            (seq_len, seq_len), dtype=torch.uint8, device=self.device
-                        )
+                        torch.ones((seq_len, seq_len), dtype=torch.uint8, device=self.device)
                     )
                     .view(1, 1, 1, seq_len, seq_len)
                     .repeat(self.n_layer, 1, 1, 1, 1)
@@ -583,8 +554,8 @@ class RecSysMetaModel(PreTrainedModel):
 
             elif self.rtd:
                 assert (
-                    type(self.model) is ElectraModel
-                ), "Replacement token detection is only supported for ELECTRA model"
+                    type(self.model) is ElectraModel or type(self.model) is XLNetModel
+                ), "Replacement token detection is only supported for ELECTRA or XLNET model"
                 model_outputs = self.model(inputs_embeds=pos_emb_inp)
 
             else:
@@ -608,9 +579,7 @@ class RecSysMetaModel(PreTrainedModel):
         if not self.mlm and not self.plm:
 
             if self.session_aware:
-                non_pad_original_mask = (
-                    label_seq_trg_original.flatten() != self.pad_token
-                )
+                non_pad_original_mask = label_seq_trg_original.flatten() != self.pad_token
                 for feat_name in metadata_for_pred_logging:
                     metadata_for_pred_logging[feat_name] = torch.masked_select(
                         metadata_for_pred_logging[feat_name].flatten(),
@@ -666,9 +635,7 @@ class RecSysMetaModel(PreTrainedModel):
                         )
                         self.neg_sampling_store_pointer = 0
                     # Get a vector of neg_sampling_extra_samples_per_batch for the current batch
-                    sample = self.neg_samples[self.neg_sampling_store_pointer].to(
-                        self.device
-                    )
+                    sample = self.neg_samples[self.neg_sampling_store_pointer].to(self.device)
                     self.neg_sampling_store_pointer += 1
                 else:
                     # Sample for each batch without using a cache
@@ -686,9 +653,7 @@ class RecSysMetaModel(PreTrainedModel):
                 )
             positives = ~negative_mask
             # flat negative mask : of shape  N_pos_targets x N_negatives
-            negative_mask_all = torch.repeat_interleave(
-                negative_mask, positives.sum(1), dim=0
-            )
+            negative_mask_all = torch.repeat_interleave(negative_mask, positives.sum(1), dim=0)
             # Get logit scores
             logit_sample = logits_all[:, negatives]
             # Compute loss:
@@ -702,11 +667,7 @@ class RecSysMetaModel(PreTrainedModel):
             # Step 1. Generate fake data using generator logits
             if self.rtd_sample_from_batch:
                 # sample items from the current batch
-                (
-                    fake_inputs,
-                    discriminator_labels,
-                    batch_updates,
-                ) = recsys_task.get_fake_data(
+                (fake_inputs, discriminator_labels, batch_updates,) = recsys_task.get_fake_data(
                     label_seq,
                     trg_flat,
                     logits_all[:, labels_all],
@@ -732,9 +693,7 @@ class RecSysMetaModel(PreTrainedModel):
                 fake_pos_emb = pos_emb.clone().detach().view(-1, pos_emb.size(2))
                 replacement_interaction = fake_pos_emb[batch_updates]
                 # replace original masked interactions by fake itemids' interactions
-                fake_pos_emb[
-                    non_pad_mask.nonzero().flatten(), :
-                ] = replacement_interaction
+                fake_pos_emb[non_pad_mask.nonzero().flatten(), :] = replacement_interaction
                 fake_pos_emb = fake_pos_emb.view(pos_emb.shape)
 
             else:
@@ -765,13 +724,9 @@ class RecSysMetaModel(PreTrainedModel):
             binary_logits = self.discriminator_prediction(fake_pos_emb_pred).squeeze(-1)
             # Step 5. Get logits for non-padded items
             non_pad_mask = label_seq != self.pad_token
-            active_logits = binary_logits.view(-1, fake_pos_emb_pred.shape[1])[
-                non_pad_mask
-            ]
+            active_logits = binary_logits.view(-1, fake_pos_emb_pred.shape[1])[non_pad_mask]
             active_labels = discriminator_labels[non_pad_mask]
-            discriminator_loss = nn.BCEWithLogitsLoss()(
-                active_logits, active_labels.float()
-            )
+            discriminator_loss = nn.BCEWithLogitsLoss()(active_logits, active_labels.float())
             # Step 6. Compute weighted joint training loss
             loss = (discriminator_loss * self.rtd_discriminator_loss_weight) + (
                 loss * self.rtd_generator_loss_weight
@@ -796,9 +751,7 @@ class RecSysMetaModel(PreTrainedModel):
         self.embedding_tables = nn.ModuleDict()
         self.numeric_to_embedding_layers = nn.ModuleDict()
         self.numeric_soft_embeddings = nn.ModuleDict()
-        self.features_embedding_projection_to_item_embedding_dim_layers = (
-            nn.ModuleDict()
-        )
+        self.features_embedding_projection_to_item_embedding_dim_layers = nn.ModuleDict()
 
         self.features_layer_norm = nn.ModuleDict()
 
@@ -808,9 +761,7 @@ class RecSysMetaModel(PreTrainedModel):
         for cname, cinfo in self.feature_map.items():
 
             # Ignoring past features to define embedding tables
-            if self.session_aware and cname.startswith(
-                self.session_aware_features_prefix
-            ):
+            if self.session_aware and cname.startswith(self.session_aware_features_prefix):
                 continue
 
             if cinfo["dtype"] == "categorical":
@@ -940,11 +891,7 @@ class RecSysMetaModel(PreTrainedModel):
                 else:
                     feature_size = 1
 
-                logger.info(
-                    "Numerical Feature: {} - Feature Size: {}".format(
-                        cname, feature_size
-                    )
-                )
+                logger.info("Numerical Feature: {} - Feature Size: {}".format(cname, feature_size))
 
             elif cinfo["is_control"]:
                 # Control features are not used as input for the model
@@ -955,9 +902,7 @@ class RecSysMetaModel(PreTrainedModel):
             self.input_combined_dim += feature_size
 
             if self.layer_norm_featurewise:
-                self.features_layer_norm[cname] = nn.LayerNorm(
-                    normalized_shape=feature_size
-                )
+                self.features_layer_norm[cname] = nn.LayerNorm(normalized_shape=feature_size)
 
             if "is_label" in cinfo and cinfo["is_label"]:
                 self.target_dim = cinfo["cardinality"]
@@ -1004,9 +949,7 @@ class RecSysMetaModel(PreTrainedModel):
                         )
                         n_values_to_replace = sse_replacement_mask.sum()
 
-                        cdata_flattened_non_zero = torch.masked_select(
-                            cdata, cdata_non_zero_mask
-                        )
+                        cdata_flattened_non_zero = torch.masked_select(cdata, cdata_non_zero_mask)
 
                         sampled_values_to_replace = cdata_flattened_non_zero[
                             torch.randperm(cdata_flattened_non_zero.shape[0])
@@ -1025,15 +968,12 @@ class RecSysMetaModel(PreTrainedModel):
                     cdata = self.embedding_tables[cinfo["emb_table"]](cdata)
 
                     if (
-                        self.input_features_aggregation
-                        == "elementwise_sum_multiply_item_embedding"
+                        self.input_features_aggregation == "elementwise_sum_multiply_item_embedding"
                         and not self.features_same_size_item_embedding
                     ):
                         cdata = self.features_embedding_projection_to_item_embedding_dim_layers[
                             cname
-                        ](
-                            cdata
-                        )
+                        ](cdata)
 
             elif cinfo["dtype"] in ["long", "float"]:
                 if cinfo["dtype"] == "long":
@@ -1052,9 +992,7 @@ class RecSysMetaModel(PreTrainedModel):
                         ):
                             cdata = self.features_embedding_projection_to_item_embedding_dim_layers[
                                 cname
-                            ](
-                                cdata
-                            )
+                            ](cdata)
                     else:
                         cdata = self.numeric_to_embedding_layers[cname](cdata)
 
@@ -1099,10 +1037,7 @@ class RecSysMetaModel(PreTrainedModel):
         if len(transformed_features) > 1:
             if self.input_features_aggregation == "concat":
                 output = torch.cat(list(transformed_features.values()), dim=-1)
-            elif (
-                self.input_features_aggregation
-                == "elementwise_sum_multiply_item_embedding"
-            ):
+            elif self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
                 additional_features_sum = torch.zeros_like(
                     transformed_features[self.label_feature_name], device=self.device
                 )
@@ -1147,18 +1082,12 @@ class RecSysMetaModel(PreTrainedModel):
         self.items_ids_sorted_by_freq = torch.Tensor(
             items_sorted_freq_series.index.values, device=self.device
         )
-        self.items_freq_sorted = torch.Tensor(
-            items_sorted_freq_series.values, device=self.device
-        )
+        self.items_freq_sorted = torch.Tensor(items_sorted_freq_series.values, device=self.device)
 
         # If should adding extra negative samples to the batch ones
-        if (
-            self.neg_sampling_store_size != 0
-        ) and self.neg_sampling_extra_samples_per_batch > 0:
+        if (self.neg_sampling_store_size != 0) and self.neg_sampling_extra_samples_per_batch > 0:
             # Generate a cumulative distribution of frequency (sorted in ascending order), so that more popular items can be sampled more often
-            self.items_freq_sorted_norm = (
-                self.items_freq_sorted ** self.neg_sampling_alpha
-            )
+            self.items_freq_sorted_norm = self.items_freq_sorted ** self.neg_sampling_alpha
             self.items_freq_sorted_norm = self.items_freq_sorted_norm.cumsum(
                 dim=0
             ) / self.items_freq_sorted_norm.sum(dim=0)
@@ -1166,16 +1095,13 @@ class RecSysMetaModel(PreTrainedModel):
 
             # Defines a cache that pre-stores N="neg_sampling_store_size" negative samples
             self.neg_sampling_store_rows = (
-                self.neg_sampling_store_size
-                // self.neg_sampling_extra_samples_per_batch
+                self.neg_sampling_store_size // self.neg_sampling_extra_samples_per_batch
             )
             if self.neg_sampling_store_rows <= 1:
                 self.neg_sampling_store_rows = 0
                 print("No negative samples store was used.")
             else:
-                self.neg_samples = self.generate_neg_samples(
-                    length=self.neg_sampling_store_rows
-                )
+                self.neg_samples = self.generate_neg_samples(length=self.neg_sampling_store_rows)
                 self.neg_sampling_store_pointer = 0
                 print(
                     "Created sample store with {} batches of samples (type=CPU)".format(
@@ -1264,9 +1190,7 @@ class SoftEmbedding(nn.Module):
 
     def forward(self, input_numeric):
         weights = self.softmax(self.projection_layer(input_numeric))
-        soft_one_hot_embeddings = (
-            weights.unsqueeze(-1) * self.embedding_table.weight
-        ).sum(-2)
+        soft_one_hot_embeddings = (weights.unsqueeze(-1) * self.embedding_table.weight).sum(-2)
         return soft_one_hot_embeddings
 
 

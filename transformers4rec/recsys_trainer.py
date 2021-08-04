@@ -89,7 +89,7 @@ class RecSysTrainerCallback(TrainerCallback):
 
 class RecSysTrainer(Trainer):
     """
-    An :class:`~transformers.Trainer` specialized for sequential recommendation 
+    An :class:`~transformers.Trainer` specialized for sequential recommendation
     including (session-based and session-aware recommendation)
     """
 
@@ -159,8 +159,8 @@ class RecSysTrainer(Trainer):
         self.__log_predictions_callback = var
 
     def reset_lr_scheduler(self) -> None:
-        """ 
-        Resets the LR scheduler of the previous :obj:`Trainer.train()` call, 
+        """
+        Resets the LR scheduler of the previous :obj:`Trainer.train()` call,
         so that a new LR scheduler one is created by the next :obj:`Trainer.train()` call.
         This is important for LR schedules like `get_linear_schedule_with_warmup()` which decays LR to 0 in the end of the train
         """
@@ -179,7 +179,7 @@ class RecSysTrainer(Trainer):
         else:
             batch_size = self.args.per_device_eval_batch_size
         """
-        return len(dataloader) * dataloader.batch_size
+        return len(dataloader) * dataloader._batch_size
 
     def create_optimizer_and_scheduler(self, num_training_steps: int):
         """
@@ -267,9 +267,7 @@ class RecSysTrainer(Trainer):
         state_copy = deepcopy(self.state)
         state_copy.global_step = self._get_general_global_step()
 
-        self.control = self.callback_handler.on_log(
-            self.args, state_copy, self.control, logs
-        )
+        self.control = self.callback_handler.on_log(self.args, state_copy, self.control, logs)
         output = {**logs, **{"step": state_copy.global_step}}
         self.state.log_history.append(output)
 
@@ -282,7 +280,7 @@ class RecSysTrainer(Trainer):
         metric_key_prefix: str = "eval",
     ) -> EvalLoopOutput:
         """
-        Overriding :obj:`Trainer.prediction_loop()` (shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`) 
+        Overriding :obj:`Trainer.prediction_loop()` (shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`)
         to provide more flexibility to work with streaming metrics (computed at each eval batch) and
         to log with the outputs of the model (e.g. prediction scores, prediction metadata, attention weights)
         """
@@ -311,7 +309,7 @@ class RecSysTrainer(Trainer):
         # Note: in torch.distributed mode, there's no point in wrapping the model
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
-        batch_size = dataloader.batch_size
+        batch_size = dataloader._batch_size
 
         # num_examples = self.num_examples(dataloader)
 
@@ -333,20 +331,14 @@ class RecSysTrainer(Trainer):
 
         if not prediction_loss_only:
 
-            if (
-                metric_key_prefix == DatasetType.train.value
-                and self.args.eval_steps_on_train_set
-            ):
+            if metric_key_prefix == DatasetType.train.value and self.args.eval_steps_on_train_set:
                 num_examples = self.args.eval_steps_on_train_set * batch_size
             else:
                 num_examples = self.num_examples(dataloader)
 
             logger.info("  Num sessions (examples) = %d", num_examples)
 
-            if (
-                not self.model_args.eval_on_last_item_seq_only
-                and self.data_args.avg_session_length
-            ):
+            if not self.model_args.eval_on_last_item_seq_only and self.data_args.avg_session_length:
                 num_examples *= self.data_args.avg_session_length
                 logger.info(
                     "  Num interactions (estimated by avg session length) = %d",
@@ -483,18 +475,12 @@ class RecSysTrainer(Trainer):
         # Gather all remaining tensors and put them back on the CPU
         if not prediction_loss_only:
             preds_item_ids_scores_gatherer.add_arrays(
-                self._gather_and_numpify(
-                    preds_item_ids_scores_host, "preds_item_ids_scores"
-                )
+                self._gather_and_numpify(preds_item_ids_scores_host, "preds_item_ids_scores")
             )
-            labels_gatherer.add_arrays(
-                self._gather_and_numpify(labels_host, "eval_label_ids")
-            )
+            labels_gatherer.add_arrays(self._gather_and_numpify(labels_host, "eval_label_ids"))
 
         preds_item_ids_scores = (
-            preds_item_ids_scores_gatherer.finalize()
-            if not prediction_loss_only
-            else None
+            preds_item_ids_scores_gatherer.finalize() if not prediction_loss_only else None
         )
         label_ids = labels_gatherer.finalize() if not prediction_loss_only else None
 
@@ -503,10 +489,7 @@ class RecSysTrainer(Trainer):
         label_ids = label_ids[valid_preds_mask]
         if isinstance(preds_item_ids_scores, tuple):
             preds_item_ids_scores = tuple(
-                [
-                    pred_section[valid_preds_mask]
-                    for pred_section in preds_item_ids_scores
-                ]
+                [pred_section[valid_preds_mask] for pred_section in preds_item_ids_scores]
             )
         else:
             preds_item_ids_scores = preds_item_ids_scores[valid_preds_mask]
@@ -557,9 +540,7 @@ class RecSysTrainer(Trainer):
         inputs = self._prepare_inputs(inputs)
         if ignore_keys is None:
             if hasattr(self.model, "config"):
-                ignore_keys = getattr(
-                    self.model.config, "keys_to_ignore_at_inference", []
-                )
+                ignore_keys = getattr(self.model.config, "keys_to_ignore_at_inference", [])
             else:
                 ignore_keys = []
 
@@ -598,9 +579,7 @@ class RecSysTrainer(Trainer):
         """
 
         # Logs the attention weights
-        if self.args.log_attention_weights and isinstance(
-            self.model.model, PreTrainedModel
-        ):
+        if self.args.log_attention_weights and isinstance(self.model.model, PreTrainedModel):
 
             if self.log_attention_weights_callback is not None:
 
@@ -620,9 +599,7 @@ class RecSysTrainer(Trainer):
                 self.log_attention_weights_callback(
                     inputs=inputs_cpu,
                     att_weights=layers_step_attention_weights_cpu,
-                    description="attention_{}_step_{:06}".format(
-                        metric_key_prefix, log_step
-                    ),
+                    description="attention_{}_step_{:06}".format(metric_key_prefix, log_step),
                 )
 
     def _maybe_log_predictions(

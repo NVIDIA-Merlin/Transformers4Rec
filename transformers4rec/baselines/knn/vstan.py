@@ -104,13 +104,13 @@ class VSKNN_STAN:
     def fit(self, train, test=None, items=None):
         """
         Trains the predictor.
-        
+
         Parameters
         --------
         data: pandas.DataFrame
             Training data. It contains the transactions of the sessions. It has one column for session IDs, one for item IDs and one for the timestamp of the events (unix timestamps).
             It must have a header. Column names are arbitrary, but must correspond to the ones you set during the initialization of the network (session_key, item_key, time_key properties).
-            
+
         """
         self.num_items = train[self.item_key].max()
 
@@ -156,9 +156,7 @@ class VSKNN_STAN:
         #    self.idf = self.idf['idf'].to_dict()
 
         # Making the IDF computing incremental
-        self.idf = {
-            k: np.log(self.sessions_count / v) for k, v in self.item_freq.items()
-        }
+        self.idf = {k: np.log(self.sessions_count / v) for k, v in self.item_freq.items()}
 
         if self.sample_size == 0:  # use all session as possible neighbors
             print("!!!!! runnig KNN without a sample size (check config)")
@@ -175,7 +173,7 @@ class VSKNN_STAN:
     ):
         """
         Gives predicton scores for a selected set of items on how likely they be the next item in the session.
-                
+
         Parameters
         --------
         session_id : int or string
@@ -184,12 +182,12 @@ class VSKNN_STAN:
             The item ID of the event. Must be in the set of item IDs of the training set.
         predict_for_item_ids : 1D array
             IDs of items for which the network should give prediction scores. Every ID must be in the set of item IDs of the training set.
-            
+
         Returns
         --------
         out : pandas.Series
             Prediction scores for selected items on how likely to be the next item of this session. Indexed by the item IDs.
-        
+
         """
 
         #         gc.collect()
@@ -224,9 +222,7 @@ class VSKNN_STAN:
         if skip:
             return
 
-        neighbors = self.find_neighbors(
-            self.session_items, input_item_id, session_id, timestamp
-        )
+        neighbors = self.find_neighbors(self.session_items, input_item_id, session_id, timestamp)
         scores = self.score_items(neighbors, self.session_items, timestamp)
 
         # Create things in the format ..
@@ -243,15 +239,15 @@ class VSKNN_STAN:
     def vec(self, current, neighbor, pos_map):
         """
         Calculates the ? for 2 sessions
-        
+
         Parameters
         --------
         first: Id of a session
         second: Id of a session
-        
-        Returns 
+
+        Returns
         --------
-        out : float value           
+        out : float value
         """
         intersection = current & neighbor
         vp_sum = 0
@@ -265,15 +261,15 @@ class VSKNN_STAN:
     def cosine(self, current, neighbor, pos_map):
         """
         Calculates the cosine similarity for two sessions
-        
+
         Parameters
         --------
         first: Id of a session
         second: Id of a session
-        
-        Returns 
+
+        Returns
         --------
-        out : float value           
+        out : float value
         """
 
         lneighbor = len(neighbor)
@@ -298,46 +294,42 @@ class VSKNN_STAN:
     def items_for_session(self, session):
         """
         Returns all items in the session
-        
+
         Parameters
         --------
         session: Id of a session
-        
-        Returns 
+
+        Returns
         --------
-        out : set           
+        out : set
         """
         return self.session_item_map.get(session)
 
     def sessions_for_item(self, item_id):
         """
         Returns all session for an item
-        
+
         Parameters
         --------
         item: Id of the item session
-        
-        Returns 
+
+        Returns
         --------
-        out : set           
+        out : set
         """
-        return (
-            self.item_session_map.get(item_id)
-            if item_id in self.item_session_map
-            else set()
-        )
+        return self.item_session_map.get(item_id) if item_id in self.item_session_map else set()
 
     def most_recent_sessions(self, sessions, number):
         """
         Find the most recent sessions in the given set
-        
+
         Parameters
         --------
         sessions: set of session ids
-        
-        Returns 
+
+        Returns
         --------
-        out : set           
+        out : set
         """
         sample = set()
 
@@ -364,28 +356,24 @@ class VSKNN_STAN:
     # -----------------
     def find_neighbors(self, session_items, input_item_id, session_id, timestamp):
         """
-        Finds the k nearest neighbors for the given session_id and the current item input_item_id. 
-        
+        Finds the k nearest neighbors for the given session_id and the current item input_item_id.
+
         Parameters
         --------
         session_items: set of item ids
-        input_item_id: int 
+        input_item_id: int
         session_id: int
-        
-        Returns 
+
+        Returns
         --------
-        out : list of tuple (session_id, similarity)           
+        out : list of tuple (session_id, similarity)
         """
         possible_neighbors = self.possible_neighbor_sessions(
             session_items, input_item_id, session_id
         )
-        possible_neighbors = self.calc_similarity(
-            session_items, possible_neighbors, timestamp
-        )
+        possible_neighbors = self.calc_similarity(session_items, possible_neighbors, timestamp)
 
-        possible_neighbors = sorted(
-            possible_neighbors, reverse=True, key=lambda x: x[1]
-        )
+        possible_neighbors = sorted(possible_neighbors, reverse=True, key=lambda x: x[1])
         possible_neighbors = possible_neighbors[: self.k]
 
         return possible_neighbors
@@ -395,20 +383,18 @@ class VSKNN_STAN:
         Find a set of session to later on find neighbors in.
         A self.sample_size of 0 uses all sessions in which any item of the current session appears.
         self.sampling can be performed with the options "recent" or "random".
-        "recent" selects the self.sample_size most recent sessions while "random" just choses randomly. 
-        
+        "recent" selects the self.sample_size most recent sessions while "random" just choses randomly.
+
         Parameters
         --------
         sessions: set of session ids
-        
-        Returns 
+
+        Returns
         --------
-        out : set           
+        out : set
         """
 
-        self.relevant_sessions = self.relevant_sessions | self.sessions_for_item(
-            input_item_id
-        )
+        self.relevant_sessions = self.relevant_sessions | self.sessions_for_item(input_item_id)
 
         if self.sample_size == 0:  # use all session as possible neighbors
 
@@ -420,9 +406,7 @@ class VSKNN_STAN:
             if len(self.relevant_sessions) > self.sample_size:
 
                 if self.sampling == "recent":
-                    sample = self.most_recent_sessions(
-                        self.relevant_sessions, self.sample_size
-                    )
+                    sample = self.most_recent_sessions(self.relevant_sessions, self.sample_size)
                 elif self.sampling == "random":
                     sample = random.sample(self.relevant_sessions, self.sample_size)
                 else:
@@ -435,15 +419,15 @@ class VSKNN_STAN:
     def calc_similarity(self, session_items, sessions, timestamp):
         """
         Calculates the configured similarity for the items in session_items and each session in sessions.
-        
+
         Parameters
         --------
         session_items: set of item ids
         sessions: list of session ids
-        
-        Returns 
+
+        Returns
         --------
-        out : list of tuple (session_id,similarity)           
+        out : list of tuple (session_id,similarity)
         """
 
         pos_map = None
@@ -489,14 +473,14 @@ class VSKNN_STAN:
     def score_items(self, neighbors, current_session, timestamp):
         """
         Compute a set of scores for all items given a set of neighbors.
-        
+
         Parameters
         --------
         neighbors: set of session ids
-        
-        Returns 
+
+        Returns
         --------
-        out : list of tuple (item, score)           
+        out : list of tuple (item, score)
         """
         # now we have the set of relevant items to make predictions
         scores = dict()
@@ -538,9 +522,7 @@ class VSKNN_STAN:
                     )
 
                 if self.lambda_idf is not None:
-                    new_score = new_score + (
-                        new_score * self.idf[item] * self.lambda_idf
-                    )
+                    new_score = new_score + (new_score * self.idf[item] * self.lambda_idf)
 
                 if self.lambda_ipw is not None:
                     new_score = new_score * ipw_decay

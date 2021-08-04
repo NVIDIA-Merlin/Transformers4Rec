@@ -1,0 +1,6 @@
+numpy
+tensorflow
+tensorflow-metadata
+torch
+torchmetrics
+transformers

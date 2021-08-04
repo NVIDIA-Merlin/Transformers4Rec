@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/merlin/merlin-pytorch-training:0.5
+FROM nvcr.io/nvidia/merlin/merlin-pytorch-training:0.5.3
 
 ADD ./transformers4rec/requirements.txt requirements.txt
 

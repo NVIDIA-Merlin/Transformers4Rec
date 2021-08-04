@@ -10,14 +10,14 @@ P.s. The GitHub repository must be cloned within the image. For that, you need t
 
 ```bash
 cd Transformers4Rec/
-docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.1 --build-arg SSH_KEY="$(cat ~/.ssh/transf4rec_ngc_repo_key)" -f containers/ngc/Dockerfile.ngc .
+docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.3 --build-arg SSH_KEY="$(cat ~/.ssh/transf4rec_ngc_repo_key)" -f containers/ngc/Dockerfile.ngc .
 ```
 
 ### Baselines
 
 ```bash
 cd Transformers4Rec/
-docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.1-theano1.0.5 --build-arg SSH_KEY="$(cat ~/.ssh/transf4rec_ngc_repo_key)" -f containers/ngc/Dockerfile.ngc_theano .
+docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.3-theano1.0.5 --build-arg SSH_KEY="$(cat ~/.ssh/transf4rec_ngc_repo_key)" -f containers/ngc/Dockerfile.ngc_theano .
 ```
 
 
@@ -25,7 +25,7 @@ docker build --no-cache --tag nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf
 
 ```bash
 DATA_PATH=~/dataset/
-docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v $DATA_PATH:/data --workdir /workspace/ nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.1 /bin/bash
+docker run --gpus all -it --rm -p 6006:6006 -p 8888:8888 -v $DATA_PATH:/data --workdir /workspace/ nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.3 /bin/bash
 ```
 
 Run inside the container
@@ -91,7 +91,7 @@ docker login -u \$oauthtoken -p <NGCAPI> nvcr.io
 
 Then you will be able to push your image to NGC
 ```bash
-docker push nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.1
+docker push nvcr.io/nvidian/prj-recsys/transformers4rec:0.2-hf-4.6.0-nvtabular-0.5.3
 ```
 
 ## Run a Job on NGC
