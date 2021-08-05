@@ -147,7 +147,7 @@ class DataArguments:
         },
     )
 
-    nvt_part_size: Optional[float] = field(
+    nvt_part_size: Optional[str] = field(
         default=None,
         metadata={
             "help": "When using the NVTabular dataloader, this is the desired size (e.g. 100MB, 1.5GB) of each Dask partition. "
