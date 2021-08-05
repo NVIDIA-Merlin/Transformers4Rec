@@ -208,14 +208,15 @@ def get_nvtabular_dataloader(
 
     # device_key = "devices" if nvtabular.__version__ < "0.5.1" else "device"
     dataloader_device = 0 if training_args.local_rank == -1 else training_args.local_rank
-
-    dataset = NVTDataset(
-        data_paths,
-        engine="parquet",
-        part_mem_fraction=data_args.nvt_part_mem_fraction,
-        part_size=data_args.nvt_part_size,
-    )
-
+    # If use part_size argument when doing multi-gpu distributed data parallel training,
+    # note that dataset row_group memory size should be smaller than the partition size and
+    # number of row groups per file should be >= number of gpus in use.
+    if data_args.nvt_part_size:
+        dataset = NVTDataset(data_paths, engine="parquet", part_size=data_args.nvt_part_size)
+    else:
+        dataset = NVTDataset(
+            data_paths, engine="parquet", part_mem_fraction=data_args.nvt_part_mem_fraction
+        )
     global_size = None
     global_rank = None
     # If using DistributedDataParallel, gets the global number of GPUs (world_size) and the GPU for this process (local_rank).

@@ -1,5 +1,9 @@
 import transformers
 
+from ..utils.registry import Registry
+
+transformer_registry: Registry = Registry("transformers")
+
 
 class T4RecConfig:
     def to_torch_model(self):
@@ -21,6 +25,7 @@ class T4RecConfig:
         raise NotImplementedError
 
 
+@transformer_registry.register("reformer")
 class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
     @classmethod
     def for_rec(
@@ -60,6 +65,7 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
         )
 
 
+@transformer_registry.register("gtp2")
 class GPT2Config(T4RecConfig, transformers.GPT2Config):
     @classmethod
     def for_rec(
@@ -95,6 +101,7 @@ class GPT2Config(T4RecConfig, transformers.GPT2Config):
         )
 
 
+@transformer_registry.register("longformer")
 class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
     @classmethod
     def for_rec(
@@ -127,6 +134,7 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
         )
 
 
+@transformer_registry.register("electra")
 class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
     @classmethod
     def for_rec(
@@ -161,6 +169,7 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
         )
 
 
+@transformer_registry.register("albert")
 class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
     @classmethod
     def for_rec(
@@ -195,6 +204,7 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
         )
 
 
+@transformer_registry.register("xlnet")
 class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
     @classmethod
     def for_rec(

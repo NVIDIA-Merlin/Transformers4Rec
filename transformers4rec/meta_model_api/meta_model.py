@@ -70,7 +70,8 @@ class MetaModel(nn.Module):
             feature_process=self.feature_group,
         )
 
-    def forward(self, inputs, training=False):
+    def forward(self, training=False, *args, **kwargs):
+        inputs = kwargs
         out = self.feature_group(inputs)
         input_sequence = out.values
         itemid_seq = inputs[self.feature_group.itemid_name]
@@ -88,6 +89,7 @@ class MetaModel(nn.Module):
             "loss": loss,
             "labels": labels_all,
             "predictions": logits_all,
+            "pred_metadata": [],
             "model_outputs": tower_out.model_outputs,  # Keep mems, hidden states, attentions if there are in it
         }
 

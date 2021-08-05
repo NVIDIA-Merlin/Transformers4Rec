@@ -1,3 +1,5 @@
+import abc
+
 import torch
 
 from ..utils.registry import Registry
@@ -8,8 +10,31 @@ aggregation_registry: Registry = Registry.class_registry("torch.aggregation_regi
 
 
 class FeatureAggregation(torch.nn.Module):
+    def __rrshift__(self, other):
+        from .block.base import right_shift_block
+
+        return right_shift_block(self, other)
+
     def forward(self, inputs: TabularData) -> torch.tensor:
         return super(FeatureAggregation, self).forward(inputs)
+
+    @abc.abstractmethod
+    def forward_output_size(self, input_size):
+        raise NotImplementedError
+
+    def build(self, input_size, device=None):
+        if device:
+            self.to(device)
+        self.input_size = input_size
+
+        return self
+
+    def output_size(self):
+        if not self.input_size:
+            # TODO: log warning here
+            pass
+
+        return self.forward_output_size(self.input_size)
 
 
 @aggregation_registry.register("concat")
@@ -27,7 +52,36 @@ class ConcatFeatures(FeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
+
         return batch_size, sum([i[1] for i in input_size.values()])
+
+
+@aggregation_registry.register("sequential_concat")
+class SequentialConcatFeatures(FeatureAggregation):
+    def forward(self, inputs):
+        tensors = []
+        for name in sorted(inputs.keys()):
+            val = inputs[name]
+            if val.ndim == 2:
+                val = val.unsqueeze(dim=-1)
+            tensors.append(val)
+
+        return torch.cat(tensors, dim=-1)
+
+    def forward_output_size(self, input_size):
+        batch_size = calculate_batch_size_from_input_size(input_size)
+        converted_input_size = {}
+        for key, val in input_size.items():
+            if len(val) == 2:
+                converted_input_size[key] = val + (1,)
+            else:
+                converted_input_size[key] = val
+
+        return (
+            batch_size,
+            list(input_size.values())[0][1],
+            sum([i[-1] for i in converted_input_size.values()]),
+        )
 
 
 @aggregation_registry.register("stack")
@@ -51,70 +105,16 @@ class StackFeatures(FeatureAggregation):
 
 
 @aggregation_registry.register("element-wise-sum")
-class ElementwiseSum(torch.nn.Module):
+class ElementwiseSum(FeatureAggregation):
     def __init__(self):
         super().__init__()
+        self.stack = StackFeatures(axis=0)
 
     def forward(self, inputs):
-        tensors = []
-        for name in sorted(inputs.keys()):
-            tensors.append(inputs[name])
+        return self.stack(inputs).sum(dim=0)
 
-        return torch.stack(tensors, dim=0).sum(dim=0)
+    def forward_output_size(self, input_size):
+        batch_size = calculate_batch_size_from_input_size(input_size)
+        last_dim = [i for i in input_size.values()][0][-1]
 
-
-@aggregation_registry.register("sequential")
-class SequenceAggregator(torch.nn.Module):
-    """
-    Receive a dictionary of sequential tensors and output their aggregation_registry as a 3d tensor.
-    It supports two types of aggregation_registry:
-        concat and elementwise_sum_multiply_item_embedding
-    """
-
-    def __init__(
-        self,
-        input_features_aggregation,
-        itemid_name,
-        feature_map,
-        numeric_features_project_to_embedding_dim,
-        device,
-    ):
-        super(SequenceAggregator, self).__init__()
-        self.itemid_name = itemid_name
-        self.feature_map = feature_map
-        self.device = device
-        self.input_features_aggregation = input_features_aggregation
-        self.numeric_features_project_to_embedding_dim = numeric_features_project_to_embedding_dim
-        if input_features_aggregation == "concat":
-            self.aggegator = ConcatFeatures()
-        elif self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
-            self.aggregator = ElementwiseSum()
-            # features to sum are all categorical and projected continuous embeddings
-            # exluding itemid
-            self.other_features = [
-                k
-                for k in feature_map.keys()
-                if (self.feature_map[k]["dtype"] == "categorical")
-                or (
-                    self.feature_map[k]["dtype"] in ["long", "float"]
-                    and self.numeric_features_project_to_embedding_dim > 0
-                )
-            ]
-
-    def forward(self, transformed_features):
-        if len(transformed_features) > 1:
-            if self.input_features_aggregation == "concat":
-                output = self.aggegator(transformed_features)
-            elif self.input_features_aggregation == "elementwise_sum_multiply_item_embedding":
-                additional_features_sum = {
-                    k: v.long() for k, v in transformed_features.items() if k in self.other_features
-                }
-
-                item_id_embedding = transformed_features[self.itemid_name]
-
-                output = item_id_embedding * (self.aggregator(additional_features_sum) + 1.0)
-            else:
-                raise ValueError("Invalid value for --input_features_aggregation.")
-        else:
-            output = list(transformed_features.values())[0]
-        return output
+        return batch_size, last_dim

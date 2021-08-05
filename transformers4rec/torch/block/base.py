@@ -1,14 +1,24 @@
 import abc
-from typing import Union
+import inspect
+from typing import Optional, Union
 
 import torch
+
+from transformers4rec.torch.typing import MaskSequence
 
 from ..head import Head
 from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule, merge_tabular
 
 
 class BlockMixin:
-    def to_model(self, head: Head, optimizer=torch.optim.Adam, block_output_size=None, **kwargs):
+    def to_model(
+        self,
+        head: Head,
+        masking: Optional[Union[MaskSequence, str]] = None,
+        optimizer=torch.optim.Adam,
+        block_output_size=None,
+        **kwargs
+    ):
         from .with_head import BlockWithHead
 
         if not block_output_size:
@@ -17,7 +27,7 @@ class BlockMixin:
         if block_output_size:
             self.output_size = block_output_size
 
-        out = BlockWithHead(self, head, optimizer=optimizer, **kwargs)
+        out = BlockWithHead(self, head, masking=masking, optimizer=optimizer, **kwargs)
 
         if next(self.parameters()).is_cuda:
             out.to("cuda")
@@ -53,6 +63,41 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
     def __add__(self, other):
         return merge_tabular(self, other)
 
+    def forward_output_size(self, input_size):
+        x = input_size
+        for module in list(self):
+            if getattr(module, "forward_output_size", None):
+                x = module.forward_output_size(x)
+            else:
+                # TODO log warning here
+                return None
+
+        return x
+
+    def output_size(self):
+        if not getattr(self, "input_size", None):
+            # TODO: log warning here
+            pass
+
+        return self.forward_output_size(self.input_size)
+
+    @staticmethod
+    def get_children_by_class_name(parent, *class_name):
+        children = []
+
+        def add_if_class_name_matches(to_check):
+            if to_check.__class__.__name__ in class_name:
+                children.append(to_check)
+
+        for child in parent:
+            if getattr(child, "merge_values", None):
+                for to_merge in child.merge_values:
+                    add_if_class_name_matches(to_merge)
+
+            add_if_class_name_matches(child)
+
+        return children
+
 
 class BuildableBlock(abc.ABC):
     @abc.abstractmethod
@@ -60,12 +105,7 @@ class BuildableBlock(abc.ABC):
         raise NotImplementedError
 
     def __rrshift__(self, other):
-        module = self.build(other.output_size())
-
-        return right_shift_block(module, other)
-
-    def __rshift__(self, other):
-        print("__rshift__")
+        return right_shift_block(self, other)
 
 
 BlockType = Union[torch.nn.Module, Block]
@@ -77,6 +117,23 @@ def right_shift_block(self, other):
     else:
         left_side = list(other) if isinstance(other, SequentialBlock) else [other]
     right_side = list(self) if isinstance(self, SequentialBlock) else [self]
+
+    # Maybe build right-side
+    if hasattr(left_side[-1], "output_size") and left_side[-1].output_size():
+        _right_side = []
+        x = left_side[-1].output_size()
+        for module in right_side:
+            if getattr(module, "build", None):
+                if "parents" in inspect.signature(module.build).parameters:
+                    build = module.build(x, left_side)
+                else:
+                    build = module.build(x)
+                if build:
+                    module = build
+                x = module.output_size() if hasattr(module, "output_size") else None
+            _right_side.append(module)
+        right_side = _right_side
+
     sequential = left_side + right_side
 
     need_moving_to_gpu = False
@@ -86,6 +143,8 @@ def right_shift_block(self, other):
         need_moving_to_gpu = need_moving_to_gpu or _check_gpu(other)
 
     out = SequentialBlock(*sequential)
+    if getattr(left_side[-1], "input_size", None) and left_side[-1].input_size:
+        out.input_size = left_side[-1].input_size
 
     if need_moving_to_gpu:
         out.to("cuda")
