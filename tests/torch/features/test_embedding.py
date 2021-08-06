@@ -1,5 +1,7 @@
 import pytest
 
+from transformers4rec.utils.tags import Tag
+
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
@@ -17,12 +19,12 @@ def test_embedding_features(torch_cat_features):
 
 
 def test_embedding_features_yoochoose(yoochoose_column_group, torch_yoochoose_like):
-    col_group = yoochoose_column_group
+    col_group = yoochoose_column_group.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = torch4rec.EmbeddingFeatures.from_column_group(col_group.categorical_column_group())
+    emb_module = torch4rec.EmbeddingFeatures.from_column_group(col_group)
     embeddings = emb_module(torch_yoochoose_like)
 
-    assert list(embeddings.keys()) == col_group.categorical_columns()
+    assert list(embeddings.keys()) == col_group.column_names
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
     assert emb_module.item_id == "item_id/list"
     assert emb_module.item_embedding_table.num_embeddings == 51996
