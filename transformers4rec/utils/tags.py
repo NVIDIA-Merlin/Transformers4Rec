@@ -18,6 +18,7 @@ class DefaultTags(Enum):
     TARGETS = ["target"]
     TARGETS_BINARY = ["target", "binary"]
     TARGETS_REGRESSION = ["target", "regression"]
+    TARGETS_MULTI_CLASS = ["target", "multi_class"]
 
 
 class Tag:
