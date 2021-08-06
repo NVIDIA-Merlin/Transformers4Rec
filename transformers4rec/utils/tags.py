@@ -37,6 +37,7 @@ class Tag:
     TARGETS = DefaultTags.TARGETS
     TARGETS_BINARY = DefaultTags.TARGETS_BINARY
     TARGETS_REGRESSION = DefaultTags.TARGETS_REGRESSION
+    TARGETS_MULTI_CLASS = DefaultTags.TARGETS_MULTI_CLASS
 
     def __init__(self, *tag):
         self.tags = tag
