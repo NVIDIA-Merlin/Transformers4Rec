@@ -1,6 +1,6 @@
 import collections.abc
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Text, Union
+from typing import List, Optional, Text, Union
 
 from google.protobuf import text_format
 from tensorflow_metadata.proto.v0 import schema_pb2
@@ -14,7 +14,6 @@ class Column:
 
     name: Text
     tags: Optional[List[Text]] = field(default_factory=list)
-    properties: Optional[Dict[Text, Text]] = field(default_factory=dict)
 
     def __post_init__(self):
         if isinstance(self.tags, DefaultTags):
@@ -31,17 +30,10 @@ class Column:
 
         tags = list(set(list(self.tags) + list(tags))) if add else tags
 
-        return Column(self.name, tags=tags, properties=self.properties)
+        return Column(self.name, tags=tags)
 
     def with_name(self, name) -> "Column":
-        return Column(name, tags=self.tags, properties=self.properties)
-
-    def with_properties(self, add=True, **properties) -> "Column":
-        if not properties:
-            return self
-        properties = {**self.properties, **properties} if add else properties
-
-        return Column(self.name, tags=self.tags, properties=properties)
+        return Column(name, tags=self.tags)
 
 
 class ColumnGroup:
@@ -61,7 +53,6 @@ class ColumnGroup:
         self,
         columns: Union[Text, List[Text], Column, List[Column], "ColumnGroup"],
         tags: Optional[Union[List[Text], DefaultTags]] = None,
-        properties: Optional[Dict[Text, Text]] = None,
     ):
         if isinstance(columns, str):
             columns = [columns]
@@ -72,11 +63,8 @@ class ColumnGroup:
             tags = tags.value
 
         self.tags = tags
-        self.properties = properties
 
-        self.columns: List[Column] = [
-            _convert_col(col, tags=tags, properties=properties) for col in columns
-        ]
+        self.columns: List[Column] = [_convert_col(col, tags=tags) for col in columns]
 
     @staticmethod
     def read_schema(schema_path):
@@ -162,40 +150,11 @@ class ColumnGroup:
         return child
 
     def __getitem__(self, columns):
-        """Selects certain columns from this ColumnGroup, and returns a new Columngroup with only
-        those columns
-        Parameters
-        -----------
-        columns: str or list of str
-            Columns to select
-        Returns
-        -------
-        ColumnGroup
-        """
-        if isinstance(columns, str):
-            columns = [columns]
-        if isinstance(columns, int):
-            return self.column_names[columns]
+        return self.select_by_name(columns)
 
-        filtered_columns = [col for col in _convert_col(columns) if col.name in self.column_names]
-        child = ColumnGroup(filtered_columns)
-
-        return child
-
-    def filter_columns(self, filter_fn, by_name=True):
-        if by_name:
-            filtered = [c for c in self.columns if filter_fn(c.name)]
-        else:
-            filtered = [c for c in self.columns if filter_fn(c)]
-
-        return self[filtered]
-
-    def filter_by_namespace(self, namespace):
-        return self.filter_columns(lambda c: c.startswith(namespace))
-
-    def get_tagged(self, tags, output_list=False, tags_to_filter=None):
+    def select_by_tag(self, tags, tags_to_filter=None):
         column_names_to_filter = (
-            self.get_tagged(tags_to_filter, output_list=True) if tags_to_filter else []
+            self.select_by_tag(tags_to_filter, output_list=True) if tags_to_filter else []
         )
 
         if isinstance(tags, DefaultTags):
@@ -210,9 +169,6 @@ class ColumnGroup:
 
         columns = [col for col in output_cols if col.name not in column_names_to_filter]
 
-        if output_list:
-            return [col.name for col in columns]
-
         child = ColumnGroup(columns, tags=tags)
 
         if self._schema:
@@ -220,60 +176,25 @@ class ColumnGroup:
 
         return child
 
-    def tags_by_column(self):
-        outputs = {}
+    def select_by_name(self, names):
+        """Selects certain columns from this ColumnGroup, and returns a new Columngroup with only
+        those columns
+        Parameters
+        -----------
+        columns: str or list of str
+            Columns to select
+        Returns
+        -------
+        ColumnGroup
+        """
+        if isinstance(names, str):
+            names = [names]
 
-        for col in self.columns:
-            outputs[col.name] = col.tags
-
-        return outputs
-
-    def targets_columns(self):
-        return self.get_tagged(Tag.TARGETS, output_list=True)
-
-    def targets_column_group(self):
-        return self.get_tagged(Tag.TARGETS, output_list=False)
-
-    def binary_targets_columns(self):
-        return self.get_tagged(Tag.TARGETS_BINARY, output_list=True)
-
-    def binary_targets_column_group(self):
-        return self.get_tagged(Tag.TARGETS_BINARY, output_list=False)
-
-    def regression_targets_columns(self):
-        return self.get_tagged(Tag.TARGETS_REGRESSION, output_list=True)
-
-    def regression_targets_column_group(self):
-        return self.get_tagged(Tag.TARGETS_REGRESSION, output_list=False)
-
-    def continuous_columns(self):
-        return self.get_tagged(Tag.CONTINUOUS, output_list=True)
-
-    def continuous_column_group(self):
-        return self.get_tagged(Tag.CONTINUOUS, output_list=False)
-
-    def categorical_columns(self):
-        return self.get_tagged(Tag.CATEGORICAL, output_list=True)
-
-    def categorical_column_group(self):
-        return self.get_tagged(Tag.CATEGORICAL, output_list=False)
-
-    def text_columns(self):
-        return self.get_tagged(Tag.TEXT, output_list=True)
-
-    def text_column_group(self):
-        return self.get_tagged(Tag.TEXT, output_list=False)
-
-    def text_tokenized_columns(self):
-        return self.get_tagged(Tag.TEXT_TOKENIZED, output_list=True)
-
-    def text_tokenized_column_group(self):
-        return self.get_tagged(Tag.TEXT_TOKENIZED, output_list=False)
-
-    def remove_tagged(self, tags):
-        to_remove = self.get_tagged(tags)
-
-        return self - to_remove
+        child = ColumnGroup(names)
+        child.parents = [self]
+        self.children.append(child)
+        child.kind = str(names)
+        return child
 
     def embedding_sizes(self):
         if self._schema:
@@ -308,14 +229,12 @@ class ColumnGroup:
         return schema
 
 
-def _convert_col(col, tags=None, properties=None):
-    if not properties:
-        properties = {}
+def _convert_col(col, tags=None):
     if isinstance(col, Column):
-        return col.with_tags(tags).with_properties(**properties)
+        return col.with_tags(tags)
     elif isinstance(col, str):
-        return Column(col, tags=tags, properties=properties)
+        return Column(col, tags=tags)
     elif isinstance(col, (tuple, list)):
-        return [tuple(_convert_col(c, tags=tags, properties=properties) for c in col)]
+        return [tuple(_convert_col(c, tags=tags) for c in col)]
     else:
         raise ValueError(f"Invalid column value for ColumnGroup: {col} (type: {type(col)})")

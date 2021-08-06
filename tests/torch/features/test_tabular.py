@@ -1,5 +1,7 @@
 import pytest
 
+from transformers4rec.utils.tags import Tag
+
 torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_utils = pytest.importorskip("transformers4rec.torch.utils.torch_utils")
 
@@ -10,7 +12,11 @@ def test_tabular_features(yoochoose_column_group, torch_yoochoose_like):
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert list(outputs.keys()) == col_group.continuous_columns() + col_group.categorical_columns()
+    assert (
+        list(outputs.keys())
+        == col_group.select_by_tag(Tag.CONTINUOUS).column_names
+        + col_group.select_by_tag(Tag.CATEGORICAL).column_names
+    )
 
 
 def test_tabular_features_with_projection(yoochoose_column_group, torch_yoochoose_like):

@@ -1,5 +1,7 @@
 import pytest
 
+from transformers4rec.utils.tags import Tag
+
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
@@ -9,7 +11,7 @@ def test_sequential_embedding_features(yoochoose_column_group, torch_yoochoose_l
 
     outputs = emb_module(torch_yoochoose_like)
 
-    assert list(outputs.keys()) == col_group.categorical_columns()
+    assert list(outputs.keys()) == col_group.select_by_tag(Tag.CATEGORICAL).column_names
     assert all(tensor.shape[1] == 20 for tensor in list(outputs.values()))
     assert all(tensor.shape[2] == 64 for tensor in list(outputs.values()))
 
@@ -20,7 +22,11 @@ def test_sequential_tabular_features(yoochoose_column_group, torch_yoochoose_lik
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert list(outputs.keys()) == col_group.continuous_columns() + col_group.categorical_columns()
+    assert (
+        list(outputs.keys())
+        == col_group.select_by_tag(Tag.CONTINUOUS).column_names
+        + col_group.select_by_tag(Tag.CATEGORICAL).column_names
+    )
 
 
 def test_sequential_tabular_features_with_projection(yoochoose_column_group, torch_yoochoose_like):

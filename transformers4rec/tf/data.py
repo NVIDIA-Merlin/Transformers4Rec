@@ -24,6 +24,8 @@ from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tf_utils import configure_tensorflow, get_dataset_schema_from_feature_columns
 from nvtabular.ops import _get_embedding_order
 
+from ..utils.tags import Tag
+
 from_dlpack = configure_tensorflow()
 
 
@@ -280,9 +282,13 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
 
         col_group = ColumnGroup.from_schema(schema_path)
 
-        categorical_features = categorical_features or col_group.categorical_columns
-        continuous_features = continuous_features or col_group.continuous_columns
-        targets = targets or col_group.targets_columns
+        categorical_features = (
+            categorical_features or col_group.select_by_tag(Tag.CATEGORICAL).column_names
+        )
+        continuous_features = (
+            continuous_features or col_group.select_by_tag(Tag.CONTINUOUS).column_names
+        )
+        targets = targets or col_group.select_by_tag(Tag.TARGETS).column_names
 
         tf_dataset = cls(
             directory,

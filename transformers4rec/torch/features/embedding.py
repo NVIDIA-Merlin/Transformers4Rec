@@ -141,10 +141,10 @@ class EmbeddingFeatures(TabularModule):
         # TODO: propogate item-id from ITEM_ID tag
 
         if tags:
-            column_group = column_group.get_tagged(tags, tags_to_filter=tags_to_filter)
+            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
 
-        if not item_id and column_group.get_tagged(["item_id"]).column_names:
-            item_id = column_group.get_tagged(["item_id"]).column_names[0]
+        if not item_id and column_group.select_by_tag(["item_id"]).column_names:
+            item_id = column_group.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
             sizes = column_group.embedding_sizes()
