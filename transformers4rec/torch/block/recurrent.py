@@ -1,11 +1,12 @@
 from typing import Union
 
 import torch
-from transformers import PreTrainedModel
+from transformers import GPT2Model, PreTrainedModel, XLNetModel
 
 from ...config.transformer import T4RecConfig
 from .. import masking
 from ..features.embedding import EmbeddingFeatures
+from ..masking import PermutationLanguageModeling
 from ..typing import MaskSequence
 from .base import BuildableBlock, SequentialBlock
 
@@ -14,12 +15,13 @@ RecurrentBody = Union[str, PreTrainedModel, T4RecConfig, torch.nn.Module]
 
 class RecurrentBlock(BuildableBlock):
     def __init__(
-        self, masking: Union[str, MaskSequence] = "clm", body: RecurrentBody = "xlnet"
+        self, hidden_size, masking: Union[str, MaskSequence] = "clm", body: RecurrentBody = "xlnet"
     ) -> None:
         super().__init__()
         if isinstance(body, T4RecConfig):
             body = body.to_torch_model()
-
+        # TODO: remove the hidden_size from paramters and directly compute it from body class
+        self.hidden_size = hidden_size
         self.masking = masking
         self.body = body
 
@@ -30,7 +32,7 @@ class RecurrentBlock(BuildableBlock):
     @masking.setter
     def masking(self, value):
         if value:
-            self._masking = masking.masking_registry.parse(value)
+            self._masking = masking.masking_registry.parse(value)(hidden_size=self.hidden_size)
         else:
             self._masking = None
 
@@ -50,12 +52,56 @@ class _RecurrentBlock(torch.nn.Module):
         self.masking = masking
 
     def forward(self, inputs, training=True, **kwargs):
-        item_seq = self.embedding_module[0].item_seq
-        self.masking.set_masking_schema(item_seq, training=training)
-        inputs = self.masking(inputs, for_inputs=True)
-        # TODO Call body here
+        if self.masking:
+            item_seq = self.embedding_module[0].item_seq
+            self.masking.set_masking_targets(item_ids=item_seq, training=training)
+            inputs = self.masking(inputs)
 
-        return inputs
+        if not isinstance(self.body, PreTrainedModel):  # Checks if its not a transformer
+            # compute output through RNNs
+            results = self.body(input=inputs)
+            if type(results) is tuple or type(results) is list:
+                pos_emb_hidden = results[0]
+            else:
+                pos_emb_hidden = results
+            model_outputs = (None,)
+
+        else:
+            """
+            Transformer Models
+            """
+            if type(self.body) is GPT2Model:
+                seq_len = inputs.shape[1]
+                # head_mask has shape n_layer x batch x n_heads x N x N
+                head_mask = (
+                    torch.tril(
+                        torch.ones((seq_len, seq_len), dtype=torch.uint8, device=self.device)
+                    )
+                    .view(1, 1, 1, seq_len, seq_len)
+                    .repeat(self.n_layer, 1, 1, 1, 1)
+                )
+
+                model_outputs = self.body(
+                    inputs_embeds=inputs,
+                    head_mask=head_mask,
+                )
+
+            elif type(self.body) is XLNetModel and isinstance(
+                self.masking, PermutationLanguageModeling
+            ):
+                model_outputs = self.body(
+                    inputs_embeds=inputs,
+                    target_mapping=self.masking.plm_target_mapping,
+                    perm_mask=self.masking.plm_perm_mask,
+                )
+
+            else:
+                model_outputs = self.body(inputs_embeds=inputs)
+
+            pos_emb_hidden = model_outputs[0]
+
+        # TODO: store the attention outputs for meta-data logging
+        return pos_emb_hidden
 
     @property
     def masking(self):
