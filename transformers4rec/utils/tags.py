@@ -6,7 +6,6 @@ class DefaultTags(Enum):
     CATEGORICAL = ["categorical"]
     CONTINUOUS = ["continuous"]
     LIST = ["list"]
-    IMAGE = ["image"]
     TEXT = ["text"]
     TEXT_TOKENIZED = ["text_tokenized"]
 
@@ -26,7 +25,6 @@ class Tag:
     CATEGORICAL = DefaultTags.CATEGORICAL
     CONTINUOUS = DefaultTags.CONTINUOUS
     LIST = DefaultTags.LIST
-    IMAGE = DefaultTags.IMAGE
     TEXT = DefaultTags.TEXT
     TEXT_TOKENIZED = DefaultTags.TEXT_TOKENIZED
 
