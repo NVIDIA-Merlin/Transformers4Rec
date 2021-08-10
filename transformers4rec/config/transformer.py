@@ -21,14 +21,14 @@ class T4RecConfig:
         return self.__class__.__bases__[1]
 
     @classmethod
-    def for_rec(cls, *args, **kwargs):
+    def build(cls, *args, **kwargs):
         raise NotImplementedError
 
 
 @transformer_registry.register("reformer")
 class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
     @classmethod
-    def for_rec(
+    def build(
         cls,
         d_model,
         n_head,
@@ -68,7 +68,7 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
 @transformer_registry.register("gtp2")
 class GPT2Config(T4RecConfig, transformers.GPT2Config):
     @classmethod
-    def for_rec(
+    def build(
         cls,
         d_model,
         n_head,
@@ -104,7 +104,7 @@ class GPT2Config(T4RecConfig, transformers.GPT2Config):
 @transformer_registry.register("longformer")
 class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
     @classmethod
-    def for_rec(
+    def build(
         cls,
         d_model,
         n_head,
@@ -137,7 +137,7 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
 @transformer_registry.register("electra")
 class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
     @classmethod
-    def for_rec(
+    def build(
         cls,
         d_model,
         n_head,
@@ -172,7 +172,7 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
 @transformer_registry.register("albert")
 class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
     @classmethod
-    def for_rec(
+    def build(
         cls,
         d_model,
         n_head,
@@ -207,7 +207,7 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
 @transformer_registry.register("xlnet")
 class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
     @classmethod
-    def for_rec(
+    def build(
         cls,
         d_model,
         n_head,

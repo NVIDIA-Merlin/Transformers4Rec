@@ -16,7 +16,7 @@
 from .aggregation import ConcatFeatures, ElementwiseSum, StackFeatures
 from .block.base import SequentialBlock, right_shift_block
 from .block.mlp import MLPBlock
-from .block.recurrent import RecurrentBlock
+from .block.transformer import TransformerBlock
 from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, SoftEmbeddingFeatures, TableConfig
@@ -30,7 +30,7 @@ __all__ = [
     "right_shift_block",
     "MLPBlock",
     "BlockWithHead",
-    "RecurrentBlock",
+    "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SoftEmbeddingFeatures",
