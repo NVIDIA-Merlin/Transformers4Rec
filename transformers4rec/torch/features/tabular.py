@@ -74,6 +74,9 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
         )
 
+        if output.aggregation is not None:
+            output.aggregation.schema = schema
+
         if automatic_build and schema._schema:
             output.build(
                 get_output_sizes_from_schema(
