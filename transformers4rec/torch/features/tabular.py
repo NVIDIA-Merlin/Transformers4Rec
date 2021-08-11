@@ -1,6 +1,6 @@
 from typing import List
 
-from ...types import ColumnGroup, Tag
+from ...types import Schema, Tag
 from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular, TabularModule
 from ..utils.torch_utils import get_output_sizes_from_schema
@@ -44,13 +44,11 @@ class TabularFeatures(MergeTabular):
         return self
 
     @classmethod
-    def from_column_group(
+    def from_schema(
         cls,
-        column_group: ColumnGroup,
+        schema: Schema,
         continuous_tags=Tag.CONTINUOUS,
-        continuous_tags_to_filter=None,
         categorical_tags=Tag.CATEGORICAL,
-        categorical_tags_to_filter=None,
         aggregation=None,
         automatic_build=True,
         max_sequence_length=None,
@@ -59,12 +57,14 @@ class TabularFeatures(MergeTabular):
     ):
         maybe_continuous_module, maybe_categorical_module = None, None
         if continuous_tags:
-            maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_column_group(
-                column_group, tags=continuous_tags, tags_to_filter=continuous_tags_to_filter
+            maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
+                schema,
+                tags=continuous_tags,
             )
         if categorical_tags:
-            maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_column_group(
-                column_group, tags=categorical_tags, tags_to_filter=categorical_tags_to_filter
+            maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(
+                schema,
+                tags=categorical_tags,
             )
 
         output = cls(
@@ -74,10 +74,10 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
         )
 
-        if automatic_build and column_group._schema:
+        if automatic_build and schema._schema:
             output.build(
                 get_output_sizes_from_schema(
-                    column_group._schema,
+                    schema._schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
                 )

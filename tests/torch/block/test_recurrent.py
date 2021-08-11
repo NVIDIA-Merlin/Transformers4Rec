@@ -6,10 +6,10 @@ torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
 # TODO: Finish this test
-def test_recurrent_block(yoochoose_column_group, torch_yoochoose_like):
-    col_group = yoochoose_column_group
-    tab_module = torch4rec.SequentialTabularFeatures.from_column_group(
-        col_group, max_sequence_length=20, aggregation="sequential_concat"
+def test_recurrent_block(yoochoose_schema, torch_yoochoose_like):
+    schema = yoochoose_schema
+    tab_module = torch4rec.SequentialTabularFeatures.from_schema(
+        schema, max_sequence_length=20, aggregation="sequential_concat"
     )
 
     transformer_config = XLNetConfig.for_rec(64, 4, 2)

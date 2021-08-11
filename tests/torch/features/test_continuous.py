@@ -12,11 +12,11 @@ def test_continuous_features(torch_con_features):
     assert list(con.keys()) == features
 
 
-def test_continuous_features_yoochoose(yoochoose_column_group, torch_yoochoose_like):
-    col_group = yoochoose_column_group
-    cont_cols = col_group.select_by_tag(Tag.CONTINUOUS)
+def test_continuous_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
+    schema = yoochoose_schema
+    cont_cols = schema.select_by_tag(Tag.CONTINUOUS)
 
-    con = torch4rec.ContinuousFeatures.from_column_group(cont_cols)
+    con = torch4rec.ContinuousFeatures.from_schema(cont_cols)
     outputs = con(torch_yoochoose_like)
 
     assert list(outputs.keys()) == cont_cols.column_names

@@ -3,7 +3,7 @@ from typing import Optional
 
 import torch
 
-from ..types import ColumnGroup
+from ..types import Schema
 from . import aggregation as agg
 
 
@@ -111,26 +111,14 @@ class TabularModule(TabularMixin, torch.nn.Module):
             self._aggregation = None
 
     @classmethod
-    def from_column_group(
-        cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
-    ) -> Optional["TabularModule"]:
+    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularModule"]:
         if tags:
-            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
+            schema = schema.select_by_tag(tags)
 
-        if not column_group.columns:
+        if not schema.columns:
             return None
 
-        return cls.from_features(column_group.column_names, **kwargs)
-
-    @classmethod
-    def from_schema(
-        cls, schema, tags=None, tags_to_filter=None, **kwargs
-    ) -> Optional["TabularModule"]:
-        from nvtabular.column_group import ColumnGroup
-
-        col_group = ColumnGroup.from_schema(schema)
-
-        return cls.from_column_group(col_group, tags=tags, tags_to_filter=tags_to_filter, **kwargs)
+        return cls.from_features(schema.column_names, **kwargs)
 
     @classmethod
     def from_features(cls, features, **kwargs):

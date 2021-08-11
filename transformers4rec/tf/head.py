@@ -3,8 +3,8 @@ from typing import Dict, List, Optional, Text
 
 import tensorflow as tf
 
-from ..types import ColumnGroup
-from ..utils.columns import Tag
+from ..types import Schema
+from ..utils.tags import Tag
 
 
 class TaskMixin:
@@ -139,19 +139,19 @@ class Head(tf.keras.layers.Layer):
         self._task_weights = defaultdict(lambda: 1)
 
     @classmethod
-    def from_column_group(cls, column_group: ColumnGroup, add_logits=True, task_weights=None):
+    def from_schema(cls, schema: Schema, add_logits=True, task_weights=None):
         if task_weights is None:
             task_weights = {}
         to_return = cls()
 
-        for binary_target in column_group.select_by_tag(Tag.TARGETS_BINARY).column_names:
+        for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
             to_return = to_return.add_binary_classification_task(
                 binary_target,
                 add_logit_layer=add_logits,
                 task_weight=task_weights.get(binary_target, 1),
             )
 
-        for regression_target in column_group.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
+        for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
             to_return = to_return.add_regression_task(
                 regression_target,
                 add_logit_layer=add_logits,

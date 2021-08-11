@@ -22,6 +22,7 @@ from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tensorflow import _validate_dataset
 from torch.utils.dlpack import from_dlpack
 
+from ..utils.schema import Schema
 from ..utils.tags import Tag
 from .utils.torch_utils import get_output_sizes_from_schema
 
@@ -92,7 +93,6 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
         sparse_names=None,
         sparse_max=None,
         sparse_as_dense=False,
-        column_group=None,
         schema=None,
     ):
         dataset = _validate_dataset(
@@ -117,7 +117,6 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
             sparse_max=sparse_max,
             sparse_as_dense=sparse_as_dense,
         )
-        self._column_group = column_group
         self.schema = schema
 
     @classmethod
@@ -136,21 +135,19 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
         targets=None,
         **kwargs
     ):
-        from nvtabular.column_group import ColumnGroup
-
         schema_path = schema_path or os.path.join(directory, "schema.pb")
         if not os.path.exists(schema_path):
             raise ValueError("Can't load from directory without a schema.")
 
-        col_group = ColumnGroup.from_schema(schema_path)
+        schema = Schema.from_schema(schema_path)
 
         categorical_features = (
-            categorical_features or col_group.select_by_tag(Tag.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or col_group.select_by_tag(Tag.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
         )
-        targets = targets or col_group.select_by_tag(Tag.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
         torch_dataset = cls(
             directory,
@@ -162,8 +159,7 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
             shuffle=shuffle,
             buffer_size=buffer_size,  # how many batches to load at once
             parts_per_chunk=parts_per_chunk,
-            column_group=col_group,
-            schema=ColumnGroup.read_schema(schema_path),
+            schema=schema,
             **kwargs
         )
 
@@ -171,10 +167,6 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
         #     return tf_dataset.map(lambda X, y: (X, dict(zip(targets, y))))
 
         return torch_dataset
-
-    @property
-    def column_group(self):
-        return self._column_group
 
     @property
     def output_sizes(self) -> Dict[str, torch.Size]:

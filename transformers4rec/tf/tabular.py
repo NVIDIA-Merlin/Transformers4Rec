@@ -2,7 +2,7 @@ from typing import Optional
 
 import tensorflow as tf
 
-from ..types import ColumnGroup
+from ..types import Schema
 from . import aggregation as agg
 from .typing import TabularData
 from .utils.tf_utils import calculate_batch_size_from_input_shapes
@@ -132,16 +132,14 @@ class TabularLayer(tf.keras.layers.Layer):
         return calculate_batch_size_from_input_shapes(input_shapes)
 
     @classmethod
-    def from_column_group(
-        cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
-    ) -> Optional["TabularLayer"]:
+    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularLayer"]:
         if tags:
-            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
+            schema = schema.select_by_tag(tags)
 
-        if not column_group.columns:
+        if not schema.columns:
             return None
 
-        return cls.from_features(column_group.column_names, **kwargs)
+        return cls.from_features(schema.column_names, **kwargs)
 
     @classmethod
     def from_features(cls, features, **kwargs):

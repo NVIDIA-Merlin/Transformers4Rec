@@ -14,18 +14,18 @@ from nvtabular.ops import Operator
 from tqdm import tqdm
 
 
-def get_from_col_group(self, to_get):
-    if isinstance(to_get, nvt.ColumnGroup):
+def get_from_schema(self, to_get):
+    if isinstance(to_get, nvt.Schema):
         to_get = set(to_get.columns)
     elif isinstance(to_get, str):
         to_get = {to_get}
     elif isinstance(to_get, collections.abc.Sequence):
         to_get = set(to_get)
     else:
-        raise ValueError(f"Expected ColumnGroup, str, or list of str. Got {to_get.__class__}")
+        raise ValueError(f"Expected Schema, str, or list of str. Got {to_get.__class__}")
 
     new_columns = [c for c in self.columns if c in to_get]
-    child = nvt.ColumnGroup(new_columns)
+    child = nvt.Schema(new_columns)
     child.parents = [self]
     self.children.append(child)
     child.kind = f"- {[c for c in self.columns if c not in to_get]}"
@@ -48,13 +48,13 @@ def remove_consecutive_interactions(
     return df
 
 
-def create_session_aggs(column_group, default_agg="list", extra_aggs=None, to_ignore=None):
+def create_session_aggs(schema, default_agg="list", extra_aggs=None, to_ignore=None):
     if not extra_aggs:
         extra_aggs = {}
     if not to_ignore:
         to_ignore = []
 
-    aggs = {col.name: [default_agg] for col in column_group.columns if col.name not in to_ignore}
+    aggs = {col.name: [default_agg] for col in schema.columns if col.name not in to_ignore}
     for key, val in extra_aggs.items():
         if key in aggs:
             if isinstance(val, list):
