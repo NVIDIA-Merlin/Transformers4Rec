@@ -37,9 +37,7 @@ def safe_json(data):
 
 
 def get_filenames(data_paths, files_filter_pattern="*"):
-    paths = [
-        [p for p in glob.glob(os.path.join(path, files_filter_pattern))] for path in data_paths
-    ]
+    paths = [glob.glob(os.path.join(path, files_filter_pattern)) for path in data_paths]
     return list(itertools.chain.from_iterable(paths))
 
 
@@ -48,7 +46,7 @@ def get_label_feature_name(feature_map: Dict[str, Any]) -> str:
     Analyses the feature map config and returns the name of the label feature (e.g. item_id)
     """
     label_feature_config = list(
-        [k for k, v in feature_map.items() if "is_label" in v and v["is_label"]]
+        k for k, v in feature_map.items() if "is_label" in v and v["is_label"]
     )
 
     if len(label_feature_config) == 0:
@@ -63,7 +61,7 @@ def get_timestamp_feature_name(feature_map: Dict[str, Any]) -> str:
     """
     Analyses the feature map config and returns the name of the label feature (e.g. item_id)
     """
-    timestamp_feature_name = list([k for k, v in feature_map.items() if v["dtype"] == "timestamp"])
+    timestamp_feature_name = list(k for k, v in feature_map.items() if v["dtype"] == "timestamp")
 
     if len(timestamp_feature_name) == 0:
         raise Exception('No feature have be configured as timestamp (dtype = "timestamp")')
@@ -75,7 +73,7 @@ def get_timestamp_feature_name(feature_map: Dict[str, Any]) -> str:
 
 
 def get_parquet_files_names(data_args, time_indices, is_train, eval_on_test_set=False):
-    if type(time_indices) is not list:
+    if not isinstance(time_indices, list):
         time_indices = [time_indices]
 
     time_window_folders = [
@@ -101,7 +99,7 @@ def get_parquet_files_names(data_args, time_indices, is_train, eval_on_test_set=
     return parquet_paths
 
 
-class Timing(object):
+class Timing:
     """A context manager that prints the execution time of the block it manages"""
 
     def __init__(self, message, file=sys.stdout, logger=None, one_line=True):
@@ -117,6 +115,7 @@ class Timing(object):
         self.file = file
 
     def _log(self, message, newline=True):
+        # pylint: disable=broad-except
         if self.default_logger:
             print(message, end="\n" if newline else "", file=self.file)
             try:

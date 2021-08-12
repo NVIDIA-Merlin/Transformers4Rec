@@ -1,4 +1,4 @@
-class MaskSequence(object):
+class MaskSequence:
     """
     Module to prepare masked data for LM tasks
 

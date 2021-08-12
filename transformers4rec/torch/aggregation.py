@@ -110,7 +110,7 @@ class StackFeatures(FeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = [i for i in input_size.values()][0][-1]
+        last_dim = list(input_size.values())[0][-1]
 
         return batch_size, len(input_size), last_dim
 
@@ -120,9 +120,8 @@ class ElementwiseFeatureAggregation(FeatureAggregation):
         all_input_shapes_equal = reduce((lambda a, b: a.shape == b.shape), inputs.values())
         if not all_input_shapes_equal:
             raise ValueError(
-                "The shapes of all input features are not equal, which is required for element-wise aggregation: {}".format(
-                    {k: v.shape for k, v in inputs.items()}
-                )
+                "The shapes of all input features are not equal, which is required for "
+                " element-wise aggregation: {}".format({k: v.shape for k, v in inputs.items()})
             )
 
 
@@ -138,7 +137,7 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = [i for i in input_size.values()][0][-1]
+        last_dim = list(input_size.values())[0][-1]
 
         return batch_size, last_dim
 
@@ -174,6 +173,6 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = [i for i in input_size.values()][0][-1]
+        last_dim = list(input_size.values())[0][-1]
 
         return batch_size, last_dim
