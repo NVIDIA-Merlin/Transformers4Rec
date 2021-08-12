@@ -90,7 +90,7 @@ class Categorical(object):
         self.project_layer = nn.Linear(self.feature_size, output_dim, bias=bias)
 
 
-class Conitnuous(object):
+class Continuous(object):
     """
     Class to build the embedding representation of continuous variables
 
@@ -588,7 +588,7 @@ def init_from_featuremap(featuremap: dict):
 
         elif config["dtype"] in ["float", "long"]:
             config["name"] = name
-            continuous.append(Conitnuous(**config))
+            continuous.append(Continuous(**config))
     return categoricals, continuous
 
 
