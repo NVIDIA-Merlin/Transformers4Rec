@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .aggregation import ConcatFeatures, ElementwiseSum, StackFeatures
+from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
 from .block.base import SequentialBlock, right_shift_block
 from .block.mlp import MLPBlock
 from .block.recurrent import RecurrentBlock
@@ -45,6 +45,7 @@ __all__ = [
     "ConcatFeatures",
     "FilterFeatures",
     "ElementwiseSum",
+    "ElementwiseSumItemMulti",
     "MergeTabular",
     "StackFeatures",
     "TabularModule",

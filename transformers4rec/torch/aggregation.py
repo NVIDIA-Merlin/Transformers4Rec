@@ -1,6 +1,9 @@
 import abc
+from functools import reduce
 
 import torch
+
+from transformers4rec.utils.tags import Tag
 
 from ..utils.registry import Registry
 from .typing import TabularData
@@ -35,6 +38,14 @@ class FeatureAggregation(torch.nn.Module):
             pass
 
         return self.forward_output_size(self.input_size)
+
+    @property
+    def schema(self):
+        return self._schema
+
+    @schema.setter
+    def schema(self, value):
+        self._schema = value
 
 
 @aggregation_registry.register("concat")
@@ -104,14 +115,62 @@ class StackFeatures(FeatureAggregation):
         return batch_size, len(input_size), last_dim
 
 
+class ElementwiseFeatureAggregation(FeatureAggregation):
+    def _check_input_shapes_equal(self, inputs):
+        all_input_shapes_equal = reduce((lambda a, b: a.shape == b.shape), inputs.values())
+        if not all_input_shapes_equal:
+            raise ValueError(
+                "The shapes of all input features are not equal, which is required for element-wise aggregation: {}".format(
+                    {k: v.shape for k, v in inputs.items()}
+                )
+            )
+
+
 @aggregation_registry.register("element-wise-sum")
-class ElementwiseSum(FeatureAggregation):
+class ElementwiseSum(ElementwiseFeatureAggregation):
     def __init__(self):
         super().__init__()
         self.stack = StackFeatures(axis=0)
 
     def forward(self, inputs):
+        self._check_input_shapes_equal(inputs)
         return self.stack(inputs).sum(dim=0)
+
+    def forward_output_size(self, input_size):
+        batch_size = calculate_batch_size_from_input_size(input_size)
+        last_dim = [i for i in input_size.values()][0][-1]
+
+        return batch_size, last_dim
+
+
+@aggregation_registry.register("element-wise-sum-item-multi")
+class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
+    def __init__(self, schema=None):
+        super().__init__()
+        self.stack = StackFeatures(axis=0)
+        self.schema = schema
+        self.item_id_col_name = None
+
+    def _set_item_id_from_col_group(self):
+        if self.schema is None:
+            raise ValueError(
+                "The schema is necessary to infer the item id column name, but it has not been set."
+            )
+        elif self.item_id_col_name is None:
+            item_id_col = self.schema.select_by_tag(Tag.ITEM_ID)
+            if len(item_id_col.columns) == 0:
+                raise ValueError("There is no column tagged as item id.")
+            self.item_id_col_name = item_id_col.column_names[0]
+
+    def forward(self, inputs):
+        self._set_item_id_from_col_group()
+        self._check_input_shapes_equal(inputs)
+
+        item_id_inputs = inputs[self.item_id_col_name]
+        other_inputs = {k: v for k, v in inputs.items() if k != self.item_id_col_name}
+        other_inputs_sum = self.stack(other_inputs).sum(dim=0)
+        result = item_id_inputs.multiply(other_inputs_sum)
+        return result
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
