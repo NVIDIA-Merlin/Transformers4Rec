@@ -39,4 +39,4 @@ jobs:
         python setup.py develop
     - name: Run unittests
       run: |
-        python -m pytest tests
+        python -m pytest -rsx --cov-config tests/.coveragerc --cov-report term-missing --cov=. tests
