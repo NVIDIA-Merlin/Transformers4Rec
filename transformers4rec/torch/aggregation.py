@@ -120,7 +120,8 @@ class ElementwiseFeatureAggregation(FeatureAggregation):
         all_input_shapes_equal = reduce((lambda a, b: a.shape == b.shape), inputs.values())
         if not all_input_shapes_equal:
             raise ValueError(
-                "The shapes of all input features are not equal, which is required for element-wise aggregation: {}".format(
+                "The shapes of all input features are not equal, \
+                which is required for element-wise aggregation: {}".format(
                     {k: v.shape for k, v in inputs.items()}
                 )
             )
