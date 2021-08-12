@@ -65,6 +65,7 @@ class Schema:
         self.tags = tags
 
         self.columns: List[ColumnSchema] = [_convert_col(col, tags=tags) for col in columns]
+        self.set_schema(None)
 
     @staticmethod
     def read_schema(schema_path):
