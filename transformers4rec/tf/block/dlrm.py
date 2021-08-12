@@ -2,8 +2,8 @@ from typing import List, Optional, Union
 
 import tensorflow as tf
 
-from ...types import ColumnGroup
-from ...utils.columns import Tag
+from ...types import Schema
+from ...utils.schema import Tag
 from .. import tabular
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
@@ -18,7 +18,7 @@ class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
 class DLRMBlock(Block):
     def __init__(
         self,
-        continuous_features: Union[List[str], ColumnGroup, tabular.TabularLayer],
+        continuous_features: Union[List[str], Schema, tabular.TabularLayer],
         embedding_layer: EmbeddingFeatures,
         bottom_mlp: BlockType,
         top_mlp: Optional[BlockType] = None,
@@ -31,8 +31,8 @@ class DLRMBlock(Block):
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
 
-        if isinstance(continuous_features, ColumnGroup):
-            continuous_features = ContinuousFeatures.from_column_group(
+        if isinstance(continuous_features, Schema):
+            continuous_features = ContinuousFeatures.from_schema(
                 continuous_features, aggregation="concat"
             )
         if isinstance(continuous_features, list):
@@ -58,21 +58,17 @@ class DLRMBlock(Block):
         self.top_mlp = top_mlp
 
     @classmethod
-    def from_column_group(
-        cls,
-        column_group: ColumnGroup,
-        bottom_mlp: BlockType,
-        top_mlp: Optional[BlockType] = None,
-        **kwargs
+    def from_schema(
+        cls, schema: Schema, bottom_mlp: BlockType, top_mlp: Optional[BlockType] = None, **kwargs
     ):
-        embedding_layer = EmbeddingFeatures.from_column_group(
-            column_group.select_by_tag(Tag.CATEGORICAL),
+        embedding_layer = EmbeddingFeatures.from_schema(
+            schema.select_by_tag(Tag.CATEGORICAL),
             infer_embedding_sizes=False,
             default_embedding_dim=bottom_mlp.layers[-1].units,
         )
 
-        continuous_features = ContinuousFeatures.from_column_group(
-            column_group.select_by_tag(Tag.CONTINUOUS), aggregation="concat"
+        continuous_features = ContinuousFeatures.from_schema(
+            schema.select_by_tag(Tag.CONTINUOUS), aggregation="concat"
         )
 
         return cls(continuous_features, embedding_layer, bottom_mlp, top_mlp=top_mlp, **kwargs)

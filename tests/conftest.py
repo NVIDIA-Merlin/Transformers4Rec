@@ -4,7 +4,7 @@ import pytest
 
 from tests.tf.conftest import *  # noqa
 from tests.torch.conftest import *  # noqa
-from transformers4rec.utils.columns import ColumnGroup
+from transformers4rec.utils.schema import Schema
 
 ASSETS_DIR = pathlib.Path(__file__).parent / "assets"
 
@@ -33,5 +33,5 @@ def yoochoose_data_file():
 
 
 @pytest.fixture
-def yoochoose_column_group():
-    return ColumnGroup.from_schema(str(YOOCHOOSE_SCHEMA))
+def yoochoose_schema():
+    return Schema.from_schema(str(YOOCHOOSE_SCHEMA))

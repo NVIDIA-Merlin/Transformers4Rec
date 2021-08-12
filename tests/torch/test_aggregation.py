@@ -3,9 +3,9 @@ import pytest
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
-def test_concat_aggregation_yoochoose(yoochoose_column_group, torch_yoochoose_like):
-    col_group = yoochoose_column_group
-    tab_module = torch4rec.features.tabular.TabularFeatures.from_column_group(col_group)
+def test_concat_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
+    schema = yoochoose_schema
+    tab_module = torch4rec.features.tabular.TabularFeatures.from_schema(schema)
 
     block = tab_module >> torch4rec.ConcatFeatures()
 
@@ -14,9 +14,9 @@ def test_concat_aggregation_yoochoose(yoochoose_column_group, torch_yoochoose_li
     assert out.shape[-1] == 248
 
 
-def test_stack_aggregation_yoochoose(yoochoose_column_group, torch_yoochoose_like):
-    col_group = yoochoose_column_group
-    tab_module = torch4rec.EmbeddingFeatures.from_column_group(col_group)
+def test_stack_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
+    schema = yoochoose_schema
+    tab_module = torch4rec.EmbeddingFeatures.from_schema(schema)
 
     block = tab_module >> torch4rec.StackFeatures()
 
@@ -26,9 +26,9 @@ def test_stack_aggregation_yoochoose(yoochoose_column_group, torch_yoochoose_lik
     assert out.shape[2] == 2
 
 
-def test_element_wise_sum_aggregation_yoochoose(yoochoose_column_group, torch_yoochoose_like):
-    col_group = yoochoose_column_group
-    tab_module = torch4rec.EmbeddingFeatures.from_column_group(col_group)
+def test_element_wise_sum_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
+    schema = yoochoose_schema
+    tab_module = torch4rec.EmbeddingFeatures.from_schema(schema)
 
     block = tab_module >> torch4rec.ElementwiseSum()
 
