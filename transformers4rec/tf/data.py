@@ -24,6 +24,7 @@ from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tf_utils import configure_tensorflow, get_dataset_schema_from_feature_columns
 from nvtabular.ops import _get_embedding_order
 
+from ..utils.schema import Schema
 from ..utils.tags import Tag
 
 from_dlpack = configure_tensorflow()
@@ -223,7 +224,6 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
         sparse_names=None,
         sparse_max=None,
         sparse_as_dense=False,
-        column_group=None,
         schema=None,
     ):
         dataset = _validate_dataset(
@@ -235,7 +235,6 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
         # (https://github.com/NVIDIA/NVTabular/issues/412)
         cat_names = _get_embedding_order(cat_names)
         cont_names = _get_embedding_order(cont_names)
-        self._column_group = column_group
 
         device = device or 0
         BaseDataLoader.__init__(
@@ -274,21 +273,19 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
         categorical_features=None,
         targets=None,
     ):
-        from nvtabular.column_group import ColumnGroup
-
         schema_path = schema_path or os.path.join(directory, "schema.pb")
         if not os.path.exists(schema_path):
             raise ValueError("Can't load from directory without a schema.")
 
-        col_group = ColumnGroup.from_schema(schema_path)
+        schema = Schema.from_schema(schema_path)
 
         categorical_features = (
-            categorical_features or col_group.select_by_tag(Tag.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or col_group.select_by_tag(Tag.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
         )
-        targets = targets or col_group.select_by_tag(Tag.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
         tf_dataset = cls(
             directory,
@@ -300,8 +297,7 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
             shuffle=shuffle,
             buffer_size=buffer_size,  # how many batches to load at once
             parts_per_chunk=parts_per_chunk,
-            column_group=col_group,
-            schema=col_group._schema,
+            schema=schema,
         )
 
         if named_labels and separate_labels and len(targets) > 1:
@@ -414,10 +410,6 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
                 )
 
         return inputs
-
-    @property
-    def column_group(self):
-        return self._column_group
 
     @property
     def _LONG_DTYPE(self):

@@ -1,10 +1,8 @@
 try:
-    import nvtabular as nvt
+    from nvtabular import Schema
     from nvtabular.tag import DefaultTags, Tag
-
-    ColumnGroup = nvt.ColumnGroup
 except ImportError:
-    from .utils.columns import ColumnGroup
+    from .utils.schema import Schema
     from .utils.tags import DefaultTags, Tag
 
-__all__ = ["ColumnGroup", "Tag", "DefaultTags"]
+__all__ = ["Schema", "Tag", "DefaultTags"]

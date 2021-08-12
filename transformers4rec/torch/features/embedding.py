@@ -9,7 +9,7 @@ from transformers4rec.torch.utils.torch_utils import (
     get_output_sizes_from_schema,
 )
 
-from ...types import ColumnGroup, DefaultTags
+from ...types import DefaultTags, Schema
 from ..tabular import FilterFeatures, TabularModule
 
 
@@ -124,16 +124,15 @@ class EmbeddingFeatures(TabularModule):
         return torch.nn.EmbeddingBag(table.vocabulary_size, table.dim, mode=table.combiner)
 
     @classmethod
-    def from_column_group(
+    def from_schema(
         cls,
-        column_group: ColumnGroup,
+        schema: Schema,
         embedding_dims=None,
         default_embedding_dim=64,
         infer_embedding_sizes=False,
         combiner="mean",
         tags=None,
         item_id=None,
-        tags_to_filter=None,
         automatic_build=True,
         max_sequence_length=None,
         **kwargs
@@ -141,18 +140,18 @@ class EmbeddingFeatures(TabularModule):
         # TODO: propogate item-id from ITEM_ID tag
 
         if tags:
-            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
+            schema = schema.select_by_tag(tags)
 
-        if not item_id and column_group.select_by_tag(["item_id"]).column_names:
-            item_id = column_group.select_by_tag(["item_id"]).column_names[0]
+        if not item_id and schema.select_by_tag(["item_id"]).column_names:
+            item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            sizes = column_group.embedding_sizes()
+            sizes = schema.embedding_sizes()
         else:
             if not embedding_dims:
                 embedding_dims = {}
             sizes = {}
-            cardinalities = column_group.cardinalities()
+            cardinalities = schema.cardinalities()
             for key, cardinality in cardinalities.items():
                 embedding_size = embedding_dims.get(key, default_embedding_dim)
                 sizes[key] = (cardinality, embedding_size)
@@ -173,10 +172,10 @@ class EmbeddingFeatures(TabularModule):
 
         output = cls(feature_config, item_id=item_id, **kwargs)
 
-        if automatic_build and column_group._schema:
+        if automatic_build and schema._schema:
             output.build(
                 get_output_sizes_from_schema(
-                    column_group._schema,
+                    schema._schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
                 )

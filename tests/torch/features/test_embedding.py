@@ -18,13 +18,13 @@ def test_embedding_features(torch_cat_features):
     assert all([emb.shape[-1] == dim for emb in embeddings.values()])
 
 
-def test_embedding_features_yoochoose(yoochoose_column_group, torch_yoochoose_like):
-    col_group = yoochoose_column_group.select_by_tag(Tag.CATEGORICAL)
+def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = torch4rec.EmbeddingFeatures.from_column_group(col_group)
+    emb_module = torch4rec.EmbeddingFeatures.from_schema(schema)
     embeddings = emb_module(torch_yoochoose_like)
 
-    assert list(embeddings.keys()) == col_group.column_names
+    assert list(embeddings.keys()) == schema.column_names
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
     assert emb_module.item_id == "item_id/list"
     assert emb_module.item_embedding_table.num_embeddings == 51996
