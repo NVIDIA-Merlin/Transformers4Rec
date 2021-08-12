@@ -155,15 +155,16 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
 class MergeTabular(TabularModule):
     def __init__(self, *to_merge, aggregation=None):
-        if all(isinstance(x, dict) for x in to_merge):
-            self.to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
-        else:
-            self.to_merge = list(to_merge)
         super().__init__(aggregation)
+        if all(isinstance(x, dict) for x in to_merge):
+            to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
+            self.to_merge = torch.nn.ModuleDict(to_merge)
+        else:
+            self.to_merge = torch.nn.ModuleList(to_merge)
 
     @property
     def merge_values(self):
-        if isinstance(self.to_merge, dict):
+        if isinstance(self.to_merge, torch.nn.ModuleDict):
             return list(self.to_merge.values())
 
         return self.to_merge
