@@ -40,13 +40,15 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
         dropout=0.3,
         pad_token=0,
         log_attention_weights=True,
+        axial_pos_shape_first_dim=4,
         **kwargs
     ):
         return cls(
+            hidden_size=d_model,
             attention_head_size=d_model,
             attn_layers=["local", "lsh"] * (n_layer // 2) if n_layer > 2 else ["local"],
+            num_hidden_layers=n_layer,
             feed_forward_size=d_model * 4,
-            hidden_size=d_model,
             num_attention_heads=n_head,
             hidden_act=hidden_act,
             initializer_range=initializer_range,
@@ -59,6 +61,10 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
             axial_pos_embds_dim=[
                 d_model // 2,
                 d_model // 2,
+            ],
+            axial_pos_shape=[
+                axial_pos_shape_first_dim,
+                total_seq_length // axial_pos_shape_first_dim,
             ],
             vocab_size=1,
             **kwargs
@@ -123,10 +129,10 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
             num_hidden_layers=n_layer,
             num_attention_heads=n_head,
             hidden_act=hidden_act,
+            attention_window=total_seq_length,
             initializer_range=initializer_range,
             layer_norm_eps=layer_norm_eps,
             dropout=dropout,
-            max_position_embeddings=total_seq_length,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             vocab_size=1,
@@ -212,6 +218,7 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
         d_model,
         n_head,
         n_layer,
+        total_seq_length,
         hidden_act="gelu",
         initializer_range=0.01,
         layer_norm_eps=0.03,

@@ -25,7 +25,7 @@ def test_task_output_shape(torch_masking_inputs, task):
 
 # Test only last item is masked when evaluating
 @pytest.mark.parametrize("task", lm_tasks)
-def test_mlm_eval(torch_masking_inputs, task):
+def test_mask_only_last_item_for_eval(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
     lm = torch_masking.masking_registry[task](
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], device="cpu"

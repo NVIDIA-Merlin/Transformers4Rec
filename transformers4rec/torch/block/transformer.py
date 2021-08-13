@@ -25,20 +25,42 @@ class TransformerBlock(BuildableBlock):
         d_model: int = None,
         n_head: int = None,
         n_layer: int = None,
+        total_seq_length: int = None,
+        device: str = "cpu",
     ) -> None:
         super().__init__()
 
         if isinstance(body, T4RecConfig):
             body = body.to_torch_model()
+
         elif isinstance(body, str):
+            # check that required arguments to build the model are not None
+            assert all(
+                arg is not None for arg in [d_model, n_head, n_layer, total_seq_length]
+            ), "Please provide all required arguments to load the model '{}'" ": {}".format(
+                body,
+                {
+                    "d_model": d_model,
+                    "n_head": n_head,
+                    "n_layer": n_layer,
+                    "total_seq_length": total_seq_length,
+                },
+            )
             body = (
-                transformer_registry.parse("xlnet")
-                .build(d_model=d_model, n_head=n_head, n_layer=n_layer)
+                transformer_registry.parse(body)
+                .build(
+                    d_model=d_model,
+                    n_head=n_head,
+                    n_layer=n_layer,
+                    total_seq_length=total_seq_length,
+                )
                 .to_torch_model()
             )
 
-        self.hidden_size = body.d_model
+        self.hidden_size = body.config.hidden_size
         self.input_shape = self.hidden_size
+        self.n_layer = n_layer
+        self.device = device
         self.masking = masking
         self.body = body
 
@@ -49,7 +71,9 @@ class TransformerBlock(BuildableBlock):
     @masking.setter
     def masking(self, value):
         if value:
-            self._masking = masking.masking_registry.parse(value)(hidden_size=self.hidden_size)
+            self._masking = masking.masking_registry.parse(value)(
+                hidden_size=self.hidden_size, device=self.device
+            )
         else:
             self._masking = None
 
@@ -59,7 +83,7 @@ class TransformerBlock(BuildableBlock):
         )
         return _TransformerBlock(self.masking, self.body, embeddings)
 
-    def link_to_input(self, input_module):
+    def to_torch_module(self, input_module):
         return self.build(input_shape=self.hidden_size, parents=[input_module])
 
 
@@ -69,6 +93,7 @@ class _TransformerBlock(torch.nn.Module):
         self.embedding_module = embedding_module
         self.body = body
         self.masking = masking
+        self.device = self.masking.device
 
     def forward(self, inputs, training=True, **kwargs):
         if self.masking:
@@ -85,7 +110,7 @@ class _TransformerBlock(torch.nn.Module):
             head_mask = (
                 torch.tril(torch.ones((seq_len, seq_len), dtype=torch.uint8, device=self.device))
                 .view(1, 1, 1, seq_len, seq_len)
-                .repeat(self.n_layer, 1, 1, 1, 1)
+                .repeat(self.body.config.num_hidden_layers, 1, 1, 1, 1)
             )
 
             model_outputs = self.body(
