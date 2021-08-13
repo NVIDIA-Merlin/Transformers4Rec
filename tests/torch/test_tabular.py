@@ -1,7 +1,12 @@
 import pytest
+import torch
 
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
+if torch.cuda.is_available():
+    devices=["cpu", "cuda"]
+else:
+    devices=["cpu"] 
 
 def test_filter_features(torch_con_features):
     features = ["con_a", "con_b"]
@@ -39,7 +44,7 @@ def test_tabular_module(torch_con_features):
     assert (tab_a + tab_b)(torch_con_features, concat_outputs=True).size()[1] == 2
 
 
-@pytest.mark.parametrize("device", ["cpu", "cuda"])
+@pytest.mark.parametrize("device", devices)
 def test_tabular_module_to_device(yoochoose_schema, device):
     schema = yoochoose_schema
     tab_module = torch4rec.SequentialTabularFeatures.from_schema(
