@@ -14,8 +14,8 @@ def test_filter_features(torch_con_features):
     con = torch4rec.FilterFeatures(features)(torch_con_features)
 
     assert list(con.keys()) == features
-    
-    
+
+
 def test_as_tabular(torch_con_features):
     name = "tabular"
     con = torch4rec.AsTabular(name)(torch_con_features)
