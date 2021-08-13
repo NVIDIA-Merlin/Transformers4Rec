@@ -22,7 +22,7 @@ from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tensorflow import _validate_dataset
 from torch.utils.dlpack import from_dlpack
 
-from ..utils.schema import Schema
+from ..utils.schema import DatasetSchema
 from ..utils.tags import Tag
 from .utils.torch_utils import get_output_sizes_from_schema
 
@@ -140,7 +140,7 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
         if not os.path.exists(schema_path):
             raise ValueError("Can't load from directory without a schema.")
 
-        schema = Schema.from_schema(schema_path)
+        schema = DatasetSchema.from_schema(schema_path)
 
         categorical_features = (
             categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names

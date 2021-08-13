@@ -3,7 +3,7 @@ from typing import Optional
 
 import torch
 
-from ..types import Schema
+from ..types import DatasetSchema
 from . import aggregation as agg
 
 
@@ -111,7 +111,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
             self._aggregation = None
 
     @classmethod
-    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularModule"]:
+    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
         if tags:
             schema = schema.select_by_tag(tags)
 

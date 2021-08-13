@@ -1,4 +1,4 @@
-from ...types import Schema, Tag
+from ...types import DatasetSchema, Tag
 from ..tabular import MergeTabular
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
@@ -28,7 +28,7 @@ class TabularFeatures(MergeTabular):
     @classmethod
     def from_schema(
         cls,
-        schema: Schema,
+        schema: DatasetSchema,
         continuous_tags=Tag.CONTINUOUS,
         categorical_tags=Tag.CATEGORICAL,
         text_model=None,
