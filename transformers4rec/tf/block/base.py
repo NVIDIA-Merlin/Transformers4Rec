@@ -112,7 +112,7 @@ class SequentialBlock(TabularBlock):
 
     @property
     def trainable(self):
-        return all([layer.trainable for layer in self.layers])
+        return all(layer.trainable for layer in self.layers)
 
     @trainable.setter
     def trainable(self, value):
@@ -161,6 +161,7 @@ class SequentialBlock(TabularBlock):
         return right_shift_layer(self, other)
 
     def __rshift__(self, other):
+        # pylint: disable=arguments-out-of-order
         return right_shift_layer(other, self)
 
 

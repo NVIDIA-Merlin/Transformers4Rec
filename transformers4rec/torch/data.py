@@ -29,6 +29,7 @@ from .utils.torch_utils import get_output_sizes_from_schema
 
 class IterDL(torch.utils.data.IterableDataset):
     def __init__(self, file_paths, batch_size=1, shuffle=False):
+        super().__init__()
         self.file_paths = file_paths
         self.batch_size = batch_size
         self.shuffle = shuffle

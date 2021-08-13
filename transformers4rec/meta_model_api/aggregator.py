@@ -27,9 +27,6 @@ class StackFeature(nn.Module):
 
 
 class ElementwiseSum(nn.Module):
-    def __init__(self):
-        super(ElementwiseSum, self).__init__()
-
     def forward(self, inputs):
         tensors = []
         for name in sorted(inputs.keys()):
