@@ -189,7 +189,7 @@ class Head(tf.keras.layers.Layer):
 
     def pop_labels(self, inputs: Dict[Text, tf.Tensor]):
         outputs = {}
-        for name in self.tasks.keys():
+        for name in self.tasks:
             outputs[name] = inputs.pop(name)
 
         return outputs

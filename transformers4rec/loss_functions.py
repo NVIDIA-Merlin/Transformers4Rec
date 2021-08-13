@@ -27,9 +27,6 @@ import torch.nn.functional as F
 
 
 class BPR(nn.Module):
-    def __init__(self):
-        super(BPR, self).__init__()
-
     def forward(self, logits_scores, negative_mask):
         """
         Args:
@@ -49,9 +46,6 @@ class BPR(nn.Module):
 
 
 class BPR_max(nn.Module):
-    def __init__(self):
-        super(BPR_max, self).__init__()
-
     def forward(self, logits_scores, negative_mask):
         """
         Args:
@@ -100,9 +94,6 @@ class BPR_max_reg(nn.Module):
 
 
 class TOP1(nn.Module):
-    def __init__(self):
-        super(TOP1, self).__init__()
-
     def forward(self, logits_scores, negative_mask):
         """
         Args:
@@ -123,9 +114,6 @@ class TOP1(nn.Module):
 
 
 class TOP1_max(nn.Module):
-    def __init__(self):
-        super(TOP1_max, self).__init__()
-
     def forward(self, logits_scores, negative_mask):
         """
         Args:

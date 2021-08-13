@@ -8,6 +8,10 @@ from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableCon
 from ...types import Schema
 from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
 
+# pylint has issues with TF array ops, so disable checks until fixed:
+# https://github.com/PyCQA/pylint/issues/3613
+# pylint: disable=no-value-for-parameter, unexpected-keyword-arg
+
 
 class EmbeddingFeatures(TabularLayer):
     def __init__(self, feature_config: Dict[str, FeatureConfig], **kwargs):

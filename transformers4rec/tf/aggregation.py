@@ -9,9 +9,13 @@ from .utils.tf_utils import calculate_batch_size_from_input_shapes
 aggregation_registry: Registry = Registry.class_registry("tf.aggregation_registry")
 
 
+# pylint has issues with TF array ops, so disable checks until fixed:
+# https://github.com/PyCQA/pylint/issues/3613
+# pylint: disable=no-value-for-parameter, unexpected-keyword-arg
+
+
 class FeatureAggregation(tf.keras.layers.Layer):
-    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        return super(FeatureAggregation, self).call(inputs, **kwargs)
+    pass
 
 
 @aggregation_registry.register("concat")
@@ -54,7 +58,7 @@ class StackFeatures(FeatureAggregation):
 
     def compute_output_shape(self, input_shapes):
         batch_size = calculate_batch_size_from_input_shapes(input_shapes)
-        last_dim = [i for i in input_shapes.values()][0][-1]
+        last_dim = list(input_shapes.values())[0][-1]
 
         return batch_size, len(input_shapes), last_dim
 

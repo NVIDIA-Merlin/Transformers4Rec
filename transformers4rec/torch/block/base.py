@@ -52,6 +52,7 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
         return right_shift_block(self, other)
 
     def __rshift__(self, other):
+        # pylint: disable=arguments-out-of-order
         return right_shift_block(other, self)
 
     def as_tabular(self, name=None):
@@ -74,11 +75,12 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
 
         return x
 
+    # TODO: seems like this gets overriden on line 28?
+    # pylint: disable=method-hidden
     def output_size(self):
         if not getattr(self, "input_size", None):
             # TODO: log warning here
             pass
-
         return self.forward_output_size(self.input_size)
 
     @staticmethod

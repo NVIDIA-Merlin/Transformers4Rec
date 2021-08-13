@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional
 
 import torch
 from torch import nn
@@ -36,7 +35,7 @@ def get_masking_task(task, hidden_size):
         raise ValueError("%s task is not supported" % task)
 
 
-class MaskSequence(object):
+class MaskSequence:
     """
     Module to prepare masked data for LM tasks
 
@@ -130,7 +129,7 @@ class CLM(MaskSequence, nn.Module):
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
-            mask_labels = label_seq_trg != self.pad_token
+            mask_labels = label_seq_trg_eval != self.pad_token
 
         pos_emb_inp = pos_emb[:, :-1]
         # As after shifting the sequence length will be subtracted by one, adding a masked item in
@@ -504,16 +503,16 @@ class RTD(MaskSequence, nn.Module):
             target_flat.clone().detach().scatter(-1, non_pad_mask.nonzero().flatten(), updates)
         )
         # Build discriminator label : distinguish orginal token from replaced one
-        discriminator_labels = (corrupted_labels != target_flat).view(-1, input_ids.size(1))
+        discriminator_labels = (corrupted_labels != target_flat).view(-1, itemid_seq.size(1))
         # Build corrupted inputs : replacing [MASK] by sampled item
         corrupted_inputs = (
-            input_ids.clone()
+            itemid_seq.clone()
             .detach()
             .reshape(-1)
             .scatter(-1, non_pad_mask.nonzero().flatten(), updates)
         )
         return (
-            corrupted_inputs.view(-1, input_ids.size(1)),
+            corrupted_inputs.view(-1, itemid_seq.size(1)),
             discriminator_labels,
             batch_updates,
         )

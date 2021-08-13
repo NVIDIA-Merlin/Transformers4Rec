@@ -20,14 +20,14 @@ class RankingMetric(tm.Metric):
     Metric wrapper for computing ranking metrics@K for session-based task.
 
     Parameters:
-    ----------
-        - top_ks (List): list of cuctoffs
+    -----------
+        - top_ks (list default [2, 5]): list of cutoffs
         - labels_onehot (bool): Enable transform the labels to one-hot representation
     """
 
-    def __init__(self, top_ks, labels_onehot):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(RankingMetric, self).__init__()
-        self.top_ks = top_ks
+        self.top_ks = top_ks or [2, 5]
         self.labels_onehot = labels_onehot
         # Store the mean of the batch metrics (for each cut-off at topk)
         self.add_state("metric_mean", default=[], dist_reduce_fx="cat")
@@ -53,7 +53,7 @@ class RankingMetric(tm.Metric):
 
 @ranking_metrics_registry.register_with_multiple_names("precision_at", "precision")
 class PrecisionAt(RankingMetric):
-    def __init__(self, top_ks=[2, 5], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(PrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
 
     def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
@@ -78,7 +78,7 @@ class PrecisionAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("recall_at", "recall")
 class RecallAt(RankingMetric):
-    def __init__(self, top_ks=[2, 5], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(RecallAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
 
     def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
@@ -115,7 +115,7 @@ class RecallAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("avg_precision_at", "avg_precision", "map")
 class AvgPrecisionAt(RankingMetric):
-    def __init__(self, top_ks=[2, 5], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(AvgPrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
         self.precision_at = PrecisionAt(top_ks)._metric
 
@@ -152,7 +152,7 @@ class AvgPrecisionAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("dcg_at", "dcg")
 class DCGAt(RankingMetric):
-    def __init__(self, top_ks=[2, 5], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(DCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
 
     def _metric(
@@ -195,7 +195,7 @@ class DCGAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
 class NDCGAt(RankingMetric):
-    def __init__(self, top_ks=[2, 5], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
         self.dcg_at = DCGAt(top_ks)._metric
 

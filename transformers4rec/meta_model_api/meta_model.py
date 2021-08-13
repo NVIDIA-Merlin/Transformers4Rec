@@ -13,9 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from typing import Any, Callable, Dict, List, Optional
-
 import torch
 from feature_process import get_feature_process
 from mask_sequence import get_masking_task
@@ -70,7 +67,7 @@ class MetaModel(nn.Module):
             feature_process=self.feature_group,
         )
 
-    def forward(self, training=False, *args, **kwargs):
+    def forward(self, training=False, **kwargs):
         inputs = kwargs
         out = self.feature_group(inputs)
         input_sequence = out.values

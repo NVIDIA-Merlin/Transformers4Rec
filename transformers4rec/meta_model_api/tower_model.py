@@ -13,9 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import logging
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Tuple
 
 import torch
 import torch.nn as nn
@@ -110,19 +109,16 @@ class TowerModel(nn.Module):
             pos_emb_inp = inputs.values
         elif isinstance(inputs, MaskOutput):
             pos_emb_inp = inputs.masked_input
-        elif isinstance(inputs, torh.tensor):
+        elif isinstance(inputs, torch.tensor):
             pos_emb_inp = inputs
         else:
             raise NotImplementedError
 
         if not isinstance(self.model, PreTrainedModel):  # Checks if its a transformer
-            """
-            RNN Models
-            """
-
+            # RNN Models
             results = self.model(input=pos_emb_inp)
 
-            if type(results) is tuple or type(results) is list:
+            if isinstance(results, (tuple, list)):
                 pos_emb_pred = results[0]
             else:
                 pos_emb_pred = results
@@ -130,11 +126,8 @@ class TowerModel(nn.Module):
             model_outputs = (None,)
 
         else:
-            """
-            Transformer Models
-            """
-
-            if type(self.model) is GPT2Model:
+            # Transformer Models
+            if isinstance(self.model, GPT2Model):
                 seq_len = pos_emb_inp.shape[1]
                 # head_mask has shape n_layer x batch x n_heads x N x N
                 head_mask = (
@@ -151,8 +144,8 @@ class TowerModel(nn.Module):
                 )
 
             elif "task" in kwargs and kwargs["task"] == "plm":
-                assert (
-                    type(self.model) is XLNetModel
+                assert isinstance(
+                    self.model, XLNetModel
                 ), "Permutation language model is only supported for XLNET model "
                 model_outputs = self.model(
                     inputs_embeds=pos_emb_inp,
@@ -400,13 +393,10 @@ def get_recsys_model(
 
 
 class AvgSeq(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, input):
+    def forward(self, inputs):
         # seq: n_batch x n_seq x n_dim
         output = []
-        for i in range(1, input.size(1) + 1):
-            output.append(input[:, :i].mean(1))
+        for i in range(1, inputs.size(1) + 1):
+            output.append(inputs[:, :i].mean(1))
 
         return (torch.stack(output).permute(1, 0, 2),)

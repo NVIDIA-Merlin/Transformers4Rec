@@ -22,7 +22,7 @@ class TabularFeatures(MergeTabular):
         if text_embedding_layer:
             to_merge.append(text_embedding_layer)
 
-        assert to_merge is not [], "Please provide at least one input layer"
+        assert to_merge != [], "Please provide at least one input layer"
         super(TabularFeatures, self).__init__(*to_merge, aggregation=aggregation, **kwargs)
 
     @classmethod

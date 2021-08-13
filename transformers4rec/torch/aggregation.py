@@ -110,7 +110,7 @@ class StackFeatures(FeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = [i for i in input_size.values()][0][-1]
+        last_dim = list(input_size.values())[0][-1]
 
         return batch_size, len(input_size), last_dim
 
@@ -137,7 +137,7 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = [i for i in input_size.values()][0][-1]
+        last_dim = list(input_size.values())[0][-1]
 
         return batch_size, last_dim
 
@@ -173,6 +173,6 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = [i for i in input_size.values()][0][-1]
+        last_dim = list(input_size.values())[0][-1]
 
         return batch_size, last_dim

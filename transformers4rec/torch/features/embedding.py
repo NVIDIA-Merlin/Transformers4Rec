@@ -13,7 +13,7 @@ from ...types import DefaultTags, Schema
 from ..tabular import FilterFeatures, TabularModule
 
 
-class TableConfig(object):
+class TableConfig:
     def __init__(
         self,
         vocabulary_size: int,
@@ -49,7 +49,7 @@ class TableConfig(object):
         )
 
 
-class FeatureConfig(object):
+class FeatureConfig:
     def __init__(
         self, table: TableConfig, max_sequence_length: int = 0, name: Optional[Text] = None
     ):

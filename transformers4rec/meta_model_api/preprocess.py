@@ -9,7 +9,6 @@ import cupy
 import dask_cudf
 import numpy as np
 import nvtabular as nvt
-from cudf.core.dtypes import ListDtype
 from nvtabular.ops import Operator
 from tqdm import tqdm
 
@@ -82,7 +81,7 @@ class Namespace(Operator):
         ]
 
 
-class Ops(object):
+class Ops:
     _namespace_items = []
 
     def __init__(self, *ops, auto_renaming=False, sequential=True):

@@ -73,7 +73,7 @@ class PredictionTask(torch.nn.Module):
             predictions = self(predictions)
         predictions = self.forward_to_prediction_fn(predictions)
         for metric in self.metrics:
-            if isinstance(metric, tuple([type(x) for x in self.binary_classification_metrics()])):
+            if isinstance(metric, tuple(type(x) for x in self.binary_classification_metrics())):
                 labels = labels.int()
             outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, labels)
 
