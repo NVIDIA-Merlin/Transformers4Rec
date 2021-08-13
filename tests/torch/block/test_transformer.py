@@ -7,7 +7,7 @@ torch4rec = pytest.importorskip("transformers4rec.torch")
 
 config_classes = [
     tconf.XLNetConfig,
-    tconf.ElectraConfig,
+    # tconf.ElectraConfig,
     tconf.LongformerConfig,
     tconf.GPT2Config,
 ]
