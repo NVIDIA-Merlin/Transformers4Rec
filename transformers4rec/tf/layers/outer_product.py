@@ -38,7 +38,7 @@ class XDeepFmOuterProduct(tf.keras.layers.Layer):
         super().__init__(**kwargs)
 
     def build(self, input_shapes):
-        if not (isinstance(input_shapes[0], tuple) or isinstance(input_shapes[0], tf.TensorShape)):
+        if not isinstance(input_shapes[0], (tuple, tf.TensorShape)):
             raise ValueError("Should be called on a list of inputs.")
         if len(input_shapes) != 2:
             raise ValueError("Should only have two inputs, found {}".format(len(input_shapes)))

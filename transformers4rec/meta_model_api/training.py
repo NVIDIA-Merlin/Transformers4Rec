@@ -1,10 +1,11 @@
+import os
 from enum import Enum
 
 import yaml
 
-from transformers4rec.recsys_args import DataArguments, ModelArguments, TrainingArguments
-from transformers4rec.recsys_data import fetch_data_loader, get_items_sorted_freq
-from transformers4rec.utils.misc_utils import get_label_feature_name, get_parquet_files_names
+from transformers4rec.recsys_args import DataArguments, TrainingArguments
+from transformers4rec.recsys_data import fetch_data_loader
+from transformers4rec.utils.misc_utils import get_parquet_files_names
 
 TrainingArguments.local_rank = -1
 TrainingArguments.dataloader_drop_last = True
@@ -96,7 +97,7 @@ def fit_and_evaluate(trainer, start_time_window_index, final_time_window_index):
     trainer.reset_lr_scheduler()
     trainer.train(model_path=model_path)
 
-    print(f"************* Evaluation *************\n")
+    print("************* Evaluation *************\n")
 
     # Loading again the data loaders, because some data loaders (e.g. NVTabular do not reset after they are not totally iterated over)
     train_loader, eval_loader = get_dataloaders(
