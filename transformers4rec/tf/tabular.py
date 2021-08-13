@@ -2,9 +2,8 @@ from typing import Optional
 
 import tensorflow as tf
 
-from ..types import ColumnGroup
+from ..types import Schema
 from . import aggregation as agg
-from .typing import TabularData
 from .utils.tf_utils import calculate_batch_size_from_input_shapes
 
 
@@ -59,9 +58,6 @@ class TabularLayer(tf.keras.layers.Layer):
         self.aggregation = None
         if aggregation:
             self.aggregation = agg.aggregation_registry.parse(aggregation)
-
-    def call(self, inputs: TabularData, *args, **kwargs) -> TabularData:
-        return super().call(inputs, *args, **kwargs)
 
     def __call__(
         self,
@@ -132,16 +128,14 @@ class TabularLayer(tf.keras.layers.Layer):
         return calculate_batch_size_from_input_shapes(input_shapes)
 
     @classmethod
-    def from_column_group(
-        cls, column_group: ColumnGroup, tags=None, tags_to_filter=None, **kwargs
-    ) -> Optional["TabularLayer"]:
+    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularLayer"]:
         if tags:
-            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
+            schema = schema.select_by_tag(tags)
 
-        if not column_group.columns:
+        if not schema.columns:
             return None
 
-        return cls.from_features(column_group.column_names, **kwargs)
+        return cls.from_features(schema.column_names, **kwargs)
 
     @classmethod
     def from_features(cls, features, **kwargs):
@@ -225,56 +219,3 @@ class AsDenseFeatures(TabularLayer):
                 outputs[name] = val
 
         return outputs
-
-
-class ParseTokenizedText(TabularLayer):
-    def __init__(
-        self,
-        max_text_length=None,
-        aggregation=None,
-        trainable=True,
-        name=None,
-        dtype=None,
-        dynamic=False,
-        **kwargs
-    ):
-        super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
-        self.max_text_length = max_text_length
-
-    def call(self, inputs, **kwargs):
-        outputs, text_tensors, text_column_names = {}, {}, []
-        for name, val in inputs.items():
-            if isinstance(val, tuple) and name.endswith(("/tokens", "/attention_mask")):
-                values = val[0][:, 0]
-                row_lengths = val[1][:, 0]
-                text_tensors[name] = tf.RaggedTensor.from_row_lengths(
-                    values, row_lengths
-                ).to_tensor()
-                text_column_names.append("/".join(name.split("/")[:-1]))
-            # else:
-            #     outputs[name] = val
-
-        for text_col in set(text_column_names):
-            outputs[text_col] = dict(
-                input_ids=tf.cast(text_tensors[text_col + "/tokens"], tf.int32),
-                attention_mask=tf.cast(text_tensors[text_col + "/attention_mask"], tf.int32),
-            )
-
-        return outputs
-
-    def compute_output_shape(self, input_shapes):
-        assert self.max_text_length is not None
-
-        output_shapes, text_column_names = {}, []
-        batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
-        for name, val in input_shapes.items():
-            if isinstance(val, tuple) and name.endswith(("/tokens", "/attention_mask")):
-                text_column_names.append("/".join(name.split("/")[:-1]))
-
-        for text_col in set(text_column_names):
-            output_shapes[text_col] = dict(
-                input_ids=tf.TensorShape([batch_size, self.max_text_length]),
-                attention_mask=tf.TensorShape([batch_size, self.max_text_length]),
-            )
-
-        return output_shapes

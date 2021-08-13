@@ -30,7 +30,7 @@ def default_object_name(obj):
     return default_name(type(obj))
 
 
-class Registry(object):
+class Registry:
     """Dict-like class for managing function registrations.
     ```python
     my_registry = Registry("custom_name")

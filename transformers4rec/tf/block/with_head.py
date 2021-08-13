@@ -49,8 +49,8 @@ class ModelWithLoss(tf.keras.Model):
 
 
 class BlockWithHead(ModelWithLoss):
-    def __init__(self, block: BlockType, head: Head, model_name=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, block: BlockType, head: Head, model_name=None, **kwargs):
+        super().__init__(**kwargs)
         self.model_name = model_name
         self.block = block
         self.head = head

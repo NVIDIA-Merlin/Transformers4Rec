@@ -5,8 +5,12 @@ import tensorflow as tf
 from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from ...types import ColumnGroup
+from ...types import Schema
 from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
+
+# pylint has issues with TF array ops, so disable checks until fixed:
+# https://github.com/PyCQA/pylint/issues/3613
+# pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
 class EmbeddingFeatures(TabularLayer):
@@ -17,27 +21,26 @@ class EmbeddingFeatures(TabularLayer):
         super().__init__(**kwargs)
 
     @classmethod
-    def from_column_group(
+    def from_schema(
         cls,
-        column_group: ColumnGroup,
+        schema: Schema,
         embedding_dims=None,
         default_embedding_dim=64,
         infer_embedding_sizes=True,
         combiner="mean",
         tags=None,
-        tags_to_filter=None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         if tags:
-            column_group = column_group.select_by_tag(tags, tags_to_filter=tags_to_filter)
+            schema = schema.select_by_tag(tags)
 
         if infer_embedding_sizes:
-            sizes = column_group.embedding_sizes()
+            sizes = schema.embedding_sizes()
         else:
             if not embedding_dims:
                 embedding_dims = {}
             sizes = {}
-            cardinalities = column_group.cardinalities()
+            cardinalities = schema.cardinalities()
             for key, cardinality in cardinalities.items():
                 embedding_size = embedding_dims.get(key, default_embedding_dim)
                 sizes[key] = (cardinality, embedding_size)

@@ -4,8 +4,8 @@ from typing import Dict, Optional, Text, Union
 import torch
 import torchmetrics as tm
 
-from ..types import ColumnGroup
-from ..utils.columns import Tag
+from ..types import Schema
+from ..utils.tags import Tag
 from .features.embedding import EmbeddingFeatures
 from .tabular import MergeTabular
 
@@ -73,7 +73,7 @@ class PredictionTask(torch.nn.Module):
             predictions = self(predictions)
         predictions = self.forward_to_prediction_fn(predictions)
         for metric in self.metrics:
-            if isinstance(metric, tuple([type(x) for x in self.binary_classification_metrics()])):
+            if isinstance(metric, tuple(type(x) for x in self.binary_classification_metrics())):
                 labels = labels.int()
             outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, labels)
 
@@ -209,21 +209,19 @@ class Head(torch.nn.Module):
         self.input_size = input_size
 
     @classmethod
-    def from_column_group(
-        cls, column_group: ColumnGroup, add_logits=True, task_weights=None, input_size=None
-    ):
+    def from_schema(cls, schema: Schema, add_logits=True, task_weights=None, input_size=None):
         if task_weights is None:
             task_weights = {}
         to_return = cls(input_size=input_size)
 
-        for binary_target in column_group.select_by_tag(Tag.TARGETS_BINARY).column_names:
+        for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
             to_return = to_return.add_binary_classification_task(
                 binary_target,
                 add_logit_layer=add_logits,
                 task_weight=task_weights.get(binary_target, 1),
             )
 
-        for regression_target in column_group.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
+        for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
             to_return = to_return.add_regression_task(
                 regression_target,
                 add_logit_layer=add_logits,

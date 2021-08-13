@@ -28,9 +28,6 @@ class MRR(StreamingMetric):
 
     name = "mrr_at_n"
 
-    def __init__(self, topn):
-        super().__init__(topn)
-
     def reset(self):
         self.mrr_results = []
 
@@ -58,9 +55,6 @@ class MRR(StreamingMetric):
 class NDCG(StreamingMetric):
 
     name = "ndcg_at_n"
-
-    def __init__(self, topn):
-        super().__init__(topn)
 
     def reset(self):
         self.ndcg_results = []
@@ -98,9 +92,6 @@ class NDCG(StreamingMetric):
 class HitRate(StreamingMetric):
 
     name = "hitrate_at_n"
-
-    def __init__(self, topn):
-        super().__init__(topn)
 
     def reset(self):
         self.hitrate_total = 0

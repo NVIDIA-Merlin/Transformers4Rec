@@ -57,9 +57,9 @@ def test_sequential_task_output_constrained(torch_seq_prediction_head_inputs):
 
 # TODO: We need the sequential aggregator to fix this test
 # Test of output of sequential_task when mf_constrained_embeddings is enabled
-# def test_build_sequential_task_from_block(yoochoose_column_group):
-#     inputs = torch4rec.features.tabular.TabularFeatures.from_column_group(
-#         yoochoose_column_group
+# def test_build_sequential_task_from_block(yoochoose_schema):
+#     inputs = torch4rec.features.tabular.TabularFeatures.from_schema(
+#         yoochoose_schema
 #     )
 #
 #     block = torch4rec.block.base.SequentialBlock(inputs, pytorch.nn.Linear(64, 64))

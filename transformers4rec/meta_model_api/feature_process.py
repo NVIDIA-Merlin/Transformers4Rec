@@ -17,7 +17,7 @@ import logging
 import math
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, List, Optional
+from typing import List
 
 import numpy as np
 import torch
@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 ###############################################################
 
 
-class Categorical(object):
+class Categorical:
     """
     Class to build the embedding representation of categorical variables
 
@@ -90,7 +90,7 @@ class Categorical(object):
         self.project_layer = nn.Linear(self.feature_size, output_dim, bias=bias)
 
 
-class Conitnuous(object):
+class Continuous:
     """
     Class to build the embedding representation of continuous variables
 
@@ -147,7 +147,7 @@ class Conitnuous(object):
         self.project_layer = nn.Linear(self.feature_size, output_dim, bias=bias)
 
 
-class FeatureProcessConfig(object):
+class FeatureProcessConfig:
     """
     Config arguments for the FeatureGroupProcess module
     """
@@ -167,7 +167,7 @@ class FeatureProcessConfig(object):
         numeric_features_soft_one_hot_encoding_num_embeddings: int = 128,
         stochastic_shared_embeddings_replacement_prob: float = 0,
         input_features_aggregation: str = "elementwise_sum_multiply_item_embedding",
-        tasks: List[str] = ["item_prediction"],
+        tasks: List[str] = None,
         device: str = "cuda",
     ):
         self.pad_token = pad_token
@@ -187,7 +187,7 @@ class FeatureProcessConfig(object):
         self.stochastic_shared_embeddings_replacement_prob = (
             stochastic_shared_embeddings_replacement_prob
         )
-        self.tasks = tasks
+        self.tasks = tasks or ["item_prediction"]
         self.device = device
 
 
@@ -588,7 +588,7 @@ def init_from_featuremap(featuremap: dict):
 
         elif config["dtype"] in ["float", "long"]:
             config["name"] = name
-            continuous.append(Conitnuous(**config))
+            continuous.append(Continuous(**config))
     return categoricals, continuous
 
 

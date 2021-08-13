@@ -1,4 +1,4 @@
-from ...types import ColumnGroup, Tag
+from ...types import Schema, Tag
 from ..tabular import MergeTabular
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
@@ -22,39 +22,37 @@ class TabularFeatures(MergeTabular):
         if text_embedding_layer:
             to_merge.append(text_embedding_layer)
 
-        assert to_merge is not [], "Please provide at least one input layer"
+        assert to_merge != [], "Please provide at least one input layer"
         super(TabularFeatures, self).__init__(*to_merge, aggregation=aggregation, **kwargs)
 
     @classmethod
-    def from_column_group(
+    def from_schema(
         cls,
-        column_group: ColumnGroup,
+        schema: Schema,
         continuous_tags=Tag.CONTINUOUS,
-        continuous_tags_to_filter=None,
         categorical_tags=Tag.CATEGORICAL,
-        categorical_tags_to_filter=None,
         text_model=None,
         text_tags=Tag.TEXT_TOKENIZED,
-        text_tags_to_filter=None,
         max_text_length=None,
         aggregation=None,
         **kwargs
     ):
         maybe_continuous_layer, maybe_categorical_layer = None, None
         if continuous_tags:
-            maybe_continuous_layer = ContinuousFeatures.from_column_group(
-                column_group, tags=continuous_tags, tags_to_filter=continuous_tags_to_filter
+            maybe_continuous_layer = ContinuousFeatures.from_schema(
+                schema,
+                tags=continuous_tags,
             )
         if categorical_tags:
-            maybe_categorical_layer = EmbeddingFeatures.from_column_group(
-                column_group, tags=categorical_tags, tags_to_filter=categorical_tags_to_filter
+            maybe_categorical_layer = EmbeddingFeatures.from_schema(
+                schema,
+                tags=categorical_tags,
             )
 
         if text_model and not isinstance(text_model, TextEmbeddingFeaturesWithTransformers):
-            text_model = TextEmbeddingFeaturesWithTransformers.from_column_group(
-                column_group,
+            text_model = TextEmbeddingFeaturesWithTransformers.from_schema(
+                schema,
                 tags=text_tags,
-                tags_to_filter=text_tags_to_filter,
                 transformer_model=text_model,
                 max_text_length=max_text_length,
             )
