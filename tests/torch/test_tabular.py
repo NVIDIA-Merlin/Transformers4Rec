@@ -4,17 +4,18 @@ import torch
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 if torch.cuda.is_available():
-    devices=["cpu", "cuda"]
+    devices = ["cpu", "cuda"]
 else:
-    devices=["cpu"] 
+    devices = ["cpu"]
+
 
 def test_filter_features(torch_con_features):
     features = ["con_a", "con_b"]
     con = torch4rec.FilterFeatures(features)(torch_con_features)
 
     assert list(con.keys()) == features
-
-
+    
+    
 def test_as_tabular(torch_con_features):
     name = "tabular"
     con = torch4rec.AsTabular(name)(torch_con_features)
