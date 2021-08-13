@@ -1,8 +1,9 @@
 import pytest
 
+from transformers4rec.utils.tags import Tag
+
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
-from transformers4rec.utils.tags import Tag
 
 
 def test_concat_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
