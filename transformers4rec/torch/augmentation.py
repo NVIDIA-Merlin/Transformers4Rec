@@ -1,13 +1,12 @@
 import torch
 
 from ..utils.registry import Registry
-from .tabular import TabularModule
 from .typing import TensorOrTabularData
 
 augmentation_registry: Registry = Registry.class_registry("torch.augmentation_registry")
 
 
-class DataAugmentation(TabularModule):
+class DataAugmentation(torch.nn.Module):
     def augment(self, inputs: torch.Tensor, **kwargs) -> torch.Tensor:
         raise NotImplementedError()
 
@@ -22,17 +21,22 @@ class DataAugmentation(TabularModule):
 
 
 @augmentation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")
-class StochasticSwapNoise(TabularModule):
+class StochasticSwapNoise(DataAugmentation):
     """
     Applies Stochastic replacement of sequence features
     """
 
-    def __init__(self, pad_token, replacement_prob, aggregation=None):
-        super().__init__(aggregation)
+    def __init__(self, pad_token=0, replacement_prob=0.1):
+        super().__init__()
         self.pad_token = pad_token
         self.replacement_prob = replacement_prob
 
-    def augment(self, input_tensor: torch.Tensor) -> torch.Tensor:
+    def __rrshift__(self, other):
+        from .block.base import right_shift_block
+
+        return right_shift_block(self, other)
+
+    def augment(self, input_tensor: torch.Tensor, **kwargs) -> torch.Tensor:
         with torch.no_grad():
             cdata_non_zero_mask = input_tensor != self.pad_token
             sse_prob_replacement_matrix = torch.full(

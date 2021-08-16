@@ -5,6 +5,7 @@ import torch
 
 from ..types import DatasetSchema
 from . import aggregation as agg
+from . import augmentation as aug
 
 
 class TabularMixin:
@@ -18,9 +19,11 @@ class TabularMixin:
         stack_outputs=False,
         concat_outputs=False,
         aggregation=None,
+        augmentation=None,
         filter_columns=None,
         **kwargs
     ):
+        augmentation = augmentation or getattr(self, "augmentation", None)
         post_op = getattr(self, "aggregation", None)
         if concat_outputs:
             post_op = agg.ConcatFeatures()
@@ -28,6 +31,7 @@ class TabularMixin:
             post_op = agg.StackFeatures()
         if aggregation:
             post_op = agg.aggregation_registry.parse(aggregation)
+
         if filter_columns:
             pre = FilterFeatures(filter_columns)
         if pre:
@@ -40,6 +44,10 @@ class TabularMixin:
             for layer_or_tensor in merge_with:
                 to_add = layer_or_tensor(inputs) if callable(layer_or_tensor) else layer_or_tensor
                 outputs.update(to_add)
+
+        if augmentation:
+            augmentation = aug.augmentation_registry.parse(augmentation)
+            outputs = augmentation(outputs)
 
         if post_op:
             outputs = post_op(outputs)
@@ -94,10 +102,11 @@ class AsTabular(torch.nn.Module):
 
 
 class TabularModule(TabularMixin, torch.nn.Module):
-    def __init__(self, aggregation=None):
+    def __init__(self, aggregation=None, augmentation=None):
         super().__init__()
         self.input_size = None
         self.aggregation = aggregation
+        self.augmentation = augmentation
 
     @property
     def aggregation(self):
@@ -109,6 +118,17 @@ class TabularModule(TabularMixin, torch.nn.Module):
             self._aggregation = agg.aggregation_registry.parse(value)
         else:
             self._aggregation = None
+
+    @property
+    def augmentation(self):
+        return self._augmentation
+
+    @augmentation.setter
+    def augmentation(self, value):
+        if value:
+            self._augmentation = aug.augmentation_registry.parse(value)
+        else:
+            self._augmentation = None
 
     @classmethod
     def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:

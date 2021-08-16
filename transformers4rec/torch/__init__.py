@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
+from .augmentation import StochasticSwapNoise
 from .block.base import SequentialBlock, right_shift_block
 from .block.mlp import MLPBlock
 from .block.recurrent import RecurrentBlock
@@ -30,6 +31,7 @@ __all__ = [
     "right_shift_block",
     "MLPBlock",
     "BlockWithHead",
+    "StochasticSwapNoise",
     "RecurrentBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
