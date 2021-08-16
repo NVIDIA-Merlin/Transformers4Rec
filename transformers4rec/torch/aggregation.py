@@ -3,8 +3,6 @@ from functools import reduce
 
 import torch
 
-from transformers4rec.utils.tags import Tag
-
 from ..utils.registry import Registry
 from .typing import TabularData
 from .utils.torch_utils import calculate_batch_size_from_input_size
@@ -144,29 +142,24 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
 
 @aggregation_registry.register("element-wise-sum-item-multi")
 class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
-    def __init__(self, schema=None):
+    def __init__(self, item_id=None):
         super().__init__()
         self.stack = StackFeatures(axis=0)
-        self.schema = schema
-        self.item_id_col_name = None
+        self.item_id = item_id
 
-    def _set_item_id_from_col_group(self):
-        if self.schema is None:
-            raise ValueError(
-                "The schema is necessary to infer the item id column name, but it has not been set."
-            )
-        elif self.item_id_col_name is None:
-            item_id_col = self.schema.select_by_tag(Tag.ITEM_ID)
-            if len(item_id_col.columns) == 0:
-                raise ValueError("There is no column tagged as item id.")
-            self.item_id_col_name = item_id_col.column_names[0]
+    def _check_input_id(self, inputs):
+        if not self.item_id:
+            raise ValueError("The `item_id` is necessary to apply this aggregation.")
+
+        if not inputs or self.item_id not in inputs:
+            raise ValueError(f"{self.item_id} not found in inputs")
 
     def forward(self, inputs):
-        self._set_item_id_from_col_group()
+        self._check_input_id(inputs)
         self._check_input_shapes_equal(inputs)
 
-        item_id_inputs = inputs[self.item_id_col_name]
-        other_inputs = {k: v for k, v in inputs.items() if k != self.item_id_col_name}
+        item_id_inputs = inputs[self.item_id]
+        other_inputs = {k: v for k, v in inputs.items() if k != self.item_id}
         other_inputs_sum = self.stack(other_inputs).sum(dim=0)
         result = item_id_inputs.multiply(other_inputs_sum)
         return result

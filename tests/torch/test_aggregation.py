@@ -55,7 +55,7 @@ def test_element_wise_sum_item_multi_no_col_group():
     with pytest.raises(ValueError) as excinfo:
         element_wise_op = torch4rec.ElementwiseSumItemMulti()
         element_wise_op(None)
-    assert "schema is necessary" in str(excinfo.value)
+    assert "`item_id` is necessary" in str(excinfo.value)
 
 
 def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
@@ -65,13 +65,13 @@ def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
         categ_schema = categ_schema - ["item_id/list"]
         element_wise_op = torch4rec.ElementwiseSumItemMulti(categ_schema)
         element_wise_op(None)
-    assert "no column tagged as item id" in str(excinfo.value)
+    assert "not found in inputs" in str(excinfo.value)
 
 
 def test_element_wise_sum_item_multi_features_different_shapes(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-        element_wise_op = torch4rec.ElementwiseSumItemMulti(categ_schema)
+        item_id = yoochoose_schema.select_by_tag(Tag.ITEM_ID).column_names[0]
+        element_wise_op = torch4rec.ElementwiseSumItemMulti(item_id)
         input = {
             "item_id/list": pytorch.rand(10, 20),
             "category/list": pytorch.rand(10, 25),
@@ -83,8 +83,9 @@ def test_element_wise_sum_item_multi_features_different_shapes(yoochoose_schema)
 def test_element_wise_sum_item_multi_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
     tab_module = torch4rec.EmbeddingFeatures.from_schema(schema)
+    item_id = yoochoose_schema.select_by_tag(Tag.ITEM_ID).column_names[0]
 
-    block = tab_module >> torch4rec.ElementwiseSumItemMulti(schema)
+    block = tab_module >> torch4rec.ElementwiseSumItemMulti(item_id)
 
     out = block(torch_yoochoose_like)
 

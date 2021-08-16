@@ -63,8 +63,7 @@ class TabularFeatures(MergeTabular):
             )
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(
-                schema,
-                tags=categorical_tags,
+                schema, tags=categorical_tags, **kwargs
             )
 
         output = cls(
@@ -74,8 +73,8 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
         )
 
-        if output.aggregation is not None:
-            output.aggregation.schema = schema
+        if output.aggregation is not None and not getattr(output.aggregation, "item_id", None):
+            output.aggregation.item_id = output.to_merge["categorical_module"].item_id
 
         if automatic_build and schema._schema:
             output.build(
