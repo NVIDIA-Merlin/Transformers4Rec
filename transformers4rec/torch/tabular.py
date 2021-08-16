@@ -174,8 +174,8 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
 
 class MergeTabular(TabularModule):
-    def __init__(self, *to_merge, aggregation=None):
-        super().__init__(aggregation)
+    def __init__(self, *to_merge, aggregation=None, augmentation=None):
+        super().__init__(aggregation=aggregation, augmentation=augmentation)
         if all(isinstance(x, dict) for x in to_merge):
             to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
             self.to_merge = torch.nn.ModuleDict(to_merge)
