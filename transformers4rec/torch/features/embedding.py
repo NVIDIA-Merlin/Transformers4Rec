@@ -307,7 +307,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
     @classmethod
     def from_schema(
         cls,
-        schema: Schema,
+        schema: DatasetSchema,
         soft_embedding_cardinalities=None,
         default_soft_embedding_cardinality=10,
         soft_embedding_dims=None,
