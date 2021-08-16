@@ -5,12 +5,13 @@ from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular, TabularModule
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
-from .embedding import EmbeddingFeatures
+from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
 
 
 class TabularFeatures(MergeTabular):
     CONTINUOUS_MODULE_CLASS = ContinuousFeatures
     EMBEDDING_MODULE_CLASS = EmbeddingFeatures
+    SOFT_EMBEDDING_MODULE_CLASS = SoftEmbeddingFeatures
 
     def __init__(
         self,
@@ -53,14 +54,36 @@ class TabularFeatures(MergeTabular):
         automatic_build=True,
         max_sequence_length=None,
         continuous_projection=None,
-        **kwargs
+        continuous_soft_embeddings_shape=None,
+        **kwargs,
     ):
         maybe_continuous_module, maybe_categorical_module = None, None
         if continuous_tags:
-            maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
-                schema,
-                tags=continuous_tags,
-            )
+            if continuous_soft_embeddings_shape:
+                assert (
+                    isinstance(continuous_soft_embeddings_shape, (list, tuple))
+                    and len(continuous_soft_embeddings_shape) == 2
+                ), (
+                    "The continuous_soft_embeddings_shape must be a list/tuple with "
+                    "2 elements corresponding to the default shape "
+                    "for the soft embedding tables of continuous features"
+                )
+
+                (
+                    default_soft_embedding_cardinality,
+                    default_soft_embedding_dim,
+                ) = continuous_soft_embeddings_shape
+                maybe_continuous_module = cls.SOFT_EMBEDDING_MODULE_CLASS.from_schema(
+                    schema,
+                    tags=continuous_tags,
+                    default_soft_embedding_cardinality=default_soft_embedding_cardinality,
+                    default_soft_embedding_dim=default_soft_embedding_dim,
+                )
+            else:
+                maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
+                    schema,
+                    tags=continuous_tags,
+                )
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(
                 schema,

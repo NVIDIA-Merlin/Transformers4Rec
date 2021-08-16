@@ -81,6 +81,14 @@ class SoftEmbedding(torch.nn.Module):
         embeddings_init_std: The standard deviation factor for normal initialization of the
             embedding matrix weights.
         """
+
+        assert (
+            num_embeddings > 0
+        ), "The number of embeddings for soft embeddings needs to be greater than 0"
+        assert (
+            embeddings_dim > 0
+        ), "The embeddings dim for soft embeddings needs to be greater than 0"
+
         super(SoftEmbedding, self).__init__()
         self.embedding_table = torch.nn.Embedding(num_embeddings, embeddings_dim)
         with torch.no_grad():
@@ -89,6 +97,7 @@ class SoftEmbedding(torch.nn.Module):
         self.softmax = torch.nn.Softmax(dim=-1)
 
     def forward(self, input_numeric):
+        input_numeric = input_numeric.unsqueeze(-1)
         weights = self.softmax(self.projection_layer(input_numeric))
         soft_one_hot_embeddings = (weights.unsqueeze(-1) * self.embedding_table.weight).sum(-2)
 
@@ -135,6 +144,7 @@ class EmbeddingFeatures(TabularModule):
         item_id=None,
         automatic_build=True,
         max_sequence_length=None,
+        continuous_soft_embeddings_shape=None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         # TODO: propogate item-id from ITEM_ID tag
@@ -151,6 +161,7 @@ class EmbeddingFeatures(TabularModule):
             if not embedding_dims:
                 embedding_dims = {}
             sizes = {}
+
             cardinalities = schema.cardinalities()
             for key, cardinality in cardinalities.items():
                 embedding_size = embedding_dims.get(key, default_embedding_dim)
@@ -293,5 +304,65 @@ class EmbeddingFeatures(TabularModule):
 
 
 class SoftEmbeddingFeatures(EmbeddingFeatures):
+    @classmethod
+    def from_schema(
+        cls,
+        schema: Schema,
+        soft_embedding_cardinalities=None,
+        default_soft_embedding_cardinality=10,
+        soft_embedding_dims=None,
+        default_soft_embedding_dim=8,
+        combiner="mean",
+        tags=None,
+        automatic_build=True,
+        max_sequence_length=None,
+        **kwargs
+    ) -> Optional["SoftEmbeddingFeatures"]:
+        # TODO: propogate item-id from ITEM_ID tag
+
+        if tags:
+            schema = schema.select_by_tag(tags)
+
+            soft_embedding_cardinalities = soft_embedding_cardinalities or {}
+            soft_embedding_dims = soft_embedding_dims or {}
+
+            sizes = {}
+            cardinalities = schema.cardinalities()
+            for col_name in schema.column_names:
+                # If this is NOT a categorical feature
+                if col_name not in cardinalities:
+                    embedding_size = soft_embedding_dims.get(col_name, default_soft_embedding_dim)
+                    cardinality = soft_embedding_cardinalities.get(
+                        col_name, default_soft_embedding_cardinality
+                    )
+                    sizes[col_name] = (cardinality, embedding_size)
+
+        feature_config: Dict[str, FeatureConfig] = {}
+        for name, (vocab_size, dim) in sizes.items():
+            feature_config[name] = FeatureConfig(
+                TableConfig(
+                    vocabulary_size=vocab_size,
+                    dim=dim,
+                    name=name,
+                    combiner=combiner,
+                )
+            )
+
+        if not feature_config:
+            return None
+
+        output = cls(feature_config, **kwargs)
+
+        if automatic_build and schema._schema:
+            output.build(
+                get_output_sizes_from_schema(
+                    schema._schema,
+                    kwargs.get("batch_size", -1),
+                    max_sequence_length=max_sequence_length,
+                )
+            )
+
+        return output
+
     def table_to_embedding_module(self, table: TableConfig) -> SoftEmbedding:
         return SoftEmbedding(table.vocabulary_size, table.dim)
