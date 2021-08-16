@@ -36,22 +36,12 @@ class ColumnSchema:
         return ColumnSchema(name, tags=self.tags)
 
 
-class Schema:
-    """A Schema is a group of columns that you want to apply the same transformations to.
-    Schema's can be transformed by shifting operators on to them, which returns a new
-    Schema with the transformations applied. This lets you define a graph of operations
-    that makes up your workflow
-    Parameters
-    ----------
-    columns: list of (str or tuple of str)
-        The columns to select from the input Dataset. The elements of this list are strings
-        indicating the column names in most cases, but can also be tuples of strings
-        for feature crosses.
-    """
+class DatasetSchema:
+    """A collection of column schemas for a dataset."""
 
     def __init__(
         self,
-        columns: Union[Text, List[Text], ColumnSchema, List[ColumnSchema], "Schema"],
+        columns: Union[Text, List[Text], ColumnSchema, List[ColumnSchema], "DatasetSchema"],
         tags: Optional[Union[List[Text], DefaultTags]] = None,
     ):
         if isinstance(columns, str):
@@ -79,7 +69,7 @@ class Schema:
         self._schema = schema
 
     @classmethod
-    def from_schema(cls, schema) -> "Schema":
+    def from_schema(cls, schema) -> "DatasetSchema":
         if isinstance(schema, str):
             schema = cls.read_schema(schema)
 
@@ -100,18 +90,18 @@ class Schema:
         return [col.name for col in self.columns]
 
     def __add__(self, other):
-        """Adds columns from this Schema with another to return a new Schema
+        """Adds columns from this DatasetSchema with another to return a new DatasetSchema
         Parameters
         -----------
-        other: Schema or str or list of str
+        other: DatasetSchema or str or list of str
         Returns
         -------
-        Schema
+        DatasetSchema
         """
         if isinstance(other, str):
-            other = Schema([other])
+            other = DatasetSchema([other])
         elif isinstance(other, collections.abc.Sequence):
-            other = Schema(other)
+            other = DatasetSchema(other)
 
         # check if there are any columns with the same name in both column groups
         overlap = set(self.column_names).intersection(other.column_names)
@@ -119,36 +109,31 @@ class Schema:
         if overlap:
             raise ValueError(f"duplicate column names found: {overlap}")
 
-        child = Schema(self.columns + other.columns)
-        child.parents = [self, other]
-        child.kind = "+"
-        return child
+        return DatasetSchema(self.columns + other.columns)
 
-    # handle the "column_name" + Schema case
+    # handle the "column_name" + DatasetSchema case
     __radd__ = __add__
 
     def __sub__(self, other):
-        """Removes columns from this Schema with another to return a new Schema
+        """Removes columns from this DatasetSchema with another to return a new DatasetSchema
         Parameters
         -----------
-        other: Schema or str or list of str
+        other: DatasetSchema or str or list of str
             Columns to remove
         Returns
         -------
-        Schema
+        DatasetSchema
         """
-        if isinstance(other, Schema):
+        if isinstance(other, DatasetSchema):
             to_remove = set(other.column_names)
         elif isinstance(other, str):
             to_remove = {other}
         elif isinstance(other, collections.abc.Sequence):
             to_remove = set(other)
         else:
-            raise ValueError(f"Expected Schema, str, or list of str. Got {other.__class__}")
+            raise ValueError(f"Expected DatasetSchema, str, or list of str. Got {other.__class__}")
         new_columns = [c for c in self.columns if c.name not in to_remove]
-        child = Schema(new_columns)
-
-        return child
+        return DatasetSchema(new_columns)
 
     def __getitem__(self, columns):
         return self.select_by_name(columns)
@@ -164,7 +149,7 @@ class Schema:
             if all(x in column.tags for x in tags):
                 output_cols.append(column)
 
-        child = Schema(output_cols, tags=tags)
+        child = DatasetSchema(output_cols, tags=tags)
 
         if self._schema:
             child._schema = self.filter_schema(child.column_names)
@@ -172,7 +157,7 @@ class Schema:
         return child
 
     def select_by_name(self, names):
-        """Selects certain columns from this Schema, and returns a new Schema with only
+        """Selects certain columns from this DatasetSchema, and returns a new DatasetSchema with only
         those columns
         Parameters
         -----------
@@ -180,15 +165,12 @@ class Schema:
             Columns to select
         Returns
         -------
-        Schema
+        DatasetSchema
         """
         if isinstance(names, str):
             names = [names]
 
-        child = Schema(names)
-        child.parents = [self]
-        self.children.append(child)
-        child.kind = str(names)
+        child = DatasetSchema(names)
         return child
 
     def embedding_sizes(self):
@@ -230,4 +212,4 @@ def _convert_col(col, tags=None):
     elif isinstance(col, (tuple, list)):
         return [tuple(_convert_col(c, tags=tags) for c in col)]
     else:
-        raise ValueError(f"Invalid column value for Schema: {col} (type: {type(col)})")
+        raise ValueError(f"Invalid column value for DatasetSchema: {col} (type: {type(col)})")

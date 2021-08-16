@@ -4,7 +4,7 @@ from typing import Dict, Optional, Text, Union
 import torch
 import torchmetrics as tm
 
-from ..types import Schema
+from ..types import DatasetSchema
 from ..utils.tags import Tag
 from .features.embedding import EmbeddingFeatures
 from .tabular import MergeTabular
@@ -209,7 +209,9 @@ class Head(torch.nn.Module):
         self.input_size = input_size
 
     @classmethod
-    def from_schema(cls, schema: Schema, add_logits=True, task_weights=None, input_size=None):
+    def from_schema(
+        cls, schema: DatasetSchema, add_logits=True, task_weights=None, input_size=None
+    ):
         if task_weights is None:
             task_weights = {}
         to_return = cls(input_size=input_size)

@@ -14,17 +14,17 @@ from tqdm import tqdm
 
 
 def get_from_schema(self, to_get):
-    if isinstance(to_get, nvt.Schema):
+    if isinstance(to_get, nvt.DatasetSchema):
         to_get = set(to_get.columns)
     elif isinstance(to_get, str):
         to_get = {to_get}
     elif isinstance(to_get, collections.abc.Sequence):
         to_get = set(to_get)
     else:
-        raise ValueError(f"Expected Schema, str, or list of str. Got {to_get.__class__}")
+        raise ValueError(f"Expected DatasetSchema, str, or list of str. Got {to_get.__class__}")
 
     new_columns = [c for c in self.columns if c in to_get]
-    child = nvt.Schema(new_columns)
+    child = nvt.DatasetSchema(new_columns)
     child.parents = [self]
     self.children.append(child)
     child.kind = f"- {[c for c in self.columns if c not in to_get]}"
