@@ -3,7 +3,7 @@ import random
 
 import pytest
 
-from transformers4rec.utils.schema import Schema
+from transformers4rec.utils.schema import DatasetSchema
 
 pytorch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
@@ -118,7 +118,7 @@ def torch_yoochoose_like():
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
 
-    schema = Schema.read_schema(str(schema_file))
+    schema = DatasetSchema.read_schema(str(schema_file))
     data = {}
 
     for i in range(NUM_ROWS):

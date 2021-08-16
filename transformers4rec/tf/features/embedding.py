@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from ...types import Schema
+from ...types import DatasetSchema
 from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
 
 # pylint has issues with TF array ops, so disable checks until fixed:
@@ -23,7 +23,7 @@ class EmbeddingFeatures(TabularLayer):
     @classmethod
     def from_schema(
         cls,
-        schema: Schema,
+        schema: DatasetSchema,
         embedding_dims=None,
         default_embedding_dim=64,
         infer_embedding_sizes=True,

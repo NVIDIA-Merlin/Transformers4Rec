@@ -2,7 +2,7 @@ from typing import Optional
 
 import tensorflow as tf
 
-from ..types import Schema
+from ..types import DatasetSchema
 from . import aggregation as agg
 from .utils.tf_utils import calculate_batch_size_from_input_shapes
 
@@ -128,7 +128,7 @@ class TabularLayer(tf.keras.layers.Layer):
         return calculate_batch_size_from_input_shapes(input_shapes)
 
     @classmethod
-    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularLayer"]:
+    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularLayer"]:
         if tags:
             schema = schema.select_by_tag(tags)
 

@@ -1,8 +1,4 @@
-try:
-    from nvtabular import Schema
-    from nvtabular.tag import DefaultTags, Tag
-except ImportError:
-    from .utils.schema import Schema
-    from .utils.tags import DefaultTags, Tag
+from .utils.schema import DatasetSchema
+from .utils.tags import DefaultTags, Tag
 
-__all__ = ["Schema", "Tag", "DefaultTags"]
+__all__ = ["DatasetSchema", "Tag", "DefaultTags"]

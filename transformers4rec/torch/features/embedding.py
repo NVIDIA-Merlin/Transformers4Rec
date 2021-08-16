@@ -9,7 +9,7 @@ from transformers4rec.torch.utils.torch_utils import (
     get_output_sizes_from_schema,
 )
 
-from ...types import DefaultTags, Schema
+from ...types import DatasetSchema, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
 
 
@@ -126,7 +126,7 @@ class EmbeddingFeatures(TabularModule):
     @classmethod
     def from_schema(
         cls,
-        schema: Schema,
+        schema: DatasetSchema,
         embedding_dims=None,
         default_embedding_dim=64,
         infer_embedding_sizes=False,

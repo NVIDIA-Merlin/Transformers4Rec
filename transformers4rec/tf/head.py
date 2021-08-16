@@ -3,7 +3,7 @@ from typing import Dict, List, Optional, Text
 
 import tensorflow as tf
 
-from ..types import Schema
+from ..types import DatasetSchema
 from ..utils.tags import Tag
 
 
@@ -139,7 +139,7 @@ class Head(tf.keras.layers.Layer):
         self._task_weights = defaultdict(lambda: 1)
 
     @classmethod
-    def from_schema(cls, schema: Schema, add_logits=True, task_weights=None):
+    def from_schema(cls, schema: DatasetSchema, add_logits=True, task_weights=None):
         if task_weights is None:
             task_weights = {}
         to_return = cls()

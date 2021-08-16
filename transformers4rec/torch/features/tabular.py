@@ -1,6 +1,6 @@
 from typing import List
 
-from ...types import Schema, Tag
+from ...types import DatasetSchema, Tag
 from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular, TabularModule
 from ..utils.torch_utils import get_output_sizes_from_schema
@@ -46,7 +46,7 @@ class TabularFeatures(MergeTabular):
     @classmethod
     def from_schema(
         cls,
-        schema: Schema,
+        schema: DatasetSchema,
         continuous_tags=Tag.CONTINUOUS,
         categorical_tags=Tag.CATEGORICAL,
         aggregation=None,
