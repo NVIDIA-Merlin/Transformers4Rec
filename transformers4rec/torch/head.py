@@ -1,8 +1,10 @@
 from collections import defaultdict
-from typing import Dict, Optional, Text, Union
+from typing import Dict, List, Optional, Text, Union
 
 import torch
 import torchmetrics as tm
+
+from transformers4rec.torch.typing import BuildableBlock
 
 from ..types import DatasetSchema
 from ..utils.tags import Tag
@@ -15,18 +17,18 @@ class PredictionTask(torch.nn.Module):
         self,
         loss,
         metrics=None,
-        body: Optional[torch.nn.Module] = None,
+        target_name=None,
         forward_to_prediction_fn=lambda x: x,
         pre: Optional[torch.nn.Module] = None,
     ):
         super().__init__()
+        self.target_name = target_name
         self.forward_to_prediction_fn = forward_to_prediction_fn
         self.set_metrics(metrics)
         self.loss = loss
-        self.body = body
         self.pre = pre
 
-    def build(self, block, device=None):
+    def build(self, block, input_size, device=None):
         """
         The method will be called when block is convert to_model,
         i.e when linked to prediction head
@@ -42,8 +44,6 @@ class PredictionTask(torch.nn.Module):
 
     def forward(self, inputs, **kwargs):
         x = inputs
-        if self.body:
-            x = self.body(x)
         if self.pre:
             x = self.pre(x)
 
@@ -86,34 +86,50 @@ class PredictionTask(torch.nn.Module):
         for metric in self.metrics:
             metric.reset()
 
-    @staticmethod
-    def binary_classification_metrics():
-        return [
-            tm.Precision(num_classes=2),
-            tm.Recall(num_classes=2),
-            tm.Accuracy(),
-            # tm.AUC()
-        ]
 
-    @classmethod
-    def binary_classification(cls, metrics=None):
-        metrics = metrics or cls.binary_classification_metrics()
+class BinaryClassificationTask(PredictionTask):
+    DEFAULT_LOSS = torch.nn.BCELoss()
+    DEFAULT_METRICS = (
+        tm.Precision(num_classes=2),
+        tm.Recall(num_classes=2),
+        tm.Accuracy(),
+        # tm.AUC()
+    )
 
-        return cls(
-            loss=torch.nn.BCELoss(),
-            forward_to_prediction_fn=lambda x: torch.round(x).int(),
+    def __init__(self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None):
+        super().__init__(
+            loss=loss,
             metrics=metrics,
+            target_name=target_name,
+            forward_to_prediction_fn=lambda x: torch.round(x).int(),
         )
 
-    @staticmethod
-    def regression_metrics():
-        return [tm.regression.MeanSquaredError()]
+    def build(self, block, input_size, device=None):
+        super().build(block, input_size, device=device)
+        self.pre = torch.nn.Sequential(
+            torch.nn.Linear(input_size[-1], 1, bias=False),
+            torch.nn.Sigmoid(),
+            LambdaModule(lambda x: x.view(-1)),
+        )
 
-    @classmethod
-    def regression(cls, metrics=None):
-        metrics = metrics or [tm.regression.MeanSquaredError()]
 
-        return cls(loss=torch.nn.MSELoss(), metrics=metrics)
+class RegressionTask(PredictionTask):
+    DEFAULT_LOSS = torch.nn.MSELoss()
+    DEFAULT_METRICS = tm.regression.MeanSquaredError()
+
+    def __init__(self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None):
+        super().__init__(
+            loss=loss,
+            metrics=metrics,
+            target_name=target_name,
+            forward_to_prediction_fn=lambda x: torch.round(x).int(),
+        )
+
+    def build(self, block, input_size, device=None):
+        super().build(block, input_size, device=device)
+        self.pre = torch.nn.Sequential(
+            torch.nn.Linear(input_size[-1], 1), LambdaModule(lambda x: x.view(-1))
+        )
 
 
 class SequentialPredictionTask(PredictionTask):
@@ -193,12 +209,26 @@ class LambdaModule(torch.nn.Module):
 
 
 class Head(torch.nn.Module):
-    def __init__(self, input_size=None):
+    def __init__(
+        self,
+        body,
+        prediction_tasks: Optional[Union[List[PredictionTask], PredictionTask]] = None,
+        task_towers: Optional[Union[BuildableBlock, Dict[str, BuildableBlock]]] = None,
+        task_weights=None,
+        body_output_size=None,
+    ):
         super().__init__()
-        if isinstance(input_size, int):
-            input_size = [input_size]
-        self.input_size = input_size
-        self.tasks = torch.nn.ModuleDict()
+        if isinstance(body_output_size, int):
+            body_output_size = [body_output_size]
+        self.body_output_size = body_output_size
+        self.body = body
+        self.prediction_tasks = torch.nn.ModuleDict()
+        if prediction_tasks:
+            if not isinstance(prediction_tasks, list):
+                prediction_tasks = [prediction_tasks]
+            for i, task in enumerate(prediction_tasks):
+                self.prediction_tasks[task.target_name or str(i)] = task
+
         self._task_weights = defaultdict(lambda: 1)
 
     def build(self, input_size, device=None):
