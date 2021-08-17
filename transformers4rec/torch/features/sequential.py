@@ -1,9 +1,11 @@
-from typing import Dict
+from typing import Dict, Optional
 
 import torch
 
+from transformers4rec.torch.masking import masking_registry
 from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
 
+from ...types import DatasetSchema, Tag
 from ..block.mlp import MLPBlock
 from ..tabular import TabularModule
 from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
@@ -30,6 +32,105 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
 
 class SequentialTabularFeatures(TabularFeatures):
     EMBEDDING_MODULE_CLASS = SequentialEmbeddingFeatures
+
+    def __init__(
+        self,
+        continuous_module=None,
+        categorical_module=None,
+        text_embedding_module=None,
+        projection_module=None,
+        masking=None,
+        aggregation=None,
+    ):
+        super().__init__(continuous_module, categorical_module, text_embedding_module, aggregation)
+        if masking:
+            self.masking = masking
+        self.projection_module = projection_module
+
+    @classmethod
+    def from_schema(
+        cls,
+        schema: DatasetSchema,
+        continuous_tags=Tag.CONTINUOUS,
+        categorical_tags=Tag.CATEGORICAL,
+        aggregation=None,
+        automatic_build=True,
+        max_sequence_length=None,
+        continuous_projection=None,
+        projection=None,
+        d_output=None,
+        masking=None,
+        **kwargs
+    ):
+        output = super().from_schema(
+            schema,
+            continuous_tags,
+            categorical_tags,
+            aggregation,
+            automatic_build,
+            max_sequence_length,
+            continuous_projection,
+            **kwargs
+        )
+        if (projection or masking or d_output) and not aggregation:
+            # TODO: print warning here for clarity
+            output.aggregation = "sequential_concat"
+        hidden_size = output.output_size()
+
+        if d_output and not projection:
+            projection = MLPBlock([d_output])
+        if projection and hasattr(projection, "build"):
+            projection = projection.build(hidden_size)
+        if projection:
+            output.projection_module = projection
+            hidden_size = projection.output_size()
+
+        if isinstance(masking, str):
+            masking = masking_registry.parse(masking)(hidden_size=hidden_size[-1], **kwargs)
+        output.masking = masking
+
+        return output
+
+    @property
+    def masking(self):
+        return self._masking
+
+    @masking.setter
+    def masking(self, value):
+        if value and not getattr(self.categorical_module, "item_id", None):
+            raise ValueError("For masking a categorical_module is required including an item_id.")
+
+        self._masking = value
+
+    @property
+    def item_id(self) -> Optional[str]:
+        if "categorical_module" in self.to_merge:
+            return getattr(self.to_merge["categorical_module"], "item_id", None)
+
+        return None
+
+    @property
+    def item_embedding_table(self) -> Optional[torch.nn.Module]:
+        if "categorical_module" in self.to_merge:
+            return getattr(self.to_merge["categorical_module"], "item_embedding_table", None)
+
+        return None
+
+    def forward(self, inputs, training=True):
+        outputs = super(SequentialTabularFeatures, self).forward(inputs)
+
+        if self.masking or self.projection_module:
+            outputs = self.aggregation(outputs)
+
+        if self.projection_module:
+            outputs = self.projection_module(outputs)
+
+        if self.masking:
+            return self.masking(
+                outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
+            )
+
+        return outputs
 
     def project_continuous_features(self, dimensions):
         if isinstance(dimensions, int):
