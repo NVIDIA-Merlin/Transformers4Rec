@@ -1,8 +1,10 @@
 import abc
 import inspect
+from collections import OrderedDict
 from typing import Optional, Union
 
 import torch
+from torch.nn import Module
 
 from transformers4rec.torch.typing import MaskSequence
 
@@ -48,6 +50,31 @@ class Block(BlockMixin, torch.nn.Module):
 
 
 class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
+    def __init__(self, *args):
+        super().__init__()
+        if len(args) == 1 and isinstance(args[0], OrderedDict):
+            last = None
+            for key, module in args[0].items():
+                self.add_module_and_maybe_build(key, module, last)
+                last = module
+        else:
+            last = None
+            for idx, module in enumerate(args):
+                self.add_module_and_maybe_build(str(idx), module, last)
+                last = module
+
+    def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
+        if isinstance(module, list):
+            module = FilterFeatures(module)
+        super().add_module(name, module)
+
+    def add_module_and_maybe_build(self, name: str, module, parent) -> None:
+        # Check if module needs to be built
+        if getattr(parent, "output_size", None) and getattr(module, "build", None):
+            module = module.build(parent.output_size())
+
+        self.add_module(name, module)
+
     def __rrshift__(self, other):
         return right_shift_block(self, other)
 
@@ -101,6 +128,10 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
         return children
 
 
+def build_blocks(*modules):
+    return list(SequentialBlock(*modules))
+
+
 class BuildableBlock(abc.ABC):
     @abc.abstractmethod
     def build(self, input_shape) -> Union[TabularBlock, Block, SequentialBlock]:
@@ -108,6 +139,15 @@ class BuildableBlock(abc.ABC):
 
     def __rrshift__(self, other):
         return right_shift_block(self, other)
+
+    def to_module(self, shape_or_module):
+        shape = shape_or_module
+        if isinstance(shape_or_module, torch.nn.Module):
+            shape = getattr(shape_or_module, "output_size", None)
+            if shape:
+                shape = shape()
+
+        return self.build(shape)
 
 
 BlockType = Union[torch.nn.Module, Block]
