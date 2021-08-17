@@ -40,3 +40,19 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, torch_yoo
     assert len(outputs.keys()) == 3
     assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
     assert all(tensor.shape[1] == 20 for tensor in outputs.values())
+
+
+def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoochoose_like):
+    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=100,
+        masking="causal",
+    )
+
+    outputs = input_module(torch_yoochoose_like)
+
+    assert len(outputs.keys()) == 3
+    assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
+    assert all(tensor.shape[1] == 20 for tensor in outputs.values())

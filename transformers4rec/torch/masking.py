@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from dataclasses import dataclass
-
 import torch
 from torch import nn
 
@@ -25,28 +23,6 @@ masking_registry = Registry("torch.masking")
 
 MaskingSchema = torch.Tensor
 MaskedTargets = torch.Tensor
-
-
-@dataclass
-class MaskedSequence:
-    """
-    Class to store the masked inputs, labels and boolean masking scheme
-    resulting from the related LM task.
-
-    Parameters
-    ----------
-        masked_input: the masked interactions tensor
-        masked_label: the masked sequence of item ids
-        mask_schema: the boolean mask indicating the position of masked items
-        plm_target_mapping: boolean mapping needed by XLNET-PLM
-        plm_perm_mask:  boolean mapping needed by XLNET-PLM
-    """
-
-    masked_input: torch.Tensor
-    masked_label: torch.Tensor
-    mask_schema: torch.Tensor
-    plm_target_mapping: torch.Tensor = None
-    plm_perm_mask: torch.Tensor = None
 
 
 class MaskSequence(_MaskSequence, nn.Module):
