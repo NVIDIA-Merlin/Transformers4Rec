@@ -68,7 +68,8 @@ class FeatureConfig:
 
 class SoftEmbedding(torch.nn.Module):
     """
-    Soft-one hot encoding embedding, from https://arxiv.org/pdf/1708.00065.pdf
+    Soft-one hot encoding embedding technique, from https://arxiv.org/pdf/1708.00065.pdf
+    In a nutshell, it represents a continuous feature as a weighted average of embeddings
     """
 
     def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
@@ -76,7 +77,7 @@ class SoftEmbedding(torch.nn.Module):
 
         Parameters
         ----------
-        num_embeddings: Number of embeddings to use.
+        num_embeddings: Number of embeddings to use (cardinality of the embedding table).
         embeddings_dim: The dimension of the vector space for projecting the scalar value.
         embeddings_init_std: The standard deviation factor for normal initialization of the
             embedding matrix weights.
@@ -136,17 +137,48 @@ class EmbeddingFeatures(TabularModule):
     def from_schema(
         cls,
         schema: DatasetSchema,
-        embedding_dims=None,
-        default_embedding_dim=64,
-        infer_embedding_sizes=False,
-        combiner="mean",
-        tags=None,
-        item_id=None,
-        automatic_build=True,
-        max_sequence_length=None,
-        continuous_soft_embeddings_shape=None,
+        embedding_dims: Optional[Dict[str, int]] = None,
+        default_embedding_dim: Optional[int] = 64,
+        infer_embedding_sizes: bool = False,
+        combiner: Optional[str] = "mean",
+        tags: Optional[Union[DefaultTags, list, str]] = None,
+        item_id: Optional[str] = None,
+        automatic_build: bool = True,
+        max_sequence_length: Optional[int] = None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
+        """Instantitates ``EmbeddingFeatures`` from a ``DatasetSchema``.
+
+        Parameters
+        ----------
+        schema : DatasetSchema
+            Dataset schema
+        embedding_dims : Optional[Dict[str, int]], optional
+            The dimension of the embedding table for each feature (key),
+            by default None by default None
+        default_embedding_dim : Optional[int], optional
+            Default dimension of the embedding table, when the feature is not found
+            in ``default_soft_embedding_dim``, by default 64
+        infer_embedding_sizes : bool, optional
+            Automatically defines the embedding dimension from the
+            feature cardinality in the schema,
+            by default False
+        combiner : Optional[str], optional
+            Feature aggregation option, by default "mean"
+        tags : Optional[Union[DefaultTags, list, str]], optional
+            Tags to filter columns, by default None
+        item_id : Optional[str], optional
+            Name of the item id column (feature), by default None
+        automatic_build : bool, optional
+            Automatically infers input size from features, by default True
+        max_sequence_length : Optional[int], optional
+            Maximum sequence length for list features,, by default None
+
+        Returns
+        -------
+        Optional[EmbeddingFeatures]
+            Returns the ``EmbeddingFeatures`` for the dataset schema
+        """
         # TODO: propogate item-id from ITEM_ID tag
 
         if tags:
@@ -304,38 +336,77 @@ class EmbeddingFeatures(TabularModule):
 
 
 class SoftEmbeddingFeatures(EmbeddingFeatures):
+    """
+    Encapsulate continuous features encoded using the Soft-one hot encoding
+    embedding technique (SoftEmbedding),    from https://arxiv.org/pdf/1708.00065.pdf
+    In a nutshell, it keeps an embedding table for each continuous feature,
+    which is represented as a weighted average of embeddings.
+    """
+
     @classmethod
     def from_schema(
         cls,
         schema: DatasetSchema,
-        soft_embedding_cardinalities=None,
-        default_soft_embedding_cardinality=10,
-        soft_embedding_dims=None,
-        default_soft_embedding_dim=8,
-        combiner="mean",
-        tags=None,
-        automatic_build=True,
-        max_sequence_length=None,
+        soft_embedding_cardinalities: Optional[Dict[str, int]] = None,
+        default_soft_embedding_cardinality: Optional[int] = 10,
+        soft_embedding_dims: Optional[Dict[str, int]] = None,
+        default_soft_embedding_dim: Optional[int] = 8,
+        combiner: Optional[str] = "mean",
+        tags: Optional[Union[DefaultTags, list, str]] = None,
+        automatic_build: bool = True,
+        max_sequence_length: Optional[int] = None,
         **kwargs
     ) -> Optional["SoftEmbeddingFeatures"]:
+        """
+        Instantitates ``SoftEmbeddingFeatures`` from a ``DatasetSchema``.
+
+        Parameters
+        ----------
+        schema : DatasetSchema
+            Dataset schema
+        soft_embedding_cardinalities : Optional[Dict[str, int]], optional
+            The cardinality of the embedding table for each feature (key),
+            by default None
+        default_soft_embedding_cardinality : Optional[int], optional
+            Default cardinality of the embedding table, when the feature
+            is not found in ``soft_embedding_cardinalities``, by default 10
+        soft_embedding_dims : Optional[Dict[str, int]], optional
+            The dimension of the embedding table for each feature (key), by default None
+        default_soft_embedding_dim : Optional[int], optional
+            Default dimension of the embedding table, when the feature
+            is not found in ``default_soft_embedding_dim``, by default 8
+        combiner : Optional[str], optional
+            Feature aggregation option, by default "mean"
+        tags : Optional[Union[DefaultTags, list, str]], optional
+            Tags to filter columns, by default None
+        automatic_build : bool, optional
+            Automatically infers input size from features, by default True
+        max_sequence_length : Optional[int], optional
+            Maximum sequence length for list features, by default None
+
+        Returns
+        -------
+        Optional[SoftEmbeddingFeatures]
+            Returns a ``SoftEmbeddingFeatures`` instance from the dataset schema
+        """
         # TODO: propogate item-id from ITEM_ID tag
 
         if tags:
             schema = schema.select_by_tag(tags)
 
-            soft_embedding_cardinalities = soft_embedding_cardinalities or {}
-            soft_embedding_dims = soft_embedding_dims or {}
+        soft_embedding_cardinalities = soft_embedding_cardinalities or {}
+        soft_embedding_dims = soft_embedding_dims or {}
 
-            sizes = {}
-            cardinalities = schema.cardinalities()
-            for col_name in schema.column_names:
-                # If this is NOT a categorical feature
-                if col_name not in cardinalities:
-                    embedding_size = soft_embedding_dims.get(col_name, default_soft_embedding_dim)
-                    cardinality = soft_embedding_cardinalities.get(
-                        col_name, default_soft_embedding_cardinality
-                    )
-                    sizes[col_name] = (cardinality, embedding_size)
+        sizes = {}
+        cardinalities = schema.cardinalities()
+        for col_name in schema.column_names:
+            # If this is NOT a categorical feature
+            if col_name not in cardinalities:
+                embedding_size = soft_embedding_dims.get(col_name, default_soft_embedding_dim)
+                cardinality = soft_embedding_cardinalities.get(
+                    col_name, default_soft_embedding_cardinality
+                )
+                sizes[col_name] = (cardinality, embedding_size)
 
         feature_config: Dict[str, FeatureConfig] = {}
         for name, (vocab_size, dim) in sizes.items():
