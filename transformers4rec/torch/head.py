@@ -8,8 +8,6 @@ from transformers4rec.torch.typing import BuildableBlock
 
 from ..types import DatasetSchema
 from ..utils.tags import Tag
-from .features.embedding import EmbeddingFeatures
-from .tabular import MergeTabular
 
 
 class PredictionTask(torch.nn.Module):
@@ -20,8 +18,10 @@ class PredictionTask(torch.nn.Module):
         target_name=None,
         forward_to_prediction_fn=lambda x: x,
         pre: Optional[torch.nn.Module] = None,
+        summary_type="first",
     ):
         super().__init__()
+        self.summary_type = summary_type
         self.target_name = target_name
         self.forward_to_prediction_fn = forward_to_prediction_fn
         self.set_metrics(metrics)
@@ -45,6 +45,11 @@ class PredictionTask(torch.nn.Module):
     def forward(self, inputs, **kwargs):
         x = inputs
         if self.pre:
+            if len(x.size()) == 3:
+                # TODO: Implement this properly
+                pass
+            if self.pre:
+                x = self.pre(x)
             x = self.pre(x)
 
         return x
@@ -96,11 +101,14 @@ class BinaryClassificationTask(PredictionTask):
         # tm.AUC()
     )
 
-    def __init__(self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None):
+    def __init__(
+        self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None, summary_type="first"
+    ):
         super().__init__(
             loss=loss,
             metrics=metrics,
             target_name=target_name,
+            summary_type=summary_type,
             forward_to_prediction_fn=lambda x: torch.round(x).int(),
         )
 
@@ -117,11 +125,14 @@ class RegressionTask(PredictionTask):
     DEFAULT_LOSS = torch.nn.MSELoss()
     DEFAULT_METRICS = tm.regression.MeanSquaredError()
 
-    def __init__(self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None):
+    def __init__(
+        self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None, summary_type="first"
+    ):
         super().__init__(
             loss=loss,
             metrics=metrics,
             target_name=target_name,
+            summary_type=summary_type,
             forward_to_prediction_fn=lambda x: torch.round(x).int(),
         )
 
@@ -132,80 +143,161 @@ class RegressionTask(PredictionTask):
         )
 
 
-class SequentialPredictionTask(PredictionTask):
+class ItemPredictionTask(PredictionTask):
     def __init__(
         self,
         loss,
         metrics=None,
-        body: Optional[torch.nn.Module] = None,
         pre: Optional[torch.nn.Module] = None,
-        forward_to_prediction_fn=lambda x: x,
-        mf_constrained_embeddings: bool = True,
-        item_id_name: str = None,
-        item_embedding_table: Optional[torch.nn.Module] = None,
-        output_layer_bias: Optional[torch.nn.Parameter] = None,
-        input_size: int = None,
-        vocab_size: int = None,
+        weight_tying: bool = True,
+        softmax_temperature: float = 1,
+        pad_token: int = 0,
+        target_dim: int = None,
+        hf_format=False,
     ):
-        super(SequentialPredictionTask, self).__init__(
-            loss=loss,
-            metrics=metrics,
-            body=body,
-            forward_to_prediction_fn=forward_to_prediction_fn,
+        """
+        It supports three sequential-based and session-based tasks :
+            - session-level classification and regression
+            - item prediction task
+        Parameters:
+        ----------
+            loss :  the loss function to use.
+            metrics: list of ranking metrics to use for evaluation.
+            body: network to transform input tensor before computing predictions.
+            pred: classifier network to compute the item predictions probabilities.
+            weight_tying: the item id embedding table weights are shared
+                        with the prediction network layer.
+            softmax_temperature: Softmax temperature, used to reduce model overconfidence,
+                        so that softmax(logits / T). Value 1.0 reduces to regular softmax.
+            pad_token: pad token id.
+            target_dim: vocabulary size of item ids
+            HF_format: output the dictionary of outputs needed by RecSysTrained,
+                        if set to False, return the predictions tensor.
+        """
+        super().__init__(loss=loss, metrics=metrics, pre=pre)
+        self.pre = pre
+        self.softmax_temperature = softmax_temperature
+        self.weight_tying = weight_tying
+        self.pad_token = pad_token
+        self.target_dim = target_dim
+        self.hf_format = hf_format
+
+        self.item_embedding_table = None
+
+    def build(self, block, input_size, device=None):
+        # Retrieve the embedding module to get the name of itemid col and its related table
+
+        # TODO: retrieve embeddings
+        embeddings = block.inputs.categorical_module
+        self.itemid_name = embeddings.item_id
+        if not self.target_dim:
+            self.target_dim = embeddings.item_vocab_size
+        if self.weight_tying:
+            self.item_embedding_table = embeddings.embedding_tables[self.itemid_name]
+
+        # Retrieve the masking if used in the model block
+        self.masking = block.inputs.masking
+        if self.masking:
+            self.pad_token = self.masking.pad_token
+
+        self.pre = _ItemPredictionTask(
+            input_size=input_size,
+            target_dim=self.target_dim,
+            weight_tying=self.weight_tying,
+            item_embedding_table=self.item_embedding_table,
+            softmax_temperature=self.softmax_temperature,
         )
 
-        self.mf_constrained_embeddings = mf_constrained_embeddings
-        self.vocab_size = vocab_size
-        self.input_size = input_size
-
-        self.item_embedding_table = item_embedding_table
-        self.output_layer_bias = output_layer_bias
-
-        self.pre = pre
-        self.itemid_name = item_id_name
-
-    def build(self, block, device=None):
-        # Retrieve item embedding table
-        for layer in block.children():
-            if isinstance(layer, MergeTabular):
-                for feature in layer.to_merge:
-                    if isinstance(feature, EmbeddingFeatures):
-                        if self.itemid_name in feature.embedding_tables:
-                            item_embedding_table = feature.embedding_tables[self.itemid_name]
-        if not self.vocab_size:
-            self.vocab_size = item_embedding_table.weight.size(0)
-        self.item_embedding_table = item_embedding_table
-        self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.vocab_size))
-        torch.nn.init.zeros_(self.output_layer_bias)
-        super(SequentialPredictionTask, self).build(block)
+        super().build(block, input_size, device=device)
 
     def forward(self, inputs, **kwargs):
         x = inputs.float()
         if self.body:
             x = self.body(x)
 
-        if self.mf_constrained_embeddings:
-            x = torch.nn.functional.linear(
-                x,
-                weight=self.item_embedding_table.weight.float(),
-                bias=self.output_layer_bias,
-            )
+        # Retrieve labels either from masking or input module
+        if self.masking:
+            labels = self.masking.masked_targets
+        else:
+            labels = self.embeddings.item_seq
 
-        if self.pre:
-            x = self.pre(x)
+        # remove padded items
+        trg_flat = labels.flatten()
+        non_pad_mask = trg_flat != self.pad_token
+        labels_all = torch.masked_select(trg_flat, non_pad_mask)
+        x = self.remove_pad_3d(x, non_pad_mask)
+
+        # Compute predictions probs
+        x = self.pred(x)
+
+        # prepare outputs for HF trainer
+        if self.hf_format:
+            loss = self.loss(x, labels_all)
+            return {
+                "loss": loss,
+                "labels": labels_all,
+                "predictions": x,
+                "pred_metadata": {},
+                "model_outputs": [],
+            }
+            # TODO: Add model_outputs and metadata
+
         return x
 
+    def remove_pad_3d(self, inp_tensor, non_pad_mask):
+        # inp_tensor: (n_batch x seqlen x emb_dim)
+        inp_tensor = inp_tensor.flatten(end_dim=1)
+        inp_tensor_fl = torch.masked_select(
+            inp_tensor, non_pad_mask.unsqueeze(1).expand_as(inp_tensor)
+        )
+        out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
+        return out_tensor
 
-class LambdaModule(torch.nn.Module):
-    def __init__(self, lambd):
+
+class _ItemPredictionTask(torch.nn.Module):
+    def __init__(
+        self,
+        input_size: int,
+        target_dim: int,
+        weight_tying: bool = False,
+        item_embedding_table: Optional[torch.nn.Module] = None,
+        softmax_temperature: float = 0,
+    ):
         super().__init__()
-        import types
+        self.input_size = input_size
+        self.target_dim = target_dim
+        self.weight_tying = weight_tying
+        self.item_embedding_table = item_embedding_table
+        self.softmax_temperature = softmax_temperature
+        self.log_softmax = torch.nn.LogSoftmax(dim=-1)
 
-        assert isinstance(lambd, types.LambdaType)
-        self.lambd = lambd
+        if self.weight_tying:
+            self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.target_dim))
+            torch.nn.init.zeros_(self.output_layer_bias)
+        else:
+            self.output_layer = torch.nn.Linear(self.input_size, self.target_dim)
 
-    def forward(self, x):
-        return self.lambd(x)
+    def forward(self, inputs):
+        if self.weight_tying:
+            logits = torch.nn.functional.linear(
+                inputs,
+                weight=self.item_embedding_table.weight,
+                bias=self.output_layer_bias,
+            )
+        else:
+            logits = self.output_layer(inputs)
+
+        if self.softmax_temperature:
+            # Softmax temperature to reduce model overconfidence
+            # and better calibrate probs and accuracy
+            logits = torch.div(logits, self.softmax_temperature)
+
+        predictions = self.log_softmax(logits)
+
+        return predictions
+
+    def _get_name(self):
+        return "ItemPredictionTask"
 
 
 class Head(torch.nn.Module):
@@ -239,24 +331,20 @@ class Head(torch.nn.Module):
         self.input_size = input_size
 
     @classmethod
-    def from_schema(
-        cls, schema: DatasetSchema, add_logits=True, task_weights=None, input_size=None
-    ):
+    def from_schema(cls, schema: DatasetSchema, body, task_weights=None, input_size=None):
         if task_weights is None:
             task_weights = {}
-        to_return = cls(input_size=input_size)
+        to_return = cls(body, body_output_size=input_size)
 
         for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
-            to_return = to_return.add_binary_classification_task(
-                binary_target,
-                add_logit_layer=add_logits,
+            to_return = to_return.add_task(
+                BinaryClassificationTask(binary_target),
                 task_weight=task_weights.get(binary_target, 1),
             )
 
         for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
-            to_return = to_return.add_regression_task(
-                regression_target,
-                add_logit_layer=add_logits,
+            to_return = to_return.add_task(
+                RegressionTask(regression_target),
                 task_weight=task_weights.get(regression_target, 1),
             )
 
@@ -266,43 +354,13 @@ class Head(torch.nn.Module):
 
     def add_task(
         self,
-        target_name,
         task: PredictionTask,
-        pre: Optional[torch.nn.Module] = None,
         task_weight=1,
     ):
-        self.tasks[target_name] = task
-        if pre:
-            self._tasks_prepares[target_name] = pre
+        key = task.target_name
+        self.tasks[key] = task
         if task_weight:
-            self._task_weights[target_name] = task_weight
-
-        return self
-
-    def add_binary_classification_task(self, target_name, add_logit_layer=True, task_weight=1):
-        self.tasks[target_name] = PredictionTask.binary_classification()
-
-        if add_logit_layer:
-            self.tasks[target_name].pre = torch.nn.Sequential(
-                torch.nn.Linear(self.input_size[-1], 1, bias=False),
-                torch.nn.Sigmoid(),
-                LambdaModule(lambda x: x.view(-1)),
-            )
-
-        if task_weight:
-            self._task_weights[target_name] = task_weight
-
-        return self
-
-    def add_regression_task(self, target_name, add_logit_layer=True, task_weight=1):
-        self.tasks[target_name] = PredictionTask.regression()
-
-        if add_logit_layer:
-            self.tasks[target_name].pre = torch.nn.Sequential(
-                torch.nn.Linear(self.input_size[-1], 1), LambdaModule(lambda x: x.view(-1))
-            )
-        if task_weight:
-            self._task_weights[target_name] = task_weight
+            self._task_weights[key] = task_weight
 
         return self
 
@@ -354,6 +412,18 @@ class Head(torch.nn.Module):
     def reset_metrics(self):
         for task in self.tasks.values():
             task.reset_metrics()
+
+
+class LambdaModule(torch.nn.Module):
+    def __init__(self, lambd):
+        super().__init__()
+        import types
+
+        assert isinstance(lambd, types.LambdaType)
+        self.lambd = lambd
+
+    def forward(self, x):
+        return self.lambd(x)
 
 
 def _output_metrics(metrics):
