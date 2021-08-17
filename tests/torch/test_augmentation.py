@@ -12,5 +12,8 @@ def test_stochastic_swap_noise(yoochoose_schema, torch_yoochoose_like):
     out = tab_module(torch_yoochoose_like)
     out_aug = block(torch_yoochoose_like)
 
+    replacement_rate = (out["item_id/list"] == out_aug["item_id/list"]).double().mean()
+    assert replacement_rate == pytest.approx(0.5, 0.1)
+
     assert not pytorch.equal(out["item_id/list"], out_aug["item_id/list"])
     assert not pytorch.equal(out["category/list"], out_aug["category/list"])

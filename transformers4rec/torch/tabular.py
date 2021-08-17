@@ -36,6 +36,11 @@ class TabularMixin:
             pre = FilterFeatures(filter_columns)
         if pre:
             inputs = pre(inputs)
+
+        if augmentation:
+            augmentation = aug.augmentation_registry.parse(augmentation)
+            inputs = augmentation(inputs)
+
         outputs = super().__call__(inputs, *args, **kwargs)  # noqa
 
         if merge_with:
@@ -44,10 +49,6 @@ class TabularMixin:
             for layer_or_tensor in merge_with:
                 to_add = layer_or_tensor(inputs) if callable(layer_or_tensor) else layer_or_tensor
                 outputs.update(to_add)
-
-        if augmentation:
-            augmentation = aug.augmentation_registry.parse(augmentation)
-            outputs = augmentation(outputs)
 
         if post_op:
             outputs = post_op(outputs)
