@@ -6,12 +6,11 @@ from transformers import GPT2Model, PreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence, PermutationLanguageModeling
-from .base import Block
 
 TransformerBody = Union[str, PreTrainedModel, T4RecConfig]
 
 
-class TransformerBlock(Block):
+class TransformerBlock(torch.nn.Module):
     """
     Class to support HF Transformers for session-based and sequential-based recommendation models.
 
@@ -107,15 +106,13 @@ class TransformerBlock(Block):
     def _get_name(self):
         return "TansformerBlock"
 
+    def forward_output_size(self, input_size):
+        assert len(input_size) == 3
+        return torch.Size([input_size[0], input_size[1], self.transformer.config.hidden_size])
+
     # TODO: Implement output-size based on the body
     # def output_size(self):
     #     if len(input_shape) == 3:
     #         return torch.Size([input_shape[0], input_shape[1], dense_output_size])
     #
     #     return torch.Size([input_shape[0], dense_output_size])
-    #
-    # def forward_output_size(self, input_size):
-    #     if len(input_size) == 3:
-    #         return torch.Size([input_size[0], input_size[1], dense_output_size])
-    #
-    #     return torch.Size([input_size[0], dense_output_size])
