@@ -5,9 +5,8 @@ import torch
 from transformers import GPT2Model, PreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
-from ..masking import PermutationLanguageModeling
+from ..masking import MaskSequence, PermutationLanguageModeling
 from .base import Block
-from .masking import MaskingBlock
 
 TransformerBody = Union[str, PreTrainedModel, T4RecConfig]
 
@@ -30,7 +29,8 @@ class TransformerBlock(Block):
     def __init__(
         self,
         transformer: TransformerBody = "xlnet",
-        masking: Optional[MaskingBlock] = None,
+        masking: Optional[MaskSequence] = None,
+        device: str = "cpu",
     ):
         super().__init__()
 
@@ -39,6 +39,7 @@ class TransformerBlock(Block):
 
         self.transformer = transformer
         self.masking = masking
+        self.device = device
 
     @classmethod
     def from_registry(
@@ -48,7 +49,7 @@ class TransformerBlock(Block):
         n_head: int,
         n_layer: int,
         total_seq_length: int,
-        masking: Optional[MaskingBlock] = None,
+        masking: Optional[MaskSequence] = None,
     ):
         transformer = transformer_registry.parse(transformer).build(
             d_model=d_model,
@@ -85,14 +86,14 @@ class TransformerBlock(Block):
             )
             if not check:
                 raise ValueError(
-                    "Permutation Language Modeling requires the parameters"
-                    "['target_mapping', 'perm_mask'] in the transformer signature"
+                    "Permutation Language Modeling requires the parameters "
+                    "['target_mapping', 'perm_mask'] in the %s signature" % type(self.transformer)
                 )
 
             model_outputs = self.transformer(
                 inputs_embeds=inputs,
-                target_mapping=self.masking_block.masking.plm_target_mapping,
-                perm_mask=self.masking_block.masking.plm_perm_mask,
+                target_mapping=self.masking.plm_target_mapping,
+                perm_mask=self.masking.plm_perm_mask,
             )
 
         else:

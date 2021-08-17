@@ -87,9 +87,13 @@ class SequentialTabularFeatures(TabularFeatures):
 
         if isinstance(masking, str):
             masking = masking_registry.parse(masking)(hidden_size=hidden_size[-1], **kwargs)
-        output.masking = masking
 
+        output.masking = masking
+        # output.hidden_size = hidden_size
         return output
+
+    # @hidden_size.setter
+    # def masking(self, value):
 
     @property
     def masking(self):
@@ -126,7 +130,7 @@ class SequentialTabularFeatures(TabularFeatures):
             outputs = self.projection_module(outputs)
 
         if self.masking:
-            return self.masking(
+            outputs = self.masking(
                 outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
             )
 
@@ -144,3 +148,15 @@ class SequentialTabularFeatures(TabularFeatures):
         self.to_merge["continuous_module"] = continuous
 
         return self
+
+    def forward_output_size(self, input_size):
+        output_sizes = {}
+        for in_layer in self.merge_values:
+            output_sizes.update(in_layer.forward_output_size(input_size))
+
+        output_sizes = TabularModule.forward_output_size(self, output_sizes)
+
+        if self.projection_module:
+            output_sizes = self.projection_module.output_size()
+
+        return output_sizes
