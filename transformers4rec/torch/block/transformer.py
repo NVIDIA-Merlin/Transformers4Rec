@@ -63,6 +63,20 @@ class TransformerBlock(torch.nn.Module):
             transformer = transformer.to_torch_model()
 
         self.transformer = transformer
+
+        if masking:
+            required = list(masking.transformer_required_arguments().keys())
+            check = all(
+                param in inspect.signature(self.transformer.forward).parameters
+                for param in required
+            )
+            if not check:
+                raise ValueError(
+                    f"{masking.__class__.__name__} requires the parameters: "
+                    f"{', '.join(required)} "
+                    f"in the {type(self.transformer)} signature"
+                )
+
         self.masking = masking
         self.prepare_module = prepare_module
         if not prepare_module and self.transformer in self.TRANSFORMER_TO_PREPARE:
@@ -114,9 +128,12 @@ class TransformerBlock(torch.nn.Module):
         if self.prepare_module:
             transformer_kwargs = self.prepare_module(inputs_embeds)
         if self.masking:
-            to_forward = self.masking.transformer_prepare()
-            if to_forward:
-                transformer_kwargs.update(to_forward)
+            required = self.masking.transformer_required_arguments()
+            if required:
+                transformer_kwargs.update(required)
+            optional = self.masking.transformer_optional_arguments()
+            if optional:
+                transformer_kwargs.update(optional)
 
         filtered_transformer_kwargs = {}
         for param in inspect.signature(self.transformer.forward).parameters:

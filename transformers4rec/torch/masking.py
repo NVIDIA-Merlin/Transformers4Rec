@@ -62,7 +62,10 @@ class MaskSequence(_MaskSequence, nn.Module):
         self.compute_masked_targets(item_ids=item_ids, training=training)
         return self.apply_mask_to_inputs(inputs, self.mask_schema)
 
-    def transformer_prepare(self):
+    def transformer_required_arguments(self):
+        return {}
+
+    def transformer_optional_arguments(self):
         return {}
 
 
@@ -460,7 +463,7 @@ class PermutationLanguageModeling(MaskSequence):
         )
         return inputs
 
-    def transformer_prepare(self):
+    def transformer_required_arguments(self):
         return dict(target_mapping=self.target_mapping, perm_mask=self.perm_mask)
 
 

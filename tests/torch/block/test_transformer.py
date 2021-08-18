@@ -99,9 +99,8 @@ def test_plm_wrong_transformer(yoochoose_schema, torch_yoochoose_like):
 
         block(torch_yoochoose_like)
 
-    assert (
-        "Permutation Language Modeling requires the parameters ['target_mapping', 'perm_mask']"
-        in str(excinfo.value)
+    assert "PermutationLanguageModeling requires the parameters: target_mapping, perm_mask" in str(
+        excinfo.value
     )
 
 
