@@ -56,3 +56,34 @@ def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoocho
     assert outputs.ndim == 3
     assert outputs.shape[-1] == 100
     assert outputs.shape[1] == 20
+
+
+def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
+    with pytest.raises(ValueError) as excinfo:
+
+        yoochoose_schema = yoochoose_schema - ["item_id/list"]
+
+        torch4rec.SequentialTabularFeatures.from_schema(
+            yoochoose_schema,
+            max_sequence_length=20,
+            continuous_projection=64,
+            d_output=100,
+            masking="causal",
+        )
+
+    assert "For masking a categorical_module is required including an item_id" in str(excinfo.value)
+
+
+def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_schema):
+    with pytest.raises(ValueError) as excinfo:
+
+        torch4rec.SequentialTabularFeatures.from_schema(
+            yoochoose_schema,
+            max_sequence_length=20,
+            continuous_projection=64,
+            d_output=100,
+            projection=torch4rec.MLPBlock([64]),
+            masking="causal",
+        )
+
+    assert "You cannot specify both d_output and projection at the same time" in str(excinfo.value)
