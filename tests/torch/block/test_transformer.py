@@ -25,7 +25,6 @@ def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
         col_group,
         max_sequence_length=20,
         aggregation="sequential_concat",
-        # d_output=64,
         masking=task,
     )
 
@@ -33,10 +32,10 @@ def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
         d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
 
-    block = (
-        tab_module
-        >> torch4rec.MLPBlock([64])
-        >> torch4rec.TransformerBlock(transformer=transformer_config, masking=tab_module.masking)
+    block = torch4rec.SequentialBlock(
+        tab_module,
+        torch4rec.MLPBlock([64]),
+        torch4rec.TransformerBlock(transformer=transformer_config, masking=tab_module.masking),
     )
 
     outputs = block(torch_yoochoose_like)
