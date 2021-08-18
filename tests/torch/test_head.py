@@ -24,9 +24,31 @@ def test_simple_heads(yoochoose_schema, torch_yoochoose_like, task):
     head = task("target").to_head(body, input_module)
 
     body_out = body(torch_yoochoose_like)
-    outputs, loss = head(body_out), head.compute_loss(body_out, targets)
+    loss = head.compute_loss(body_out, targets)
 
-    assert outputs.min() >= 0 and outputs.max() <= 1
+    assert loss.min() >= 0 and loss.max() <= 1
+
+
+def test_head_with_multiple_tasks(yoochoose_schema, torch_yoochoose_like):
+    input_module = torch4rec.TabularFeatures.from_schema(
+        yoochoose_schema, max_sequence_length=20, continuous_projection=64, aggregation="concat"
+    )
+
+    targets = {
+        "classification": pytorch.randint(2, (100,)).float(),
+        "regression": pytorch.randint(2, (100,)).float(),
+    }
+
+    body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
+    tasks = [
+        torch4rec.BinaryClassificationTask("classification"),
+        torch4rec.RegressionTask("regression"),
+    ]
+    head = torch4rec.Head(body, tasks, inputs=input_module)
+
+    body_out = body(torch_yoochoose_like)
+    loss = head.compute_loss(body_out, targets)
+
     assert loss.min() >= 0 and loss.max() <= 1
 
 

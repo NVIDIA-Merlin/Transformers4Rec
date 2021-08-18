@@ -391,7 +391,7 @@ class Head(torch.nn.Module):
             loss = task.compute_loss(body_outputs, targets, **kwargs)
             losses.append(loss * self._task_weights[name])
 
-        return torch.sum(*losses)
+        return torch.stack(losses).mean()
 
     def calculate_metrics(
         self, block_outputs, targets, mode="val"
