@@ -147,7 +147,7 @@ class RegressionTask(PredictionTask):
         )
 
 
-class ItemPredictionTask(PredictionTask):
+class NextItemPredictionTask(PredictionTask):
     def __init__(
         self,
         loss=torch.nn.NLLLoss(ignore_index=0),

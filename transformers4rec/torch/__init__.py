@@ -27,7 +27,13 @@ from .features.embedding import (
 )
 from .features.sequential import SequentialEmbeddingFeatures, SequentialTabularFeatures
 from .features.tabular import TabularFeatures
-from .head import BinaryClassificationTask, Head, ItemPredictionTask, PredictionTask, RegressionTask
+from .head import (
+    BinaryClassificationTask,
+    Head,
+    NextItemPredictionTask,
+    PredictionTask,
+    RegressionTask,
+)
 from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
 
 __all__ = [
@@ -56,7 +62,7 @@ __all__ = [
     "StackFeatures",
     "BinaryClassificationTask",
     "RegressionTask",
-    "ItemPredictionTask",
+    "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
 ]

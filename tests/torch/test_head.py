@@ -44,7 +44,7 @@ def test_head_with_multiple_tasks(yoochoose_schema, torch_yoochoose_like):
         torch4rec.BinaryClassificationTask("classification"),
         torch4rec.RegressionTask("regression"),
     ]
-    head = torch4rec.Head(body, tasks, inputs=input_module)
+    head = torch4rec.Head(body, tasks)
 
     body_out = body(torch_yoochoose_like)
     loss = head.compute_loss(body_out, targets)
@@ -62,7 +62,7 @@ def test_item_prediction_head(yoochoose_schema, torch_yoochoose_like):
     )
 
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
-    head = torch4rec.Head(body, torch4rec.ItemPredictionTask(), inputs=input_module)
+    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(), inputs=input_module)
 
     outputs = head(body(torch_yoochoose_like))
 
