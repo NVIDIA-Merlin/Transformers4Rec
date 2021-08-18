@@ -160,7 +160,7 @@ class NextItemPredictionTask(PredictionTask):
         hf_format=False,
     ):
         """
-        Class to support Next Item prediction task: 
+        Class to support Next Item prediction task:
         Parameters:
         ----------
             loss : the loss function to use.
@@ -194,8 +194,10 @@ class NextItemPredictionTask(PredictionTask):
         if not inputs:
             inputs = body.inputs
         if not getattr(inputs, "item_id", None):
-            raise ValueError(f"For Item Prediction task a categorical_module "
-                             f"including an item_id column is required.")
+            raise ValueError(
+                "For Item Prediction task a categorical_module "
+                "including an item_id column is required."
+            )
         embeddings = inputs.categorical_module
         if not self.target_dim:
             self.target_dim = embeddings.item_embedding_table.num_embeddings
@@ -206,7 +208,7 @@ class NextItemPredictionTask(PredictionTask):
         self.masking = inputs.masking
         if self.masking:
             self.pad_token = self.masking.pad_token
-        
+
         self.pre = _ItemPredictionTask(
             input_size=input_size,
             target_dim=self.target_dim,
@@ -218,7 +220,7 @@ class NextItemPredictionTask(PredictionTask):
         super().build(body, input_size, device=device, inputs=inputs)
 
     def forward(self, inputs, **kwargs):
-        if isinstance(inputs, (tuple, list)): 
+        if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
 
@@ -271,13 +273,13 @@ class _ItemPredictionTask(torch.nn.Module):
         softmax_temperature: float = 0,
     ):
         """
-        Predict the interacted item-id probabilities. 
-        - During inference, the task consists of predicting the next item. 
-        - During training, the class supports the following Language modeling tasks: 
+        Predict the interacted item-id probabilities.
+        - During inference, the task consists of predicting the next item.
+        - During training, the class supports the following Language modeling tasks:
             Causal LM, Masked LM, Permutation LM and Replacement Token Detection
-        Parameters: 
+        Parameters:
         -----------
-            input_size: 
+            input_size:
             target_dim:
             weight_tying:
             item_embedding_table:

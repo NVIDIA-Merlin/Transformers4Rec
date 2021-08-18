@@ -5,7 +5,7 @@ pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_metric = pytest.importorskip("transformers4rec.torch.ranking_metric")
 torch_head = pytest.importorskip("transformers4rec.torch.head")
-from transformers4rec.config import transformer as tconf
+
 # fixed parameters for tests
 METRICS = [
     torch_metric.NDCGAt(top_ks=[2, 5, 10], labels_onehot=True),
@@ -77,14 +77,17 @@ def test_item_prediction_head_weight_tying(yoochoose_schema, torch_yoochoose_lik
         continuous_projection=64,
         d_output=64,
         masking="causal",
-        )
-    
+    )
+
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
-    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=True), inputs=input_module)
-    
+    head = torch4rec.Head(
+        body, torch4rec.NextItemPredictionTask(weight_tying=True), inputs=input_module
+    )
+
     outputs = head(body(torch_yoochoose_like))
-    
+
     assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
+
 
 # Test loss and metrics outputs
 @pytest.mark.parametrize("weight_tying", [True, False])
@@ -95,32 +98,32 @@ def test_item_prediction_loss_and_metrics(yoochoose_schema, torch_yoochoose_like
         continuous_projection=64,
         d_output=64,
         masking="causal",
-        )
-    
+    )
+
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
-    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=weight_tying), inputs=input_module)
-    
+    head = torch4rec.Head(
+        body, torch4rec.NextItemPredictionTask(weight_tying=weight_tying), inputs=input_module
+    )
+
     body_outputs = body(torch_yoochoose_like)
-    outputs = head(body(torch_yoochoose_like))
 
     trg_flat = input_module.masking.masked_targets.flatten()
     non_pad_mask = trg_flat != input_module.masking.pad_token
     labels_all = torch.masked_select(trg_flat, non_pad_mask)
-    
-    loss = head.prediction_tasks['0'].compute_loss(
+
+    loss = head.prediction_tasks["0"].compute_loss(
         inputs=body_outputs,
         targets=labels_all,
-     )
-    
-    metrics = head.prediction_tasks['0'].calculate_metrics(
-        predictions=body_outputs,
-        labels=labels_all
-     )
+    )
+
+    metrics = head.prediction_tasks["0"].calculate_metrics(
+        predictions=body_outputs, labels=labels_all
+    )
     assert all(len(m) == 3 for m in metrics.values())
     assert loss != 0
-    
 
-# Test output formats  
+
+# Test output formats
 def test_item_prediction_HF_output(yoochoose_schema, torch_yoochoose_like):
     input_module = torch4rec.SequentialTabularFeatures.from_schema(
         yoochoose_schema,
@@ -128,23 +131,25 @@ def test_item_prediction_HF_output(yoochoose_schema, torch_yoochoose_like):
         continuous_projection=64,
         d_output=64,
         masking="causal",
-        )
-    
+    )
+
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
-    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=True,
-                                                                 hf_format=True),
-                          inputs=input_module)
-    
-    body_outputs = body(torch_yoochoose_like)
+    head = torch4rec.Head(
+        body,
+        torch4rec.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        inputs=input_module,
+    )
+
     outputs = head(body(torch_yoochoose_like))
-    
+
     assert isinstance(outputs, dict)
-    assert [param in outputs for param in ['loss', 
-                                           'labels',
-                                           'predictions',
-                                           'pred_metadata',
-                                           'model_outputs']]
-# Test output formats  
+    assert [
+        param in outputs
+        for param in ["loss", "labels", "predictions", "pred_metadata", "model_outputs"]
+    ]
+
+
+# Test output formats
 def test_item_prediction_with_rnn(yoochoose_schema, torch_yoochoose_like):
     input_module = torch4rec.SequentialTabularFeatures.from_schema(
         yoochoose_schema,
@@ -152,21 +157,20 @@ def test_item_prediction_with_rnn(yoochoose_schema, torch_yoochoose_like):
         continuous_projection=64,
         d_output=64,
         masking="causal",
-        )
-    
-    body = torch4rec.SequentialBlock(input_module,
-                                     torch4rec.MLPBlock([64]), 
-                                     torch4rec.Block(torch.nn.GRU(
-                                         input_size=64,
-                                         hidden_size=64,
-                                         num_layers=2), [None, 20, 64])
-                                    )
-    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=True,
-                                                                 hf_format=True),
-                          inputs=input_module)
-    
-    body_outputs = body(torch_yoochoose_like)
+    )
+
+    body = torch4rec.SequentialBlock(
+        input_module,
+        torch4rec.MLPBlock([64]),
+        torch4rec.Block(torch.nn.GRU(input_size=64, hidden_size=64, num_layers=2), [None, 20, 64]),
+    )
+    head = torch4rec.Head(
+        body,
+        torch4rec.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        inputs=input_module,
+    )
+
     outputs = head(body(torch_yoochoose_like))
-    
+
     assert outputs
-    assert isinstance(outputs, dict)    
+    assert isinstance(outputs, dict)
