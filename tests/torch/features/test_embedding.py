@@ -72,7 +72,9 @@ def test_soft_continuous_features(torch_con_features):
         f: torch4rec.FeatureConfig(torch4rec.TableConfig(num_embeddings, dim, name=f))
         for f in torch_con_features.keys()
     }
-    con_embeddings = torch4rec.SoftEmbeddingFeatures(feature_config)(torch_con_features)
+    con_embeddings = torch4rec.SoftEmbeddingFeatures(feature_config, soft_embeddings_init_std=0.05)(
+        torch_con_features
+    )
 
     assert list(con_embeddings.keys()) == list(feature_config.keys())
     assert all(

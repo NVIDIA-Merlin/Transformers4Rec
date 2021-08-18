@@ -145,7 +145,7 @@ class EmbeddingFeatures(TabularModule):
         item_id: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
-        **kwargs
+        **kwargs,
     ) -> Optional["EmbeddingFeatures"]:
         """Instantitates ``EmbeddingFeatures`` from a ``DatasetSchema``.
 
@@ -236,7 +236,7 @@ class EmbeddingFeatures(TabularModule):
         combiner="mean",
         tags=None,
         tags_to_filter=None,
-        **kwargs
+        **kwargs,
     ) -> Optional["EmbeddingFeatures"]:
         if isinstance(config, str):
             # load config from specified path
@@ -343,6 +343,15 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
     which is represented as a weighted average of embeddings.
     """
 
+    def __init__(
+        self,
+        feature_config: Dict[str, FeatureConfig],
+        soft_embeddings_init_std: float = 0.05,
+        **kwargs,
+    ):
+        self.soft_embeddings_init_std = soft_embeddings_init_std
+        super().__init__(feature_config, **kwargs)
+
     @classmethod
     def from_schema(
         cls,
@@ -355,7 +364,8 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         tags: Optional[Union[DefaultTags, list, str]] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
-        **kwargs
+        soft_embeddings_init_std=0.05,
+        **kwargs,
     ) -> Optional["SoftEmbeddingFeatures"]:
         """
         Instantitates ``SoftEmbeddingFeatures`` from a ``DatasetSchema``.
@@ -422,7 +432,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         if not feature_config:
             return None
 
-        output = cls(feature_config, **kwargs)
+        output = cls(feature_config, soft_embeddings_init_std, **kwargs)
 
         if automatic_build and schema._schema:
             output.build(
@@ -436,4 +446,4 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         return output
 
     def table_to_embedding_module(self, table: TableConfig) -> SoftEmbedding:
-        return SoftEmbedding(table.vocabulary_size, table.dim)
+        return SoftEmbedding(table.vocabulary_size, table.dim, self.soft_embeddings_init_std)

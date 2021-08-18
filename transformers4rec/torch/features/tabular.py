@@ -1,6 +1,6 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
-from ...types import DatasetSchema, DefaultTags, Tag, Union
+from ...types import DatasetSchema, DefaultTags, Tag
 from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular, TabularModule
 from ..utils.torch_utils import get_output_sizes_from_schema
@@ -68,7 +68,7 @@ class TabularFeatures(MergeTabular):
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
         continuous_projection: Optional[Union[List[int], int]] = None,
-        continuous_soft_embeddings_shape: Optional[Union[Tuple[int, int], List[int, int]]] = None,
+        continuous_soft_embeddings_shape: Optional[Union[Tuple[int, int], List[int]]] = None,
         **kwargs,
     ) -> "TabularFeatures":
         """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
