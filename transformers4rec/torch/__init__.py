@@ -16,7 +16,6 @@
 from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
 from .block.base import Block, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
-from .block.transformer import TransformerBlock
 from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import (
@@ -28,7 +27,7 @@ from .features.embedding import (
 )
 from .features.sequential import SequentialEmbeddingFeatures, SequentialTabularFeatures
 from .features.tabular import TabularFeatures
-from .head import Head, PredictionTask
+from .head import BinaryClassificationTask, Head, ItemPredictionTask, PredictionTask, RegressionTask
 from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
 
 __all__ = [
@@ -38,7 +37,6 @@ __all__ = [
     "Block",
     "MLPBlock",
     "BlockWithHead",
-    "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SoftEmbeddingFeatures",
@@ -56,6 +54,9 @@ __all__ = [
     "ElementwiseSumItemMulti",
     "MergeTabular",
     "StackFeatures",
+    "BinaryClassificationTask",
+    "RegressionTask",
+    "ItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
 ]

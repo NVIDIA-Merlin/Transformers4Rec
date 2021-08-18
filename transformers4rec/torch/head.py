@@ -4,7 +4,7 @@ from typing import Dict, List, Optional, Text, Union
 import torch
 import torchmetrics as tm
 
-from transformers4rec.torch.typing import BuildableBlock
+from transformers4rec.torch.typing import BuildableBlock, SequentialBlock
 
 from ..types import DatasetSchema
 from ..utils.tags import Tag
@@ -28,7 +28,7 @@ class PredictionTask(torch.nn.Module):
         self.loss = loss
         self.pre = pre
 
-    def build(self, block, input_size, device=None):
+    def build(self, block, input_size, inputs=None, device=None):
         """
         The method will be called when block is convert to_model,
         i.e when linked to prediction head
@@ -48,8 +48,6 @@ class PredictionTask(torch.nn.Module):
             if len(x.size()) == 3:
                 # TODO: Implement this properly
                 pass
-            if self.pre:
-                x = self.pre(x)
             x = self.pre(x)
 
         return x
@@ -60,6 +58,9 @@ class PredictionTask(torch.nn.Module):
     def compute_loss(
         self, inputs, targets, training: bool = False, compute_metrics=True
     ) -> torch.Tensor:
+        if isinstance(targets, dict) and self.target_name:
+            targets = targets[self.target_name]
+
         predictions = self(inputs)
         loss = self.loss(predictions, targets)
 
@@ -78,7 +79,7 @@ class PredictionTask(torch.nn.Module):
             predictions = self(predictions)
         predictions = self.forward_to_prediction_fn(predictions)
         for metric in self.metrics:
-            if isinstance(metric, tuple(type(x) for x in self.binary_classification_metrics())):
+            if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
                 labels = labels.int()
             outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, labels)
 
@@ -91,6 +92,9 @@ class PredictionTask(torch.nn.Module):
         for metric in self.metrics:
             metric.reset()
 
+    def to_head(self, body, inputs=None, **kwargs) -> "Head":
+        return Head(body, self, inputs=inputs, **kwargs)
+
 
 class BinaryClassificationTask(PredictionTask):
     DEFAULT_LOSS = torch.nn.BCELoss()
@@ -102,7 +106,7 @@ class BinaryClassificationTask(PredictionTask):
     )
 
     def __init__(
-        self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None, summary_type="first"
+        self, target_name=None, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, summary_type="first"
     ):
         super().__init__(
             loss=loss,
@@ -112,7 +116,7 @@ class BinaryClassificationTask(PredictionTask):
             forward_to_prediction_fn=lambda x: torch.round(x).int(),
         )
 
-    def build(self, block, input_size, device=None):
+    def build(self, block, input_size, inputs=None, device=None):
         super().build(block, input_size, device=device)
         self.pre = torch.nn.Sequential(
             torch.nn.Linear(input_size[-1], 1, bias=False),
@@ -123,10 +127,10 @@ class BinaryClassificationTask(PredictionTask):
 
 class RegressionTask(PredictionTask):
     DEFAULT_LOSS = torch.nn.MSELoss()
-    DEFAULT_METRICS = tm.regression.MeanSquaredError()
+    DEFAULT_METRICS = (tm.regression.MeanSquaredError(),)
 
     def __init__(
-        self, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, target_name=None, summary_type="first"
+        self, target_name=None, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, summary_type="first"
     ):
         super().__init__(
             loss=loss,
@@ -136,7 +140,7 @@ class RegressionTask(PredictionTask):
             forward_to_prediction_fn=lambda x: torch.round(x).int(),
         )
 
-    def build(self, block, input_size, device=None):
+    def build(self, block, input_size, inputs=None, device=None):
         super().build(block, input_size, device=device)
         self.pre = torch.nn.Sequential(
             torch.nn.Linear(input_size[-1], 1), LambdaModule(lambda x: x.view(-1))
@@ -146,7 +150,7 @@ class RegressionTask(PredictionTask):
 class ItemPredictionTask(PredictionTask):
     def __init__(
         self,
-        loss,
+        loss=torch.nn.NLLLoss(ignore_index=0),
         metrics=None,
         pre: Optional[torch.nn.Module] = None,
         weight_tying: bool = True,
@@ -183,20 +187,22 @@ class ItemPredictionTask(PredictionTask):
         self.hf_format = hf_format
 
         self.item_embedding_table = None
+        self.masking = None
 
-    def build(self, block, input_size, device=None):
+    def build(self, body, input_size, device=None, inputs=None):
         # Retrieve the embedding module to get the name of itemid col and its related table
 
         # TODO: retrieve embeddings
-        embeddings = block.inputs.categorical_module
-        self.itemid_name = embeddings.item_id
+        if not inputs:
+            inputs = body.inputs
+        embeddings = inputs.categorical_module
         if not self.target_dim:
-            self.target_dim = embeddings.item_vocab_size
+            self.target_dim = embeddings.item_embedding_table.num_embeddings
         if self.weight_tying:
-            self.item_embedding_table = embeddings.embedding_tables[self.itemid_name]
+            self.item_embedding_table = embeddings.item_embedding_table
 
         # Retrieve the masking if used in the model block
-        self.masking = block.inputs.masking
+        self.masking = inputs.masking
         if self.masking:
             self.pad_token = self.masking.pad_token
 
@@ -208,12 +214,10 @@ class ItemPredictionTask(PredictionTask):
             softmax_temperature=self.softmax_temperature,
         )
 
-        super().build(block, input_size, device=device)
+        super().build(body, input_size, device=device, inputs=inputs)
 
     def forward(self, inputs, **kwargs):
         x = inputs.float()
-        if self.body:
-            x = self.body(x)
 
         # Retrieve labels either from masking or input module
         if self.masking:
@@ -228,7 +232,7 @@ class ItemPredictionTask(PredictionTask):
         x = self.remove_pad_3d(x, non_pad_mask)
 
         # Compute predictions probs
-        x = self.pred(x)
+        x = self.pre(x)
 
         # prepare outputs for HF trainer
         if self.hf_format:
@@ -303,11 +307,12 @@ class _ItemPredictionTask(torch.nn.Module):
 class Head(torch.nn.Module):
     def __init__(
         self,
-        body,
+        body: SequentialBlock,
         prediction_tasks: Optional[Union[List[PredictionTask], PredictionTask]] = None,
         task_towers: Optional[Union[BuildableBlock, Dict[str, BuildableBlock]]] = None,
         task_weights=None,
         body_output_size=None,
+        inputs=None,
     ):
         super().__init__()
         if isinstance(body_output_size, int):
@@ -322,12 +327,13 @@ class Head(torch.nn.Module):
                 self.prediction_tasks[task.target_name or str(i)] = task
 
         self._task_weights = defaultdict(lambda: 1)
+        self.build(body_output_size or body.output_size(), inputs=inputs)
 
-    def build(self, input_size, device=None):
+    def build(self, input_size, inputs=None, device=None):
         if device:
             self.to(device)
-            for task in self.tasks.values():
-                task.build(input_size, device=device)
+        for task in self.prediction_tasks.values():
+            task.build(self.body, input_size, inputs=inputs, device=device)
         self.input_size = input_size
 
     @classmethod
@@ -354,7 +360,7 @@ class Head(torch.nn.Module):
 
     def add_task(self, task: PredictionTask, task_weight=1):
         key = task.target_name
-        self.tasks[key] = task
+        self.prediction_tasks[key] = task
         if task_weight:
             self._task_weights[key] = task_weight
 
@@ -362,7 +368,7 @@ class Head(torch.nn.Module):
 
     def pop_labels(self, inputs: Dict[Text, torch.Tensor]):
         outputs = {}
-        for name in self.tasks.keys():
+        for name in self.prediction_tasks.keys():
             outputs[name] = inputs.pop(name)
 
         return outputs
@@ -370,7 +376,7 @@ class Head(torch.nn.Module):
     def forward(self, logits: torch.Tensor, **kwargs):
         outputs = {}
 
-        for name, task in self.tasks.items():
+        for name, task in self.prediction_tasks.items():
             outputs[name] = task(logits, **kwargs)
 
         if len(outputs) == 1:
@@ -378,11 +384,11 @@ class Head(torch.nn.Module):
 
         return outputs
 
-    def compute_loss(self, block_outputs, targets, **kwargs) -> torch.Tensor:
+    def compute_loss(self, body_outputs, targets, **kwargs) -> torch.Tensor:
         losses = []
 
-        for name, task in self.tasks.items():
-            loss = task.compute_loss(block_outputs, targets, **kwargs)
+        for name, task in self.prediction_tasks.items():
+            loss = task.compute_loss(body_outputs, targets, **kwargs)
             losses.append(loss * self._task_weights[name])
 
         return torch.sum(*losses)
@@ -392,7 +398,7 @@ class Head(torch.nn.Module):
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
 
-        for name, task in self.tasks.items():
+        for name, task in self.prediction_tasks.items():
             metrics[name] = task.calculate_metrics(block_outputs, targets, mode=mode)
 
         return _output_metrics(metrics)
@@ -401,12 +407,14 @@ class Head(torch.nn.Module):
         def name_fn(x):
             return "_".join([mode, x]) if mode else x
 
-        metrics = {name_fn(name): task.compute_metrics() for name, task in self.tasks.items()}
+        metrics = {
+            name_fn(name): task.compute_metrics() for name, task in self.prediction_tasks.items()
+        }
 
         return _output_metrics(metrics)
 
     def reset_metrics(self):
-        for task in self.tasks.values():
+        for task in self.prediction_tasks.values():
             task.reset_metrics()
 
 

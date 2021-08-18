@@ -2,14 +2,19 @@ from typing import Dict, Union
 
 import torch
 
+from transformers4rec.torch.typing import TensorOrTabularData
+
 
 class Model(torch.nn.Module):
     def __init__(self, *head, **kwargs):
         super().__init__()
         self.heads = head
 
-    def forward(self, logits: torch.Tensor, **kwargs):
+    def forward(self, inputs: TensorOrTabularData, **kwargs):
         raise NotImplementedError
+        # TODO: Optimize this
+        # for head in self.heads:
+        #     outputs = head(head.body(inputs))
 
     def compute_loss(self, block_outputs, targets, **kwargs) -> torch.Tensor:
         raise NotImplementedError
