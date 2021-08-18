@@ -78,8 +78,10 @@ def test_at_least_one_masked_item_mlm(torch_masking_inputs, task):
     lm = torch_masking.masking_registry[task](
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], device="cpu"
     )
-    lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
-    trgt_mask = lm.masked_targets != torch_masking_inputs["pad_token"]
+    masked_targets = lm.compute_masked_targets(
+        torch_masking_inputs["labels"], training=True, return_targets=True
+    )
+    trgt_mask = masked_targets != torch_masking_inputs["pad_token"]
     assert all(trgt_mask.sum(axis=1).numpy() > 0)
 
 
@@ -115,8 +117,8 @@ def test_plm_output_shape(torch_masking_inputs):
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], device="cpu"
     )
     lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
-    assert lm.plm_target_mapping is not None
-    assert lm.plm_perm_mask is not None
+    assert lm.target_mapping is not None
+    assert lm.perm_mask is not None
 
 
 # Check that only masked items are replaced
@@ -125,8 +127,10 @@ def test_replaced_fake_tokens(torch_masking_inputs):
     lm = torch_masking.masking_registry["replacement"](
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], device="cpu"
     )
-    lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
-    trg_flat = lm.masked_targets.flatten()
+    masked_targets = lm.compute_masked_targets(
+        torch_masking_inputs["labels"], training=True, return_targets=True
+    )
+    trg_flat = masked_targets.flatten()
     non_pad_mask = trg_flat != torch_masking_inputs["pad_token"]
     # Nb of pos items
     pos_items = non_pad_mask.sum()
@@ -147,9 +151,11 @@ def test_replacement_from_batch(torch_masking_inputs):
     lm = torch_masking.ReplacementLanguageModeling(
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], sample_from_batch=True
     )
-    lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
+    masked_targets = lm.compute_masked_targets(
+        torch_masking_inputs["labels"], training=True, return_targets=True
+    )
 
-    trg_flat = lm.masked_targets.flatten()
+    trg_flat = masked_targets.flatten()
     non_pad_mask = trg_flat != torch_masking_inputs["pad_token"]
     # Nb of pos items
     pos_items = non_pad_mask.sum()
@@ -168,8 +174,10 @@ def test_sample_from_softmax_output(torch_masking_inputs):
     lm = torch_masking.ReplacementLanguageModeling(
         hidden_dim, pad_token=torch_masking_inputs["pad_token"], sample_from_batch=True
     )
-    lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
-    trg_flat = lm.masked_targets.flatten()
+    masked_targets = lm.compute_masked_targets(
+        torch_masking_inputs["labels"], training=True, return_targets=True
+    )
+    trg_flat = masked_targets.flatten()
     non_pad_mask = trg_flat != torch_masking_inputs["pad_token"]
     # Nb of pos items
     pos_items = non_pad_mask.sum()
