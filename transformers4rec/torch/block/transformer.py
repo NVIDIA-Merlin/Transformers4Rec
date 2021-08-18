@@ -16,10 +16,11 @@ class TransformerBlock(torch.nn.Module):
 
     Parameters:
     -----------
-        transformer: TransformerBody to set the HF model.
-        The model returns the hidden representation of the sequence of interaction embeddings
+        transformer: TransformerBody 
+            The T4RecConfig or a pre-trained HF object related to specific transformer architecture.
 
-        masking: Optional MaskingBlock, the block is required when :
+        masking: [Optional MaskSequence] optional 
+            the block is only required when :
                     - The HF model signature needs additional masks
                     -> e.g: For PLM task, XLNet needs target_mapping and perm_mask.
 
@@ -50,6 +51,21 @@ class TransformerBlock(torch.nn.Module):
         total_seq_length: int,
         masking: Optional[MaskSequence] = None,
     ):
+        """
+        Load the HF transformer architecture based on its name 
+        Parameters: 
+           transformer: str 
+               name of the Transformer to use. Possible values are : 
+               ["reformer", "gtp2", "longformer", "electra", "albert", "xlnet"]
+           d_model: int 
+               size of hidden states for Transformers
+           n_head: 
+               Number of attention heads for Transformers
+           n_layer: int
+               Number of layers for RNNs and Transformers"
+           total_seq_length: int
+               The maximum sequence length 
+        """
         transformer = transformer_registry.parse(transformer).build(
             d_model=d_model,
             n_head=n_head,
