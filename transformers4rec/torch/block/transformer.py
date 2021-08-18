@@ -7,7 +7,7 @@ from transformers import GPT2Model, PreTrainedModel
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence, PermutationLanguageModeling
 
-TransformerBody = Union[str, PreTrainedModel, T4RecConfig]
+TransformerBody = Union[PreTrainedModel, T4RecConfig]
 
 
 class TransformerBlock(torch.nn.Module):
