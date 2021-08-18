@@ -62,6 +62,9 @@ class MaskSequence(_MaskSequence, nn.Module):
         self.compute_masked_targets(item_ids=item_ids, training=training)
         return self.apply_mask_to_inputs(inputs, self.mask_schema)
 
+    def transformer_prepare(self):
+        return {}
+
 
 @masking_registry.register_with_multiple_names("clm", "causal")
 class CausalLanguageModeling(MaskSequence):
@@ -257,30 +260,30 @@ class PermutationLanguageModeling(MaskSequence):
         Parameters:
         ----------
             max_span_length: maximum length of a span of masked items
-            plm_probability: The ratio of surrounding items to unmask to define the context of the
+            probability: The ratio of surrounding items to unmask to define the context of the
                             span-based prediction segment of items
-            plm_permute_all: Compute partial span-based prediction (=False) or not.
+            permute_all: Compute partial span-based prediction (=False) or not.
         """
         super(PermutationLanguageModeling, self).__init__(hidden_size, **kwargs)
 
-        if "plm_probability" not in kwargs:
-            self.plm_probability = 1 / 6
+        if "probability" not in kwargs:
+            self.probability = 1 / 6
         else:
-            self.plm_probability = kwargs.pop("plm_probability")
+            self.probability = kwargs.pop("probability")
 
         if "max_span_length" not in kwargs:
             self.max_span_length = 5
         else:
             self.max_span_length = kwargs.pop("max_span_length")
 
-        if "plm_permute_all" not in kwargs:
-            self.plm_permute_all = False
+        if "permute_all" not in kwargs:
+            self.permute_all = False
         else:
-            self.plm_permute_all = kwargs.pop("plm_permute_all")
+            self.permute_all = kwargs.pop("permute_all")
 
         # additional masked scheme needed for XLNet-PLM task :
-        self.plm_target_mapping = None
-        self.plm_perm_mask = None
+        self.target_mapping = None
+        self.perm_mask = None
 
         # Create a trainable embedding to replace masked inputs for Permutation LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(self.hidden_size)).to(self.device)
@@ -333,7 +336,7 @@ class PermutationLanguageModeling(MaskSequence):
                 dtype=torch.float32,
                 device=self.device,
             )
-            if self.plm_permute_all:
+            if self.permute_all:
                 # Permute all non padded items
                 mask_labels = non_padded_mask
             else:
@@ -349,7 +352,7 @@ class PermutationLanguageModeling(MaskSequence):
                         span_length = torch.randint(1, self.max_span_length + 1, (1,)).item()
                         # Reserve a context
                         # to surround span to be masked
-                        context_length = int(span_length / self.plm_probability)
+                        context_length = int(span_length / self.probability)
                         # Sample a starting point `start_index`
                         # from the interval `[cur_len, cur_len + context_length - span_length]`
                         start_index = (
@@ -445,8 +448,8 @@ class PermutationLanguageModeling(MaskSequence):
         (
             self.mask_schema,
             self.masked_targets,
-            self.plm_target_mapping,
-            self.plm_perm_mask,
+            self.target_mapping,
+            self.perm_mask,
         ) = self._compute_masked_targets(item_ids, training=training)
 
     def apply_mask_to_inputs(self, inputs: torch.Tensor, mask_schema: MaskingSchema):
@@ -456,6 +459,9 @@ class PermutationLanguageModeling(MaskSequence):
             inputs,
         )
         return inputs
+
+    def transformer_prepare(self):
+        return dict(target_mapping=self.target_mapping, perm_mask=self.perm_mask)
 
 
 @masking_registry.register_with_multiple_names("rtd", "replacement")

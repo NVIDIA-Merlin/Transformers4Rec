@@ -21,4 +21,7 @@ def get_output_sizes_from_schema(schema, batch_size=-1, max_sequence_length=None
 
 
 def calculate_batch_size_from_input_size(input_size):
-    return [i for i in input_size.values() if isinstance(i, torch.Size)][0][0]
+    if isinstance(input_size, dict):
+        input_size = [i for i in input_size.values() if isinstance(i, torch.Size)][0]
+
+    return input_size[0]

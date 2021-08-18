@@ -53,6 +53,6 @@ def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoocho
 
     outputs = input_module(torch_yoochoose_like)
 
-    assert len(outputs.keys()) == 3
-    assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
-    assert all(tensor.shape[1] == 20 for tensor in outputs.values())
+    assert outputs.ndim == 3
+    assert outputs.shape[-1] == 100
+    assert outputs.shape[1] == 20

@@ -134,6 +134,15 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
         return self
 
+    def to_module(self, shape_or_module, device=None):
+        shape = shape_or_module
+        if isinstance(shape_or_module, torch.nn.Module):
+            shape = getattr(shape_or_module, "output_size", None)
+            if shape:
+                shape = shape()
+
+        return self.build(shape, device=device)
+
     def forward_output_size(self, input_size):
         if self.aggregation:
             return self.aggregation.forward_output_size(input_size)
