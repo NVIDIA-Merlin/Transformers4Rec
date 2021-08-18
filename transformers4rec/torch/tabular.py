@@ -3,7 +3,7 @@ from typing import Optional
 
 import torch
 
-from ..types import Schema
+from ..types import DatasetSchema
 from . import aggregation as agg
 
 
@@ -111,7 +111,7 @@ class TabularModule(TabularMixin, torch.nn.Module):
             self._aggregation = None
 
     @classmethod
-    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularModule"]:
+    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
         if tags:
             schema = schema.select_by_tag(tags)
 
@@ -134,6 +134,15 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
         return self
 
+    def to_module(self, shape_or_module, device=None):
+        shape = shape_or_module
+        if isinstance(shape_or_module, torch.nn.Module):
+            shape = getattr(shape_or_module, "output_size", None)
+            if shape:
+                shape = shape()
+
+        return self.build(shape, device=device)
+
     def forward_output_size(self, input_size):
         if self.aggregation:
             return self.aggregation.forward_output_size(input_size)
@@ -155,15 +164,16 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
 class MergeTabular(TabularModule):
     def __init__(self, *to_merge, aggregation=None):
-        if all(isinstance(x, dict) for x in to_merge):
-            self.to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
-        else:
-            self.to_merge = list(to_merge)
         super().__init__(aggregation)
+        if all(isinstance(x, dict) for x in to_merge):
+            to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
+            self.to_merge = torch.nn.ModuleDict(to_merge)
+        else:
+            self.to_merge = torch.nn.ModuleList(to_merge)
 
     @property
     def merge_values(self):
-        if isinstance(self.to_merge, dict):
+        if isinstance(self.to_merge, torch.nn.ModuleDict):
             return list(self.to_merge.values())
 
         return self.to_merge
