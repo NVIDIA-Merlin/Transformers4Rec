@@ -6,7 +6,7 @@ torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
 def test_sequential_embedding_features(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
     emb_module = torch4rec.SequentialEmbeddingFeatures.from_schema(schema)
 
     outputs = emb_module(torch_yoochoose_like)
