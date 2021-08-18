@@ -68,6 +68,9 @@ class MaskSequence(_MaskSequence, nn.Module):
     def transformer_optional_arguments(self):
         return {}
 
+    def transformer_arguments(self):
+        return {**self.transformer_required_arguments(), **self.transformer_optional_arguments()}
+
 
 @masking_registry.register_with_multiple_names("clm", "causal")
 class CausalLanguageModeling(MaskSequence):

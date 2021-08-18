@@ -128,12 +128,9 @@ class TransformerBlock(torch.nn.Module):
         if self.prepare_module:
             transformer_kwargs = self.prepare_module(inputs_embeds)
         if self.masking:
-            required = self.masking.transformer_required_arguments()
-            if required:
-                transformer_kwargs.update(required)
-            optional = self.masking.transformer_optional_arguments()
-            if optional:
-                transformer_kwargs.update(optional)
+            masking_kwargs = self.masking.transformer_arguments()
+            if masking_kwargs:
+                transformer_kwargs.update(masking_kwargs)
 
         filtered_transformer_kwargs = {}
         for param in inspect.signature(self.transformer.forward).parameters:
