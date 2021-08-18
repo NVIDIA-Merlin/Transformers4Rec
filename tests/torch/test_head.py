@@ -1,10 +1,11 @@
 import pytest
+import torch
 
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_metric = pytest.importorskip("transformers4rec.torch.ranking_metric")
 torch_head = pytest.importorskip("transformers4rec.torch.head")
-
+from transformers4rec.config import transformer as tconf
 # fixed parameters for tests
 METRICS = [
     torch_metric.NDCGAt(top_ks=[2, 5, 10], labels_onehot=True),
@@ -69,74 +70,103 @@ def test_item_prediction_head(yoochoose_schema, torch_yoochoose_like):
     assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
 
 
-# # Test of output of sequential_task when mf_constrained_embeddings is disabled
-# def test_sequential_task_output(torch_seq_prediction_head_inputs):
-#     task = torch_head.SequentialPredictionTask(
-#         loss=pytorch.nn.NLLLoss(ignore_index=0),
-#         metrics=METRICS,
-#         mf_constrained_embeddings=False,
-#         input_size=torch_seq_prediction_head_inputs["item_dim"],
-#         vocab_size=torch_seq_prediction_head_inputs["vocab_size"],
-#     )
-#     loss = task.compute_loss(
-#         inputs=torch_seq_prediction_head_inputs["seq_model_output"],
-#         targets=torch_seq_prediction_head_inputs["labels_all"],
-#     )
-#     metrics = task.calculate_metrics(
-#         predictions=torch_seq_prediction_head_inputs["seq_model_output"],
-#         labels=torch_seq_prediction_head_inputs["labels_all"],
-#     )
-#     assert all(len(m) == 3 for m in metrics.values())
-#     assert loss != 0
-#
-#
-# # Test of output of sequential_task when mf_constrained_embeddings is enabled
-# def test_sequential_task_output_constrained(torch_seq_prediction_head_inputs):
-#     task = torch_head.SequentialPredictionTask(
-#         loss=pytorch.nn.NLLLoss(ignore_index=0),
-#         metrics=METRICS,
-#         mf_constrained_embeddings=True,
-#         item_embedding_table=torch_seq_prediction_head_inputs["item_embedding_table"],
-#         input_size=torch_seq_prediction_head_inputs["item_dim"],
-#         vocab_size=torch_seq_prediction_head_inputs["vocab_size"],
-#     )
-#     loss = task.compute_loss(
-#         inputs=torch_seq_prediction_head_inputs["seq_model_output"],
-#         targets=torch_seq_prediction_head_inputs["labels_all"],
-#     )
-#     metrics = task.calculate_metrics(
-#         predictions=torch_seq_prediction_head_inputs["seq_model_output"],
-#         labels=torch_seq_prediction_head_inputs["labels_all"],
-#     )
-#     assert all(len(m) == 3 for m in metrics.values())
-#     assert loss != 0
+def test_item_prediction_head_weight_tying(yoochoose_schema, torch_yoochoose_like):
+    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+        )
+    
+    body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
+    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=True), inputs=input_module)
+    
+    outputs = head(body(torch_yoochoose_like))
+    
+    assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
 
+# Test loss and metrics outputs
+@pytest.mark.parametrize("weight_tying", [True, False])
+def test_item_prediction_loss_and_metrics(yoochoose_schema, torch_yoochoose_like, weight_tying):
+    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+        )
+    
+    body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
+    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=weight_tying), inputs=input_module)
+    
+    body_outputs = body(torch_yoochoose_like)
+    outputs = head(body(torch_yoochoose_like))
 
-# TODO: We need the sequential aggregator to fix this test
-# Test of output of sequential_task when mf_constrained_embeddings is enabled
-# def test_build_sequential_task_from_block(yoochoose_schema):
-#     inputs = torch4rec.features.tabular.TabularFeatures.from_schema(
-#         yoochoose_schema
-#     )
-#
-#     block = torch4rec.block.base.SequentialBlock(inputs, pytorch.nn.Linear(64, 64))
+    trg_flat = input_module.masking.masked_targets.flatten()
+    non_pad_mask = trg_flat != input_module.masking.pad_token
+    labels_all = torch.masked_select(trg_flat, non_pad_mask)
+    
+    loss = head.prediction_tasks['0'].compute_loss(
+        inputs=body_outputs,
+        targets=labels_all,
+     )
+    
+    metrics = head.prediction_tasks['0'].calculate_metrics(
+        predictions=body_outputs,
+        labels=labels_all
+     )
+    assert all(len(m) == 3 for m in metrics.values())
+    assert loss != 0
+    
 
-#
-# task = torch_head.SequentialPredictionTask(
-#     loss=pytorch.nn.NLLLoss(ignore_index=0),
-#     item_id_name="item",
-#     metrics=METRICS,
-#     mf_constrained_embeddings=True,
-# )
-# task.build(block)
-#
-# loss = task.compute_loss(
-#     inputs=torch_seq_prediction_head_link_to_block["seq_model_output"],
-#     targets=torch_seq_prediction_head_link_to_block["labels_all"],
-# )
-# metrics = task.calculate_metrics(
-#     predictions=torch_seq_prediction_head_link_to_block["seq_model_output"],
-#     labels=torch_seq_prediction_head_link_to_block["labels_all"],
-# )
-# assert all(len(m) == 3 for m in metrics.values())
-# assert loss != 0
+# Test output formats  
+def test_item_prediction_HF_output(yoochoose_schema, torch_yoochoose_like):
+    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+        )
+    
+    body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
+    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=True,
+                                                                 hf_format=True),
+                          inputs=input_module)
+    
+    body_outputs = body(torch_yoochoose_like)
+    outputs = head(body(torch_yoochoose_like))
+    
+    assert isinstance(outputs, dict)
+    assert [param in outputs for param in ['loss', 
+                                           'labels',
+                                           'predictions',
+                                           'pred_metadata',
+                                           'model_outputs']]
+# Test output formats  
+def test_item_prediction_with_rnn(yoochoose_schema, torch_yoochoose_like):
+    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+        )
+    
+    body = torch4rec.SequentialBlock(input_module,
+                                     torch4rec.MLPBlock([64]), 
+                                     torch4rec.Block(torch.nn.GRU(
+                                         input_size=64,
+                                         hidden_size=64,
+                                         num_layers=2), [None, 20, 64])
+                                    )
+    head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(weight_tying=True,
+                                                                 hf_format=True),
+                          inputs=input_module)
+    
+    body_outputs = body(torch_yoochoose_like)
+    outputs = head(body(torch_yoochoose_like))
+    
+    assert outputs
+    assert isinstance(outputs, dict)    

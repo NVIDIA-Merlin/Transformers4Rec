@@ -153,22 +153,20 @@ class NextItemPredictionTask(PredictionTask):
         loss=torch.nn.NLLLoss(ignore_index=0),
         metrics=None,
         pre: Optional[torch.nn.Module] = None,
-        weight_tying: bool = True,
+        weight_tying: bool = False,
         softmax_temperature: float = 1,
         pad_token: int = 0,
         target_dim: int = None,
         hf_format=False,
     ):
         """
-        It supports three sequential-based and session-based tasks :
-            - session-level classification and regression
-            - item prediction task
+        Class to support Next Item prediction task: 
         Parameters:
         ----------
-            loss :  the loss function to use.
+            loss : the loss function to use.
             metrics: list of ranking metrics to use for evaluation.
             body: network to transform input tensor before computing predictions.
-            pred: classifier network to compute the item predictions probabilities.
+            pre: classifier network to compute the item predictions probabilities.
             weight_tying: the item id embedding table weights are shared
                         with the prediction network layer.
             softmax_temperature: Softmax temperature, used to reduce model overconfidence,
@@ -195,6 +193,9 @@ class NextItemPredictionTask(PredictionTask):
         # TODO: retrieve embeddings
         if not inputs:
             inputs = body.inputs
+        if not getattr(inputs, "item_id", None):
+            raise ValueError(f"For Item Prediction task a categorical_module "
+                             f"including an item_id column is required.")
         embeddings = inputs.categorical_module
         if not self.target_dim:
             self.target_dim = embeddings.item_embedding_table.num_embeddings
@@ -205,7 +206,7 @@ class NextItemPredictionTask(PredictionTask):
         self.masking = inputs.masking
         if self.masking:
             self.pad_token = self.masking.pad_token
-
+        
         self.pre = _ItemPredictionTask(
             input_size=input_size,
             target_dim=self.target_dim,
@@ -217,6 +218,8 @@ class NextItemPredictionTask(PredictionTask):
         super().build(body, input_size, device=device, inputs=inputs)
 
     def forward(self, inputs, **kwargs):
+        if isinstance(inputs, (tuple, list)): 
+            inputs = inputs[0]
         x = inputs.float()
 
         # Retrieve labels either from masking or input module
@@ -267,6 +270,19 @@ class _ItemPredictionTask(torch.nn.Module):
         item_embedding_table: Optional[torch.nn.Module] = None,
         softmax_temperature: float = 0,
     ):
+        """
+        Predict the interacted item-id probabilities. 
+        - During inference, the task consists of predicting the next item. 
+        - During training, the class supports the following Language modeling tasks: 
+            Causal LM, Masked LM, Permutation LM and Replacement Token Detection
+        Parameters: 
+        -----------
+            input_size: 
+            target_dim:
+            weight_tying:
+            item_embedding_table:
+            softmax_temperature:
+        """
         super().__init__()
         self.input_size = input_size
         self.target_dim = target_dim
@@ -279,7 +295,7 @@ class _ItemPredictionTask(torch.nn.Module):
             self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.target_dim))
             torch.nn.init.zeros_(self.output_layer_bias)
         else:
-            self.output_layer = torch.nn.Linear(self.input_size, self.target_dim)
+            self.output_layer = torch.nn.Linear(self.input_size[-1], self.target_dim)
 
     def forward(self, inputs):
         if self.weight_tying:
