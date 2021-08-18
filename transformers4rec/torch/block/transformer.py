@@ -1,4 +1,3 @@
-import abc
 import inspect
 from typing import Any, Dict, Optional, Type, Union
 
@@ -18,16 +17,12 @@ class TransformerPrepare(torch.nn.Module):
         self.masking = masking
         self.device = device
 
-    @abc.abstractmethod
-    def prepare(self, inputs_embeds) -> Dict[str, Any]:
+    def forward(self, inputs_embeds) -> Dict[str, Any]:
         raise NotImplementedError()
-
-    def forward(self, inputs_embeds):
-        return self.prepare(inputs_embeds)
 
 
 class GPT2Prepare(TransformerPrepare):
-    def prepare(self, inputs_embeds) -> Dict[str, Any]:
+    def forward(self, inputs_embeds) -> Dict[str, Any]:
         seq_len = inputs_embeds.shape[1]
         # head_mask has shape n_layer x batch x n_heads x N x N
         head_mask = (
