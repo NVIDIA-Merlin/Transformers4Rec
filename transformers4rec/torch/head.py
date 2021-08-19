@@ -1,8 +1,10 @@
 from collections import defaultdict
+from types import SimpleNamespace
 from typing import Dict, List, Optional, Text, Union
 
 import torch
 import torchmetrics as tm
+from transformers.modeling_utils import SequenceSummary
 
 from transformers4rec.torch.typing import BuildableBlock, SequentialBlock
 
@@ -18,10 +20,10 @@ class PredictionTask(torch.nn.Module):
         target_name=None,
         forward_to_prediction_fn=lambda x: x,
         pre: Optional[torch.nn.Module] = None,
-        summary_type="first",
+        summary_type="last",
     ):
         super().__init__()
-        self.summary_type = summary_type
+        self.sequence_summary = SequenceSummary(SimpleNamespace(summary_type=summary_type))  # noqa
         self.target_name = target_name
         self.forward_to_prediction_fn = forward_to_prediction_fn
         self.set_metrics(metrics)
@@ -46,8 +48,7 @@ class PredictionTask(torch.nn.Module):
         x = inputs
         if self.pre:
             if len(x.size()) == 3:
-                # TODO: Implement this properly
-                pass
+                x = self.sequence_summary(x)
             x = self.pre(x)
 
         return x
@@ -189,6 +190,11 @@ class NextItemPredictionTask(PredictionTask):
 
     def build(self, body, input_size, device=None, inputs=None):
         # Retrieve the embedding module to get the name of itemid col and its related table
+
+        if not len(input_size) == 3 or isinstance(input_size, dict):
+            raise ValueError(
+                "NextItemPredictionTask needs a 3-dim vector as input, found:" f"{input_size}"
+            )
 
         # TODO: retrieve embeddings
         if not inputs:
@@ -348,6 +354,12 @@ class Head(torch.nn.Module):
         self.build(body_output_size or body.output_size(), inputs=inputs)
 
     def build(self, input_size, inputs=None, device=None):
+        if not getattr(self.body, "output_size", lambda: None)() and not self.body_output_size:
+            raise ValueError(
+                "Can't infer output-size of the body, please provide this either "
+                "in the `body_output_size` parameter or pass in a `Block` with a output-size."
+            )
+
         if device:
             self.to(device)
         for task in self.prediction_tasks.values():

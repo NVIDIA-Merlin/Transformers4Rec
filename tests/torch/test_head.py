@@ -26,6 +26,23 @@ def test_simple_heads(torch_yoochoose_tabular_features, torch_yoochoose_like, ta
     assert loss.min() >= 0 and loss.max() <= 1
 
 
+@pytest.mark.parametrize("task", [torch4rec.BinaryClassificationTask, torch4rec.RegressionTask])
+@pytest.mark.parametrize("summary", ["last", "first", "mean", "cls_index"])
+def test_simple_heads_on_sequence(
+    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like, task, summary
+):
+    inputs = torch_yoochoose_sequential_tabular_features
+    targets = {"target": pytorch.randint(2, (100,)).float()}
+
+    body = torch4rec.SequentialBlock(inputs, torch4rec.MLPBlock([64]))
+    head = task("target", summary_type=summary).to_head(body, inputs)
+
+    body_out = body(torch_yoochoose_like)
+    loss = head.compute_loss(body_out, targets)
+
+    assert loss.min() >= 0 and loss.max() <= 1
+
+
 def test_head_with_multiple_tasks(torch_yoochoose_tabular_features, torch_yoochoose_like):
     targets = {
         "classification": pytorch.randint(2, (100,)).float(),
@@ -118,6 +135,28 @@ def test_item_prediction_HF_output(
         param in outputs
         for param in ["loss", "labels", "predictions", "pred_metadata", "model_outputs"]
     ]
+
+
+def test_head_not_inferring_output_size_body(torch_yoochoose_tabular_features):
+    with pytest.raises(ValueError) as excinfo:
+        body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, pytorch.nn.Dropout(0.5))
+        torch4rec.Head(
+            body,
+            torch4rec.BinaryClassificationTask(),
+        )
+
+        assert "Can't infer output-size of the body" in str(excinfo.value)
+
+
+def test_item_prediction_head_with_wrong_body(torch_yoochoose_tabular_features):
+    with pytest.raises(ValueError) as excinfo:
+        body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, pytorch.nn.Dropout(0.5))
+        torch4rec.Head(
+            body,
+            torch4rec.NextItemPredictionTask(),
+        )
+
+        assert "NextItemPredictionTask needs a 3-dim vector as input, found:" in str(excinfo.value)
 
 
 def test_item_prediction_head_with_input_size(
