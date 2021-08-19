@@ -16,7 +16,7 @@
 from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
 from .block.base import Block, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
-from .block.recurrent import RecurrentBlock
+from .block.transformer import TransformerBlock
 from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import (
@@ -38,7 +38,7 @@ __all__ = [
     "Block",
     "MLPBlock",
     "BlockWithHead",
-    "RecurrentBlock",
+    "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SoftEmbeddingFeatures",
