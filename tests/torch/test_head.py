@@ -27,15 +27,18 @@ def test_simple_heads(torch_yoochoose_tabular_features, torch_yoochoose_like, ta
 
 
 @pytest.mark.parametrize("task", [torch4rec.BinaryClassificationTask, torch4rec.RegressionTask])
+@pytest.mark.parametrize(
+    "task_block", [None, torch4rec.MLPBlock([32]), torch4rec.MLPBlock([32]).build([-1, 64])]
+)
 @pytest.mark.parametrize("summary", ["last", "first", "mean", "cls_index"])
 def test_simple_heads_on_sequence(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like, task, summary
+    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like, task, task_block, summary
 ):
     inputs = torch_yoochoose_sequential_tabular_features
     targets = {"target": pytorch.randint(2, (100,)).float()}
 
     body = torch4rec.SequentialBlock(inputs, torch4rec.MLPBlock([64]))
-    head = task("target", summary_type=summary).to_head(body, inputs)
+    head = task("target", task_block=task_block, summary_type=summary).to_head(body, inputs)
 
     body_out = body(torch_yoochoose_like)
     loss = head.compute_loss(body_out, targets)
@@ -130,7 +133,7 @@ def test_item_prediction_loss_and_metrics(
     )
 
     metrics = head.prediction_tasks["0"].calculate_metrics(
-        predictions=body_outputs, labels=labels_all
+        predictions=body_outputs, targets=labels_all
     )
     assert all(len(m) == 3 for m in metrics.values())
     assert loss != 0

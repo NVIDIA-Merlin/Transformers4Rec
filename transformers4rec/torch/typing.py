@@ -27,6 +27,7 @@ SequentialBlock = ForwardRef("transformers4rec.torch.block.base.SequentialBlock"
 BuildableBlock = ForwardRef("transformers4rec.torch.block.base.BuildableBlock")
 BlockWithHead = ForwardRef("transformers4rec.torch.block.with_head.BlockWithHead")
 BlockType = typing.Union[Block, BuildableBlock]
+BlockOrModule = typing.Union[Block, BuildableBlock, torch.nn.Module]
 
 
 Head = ForwardRef("transformers4rec.torch.head.Head")
@@ -42,6 +43,7 @@ __all__ = [
     "MaskedSequence",
     "Block",
     "BlockType",
+    "BlockOrModule",
     "SequentialBlock",
     "BuildableBlock",
     "BlockWithHead",

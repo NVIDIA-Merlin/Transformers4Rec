@@ -9,33 +9,34 @@ from torch.nn import Module
 from transformers4rec.torch.typing import MaskSequence
 from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
 
-from ..head import Head
 from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule, merge_tabular
 
 
 class BlockMixin:
     def to_model(
         self,
-        head: Head,
+        head,
         masking: Optional[Union[MaskSequence, str]] = None,
         optimizer=torch.optim.Adam,
         block_output_size=None,
         **kwargs
     ):
-        from .with_head import BlockWithHead
+        raise NotImplementedError
 
-        if not block_output_size:
-            if getattr(self, "input_size", None) and getattr(self, "forward_output_size", None):
-                block_output_size = self.forward_output_size(self.input_size)
-        if block_output_size:
-            self.output_size = block_output_size
-
-        out = BlockWithHead(self, head, masking=masking, optimizer=optimizer, **kwargs)
-
-        if next(self.parameters()).is_cuda:
-            out.to("cuda")
-
-        return out
+        # from .with_head import BlockWithHead
+        #
+        # if not block_output_size:
+        #     if getattr(self, "input_size", None) and getattr(self, "forward_output_size", None):
+        #         block_output_size = self.forward_output_size(self.input_size)
+        # if block_output_size:
+        #     self.output_size = block_output_size
+        #
+        # out = BlockWithHead(self, head, masking=masking, optimizer=optimizer, **kwargs)
+        #
+        # if next(self.parameters()).is_cuda:
+        #     out.to("cuda")
+        #
+        # return out
 
 
 class TabularBlock(TabularModule, BlockMixin):
@@ -176,7 +177,7 @@ def build_blocks(*modules):
 
 class BuildableBlock(abc.ABC):
     @abc.abstractmethod
-    def build(self, input_shape) -> Union[TabularBlock, Block, SequentialBlock]:
+    def build(self, input_size) -> Union[TabularBlock, Block, SequentialBlock]:
         raise NotImplementedError
 
     def __rrshift__(self, other):

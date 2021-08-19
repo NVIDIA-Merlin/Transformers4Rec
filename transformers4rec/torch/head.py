@@ -9,7 +9,8 @@ from transformers.modeling_utils import SequenceSummary
 
 from ..types import DatasetSchema
 from ..utils.tags import Tag
-from .typing import BlockType, SequentialBlock
+from .block.base import Block, BuildableBlock, SequentialBlock
+from .typing import BlockOrModule, BlockType
 
 
 class PredictionTask(torch.nn.Module):
@@ -19,7 +20,8 @@ class PredictionTask(torch.nn.Module):
         metrics=None,
         target_name=None,
         forward_to_prediction_fn=lambda x: x,
-        pre: Optional[torch.nn.Module] = None,
+        task_block: Optional[BlockType] = None,
+        pre: Optional[BlockType] = None,
         summary_type="last",
     ):
         super().__init__()
@@ -29,8 +31,9 @@ class PredictionTask(torch.nn.Module):
         self.set_metrics(metrics)
         self.loss = loss
         self.pre = pre
+        self.task_block = task_block
 
-    def build(self, block, input_size, inputs=None, device=None):
+    def build(self, body, input_size, inputs=None, device=None, task_block=None, pre=None):
         """
         The method will be called when block is convert to_model,
         i.e when linked to prediction head
@@ -38,6 +41,28 @@ class PredictionTask(torch.nn.Module):
             block: (BlockType) the model block to link with head
             device: set the device for the metrics and layers of the task
         """
+        if task_block:
+            # TODO: What to do when `self.task_block is not None`?
+            self.task_block = task_block
+        if pre:
+            # TODO: What to do when `self.pre is not None`?
+            self.pre = pre
+
+        # Build task block
+        pre_input_size = input_size
+        if self.task_block:
+            if isinstance(self.task_block, torch.nn.Module):
+                self.task_block = copy.deepcopy(self.task_block)
+            else:
+                self.task_block = self.task_block.build(input_size)
+            pre_input_size = self.task_block.output_size()
+
+        if self.pre:
+            if isinstance(self.pre, torch.nn.Module):
+                self.pre = copy.deepcopy(self.pre)
+            else:
+                self.pre = self.pre.build(pre_input_size)
+
         if device:
             self.to(device)
             for metric in self.metrics:
@@ -46,9 +71,14 @@ class PredictionTask(torch.nn.Module):
 
     def forward(self, inputs, **kwargs):
         x = inputs
+
+        if len(x.size()) == 3:
+            x = self.sequence_summary(x)
+
+        if self.task_block:
+            x = self.task_block(x)
+
         if self.pre:
-            if len(x.size()) == 3:
-                x = self.sequence_summary(x)
             x = self.pre(x)
 
         return x
@@ -100,6 +130,18 @@ class PredictionTask(torch.nn.Module):
         return Head(body, self, inputs=inputs, **kwargs)
 
 
+class BinaryClassificationPrepareBlock(BuildableBlock):
+    def build(self, input_size) -> SequentialBlock:
+        return SequentialBlock(
+            torch.nn.Linear(input_size[-1], 1, bias=False),
+            torch.nn.Sigmoid(),
+            LambdaModule(lambda x: x.view(-1)),
+            output_size=[
+                None,
+            ],
+        )
+
+
 class BinaryClassificationTask(PredictionTask):
     DEFAULT_LOSS = torch.nn.BCELoss()
     DEFAULT_METRICS = (
@@ -110,22 +152,32 @@ class BinaryClassificationTask(PredictionTask):
     )
 
     def __init__(
-        self, target_name=None, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, summary_type="first"
+        self,
+        target_name=None,
+        task_block: Optional[BlockType] = None,
+        loss=DEFAULT_LOSS,
+        metrics=DEFAULT_METRICS,
+        summary_type="first",
     ):
         super().__init__(
             loss=loss,
             metrics=metrics,
             target_name=target_name,
             summary_type=summary_type,
+            task_block=task_block,
+            pre=BinaryClassificationPrepareBlock(),
             forward_to_prediction_fn=lambda x: torch.round(x).int(),
         )
 
-    def build(self, block, input_size, inputs=None, device=None):
-        super().build(block, input_size, device=device)
-        self.pre = torch.nn.Sequential(
-            torch.nn.Linear(input_size[-1], 1, bias=False),
-            torch.nn.Sigmoid(),
+
+class RegressionPrepareBlock(BuildableBlock):
+    def build(self, input_size) -> SequentialBlock:
+        return SequentialBlock(
+            torch.nn.Linear(input_size[-1], 1),
             LambdaModule(lambda x: x.view(-1)),
+            output_size=[
+                None,
+            ],
         )
 
 
@@ -134,20 +186,21 @@ class RegressionTask(PredictionTask):
     DEFAULT_METRICS = (tm.regression.MeanSquaredError(),)
 
     def __init__(
-        self, target_name=None, loss=DEFAULT_LOSS, metrics=DEFAULT_METRICS, summary_type="first"
+        self,
+        target_name=None,
+        task_block: Optional[BlockType] = None,
+        loss=DEFAULT_LOSS,
+        metrics=DEFAULT_METRICS,
+        summary_type="first",
     ):
         super().__init__(
             loss=loss,
             metrics=metrics,
             target_name=target_name,
             summary_type=summary_type,
+            task_block=task_block,
+            pre=RegressionPrepareBlock(),
             forward_to_prediction_fn=lambda x: torch.round(x).int(),
-        )
-
-    def build(self, block, input_size, inputs=None, device=None):
-        super().build(block, input_size, device=device)
-        self.pre = torch.nn.Sequential(
-            torch.nn.Linear(input_size[-1], 1), LambdaModule(lambda x: x.view(-1))
         )
 
 
@@ -156,7 +209,7 @@ class NextItemPredictionTask(PredictionTask):
         self,
         loss=torch.nn.NLLLoss(ignore_index=0),
         metrics=None,
-        pre: Optional[torch.nn.Module] = None,
+        task_block: Optional[torch.nn.Module] = None,
         weight_tying: bool = False,
         softmax_temperature: float = 1,
         pad_token: int = 0,
@@ -177,11 +230,10 @@ class NextItemPredictionTask(PredictionTask):
                         so that softmax(logits / T). Value 1.0 reduces to regular softmax.
             pad_token: pad token id.
             target_dim: vocabulary size of item ids
-            HF_format: output the dictionary of outputs needed by RecSysTrained,
+            hf_format: output the dictionary of outputs needed by RecSysTrained,
                         if set to False, return the predictions tensor.
         """
-        super().__init__(loss=loss, metrics=metrics, pre=pre)
-        self.pre = pre
+        super().__init__(loss=loss, metrics=metrics, task_block=task_block)
         self.softmax_temperature = softmax_temperature
         self.weight_tying = weight_tying
         self.pad_token = pad_token
@@ -191,15 +243,14 @@ class NextItemPredictionTask(PredictionTask):
         self.item_embedding_table = None
         self.masking = None
 
-    def build(self, body, input_size, device=None, inputs=None):
-        # Retrieve the embedding module to get the name of itemid col and its related table
-
+    def build(self, body, input_size, device=None, inputs=None, task_block=None, pre=None):
+        """Build method, this is called by the `Head`."""
         if not len(input_size) == 3 or isinstance(input_size, dict):
             raise ValueError(
                 "NextItemPredictionTask needs a 3-dim vector as input, found:" f"{input_size}"
             )
 
-        # TODO: retrieve embeddings
+        # Retrieve the embedding module to get the name of itemid col and its related table
         if not inputs:
             inputs = body.inputs
         if not getattr(inputs, "item_id", None):
@@ -218,15 +269,13 @@ class NextItemPredictionTask(PredictionTask):
         if self.masking:
             self.pad_token = self.masking.pad_token
 
-        self.pre = _ItemPredictionTask(
-            input_size=input_size,
+        pre = NextItemPredictionPrepareBlock(
             target_dim=self.target_dim,
             weight_tying=self.weight_tying,
             item_embedding_table=self.item_embedding_table,
             softmax_temperature=self.softmax_temperature,
         )
-
-        super().build(body, input_size, device=device, inputs=inputs)
+        super().build(body, input_size, device=device, inputs=inputs, task_block=None, pre=pre)
 
     def forward(self, inputs, **kwargs):
         if isinstance(inputs, (tuple, list)):
@@ -272,7 +321,35 @@ class NextItemPredictionTask(PredictionTask):
         return out_tensor
 
 
-class _ItemPredictionTask(torch.nn.Module):
+class NextItemPredictionPrepareBlock(BuildableBlock):
+    def __init__(
+        self,
+        target_dim: int,
+        weight_tying: bool = False,
+        item_embedding_table: Optional[torch.nn.Module] = None,
+        softmax_temperature: float = 0,
+    ):
+        super().__init__()
+        self.target_dim = target_dim
+        self.weight_tying = weight_tying
+        self.item_embedding_table = item_embedding_table
+        self.softmax_temperature = softmax_temperature
+
+    def build(self, input_size) -> Block:
+        # TODO: What's the output-size of this?
+        return Block(
+            _NextItemPredictionTask(
+                input_size,
+                self.target_dim,
+                self.weight_tying,
+                self.item_embedding_table,
+                self.softmax_temperature,
+            ),
+            [None, None],
+        )
+
+
+class _NextItemPredictionTask(torch.nn.Module):
     def __init__(
         self,
         input_size: int,
@@ -328,7 +405,7 @@ class _ItemPredictionTask(torch.nn.Module):
         return predictions
 
     def _get_name(self):
-        return "ItemPredictionTask"
+        return "NextItemPredictionTask"
 
 
 class Head(torch.nn.Module):
@@ -342,13 +419,6 @@ class Head(torch.nn.Module):
         inputs=None,
     ):
         super().__init__()
-        if task_blocks:
-            if isinstance(task_blocks, torch.nn.Module):
-                self.task_blocks = torch.nn.ModuleDict(dict(__default__=task_blocks))
-            else:
-                self.task_blocks = task_blocks
-        else:
-            self.task_blocks = {}
         if isinstance(body_output_size, int):
             body_output_size = [body_output_size]
         self.body_output_size = body_output_size
@@ -364,12 +434,9 @@ class Head(torch.nn.Module):
         if task_weights:
             for key, val in task_weights.items():
                 self._task_weights[key] = val
-        self.build(body_output_size or body.output_size(), inputs=inputs)
+        self.build(body_output_size or body.output_size(), inputs=inputs, task_blocks=task_blocks)
 
-    def build(self, input_size, inputs=None, device=None):
-        from .block.base import Block, BuildableBlock
-        from .block.base import SequentialBlock as _SequentialBlock
-
+    def build(self, input_size, inputs=None, device=None, task_blocks=None):
         if not getattr(self.body, "output_size", lambda: None)() and not self.body_output_size:
             raise ValueError(
                 "Can't infer output-size of the body, please provide this either "
@@ -379,30 +446,11 @@ class Head(torch.nn.Module):
         if device:
             self.to(device)
 
-        if self.task_blocks and isinstance(
-            self.task_blocks, (Block, BuildableBlock, _SequentialBlock)
-        ):
-            task_blocks = {}
-            for name in self.prediction_tasks.keys():
-                if isinstance(self.task_blocks, (Block, _SequentialBlock)):
-                    task_blocks[name] = copy.deepcopy(self.task_blocks)
-                else:
-                    task_blocks[name] = self.task_blocks.build(input_size)
-            self.task_blocks = torch.nn.ModuleDict(task_blocks)
-
-        elif self.task_blocks and "__default__" in self.task_blocks:
-            task_blocks = {}
-            for name in self.prediction_tasks.keys():
-                task_blocks[name] = copy.deepcopy(self.task_blocks["__default__"])
-            self.task_blocks = torch.nn.ModuleDict(task_blocks)
-
         for name, task in self.prediction_tasks.items():
-            task_input_size = input_size
-            if self.task_blocks and name in self.task_blocks:
-                if hasattr(self.task_blocks[name], "build"):
-                    self.task_blocks[name] = self.task_blocks[name].build(input_size)
-                task_input_size = self.task_blocks[name].output_size()
-            task.build(self.body, task_input_size, inputs=inputs, device=device)
+            task_block = task_blocks
+            if task_blocks and isinstance(task_blocks, dict) and name in task_blocks:
+                task_block = task_blocks[name]
+            task.build(self.body, input_size, inputs=inputs, device=device, task_block=task_block)
         self.input_size = input_size
 
     @classmethod
@@ -442,13 +490,11 @@ class Head(torch.nn.Module):
 
         return outputs
 
-    def forward(self, logits: torch.Tensor, **kwargs):
+    def forward(self, body_outputs, **kwargs):
         outputs = {}
 
         for name, task in self.prediction_tasks.items():
-            maybe_task_block = self.task_blocks[name] if name in self.task_blocks else None
-            task_inputs = self.task_blocks[name](logits) if maybe_task_block else logits
-            outputs[name] = task(task_inputs, **kwargs)
+            outputs[name] = task(body_outputs, **kwargs)
 
         if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]
@@ -459,9 +505,7 @@ class Head(torch.nn.Module):
         losses = []
 
         for name, task in self.prediction_tasks.items():
-            maybe_task_block = self.task_blocks[name] if name in self.task_blocks else None
-            task_inputs = self.task_blocks[name](body_outputs) if maybe_task_block else body_outputs
-            loss = task.compute_loss(task_inputs, targets, **kwargs)
+            loss = task.compute_loss(body_outputs, targets, **kwargs)
             losses.append(loss * self._task_weights[name])
 
         return torch.stack(losses).mean()
@@ -472,9 +516,7 @@ class Head(torch.nn.Module):
         metrics = {}
 
         for name, task in self.prediction_tasks.items():
-            maybe_task_block = self.task_blocks[name] if name in self.task_blocks else None
-            task_inputs = self.task_blocks[name](body_outputs) if maybe_task_block else body_outputs
-            metrics[name] = task.calculate_metrics(task_inputs, targets, mode=mode)
+            metrics[name] = task.calculate_metrics(body_outputs, targets, mode=mode)
 
         return _output_metrics(metrics)
 
@@ -491,6 +533,10 @@ class Head(torch.nn.Module):
     def reset_metrics(self):
         for task in self.prediction_tasks.values():
             task.reset_metrics()
+
+    @property
+    def task_blocks(self) -> Dict[str, Optional[BlockOrModule]]:
+        return {name: task.task_block for name, task in self.prediction_tasks.items()}
 
 
 class LambdaModule(torch.nn.Module):
