@@ -51,8 +51,7 @@ def test_simple_heads_on_sequence(
     [
         None,
         torch4rec.MLPBlock([32]),
-        # TODO: Fix this failing test, somehow the weight matrices of the task-blocks are equal
-        # torch4rec.MLPBlock([32]).build([-1, 64]),
+        torch4rec.MLPBlock([32]).build([-1, 64]),
         dict(classification=torch4rec.MLPBlock([16]), regression=torch4rec.MLPBlock([20])),
     ],
 )
@@ -70,9 +69,16 @@ def test_head_with_multiple_tasks(
         torch4rec.RegressionTask("regression"),
     ]
     head = torch4rec.Head(body, tasks, task_blocks=task_blocks)
+    optimizer = pytorch.optim.Adam(head.parameters())
 
-    body_out = body(torch_yoochoose_like)
-    loss, metrics = head.compute_loss(body_out, targets), head.calculate_metrics(body_out, targets)
+    with pytorch.set_grad_enabled(mode=True):
+        body_out = body(torch_yoochoose_like)
+        loss = head.compute_loss(body_out, targets)
+        metrics = head.calculate_metrics(body_out, targets)
+
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
 
     assert loss.min() >= 0 and loss.max() <= 1
     assert list(metrics.keys()) == ["classification", "regression"]
@@ -80,6 +86,7 @@ def test_head_with_multiple_tasks(
     assert list(metrics["regression"].keys()) == ["val_meansquarederror"]
     if task_blocks:
         assert head.task_blocks["classification"][0] != head.task_blocks["regression"][0]
+
         assert not pytorch.equal(
             head.task_blocks["classification"][0][0].weight,
             head.task_blocks["regression"][0][0].weight,
