@@ -73,16 +73,19 @@ class PredictionTask(torch.nn.Module):
         return loss
 
     def calculate_metrics(
-        self, predictions, labels, mode="val", forward=True
+        self, predictions, targets, mode="val", forward=True
     ) -> Dict[str, torch.Tensor]:
+        if isinstance(targets, dict) and self.target_name:
+            targets = targets[self.target_name]
+
         outputs = {}
         if forward:
             predictions = self(predictions)
         predictions = self.forward_to_prediction_fn(predictions)
         for metric in self.metrics:
             if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
-                labels = labels.int()
-            outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, labels)
+                targets = targets.int()
+            outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, targets)
 
         return outputs
 
@@ -464,12 +467,14 @@ class Head(torch.nn.Module):
         return torch.stack(losses).mean()
 
     def calculate_metrics(
-        self, block_outputs, targets, mode="val"
+        self, body_outputs, targets, mode="val"
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
 
         for name, task in self.prediction_tasks.items():
-            metrics[name] = task.calculate_metrics(block_outputs, targets, mode=mode)
+            maybe_task_block = self.task_blocks[name] if name in self.task_blocks else None
+            task_inputs = self.task_blocks[name](body_outputs) if maybe_task_block else body_outputs
+            metrics[name] = task.calculate_metrics(task_inputs, targets, mode=mode)
 
         return _output_metrics(metrics)
 
