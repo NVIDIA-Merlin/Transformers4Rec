@@ -92,7 +92,7 @@ class PredictionTask(torch.nn.Module):
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
-        predictions = self(inputs)
+        predictions = self(inputs, training=training)
         loss = self.loss(predictions, targets)
 
         if compute_metrics:
@@ -418,6 +418,7 @@ class Head(torch.nn.Module):
         task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
         task_weights=None,
         body_output_size=None,
+        loss_reduction="mean",
         inputs=None,
     ):
         super().__init__()
@@ -425,6 +426,7 @@ class Head(torch.nn.Module):
             body_output_size = [body_output_size]
         self.body_output_size = body_output_size
         self.body = body
+        self.loss_reduction = loss_reduction
         self.prediction_tasks = torch.nn.ModuleDict()
         if prediction_tasks:
             if not isinstance(prediction_tasks, list):
@@ -492,30 +494,45 @@ class Head(torch.nn.Module):
 
         return outputs
 
-    def forward(self, body_outputs, **kwargs):
+    def forward(self, body_outputs, call_body=False, always_output_dict=False, **kwargs):
         outputs = {}
+
+        if call_body:
+            body_outputs = self.body(body_outputs)
 
         for name, task in self.prediction_tasks.items():
             outputs[name] = task(body_outputs, **kwargs)
 
-        if len(outputs) == 1:
+        if len(outputs) == 1 and not always_output_dict:
             return outputs[list(outputs.keys())[0]]
 
         return outputs
 
-    def compute_loss(self, body_outputs, targets, **kwargs) -> torch.Tensor:
+    def compute_loss(
+        self, body_outputs, targets, calculate_metrics=True, call_body=False, **kwargs
+    ) -> torch.Tensor:
         losses = []
 
+        if call_body:
+            body_outputs = self.body(body_outputs)
+
         for name, task in self.prediction_tasks.items():
-            loss = task.compute_loss(body_outputs, targets, **kwargs)
+            loss = task.compute_loss(
+                body_outputs, targets, calculate_metrics=calculate_metrics, **kwargs
+            )
             losses.append(loss * self._task_weights[name])
 
-        return torch.stack(losses).mean()
+        loss_tensor = torch.stack(losses)
+
+        return getattr(loss_tensor, self.loss_reduction)()
 
     def calculate_metrics(
-        self, body_outputs, targets, mode="val"
+        self, body_outputs, targets, mode="val", call_body=False
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
+
+        if call_body:
+            body_outputs = self.body(body_outputs)
 
         for name, task in self.prediction_tasks.items():
             metrics[name] = task.calculate_metrics(body_outputs, targets, mode=mode)
