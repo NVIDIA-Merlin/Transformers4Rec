@@ -1,3 +1,4 @@
+import copy
 from collections import defaultdict
 from types import SimpleNamespace
 from typing import Dict, List, Optional, Text, Union
@@ -6,10 +7,9 @@ import torch
 import torchmetrics as tm
 from transformers.modeling_utils import SequenceSummary
 
-from transformers4rec.torch.typing import BuildableBlock, SequentialBlock
-
 from ..types import DatasetSchema
 from ..utils.tags import Tag
+from .typing import BlockType, SequentialBlock
 
 
 class PredictionTask(torch.nn.Module):
@@ -333,12 +333,19 @@ class Head(torch.nn.Module):
         self,
         body: SequentialBlock,
         prediction_tasks: Optional[Union[List[PredictionTask], PredictionTask]] = None,
-        task_towers: Optional[Union[BuildableBlock, Dict[str, BuildableBlock]]] = None,
+        task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
         task_weights=None,
         body_output_size=None,
         inputs=None,
     ):
         super().__init__()
+        if task_blocks:
+            if isinstance(task_blocks, torch.nn.Module):
+                self.task_blocks = torch.nn.ModuleDict(dict(__default__=task_blocks))
+            else:
+                self.task_blocks = task_blocks
+        else:
+            self.task_blocks = {}
         if isinstance(body_output_size, int):
             body_output_size = [body_output_size]
         self.body_output_size = body_output_size
@@ -351,9 +358,15 @@ class Head(torch.nn.Module):
                 self.prediction_tasks[task.target_name or str(i)] = task
 
         self._task_weights = defaultdict(lambda: 1)
+        if task_weights:
+            for key, val in task_weights.items():
+                self._task_weights[key] = val
         self.build(body_output_size or body.output_size(), inputs=inputs)
 
     def build(self, input_size, inputs=None, device=None):
+        from .block.base import Block, BuildableBlock
+        from .block.base import SequentialBlock as _SequentialBlock
+
         if not getattr(self.body, "output_size", lambda: None)() and not self.body_output_size:
             raise ValueError(
                 "Can't infer output-size of the body, please provide this either "
@@ -362,8 +375,31 @@ class Head(torch.nn.Module):
 
         if device:
             self.to(device)
-        for task in self.prediction_tasks.values():
-            task.build(self.body, input_size, inputs=inputs, device=device)
+
+        if self.task_blocks and isinstance(
+            self.task_blocks, (Block, BuildableBlock, _SequentialBlock)
+        ):
+            task_blocks = {}
+            for name in self.prediction_tasks.keys():
+                if isinstance(self.task_blocks, (Block, _SequentialBlock)):
+                    task_blocks[name] = copy.deepcopy(self.task_blocks)
+                else:
+                    task_blocks[name] = self.task_blocks.build(input_size)
+            self.task_blocks = torch.nn.ModuleDict(task_blocks)
+
+        elif self.task_blocks and "__default__" in self.task_blocks:
+            task_blocks = {}
+            for name in self.prediction_tasks.keys():
+                task_blocks[name] = copy.deepcopy(self.task_blocks["__default__"])
+            self.task_blocks = torch.nn.ModuleDict(task_blocks)
+
+        for name, task in self.prediction_tasks.items():
+            task_input_size = input_size
+            if self.task_blocks and name in self.task_blocks:
+                if hasattr(self.task_blocks[name], "build"):
+                    self.task_blocks[name] = self.task_blocks[name].build(input_size)
+                task_input_size = self.task_blocks[name].output_size()
+            task.build(self.body, task_input_size, inputs=inputs, device=device)
         self.input_size = input_size
 
     @classmethod
@@ -407,7 +443,9 @@ class Head(torch.nn.Module):
         outputs = {}
 
         for name, task in self.prediction_tasks.items():
-            outputs[name] = task(logits, **kwargs)
+            maybe_task_block = self.task_blocks[name] if name in self.task_blocks else None
+            task_inputs = self.task_blocks[name](logits) if maybe_task_block else logits
+            outputs[name] = task(task_inputs, **kwargs)
 
         if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]
@@ -418,7 +456,9 @@ class Head(torch.nn.Module):
         losses = []
 
         for name, task in self.prediction_tasks.items():
-            loss = task.compute_loss(body_outputs, targets, **kwargs)
+            maybe_task_block = self.task_blocks[name] if name in self.task_blocks else None
+            task_inputs = self.task_blocks[name](body_outputs) if maybe_task_block else body_outputs
+            loss = task.compute_loss(task_inputs, targets, **kwargs)
             losses.append(loss * self._task_weights[name])
 
         return torch.stack(losses).mean()

@@ -192,9 +192,6 @@ class BuildableBlock(abc.ABC):
         return self.build(shape)
 
 
-BlockType = Union[torch.nn.Module, Block]
-
-
 def right_shift_block(self, other):
     if isinstance(other, list):
         left_side = [FilterFeatures(other)]

@@ -6,8 +6,7 @@ import torch
 from tqdm import tqdm
 
 from ..head import Head
-from ..typing import MaskSequence
-from .base import BlockType
+from ..typing import BlockType, MaskSequence
 
 
 class BlockWithHead(torch.nn.Module):

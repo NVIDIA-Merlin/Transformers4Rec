@@ -43,7 +43,19 @@ def test_simple_heads_on_sequence(
     assert loss.min() >= 0 and loss.max() <= 1
 
 
-def test_head_with_multiple_tasks(torch_yoochoose_tabular_features, torch_yoochoose_like):
+@pytest.mark.parametrize(
+    "task_blocks",
+    [
+        None,
+        torch4rec.MLPBlock([32]),
+        # TODO: Fix this failing test, somehow the weight matrices of the task-blocks are equal
+        # torch4rec.MLPBlock([32]).build([-1, 64]),
+        dict(classification=torch4rec.MLPBlock([16]), regression=torch4rec.MLPBlock([20])),
+    ],
+)
+def test_head_with_multiple_tasks(
+    torch_yoochoose_tabular_features, torch_yoochoose_like, task_blocks
+):
     targets = {
         "classification": pytorch.randint(2, (100,)).float(),
         "regression": pytorch.randint(2, (100,)).float(),
@@ -54,12 +66,18 @@ def test_head_with_multiple_tasks(torch_yoochoose_tabular_features, torch_yoocho
         torch4rec.BinaryClassificationTask("classification"),
         torch4rec.RegressionTask("regression"),
     ]
-    head = torch4rec.Head(body, tasks)
+    head = torch4rec.Head(body, tasks, task_blocks=task_blocks)
 
     body_out = body(torch_yoochoose_like)
     loss = head.compute_loss(body_out, targets)
 
     assert loss.min() >= 0 and loss.max() <= 1
+    if task_blocks:
+        assert head.task_blocks["classification"][0] != head.task_blocks["regression"][0]
+        assert not pytorch.equal(
+            head.task_blocks["classification"][0][0].weight,
+            head.task_blocks["regression"][0][0].weight,
+        )
 
 
 def test_item_prediction_head(torch_yoochoose_sequential_tabular_features, torch_yoochoose_like):
