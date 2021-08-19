@@ -14,7 +14,7 @@ config_classes = [
 
 @pytest.mark.parametrize("config_cls", config_classes)
 def test_to_torch_model(config_cls):
-    config = config_cls.for_rec(100, 4, 2, 20)
+    config = config_cls.build(100, 4, 2, 20)
 
     model = config.to_torch_model()
 
@@ -23,7 +23,7 @@ def test_to_torch_model(config_cls):
 
 @pytest.mark.parametrize("config_cls", list(set(config_classes) - {tconf.ReformerConfig}))
 def test_to_tf_model(config_cls):
-    config = config_cls.for_rec(100, 4, 2, 20)
+    config = config_cls.build(100, 4, 2, 20)
 
     model = config.to_tf_model()
 
