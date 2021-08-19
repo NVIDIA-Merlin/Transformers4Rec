@@ -29,7 +29,7 @@ def test_sequential_prediction_model(
 
     inputs = torch_yoochoose_sequential_tabular_features
 
-    transformer_config = tconf.AlbertConfig.build(
+    transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
     body = torch4rec.SequentialBlock(
@@ -54,7 +54,6 @@ def test_model_with_multiple_heads_and_tasks(
     torch_yoochoose_tabular_features,
     torch_yoochoose_sequential_tabular_features,
     torch_yoochoose_like,
-    transformer_body,
 ):
     # Tabular classification and regression tasks
     targets = {
