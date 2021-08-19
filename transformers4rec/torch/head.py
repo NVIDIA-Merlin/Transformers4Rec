@@ -275,7 +275,9 @@ class NextItemPredictionTask(PredictionTask):
             item_embedding_table=self.item_embedding_table,
             softmax_temperature=self.softmax_temperature,
         )
-        super().build(body, input_size, device=device, inputs=inputs, task_block=None, pre=pre)
+        super().build(
+            body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
+        )
 
     def forward(self, inputs, **kwargs):
         if isinstance(inputs, (tuple, list)):
