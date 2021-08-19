@@ -81,8 +81,9 @@ class Block(BlockMixin, torch.nn.Module):
 
 
 class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
-    def __init__(self, *args):
+    def __init__(self, *args, output_size=None):
         super().__init__()
+        self._static_output_size = output_size
         self.input_size = None
         if len(args) == 1 and isinstance(args[0], OrderedDict):
             last = None
@@ -128,6 +129,9 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
         return merge_tabular(self, other)
 
     def forward_output_size(self, input_size):
+        if self._static_output_size:
+            return self._static_output_size
+
         x = input_size
         for module in list(self):
             if getattr(module, "forward_output_size", None):

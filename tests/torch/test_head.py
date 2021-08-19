@@ -120,6 +120,28 @@ def test_item_prediction_HF_output(
     ]
 
 
+def test_item_prediction_head_with_input_size(
+    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+):
+    input_module = torch_yoochoose_sequential_tabular_features
+
+    body = torch4rec.SequentialBlock(
+        input_module,
+        torch4rec.MLPBlock([64]),
+        torch.nn.GRU(input_size=64, hidden_size=64, num_layers=2),
+    )
+    head = torch4rec.Head(
+        body,
+        torch4rec.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        inputs=input_module,
+        body_output_size=[None, 20, 64],
+    )
+
+    outputs = head(body(torch_yoochoose_like))
+
+    assert outputs
+
+
 # Test output formats
 def test_item_prediction_with_rnn(
     torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
