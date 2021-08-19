@@ -489,15 +489,15 @@ class Head(torch.nn.Module):
 
 
 class LambdaModule(torch.nn.Module):
-    def __init__(self, lambd):
+    def __init__(self, lambda_fn):
         super().__init__()
         import types
 
-        assert isinstance(lambd, types.LambdaType)
-        self.lambd = lambd
+        assert isinstance(lambda_fn, types.LambdaType)
+        self.lambda_fn = lambda_fn
 
     def forward(self, x):
-        return self.lambd(x)
+        return self.lambda_fn(x)
 
 
 def _output_metrics(metrics):
