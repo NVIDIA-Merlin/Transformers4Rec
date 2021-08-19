@@ -14,15 +14,11 @@ METRICS = [
 
 
 @pytest.mark.parametrize("task", [torch4rec.BinaryClassificationTask, torch4rec.RegressionTask])
-def test_simple_heads(yoochoose_schema, torch_yoochoose_like, task):
-    input_module = torch4rec.TabularFeatures.from_schema(
-        yoochoose_schema, max_sequence_length=20, continuous_projection=64, aggregation="concat"
-    )
-
+def test_simple_heads(torch_yoochoose_tabular_features, torch_yoochoose_like, task):
     targets = {"target": pytorch.randint(2, (100,)).float()}
 
-    body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
-    head = task("target").to_head(body, input_module)
+    body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, torch4rec.MLPBlock([64]))
+    head = task("target").to_head(body, torch_yoochoose_tabular_features)
 
     body_out = body(torch_yoochoose_like)
     loss = head.compute_loss(body_out, targets)
@@ -30,17 +26,13 @@ def test_simple_heads(yoochoose_schema, torch_yoochoose_like, task):
     assert loss.min() >= 0 and loss.max() <= 1
 
 
-def test_head_with_multiple_tasks(yoochoose_schema, torch_yoochoose_like):
-    input_module = torch4rec.TabularFeatures.from_schema(
-        yoochoose_schema, max_sequence_length=20, continuous_projection=64, aggregation="concat"
-    )
-
+def test_head_with_multiple_tasks(torch_yoochoose_tabular_features, torch_yoochoose_like):
     targets = {
         "classification": pytorch.randint(2, (100,)).float(),
         "regression": pytorch.randint(2, (100,)).float(),
     }
 
-    body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
+    body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, torch4rec.MLPBlock([64]))
     tasks = [
         torch4rec.BinaryClassificationTask("classification"),
         torch4rec.RegressionTask("regression"),
@@ -53,15 +45,8 @@ def test_head_with_multiple_tasks(yoochoose_schema, torch_yoochoose_like):
     assert loss.min() >= 0 and loss.max() <= 1
 
 
-def test_item_prediction_head(yoochoose_schema, torch_yoochoose_like):
-    input_module = torch4rec.SequentialTabularFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=100,
-        masking="causal",
-    )
-
+def test_item_prediction_head(torch_yoochoose_sequential_tabular_features, torch_yoochoose_like):
+    input_module = torch_yoochoose_sequential_tabular_features
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(), inputs=input_module)
 
@@ -70,15 +55,10 @@ def test_item_prediction_head(yoochoose_schema, torch_yoochoose_like):
     assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
 
 
-def test_item_prediction_head_weight_tying(yoochoose_schema, torch_yoochoose_like):
-    input_module = torch4rec.SequentialTabularFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking="causal",
-    )
-
+def test_item_prediction_head_weight_tying(
+    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+):
+    input_module = torch_yoochoose_sequential_tabular_features
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(
         body, torch4rec.NextItemPredictionTask(weight_tying=True), inputs=input_module
@@ -91,15 +71,10 @@ def test_item_prediction_head_weight_tying(yoochoose_schema, torch_yoochoose_lik
 
 # Test loss and metrics outputs
 @pytest.mark.parametrize("weight_tying", [True, False])
-def test_item_prediction_loss_and_metrics(yoochoose_schema, torch_yoochoose_like, weight_tying):
-    input_module = torch4rec.SequentialTabularFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking="causal",
-    )
-
+def test_item_prediction_loss_and_metrics(
+    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like, weight_tying
+):
+    input_module = torch_yoochoose_sequential_tabular_features
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(
         body, torch4rec.NextItemPredictionTask(weight_tying=weight_tying), inputs=input_module
@@ -124,14 +99,10 @@ def test_item_prediction_loss_and_metrics(yoochoose_schema, torch_yoochoose_like
 
 
 # Test output formats
-def test_item_prediction_HF_output(yoochoose_schema, torch_yoochoose_like):
-    input_module = torch4rec.SequentialTabularFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking="causal",
-    )
+def test_item_prediction_HF_output(
+    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+):
+    input_module = torch_yoochoose_sequential_tabular_features
 
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(
@@ -150,14 +121,10 @@ def test_item_prediction_HF_output(yoochoose_schema, torch_yoochoose_like):
 
 
 # Test output formats
-def test_item_prediction_with_rnn(yoochoose_schema, torch_yoochoose_like):
-    input_module = torch4rec.SequentialTabularFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking="causal",
-    )
+def test_item_prediction_with_rnn(
+    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+):
+    input_module = torch_yoochoose_sequential_tabular_features
 
     body = torch4rec.SequentialBlock(
         input_module,
@@ -172,5 +139,11 @@ def test_item_prediction_with_rnn(yoochoose_schema, torch_yoochoose_like):
 
     outputs = head(body(torch_yoochoose_like))
 
-    assert outputs
     assert isinstance(outputs, dict)
+    assert list(outputs.keys()) == [
+        "loss",
+        "labels",
+        "predictions",
+        "pred_metadata",
+        "model_outputs",
+    ]
