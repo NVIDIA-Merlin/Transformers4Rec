@@ -35,6 +35,7 @@ from .head import (
     PredictionTask,
     RegressionTask,
 )
+from .model import Model
 from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
 
 __all__ = [
@@ -53,6 +54,7 @@ __all__ = [
     "TableConfig",
     "TabularFeatures",
     "Head",
+    "Model",
     "PredictionTask",
     "AsTabular",
     "ConcatFeatures",

@@ -1,5 +1,4 @@
 import pytest
-import torch
 
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
@@ -132,7 +131,7 @@ def test_item_prediction_loss_and_metrics(
 
     trg_flat = input_module.masking.masked_targets.flatten()
     non_pad_mask = trg_flat != input_module.masking.pad_token
-    labels_all = torch.masked_select(trg_flat, non_pad_mask)
+    labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
 
     loss = head.prediction_tasks["0"].compute_loss(
         inputs=body_outputs,
@@ -198,7 +197,7 @@ def test_item_prediction_head_with_input_size(
     body = torch4rec.SequentialBlock(
         input_module,
         torch4rec.MLPBlock([64]),
-        torch.nn.GRU(input_size=64, hidden_size=64, num_layers=2),
+        pytorch.nn.GRU(input_size=64, hidden_size=64, num_layers=2),
     )
     head = torch4rec.Head(
         body,
@@ -221,7 +220,9 @@ def test_item_prediction_with_rnn(
     body = torch4rec.SequentialBlock(
         input_module,
         torch4rec.MLPBlock([64]),
-        torch4rec.Block(torch.nn.GRU(input_size=64, hidden_size=64, num_layers=2), [None, 20, 64]),
+        torch4rec.Block(
+            pytorch.nn.GRU(input_size=64, hidden_size=64, num_layers=2), [None, 20, 64]
+        ),
     )
     head = torch4rec.Head(
         body,

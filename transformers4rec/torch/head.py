@@ -129,6 +129,11 @@ class PredictionTask(torch.nn.Module):
     def to_head(self, body, inputs=None, **kwargs) -> "Head":
         return Head(body, self, inputs=inputs, **kwargs)
 
+    def to_model(self, body, inputs=None, **kwargs):
+        from .model import Model
+
+        return Model(Head(body, self, inputs=inputs, **kwargs), **kwargs)
+
 
 class BinaryClassificationPrepareBlock(BuildableBlock):
     def build(self, input_size) -> SequentialBlock:
@@ -509,7 +514,7 @@ class Head(torch.nn.Module):
         return outputs
 
     def compute_loss(
-        self, body_outputs, targets, calculate_metrics=True, call_body=False, **kwargs
+        self, body_outputs, targets, compute_metrics=True, call_body=False, **kwargs
     ) -> torch.Tensor:
         losses = []
 
@@ -518,7 +523,7 @@ class Head(torch.nn.Module):
 
         for name, task in self.prediction_tasks.items():
             loss = task.compute_loss(
-                body_outputs, targets, calculate_metrics=calculate_metrics, **kwargs
+                body_outputs, targets, compute_metrics=compute_metrics, **kwargs
             )
             losses.append(loss * self._task_weights[name])
 

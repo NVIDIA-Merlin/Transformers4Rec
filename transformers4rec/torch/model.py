@@ -1,16 +1,22 @@
 import inspect
-from typing import Dict, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
-from transformers4rec.torch.typing import TensorOrTabularData
+from .head import Head
+from .typing import TensorOrTabularData
 
 
 class Model(torch.nn.Module):
     def __init__(
-        self, *head, head_weights=None, head_reduction="mean", optimizer=torch.optim.Adam, name=None
+        self,
+        *head: Head,
+        head_weights: Optional[List[float]] = None,
+        head_reduction: Optional[str] = "mean",
+        optimizer=torch.optim.Adam,
+        name=None
     ):
         if head_weights:
             if not isinstance(head_weights, list):
@@ -23,7 +29,7 @@ class Model(torch.nn.Module):
         super().__init__()
 
         self.name = name
-        self.heads = head
+        self.heads = torch.nn.ModuleList(head)
         self.head_weights = head_weights or [1.0] * len(head)
         self.head_reduction = head_reduction
         self.optimizer = optimizer
@@ -39,12 +45,12 @@ class Model(torch.nn.Module):
 
         return outputs
 
-    def compute_loss(self, inputs, targets, calculate_metrics=True, **kwargs) -> torch.Tensor:
+    def compute_loss(self, inputs, targets, compute_metrics=True, **kwargs) -> torch.Tensor:
         losses = []
 
         for i, head in enumerate(self.heads):
             loss = head.compute_loss(
-                inputs, targets, call_body=True, calculate_metrics=calculate_metrics, **kwargs
+                inputs, targets, call_body=True, compute_metrics=compute_metrics, **kwargs
             )
             losses.append(loss * self.head_weights[i])
 
