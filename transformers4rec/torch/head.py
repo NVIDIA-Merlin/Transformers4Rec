@@ -352,7 +352,7 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
                 self.item_embedding_table,
                 self.softmax_temperature,
             ),
-            [None, None],
+            [None, self.target_dim],
         )
 
 
