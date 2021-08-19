@@ -6,37 +6,12 @@ from typing import Optional, Union
 import torch
 from torch.nn import Module
 
-from transformers4rec.torch.typing import MaskSequence
-from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
-
 from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule, merge_tabular
+from ..utils.torch_utils import calculate_batch_size_from_input_size
 
 
 class BlockMixin:
-    def to_model(
-        self,
-        head,
-        masking: Optional[Union[MaskSequence, str]] = None,
-        optimizer=torch.optim.Adam,
-        block_output_size=None,
-        **kwargs
-    ):
-        raise NotImplementedError
-
-        # from .with_head import BlockWithHead
-        #
-        # if not block_output_size:
-        #     if getattr(self, "input_size", None) and getattr(self, "forward_output_size", None):
-        #         block_output_size = self.forward_output_size(self.input_size)
-        # if block_output_size:
-        #     self.output_size = block_output_size
-        #
-        # out = BlockWithHead(self, head, masking=masking, optimizer=optimizer, **kwargs)
-        #
-        # if next(self.parameters()).is_cuda:
-        #     out.to("cuda")
-        #
-        # return out
+    pass
 
 
 class TabularBlock(TabularModule, BlockMixin):

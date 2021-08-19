@@ -562,6 +562,11 @@ class Head(torch.nn.Module):
     def task_blocks(self) -> Dict[str, Optional[BlockOrModule]]:
         return {name: task.task_block for name, task in self.prediction_tasks.items()}
 
+    def to_model(self, **kwargs):
+        from .model import Model
+
+        return Model(self, **kwargs)
+
 
 class LambdaModule(torch.nn.Module):
     def __init__(self, lambda_fn):
