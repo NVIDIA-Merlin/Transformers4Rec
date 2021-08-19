@@ -91,6 +91,8 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
                 self.add_module_and_maybe_build(key, module, last, idx)
                 last = module
         else:
+            if len(args) == 1 and isinstance(args[0], list):
+                args = args[0]
             last = None
             for idx, module in enumerate(args):
                 last = self.add_module_and_maybe_build(str(idx), module, last, idx)
