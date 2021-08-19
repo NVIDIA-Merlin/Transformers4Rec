@@ -109,7 +109,11 @@ class DatasetSchema:
         if overlap:
             raise ValueError(f"duplicate column names found: {overlap}")
 
-        return DatasetSchema(self.columns + other.columns)
+        new_schema = DatasetSchema(self.columns + other.columns)
+        # TODO : set update method of the _schema
+        # To keep it consistent over ops
+        new_schema._schema = self.filter_schema(new_schema.column_names)
+        return new_schema
 
     # handle the "column_name" + DatasetSchema case
     __radd__ = __add__
@@ -133,7 +137,11 @@ class DatasetSchema:
         else:
             raise ValueError(f"Expected DatasetSchema, str, or list of str. Got {other.__class__}")
         new_columns = [c for c in self.columns if c.name not in to_remove]
-        return DatasetSchema(new_columns)
+        new_schema = DatasetSchema(new_columns)
+        # TODO : set update method of the _schema
+        # To keep it consistent over ops
+        new_schema._schema = self.filter_schema(new_schema.column_names)
+        return new_schema
 
     def __getitem__(self, columns):
         return self.select_by_name(columns)
@@ -170,7 +178,15 @@ class DatasetSchema:
         if isinstance(names, str):
             names = [names]
 
-        child = DatasetSchema(names)
+        output_cols = []
+        for column in self.columns:
+            if column.name in names:
+                output_cols.append(column)
+
+        child = DatasetSchema(output_cols)
+        # TODO : set update method of the _schema
+        # To keep it consistent over ops
+        child._schema = self.filter_schema(child.column_names)
         return child
 
     def embedding_sizes(self):
@@ -199,6 +215,7 @@ class DatasetSchema:
         for feat in self._schema.feature:
             if feat.name in columns:
                 f = schema.feature.add()
+                # f = f.annotation.tag
                 f.CopyFrom(feat)
 
         return schema

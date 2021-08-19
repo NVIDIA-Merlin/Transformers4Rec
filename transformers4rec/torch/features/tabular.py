@@ -166,3 +166,11 @@ class TabularFeatures(MergeTabular):
             output_sizes.update(in_layer.forward_output_size(input_size))
 
         return TabularModule.forward_output_size(self, output_sizes)
+
+    @property
+    def continuous_module(self):
+        return self.to_merge.get("continuous_module", None)
+
+    @property
+    def categorical_module(self):
+        return self.to_merge.get("categorical_module", None)
