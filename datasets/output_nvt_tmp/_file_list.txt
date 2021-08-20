@@ -1,0 +1,10 @@
+9
+./output_nvt_tmp/day_idx-first=1/part.0.parquet
+./output_nvt_tmp/day_idx-first=2/part.0.parquet
+./output_nvt_tmp/day_idx-first=3/part.0.parquet
+./output_nvt_tmp/day_idx-first=4/part.0.parquet
+./output_nvt_tmp/day_idx-first=5/part.0.parquet
+./output_nvt_tmp/day_idx-first=6/part.0.parquet
+./output_nvt_tmp/day_idx-first=7/part.0.parquet
+./output_nvt_tmp/day_idx-first=8/part.0.parquet
+./output_nvt_tmp/day_idx-first=9/part.0.parquet
