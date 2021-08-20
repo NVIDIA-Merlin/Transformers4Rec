@@ -172,8 +172,14 @@ class TabularFeatures(MergeTabular):
 
     @property
     def continuous_module(self):
-        return self.to_merge.get("continuous_module", None)
+        if "continuous_module" in self.to_merge:
+            return self.to_merge["continuous_module"]
+
+        return None
 
     @property
     def categorical_module(self):
-        return self.to_merge.get("categorical_module", None)
+        if "categorical_module" in self.to_merge:
+            return self.to_merge["categorical_module"]
+
+        return None

@@ -1,52 +1,82 @@
 import inspect
-from typing import Dict, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
-from ..head import Head
-from ..typing import MaskSequence
-from .base import BlockType
+from .head import Head
+from .typing import TensorOrTabularData
 
 
-class BlockWithHead(torch.nn.Module):
+class Model(torch.nn.Module):
     def __init__(
         self,
-        block: BlockType,
-        head: Head,
-        masking: Optional[Union[MaskSequence, str]] = None,
+        *head: Head,
+        head_weights: Optional[List[float]] = None,
+        head_reduction: Optional[str] = "mean",
         optimizer=torch.optim.Adam,
-        model_name=None,
+        name=None
     ):
+        if head_weights:
+            if not isinstance(head_weights, list):
+                raise ValueError("`head_weights` must be a list")
+            if not len(head_weights) == len(head):
+                raise ValueError(
+                    "`head_weights` needs to have the same length " "as the number of heads"
+                )
+
         super().__init__()
-        self.masking = masking
-        self.model_name = model_name
-        self.block = block
-        self.head = head
+
+        self.name = name
+        self.heads = torch.nn.ModuleList(head)
+        self.head_weights = head_weights or [1.0] * len(head)
+        self.head_reduction = head_reduction
         self.optimizer = optimizer
 
-    def forward(self, inputs, *args, **kwargs):
-        return self.head(self.block(inputs, *args, **kwargs), **kwargs)
+    def forward(self, inputs: TensorOrTabularData, **kwargs):
+        # TODO: Optimize this
+        outputs = {}
+        for head in self.heads:
+            outputs.update(head(inputs, call_body=True, always_output_dict=True))
 
-    def compute_loss(self, inputs, targets) -> torch.Tensor:
-        block_outputs = self.block(inputs)
-        if getattr(self.block, "get_children_by_class_name"):
-            maybe_masking = self.block.get_children_by_class_name("_RecurrentBlock")
-            if maybe_masking:
-                targets = maybe_masking[0].masking(inputs, for_inputs=False)
+        if len(outputs) == 1:
+            return outputs[list(outputs.keys())[0]]
 
-        return self.head.compute_loss(block_outputs, targets)
+        return outputs
 
-    def calculate_metrics(self, inputs, targets, mode="val") -> Dict[str, torch.Tensor]:
-        block_outputs = self.block(inputs)
-        return self.head.calculate_metrics(block_outputs, targets, mode=mode)
+    def compute_loss(self, inputs, targets, compute_metrics=True, **kwargs) -> torch.Tensor:
+        losses = []
+
+        for i, head in enumerate(self.heads):
+            loss = head.compute_loss(
+                inputs, targets, call_body=True, compute_metrics=compute_metrics, **kwargs
+            )
+            losses.append(loss * self.head_weights[i])
+
+        loss_tensor = torch.stack(losses)
+
+        return getattr(loss_tensor, self.head_reduction)()
+
+    def calculate_metrics(
+        self, inputs, targets, mode="val"
+    ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        outputs = {}
+        for head in self.heads:
+            outputs.update(head.calculate_metrics(inputs, targets, mode=mode, call_body=True))
+
+        return outputs
 
     def compute_metrics(self, mode=None):
-        return self.head.compute_metrics(mode=mode)
+        metrics = {}
+        for head in self.heads:
+            metrics.update(head.compute_metrics(mode=mode))
+
+        return metrics
 
     def reset_metrics(self):
-        return self.head.reset_metrics()
+        for head in self.heads:
+            head.reset_metrics()
 
     def to_lightning(self):
         import pytorch_lightning as pl
@@ -137,7 +167,7 @@ class BlockWithHead(torch.nn.Module):
         return self.compute_metrics(mode=mode)
 
     def _get_name(self):
-        if self.model_name:
-            return self.model_name
+        if self.name:
+            return self.name
 
-        return f"{self.block._get_name()}WithHead"
+        return super(Model, self)._get_name()
