@@ -35,7 +35,7 @@ def test_tabular_module(torch_con_features):
     assert tabular(torch_con_features, aggregation=torch4rec.ConcatFeatures()).size()[1] == 6
     assert tabular(torch_con_features, concat_outputs=True, filter_columns=["con_b"]).size()[1] == 1
 
-    tabular_concat = _DummyTabular(aggregation="concat")
+    tabular_concat = _DummyTabular(aggregation="concat", augmentation="ssn")
     assert tabular_concat(torch_con_features).size()[1] == 6
 
     tab_a = ["con_a"] >> _DummyTabular()

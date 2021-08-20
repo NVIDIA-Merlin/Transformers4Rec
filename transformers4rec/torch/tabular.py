@@ -5,6 +5,7 @@ import torch
 
 from ..types import DatasetSchema
 from . import aggregation as agg
+from . import augmentation as aug
 
 
 class TabularMixin:
@@ -18,9 +19,11 @@ class TabularMixin:
         stack_outputs=False,
         concat_outputs=False,
         aggregation=None,
+        augmentation=None,
         filter_columns=None,
         **kwargs
     ):
+        augmentation = augmentation or getattr(self, "augmentation", None)
         post_op = getattr(self, "aggregation", None)
         if concat_outputs:
             post_op = agg.ConcatFeatures()
@@ -28,10 +31,16 @@ class TabularMixin:
             post_op = agg.StackFeatures()
         if aggregation:
             post_op = agg.aggregation_registry.parse(aggregation)
+
         if filter_columns:
             pre = FilterFeatures(filter_columns)
         if pre:
             inputs = pre(inputs)
+
+        if augmentation:
+            augmentation = aug.augmentation_registry.parse(augmentation)
+            inputs = augmentation(inputs)
+
         outputs = super().__call__(inputs, *args, **kwargs)  # noqa
 
         if merge_with:
@@ -94,10 +103,11 @@ class AsTabular(torch.nn.Module):
 
 
 class TabularModule(TabularMixin, torch.nn.Module):
-    def __init__(self, aggregation=None):
+    def __init__(self, aggregation=None, augmentation=None):
         super().__init__()
         self.input_size = None
         self.aggregation = aggregation
+        self.augmentation = augmentation
 
     @property
     def aggregation(self):
@@ -109,6 +119,17 @@ class TabularModule(TabularMixin, torch.nn.Module):
             self._aggregation = agg.aggregation_registry.parse(value)
         else:
             self._aggregation = None
+
+    @property
+    def augmentation(self):
+        return self._augmentation
+
+    @augmentation.setter
+    def augmentation(self, value):
+        if value:
+            self._augmentation = aug.augmentation_registry.parse(value)
+        else:
+            self._augmentation = None
 
     @classmethod
     def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
@@ -163,8 +184,8 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
 
 class MergeTabular(TabularModule):
-    def __init__(self, *to_merge, aggregation=None):
-        super().__init__(aggregation)
+    def __init__(self, *to_merge, aggregation=None, augmentation=None):
+        super().__init__(aggregation=aggregation, augmentation=augmentation)
         if all(isinstance(x, dict) for x in to_merge):
             to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
             self.to_merge = torch.nn.ModuleDict(to_merge)
