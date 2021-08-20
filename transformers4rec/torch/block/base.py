@@ -6,36 +6,12 @@ from typing import Optional, Union
 import torch
 from torch.nn import Module
 
-from transformers4rec.torch.typing import MaskSequence
-from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
-
-from ..head import Head
 from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule, merge_tabular
+from ..utils.torch_utils import calculate_batch_size_from_input_size
 
 
 class BlockMixin:
-    def to_model(
-        self,
-        head: Head,
-        masking: Optional[Union[MaskSequence, str]] = None,
-        optimizer=torch.optim.Adam,
-        block_output_size=None,
-        **kwargs
-    ):
-        from .with_head import BlockWithHead
-
-        if not block_output_size:
-            if getattr(self, "input_size", None) and getattr(self, "forward_output_size", None):
-                block_output_size = self.forward_output_size(self.input_size)
-        if block_output_size:
-            self.output_size = block_output_size
-
-        out = BlockWithHead(self, head, masking=masking, optimizer=optimizer, **kwargs)
-
-        if next(self.parameters()).is_cuda:
-            out.to("cuda")
-
-        return out
+    pass
 
 
 class TabularBlock(TabularModule, BlockMixin):
@@ -81,8 +57,9 @@ class Block(BlockMixin, torch.nn.Module):
 
 
 class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
-    def __init__(self, *args):
+    def __init__(self, *args, output_size=None):
         super().__init__()
+        self._static_output_size = output_size
         self.input_size = None
         if len(args) == 1 and isinstance(args[0], OrderedDict):
             last = None
@@ -90,6 +67,8 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
                 self.add_module_and_maybe_build(key, module, last, idx)
                 last = module
         else:
+            if len(args) == 1 and isinstance(args[0], list):
+                args = args[0]
             last = None
             for idx, module in enumerate(args):
                 last = self.add_module_and_maybe_build(str(idx), module, last, idx)
@@ -128,6 +107,9 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
         return merge_tabular(self, other)
 
     def forward_output_size(self, input_size):
+        if self._static_output_size:
+            return self._static_output_size
+
         x = input_size
         for module in list(self):
             if getattr(module, "forward_output_size", None):
@@ -170,7 +152,7 @@ def build_blocks(*modules):
 
 class BuildableBlock(abc.ABC):
     @abc.abstractmethod
-    def build(self, input_shape) -> Union[TabularBlock, Block, SequentialBlock]:
+    def build(self, input_size) -> Union[TabularBlock, Block, SequentialBlock]:
         raise NotImplementedError
 
     def __rrshift__(self, other):
@@ -184,9 +166,6 @@ class BuildableBlock(abc.ABC):
                 shape = shape()
 
         return self.build(shape)
-
-
-BlockType = Union[torch.nn.Module, Block]
 
 
 def right_shift_block(self, other):

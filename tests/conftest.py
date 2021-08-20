@@ -2,8 +2,6 @@ import pathlib
 
 import pytest
 
-from tests.tf.conftest import *  # noqa
-from tests.torch.conftest import *  # noqa
 from transformers4rec.utils.schema import DatasetSchema
 
 ASSETS_DIR = pathlib.Path(__file__).parent / "assets"
@@ -35,3 +33,7 @@ def yoochoose_data_file():
 @pytest.fixture
 def yoochoose_schema():
     return DatasetSchema.from_schema(str(YOOCHOOSE_SCHEMA))
+
+
+from tests.tf.conftest import *  # noqa
+from tests.torch.conftest import *  # noqa

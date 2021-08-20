@@ -7,7 +7,7 @@ from transformers4rec.utils.schema import DatasetSchema
 
 pytorch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
-
+torch4rec = pytest.importorskip("transformers4rec.torch")
 
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets"
 
@@ -108,6 +108,27 @@ def torch_seq_prediction_head_link_to_block():
     }
 
     return features
+
+
+@pytest.fixture
+def torch_yoochoose_tabular_features(yoochoose_schema):
+    return torch4rec.TabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        aggregation="concat",
+    )
+
+
+@pytest.fixture
+def torch_yoochoose_sequential_tabular_features(yoochoose_schema):
+    return torch4rec.SequentialTabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=100,
+        masking="causal",
+    )
 
 
 @pytest.fixture
