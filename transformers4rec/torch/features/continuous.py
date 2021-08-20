@@ -1,7 +1,8 @@
-from ..tabular import FilterFeatures, TabularModule
+from ..tabular import FilterFeatures
+from .base import InputModule
 
 
-class ContinuousFeatures(TabularModule):
+class ContinuousFeatures(InputModule):
     def __init__(self, features, aggregation=None, augmentation=None):
         super().__init__(aggregation=aggregation, augmentation=augmentation)
         self.filter_features = FilterFeatures(features)

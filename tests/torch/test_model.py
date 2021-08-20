@@ -24,16 +24,15 @@ def test_simple_model(torch_yoochoose_tabular_features, torch_yoochoose_like):
 
 @pytest.mark.parametrize("task", [torch4rec.BinaryClassificationTask, torch4rec.RegressionTask])
 def test_sequential_prediction_model(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like, task
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, task
 ):
-
-    inputs = torch_yoochoose_sequential_tabular_features
+    inputs = torch_yoochoose_tabular_transformer_features
 
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
     body = torch4rec.SequentialBlock(
-        inputs, torch4rec.MLPBlock([64]), torch4rec.TransformerBlock(transformer=transformer_config)
+        inputs, torch4rec.MLPBlock([64]), torch4rec.TransformerBlock(transformer_config)
     )
 
     head_1 = torch4rec.Head(
@@ -52,7 +51,7 @@ def test_sequential_prediction_model(
 
 def test_model_with_multiple_heads_and_tasks(
     torch_yoochoose_tabular_features,
-    torch_yoochoose_sequential_tabular_features,
+    torch_yoochoose_tabular_transformer_features,
     torch_yoochoose_like,
 ):
     # Tabular classification and regression tasks
@@ -76,9 +75,9 @@ def test_model_with_multiple_heads_and_tasks(
         d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
     body_2 = torch4rec.SequentialBlock(
-        torch_yoochoose_sequential_tabular_features,
+        torch_yoochoose_tabular_transformer_features,
         torch4rec.MLPBlock([64]),
-        torch4rec.TransformerBlock(transformer=transformer_config),
+        torch4rec.TransformerBlock(transformer_config),
     )
     tasks_2 = [
         torch4rec.BinaryClassificationTask("classification_session", summary_type="last"),
