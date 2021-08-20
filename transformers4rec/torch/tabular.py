@@ -50,7 +50,7 @@ class TabularMixin:
                 to_add = layer_or_tensor(inputs) if callable(layer_or_tensor) else layer_or_tensor
                 outputs.update(to_add)
 
-        if post_op:
+        if isinstance(outputs, dict) and post_op:
             outputs = post_op(outputs)
 
         return outputs
