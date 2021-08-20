@@ -74,10 +74,6 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
                             "Masking is set in the input module but not in the "
                             "TransformerBlock, provide this through the masking argument"
                         )
-                        # raise ValueError(
-                        #     "Masking is set in the input module but not in the "
-                        #     "TransformerBlock, provide this through the masking argument"
-                        # )
 
         super().__init__()
         self._static_output_size = output_size
