@@ -19,6 +19,7 @@ class TabularFeatures(MergeTabular):
         categorical_module=None,
         text_embedding_module=None,
         aggregation=None,
+        augmentation=None,
     ):
         to_merge = {}
         if continuous_module:
@@ -29,7 +30,9 @@ class TabularFeatures(MergeTabular):
             to_merge["text_embedding_module"] = text_embedding_module
 
         assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(to_merge, aggregation=aggregation)
+        super(TabularFeatures, self).__init__(
+            to_merge, aggregation=aggregation, augmentation=augmentation
+        )
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]

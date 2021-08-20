@@ -15,6 +15,7 @@
 #
 
 from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
+from .augmentation import StochasticSwapNoise
 from .block.base import Block, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
 from .block.transformer import TransformerBlock
@@ -44,6 +45,7 @@ __all__ = [
     "build_blocks",
     "Block",
     "MLPBlock",
+    "StochasticSwapNoise",
     "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
