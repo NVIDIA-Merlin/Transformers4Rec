@@ -122,8 +122,7 @@ def test_multi_head_model_wrong_weights(torch_yoochoose_tabular_features, torch_
 
 config_classes = [
     tconf.XLNetConfig,
-    # TODO: Why do these 2 not work?
-    # tconf.ReformerConfig,
+    # TODO: Add Electra when HF fix is released
     # tconf.ElectraConfig,
     tconf.LongformerConfig,
     tconf.GPT2Config,
@@ -132,13 +131,13 @@ config_classes = [
 
 @pytest.mark.parametrize("config_cls", config_classes)
 def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_like, config_cls):
-    transformer_config = config_cls.build(100, 4, 2, 20)
+    transformer_config = config_cls.build(128, 4, 2, 20)
 
     input_module = torch4rec.SequentialTabularFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
-        d_output=100,
+        d_output=128,
         masking="causal",
     )
     task = torch4rec.BinaryClassificationTask("classification")
@@ -148,3 +147,26 @@ def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_l
 
     assert out.size()[0] == 100
     assert len(out.size()) == 1
+
+
+@pytest.mark.parametrize("config_cls", config_classes)
+def test_item_prediction_transformer_torch_model_from_config(
+    yoochoose_schema, torch_yoochoose_like, config_cls
+):
+    transformer_config = config_cls.build(128, 4, 2, 20)
+
+    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=128,
+        masking="causal",
+    )
+
+    task = torch4rec.NextItemPredictionTask()
+    model = transformer_config.to_torch_model(input_module, task)
+
+    out = model(torch_yoochoose_like)
+
+    assert out.size()[1] == task.target_dim
+    assert len(out.size()) == 2
