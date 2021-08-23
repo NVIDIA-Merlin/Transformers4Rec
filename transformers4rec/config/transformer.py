@@ -11,7 +11,15 @@ class T4RecConfig:
 
         return model_cls(self)
 
-    def to_torch_model(self, input_features, *prediction_task, **kwargs):
+    def to_torch_model(
+        self,
+        input_features,
+        *prediction_task,
+        task_blocks=None,
+        task_weights=None,
+        loss_reduction="mean",
+        **kwargs
+    ):
         from .. import torch as torch4rec
 
         if not isinstance(input_features, torch4rec.SequentialTabularFeatures):
@@ -26,7 +34,13 @@ class T4RecConfig:
             input_features, torch4rec.TransformerBlock(self, masking=input_features.masking)
         )
 
-        return torch4rec.Head(body, *prediction_task, **kwargs).to_model(**kwargs)
+        return torch4rec.Head(
+            body,
+            *prediction_task,
+            task_blocks=task_blocks,
+            task_weights=task_weights,
+            loss_reduction=loss_reduction
+        ).to_model(**kwargs)
 
     def to_huggingface_tf_model(self):
         model_cls = transformers.TF_MODEL_MAPPING[self.transformers_config_cls]
