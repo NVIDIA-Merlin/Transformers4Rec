@@ -1,3 +1,4 @@
+from functools import reduce
 from typing import Optional
 
 import tensorflow as tf
@@ -55,9 +56,18 @@ class TabularLayer(tf.keras.layers.Layer):
         self, aggregation=None, trainable=True, name=None, dtype=None, dynamic=False, **kwargs
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
-        self.aggregation = None
-        if aggregation:
-            self.aggregation = agg.aggregation_registry.parse(aggregation)
+        self.aggregation = aggregation
+
+    @property
+    def aggregation(self):
+        return self._aggregation
+
+    @aggregation.setter
+    def aggregation(self, value):
+        if value:
+            self._aggregation = agg.aggregation_registry.parse(value)
+        else:
+            self._aggregation = None
 
     def __call__(
         self,
@@ -158,14 +168,25 @@ class MergeTabular(TabularLayer):
         dynamic=False,
         **kwargs
     ):
-        self.to_merge = list(to_merge)
         super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
+        if all(isinstance(x, dict) for x in to_merge):
+            to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
+            self.to_merge = to_merge
+        else:
+            self.to_merge = list(to_merge)
+
+    @property
+    def merge_values(self):
+        if isinstance(self.to_merge, dict):
+            return list(self.to_merge.values())
+
+        return self.to_merge
 
     def call(self, inputs, **kwargs):
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
         outputs = {}
-        for layer in self.to_merge:
+        for layer in self.merge_values:
             outputs.update(layer(inputs))
 
         return outputs
@@ -173,7 +194,7 @@ class MergeTabular(TabularLayer):
     def compute_output_shape(self, input_shape):
         output_shapes = {}
 
-        for layer in self.to_merge:
+        for layer in self.merge_values:
             output_shapes.update(layer.compute_output_shape(input_shape))
 
         return super(MergeTabular, self).compute_output_shape(output_shapes)
