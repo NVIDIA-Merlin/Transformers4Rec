@@ -1,3 +1,5 @@
+import pytest
+
 from transformers4rec.utils.schema import DatasetSchema
 from transformers4rec.utils.tags import Tag
 
@@ -17,6 +19,7 @@ def test_schema_from_yoochoose_schema(yoochoose_schema_file):
     assert len(schema.select_by_tag(Tag.CATEGORICAL).columns) == 2
 
 
+@pytest.mark.skip(reason="This test requires NVTabular installed but it is not in the CI instance")
 def test_schema_embedding_sizes(yoochoose_schema_file):
     schema = DatasetSchema.from_schema(str(yoochoose_schema_file))
 
