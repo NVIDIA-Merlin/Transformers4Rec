@@ -1,4 +1,6 @@
-import transformers
+from dataclasses import dataclass
+
+from transformers import TFTrainingArguments, TrainingArguments
 
 
 @dataclass
@@ -15,6 +17,7 @@ class T4RecTrainerConfig(TrainingArguments):
         learning_rate_schedule: str = "constant_with_warmup",
         learning_rate_num_cosine_cycles_by_epoch: float = 1.25,
         experiments_group: str = "default",
+        **kwargs
     ):
         """
         Parameters:
@@ -68,7 +71,6 @@ class T4RecTrainerConfig(TrainingArguments):
         self.log_predictions = log_predictions
         self.log_attention_weights = log_attention_weights
         self.learning_rate_schedule = learning_rate_schedule
-        self.warmup_steps = warmup_steps
         self.learning_rate_num_cosine_cycles_by_epoch = learning_rate_num_cosine_cycles_by_epoch
         self.experiments_group = experiments_group
 
