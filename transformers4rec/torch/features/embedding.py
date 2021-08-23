@@ -1,8 +1,7 @@
-import math
-from typing import Dict, Optional, Text, Union
+from functools import partial
+from typing import Any, Callable, Dict, Optional, Text, Union
 
 import torch
-import yaml
 
 from ...types import DatasetSchema, DefaultTags
 from ..tabular import FilterFeatures
@@ -36,7 +35,12 @@ class EmbeddingFeatures(InputModule):
         return self.embedding_tables[self.item_id]
 
     def table_to_embedding_module(self, table: "TableConfig") -> torch.nn.Module:
-        return torch.nn.EmbeddingBag(table.vocabulary_size, table.dim, mode=table.combiner)
+        emb_table = torch.nn.EmbeddingBag(table.vocabulary_size, table.dim, mode=table.combiner)
+
+        if table.initializer is not None:
+            table.initializer(emb_table.weight)
+
+        return emb_table
 
     @classmethod
     def from_schema(
@@ -45,6 +49,8 @@ class EmbeddingFeatures(InputModule):
         embedding_dims: Optional[Dict[str, int]] = None,
         default_embedding_dim: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
+        infer_embedding_sizes_multiplier: Optional[float] = 2.0,
+        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
@@ -68,6 +74,11 @@ class EmbeddingFeatures(InputModule):
             Automatically defines the embedding dimension from the
             feature cardinality in the schema,
             by default False
+        infer_embedding_sizes_multiplier: Optional[int], by default 2.0
+            multiplier used by the heuristic to infer the embedding dimension from
+            its cardinality. Generally reasonable values range between 2.0 and 10.0
+        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]]
+            Dict where keys are feature names and values are callable to initialize embedding tables
         combiner : Optional[str], optional
             Feature aggregation option, by default "mean"
         tags : Optional[Union[DefaultTags, list, str]], optional
@@ -93,25 +104,27 @@ class EmbeddingFeatures(InputModule):
             item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            sizes = schema.embedding_sizes()
-        else:
-            if not embedding_dims:
-                embedding_dims = {}
-            sizes = {}
+            embedding_dims = schema.embedding_sizes_v2(infer_embedding_sizes_multiplier)
 
-            cardinalities = schema.cardinalities()
-            for key, cardinality in cardinalities.items():
-                embedding_size = embedding_dims.get(key, default_embedding_dim)
-                sizes[key] = (cardinality, embedding_size)
+        embedding_dims = embedding_dims or {}
+        embeddings_initializers = embeddings_initializers or {}
+
+        emb_config = {}
+        cardinalities = schema.cardinalities()
+        for key, cardinality in cardinalities.items():
+            embedding_size = embedding_dims.get(key, default_embedding_dim)
+            embedding_initializer = embeddings_initializers.get(key, None)
+            emb_config[key] = (cardinality, embedding_size, embedding_initializer)
 
         feature_config: Dict[str, FeatureConfig] = {}
-        for name, (vocab_size, dim) in sizes.items():
+        for name, (vocab_size, dim, emb_initilizer) in emb_config.items():
             feature_config[name] = FeatureConfig(
                 TableConfig(
                     vocabulary_size=vocab_size,
                     dim=dim,
                     name=name,
                     combiner=combiner,
+                    initializer=emb_initilizer,
                 )
             )
 
@@ -130,75 +143,6 @@ class EmbeddingFeatures(InputModule):
             )
 
         return output
-
-    @classmethod
-    def from_config(
-        cls,
-        config: Union[Dict[str, dict], str],
-        embedding_dims=None,
-        default_embedding_dim=64,
-        infer_embedding_sizes=False,
-        combiner="mean",
-        tags=None,
-        tags_to_filter=None,
-        **kwargs,
-    ) -> Optional["EmbeddingFeatures"]:
-        if isinstance(config, str):
-            # load config from specified path
-            with open(config) as yaml_file:
-                config = yaml.load(yaml_file, Loader=yaml.FullLoader)
-
-        if isinstance(tags, DefaultTags):
-            tags = tags.value
-        if not isinstance(tags, list):
-            tags = [tags]
-
-        column_names_to_filter = []
-        if tags_to_filter:
-            column_names_to_filter = [
-                key for key, val in config.items() if all(x in val["tags"] for x in tags_to_filter)
-            ]
-        if tags:
-            output_cols = [
-                {key: val} for key, val in config.items() if all(x in val["tags"] for x in tags)
-            ]
-        output_cols = {
-            k: v for d in output_cols for k, v in d.items() if k not in column_names_to_filter
-        }
-
-        if infer_embedding_sizes:
-            sizes = [
-                {
-                    key: (
-                        val["cardinality"],
-                        cls.get_embedding_size_from_cardinality(val["cardinality"]),
-                    )
-                }
-                for key, val in output_cols.items()
-            ]
-        else:
-            if not embedding_dims:
-                embedding_dims = {}
-            sizes = {}
-            cardinalities = {key: val["cardinality"] for key, val in output_cols.items()}
-            for key, cardinality in cardinalities.items():
-                embedding_size = embedding_dims.get(key, default_embedding_dim)
-                sizes[key] = (cardinality, embedding_size)
-
-        feature_config: Dict[str, FeatureConfig] = {}
-        for name, (vocab_size, dim) in sizes.items():
-            feature_config[name] = FeatureConfig(
-                TableConfig(
-                    vocabulary_size=vocab_size,
-                    dim=dim,
-                    name=name,
-                    combiner=combiner,
-                )
-            )
-        if not feature_config:
-            return None
-
-        return cls(feature_config, **kwargs)
 
     def item_ids(self, inputs) -> torch.Tensor:
         return inputs[self.item_id]
@@ -232,12 +176,6 @@ class EmbeddingFeatures(InputModule):
             sizes[name] = torch.Size([batch_size, feature.table.dim])
 
         return super().forward_output_size(sizes)
-
-    @staticmethod
-    def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
-        # A rule-of-thumb from Google.
-        embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
-        return embedding_size
 
 
 class SoftEmbeddingFeatures(EmbeddingFeatures):
