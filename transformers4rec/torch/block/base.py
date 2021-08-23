@@ -1,5 +1,6 @@
 import abc
 import inspect
+import logging
 from collections import OrderedDict
 from typing import Optional, Union
 
@@ -8,6 +9,8 @@ from torch.nn import Module
 
 from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule, merge_tabular
 from ..utils.torch_utils import calculate_batch_size_from_input_size
+
+LOG = logging.getLogger("transformers4rec")
 
 
 class BlockMixin:
@@ -58,9 +61,24 @@ class Block(BlockMixin, torch.nn.Module):
 
 class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
     def __init__(self, *args, output_size=None):
+        from transformers4rec.torch import SequentialTabularFeatures, TransformerBlock
+
+        if isinstance(args[0], SequentialTabularFeatures) and any(
+            isinstance(arg, TransformerBlock) for arg in args
+        ):
+            masking = args[0].masking
+            for arg in args:
+                if isinstance(arg, TransformerBlock):
+                    if arg.masking != masking:
+                        LOG.warning(
+                            "Masking is set in the input module but not in the "
+                            "TransformerBlock, provide this through the masking argument"
+                        )
+
         super().__init__()
         self._static_output_size = output_size
         self.input_size = None
+
         if len(args) == 1 and isinstance(args[0], OrderedDict):
             last = None
             for idx, key, module in enumerate(args[0].items()):
@@ -72,6 +90,14 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
             last = None
             for idx, module in enumerate(args):
                 last = self.add_module_and_maybe_build(str(idx), module, last, idx)
+
+    @property
+    def inputs(self):
+        from transformers4rec.torch import SequentialTabularFeatures, TabularFeatures
+
+        first = list(self)[0]
+        if isinstance(first, (SequentialTabularFeatures, TabularFeatures)):
+            return first
 
     def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
         if isinstance(module, list):
