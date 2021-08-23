@@ -6,6 +6,7 @@ from transformers4rec.torch.masking import masking_registry
 from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
 
 from ...types import DatasetSchema, Tag
+from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..tabular import TabularModule
 from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
@@ -179,7 +180,9 @@ class SequentialTabularFeatures(TabularFeatures):
         continuous = self.to_merge["continuous_module"]
         continuous.aggregation = "sequential_concat"
 
-        continuous = continuous >> MLPBlock(dimensions) >> AsTabular("continuous_projection")
+        continuous = SequentialBlock(
+            continuous, MLPBlock(dimensions), AsTabular("continuous_projection")
+        )
 
         self.to_merge["continuous_module"] = continuous
 
