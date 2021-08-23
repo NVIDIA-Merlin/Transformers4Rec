@@ -23,4 +23,5 @@ def test_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
     outputs = tab_module(tf_yoochoose_like)
 
     assert len(outputs.keys()) == 3
+    assert all(len(tensor.shape) == 2 for tensor in outputs.values())
     assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
