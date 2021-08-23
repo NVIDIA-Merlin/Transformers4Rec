@@ -60,7 +60,7 @@ class TransformerBlock(torch.nn.Module):
         super().__init__()
 
         if isinstance(transformer, T4RecConfig):
-            transformer = transformer.to_torch_model()
+            transformer = transformer.to_huggingface_torch_model()
 
         self.transformer = transformer
 
