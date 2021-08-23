@@ -14,10 +14,11 @@ from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
 
 
 class EmbeddingFeatures(TabularLayer):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], **kwargs):
+    def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
         self.filter_features = FilterFeatures(list(feature_config.keys()))
         self.convert_to_sparse = AsSparseFeatures()
         self.embeddings = feature_config
+        self.item_id = item_id
         super().__init__(**kwargs)
 
     @classmethod
@@ -26,13 +27,17 @@ class EmbeddingFeatures(TabularLayer):
         schema: DatasetSchema,
         embedding_dims=None,
         default_embedding_dim=64,
-        infer_embedding_sizes=True,
+        infer_embedding_sizes=False,
         combiner="mean",
         tags=None,
+        item_id: Optional[str] = None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         if tags:
             schema = schema.select_by_tag(tags)
+
+        if not item_id and schema.select_by_tag(["item_id"]).column_names:
+            item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
             sizes = schema.embedding_sizes()
@@ -60,7 +65,7 @@ class EmbeddingFeatures(TabularLayer):
         if not feature_config:
             return None
 
-        return cls(feature_config, **kwargs)
+        return cls(feature_config, item_id=item_id, **kwargs)
 
     def build(self, input_shapes):
         self.embedding_tables = {}
@@ -79,6 +84,12 @@ class EmbeddingFeatures(TabularLayer):
                 shape=shape,
             )
         super().build(input_shapes)
+
+    @property
+    def item_embedding_table(self):
+        assert self.item_id is not None
+
+        return self.embedding_tables[self.item_id]
 
     def lookup_feature(self, name, val):
         table: TableConfig = self.embeddings[name].table
