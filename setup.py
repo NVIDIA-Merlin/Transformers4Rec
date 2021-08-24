@@ -12,8 +12,7 @@ def read_requirements(filename):
     with codecs.open(os.path.join(base, filename), "rb", "utf-8") as f:
         parsed.append(f.read())
 
-    parsed = [r.split("==")[0] for r in parsed]
-    return [r for r in parsed if len(r) > 0]
+    return parsed
 
 
 requirements = {
