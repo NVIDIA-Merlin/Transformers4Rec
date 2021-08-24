@@ -190,8 +190,37 @@ class DatasetSchema:
         child._schema = self.filter_schema(child.column_names)
         return child
 
-    def embedding_sizes(self, minimum_size=16, maximum_size=512) -> int:
+    def embedding_sizes(self, multiplier: float) -> int:
         """Heuristic method to suggest the embedding sizes based on the categorical feature cardinality
+
+        Parameters
+        ----------
+        multiplier : float
+            multiplier used by the heuristic to infer the embedding dimension from
+            its cardinality. Generally reasonable values range between 2.0 and 10.0
+        Returns
+        -------
+        int
+            The suggested embedding dimension
+        """
+        if not self._schema:
+            raise ValueError(
+                "The internal schema is required to retrieve "
+                " the features cardinality and infer embeddings dim."
+            )
+
+        if not (multiplier is not None and multiplier > 0.0):
+            raise ValueError("The multiplier of the embedding size needs to be greater than 0.")
+
+        cardinalities = self.cardinalities()
+        return {
+            key: DatasetSchema.get_embedding_size_from_cardinality(val, multiplier=multiplier)
+            for key, val in cardinalities.items()
+        }
+
+    def embedding_sizes_nvt(self, minimum_size=16, maximum_size=512) -> int:
+        """Heuristic method from NVTabular to suggest the embedding sizes
+        based on the categorical feature cardinality.
 
         Parameters
         ----------
@@ -217,34 +246,6 @@ class DatasetSchema:
 
         return {
             key: _emb_sz_rule(val, minimum_size=minimum_size, maximum_size=maximum_size)[1]
-            for key, val in cardinalities.items()
-        }
-
-    def embedding_sizes_v2(self, multiplier: float) -> int:
-        """Heuristic method to suggest the embedding sizes based on the categorical feature cardinality
-
-        Parameters
-        ----------
-        multiplier : float
-            multiplier used by the heuristic to infer the embedding dimension from
-            its cardinality. Generally reasonable values range between 2.0 and 10.0
-        Returns
-        -------
-        int
-            The suggested embedding dimension
-        """
-        if not self._schema:
-            raise ValueError(
-                "The internal schema is required to retrieve "
-                " the features cardinality and infer embeddings dim."
-            )
-
-        if not (multiplier is not None and multiplier > 0.0):
-            raise ValueError("The multiplier of the embedding size needs to be greater than 0.")
-
-        cardinalities = self.cardinalities()
-        return {
-            key: DatasetSchema.get_embedding_size_from_cardinality(val, multiplier=multiplier)
             for key, val in cardinalities.items()
         }
 

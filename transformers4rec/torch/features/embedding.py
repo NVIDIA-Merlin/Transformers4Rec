@@ -46,11 +46,13 @@ class EmbeddingFeatures(InputModule):
     def from_schema(
         cls,
         schema: DatasetSchema,
-        embedding_dims: Optional[Dict[str, int]] = None,
-        default_embedding_dim: Optional[int] = 64,
+        embedding_dims: Union[int, Dict[str, int], None] = None,
+        embedding_dim_default: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
-        embeddings_initializers: Optional[Dict[str, Callable[[torch.Tensor], None]]] = None,
+        embeddings_initializers: Union[
+            Callable[[torch.Tensor], None], Dict[str, Callable[[torch.Tensor], None]], None
+        ] = None,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
@@ -67,7 +69,7 @@ class EmbeddingFeatures(InputModule):
         embedding_dims : Optional[Dict[str, int]], optional
             The dimension of the embedding table for each feature (key),
             by default None by default None
-        default_embedding_dim : Optional[int], optional
+        embedding_dim_default : Optional[int], optional
             Default dimension of the embedding table, when the feature is not found
             in ``default_soft_embedding_dim``, by default 64
         infer_embedding_sizes : bool, optional
@@ -77,8 +79,10 @@ class EmbeddingFeatures(InputModule):
         infer_embedding_sizes_multiplier: Optional[int], by default 2.0
             multiplier used by the heuristic to infer the embedding dimension from
             its cardinality. Generally reasonable values range between 2.0 and 10.0
-        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]]
-            Dict where keys are feature names and values are callable to initialize embedding tables
+        embeddings_initializer: Union[Callable[[torch.Tensor], None],
+                                      Dict[str, Callable[[torch.Tensor], None]], None]
+            Callable or Dict where keys are feature names and values are callable
+            to initialize embedding tables
         combiner : Optional[str], optional
             Feature aggregation option, by default "mean"
         tags : Optional[Union[DefaultTags, list, str]], optional
@@ -104,17 +108,28 @@ class EmbeddingFeatures(InputModule):
             item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            embedding_dims = schema.embedding_sizes_v2(infer_embedding_sizes_multiplier)
+            embedding_dims = schema.embedding_sizes(infer_embedding_sizes_multiplier)
 
         embedding_dims = embedding_dims or {}
-        embeddings_initializers = embeddings_initializers or {}
 
         emb_config = {}
         cardinalities = schema.cardinalities()
         for key, cardinality in cardinalities.items():
-            embedding_size = embedding_dims.get(key, default_embedding_dim)
-            embedding_initializer = embeddings_initializers.get(key, None)
-            emb_config[key] = (cardinality, embedding_size, embedding_initializer)
+
+            embedding_size = embedding_dims.get(key, embedding_dim_default)
+
+            emb_initializer = None
+            if embeddings_initializers is not None:
+                if isinstance(embeddings_initializers, dict):
+                    emb_initializer = embeddings_initializers.get(key, None)
+                elif callable(embeddings_initializers):
+                    emb_initializer = embeddings_initializers
+                else:
+                    raise ValueError(
+                        "The embeddings_initializer must be a Callable, Dict[Calable] or None"
+                    )
+
+            emb_config[key] = (cardinality, embedding_size, emb_initializer)
 
         feature_config: Dict[str, FeatureConfig] = {}
         for name, (vocab_size, dim, emb_initilizer) in emb_config.items():
@@ -293,35 +308,70 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
 
 class TableConfig:
+    """Configuration data for one embedding table.
+
+    This class holds the configuration data for a single embedding table.
+    To share the embedding table among more than one feature, you can reuse
+    the `TableConfig` in many `FeatureConfig`
+    """
+
     def __init__(
         self,
         vocabulary_size: int,
         dim: int,
-        # initializer: Optional[Callable[[Any], None]],
+        initializer: Optional[Callable[[torch.Tensor], None]] = None,
         # optimizer: Optional[_Optimizer] = None,
         combiner: Text = "mean",
         name: Optional[Text] = None,
     ):
+        """ "Embedding table configuration
+
+        Parameters
+        ----------
+        vocabulary_size : int
+            Size of the table's vocabulary (number of rows).
+        dim : int
+            The embedding dimension (width) of the table.
+        initializer : Optional[Callable[[torch.Tensor], None]], optional
+            A callable initializer taking as parameter a `torch.Tensor`,
+            which is called when the embedding table is created.
+            If not specified, defaults to `torch.nn.init.normal_()`
+            with mean `0.0` and standarddeviation `0.05`.
+        combiner : Text, optional
+            A string specifying how to reduce if there are multiple entries
+            in a single row, by default "mean"
+        name : Optional[Text], optional
+            An optional string used to name the table. Useful for debugging.
+        """
         if not isinstance(vocabulary_size, int) or vocabulary_size < 1:
             raise ValueError("Invalid vocabulary_size {}.".format(vocabulary_size))
 
         if not isinstance(dim, int) or dim < 1:
             raise ValueError("Invalid dim {}.".format(dim))
 
+        if (initializer is not None) and (not callable(initializer)):
+            raise ValueError("initializer must be callable if specified.")
+        if initializer is None:
+            # Default initialization for embedding tables. It is independent of the embeddings dim,
+            # so that all embedded features can have the same variance
+            initializer = partial(torch.nn.init.normal_, mean=0.0, std=0.05)
+
         if combiner not in ("mean", "sum", "sqrtn"):
             raise ValueError("Invalid combiner {}".format(combiner))
 
         self.vocabulary_size = vocabulary_size
         self.dim = dim
+        self.initializer = initializer
         self.combiner = combiner
         self.name = name
 
     def __repr__(self):
         return (
             "TableConfig(vocabulary_size={vocabulary_size!r}, dim={dim!r}, "
-            "combiner={combiner!r}, name={name!r})".format(
+            "initializer={initializer!r}, combiner={combiner!r}, name={name!r})".format(
                 vocabulary_size=self.vocabulary_size,
                 dim=self.dim,
+                initializer=self.initializer,
                 combiner=self.combiner,
                 name=self.name,
             )

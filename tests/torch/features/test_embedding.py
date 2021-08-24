@@ -63,7 +63,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoocho
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
-        schema, embedding_dims={"item_id/list": 100}, default_embedding_dim=64
+        schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
     )
 
     assert emb_module.embedding_tables["item_id/list"].weight.shape[1] == 100
@@ -91,7 +91,30 @@ def test_embedding_features_yoochoose_infer_embedding_sizes(yoochoose_schema, to
     assert embeddings["category/list"].shape[1] == 13
 
 
-def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torch_yoochoose_like):
+def test_embedding_features_yoochoose_custom_single_initializer(
+    yoochoose_schema, torch_yoochoose_like
+):
+    MEAN = 1.0
+    STD = 0.05
+
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    emb_module = torch4rec.EmbeddingFeatures.from_schema(
+        schema,
+        embeddings_initializers=partial(pytorch.nn.init.normal_, mean=MEAN, std=STD),
+    )
+
+    embeddings = emb_module(torch_yoochoose_like)
+
+    assert embeddings["item_id/list"].detach().numpy().mean() == pytest.approx(MEAN, abs=0.1)
+    assert embeddings["item_id/list"].detach().numpy().std() == pytest.approx(STD, abs=0.1)
+
+    assert embeddings["category/list"].detach().numpy().mean() == pytest.approx(MEAN, abs=0.1)
+    assert embeddings["category/list"].detach().numpy().std() == pytest.approx(STD, abs=0.1)
+
+
+def test_embedding_features_yoochoose_custom_dict_initializers(
+    yoochoose_schema, torch_yoochoose_like
+):
     ITEM_MEAN = 1.0
     ITEM_STD = 0.05
 
@@ -117,6 +140,21 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
     )
     assert embeddings["category/list"].detach().numpy().std() == pytest.approx(
         CATEGORY_STD, abs=0.1
+    )
+
+
+def test_embedding_features_yoochoose_invalid_initializer(yoochoose_schema):
+
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+
+    with pytest.raises(ValueError) as excinfo:
+        torch4rec.EmbeddingFeatures.from_schema(
+            schema,
+            embeddings_initializers="INVALID INITIALIZER",
+        )
+
+    assert "The embeddings_initializer must be a Callable, Dict[Calable] or None" in str(
+        excinfo.value
     )
 
 
