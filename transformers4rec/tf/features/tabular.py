@@ -73,7 +73,6 @@ class TabularFeatures(InputLayer, MergeTabular):
         text_model=None,
         text_tags=Tag.TEXT_TOKENIZED,
         max_sequence_length=None,
-        automatic_build=True,
         max_text_length=None,
         **kwargs
     ):
@@ -104,15 +103,6 @@ class TabularFeatures(InputLayer, MergeTabular):
             aggregation=aggregation,
             **kwargs
         )
-
-        # if automatic_build and schema._schema:
-        #     output.build(
-        #         get_output_sizes_from_schema(
-        #             schema._schema,
-        #             kwargs.get("batch_size", 0),
-        #             max_sequence_length=max_sequence_length,
-        #         )
-        #     )
 
         if continuous_projection:
             output = output.project_continuous_features(continuous_projection)

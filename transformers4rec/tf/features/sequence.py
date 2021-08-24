@@ -14,9 +14,15 @@ from .tabular import TabularFeatures
 
 class SequentialEmbeddingFeatures(EmbeddingFeatures):
     def __init__(
-        self, feature_config: Dict[str, FeatureConfig], item_id=None, mask_zero=True, **kwargs
+        self,
+        feature_config: Dict[str, FeatureConfig],
+        item_id=None,
+        mask_zero=True,
+        padding_idx: int = 0,
+        **kwargs
     ):
         super().__init__(feature_config, item_id, **kwargs)
+        self.padding_idx = padding_idx
         self.mask_zero = mask_zero
 
     def lookup_feature(self, name, val):
@@ -39,7 +45,7 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
 
         outputs = {}
         for key, val in filtered_inputs.items():
-            outputs[key] = tf.not_equal(val, 0)
+            outputs[key] = tf.not_equal(val, self.padding_idx)
 
         return outputs
 

@@ -5,7 +5,7 @@ import tensorflow as tf
 from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from ...types import DatasetSchema
+from ...types import DatasetSchema, Tag
 from ..tabular import AsSparseFeatures, FilterFeatures
 from .base import InputLayer
 
@@ -37,8 +37,8 @@ class EmbeddingFeatures(InputLayer):
         if tags:
             schema = schema.select_by_tag(tags)
 
-        if not item_id and schema.select_by_tag(["item_id"]).column_names:
-            item_id = schema.select_by_tag(["item_id"]).column_names[0]
+        if not item_id and schema.select_by_tag(Tag.ITEM_ID).column_names:
+            item_id = schema.select_by_tag(Tag.ITEM_ID).column_names[0]
 
         if infer_embedding_sizes:
             sizes = schema.embedding_sizes()
@@ -119,6 +119,11 @@ class EmbeddingFeatures(InputLayer):
         sparse_inputs = self.convert_to_sparse(self.filter_features(inputs))
         for name, val in sparse_inputs.items():
             embedded_outputs[name] = self.lookup_feature(name, val)
+
+        # Store raw item ids for masking and/or negative sampling
+        # This makes this module stateful.
+        if self.item_id:
+            self.item_seq = self.item_ids(inputs)
 
         return embedded_outputs
 
