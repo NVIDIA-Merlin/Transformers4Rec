@@ -44,7 +44,7 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
         return outputs
 
 
-class SequentialTabularFeatures(TabularFeatures):
+class TabularSequenceFeatures(TabularFeatures):
     EMBEDDING_MODULE_CLASS = SequentialEmbeddingFeatures
 
     def __init__(
@@ -78,7 +78,7 @@ class SequentialTabularFeatures(TabularFeatures):
         d_output=None,
         masking=None,
         **kwargs
-    ) -> "SequentialTabularFeatures":
+    ) -> "TabularSequenceFeatures":
         """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
         Parameters
         ----------

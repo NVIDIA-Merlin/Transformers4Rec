@@ -18,7 +18,7 @@ def test_sequential_embedding_features(yoochoose_schema, tf_yoochoose_like):
 
 
 def test_sequential_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
-    tab_module = tf4rec.SequentialTabularFeatures.from_schema(
+    tab_module = tf4rec.TabularSequenceFeatures.from_schema(
         yoochoose_schema, max_sequence_length=20, continuous_projection=64
     )
 
@@ -67,7 +67,7 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, tf_yoocho
 def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
 
-        tf4rec.SequentialTabularFeatures.from_schema(
+        tf4rec.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
