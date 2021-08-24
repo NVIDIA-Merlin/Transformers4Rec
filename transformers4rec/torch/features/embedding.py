@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Text, Union
+from typing import Callable, Dict, Optional, Text, Union
 
 import torch
 
@@ -50,7 +50,7 @@ class EmbeddingFeatures(InputModule):
         default_embedding_dim: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
-        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
+        embeddings_initializers: Optional[Dict[str, Callable[[torch.Tensor], None]]] = None,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
