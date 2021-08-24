@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig
 
 from ...types import DatasetSchema, Tag
+from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
 from ..tabular import AsTabular
@@ -150,7 +151,9 @@ class SequentialTabularFeatures(TabularFeatures):
         continuous = self.continuous_layer
         continuous.set_aggregation("sequential_concat")
 
-        continuous = continuous >> MLPBlock(dimensions) >> AsTabular("continuous_projection")
+        continuous = SequentialBlock(
+            [continuous, MLPBlock(dimensions), AsTabular("continuous_projection")]
+        )
 
         self.to_merge["continuous_layer"] = continuous
 

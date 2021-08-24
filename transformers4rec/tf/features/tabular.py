@@ -54,7 +54,7 @@ class TabularFeatures(MergeTabular):
         continuous.set_aggregation("concat")
 
         continuous = SequentialBlock(
-            continuous, MLPBlock(mlp_layers_dims), AsTabular("continuous_projection")
+            [continuous, MLPBlock(mlp_layers_dims), AsTabular("continuous_projection")]
         )
 
         self.to_merge["continuous_layer"] = continuous
