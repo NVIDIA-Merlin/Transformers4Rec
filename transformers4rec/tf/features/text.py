@@ -1,9 +1,9 @@
 import tensorflow as tf
 
-from ..tabular import TabularLayer
+from .base import InputLayer
 
 
-class ParseTokenizedText(TabularLayer):
+class ParseTokenizedText(InputLayer):
     def __init__(
         self,
         max_text_length=None,
@@ -56,7 +56,7 @@ class ParseTokenizedText(TabularLayer):
         return output_shapes
 
 
-class TextEmbeddingFeaturesWithTransformers(TabularLayer):
+class TextEmbeddingFeaturesWithTransformers(InputLayer):
     def __init__(
         self,
         transformer_model,

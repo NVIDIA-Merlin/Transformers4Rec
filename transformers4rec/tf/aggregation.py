@@ -44,6 +44,34 @@ class ConcatFeatures(FeatureAggregation):
         }
 
 
+@aggregation_registry.register("sequential_concat")
+class SequentialConcatFeatures(FeatureAggregation):
+    def call(self, inputs, **kwargs):
+        tensors = []
+        for name in sorted(inputs.keys()):
+            val = inputs[name]
+            if val.ndim == 2:
+                val = tf.expand_dims(val, axis=-1)
+            tensors.append(val)
+
+        return tf.concat(tensors, axis=-1)
+
+    def compute_output_shape(self, input_size):
+        batch_size = calculate_batch_size_from_input_shapes(input_size)
+        converted_input_size = {}
+        for key, val in input_size.items():
+            if len(val) == 2:
+                converted_input_size[key] = val + (1,)
+            else:
+                converted_input_size[key] = val
+
+        return (
+            batch_size,
+            list(input_size.values())[0][1],
+            sum([i[-1] for i in converted_input_size.values()]),
+        )
+
+
 @aggregation_registry.register("stack")
 class StackFeatures(FeatureAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):

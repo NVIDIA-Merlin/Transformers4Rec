@@ -12,6 +12,7 @@ def test_sequential_embedding_features(yoochoose_schema, torch_yoochoose_like):
     outputs = emb_module(torch_yoochoose_like)
 
     assert list(outputs.keys()) == schema.select_by_tag(Tag.CATEGORICAL).column_names
+    assert all(len(tensor.shape) == 3 for tensor in list(outputs.values()))
     assert all(tensor.shape[1] == 20 for tensor in list(outputs.values()))
     assert all(tensor.shape[2] == 64 for tensor in list(outputs.values()))
 

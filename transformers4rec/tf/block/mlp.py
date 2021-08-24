@@ -1,3 +1,5 @@
+from typing import List
+
 import tensorflow as tf
 
 from .base import SequentialBlock
@@ -6,7 +8,7 @@ from .base import SequentialBlock
 class MLPBlock(SequentialBlock):
     def __init__(
         self,
-        dimensions,
+        dimensions: List[int],
         activation="relu",
         use_bias: bool = True,
         dropout=None,

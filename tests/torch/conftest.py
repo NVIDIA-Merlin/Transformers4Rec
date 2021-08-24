@@ -150,8 +150,8 @@ def torch_yoochoose_like():
             is_int_feature = feature.HasField("int_domain")
 
             if is_int_feature:
+                max_num = MAX_CARDINALITY
                 if is_session_feature:
-                    max_num = MAX_CARDINALITY
                     if not feature.int_domain.is_categorical:
                         max_num = feature.int_domain.max
                     row = pytorch.randint(max_num, (session_length,))
