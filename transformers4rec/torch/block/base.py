@@ -34,7 +34,7 @@ class Block(BlockMixin, torch.nn.Module):
         if not name:
             name = self.name
 
-        return self >> AsTabular(name)
+        return SequentialBlock(self, AsTabular(name))
 
     def output_size(self):
         if self._output_size[0] is None:
@@ -127,7 +127,7 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
         if not name:
             name = self.name
 
-        return self >> AsTabular(name)
+        return SequentialBlock(self, AsTabular(name))
 
     def __add__(self, other):
         return merge_tabular(self, other)
