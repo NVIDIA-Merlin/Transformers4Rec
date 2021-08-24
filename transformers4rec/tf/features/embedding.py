@@ -92,6 +92,9 @@ class EmbeddingFeatures(InputLayer):
 
         return self.embedding_tables[self.item_id]
 
+    def item_ids(self, inputs) -> tf.Tensor:
+        return inputs[self.item_id]
+
     def lookup_feature(self, name, val):
         table: TableConfig = self.embeddings[name].table
         table_var = self.embedding_tables[table.name]
