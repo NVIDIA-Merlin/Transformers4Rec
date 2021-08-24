@@ -22,7 +22,7 @@ class T4RecConfig:
     ):
         from .. import torch as torch4rec
 
-        if not isinstance(input_features, torch4rec.SequentialTabularFeatures):
+        if not isinstance(input_features, torch4rec.TabularSequenceFeatures):
             raise ValueError("`input_features` must an instance of SequentialTabularFeatures")
         if not all(isinstance(t, torch4rec.PredictionTask) for t in prediction_task):
             raise ValueError(

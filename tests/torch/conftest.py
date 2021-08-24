@@ -121,8 +121,8 @@ def torch_yoochoose_tabular_features(yoochoose_schema):
 
 
 @pytest.fixture
-def torch_yoochoose_sequential_tabular_features(yoochoose_schema):
-    return torch4rec.SequentialTabularFeatures.from_schema(
+def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
+    return torch4rec.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
