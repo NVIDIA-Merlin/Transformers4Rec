@@ -132,7 +132,7 @@ config_classes = [
 def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_like, config_cls):
     transformer_config = config_cls.build(128, 4, 2, 20)
 
-    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+    input_module = torch4rec.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
@@ -154,7 +154,7 @@ def test_item_prediction_transformer_torch_model_from_config(
 ):
     transformer_config = config_cls.build(128, 4, 2, 20)
 
-    input_module = torch4rec.SequentialTabularFeatures.from_schema(
+    input_module = torch4rec.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,

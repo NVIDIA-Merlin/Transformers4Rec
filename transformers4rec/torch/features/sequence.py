@@ -31,7 +31,7 @@ class SequenceEmbeddingFeatures(EmbeddingFeatures):
         return TabularModule.forward_output_size(self, sizes)
 
 
-class TabularTransformerFeatures(TabularFeatures):
+class TabularSequenceFeatures(TabularFeatures):
     EMBEDDING_MODULE_CLASS = SequenceEmbeddingFeatures
 
     def __init__(
@@ -63,7 +63,7 @@ class TabularTransformerFeatures(TabularFeatures):
         d_output=None,
         masking=None,
         **kwargs
-    ) -> "TabularTransformerFeatures":
+    ) -> "TabularSequenceFeatures":
         """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
         Parameters
         ----------
@@ -158,7 +158,7 @@ class TabularTransformerFeatures(TabularFeatures):
         return None
 
     def forward(self, inputs, training=True):
-        outputs = super(TabularTransformerFeatures, self).forward(inputs)
+        outputs = super(TabularSequenceFeatures, self).forward(inputs)
 
         if self.masking or self.projection_module:
             outputs = self.aggregation(outputs)

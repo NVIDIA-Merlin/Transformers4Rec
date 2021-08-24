@@ -21,7 +21,7 @@ lm_tasks.remove("permutation")
 def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
 
     col_group = yoochoose_schema
-    tab_module = torch4rec.TabularTransformerFeatures.from_schema(
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
         aggregation="sequential_concat",
@@ -48,7 +48,7 @@ def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
 def test_xlnet_with_plm(yoochoose_schema, torch_yoochoose_like):
 
     col_group = yoochoose_schema
-    tab_module = torch4rec.TabularTransformerFeatures.from_schema(
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
         aggregation="sequential_concat",
@@ -76,7 +76,7 @@ def test_xlnet_with_plm(yoochoose_schema, torch_yoochoose_like):
 def test_plm_wrong_transformer(yoochoose_schema, torch_yoochoose_like):
     with pytest.raises(ValueError) as excinfo:
         col_group = yoochoose_schema
-        tab_module = torch4rec.TabularTransformerFeatures.from_schema(
+        tab_module = torch4rec.TabularSequenceFeatures.from_schema(
             col_group,
             max_sequence_length=20,
             aggregation="sequential_concat",
@@ -107,7 +107,7 @@ def test_plm_wrong_transformer(yoochoose_schema, torch_yoochoose_like):
 @pytest.mark.parametrize("transformer_body", config_classes)
 def test_transformer_block_clm(yoochoose_schema, torch_yoochoose_like, transformer_body):
     col_group = yoochoose_schema
-    tab_module = torch4rec.TabularTransformerFeatures.from_schema(
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
         aggregation="sequential_concat",
@@ -129,7 +129,7 @@ def test_transformer_block_clm(yoochoose_schema, torch_yoochoose_like, transform
 # Test output of Reformer with clm using pytorch-like code
 def test_reformer_block_clm(yoochoose_schema, torch_yoochoose_like):
     col_group = yoochoose_schema
-    tab_module = torch4rec.TabularTransformerFeatures.from_schema(
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
         aggregation="sequential_concat",

@@ -96,7 +96,7 @@ def test_element_wise_sum_item_multi_aggregation_registry_yoochoose(
 ):
     categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    tab_module = torch4rec.TabularTransformerFeatures.from_schema(
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         categ_schema, aggregation="element-wise-sum-item-multi"
     )
 

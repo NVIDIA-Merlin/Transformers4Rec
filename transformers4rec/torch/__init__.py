@@ -27,7 +27,7 @@ from .features.embedding import (
     SoftEmbeddingFeatures,
     TableConfig,
 )
-from .features.sequence import SequenceEmbeddingFeatures, TabularTransformerFeatures
+from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .head import (
     BinaryClassificationTask,
@@ -50,7 +50,7 @@ __all__ = [
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SoftEmbeddingFeatures",
-    "TabularTransformerFeatures",
+    "TabularSequenceFeatures",
     "SequenceEmbeddingFeatures",
     "FeatureConfig",
     "TableConfig",
