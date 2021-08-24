@@ -6,14 +6,15 @@ from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
 from ...types import DatasetSchema
-from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
+from ..tabular import AsSparseFeatures, FilterFeatures
+from .base import InputLayer
 
 # pylint has issues with TF array ops, so disable checks until fixed:
 # https://github.com/PyCQA/pylint/issues/3613
 # pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
-class EmbeddingFeatures(TabularLayer):
+class EmbeddingFeatures(InputLayer):
     def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
         self.filter_features = FilterFeatures(list(feature_config.keys()))
         self.convert_to_sparse = AsSparseFeatures()

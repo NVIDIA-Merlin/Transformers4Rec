@@ -4,12 +4,13 @@ from ...types import DatasetSchema, DefaultTags, Tag
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular
+from .base import InputLayer
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
 from .text import TextEmbeddingFeaturesWithTransformers
 
 
-class TabularFeatures(MergeTabular):
+class TabularFeatures(InputLayer, MergeTabular):
     CONTINUOUS_MODULE_CLASS = ContinuousFeatures
     EMBEDDING_MODULE_CLASS = EmbeddingFeatures
 
