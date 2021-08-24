@@ -2,7 +2,6 @@ import pytest
 from torch.utils.data import DataLoader
 
 from transformers4rec.config import trainer
-from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
@@ -10,19 +9,8 @@ torch4rec = pytest.importorskip("transformers4rec.torch")
 
 @pytest.mark.parametrize("batch_size", [16, 32])
 def test_set_train_eval_loaders(
-    torch_yoochoose_like, torch_yoochoose_sequential_tabular_features, batch_size
+    torch_yoochoose_like, torch_yoochoose_next_item_prediction_model, batch_size
 ):
-    # define Transformer-based model
-    inputs = torch_yoochoose_sequential_tabular_features
-    transformer_config = tconf.XLNetConfig.build(
-        d_model=64, n_head=4, n_layer=2, total_seq_length=20
-    )
-    body = torch4rec.SequentialBlock(
-        inputs,
-        torch4rec.MLPBlock([64]),
-        torch4rec.TransformerBlock(transformer=transformer_config, masking=inputs.masking),
-    )
-    model = torch4rec.BinaryClassificationTask("target").to_model(body, inputs)
 
     train_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size)
     eval_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
@@ -35,7 +23,9 @@ def test_set_train_eval_loaders(
             "per_device_eval_batch_size": batch_size // 2,
         }
     )
-    resys_trainer = torch4rec.T4recTrainer(model=model, args=args)
+    resys_trainer = torch4rec.T4recTrainer(
+        model=torch_yoochoose_next_item_prediction_model, args=args
+    )
 
     resys_trainer.set_train_dataloader(train_loader)
     resys_trainer.set_eval_dataloader(eval_loader)
