@@ -4,7 +4,7 @@ from transformers4rec.config import trainer
 
 
 def test_torch_trainer_config():
-    config = trainer.TF4RecTrainerConfig(
+    config = trainer.T4RecTrainerConfig(
         output_dir=".", avg_session_length=20, predict_top_k=5, **{"learning_rate": 0.008}
     )
 
@@ -14,7 +14,7 @@ def test_torch_trainer_config():
 
 
 def test_tf_trainer_config():
-    config = trainer.TF4RecTrainerConfigTF(
+    config = trainer.T4RecTrainerConfigTF(
         output_dir=".", avg_session_length=20, predict_top_k=5, **{"learning_rate": 0.008}
     )
 

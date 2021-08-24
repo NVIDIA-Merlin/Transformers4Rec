@@ -12,7 +12,7 @@ from ..config.trainer import T4RecTrainerConfig
 logger = logging.get_logger(__name__)
 
 
-class TF4recTrainer(Trainer):
+class T4recTrainer(Trainer):
     """
     An :class:`~transformers.Trainer` specialized for sequential recommendation
     including (session-based and sequtial recommendation)
@@ -25,7 +25,7 @@ class TF4recTrainer(Trainer):
         recsys_callback = RecSysTrainerCallback(self)
         mock_dataset = DatasetMock()
 
-        super(TF4recTrainer, self).__init__(
+        super(T4recTrainer, self).__init__(
             model=model,
             args=args,
             train_dataset=mock_dataset,

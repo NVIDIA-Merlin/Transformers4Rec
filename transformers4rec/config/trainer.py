@@ -4,7 +4,7 @@ from transformers import TFTrainingArguments, TrainingArguments
 
 
 @dataclass
-class TF4RecTrainerConfig(TrainingArguments):
+class T4RecTrainerConfig(TrainingArguments):
     def __init__(
         self,
         output_dir: str,

@@ -38,7 +38,7 @@ from .head import (
 )
 from .model import Model
 from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
-from .trainer import TF4recTrainer
+from .trainer import T4recTrainer
 
 __all__ = [
     "SequentialBlock",
@@ -71,7 +71,7 @@ __all__ = [
     "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
-    "TF4recTrainer",
+    "T4recTrainer",
 ]
 
 try:
