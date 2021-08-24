@@ -20,6 +20,7 @@ from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.training.tracking.data_structures import ListWrapper, _DictWrapper
 
 from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
+from .augmentation import StochasticSwapNoise
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
@@ -79,6 +80,7 @@ __all__ = [
     "BinaryClassificationTask",
     "RegressionTask",
     "Model",
+    "StochasticSwapNoise",
 ]
 
 try:
