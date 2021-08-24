@@ -13,7 +13,7 @@ from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .tabular import AsTabular, TabularFeatures
 
 
-class SequentialEmbeddingFeatures(EmbeddingFeatures):
+class SequenceEmbeddingFeatures(EmbeddingFeatures):
     def __init__(self, feature_config: Dict[str, FeatureConfig], padding_idx: int = 0, **kwargs):
         self.padding_idx = padding_idx
         super().__init__(feature_config, **kwargs)
@@ -31,8 +31,8 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
         return TabularModule.forward_output_size(self, sizes)
 
 
-class SequentialTabularFeatures(TabularFeatures):
-    EMBEDDING_MODULE_CLASS = SequentialEmbeddingFeatures
+class TabularSequenceFeatures(TabularFeatures):
+    EMBEDDING_MODULE_CLASS = SequenceEmbeddingFeatures
 
     def __init__(
         self,
@@ -63,7 +63,7 @@ class SequentialTabularFeatures(TabularFeatures):
         d_output=None,
         masking=None,
         **kwargs
-    ) -> "SequentialTabularFeatures":
+    ) -> "TabularSequenceFeatures":
         """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
         Parameters
         ----------
@@ -158,7 +158,7 @@ class SequentialTabularFeatures(TabularFeatures):
         return None
 
     def forward(self, inputs, training=True):
-        outputs = super(SequentialTabularFeatures, self).forward(inputs)
+        outputs = super(TabularSequenceFeatures, self).forward(inputs)
 
         if self.masking or self.projection_module:
             outputs = self.aggregation(outputs)

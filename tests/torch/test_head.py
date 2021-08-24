@@ -31,9 +31,9 @@ def test_simple_heads(torch_yoochoose_tabular_features, torch_yoochoose_like, ta
 )
 @pytest.mark.parametrize("summary", ["last", "first", "mean", "cls_index"])
 def test_simple_heads_on_sequence(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like, task, task_block, summary
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, task, task_block, summary
 ):
-    inputs = torch_yoochoose_sequential_tabular_features
+    inputs = torch_yoochoose_tabular_transformer_features
     targets = {"target": pytorch.randint(2, (100,)).float()}
 
     body = torch4rec.SequentialBlock(inputs, torch4rec.MLPBlock([64]))
@@ -92,8 +92,8 @@ def test_head_with_multiple_tasks(
         )
 
 
-def test_item_prediction_head(torch_yoochoose_sequential_tabular_features, torch_yoochoose_like):
-    input_module = torch_yoochoose_sequential_tabular_features
+def test_item_prediction_head(torch_yoochoose_tabular_transformer_features, torch_yoochoose_like):
+    input_module = torch_yoochoose_tabular_transformer_features
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(body, torch4rec.NextItemPredictionTask(), inputs=input_module)
 
@@ -103,9 +103,9 @@ def test_item_prediction_head(torch_yoochoose_sequential_tabular_features, torch
 
 
 def test_item_prediction_head_weight_tying(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like
 ):
-    input_module = torch_yoochoose_sequential_tabular_features
+    input_module = torch_yoochoose_tabular_transformer_features
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(
         body, torch4rec.NextItemPredictionTask(weight_tying=True), inputs=input_module
@@ -119,9 +119,9 @@ def test_item_prediction_head_weight_tying(
 # Test loss and metrics outputs
 @pytest.mark.parametrize("weight_tying", [True, False])
 def test_item_prediction_loss_and_metrics(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like, weight_tying
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, weight_tying
 ):
-    input_module = torch_yoochoose_sequential_tabular_features
+    input_module = torch_yoochoose_tabular_transformer_features
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(
         body, torch4rec.NextItemPredictionTask(weight_tying=weight_tying), inputs=input_module
@@ -147,9 +147,9 @@ def test_item_prediction_loss_and_metrics(
 
 # Test output formats
 def test_item_prediction_HF_output(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like
 ):
-    input_module = torch_yoochoose_sequential_tabular_features
+    input_module = torch_yoochoose_tabular_transformer_features
 
     body = torch4rec.SequentialBlock(input_module, torch4rec.MLPBlock([64]))
     head = torch4rec.Head(
@@ -190,9 +190,9 @@ def test_item_prediction_head_with_wrong_body(torch_yoochoose_tabular_features):
 
 
 def test_item_prediction_head_with_input_size(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like
 ):
-    input_module = torch_yoochoose_sequential_tabular_features
+    input_module = torch_yoochoose_tabular_transformer_features
 
     body = torch4rec.SequentialBlock(
         input_module,
@@ -213,9 +213,9 @@ def test_item_prediction_head_with_input_size(
 
 # Test output formats
 def test_item_prediction_with_rnn(
-    torch_yoochoose_sequential_tabular_features, torch_yoochoose_like
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like
 ):
-    input_module = torch_yoochoose_sequential_tabular_features
+    input_module = torch_yoochoose_tabular_transformer_features
 
     body = torch4rec.SequentialBlock(
         input_module,
