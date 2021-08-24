@@ -143,7 +143,9 @@ class TabularModule(TabularMixin, torch.nn.Module):
 
     @classmethod
     def from_features(cls, features, **kwargs):
-        return features >> cls(**kwargs)
+        from .block.base import SequentialBlock
+
+        return SequentialBlock(features, **kwargs)
 
     def forward(self, x, *args, **kwargs):
         return x
