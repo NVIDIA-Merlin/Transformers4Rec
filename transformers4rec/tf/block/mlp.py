@@ -22,7 +22,11 @@ class MLPBlock(SequentialBlock):
             if normalization:
                 if normalization == "batch_norm":
                     layers.append(tf.keras.layers.BatchNormalization())
-                else:
+                elif isinstance(normalization, tf.keras.layers.Layer):
                     layers.append(normalization)
+                else:
+                    raise ValueError(
+                        "Normalization needs to be an instance `Layer` or " "`batch_norm`"
+                    )
 
         super().__init__(layers, filter_features, **kwargs)
