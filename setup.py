@@ -19,7 +19,7 @@ requirements = {
     "base": read_requirements("requirements/base.txt"),
     "tensorflow": read_requirements("requirements/tensorflow.txt"),
     "pytorch": read_requirements("requirements/pytorch.txt"),
-    # "nvtabular": read_requirements("requirements/nvtabular.txt"),
+    "nvtabular": read_requirements("requirements/nvtabular.txt"),
     "dev": read_requirements("requirements/dev.txt"),
 }
 
