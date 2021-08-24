@@ -119,7 +119,7 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
 
     def call(self, inputs, **kwargs):
         self._check_input_shapes_equal(inputs)
-        return self.stack(inputs).sum(dim=0)
+        return tf.reduce_sum(self.stack(inputs), axis=0)
 
     def compute_output_shape(self, input_shape):
         batch_size = calculate_batch_size_from_input_shapes(input_shape)
@@ -153,8 +153,8 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
 
         item_id_inputs = inputs[self.item_id_col_name]
         other_inputs = {k: v for k, v in inputs.items() if k != self.item_id_col_name}
-        other_inputs_sum = self.stack(other_inputs).sum(dim=0)
-        result = item_id_inputs.multiply(other_inputs_sum)
+        other_inputs_sum = tf.reduce_sum(self.stack(other_inputs), axis=0)
+        result = item_id_inputs * other_inputs_sum
         return result
 
     def compute_output_shape(self, input_shape):
