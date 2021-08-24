@@ -5,19 +5,21 @@ import tensorflow as tf
 from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from ...types import DatasetSchema
-from ..tabular import AsSparseFeatures, FilterFeatures, TabularLayer
+from ...types import DatasetSchema, Tag
+from ..tabular import AsSparseFeatures, FilterFeatures
+from .base import InputLayer
 
 # pylint has issues with TF array ops, so disable checks until fixed:
 # https://github.com/PyCQA/pylint/issues/3613
 # pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
-class EmbeddingFeatures(TabularLayer):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], **kwargs):
+class EmbeddingFeatures(InputLayer):
+    def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
         self.filter_features = FilterFeatures(list(feature_config.keys()))
         self.convert_to_sparse = AsSparseFeatures()
         self.embeddings = feature_config
+        self.item_id = item_id
         super().__init__(**kwargs)
 
     @classmethod
@@ -26,13 +28,17 @@ class EmbeddingFeatures(TabularLayer):
         schema: DatasetSchema,
         embedding_dims=None,
         default_embedding_dim=64,
-        infer_embedding_sizes=True,
+        infer_embedding_sizes=False,
         combiner="mean",
         tags=None,
+        item_id: Optional[str] = None,
         **kwargs
     ) -> Optional["EmbeddingFeatures"]:
         if tags:
             schema = schema.select_by_tag(tags)
+
+        if not item_id and schema.select_by_tag(Tag.ITEM_ID).column_names:
+            item_id = schema.select_by_tag(Tag.ITEM_ID).column_names[0]
 
         if infer_embedding_sizes:
             sizes = schema.embedding_sizes()
@@ -60,7 +66,7 @@ class EmbeddingFeatures(TabularLayer):
         if not feature_config:
             return None
 
-        return cls(feature_config, **kwargs)
+        return cls(feature_config, item_id=item_id, **kwargs)
 
     def build(self, input_shapes):
         self.embedding_tables = {}
@@ -79,6 +85,15 @@ class EmbeddingFeatures(TabularLayer):
                 shape=shape,
             )
         super().build(input_shapes)
+
+    @property
+    def item_embedding_table(self):
+        assert self.item_id is not None
+
+        return self.embedding_tables[self.item_id]
+
+    def item_ids(self, inputs) -> tf.Tensor:
+        return inputs[self.item_id]
 
     def lookup_feature(self, name, val):
         table: TableConfig = self.embeddings[name].table
@@ -107,6 +122,11 @@ class EmbeddingFeatures(TabularLayer):
         sparse_inputs = self.convert_to_sparse(self.filter_features(inputs))
         for name, val in sparse_inputs.items():
             embedded_outputs[name] = self.lookup_feature(name, val)
+
+        # Store raw item ids for masking and/or negative sampling
+        # This makes this module stateful.
+        if self.item_id:
+            self.item_seq = self.item_ids(inputs)
 
         return embedded_outputs
 
