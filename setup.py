@@ -17,6 +17,7 @@ def read_requirements(filename):
 
 
 requirements = {
+    "base": read_requirements("requirements/base.txt"),
     "tensorflow": read_requirements("requirements/tensorflow.txt"),
     "pytorch": read_requirements("requirements/pytorch.txt"),
     "nvtabular": read_requirements("requirements/nvtabular.txt"),
@@ -32,10 +33,9 @@ setup(
     license="Apache 2.0",
     long_description=open("README.md", encoding="utf8").read(),
     long_description_content_type="text/markdown",
-    install_requires=read_requirements("requirements/base.txt"),
+    install_requires=requirements["base"],
     test_suite="tests",
-    tests_require=read_requirements("requirements/dev.txt"),
-    extras_require={**requirements, "all": itertools.chain(*list(requirements.values()))},
+    extras_require={**requirements, "all": list(itertools.chain(*list(requirements.values())))},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
