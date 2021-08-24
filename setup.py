@@ -1,4 +1,5 @@
 import codecs
+import itertools
 import os
 
 from setuptools import find_packages, setup
@@ -15,6 +16,13 @@ def read_requirements(filename):
     return [r for r in parsed if len(r) > 0]
 
 
+requirements = {
+    "tensorflow": read_requirements("requirements/tensorflow.txt"),
+    "pytorch": read_requirements("requirements/pytorch.txt"),
+    "nvtabular": read_requirements("requirements/nvtabular.txt"),
+    "dev": read_requirements("requirements/dev.txt"),
+}
+
 setup(
     name="transformers4rec",
     version="0.01",
@@ -27,11 +35,7 @@ setup(
     install_requires=read_requirements("requirements/base.txt"),
     test_suite="tests",
     tests_require=read_requirements("requirements/dev.txt"),
-    extras_require={
-        "tensorflow": read_requirements("requirements/tensorflow.txt"),
-        "pytorch": read_requirements("requirements/pytorch.txt"),
-        "nvtabular": read_requirements("requirements/nvtabular.txt"),
-    },
+    extras_require={**requirements, "all": itertools.chain(*list(requirements.values()))},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
