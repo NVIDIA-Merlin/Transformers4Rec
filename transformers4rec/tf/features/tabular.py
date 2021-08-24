@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 
 from ...types import DatasetSchema, DefaultTags, Tag
+from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular
 from .continuous import ContinuousFeatures
@@ -50,9 +51,11 @@ class TabularFeatures(MergeTabular):
             mlp_layers_dims = [mlp_layers_dims]
 
         continuous = self.continuous_layer
-        continuous.aggregation = "concat"
+        continuous.set_aggregation("concat")
 
-        continuous = continuous >> MLPBlock(mlp_layers_dims) >> AsTabular("continuous_projection")
+        continuous = SequentialBlock(
+            continuous, MLPBlock(mlp_layers_dims), AsTabular("continuous_projection")
+        )
 
         self.to_merge["continuous_layer"] = continuous
 
@@ -68,6 +71,8 @@ class TabularFeatures(MergeTabular):
         continuous_projection: Optional[Union[List[int], int]] = None,
         text_model=None,
         text_tags=Tag.TEXT_TOKENIZED,
+        max_sequence_length=None,
+        automatic_build=True,
         max_text_length=None,
         **kwargs
     ):
@@ -98,6 +103,15 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
             **kwargs
         )
+
+        # if automatic_build and schema._schema:
+        #     output.build(
+        #         get_output_sizes_from_schema(
+        #             schema._schema,
+        #             kwargs.get("batch_size", 0),
+        #             max_sequence_length=max_sequence_length,
+        #         )
+        #     )
 
         if continuous_projection:
             output = output.project_continuous_features(continuous_projection)

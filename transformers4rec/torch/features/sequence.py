@@ -2,13 +2,12 @@ from typing import Dict, Optional
 
 import torch
 
-from transformers4rec.torch.masking import masking_registry
-from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
-
 from ...types import DatasetSchema, Tag
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
+from ..masking import masking_registry
 from ..tabular import TabularModule
+from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .tabular import AsTabular, TabularFeatures
 

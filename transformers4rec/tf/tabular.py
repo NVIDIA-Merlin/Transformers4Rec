@@ -56,14 +56,13 @@ class TabularLayer(tf.keras.layers.Layer):
         self, aggregation=None, trainable=True, name=None, dtype=None, dynamic=False, **kwargs
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
-        self.aggregation = aggregation
+        self.set_aggregation(aggregation)
 
     @property
     def aggregation(self):
         return self._aggregation
 
-    @aggregation.setter
-    def aggregation(self, value):
+    def set_aggregation(self, value):
         if value:
             self._aggregation = agg.aggregation_registry.parse(value)
         else:
