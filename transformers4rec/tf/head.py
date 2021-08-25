@@ -1,27 +1,40 @@
 from collections import defaultdict
-from typing import Dict, List, Optional, Text
+from types import SimpleNamespace
+from typing import Dict, List, Optional, Text, Type, Union
 
 import tensorflow as tf
+from tensorflow.python.keras.utils import generic_utils
+from transformers.modeling_tf_utils import TFSequenceSummary
 
 from ..types import DatasetSchema
 from ..utils.tags import Tag
+
+
+def name_fn(name, inp):
+    return "/".join([name, inp]) if name else None
 
 
 class TaskMixin:
     pass
 
 
-class PredictionTask(TaskMixin, tf.keras.layers.Layer):
+Layer = tf.keras.layers.Layer
+MetricOrMetricClass = Union[tf.keras.metrics.Metric, Type[tf.keras.metrics.Metric]]
+
+
+class PredictionTask(TaskMixin, Layer):
     def __init__(
         self,
-        loss: Optional[tf.keras.losses.Loss] = None,
-        pre: Optional[tf.keras.layers.Layer] = None,
-        body: Optional[tf.keras.layers.Layer] = None,
-        metrics: Optional[List[tf.keras.metrics.Metric]] = None,
+        loss: Optional[tf.keras.losses.Loss],
+        target_name=None,
+        metrics: Optional[List[MetricOrMetricClass]] = None,
+        pre: Optional[Layer] = None,
+        task_block: Optional[Layer] = None,
         prediction_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
         label_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
         loss_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
         name: Optional[Text] = None,
+        summary_type="last",
     ) -> None:
         """Initializes the task.
         Args:
@@ -35,24 +48,49 @@ class PredictionTask(TaskMixin, tf.keras.layers.Layer):
         """
 
         super().__init__(name=name)
-
-        self.body = body
+        self.target_name = target_name
+        self.seqeunce_sumary = TFSequenceSummary(SimpleNamespace(summary_type=summary_type))  # noqa
         self.pre = pre
+        self.task_block = task_block
+        self.loss = loss
 
-        self.loss = loss if loss is not None else tf.keras.losses.BinaryCrossentropy()
-        self.eval_metrics = metrics or []
-        self.prediction_metrics = prediction_metrics or []
-        self.label_metrics = label_metrics or []
-        self.loss_metrics = loss_metrics or []
+        create_metrics = self._create_metrics
+        self.eval_metrics = create_metrics(metrics) if metrics else []
+        self.prediction_metrics = create_metrics(prediction_metrics) if prediction_metrics else []
+        self.label_metrics = create_metrics(label_metrics) if label_metrics else []
+        self.loss_metrics = create_metrics(loss_metrics) if loss_metrics else []
 
     def call(self, inputs, training=False, **kwargs):
         x = inputs
-        if self.body:
-            x = self.body(x)
+
+        if len(x.shape) == 3:
+            x = self.sequence_summary(x)
+
+        if self.task_block:
+            x = self.task_block(x)
+
         if self.pre:
             x = self.pre(x)
 
         return x
+
+    def _create_metrics(self, metrics: List[MetricOrMetricClass]) -> List[tf.keras.metrics.Metric]:
+        outputs = []
+        for metric in metrics:
+            if not isinstance(metric, tf.keras.metrics.Metric):
+                metric = metric(name=self.child_name(generic_utils.to_snake_case(metric.__name__)))
+            outputs.append(metric)
+
+        return outputs
+
+    @property
+    def task_name(self):
+        base_name = generic_utils.to_snake_case(self.__class__.__name__)
+
+        return name_fn(self.target_name, base_name) if self.target_name else base_name
+
+    def child_name(self, name):
+        return name_fn(self.task_name, name)
 
     def compute_loss(
         self,
@@ -63,6 +101,9 @@ class PredictionTask(TaskMixin, tf.keras.layers.Layer):
         sample_weight: Optional[tf.Tensor] = None,
         **kwargs
     ) -> tf.Tensor:
+        if isinstance(targets, dict) and self.target_name:
+            targets = targets[self.target_name]
+
         predictions = self(inputs, training=training, **kwargs)
         loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
 
@@ -79,7 +120,10 @@ class PredictionTask(TaskMixin, tf.keras.layers.Layer):
     def repr_add(self):
         return [("loss", self.loss)]
 
-    def calculate_metrics(self, predictions, labels, sample_weight=None, forward=True, loss=None):
+    def calculate_metrics(self, predictions, targets, sample_weight=None, forward=True, loss=None):
+        if isinstance(targets, dict) and self.target_name:
+            targets = targets[self.target_name]
+
         if forward:
             predictions = self(predictions)
 
@@ -87,74 +131,118 @@ class PredictionTask(TaskMixin, tf.keras.layers.Layer):
 
         for metric in self.eval_metrics:
             update_ops.append(
-                metric.update_state(y_true=labels, y_pred=predictions, sample_weight=sample_weight)
+                metric.update_state(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
             )
 
         for metric in self.prediction_metrics:
             update_ops.append(metric.update_state(predictions, sample_weight=sample_weight))
 
         for metric in self.label_metrics:
-            update_ops.append(metric.update_state(labels, sample_weight=sample_weight))
+            update_ops.append(metric.update_state(targets, sample_weight=sample_weight))
 
         for metric in self.loss_metrics:
             if not loss:
-                loss = self.loss(y_true=labels, y_pred=predictions, sample_weight=sample_weight)
+                loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
             update_ops.append(metric.update_state(loss, sample_weight=sample_weight))
 
         return update_ops
 
-    @classmethod
-    def binary_classification(cls, metrics=None, add_logit_layer=True, name=None):
+    def metric_results(self):
+        return {metric.name: metric.result() for metric in self.metrics}
 
-        metrics = metrics or [
-            tf.keras.metrics.Precision(name=name_fn(name, "precision")),
-            tf.keras.metrics.Recall(name=name_fn(name, "recall")),
-            tf.keras.metrics.BinaryAccuracy(name=name_fn(name, "accuracy")),
-            tf.keras.metrics.AUC(name=name_fn(name, "auc")),
-        ]
+    def to_head(self, body, inputs=None, **kwargs) -> "Head":
+        return Head(body, self, inputs=inputs, **kwargs)
 
-        return cls(
-            loss=tf.keras.losses.BinaryCrossentropy(),
+
+class BinaryClassificationTask(PredictionTask):
+    DEFAULT_LOSS = tf.keras.losses.BinaryCrossentropy()
+    DEFAULT_METRICS = (
+        tf.keras.metrics.Precision,
+        tf.keras.metrics.Recall,
+        tf.keras.metrics.BinaryAccuracy,
+        tf.keras.metrics.AUC,
+    )
+
+    def __init__(
+        self,
+        target_name=None,
+        task_block: Optional[Layer] = None,
+        loss=DEFAULT_LOSS,
+        metrics: List[MetricOrMetricClass] = DEFAULT_METRICS,
+        summary_type="first",
+    ):
+        super().__init__(
+            loss=loss,
             metrics=metrics,
-            pre=tf.keras.layers.Dense(1, activation="sigmoid", name=name_fn(name, "logit"))
-            if add_logit_layer
-            else None,
+            target_name=target_name,
+            summary_type=summary_type,
+            task_block=task_block,
         )
+        self.pre = tf.keras.layers.Dense(1, activation="sigmoid", name=self.child_name("logit"))
 
-    @classmethod
-    def regression(cls, metrics=None, add_logit_layer=True, name=None):
-        metrics = metrics or [tf.keras.metrics.RootMeanSquaredError(name=name_fn(name, "rmse"))]
 
-        return cls(
-            loss=tf.keras.losses.MeanSquaredError(),
+class RegressionTask(PredictionTask):
+    DEFAULT_LOSS = tf.keras.losses.MeanSquaredError()
+    DEFAULT_METRICS = (tf.keras.metrics.RootMeanSquaredError,)
+
+    def __init__(
+        self,
+        target_name=None,
+        task_block: Optional[Layer] = None,
+        loss=DEFAULT_LOSS,
+        metrics=DEFAULT_METRICS,
+        summary_type="first",
+    ):
+        super().__init__(
+            loss=loss,
             metrics=metrics,
-            pre=tf.keras.layers.Dense(1, name=name_fn(name, "logit")) if add_logit_layer else None,
+            target_name=target_name,
+            summary_type=summary_type,
+            task_block=task_block,
         )
+        self.pre = tf.keras.layers.Dense(1, name=self.child_name("logit"))
 
 
 class Head(tf.keras.layers.Layer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.tasks = {}
+    def __init__(
+        self,
+        body: tf.keras.layers.Layer,
+        prediction_tasks: Optional[Union[List[PredictionTask], PredictionTask]] = None,
+        task_blocks: Optional[Union[Layer, Dict[str, Layer]]] = None,
+        task_weights=None,
+        loss_reduction=tf.reduce_mean,
+        inputs=None,
+    ):
+        super().__init__()
+        self.body = body
+        self.loss_reduction = loss_reduction
+        self.prediction_tasks = {}
+        if prediction_tasks:
+            if not isinstance(prediction_tasks, list):
+                prediction_tasks = [prediction_tasks]
+            for i, task in enumerate(prediction_tasks):
+                self.prediction_tasks[task.target_name or str(i)] = task
+
         self._task_weights = defaultdict(lambda: 1)
+        if task_weights:
+            for key, val in task_weights.items():
+                self._task_weights[key] = val
 
     @classmethod
-    def from_schema(cls, schema: DatasetSchema, add_logits=True, task_weights=None):
+    def from_schema(cls, schema: DatasetSchema, body, task_weights=None):
         if task_weights is None:
             task_weights = {}
-        to_return = cls()
+        to_return = cls(body)
 
         for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
-            to_return = to_return.add_binary_classification_task(
-                binary_target,
-                add_logit_layer=add_logits,
+            to_return = to_return.add_task(
+                BinaryClassificationTask(binary_target),
                 task_weight=task_weights.get(binary_target, 1),
             )
 
         for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
-            to_return = to_return.add_regression_task(
-                regression_target,
-                add_logit_layer=add_logits,
+            to_return = to_return.add_task(
+                RegressionTask(regression_target),
                 task_weight=task_weights.get(regression_target, 1),
             )
 
@@ -162,59 +250,70 @@ class Head(tf.keras.layers.Layer):
 
         return to_return
 
-    def add_task(self, target_name, task: PredictionTask, task_weight=1):
-        self.tasks[target_name] = task
+    def add_task(self, task: PredictionTask, task_weight=1):
+        key = task.target_name
+        self.prediction_tasks[key] = task
         if task_weight:
-            self._task_weights[target_name] = task_weight
-
-        return self
-
-    def add_binary_classification_task(self, target_name, add_logit_layer=True, task_weight=1):
-        self.tasks[target_name] = PredictionTask.binary_classification(
-            add_logit_layer=add_logit_layer, name=target_name
-        )
-        if task_weight:
-            self._task_weights[target_name] = task_weight
-
-        return self
-
-    def add_regression_task(self, target_name, add_logit_layer=True, task_weight=1):
-        self.tasks[target_name] = PredictionTask.regression(
-            add_logit_layer=add_logit_layer, name=target_name
-        )
-        if task_weight:
-            self._task_weights[target_name] = task_weight
+            self._task_weights[key] = task_weight
 
         return self
 
     def pop_labels(self, inputs: Dict[Text, tf.Tensor]):
         outputs = {}
-        for name in self.tasks:
+        for name in self.prediction_tasks.keys():
             outputs[name] = inputs.pop(name)
 
         return outputs
 
-    def call(self, logits: tf.Tensor, **kwargs):
+    def call(self, body_outputs: tf.Tensor, call_body=False, always_output_dict=False, **kwargs):
         outputs = {}
 
-        for name, task in self.tasks.items():
-            outputs[name] = task(logits, **kwargs)
+        if call_body:
+            body_outputs = self.body(body_outputs)
 
-        if len(outputs) == 1:
+        for name, task in self.prediction_tasks.items():
+            outputs[name] = task(body_outputs, **kwargs)
+
+        if len(outputs) == 1 and not always_output_dict:
             return outputs[list(outputs.keys())[0]]
 
         return outputs
 
-    def compute_loss(self, block_outputs, targets, training=False, **kwargs) -> tf.Tensor:
+    def compute_loss(
+        self, body_outputs, targets, training=False, call_body=False, **kwargs
+    ) -> tf.Tensor:
         losses = []
 
-        for name, task in self.tasks.items():
-            task_target = targets[name] if isinstance(targets, dict) else targets
-            loss = task.compute_loss(block_outputs, task_target, training=training, **kwargs)
+        if call_body:
+            body_outputs = self.body(body_outputs)
+
+        for name, task in self.prediction_tasks.items():
+            loss = task.compute_loss(body_outputs, targets, training=training, **kwargs)
             losses.append(loss * self._task_weights[name])
 
-        return tf.reduce_sum(losses)
+        return self.loss_reduction(losses)
+
+    def metric_results(self, mode=None):
+        def name_fn(x):
+            return "_".join([mode, x]) if mode else x
+
+        metrics = {
+            name_fn(name): task.metric_results() for name, task in self.prediction_tasks.items()
+        }
+
+        return _output_metrics(metrics)
+
+    def reset_metrics(self):
+        for task in self.prediction_tasks.values():
+            task.reset_metrics()
+
+    @property
+    def task_blocks(self) -> Dict[str, Optional[Layer]]:
+        return {name: task.task_block for name, task in self.prediction_tasks.items()}
 
 
-def name_fn(name, inp):
-    return "/".join([name, inp]) if name else None
+def _output_metrics(metrics):
+    if len(metrics) == 1:
+        return metrics[list(metrics.keys())[0]]
+
+    return metrics

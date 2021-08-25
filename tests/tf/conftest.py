@@ -46,6 +46,18 @@ def tf_yoochoose_tabular_features(yoochoose_schema):
 
 
 @pytest.fixture
+def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
+    return tf4rec.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=100,
+        # TODO: Add masking when we add it
+        # masking="causal",
+    )
+
+
+@pytest.fixture
 def tf_yoochoose_like():
     NUM_ROWS = 100
     MAX_CARDINALITY = 100
