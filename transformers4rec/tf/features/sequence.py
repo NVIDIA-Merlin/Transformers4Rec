@@ -7,7 +7,7 @@ from ...types import DatasetSchema, Tag
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
-from ..tabular import AsTabular
+from ..tabular import AsTabular, TabularLayer
 from .embedding import EmbeddingFeatures, TableConfig
 from .tabular import TabularFeatures
 
@@ -136,11 +136,14 @@ class TabularSequenceFeatures(TabularFeatures):
             raise ValueError("You cannot specify both d_output and projection at the same time")
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
-            output.aggregation = "sequential_concat"
+            output.set_aggregation("sequential_concat")
         # hidden_size = output.output_size()
 
         if d_output and not projection:
             projection = MLPBlock([d_output])
+
+        if projection:
+            output.projection_module = projection
 
         if isinstance(masking, str):
             masking = masking_registry.parse(masking)(**kwargs)
@@ -164,6 +167,35 @@ class TabularSequenceFeatures(TabularFeatures):
         self.to_merge["continuous_layer"] = continuous
 
         return self
+
+    def call(self, inputs, training=True):
+        outputs = super(TabularSequenceFeatures, self).call(inputs)
+
+        if self.masking or self.projection_module:
+            outputs = self.aggregation(outputs)
+
+        if self.projection_module:
+            outputs = self.projection_module(outputs)
+
+        if self.masking:
+            outputs = self.masking(
+                outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
+            )
+
+        return outputs
+
+    def compute_output_shape(self, input_shape):
+        output_shapes = {}
+
+        for layer in self.merge_values:
+            output_shapes.update(layer.compute_output_shape(input_shape))
+
+        output_shapes = TabularLayer.compute_output_shape(self, output_shapes)
+
+        if self.projection_module:
+            output_shapes = self.projection_module.compute_output_shape(output_shapes)
+
+        return output_shapes
 
     @property
     def masking(self):

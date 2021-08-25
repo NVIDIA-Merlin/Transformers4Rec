@@ -49,7 +49,9 @@ class PredictionTask(TaskMixin, Layer):
 
         super().__init__(name=name)
         self.target_name = target_name
-        self.seqeunce_sumary = TFSequenceSummary(SimpleNamespace(summary_type=summary_type))  # noqa
+        self.sequence_summary = TFSequenceSummary(
+            SimpleNamespace(summary_type=summary_type)
+        )  # noqa
         self.pre = pre
         self.task_block = task_block
         self.loss = loss
@@ -220,8 +222,8 @@ class Head(tf.keras.layers.Layer):
         if prediction_tasks:
             if not isinstance(prediction_tasks, list):
                 prediction_tasks = [prediction_tasks]
-            for i, task in enumerate(prediction_tasks):
-                self.prediction_tasks[task.target_name or str(i)] = task
+            for task in prediction_tasks:
+                self.prediction_tasks[task.task_name] = task
 
         self._task_weights = defaultdict(lambda: 1)
         if task_weights:
@@ -310,6 +312,14 @@ class Head(tf.keras.layers.Layer):
     @property
     def task_blocks(self) -> Dict[str, Optional[Layer]]:
         return {name: task.task_block for name, task in self.prediction_tasks.items()}
+
+    @property
+    def metrics(self) -> Dict[str, tf.keras.metrics.Metric]:
+        outputs = {}
+        for name, task in self.prediction_tasks.items():
+            outputs.update({metric.name: metric for metric in task.metrics})
+
+        return outputs
 
 
 def _output_metrics(metrics):
