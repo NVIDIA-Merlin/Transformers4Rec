@@ -44,7 +44,7 @@ class EmbeddingFeatures(InputLayer):
             item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            embedding_dims = schema.embedding_sizes_v2(infer_embedding_sizes_multiplier)
+            embedding_dims = schema.embedding_sizes(infer_embedding_sizes_multiplier)
 
         embedding_dims = embedding_dims or {}
         embeddings_initializers = embeddings_initializers or {}
