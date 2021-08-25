@@ -19,8 +19,8 @@ def test_schema_from_yoochoose_schema(yoochoose_schema_file):
     assert len(schema.select_by_tag(Tag.CATEGORICAL).columns) == 2
 
 
-@pytest.mark.skip(reason="This test requires NVTabular installed but it is not in the CI instance")
 def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
+    pytest.importorskip("nvtabular")
     schema = DatasetSchema.from_schema(str(yoochoose_schema_file))
 
     assert schema.cardinalities() == {"item_id/list": 51996, "category/list": 332}
