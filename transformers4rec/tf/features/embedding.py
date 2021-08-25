@@ -1,11 +1,11 @@
-import math
-from typing import Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import tensorflow as tf
-from tensorflow.python.ops import init_ops_v2
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from ...types import DatasetSchema, Tag
+from transformers4rec.utils.tags import DefaultTags
+
+from ...types import DatasetSchema
 from ..tabular import AsSparseFeatures, FilterFeatures
 from .base import InputLayer
 
@@ -26,47 +26,54 @@ class EmbeddingFeatures(InputLayer):
     def from_schema(
         cls,
         schema: DatasetSchema,
-        embedding_dims=None,
-        default_embedding_dim=64,
-        infer_embedding_sizes=False,
-        combiner="mean",
-        tags=None,
+        embedding_dims: Optional[Dict[str, int]] = None,
+        default_embedding_dim: Optional[int] = 64,
+        infer_embedding_sizes: bool = False,
+        infer_embedding_sizes_multiplier: Optional[float] = 2.0,
+        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
+        combiner: Optional[str] = "mean",
+        tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
-        **kwargs
+        max_sequence_length: Optional[int] = None,
+        **kwargs,
     ) -> Optional["EmbeddingFeatures"]:
         if tags:
             schema = schema.select_by_tag(tags)
 
-        if not item_id and schema.select_by_tag(Tag.ITEM_ID).column_names:
-            item_id = schema.select_by_tag(Tag.ITEM_ID).column_names[0]
+        if not item_id and schema.select_by_tag(["item_id"]).column_names:
+            item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            sizes = schema.embedding_sizes()
-        else:
-            if not embedding_dims:
-                embedding_dims = {}
-            sizes = {}
-            cardinalities = schema.cardinalities()
-            for key, cardinality in cardinalities.items():
-                embedding_size = embedding_dims.get(key, default_embedding_dim)
-                sizes[key] = (cardinality, embedding_size)
+            embedding_dims = schema.embedding_sizes(infer_embedding_sizes_multiplier)
+
+        embedding_dims = embedding_dims or {}
+        embeddings_initializers = embeddings_initializers or {}
+
+        emb_config = {}
+        cardinalities = schema.cardinalities()
+        for key, cardinality in cardinalities.items():
+            embedding_size = embedding_dims.get(key, default_embedding_dim)
+            embedding_initializer = embeddings_initializers.get(key, None)
+            emb_config[key] = (cardinality, embedding_size, embedding_initializer)
 
         feature_config: Dict[str, FeatureConfig] = {}
-        for name, (vocab_size, dim) in sizes.items():
+        for name, (vocab_size, dim, emb_initilizer) in emb_config.items():
             feature_config[name] = FeatureConfig(
                 TableConfig(
                     vocabulary_size=vocab_size,
                     dim=dim,
                     name=name,
                     combiner=combiner,
-                    initializer=init_ops_v2.TruncatedNormal(mean=0.0, stddev=1 / math.sqrt(dim)),
+                    initializer=emb_initilizer,
                 )
             )
 
         if not feature_config:
             return None
 
-        return cls(feature_config, item_id=item_id, **kwargs)
+        output = cls(feature_config, item_id=item_id, **kwargs)
+
+        return output
 
     def build(self, input_shapes):
         self.embedding_tables = {}
