@@ -1,7 +1,19 @@
+import platform
+
 import pytest
 
 tf = pytest.importorskip("tensorflow")
 tf4rec = pytest.importorskip("transformers4rec.tf")
+
+
+def mark_run_eagerly_modes(*args, **kwargs):
+    modes = [True, False]
+
+    # As of TF 2.5 there's a bug that our EmbeddingFeatures don't work on M1 Macs
+    if "macOS" in platform.platform() and "arm64-arm-64bit" in platform.platform():
+        modes = [True]
+
+    return pytest.mark.parametrize("run_eagerly", modes)(*args, **kwargs)
 
 
 def assert_body_works_in_model(data, inputs, body, run_eagerly):
