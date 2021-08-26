@@ -50,7 +50,7 @@ class SequentialConcatFeatures(FeatureAggregation):
         tensors = []
         for name in sorted(inputs.keys()):
             val = inputs[name]
-            if val.ndim == 2:
+            if len(val.shape) == 2:
                 val = tf.expand_dims(val, axis=-1)
             tensors.append(val)
 
