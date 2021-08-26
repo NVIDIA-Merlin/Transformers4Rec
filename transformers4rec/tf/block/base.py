@@ -1,6 +1,8 @@
 import copy
+import sys
 from typing import Union
 
+import six
 import tensorflow as tf
 
 from .. import tabular
@@ -84,9 +86,20 @@ class SequentialBlock(TabularBlock):
         return output_signature
 
     def build(self, input_shape=None):
+        last_layer = None
         for layer in self.layers:
-            layer.build(input_shape)
+            try:
+                layer.build(input_shape)
+            except TypeError:
+                t, v, tb = sys.exc_info()
+                if isinstance(input_shape, dict) and isinstance(last_layer, tabular.TabularLayer):
+                    v = TypeError(
+                        f"Couldn't build {layer}, "
+                        f"did you forget to add aggregation to {last_layer}?"
+                    )
+                six.reraise(t, v, tb)
             input_shape = layer.compute_output_shape(input_shape)
+            last_layer = layer
         self.built = True
 
     def _get_name(self):
