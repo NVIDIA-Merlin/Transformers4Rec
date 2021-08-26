@@ -28,7 +28,8 @@ from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.sequence import SequentialEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
-from .head import Head
+from .head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
+from .model import Model
 from .tabular import (
     AsDenseFeatures,
     AsSparseFeatures,
@@ -73,6 +74,10 @@ __all__ = [
     "MergeTabular",
     "StackFeatures",
     "TabularLayer",
+    "PredictionTask",
+    "BinaryClassificationTask",
+    "RegressionTask",
+    "Model",
 ]
 
 try:

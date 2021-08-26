@@ -11,6 +11,7 @@ else:
 
 # TODO: Make this more generic and work with multi-hot features
 TabularData = Dict[str, tf.Tensor]
+TensorOrTabularData = typing.Union[tf.Tensor, TabularData]
 
 TabularModule = ForwardRef("transformers4rec.tf.tabular.TabularModule")
 
@@ -25,9 +26,13 @@ BlockWithHead = ForwardRef("transformers4rec.tf.block.with_head.BlockWithHead")
 Head = ForwardRef("transformers4rec.tf.head.Head")
 PredictionTask = ForwardRef("transformers4rec.tf.head.PredictionTask")
 
+LossReduction = typing.Callable[[typing.List[tf.Tensor]], tf.Tensor]
+
 __all__ = [
     "TabularData",
+    "TensorOrTabularData",
     "TabularModule",
+    "LossReduction",
     "FeatureAggregator",
     "MaskSequence",
     "Block",
