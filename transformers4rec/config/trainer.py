@@ -1,87 +1,144 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from transformers import TFTrainingArguments, TrainingArguments
 
 
 @dataclass
-class T4RecTrainerConfig(TrainingArguments):
-    def __init__(
-        self,
-        output_dir: str,
-        avg_session_length: int,
-        eval_on_last_item_seq_only: bool = True,
-        validate_every: int = -1,
-        predict_top_k: int = 10,
-        log_predictions: bool = False,
-        log_attention_weights: bool = False,
-        learning_rate_schedule: str = "constant_with_warmup",
-        learning_rate_num_cosine_cycles_by_epoch: float = 1.25,
-        experiments_group: str = "default",
-        **kwargs
-    ):
-        """
-        Parameters:
-        -----------
-        output_dir: str
-            The output directory where the model predictions and checkpoints will be written.
-        avg_session_length : int
-            the avg. session length (rounded up to the next int),
-            It is used to estimate the number of interactions from the batch_size (# sessions)
-            so that the tensor that accumulates all predictions is sufficient
-            to concatenate all predictions
-        eval_on_last_item_seq_only : Optional[bool], bool
-            Evaluate metrics only on predictions for the last item of the sequence
-            (rather then evaluation for all next-item predictions).
-            by default True
-        validate_every: Optional[int], int
-            Run validation set every this epoch.
-            -1 means no validation is used
-            by default -1
-        predict_top_k:  Option[int], int
-            Truncate recommendation list to the highest top-K predicted items
-            (do not affect evaluation metrics computation)
-            by default 10
-        log_predictions : Optional[bool], bool
-            log predictions, labels and metadata features each --compute_metrics_each_n_steps
-            (for test set).
-            by default False
-        log_attention_weights : Optional[bool], bool
-            Logs the inputs and attention weights
-            each --eval_steps (only test set)"
-            bu default False
-        learning_rate_schedule: Optional[str], str
-            Learning Rate schedule (restarted for each training day).
-            Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup
-            by defaut constant_with_warmup
-        learning_rate_num_cosine_cycles_by_epoch : Optional[int], int
-            Number of cycles for by epoch when --learning_rate_schedule = cosine_with_warmup.
-            The number of waves in the cosine schedule
-            (e.g. 0.5 is to just decrease from the max value to 0, following a half-cosine).
-            by default 1.25
-        experiments_group: Optional[str], str
-            Name of the Experiments Group, for organizing job runs logged on W&B
-            by default "default"
-        """
+class T4RecTrainingArguments(TrainingArguments):
+    """
+    Class that inherits HF TrainingArguments and add on top of it arguments needed for
+    session-based and sequential-based recommendation
 
-        self.output_dir = output_dir
-        self.avg_session_length = avg_session_length
-        self.eval_on_last_item_seq_only = eval_on_last_item_seq_only
-        self.validate_every = validate_every
-        self.predict_top_k = predict_top_k
-        self.log_predictions = log_predictions
-        self.log_attention_weights = log_attention_weights
-        self.learning_rate_schedule = learning_rate_schedule
-        self.learning_rate_num_cosine_cycles_by_epoch = learning_rate_num_cosine_cycles_by_epoch
-        self.experiments_group = experiments_group
+    Parameters:
+    -----------
+    avg_session_length : int
+        the avg. session length (rounded up to the next int),
+        It is used to estimate the number of interactions from the batch_size (# sessions)
+        so that the tensor that accumulates all predictions is sufficient
+        to concatenate all predictions
 
-        super().__init__(self.output_dir, **kwargs)
+    shuffle_buffer_size
+
+    validate_every: Optional[int], int
+        Run validation set every this epoch.
+        -1 means no validation is used
+        by default -1
+
+    eval_on_test_set
+
+    eval_steps_on_train_set
+
+    predict_top_k:  Option[int], int
+        Truncate recommendation list to the highest top-K predicted items
+        (do not affect evaluation metrics computation)
+        by default 10
+    log_predictions : Optional[bool], bool
+        log predictions, labels and metadata features each --compute_metrics_each_n_steps
+        (for test set).
+        by default False
+    log_attention_weights : Optional[bool], bool
+        Logs the inputs and attention weights
+        each --eval_steps (only test set)"
+        bu default False
+    learning_rate_schedule: Optional[str], str
+        Learning Rate schedule (restarted for each training day).
+        Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup
+        by defaut constant_with_warmup
+    learning_rate_num_cosine_cycles_by_epoch : Optional[int], int
+        Number of cycles for by epoch when --learning_rate_schedule = cosine_with_warmup.
+        The number of waves in the cosine schedule
+        (e.g. 0.5 is to just decrease from the max value to 0, following a half-cosine).
+        by default 1.25
+    experiments_group: Optional[str], str
+        Name of the Experiments Group, for organizing job runs logged on W&B
+        by default "default"
+    """
+
+    avg_session_length: int = field(
+        default=None,
+        metadata={
+            "help": "When --eval_on_last_item_seq_only False, this conservative estimate of "
+            "the avg. session length (rounded up to the next int) "
+            "is used to estimate the number of interactions from the batch_size (# sessions) "
+            "so that the tensor that accumulates all predictions is sufficient "
+            "to concatenate all predictions"
+        },
+    )
+
+    shuffle_buffer_size: int = field(
+        default=0,
+        metadata={
+            "help": "Number of samples to keep in the buffer for shuffling."
+            "shuffle_buffer_size=0 means no shuffling"
+        },
+    )
+
+    validate_every: int = field(
+        default=-1,
+        metadata={
+            "help": "Run validation set every this epoch. "
+            "-1 means no validation is used (default: -1)"
+        },
+    )
+
+    eval_on_test_set: bool = field(
+        default=False,
+        metadata={"help": "Evaluate on test set (by default, evaluates on the validation set)."},
+    )
+
+    eval_steps_on_train_set: int = field(
+        default=20,
+        metadata={"help": "Number of steps to evaluate on train set (which is usually large)"},
+    )
+
+    predict_top_k: int = field(
+        default=10,
+        metadata={
+            "help": "Truncate recommendation list to the highest top-K predicted items (do not affect evaluation metrics computation)"
+        },
+    )
+
+    log_predictions: bool = field(
+        default=False,
+        metadata={
+            "help": "Logs predictions, labels and metadata features each --compute_metrics_each_n_steps (for test set)."
+        },
+    )
+
+    log_attention_weights: bool = field(
+        default=False,
+        metadata={
+            "help": "Logs the inputs and attention weights each --compute_metrics_each_n_steps (only test set)"
+        },
+    )
+
+    learning_rate_schedule: str = field(
+        default="constant_with_warmup",
+        metadata={
+            "help": "Learning Rate schedule (restarted for each training day). "
+            "Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup"
+        },
+    )
+
+    learning_rate_num_cosine_cycles_by_epoch: float = field(
+        default=1.25,
+        metadata={
+            "help": "Number of cycles for by epoch when --learning_rate_schedule = cosine_with_warmup."
+            "The number of waves in the cosine schedule "
+            "(e.g. 0.5 is to just decrease from the max value to 0, following a half-cosine)."
+        },
+    )
+
+    experiments_group: str = field(
+        default="default",
+        metadata={"help": "Name of the Experiments Group, for organizing job runs logged on W&B"},
+    )
 
 
-class T4RecTrainerConfigTF(T4RecTrainerConfig, TFTrainingArguments):
+class T4RecTrainingArgumentsTF(T4RecTrainingArguments, TFTrainingArguments):
     """
     Prepare Training arguments for TFTrainer,
-    Inherit arguments from T4RecTrainerConfig and TFTrainingArguments
+    Inherit arguments from T4RecTrainingArguments and TFTrainingArguments
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    pass

@@ -15,7 +15,7 @@ def test_set_train_eval_loaders(
     train_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size)
     eval_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
 
-    args = trainer.T4RecTrainerConfig(
+    args = trainer.T4RecTrainingArguments(
         output_dir=".",
         avg_session_length=20,
         **{
@@ -41,7 +41,7 @@ def test_set_train_loader_wrong_batch_size(
         batch_size = 16
         train_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size)
 
-        args = trainer.T4RecTrainerConfig(
+        args = trainer.T4RecTrainingArguments(
             output_dir=".",
             avg_session_length=20,
             **{
@@ -64,7 +64,7 @@ def test_set_train_loader_wrong_drop_last(
         batch_size = 16
         train_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size, drop_last=True)
 
-        args = trainer.T4RecTrainerConfig(
+        args = trainer.T4RecTrainingArguments(
             output_dir=".",
             avg_session_length=20,
             **{
