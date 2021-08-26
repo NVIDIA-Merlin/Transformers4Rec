@@ -105,7 +105,7 @@ class TabularLayer(tf.keras.layers.Layer):
                 )
                 outputs.update(to_add)
 
-        if post_op:
+        if isinstance(outputs, dict) and post_op:
             outputs = post_op(outputs)
 
         return outputs
