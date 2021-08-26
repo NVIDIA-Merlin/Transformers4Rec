@@ -18,8 +18,10 @@ from typing import Dict
 
 import pandas as pd
 import torch
-from nvtabular.loader.backend import DataLoader as BaseDataLoader
+
+# from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tensorflow import _validate_dataset
+from nvtabular.loader.torch import TorchAsyncItr as BaseDataLoader
 from torch.utils.dlpack import from_dlpack
 
 from ..utils.schema import DatasetSchema
@@ -44,7 +46,7 @@ class IterDL(torch.utils.data.IterableDataset):
                 yield df
 
 
-class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
+class DataLoader(BaseDataLoader):
     """This class creates batches of tensor. Each batch size is specified by the user.
     The data input requires an NVTabular dataset. Handles spillover to ensure all
     batches are the specified size until the final batch.
@@ -119,6 +121,45 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
             sparse_as_dense=sparse_as_dense,
         )
         self.schema = schema
+
+    @classmethod
+    def from_schema(
+        cls,
+        schema: DatasetSchema,
+        paths_or_dataset,
+        batch_size,
+        shuffle=True,
+        buffer_size=0.06,
+        parts_per_chunk=1,
+        separate_labels=True,
+        named_labels=False,
+        continuous_features=None,
+        categorical_features=None,
+        targets=None,
+        **kwargs
+    ):
+        categorical_features = (
+            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+        )
+        continuous_features = (
+            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+        )
+        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+
+        torch_dataset = cls(
+            paths_or_dataset,
+            batch_size=batch_size,
+            labels=targets if separate_labels else [],
+            cats=categorical_features if separate_labels else categorical_features + targets,
+            conts=continuous_features,
+            engine="parquet",
+            shuffle=shuffle,
+            buffer_size=buffer_size,  # how many batches to load at once
+            parts_per_chunk=parts_per_chunk,
+            schema=schema,
+            **kwargs
+        )
+        return torch_dataset
 
     @classmethod
     def from_directory(
