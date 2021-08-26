@@ -30,6 +30,7 @@ from .features.sequence import SequentialEmbeddingFeatures, TabularSequenceFeatu
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
 from .head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
+from .model import Model
 from .tabular import (
     AsDenseFeatures,
     AsSparseFeatures,
@@ -78,6 +79,7 @@ __all__ = [
     "PredictionTask",
     "BinaryClassificationTask",
     "RegressionTask",
+    "Model",
 ]
 
 try:
