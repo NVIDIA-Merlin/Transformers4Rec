@@ -112,6 +112,7 @@ class PredictionTask(torch.nn.Module):
         if forward:
             predictions = self(predictions)
         predictions = self.forward_to_prediction_fn(predictions)
+
         for metric in self.metrics:
             if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
                 targets = targets.int()
@@ -326,6 +327,40 @@ class NextItemPredictionTask(PredictionTask):
         )
         out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
         return out_tensor
+
+    def calculate_metrics(
+        self, predictions, targets, mode="val", forward=True
+    ) -> Dict[str, torch.Tensor]:
+        if isinstance(targets, dict) and self.target_name:
+            targets = targets[self.target_name]
+
+        outputs = {}
+        if forward:
+            predictions = self(predictions)
+        predictions = self.forward_to_prediction_fn(predictions)
+        if self.hf_format:
+            predictions = predictions["predictions"]
+
+        for metric in self.metrics:
+            outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, targets)
+
+        return outputs
+
+    def compute_metrics(self):
+        metrics = {
+            f"{metric.__class__.__name__.lower()}": metric.compute()
+            for metric in self.metrics
+            if getattr(metric, "top_ks", None)
+        }
+        # Explode metrics for each cut-off
+        # TODO make result generic:
+        # To accept a mix of ranking metrics and others not requiring top_ks ?
+        topks = {f"{metric.__class__.__name__.lower()}": metric.top_ks for metric in self.metrics}
+        results = {}
+        for name, metric in metrics.items():
+            for measure, k in zip(metric, topks[name]):
+                results[f"{name}_@{k}"] = measure
+        return results
 
 
 class NextItemPredictionPrepareBlock(BuildableBlock):
