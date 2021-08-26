@@ -1,51 +1,74 @@
 from typing import Dict, Optional
 
-import torch
-
-from transformers4rec.torch.masking import masking_registry
-from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
+import tensorflow as tf
+from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig
 
 from ...types import DatasetSchema, Tag
+from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular import TabularModule
-from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
-from .tabular import AsTabular, TabularFeatures
+from ..masking import masking_registry
+from ..tabular import AsTabular
+from .embedding import EmbeddingFeatures, TableConfig
+from .tabular import TabularFeatures
 
 
 class SequentialEmbeddingFeatures(EmbeddingFeatures):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], padding_idx: int = 0, **kwargs):
+    def __init__(
+        self,
+        feature_config: Dict[str, FeatureConfig],
+        item_id=None,
+        mask_zero=True,
+        padding_idx: int = 0,
+        **kwargs
+    ):
+        super().__init__(feature_config, item_id, **kwargs)
         self.padding_idx = padding_idx
-        super().__init__(feature_config, **kwargs)
+        self.mask_zero = mask_zero
 
-    def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Embedding:
-        return torch.nn.Embedding(table.vocabulary_size, table.dim, padding_idx=self.padding_idx)
+    def lookup_feature(self, name, val):
+        table: TableConfig = self.embeddings[name].table
+        table_var = self.embedding_tables[table.name]
+        if isinstance(val, tf.SparseTensor):
+            return tf.nn.safe_embedding_lookup_sparse(
+                table_var, tf.cast(val, tf.int32), None, combiner=table.combiner
+            )
 
-    def forward_output_size(self, input_sizes):
-        sizes = {}
-        batch_size = calculate_batch_size_from_input_size(input_sizes)
-        sequence_length = input_sizes[list(self.feature_config.keys())[0]][1]
-        for name, feature in self.feature_config.items():
-            sizes[name] = torch.Size([batch_size, sequence_length, feature.table.dim])
+        return tf.gather(table_var, tf.cast(val, tf.int32))
 
-        return TabularModule.forward_output_size(self, sizes)
+    def compute_output_shape(self, input_shapes):
+        return super().compute_output_shape(input_shapes)
+
+    def compute_mask(self, inputs, mask=None):
+        if not self.mask_zero:
+            return None
+        filtered_inputs = self.filter_features(inputs)
+
+        outputs = {}
+        for key, val in filtered_inputs.items():
+            outputs[key] = tf.not_equal(val, self.padding_idx)
+
+        return outputs
 
 
-class SequentialTabularFeatures(TabularFeatures):
+class TabularSequenceFeatures(TabularFeatures):
     EMBEDDING_MODULE_CLASS = SequentialEmbeddingFeatures
 
     def __init__(
         self,
-        continuous_module=None,
-        categorical_module=None,
-        text_embedding_module=None,
+        continuous_layer=None,
+        categorical_layer=None,
+        text_embedding_layer=None,
         projection_module=None,
         masking=None,
         aggregation=None,
+        **kwargs
     ):
-        super().__init__(continuous_module, categorical_module, text_embedding_module, aggregation)
+        super().__init__(
+            continuous_layer, categorical_layer, text_embedding_layer, aggregation, **kwargs
+        )
+        self.projection_module = projection_module
         if masking:
             self.masking = masking
-        self.projection_module = projection_module
 
     @classmethod
     def from_schema(
@@ -54,7 +77,6 @@ class SequentialTabularFeatures(TabularFeatures):
         continuous_tags=Tag.CONTINUOUS,
         categorical_tags=Tag.CATEGORICAL,
         aggregation=None,
-        automatic_build=True,
         max_sequence_length=None,
         continuous_projection=None,
         continuous_soft_embeddings_shape=None,
@@ -62,7 +84,7 @@ class SequentialTabularFeatures(TabularFeatures):
         d_output=None,
         masking=None,
         **kwargs
-    ) -> "SequentialTabularFeatures":
+    ) -> "TabularSequenceFeatures":
         """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
         Parameters
         ----------
@@ -101,14 +123,13 @@ class SequentialTabularFeatures(TabularFeatures):
             Returns ``TabularFeatures`` from a dataset schema
         """
         output = super().from_schema(
-            schema,
-            continuous_tags,
-            categorical_tags,
-            aggregation,
-            automatic_build,
-            max_sequence_length,
-            continuous_projection,
-            continuous_soft_embeddings_shape,
+            schema=schema,
+            continuous_tags=continuous_tags,
+            categorical_tags=categorical_tags,
+            aggregation=aggregation,
+            max_sequence_length=max_sequence_length,
+            continuous_projection=continuous_projection,
+            # continuous_soft_embeddings_shape=,
             **kwargs
         )
         if d_output and projection:
@@ -116,23 +137,33 @@ class SequentialTabularFeatures(TabularFeatures):
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
             output.aggregation = "sequential_concat"
-        hidden_size = output.output_size()
+        # hidden_size = output.output_size()
 
         if d_output and not projection:
             projection = MLPBlock([d_output])
-        if projection and hasattr(projection, "build"):
-            projection = projection.build(hidden_size)
-        if projection:
-            output.projection_module = projection
-            hidden_size = projection.output_size()
 
         if isinstance(masking, str):
-            masking = masking_registry.parse(masking)(hidden_size=hidden_size[-1], **kwargs)
+            masking = masking_registry.parse(masking)(**kwargs)
         if masking and not getattr(output, "item_id", None):
             raise ValueError("For masking a categorical_module is required including an item_id.")
         output.masking = masking
 
         return output
+
+    def project_continuous_features(self, dimensions):
+        if isinstance(dimensions, int):
+            dimensions = [dimensions]
+
+        continuous = self.continuous_layer
+        continuous.set_aggregation("sequential_concat")
+
+        continuous = SequentialBlock(
+            [continuous, MLPBlock(dimensions), AsTabular("continuous_projection")]
+        )
+
+        self.to_merge["continuous_layer"] = continuous
+
+        return self
 
     @property
     def masking(self):
@@ -144,55 +175,14 @@ class SequentialTabularFeatures(TabularFeatures):
 
     @property
     def item_id(self) -> Optional[str]:
-        if "categorical_module" in self.to_merge:
-            return getattr(self.to_merge["categorical_module"], "item_id", None)
+        if "categorical_layer" in self.to_merge:
+            return getattr(self.to_merge["categorical_layer"], "item_id", None)
 
         return None
 
     @property
-    def item_embedding_table(self) -> Optional[torch.nn.Module]:
+    def item_embedding_table(self):
         if "categorical_module" in self.to_merge:
-            return getattr(self.to_merge["categorical_module"], "item_embedding_table", None)
+            return getattr(self.to_merge["categorical_layer"], "item_embedding_table", None)
 
         return None
-
-    def forward(self, inputs, training=True):
-        outputs = super(SequentialTabularFeatures, self).forward(inputs)
-
-        if self.masking or self.projection_module:
-            outputs = self.aggregation(outputs)
-
-        if self.projection_module:
-            outputs = self.projection_module(outputs)
-
-        if self.masking:
-            outputs = self.masking(
-                outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
-            )
-
-        return outputs
-
-    def project_continuous_features(self, dimensions):
-        if isinstance(dimensions, int):
-            dimensions = [dimensions]
-
-        continuous = self.to_merge["continuous_module"]
-        continuous.aggregation = "sequential_concat"
-
-        continuous = continuous >> MLPBlock(dimensions) >> AsTabular("continuous_projection")
-
-        self.to_merge["continuous_module"] = continuous
-
-        return self
-
-    def forward_output_size(self, input_size):
-        output_sizes = {}
-        for in_layer in self.merge_values:
-            output_sizes.update(in_layer.forward_output_size(input_size))
-
-        output_sizes = TabularModule.forward_output_size(self, output_sizes)
-
-        if self.projection_module:
-            output_sizes = self.projection_module.output_size()
-
-        return output_sizes

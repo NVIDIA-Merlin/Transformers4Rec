@@ -1,9 +1,10 @@
 from typing import List
 
-from ..tabular import FilterFeatures, TabularLayer
+from ..tabular import FilterFeatures
+from .base import InputLayer
 
 
-class ContinuousFeatures(TabularLayer):
+class ContinuousFeatures(InputLayer):
     def __init__(
         self,
         features,

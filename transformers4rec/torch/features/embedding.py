@@ -1,8 +1,7 @@
-import math
-from typing import Dict, Optional, Text, Union
+from functools import partial
+from typing import Any, Callable, Dict, Optional, Text, Union
 
 import torch
-import yaml
 
 from transformers4rec.torch.utils.torch_utils import (
     calculate_batch_size_from_input_size,
@@ -13,100 +12,13 @@ from ...types import DatasetSchema, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
 
 
-class TableConfig:
+class EmbeddingFeatures(TabularModule):
     def __init__(
         self,
-        vocabulary_size: int,
-        dim: int,
-        # initializer: Optional[Callable[[Any], None]],
-        # optimizer: Optional[_Optimizer] = None,
-        combiner: Text = "mean",
-        name: Optional[Text] = None,
+        feature_config: Dict[str, "FeatureConfig"],
+        item_id=None,
+        **kwargs,
     ):
-        if not isinstance(vocabulary_size, int) or vocabulary_size < 1:
-            raise ValueError("Invalid vocabulary_size {}.".format(vocabulary_size))
-
-        if not isinstance(dim, int) or dim < 1:
-            raise ValueError("Invalid dim {}.".format(dim))
-
-        if combiner not in ("mean", "sum", "sqrtn"):
-            raise ValueError("Invalid combiner {}".format(combiner))
-
-        self.vocabulary_size = vocabulary_size
-        self.dim = dim
-        self.combiner = combiner
-        self.name = name
-
-    def __repr__(self):
-        return (
-            "TableConfig(vocabulary_size={vocabulary_size!r}, dim={dim!r}, "
-            "combiner={combiner!r}, name={name!r})".format(
-                vocabulary_size=self.vocabulary_size,
-                dim=self.dim,
-                combiner=self.combiner,
-                name=self.name,
-            )
-        )
-
-
-class FeatureConfig:
-    def __init__(
-        self, table: TableConfig, max_sequence_length: int = 0, name: Optional[Text] = None
-    ):
-        self.table = table
-        self.max_sequence_length = max_sequence_length
-        self.name = name
-
-    def __repr__(self):
-        return (
-            "FeatureConfig(table={table!r}, "
-            "max_sequence_length={max_sequence_length!r}, name={name!r})".format(
-                table=self.table, max_sequence_length=self.max_sequence_length, name=self.name
-            )
-        )
-
-
-class SoftEmbedding(torch.nn.Module):
-    """
-    Soft-one hot encoding embedding technique, from https://arxiv.org/pdf/1708.00065.pdf
-    In a nutshell, it represents a continuous feature as a weighted average of embeddings
-    """
-
-    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
-        """
-
-        Parameters
-        ----------
-        num_embeddings: Number of embeddings to use (cardinality of the embedding table).
-        embeddings_dim: The dimension of the vector space for projecting the scalar value.
-        embeddings_init_std: The standard deviation factor for normal initialization of the
-            embedding matrix weights.
-        """
-
-        assert (
-            num_embeddings > 0
-        ), "The number of embeddings for soft embeddings needs to be greater than 0"
-        assert (
-            embeddings_dim > 0
-        ), "The embeddings dim for soft embeddings needs to be greater than 0"
-
-        super(SoftEmbedding, self).__init__()
-        self.embedding_table = torch.nn.Embedding(num_embeddings, embeddings_dim)
-        with torch.no_grad():
-            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
-        self.projection_layer = torch.nn.Linear(1, num_embeddings, bias=True)
-        self.softmax = torch.nn.Softmax(dim=-1)
-
-    def forward(self, input_numeric):
-        input_numeric = input_numeric.unsqueeze(-1)
-        weights = self.softmax(self.projection_layer(input_numeric))
-        soft_one_hot_embeddings = (weights.unsqueeze(-1) * self.embedding_table.weight).sum(-2)
-
-        return soft_one_hot_embeddings
-
-
-class EmbeddingFeatures(TabularModule):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
         super().__init__(**kwargs)
         self.item_id = item_id
         self.feature_config = feature_config
@@ -130,8 +42,14 @@ class EmbeddingFeatures(TabularModule):
 
         return self.embedding_tables[self.item_id]
 
-    def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Module:
-        return torch.nn.EmbeddingBag(table.vocabulary_size, table.dim, mode=table.combiner)
+    def table_to_embedding_module(self, table: "TableConfig") -> torch.nn.Module:
+        embedding_table = torch.nn.EmbeddingBag(
+            table.vocabulary_size, table.dim, mode=table.combiner
+        )
+
+        if table.initializer is not None:
+            table.initializer(embedding_table.weight)
+        return embedding_table
 
     @classmethod
     def from_schema(
@@ -140,6 +58,8 @@ class EmbeddingFeatures(TabularModule):
         embedding_dims: Optional[Dict[str, int]] = None,
         default_embedding_dim: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
+        infer_embedding_sizes_multiplier: Optional[float] = 2.0,
+        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
@@ -163,6 +83,11 @@ class EmbeddingFeatures(TabularModule):
             Automatically defines the embedding dimension from the
             feature cardinality in the schema,
             by default False
+        infer_embedding_sizes_multiplier: Optional[int], by default 2.0
+            multiplier used by the heuristic to infer the embedding dimension from
+            its cardinality. Generally reasonable values range between 2.0 and 10.0
+        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]]
+            Dict where keys are feature names and values are callable to initialize embedding tables
         combiner : Optional[str], optional
             Feature aggregation option, by default "mean"
         tags : Optional[Union[DefaultTags, list, str]], optional
@@ -188,25 +113,27 @@ class EmbeddingFeatures(TabularModule):
             item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            sizes = schema.embedding_sizes()
-        else:
-            if not embedding_dims:
-                embedding_dims = {}
-            sizes = {}
+            embedding_dims = schema.embedding_sizes(infer_embedding_sizes_multiplier)
 
-            cardinalities = schema.cardinalities()
-            for key, cardinality in cardinalities.items():
-                embedding_size = embedding_dims.get(key, default_embedding_dim)
-                sizes[key] = (cardinality, embedding_size)
+        embedding_dims = embedding_dims or {}
+        embeddings_initializers = embeddings_initializers or {}
+
+        emb_config = {}
+        cardinalities = schema.cardinalities()
+        for key, cardinality in cardinalities.items():
+            embedding_size = embedding_dims.get(key, default_embedding_dim)
+            embedding_initializer = embeddings_initializers.get(key, None)
+            emb_config[key] = (cardinality, embedding_size, embedding_initializer)
 
         feature_config: Dict[str, FeatureConfig] = {}
-        for name, (vocab_size, dim) in sizes.items():
+        for name, (vocab_size, dim, emb_initilizer) in emb_config.items():
             feature_config[name] = FeatureConfig(
                 TableConfig(
                     vocabulary_size=vocab_size,
                     dim=dim,
                     name=name,
                     combiner=combiner,
+                    initializer=emb_initilizer,
                 )
             )
 
@@ -225,75 +152,6 @@ class EmbeddingFeatures(TabularModule):
             )
 
         return output
-
-    @classmethod
-    def from_config(
-        cls,
-        config: Union[Dict[str, dict], str],
-        embedding_dims=None,
-        default_embedding_dim=64,
-        infer_embedding_sizes=False,
-        combiner="mean",
-        tags=None,
-        tags_to_filter=None,
-        **kwargs,
-    ) -> Optional["EmbeddingFeatures"]:
-        if isinstance(config, str):
-            # load config from specified path
-            with open(config) as yaml_file:
-                config = yaml.load(yaml_file, Loader=yaml.FullLoader)
-
-        if isinstance(tags, DefaultTags):
-            tags = tags.value
-        if not isinstance(tags, list):
-            tags = [tags]
-
-        column_names_to_filter = []
-        if tags_to_filter:
-            column_names_to_filter = [
-                key for key, val in config.items() if all(x in val["tags"] for x in tags_to_filter)
-            ]
-        if tags:
-            output_cols = [
-                {key: val} for key, val in config.items() if all(x in val["tags"] for x in tags)
-            ]
-        output_cols = {
-            k: v for d in output_cols for k, v in d.items() if k not in column_names_to_filter
-        }
-
-        if infer_embedding_sizes:
-            sizes = [
-                {
-                    key: (
-                        val["cardinality"],
-                        cls.get_embedding_size_from_cardinality(val["cardinality"]),
-                    )
-                }
-                for key, val in output_cols.items()
-            ]
-        else:
-            if not embedding_dims:
-                embedding_dims = {}
-            sizes = {}
-            cardinalities = {key: val["cardinality"] for key, val in output_cols.items()}
-            for key, cardinality in cardinalities.items():
-                embedding_size = embedding_dims.get(key, default_embedding_dim)
-                sizes[key] = (cardinality, embedding_size)
-
-        feature_config: Dict[str, FeatureConfig] = {}
-        for name, (vocab_size, dim) in sizes.items():
-            feature_config[name] = FeatureConfig(
-                TableConfig(
-                    vocabulary_size=vocab_size,
-                    dim=dim,
-                    name=name,
-                    combiner=combiner,
-                )
-            )
-        if not feature_config:
-            return None
-
-        return cls(feature_config, **kwargs)
 
     def item_ids(self, inputs) -> torch.Tensor:
         return inputs[self.item_id]
@@ -328,12 +186,6 @@ class EmbeddingFeatures(TabularModule):
 
         return super().forward_output_size(sizes)
 
-    @staticmethod
-    def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
-        # A rule-of-thumb from Google.
-        embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
-        return embedding_size
-
 
 class SoftEmbeddingFeatures(EmbeddingFeatures):
     """
@@ -345,7 +197,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
     def __init__(
         self,
-        feature_config: Dict[str, FeatureConfig],
+        feature_config: Dict[str, "FeatureConfig"],
         soft_embeddings_init_std: float = 0.05,
         **kwargs,
     ):
@@ -445,5 +297,102 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
         return output
 
-    def table_to_embedding_module(self, table: TableConfig) -> SoftEmbedding:
+    def table_to_embedding_module(self, table: "TableConfig") -> "SoftEmbedding":
         return SoftEmbedding(table.vocabulary_size, table.dim, self.soft_embeddings_init_std)
+
+
+class TableConfig:
+    def __init__(
+        self,
+        vocabulary_size: int,
+        dim: int,
+        initializer: Optional[Callable[[Any], None]] = None,
+        combiner: Text = "mean",
+        name: Optional[Text] = None,
+    ):
+        if not isinstance(vocabulary_size, int) or vocabulary_size < 1:
+            raise ValueError("Invalid vocabulary_size {}.".format(vocabulary_size))
+
+        if not isinstance(dim, int) or dim < 1:
+            raise ValueError("Invalid dim {}.".format(dim))
+
+        if combiner not in ("mean", "sum", "sqrtn"):
+            raise ValueError("Invalid combiner {}".format(combiner))
+
+        if (initializer is not None) and (not callable(initializer)):
+            raise ValueError("initializer must be callable if specified.")
+        if initializer is None:
+            initializer = partial(torch.nn.init.normal_, mean=0.0, std=0.05)
+
+        self.vocabulary_size = vocabulary_size
+        self.dim = dim
+        self.combiner = combiner
+        self.name = name
+        self.initializer = initializer
+
+    def __repr__(self):
+        return (
+            "TableConfig(vocabulary_size={vocabulary_size!r}, dim={dim!r}, "
+            "combiner={combiner!r}, name={name!r})".format(
+                vocabulary_size=self.vocabulary_size,
+                dim=self.dim,
+                combiner=self.combiner,
+                name=self.name,
+            )
+        )
+
+
+class FeatureConfig:
+    def __init__(
+        self, table: TableConfig, max_sequence_length: int = 0, name: Optional[Text] = None
+    ):
+        self.table = table
+        self.max_sequence_length = max_sequence_length
+        self.name = name
+
+    def __repr__(self):
+        return (
+            "FeatureConfig(table={table!r}, "
+            "max_sequence_length={max_sequence_length!r}, name={name!r})".format(
+                table=self.table, max_sequence_length=self.max_sequence_length, name=self.name
+            )
+        )
+
+
+class SoftEmbedding(torch.nn.Module):
+    """
+    Soft-one hot encoding embedding technique, from https://arxiv.org/pdf/1708.00065.pdf
+    In a nutshell, it represents a continuous feature as a weighted average of embeddings
+    """
+
+    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
+        """
+
+        Parameters
+        ----------
+        num_embeddings: Number of embeddings to use (cardinality of the embedding table).
+        embeddings_dim: The dimension of the vector space for projecting the scalar value.
+        embeddings_init_std: The standard deviation factor for normal initialization of the
+            embedding matrix weights.
+        """
+
+        assert (
+            num_embeddings > 0
+        ), "The number of embeddings for soft embeddings needs to be greater than 0"
+        assert (
+            embeddings_dim > 0
+        ), "The embeddings dim for soft embeddings needs to be greater than 0"
+
+        super(SoftEmbedding, self).__init__()
+        self.embedding_table = torch.nn.Embedding(num_embeddings, embeddings_dim)
+        with torch.no_grad():
+            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
+        self.projection_layer = torch.nn.Linear(1, num_embeddings, bias=True)
+        self.softmax = torch.nn.Softmax(dim=-1)
+
+    def forward(self, input_numeric):
+        input_numeric = input_numeric.unsqueeze(-1)
+        weights = self.softmax(self.projection_layer(input_numeric))
+        soft_one_hot_embeddings = (weights.unsqueeze(-1) * self.embedding_table.weight).sum(-2)
+
+        return soft_one_hot_embeddings

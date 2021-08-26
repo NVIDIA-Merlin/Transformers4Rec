@@ -34,7 +34,7 @@ class Block(BlockMixin, torch.nn.Module):
         if not name:
             name = self.name
 
-        return self >> AsTabular(name)
+        return SequentialBlock(self, AsTabular(name))
 
     def output_size(self):
         if self._output_size[0] is None:
@@ -61,9 +61,9 @@ class Block(BlockMixin, torch.nn.Module):
 
 class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
     def __init__(self, *args, output_size=None):
-        from transformers4rec.torch import SequentialTabularFeatures, TransformerBlock
+        from transformers4rec.torch import TabularSequenceFeatures, TransformerBlock
 
-        if isinstance(args[0], SequentialTabularFeatures) and any(
+        if isinstance(args[0], TabularSequenceFeatures) and any(
             isinstance(arg, TransformerBlock) for arg in args
         ):
             masking = args[0].masking
@@ -93,10 +93,10 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
 
     @property
     def inputs(self):
-        from transformers4rec.torch import SequentialTabularFeatures, TabularFeatures
+        from transformers4rec.torch import TabularFeatures, TabularSequenceFeatures
 
         first = list(self)[0]
-        if isinstance(first, (SequentialTabularFeatures, TabularFeatures)):
+        if isinstance(first, (TabularSequenceFeatures, TabularFeatures)):
             return first
 
     def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
@@ -127,7 +127,7 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
         if not name:
             name = self.name
 
-        return self >> AsTabular(name)
+        return SequentialBlock(self, AsTabular(name))
 
     def __add__(self, other):
         return merge_tabular(self, other)

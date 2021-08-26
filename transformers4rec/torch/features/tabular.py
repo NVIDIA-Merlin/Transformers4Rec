@@ -1,6 +1,7 @@
 from typing import List, Optional, Tuple, Union
 
 from ...types import DatasetSchema, DefaultTags, Tag
+from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..tabular import AsTabular, MergeTabular, TabularModule
 from ..utils.torch_utils import get_output_sizes_from_schema
@@ -55,7 +56,9 @@ class TabularFeatures(MergeTabular):
         continuous = self.to_merge["continuous_module"]
         continuous.aggregation = "concat"
 
-        continuous = continuous >> MLPBlock(mlp_layers_dims) >> AsTabular("continuous_projection")
+        continuous = SequentialBlock(
+            continuous, MLPBlock(mlp_layers_dims), AsTabular("continuous_projection")
+        )
 
         self.to_merge["continuous_module"] = continuous
 

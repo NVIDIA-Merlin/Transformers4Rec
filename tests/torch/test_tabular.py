@@ -48,7 +48,7 @@ def test_tabular_module(torch_con_features):
 @pytest.mark.parametrize("device", devices)
 def test_tabular_module_to_device(yoochoose_schema, device):
     schema = yoochoose_schema
-    tab_module = torch4rec.SequentialTabularFeatures.from_schema(
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         schema, max_sequence_length=20, aggregation="sequential_concat"
     )
     tab_module.to(device)

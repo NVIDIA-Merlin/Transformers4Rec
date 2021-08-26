@@ -122,8 +122,8 @@ def torch_yoochoose_tabular_features(yoochoose_schema):
 
 
 @pytest.fixture
-def torch_yoochoose_sequential_tabular_features(yoochoose_schema):
-    return torch4rec.SequentialTabularFeatures.from_schema(
+def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
+    return torch4rec.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
@@ -171,8 +171,8 @@ def torch_yoochoose_like():
             is_int_feature = feature.HasField("int_domain")
 
             if is_int_feature:
+                max_num = MAX_CARDINALITY
                 if is_session_feature:
-                    max_num = MAX_CARDINALITY
                     if not feature.int_domain.is_categorical:
                         max_num = feature.int_domain.max
                     row = pytorch.randint(max_num, (session_length,))
