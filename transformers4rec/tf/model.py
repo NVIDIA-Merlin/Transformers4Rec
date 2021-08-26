@@ -2,9 +2,9 @@ from abc import ABC
 from typing import List, Optional
 
 import tensorflow as tf
+from tensorflow.python.framework import ops
 
 from .head import Head
-from .typing import LossReduction
 
 
 class ModelWithLoss(tf.keras.Model, ABC):
@@ -53,12 +53,7 @@ class ModelWithLoss(tf.keras.Model, ABC):
 
 class Model(ModelWithLoss):
     def __init__(
-        self,
-        *head: Head,
-        head_weights: Optional[List[float]] = None,
-        head_reduction: Optional[LossReduction] = tf.reduce_mean,
-        name=None,
-        **kwargs
+        self, *head: Head, head_weights: Optional[List[float]] = None, name=None, **kwargs
     ):
         if head_weights:
             if not isinstance(head_weights, list):
@@ -71,8 +66,7 @@ class Model(ModelWithLoss):
         super().__init__(name=name, **kwargs)
 
         self.heads = head
-        self.head_weights = head_weights or [1.0] * len(head)
-        self.head_reduction = head_reduction
+        self.head_weights = tuple(head_weights or [1.0] * len(head))
 
     def call(self, inputs, **kwargs):
         # TODO: Optimize this
@@ -88,17 +82,20 @@ class Model(ModelWithLoss):
     def compute_loss(
         self, inputs, targets, training: bool = False, compute_metrics=True, **kwargs
     ) -> tf.Tensor:
-        losses = []
+        losses = tuple(
+            [
+                head.compute_loss(
+                    inputs, targets, call_body=True, compute_metrics=compute_metrics, **kwargs
+                )
+                for head in self.heads
+            ]
+        )
+        with ops.name_scope("merge_losses", values=losses + self.head_weights):
+            weighted_losses = []
+            for loss, head_weight in zip(losses, self.head_weights):
+                weighted_losses.append(tf.math.multiply(loss, head_weight))
 
-        for i, head in enumerate(self.heads):
-            loss = head.compute_loss(
-                inputs, targets, call_body=True, compute_metrics=compute_metrics, **kwargs
-            )
-            losses.append(loss * self.head_weights[i])
-
-        losses_tensor = tf.concat(losses, axis=0)
-
-        return self.head_reduction(losses_tensor)
+            return tf.add_n(weighted_losses)
 
     def get_config(self):
         pass

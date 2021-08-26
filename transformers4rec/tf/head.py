@@ -155,6 +155,11 @@ class PredictionTask(TaskMixin, Layer):
     def to_head(self, body, inputs=None, **kwargs) -> "Head":
         return Head(body, self, inputs=inputs, **kwargs)
 
+    def to_model(self, body, inputs=None, **kwargs):
+        from .model import Model
+
+        return Model(Head(body, self, inputs=inputs, **kwargs), **kwargs)
+
 
 class BinaryClassificationTask(PredictionTask):
     DEFAULT_LOSS = tf.keras.losses.BinaryCrossentropy()
