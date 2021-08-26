@@ -1,7 +1,7 @@
 import pytest
 from tensorflow.python.ops import init_ops_v2
 
-from tests.tf._utils import assert_body_works_in_model, mark_run_eagerly_modes
+from tests.tf import _utils as test_utils
 from transformers4rec.utils.tags import Tag
 
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -31,14 +31,14 @@ def test_embedding_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
     assert emb_module.item_embedding_table.shape[0] == 51996
 
 
-@mark_run_eagerly_modes
+@test_utils.mark_run_eagerly_modes
 def test_embedding_features_yoochoose_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     inputs = tf4rec.EmbeddingFeatures.from_schema(schema, aggregation="concat")
     body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
 
-    assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
+    test_utils.assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
 
 
 def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, tf_yoochoose_like):

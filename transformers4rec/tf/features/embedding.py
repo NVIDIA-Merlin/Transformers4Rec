@@ -103,7 +103,7 @@ class EmbeddingFeatures(InputLayer):
     def item_ids(self, inputs) -> tf.Tensor:
         return inputs[self.item_id]
 
-    def lookup_feature(self, name, val):
+    def lookup_feature(self, name, val, output_sequence=False):
         dtype = backend.dtype(val)
         if dtype != "int32" and dtype != "int64":
             val = tf.cast(val, "int32")
@@ -113,7 +113,10 @@ class EmbeddingFeatures(InputLayer):
         if isinstance(val, tf.SparseTensor):
             out = tf.nn.safe_embedding_lookup_sparse(table_var, val, None, combiner=table.combiner)
         else:
-            out = tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
+            if output_sequence:
+                out = tf.gather(table_var, tf.cast(val, tf.int32))
+            else:
+                out = tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
 
         if self._dtype_policy.compute_dtype != self._dtype_policy.variable_dtype:
             # Instead of casting the variable as in most layers, cast the output, as
