@@ -101,7 +101,7 @@ class PredictionTask(TaskMixin, Layer):
         training: bool = False,
         compute_metrics=True,
         sample_weight: Optional[tf.Tensor] = None,
-        **kwargs
+        **kwargs,
     ) -> tf.Tensor:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
@@ -230,6 +230,8 @@ class Head(tf.keras.layers.Layer):
             for key, val in task_weights.items():
                 self._task_weights[key] = val
 
+        self._set_task_blocks(task_blocks)
+
     @classmethod
     def from_schema(cls, schema: DatasetSchema, body, task_weights=None):
         if task_weights is None:
@@ -252,6 +254,47 @@ class Head(tf.keras.layers.Layer):
 
         return to_return
 
+    def _set_task_blocks(self, task_blocks):
+        if not task_blocks:
+            return
+
+        if isinstance(task_blocks, dict):
+            tasks_multi_names = self._prediction_tasks_multi_names()
+            for key, task_block in task_blocks.items():
+                if key in tasks_multi_names:
+                    tasks = tasks_multi_names[key]
+                    if len(tasks) == 1:
+                        self.prediction_tasks[tasks[0].task_name].task_block = task_block
+                    else:
+                        raise ValueError(
+                            f"Ambiguous name: {key}, can't resolve it to a task "
+                            "because there are multiple tasks that contain the key: "
+                            f"{', '.join([task.task_name for task in tasks])}"
+                        )
+                else:
+                    raise ValueError(
+                        f"Couldn't find {key} in prediction_tasks, "
+                        f"only found: {', '.join(list(self.prediction_tasks.keys()))}"
+                    )
+        elif isinstance(task_blocks, Layer):
+            for key, val in self.prediction_tasks.items():
+                task_block = task_blocks.from_config(task_blocks.get_config())
+                val.task_block = task_block
+        else:
+            raise ValueError("`task_blocks` must be a Layer or a Dict[str, Layer]")
+
+    def _prediction_tasks_multi_names(self) -> Dict[str, List[PredictionTask]]:
+        prediction_tasks_multi_names = {name: [val] for name, val in self.prediction_tasks.items()}
+        for name, value in self.prediction_tasks.items():
+            name_parts = name.split("/")
+            for name_part in name_parts:
+                if name_part in prediction_tasks_multi_names:
+                    prediction_tasks_multi_names[name_part].append(value)
+                else:
+                    prediction_tasks_multi_names[name_part] = [value]
+
+        return prediction_tasks_multi_names
+
     def add_task(self, task: PredictionTask, task_weight=1):
         key = task.target_name
         self.prediction_tasks[key] = task
@@ -266,6 +309,9 @@ class Head(tf.keras.layers.Layer):
             outputs[name] = inputs.pop(name)
 
         return outputs
+
+    def build(self, input_shape):
+        return super().build(input_shape)
 
     def call(self, body_outputs: tf.Tensor, call_body=False, always_output_dict=False, **kwargs):
         outputs = {}

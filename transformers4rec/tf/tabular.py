@@ -31,7 +31,7 @@ class FilterFeatures(tf.keras.layers.Layer):
 
     def get_config(self):
         return {
-            "columns": self.to_include,
+            "to_include": self.to_include,
         }
 
 
