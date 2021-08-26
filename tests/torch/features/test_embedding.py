@@ -30,7 +30,7 @@ def test_embedding_features_custom_init(torch_cat_features):
         )
         for f in torch_cat_features.keys()
     }
-    embeddings = torch4rec.EmbeddingFeatures(feature_config)(torch_cat_features)
+    embeddings = torch4rec.EmbeddingFeatures(feature_config, layer_norm=False)(torch_cat_features)
 
     assert list(embeddings.keys()) == list(feature_config.keys())
     assert all(
@@ -101,6 +101,7 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema,
+        layer_norm=False,
         embeddings_initializers={
             "item_id/list": partial(pytorch.nn.init.normal_, mean=ITEM_MEAN, std=ITEM_STD),
             "category/list": partial(pytorch.nn.init.normal_, mean=CATEGORY_MEAN, std=CATEGORY_STD),

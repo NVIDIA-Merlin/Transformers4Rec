@@ -10,24 +10,29 @@ from transformers4rec.torch.utils.torch_utils import (
 
 from ...types import DatasetSchema, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
+from .normalization import LayerNormalizationFeatures
 
 
 class EmbeddingFeatures(TabularModule):
     def __init__(
         self,
         feature_config: Dict[str, "FeatureConfig"],
-        item_id=None,
+        item_id: Optional[str] = None,
+        layer_norm: bool = True,
         **kwargs,
     ):
         super().__init__(**kwargs)
         self.item_id = item_id
         self.feature_config = feature_config
+        self.layer_norm = layer_norm
         self.filter_features = FilterFeatures(list(feature_config.keys()))
 
         embedding_tables = {}
+        features_dim = {}
         tables: Dict[str, TableConfig] = {}
         for name, feature in self.feature_config.items():
             table: TableConfig = feature.table
+            features_dim[name] = table.dim
             if table.name not in tables:
                 tables[table.name] = table
 
@@ -35,6 +40,10 @@ class EmbeddingFeatures(TabularModule):
             embedding_tables[name] = self.table_to_embedding_module(table)
 
         self.embedding_tables = torch.nn.ModuleDict(embedding_tables)
+
+        self.layer_norm_features = None
+        if layer_norm:
+            self.layer_norm_features = LayerNormalizationFeatures(features_dim)
 
     @property
     def item_embedding_table(self):
@@ -60,6 +69,7 @@ class EmbeddingFeatures(TabularModule):
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
+        layer_norm: bool = True,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
@@ -140,7 +150,7 @@ class EmbeddingFeatures(TabularModule):
         if not feature_config:
             return None
 
-        output = cls(feature_config, item_id=item_id, **kwargs)
+        output = cls(feature_config, item_id=item_id, layer_norm=layer_norm, **kwargs)
 
         if automatic_build and schema._schema:
             output.build(
@@ -171,6 +181,10 @@ class EmbeddingFeatures(TabularModule):
                 if len(val.shape) <= 1:
                     val = val.unsqueeze(0)
                 embedded_outputs[name] = self.embedding_tables[name](val)
+
+        if self.layer_norm_features:
+            embedded_outputs = self.layer_norm_features(embedded_outputs)
+
         # Store raw item ids for masking and/or negative sampling
         # This makes this module stateful.
         if self.item_id:
@@ -199,10 +213,11 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         self,
         feature_config: Dict[str, "FeatureConfig"],
         soft_embeddings_init_std: float = 0.05,
+        layer_norm: bool = True,
         **kwargs,
     ):
         self.soft_embeddings_init_std = soft_embeddings_init_std
-        super().__init__(feature_config, **kwargs)
+        super().__init__(feature_config, layer_norm=layer_norm, **kwargs)
 
     @classmethod
     def from_schema(
@@ -212,6 +227,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         default_soft_embedding_cardinality: Optional[int] = 10,
         soft_embedding_dims: Optional[Dict[str, int]] = None,
         default_soft_embedding_dim: Optional[int] = 8,
+        layer_norm: bool = True,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         automatic_build: bool = True,
@@ -284,7 +300,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         if not feature_config:
             return None
 
-        output = cls(feature_config, soft_embeddings_init_std, **kwargs)
+        output = cls(feature_config, soft_embeddings_init_std, layer_norm=layer_norm, **kwargs)
 
         if automatic_build and schema._schema:
             output.build(
