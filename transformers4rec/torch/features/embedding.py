@@ -10,15 +10,31 @@ from transformers4rec.torch.utils.torch_utils import (
 
 from ...types import DatasetSchema, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
-from .normalization import LayerNormalizationFeatures
+from ..typing import TabularData
+from .base import InputModule
 
 
-class EmbeddingFeatures(TabularModule):
+class EmbeddingModule(InputModule):
+    def __init__(self, aggregation=None, augmentation=None):
+        super().__init__(aggregation, augmentation)
+        self.normalization = None
+
+    def add_normalization(self, feature_config: Dict[str, "FeatureConfig"]):
+        self.normalization = LayerNormalizationFeatures.from_feature_config(feature_config)
+
+    def forward(self, inputs, **kwargs):
+        if self.normalization:
+            return self.normalization(inputs)
+
+        return inputs
+
+
+class EmbeddingFeatures(EmbeddingModule):
     def __init__(
         self,
         feature_config: Dict[str, "FeatureConfig"],
         item_id: Optional[str] = None,
-        layer_norm: bool = True,
+        layer_norm: bool = False,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -41,9 +57,8 @@ class EmbeddingFeatures(TabularModule):
 
         self.embedding_tables = torch.nn.ModuleDict(embedding_tables)
 
-        self.layer_norm_features = None
         if layer_norm:
-            self.layer_norm_features = LayerNormalizationFeatures(features_dim)
+            self.add_normalization(feature_config)
 
     @property
     def item_embedding_table(self):
@@ -69,7 +84,7 @@ class EmbeddingFeatures(TabularModule):
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
-        layer_norm: bool = True,
+        layer_norm: bool = False,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
@@ -182,13 +197,12 @@ class EmbeddingFeatures(TabularModule):
                     val = val.unsqueeze(0)
                 embedded_outputs[name] = self.embedding_tables[name](val)
 
-        if self.layer_norm_features:
-            embedded_outputs = self.layer_norm_features(embedded_outputs)
-
         # Store raw item ids for masking and/or negative sampling
         # This makes this module stateful.
         if self.item_id:
             self.item_seq = self.item_ids(inputs)
+
+        embedded_outputs = super().forward(embedded_outputs)
 
         return embedded_outputs
 
@@ -315,6 +329,30 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
     def table_to_embedding_module(self, table: "TableConfig") -> "SoftEmbedding":
         return SoftEmbedding(table.vocabulary_size, table.dim, self.soft_embeddings_init_std)
+
+
+class LayerNormalizationFeatures(TabularModule):
+    """
+    Applies Layer norm to each input feature individually, before the aggregation
+    """
+
+    def __init__(self, features_dim: Dict[str, int]):
+        super().__init__()
+        feature_layer_norm = {}
+        for fname, dim in features_dim.items():
+            feature_layer_norm[fname] = torch.nn.LayerNorm(normalized_shape=dim)
+        self.feature_layer_norm = torch.nn.ModuleDict(feature_layer_norm)
+
+    @classmethod
+    def from_feature_config(cls, feature_config: Dict[str, "FeatureConfig"]):
+        features_dim = {}
+        for name, feature in feature_config.items():
+            table: TableConfig = feature.table
+            features_dim[name] = table.dim
+        return cls(features_dim)
+
+    def forward(self, inputs: TabularData, **kwargs) -> TabularData:
+        return {key: self.feature_layer_norm[key](val) for key, val in inputs.items()}
 
 
 class TableConfig:
