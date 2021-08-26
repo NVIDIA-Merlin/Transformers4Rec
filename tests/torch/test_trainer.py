@@ -13,7 +13,9 @@ def test_set_train_eval_loaders(
 ):
 
     train_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size)
+    train_loader._batch_size = batch_size
     eval_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
+    eval_loader._batch_size = batch_size // 2
 
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
@@ -29,7 +31,7 @@ def test_set_train_eval_loaders(
     resys_trainer.set_eval_dataloader(eval_loader)
 
     assert resys_trainer.get_train_dataloader().batch_size == batch_size
-    assert resys_trainer.get_eval_dataloader().batch_size == batch_size // 2
+    assert resys_trainer.eval_dataloader.batch_size == batch_size // 2
 
 
 def test_set_train_loader_wrong_batch_size(
@@ -38,6 +40,7 @@ def test_set_train_loader_wrong_batch_size(
     with pytest.raises(AssertionError) as excinfo:
         batch_size = 16
         train_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size)
+        train_loader._batch_size = batch_size
 
         args = trainer.T4RecTrainingArguments(
             output_dir=".",
@@ -61,6 +64,7 @@ def test_set_train_loader_wrong_drop_last(
     with pytest.raises(AssertionError) as excinfo:
         batch_size = 16
         train_loader = DataLoader([torch_yoochoose_like], batch_size=batch_size, drop_last=True)
+        train_loader._batch_size = batch_size
 
         args = trainer.T4RecTrainingArguments(
             output_dir=".",
