@@ -3,7 +3,7 @@ import pytest
 tf4rec = pytest.importorskip("transformers4rec.tf")
 
 
-def test_sequential_block_yoochoosel(yoochoose_schema, tf_yoochoose_like):
+def test_sequential_block_yoochoose(yoochoose_schema, tf_yoochoose_like):
     inputs = tf4rec.TabularFeatures.from_schema(yoochoose_schema, aggregation="concat")
 
     body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
