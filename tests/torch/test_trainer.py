@@ -23,9 +23,7 @@ def test_set_train_eval_loaders(
             "per_device_eval_batch_size": batch_size // 2,
         }
     )
-    resys_trainer = torch4rec.T4recTrainer(
-        model=torch_yoochoose_next_item_prediction_model, args=args
-    )
+    resys_trainer = torch4rec.Trainer(model=torch_yoochoose_next_item_prediction_model, args=args)
 
     resys_trainer.set_train_dataloader(train_loader)
     resys_trainer.set_eval_dataloader(eval_loader)
@@ -48,7 +46,7 @@ def test_set_train_loader_wrong_batch_size(
                 "per_device_train_batch_size": batch_size * 2,
             }
         )
-        resys_trainer = torch4rec.T4recTrainer(
+        resys_trainer = torch4rec.Trainer(
             model=torch_yoochoose_next_item_prediction_model, args=args
         )
 
@@ -71,7 +69,7 @@ def test_set_train_loader_wrong_drop_last(
                 "per_device_train_batch_size": batch_size,
             }
         )
-        resys_trainer = torch4rec.T4recTrainer(
+        resys_trainer = torch4rec.Trainer(
             model=torch_yoochoose_next_item_prediction_model, args=args
         )
 
