@@ -33,17 +33,16 @@ class DataLoaderBuilder:
         self,
         paths_or_dataset,
         batch_size,
-        max_sequence_length,
-        dataloader_drop_last=True,
+        drop_last=False,
         shuffle=False,
     ):
         self.paths_or_dataset = paths_or_dataset
         self.batch_size = batch_size
-        self.max_sequence_length = max_sequence_length
-        self.dataloader_drop_last = dataloader_drop_last
+        self.drop_last = drop_last
         self.shuffle = shuffle
 
-    def build_from_schema(self, schema: DatasetSchema):
+    @classmethod
+    def from_schema(self, schema: DatasetSchema):
         # Build the data-loader from the schema
         raise NotImplementedError
 
@@ -53,42 +52,78 @@ class DataLoaderBuilder:
         raise NotImplementedError
 
 
-class PyarrowDataLoaderBuilder(DataLoaderBuilder):
+class PyarrowDataLoaderBuilder(DataLoaderBuilder, PyTorchDataLoader):
     # TODO fix device mismatch error when calling eval after training
     def __init__(
         self,
         paths_or_dataset,
         batch_size,
         max_sequence_length,
+        conts=None,
+        cats=None,
+        labels=None,
+        shuffle=False,
         shuffle_buffer_size=0,
         num_workers=1,
         pin_memory=True,
+        drop_last=False,
         **kwargs,
     ):
-
         self.shuffle_buffer_size = shuffle_buffer_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory
-        DataLoaderBuilder.__init__(
-            self, paths_or_dataset, batch_size, max_sequence_length, **kwargs
-        )
+        self.max_sequence_length = max_sequence_length
 
-    def get_dataset(self, cols_to_read):
+        DataLoaderBuilder.__init__(self, paths_or_dataset, batch_size, drop_last, shuffle)
+
+        self.set_dataset(cols_to_read=conts + cats + labels)
+
+        PyTorchDataLoader.__init__(
+            self,
+            self.dataset,
+            batch_size=self.batch_size,
+            drop_last=self.drop_last,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+        )
+        # set _batch_size attribute needed by HF trainer
+        self._batch_size = self.batch_size
+
+    def set_dataset(self, cols_to_read):
+        """
+        set the Parquet dataset
+        Args:
+        ------
+            cols_to_read: str
+                The list of features names to load
+        """
+
         if isinstance(self.paths_or_dataset, ParquetDataset):
-            return self.paths_or_dataset
+            dataset = self.paths_or_dataset
         dataset = ParquetDataset(
             self.paths_or_dataset,
             cols_to_read,
             seq_features_len_pad_trim=self.max_sequence_length,
         )
-        return dataset
+        if self.shuffle and self.shuffle_buffer_size > 0:
+            dataset = ShuffleDataset(dataset, buffer_size=self.shuffle_buffer_size)
 
-    def build_from_schema(
-        self,
+        self.dataset = dataset
+
+    @classmethod
+    def from_schema(
+        cls,
         schema,
+        paths_or_dataset,
+        batch_size,
+        max_sequence_length,
         continuous_features=None,
         categorical_features=None,
         targets=None,
+        shuffle_buffer_size=0,
+        num_workers=1,
+        pin_memory=True,
+        **kwargs,
     ):
         categorical_features = (
             categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
@@ -98,33 +133,41 @@ class PyarrowDataLoaderBuilder(DataLoaderBuilder):
         )
         targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
-        cols_to_read = categorical_features + continuous_features + targets
-
-        dataset = self.get_dataset(cols_to_read)
-
-        if self.shuffle and self.shuffle_buffer_size > 0:
-            dataset = ShuffleDataset(dataset, buffer_size=self.shuffle_buffer_size)
-
-        loader = PyTorchDataLoader(
-            dataset,
-            batch_size=self.batch_size,
-            drop_last=self.dataloader_drop_last,
-            num_workers=self.num_workers,
-            pin_memory=self.pin_memory,
+        return cls(
+            paths_or_dataset,
+            batch_size,
+            max_sequence_length,
+            conts=continuous_features,
+            cats=categorical_features,
+            labels=targets,
+            shuffle_buffer_size=0,
+            num_workers=1,
+            pin_memory=True,
+            **kwargs,
         )
-        # set _batch_size attribute needed by HF trainer
-        loader._batch_size = self.batch_size
-        return loader
 
 
 if nvtabular is not None:
 
-    class NVTDataLoaderBuilder(DataLoaderBuilder):
+    class DLDataLoaderWrapper(DLDataLoader):
+        def __init__(self, *args, **kwargs) -> None:
+            if "batch_size" in kwargs:
+                # Setting the batch size directly to DLDataLoader makes it 3x slower.
+                # So we set as an alternative attribute and use
+                # it within T4Rec Trainer during evaluation
+                # TODO : run experiments with new nvt dataloader
+                self._batch_size = kwargs.pop("batch_size")
+                super().__init__(*args, **kwargs)
+
+    class NVTDataLoaderBuilder(DataLoaderBuilder, DLDataLoaderWrapper):
         def __init__(
             self,
             paths_or_dataset,
             batch_size,
-            max_sequence_length,
+            conts=None,
+            cats=None,
+            labels=None,
+            collate_fn=lambda x: x[0][0],
             engine=None,
             buffer_size=0.1,
             reader_kwargs=None,
@@ -137,70 +180,94 @@ if nvtabular is not None:
             sparse_names=None,
             sparse_max=None,
             sparse_as_dense=False,
+            drop_last=False,
+            schema=None,
             **kwargs,
         ):
-
-            self.engine = engine
-            self.buffer_size = buffer_size
-            self.reader_kwargs = reader_kwargs
-            self.shuffle = (shuffle,)
-            self.seed_fn = (seed_fn,)
-            self.parts_per_chunk = parts_per_chunk
-            self.device = (device,)
-            self.global_size = global_size
-            self.global_rank = global_rank
-            self.sparse_names = sparse_names
-            self.sparse_max = sparse_max
-            self.sparse_as_dense = sparse_as_dense
-
             DataLoaderBuilder.__init__(
-                self, paths_or_dataset, batch_size, max_sequence_length, **kwargs
+                self, paths_or_dataset, batch_size=batch_size, drop_last=drop_last, shuffle=shuffle
             )
 
-        def get_dataset(self):
+            self.set_dataset(buffer_size, engine, reader_kwargs)
+
+            loader = DataLoader(
+                self.dataset,
+                cats,
+                conts,
+                labels,
+                self.batch_size,
+                shuffle,
+                seed_fn=seed_fn,
+                parts_per_chunk=parts_per_chunk,
+                device=device,
+                global_size=global_size,
+                global_rank=global_rank,
+                drop_last=self.drop_last,
+                sparse_names=sparse_names,
+                sparse_max=sparse_max,
+                sparse_as_dense=sparse_as_dense,
+            )
+
+            DLDataLoaderWrapper.__init__(
+                self,
+                loader,
+                collate_fn=collate_fn,
+                batch_size=self.batch_size,
+                drop_last=self.drop_last,
+            )
+            self.schema = schema
+
+        def set_dataset(self, buffer_size, engine, reader_kwargs):
             dataset = _validate_dataset(
                 self.paths_or_dataset,
                 self.batch_size,
-                self.buffer_size,
-                self.engine,
-                self.reader_kwargs,
+                buffer_size,
+                engine,
+                reader_kwargs,
             )
-            return dataset
+            self.dataset = dataset
 
-        def build_from_schema(
-            self,
-            schema,
+        @classmethod
+        def from_schema(
+            cls,
+            schema: DatasetSchema,
+            paths_or_dataset,
+            batch_size,
             continuous_features=None,
             categorical_features=None,
             targets=None,
             collate_fn=lambda x: x[0][0],
+            shuffle=True,
+            buffer_size=0.06,
+            parts_per_chunk=1,
+            separate_labels=True,
+            named_labels=False,
+            **kwargs,
         ):
-            class DLDataLoaderWrapper(DLDataLoader):
-                def __init__(self, *args, **kwargs) -> None:
-                    if "batch_size" in kwargs:
-                        # Setting the batch size directly to DLDataLoader makes it 3x slower.
-                        # So we set as an alternative attribute and use
-                        # it within T4Rec Trainer during evaluation
-                        self._batch_size = kwargs.pop("batch_size")
-                    super().__init__(*args, **kwargs)
-
-            dataset = self.get_dataset()
-            loader = DataLoader.from_schema(
-                schema,
-                dataset,
-                batch_size=self.batch_size,
-                sparse_names=self.sparse_names,
-                sparse_max=self.sparse_max,
-                sparse_as_dense=self.sparse_as_dense,
-                drop_last=self.dataloader_drop_last,
+            categorical_features = (
+                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
             )
+            continuous_features = (
+                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+            )
+            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
-            return DLDataLoaderWrapper(
-                loader,
+            nvt_loader = cls(
+                paths_or_dataset,
+                batch_size=batch_size,
+                labels=targets if separate_labels else [],
+                cats=categorical_features if separate_labels else categorical_features + targets,
+                conts=continuous_features,
                 collate_fn=collate_fn,
-                batch_size=self.batch_size,
-                drop_last=self.dataloader_drop_last,
+                engine="parquet",
+                shuffle=shuffle,
+                buffer_size=buffer_size,  # how many batches to load at once
+                parts_per_chunk=parts_per_chunk,
+                schema=schema,
+                **kwargs,
             )
+
+            return nvt_loader
 
 
 class ParquetDataset(Dataset):

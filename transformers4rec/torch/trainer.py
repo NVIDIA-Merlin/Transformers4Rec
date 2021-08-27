@@ -34,8 +34,8 @@ class Trainer(Trainer):
         self,
         model: Model,
         args: T4RecTrainingArguments,
-        train_dataset: Optional[Dataset] = None,
-        eval_dataset: Optional[Dataset] = None,
+        train_dataloader: Optional[Dataset] = None,
+        eval_dataloader: Optional[Dataset] = None,
         compute_metrics: Optional[bool] = None,
         **kwargs,
     ):
@@ -60,6 +60,11 @@ class Trainer(Trainer):
             **kwargs,
         )
         self.compute_metrics = compute_metrics
+
+        if train_dataloader is not None:
+            self.train_dataloader = train_dataloader
+        if eval_dataloader is not None:
+            self.eval_dataloader = eval_dataloader
 
     def get_train_dataloader(self) -> DataLoader:
         return self.train_dataloader

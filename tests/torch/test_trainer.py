@@ -1,9 +1,9 @@
 import pytest
-from torch.utils.data import DataLoader
 
 from transformers4rec.config import trainer
 
 pytorch = pytest.importorskip("torch")
+DataLoader = pytest.importorskip("torch.utils.data.DataLoader")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
