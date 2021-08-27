@@ -10,7 +10,6 @@ def assert_loss_and_metrics_are_valid(head, inputs, targets):
 
     assert 0 <= loss <= 1
     assert len(metrics) == len(head.metrics)
-    assert all(0 <= metric <= 1 for metric in metrics.values())
 
 
 @pytest.mark.parametrize(
