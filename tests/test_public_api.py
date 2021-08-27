@@ -3,11 +3,12 @@ import pytest
 import transformers4rec as tr
 
 transformer_config_names = [
+    "AlbertConfig",
+    "ElectraConfig",
+    "GPT2Config",
+    "LongformerConfig",
     "ReformerConfig",
     "XLNetConfig",
-    "ElectraConfig",
-    "LongformerConfig",
-    "GPT2Config",
 ]
 
 
