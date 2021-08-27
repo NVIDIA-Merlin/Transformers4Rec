@@ -31,7 +31,7 @@ class FilterFeatures(tf.keras.layers.Layer):
 
     def get_config(self):
         return {
-            "columns": self.to_include,
+            "to_include": self.to_include,
         }
 
 
@@ -105,7 +105,7 @@ class TabularLayer(tf.keras.layers.Layer):
                 )
                 outputs.update(to_add)
 
-        if post_op:
+        if isinstance(outputs, dict) and post_op:
             outputs = post_op(outputs)
 
         return outputs

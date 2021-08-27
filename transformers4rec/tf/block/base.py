@@ -1,6 +1,8 @@
 import copy
+import sys
 from typing import Union
 
+import six
 import tensorflow as tf
 
 from .. import tabular
@@ -65,7 +67,6 @@ class SequentialBlock(TabularBlock):
                 )
 
         super(SequentialBlock, self).__init__(**kwargs)
-        self.filter_features = filter_features
         if filter_features:
             self.layers = [tabular.FilterFeatures(filter_features), *copy.copy(layers)]
         else:
@@ -84,9 +85,20 @@ class SequentialBlock(TabularBlock):
         return output_signature
 
     def build(self, input_shape=None):
+        last_layer = None
         for layer in self.layers:
-            layer.build(input_shape)
+            try:
+                layer.build(input_shape)
+            except TypeError:
+                t, v, tb = sys.exc_info()
+                if isinstance(input_shape, dict) and isinstance(last_layer, tabular.TabularLayer):
+                    v = TypeError(
+                        f"Couldn't build {layer}, "
+                        f"did you forget to add aggregation to {last_layer}?"
+                    )
+                six.reraise(t, v, tb)
             input_shape = layer.compute_output_shape(input_shape)
+            last_layer = layer
         self.built = True
 
     def _get_name(self):
@@ -140,14 +152,14 @@ class SequentialBlock(TabularBlock):
         return outputs
 
     def get_config(self):
-        config = {"filter_features": self.filter_features}
+        config = {}
         for i, layer in enumerate(self.layers):
-            config[i] = {
-                "class_name": layer.__class__.__name__,
-                "config": copy.deepcopy(layer.get_config()),
-            }
+            config[i] = tf.keras.layers.serialize(layer)
 
         return config
+
+    def __getitem__(self, key):
+        return self.layers[key]
 
     @classmethod
     def from_config(cls, config, custom_objects=None):
@@ -155,7 +167,8 @@ class SequentialBlock(TabularBlock):
             tf.keras.layers.deserialize(conf, custom_objects=custom_objects)
             for conf in config.values()
         ]
-        return cls(layers)
+
+        return SequentialBlock(layers)
 
     def __rrshift__(self, other):
         return right_shift_layer(self, other)

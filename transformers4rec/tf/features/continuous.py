@@ -37,4 +37,4 @@ class ContinuousFeatures(InputLayer):
         return ["filter_features"]
 
     def repr_extra(self):
-        return ", ".join(sorted(self.filter_features.columns))
+        return ", ".join(sorted(self.filter_features.to_include))
