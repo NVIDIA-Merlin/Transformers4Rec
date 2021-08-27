@@ -1,4 +1,31 @@
+import abc
+
 import torch
+
+
+class OutputSizeMixin(abc.ABC):
+    def build(self, input_size, **kwargs):
+        self.input_size = input_size
+
+        return self
+
+    def output_size(self, input_size=None):
+        input_size = input_size or getattr(self, "input_size", None)
+        if not input_size:
+            # TODO: log warning here
+            return None
+
+        return self.forward_output_size(input_size)
+
+    def forward_output_size(self, input_size):
+        raise NotImplementedError()
+
+
+def check_gpu(module):
+    try:
+        return next(module.parameters()).is_cuda
+    except StopIteration:
+        return False
 
 
 def get_output_sizes_from_schema(schema, batch_size=-1, max_sequence_length=None):

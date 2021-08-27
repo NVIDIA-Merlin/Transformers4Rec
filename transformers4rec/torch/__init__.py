@@ -16,7 +16,16 @@
 
 from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
 from .augmentation import StochasticSwapNoise
-from .block.base import Block, SequentialBlock, build_blocks, right_shift_block
+from .block.base import (
+    AsTabular,
+    Block,
+    BlockBase,
+    MergeTabular,
+    SequentialBlock,
+    TabularBlock,
+    build_blocks,
+    right_shift_block,
+)
 from .block.mlp import MLPBlock
 from .block.transformer import TransformerBlock
 from .features.continuous import ContinuousFeatures
@@ -38,12 +47,14 @@ from .head import (
     RegressionTask,
 )
 from .model import Model
-from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
+from .tabular import FilterFeatures, TabularModule
 
 __all__ = [
     "SequentialBlock",
     "right_shift_block",
     "build_blocks",
+    "BlockBase",
+    "TabularBlock",
     "Block",
     "MLPBlock",
     "StochasticSwapNoise",

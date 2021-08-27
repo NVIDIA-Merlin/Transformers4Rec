@@ -1,14 +1,87 @@
-from functools import reduce
-from typing import Optional
+from typing import Optional, Union
 
 import torch
 
 from ..types import DatasetSchema
 from . import aggregation as agg
 from . import augmentation as aug
+from .typing import TabularData
 
 
-class TabularMixin:
+class TabularModule(torch.nn.Module):
+    """Torch Module that's specialized for tabular-data.
+
+    Parameters
+    ----------
+    augmentation: Union[str, aug.DataAugmentation], optional
+        Augmentation to apply on the inputs when the module is called.
+    aggregation: Union[str, agg.FeatureAggregation], optional
+        Aggregation to apply after processing the `forward`-method.
+    """
+
+    def __init__(
+        self,
+        augmentation: Optional[Union[str, aug.DataAugmentation]] = None,
+        aggregation: Optional[Union[str, agg.FeatureAggregation]] = None,
+    ):
+        super().__init__()
+        self.input_size = None
+        self.augmentation = augmentation
+        self.aggregation = aggregation
+
+    @property
+    def aggregation(self):
+        return self._aggregation
+
+    @aggregation.setter
+    def aggregation(self, value: Optional[Union[str, agg.FeatureAggregation]]):
+        if value:
+            self._aggregation = agg.aggregation_registry.parse(value)
+        else:
+            self._aggregation = None
+
+    @property
+    def augmentation(self):
+        return self._augmentation
+
+    @augmentation.setter
+    def augmentation(self, value: Optional[Union[str, aug.DataAugmentation]]):
+        if value:
+            self._augmentation = aug.augmentation_registry.parse(value)
+        else:
+            self._augmentation = None
+
+    @classmethod
+    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
+        """
+
+        Parameters
+        ----------
+        schema
+        tags
+        kwargs
+
+        Returns
+        -------
+
+        """
+        if tags:
+            schema = schema.select_by_tag(tags)
+
+        if not schema.columns:
+            return None
+
+        return cls.from_features(schema.column_names, **kwargs)
+
+    @classmethod
+    def from_features(cls, features, **kwargs):
+        from .block.base import SequentialBlock
+
+        return SequentialBlock(features, **kwargs)
+
+    def forward(self, x: TabularData, *args, **kwargs) -> TabularData:
+        return x
+
     def __call__(
         self,
         inputs,
@@ -23,6 +96,26 @@ class TabularMixin:
         filter_columns=None,
         **kwargs
     ):
+        """
+
+        Parameters
+        ----------
+        inputs
+        args
+        pre
+        post
+        merge_with
+        stack_outputs
+        concat_outputs
+        aggregation
+        augmentation
+        filter_columns
+        kwargs
+
+        Returns
+        -------
+
+        """
         augmentation = augmentation or getattr(self, "augmentation", None)
         post_op = getattr(self, "aggregation", None)
         if concat_outputs:
@@ -56,13 +149,13 @@ class TabularMixin:
         return outputs
 
 
-class FilterFeatures(TabularMixin, torch.nn.Module):
+class FilterFeatures(torch.nn.Module):
     def __init__(self, to_include, pop=False):
         super().__init__()
         self.to_include = to_include
         self.pop = pop
 
-    def forward(self, inputs):
+    def forward(self, inputs: TabularData) -> TabularData:
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
         outputs = {k: v for k, v in inputs.items() if k in self.to_include}
@@ -76,158 +169,9 @@ class FilterFeatures(TabularMixin, torch.nn.Module):
         return {k: v for k, v in input_shape.items() if k in self.to_include}
 
 
-class AsTabular(torch.nn.Module):
-    def __init__(self, output_name):
-        super().__init__()
-        self.output_name = output_name
-
-    def forward(self, inputs):
-        return {self.output_name: inputs}
-
-    def build(self, input_size, device=None):
-        if device:
-            self.to(device)
-        self.input_size = input_size
-
-        return self
-
-    def forward_output_size(self, input_size):
-        return {self.output_name: input_size}
-
-    def output_size(self):
-        if not self.input_size:
-            # TODO: log warning here
-            pass
-
-        return self.forward_output_size(self.input_size)
-
-
-class TabularModule(TabularMixin, torch.nn.Module):
-    def __init__(self, aggregation=None, augmentation=None):
-        super().__init__()
-        self.input_size = None
-        self.aggregation = aggregation
-        self.augmentation = augmentation
-
-    @property
-    def aggregation(self):
-        return self._aggregation
-
-    @aggregation.setter
-    def aggregation(self, value):
-        if value:
-            self._aggregation = agg.aggregation_registry.parse(value)
-        else:
-            self._aggregation = None
-
-    @property
-    def augmentation(self):
-        return self._augmentation
-
-    @augmentation.setter
-    def augmentation(self, value):
-        if value:
-            self._augmentation = aug.augmentation_registry.parse(value)
-        else:
-            self._augmentation = None
-
-    @classmethod
-    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
-        if tags:
-            schema = schema.select_by_tag(tags)
-
-        if not schema.columns:
-            return None
-
-        return cls.from_features(schema.column_names, **kwargs)
-
-    @classmethod
-    def from_features(cls, features, **kwargs):
-        from .block.base import SequentialBlock
-
-        return SequentialBlock(features, **kwargs)
-
-    def forward(self, x, *args, **kwargs):
-        return x
-
-    def build(self, input_size, device=None):
-        if device:
-            self.to(device)
-        self.input_size = input_size
-
-        return self
-
-    def to_module(self, shape_or_module, device=None):
-        shape = shape_or_module
-        if isinstance(shape_or_module, torch.nn.Module):
-            shape = getattr(shape_or_module, "output_size", None)
-            if shape:
-                shape = shape()
-
-        return self.build(shape, device=device)
-
-    def forward_output_size(self, input_size):
-        if self.aggregation:
-            return self.aggregation.forward_output_size(input_size)
-
-        return input_size
-
-    def output_size(self):
-        if not self.input_size:
-            # TODO: log warning here
-            pass
-
-        return self.forward_output_size(self.input_size)
-
-    def __rrshift__(self, other):
-        from .block.base import right_shift_block
-
-        return right_shift_block(self, other)
-
-
-class MergeTabular(TabularModule):
-    def __init__(self, *to_merge, aggregation=None, augmentation=None):
-        super().__init__(aggregation=aggregation, augmentation=augmentation)
-        if all(isinstance(x, dict) for x in to_merge):
-            to_merge = reduce(lambda a, b: dict(a, **b), to_merge)
-            self.to_merge = torch.nn.ModuleDict(to_merge)
-        else:
-            self.to_merge = torch.nn.ModuleList(to_merge)
-
-    @property
-    def merge_values(self):
-        if isinstance(self.to_merge, torch.nn.ModuleDict):
-            return list(self.to_merge.values())
-
-        return self.to_merge
-
-    def forward(self, inputs):
-        assert isinstance(inputs, dict), "Inputs needs to be a dict"
-
-        outputs = {}
-        for layer in self.merge_values:
-            outputs.update(layer(inputs))
-
-        return outputs
-
-    def forward_output_size(self, input_size):
-        output_shapes = {}
-
-        for layer in self.merge_values:
-            output_shapes.update(layer.forward_output_size(input_size))
-
-        return super(MergeTabular, self).forward_output_size(output_shapes)
-
-    def build(self, input_size, device=None):
-        super().build(input_size, device)
-
-        for layer in self.merge_values:
-            layer.build(input_size, device)
-
-        return self
-
-
 def merge_tabular(self, other, **kwargs):
+    from .block.base import MergeTabular
+
     return MergeTabular(self, other)
 
 

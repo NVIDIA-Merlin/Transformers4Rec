@@ -4,13 +4,12 @@ import torch
 
 from ...types import DatasetSchema, DefaultTags, Tag
 from ...utils.masking import MaskSequence
-from ..block.base import BuildableBlock, SequentialBlock
+from ..block.base import AsTabular, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
-from ..tabular import TabularModule
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
-from .tabular import AsTabular, TabularFeatures
+from .tabular import TabularFeatures
 
 
 class SequenceEmbeddingFeatures(EmbeddingFeatures):
@@ -33,7 +32,7 @@ class SequenceEmbeddingFeatures(EmbeddingFeatures):
         for name, feature in self.feature_config.items():
             sizes[name] = torch.Size([batch_size, sequence_length, feature.table.dim])
 
-        return TabularModule.forward_output_size(self, sizes)
+        return sizes
 
 
 class TabularSequenceFeatures(TabularFeatures):
@@ -197,7 +196,7 @@ class TabularSequenceFeatures(TabularFeatures):
         for in_layer in self.merge_values:
             output_sizes.update(in_layer.forward_output_size(input_size))
 
-        output_sizes = TabularModule.forward_output_size(self, output_sizes)
+        output_sizes = self._check_aggregation_output_size(output_sizes)
 
         if self.projection_module:
             output_sizes = self.projection_module.output_size()

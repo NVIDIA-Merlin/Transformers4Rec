@@ -1,5 +1,7 @@
-from ..tabular import TabularModule
+from abc import ABC
+
+from ..block.base import TabularBlock
 
 
-class InputModule(TabularModule):
+class InputBlock(TabularBlock, ABC):
     pass

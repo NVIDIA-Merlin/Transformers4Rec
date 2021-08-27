@@ -11,10 +11,10 @@ from transformers4rec.torch.utils.torch_utils import (
 from ...types import DatasetSchema, DefaultTags
 from ..tabular import FilterFeatures, TabularModule
 from ..typing import TabularData
-from .base import InputModule
+from .base import InputBlock
 
 
-class EmbeddingModule(InputModule):
+class EmbeddingModule(InputBlock):
     def __init__(self, aggregation=None, augmentation=None, **kwargs):
         super().__init__(aggregation, augmentation)
         self.normalization = None
@@ -212,7 +212,7 @@ class EmbeddingFeatures(EmbeddingModule):
         for name, feature in self.feature_config.items():
             sizes[name] = torch.Size([batch_size, feature.table.dim])
 
-        return super().forward_output_size(sizes)
+        return sizes
 
 
 class SoftEmbeddingFeatures(EmbeddingFeatures):
