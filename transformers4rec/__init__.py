@@ -16,6 +16,7 @@
 
 from .config.transformer import (
     AlbertConfig,
+    ElectraConfig,
     GPT2Config,
     LongformerConfig,
     ReformerConfig,
@@ -35,6 +36,7 @@ __all__ = [
     "LongformerConfig",
     "AlbertConfig",
     "ReformerConfig",
+    "ElectraConfig",
 ]
 
 
@@ -48,9 +50,9 @@ except ImportError:
     pass
 
 try:
-    from . import torch as pytorch
+    from . import torch as t
 
-    torch = pytorch
+    torch = t
 
     __all__.append("torch")
 except ImportError:
