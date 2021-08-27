@@ -11,7 +11,7 @@ from torch.cuda.amp import autocast
 from torch.optim import Optimizer
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
-from transformers import Trainer
+from transformers import Trainer as BaseTrainer
 from transformers.optimization import TYPE_TO_SCHEDULER_FUNCTION
 from transformers.trainer_callback import TrainerCallback
 from transformers.trainer_pt_utils import DistributedTensorGatherer, nested_concat
@@ -24,7 +24,7 @@ from .model import Model
 logger = logging.get_logger(__name__)
 
 
-class Trainer(Trainer):
+class Trainer(BaseTrainer):
     """
     An :class:`~transformers.Trainer` specialized for sequential recommendation
     including (session-based and sequtial recommendation)

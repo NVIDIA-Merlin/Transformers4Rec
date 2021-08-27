@@ -20,10 +20,8 @@ def test_set_train_eval_loaders(
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         avg_session_length=20,
-        **{
-            "per_device_train_batch_size": batch_size,
-            "per_device_eval_batch_size": batch_size // 2,
-        }
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
     )
     resys_trainer = torch4rec.Trainer(model=torch_yoochoose_next_item_prediction_model, args=args)
 
