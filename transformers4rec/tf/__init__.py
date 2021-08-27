@@ -23,7 +23,6 @@ from .aggregation import ConcatFeatures, StackFeatures, aggregation_registry
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
-from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.sequence import SequentialEmbeddingFeatures, TabularSequenceFeatures
@@ -57,7 +56,6 @@ __all__ = [
     "right_shift_layer",
     "DLRMBlock",
     "MLPBlock",
-    "BlockWithHead",
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SequentialEmbeddingFeatures",
