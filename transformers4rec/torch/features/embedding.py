@@ -15,7 +15,7 @@ from .base import InputModule
 
 
 class EmbeddingModule(InputModule):
-    def __init__(self, aggregation=None, augmentation=None):
+    def __init__(self, aggregation=None, augmentation=None, **kwargs):
         super().__init__(aggregation, augmentation)
         self.normalization = None
 
@@ -80,7 +80,7 @@ class EmbeddingFeatures(EmbeddingModule):
         cls,
         schema: DatasetSchema,
         embedding_dims: Optional[Dict[str, int]] = None,
-        default_embedding_dim: Optional[int] = 64,
+        embedding_dim_default: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
@@ -146,7 +146,7 @@ class EmbeddingFeatures(EmbeddingModule):
         emb_config = {}
         cardinalities = schema.cardinalities()
         for key, cardinality in cardinalities.items():
-            embedding_size = embedding_dims.get(key, default_embedding_dim)
+            embedding_size = embedding_dims.get(key, embedding_dim_default)
             embedding_initializer = embeddings_initializers.get(key, None)
             emb_config[key] = (cardinality, embedding_size, embedding_initializer)
 
@@ -226,11 +226,9 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
     def __init__(
         self,
         feature_config: Dict[str, "FeatureConfig"],
-        soft_embeddings_init_std: float = 0.05,
         layer_norm: bool = True,
         **kwargs,
     ):
-        self.soft_embeddings_init_std = soft_embeddings_init_std
         super().__init__(feature_config, layer_norm=layer_norm, **kwargs)
 
     @classmethod
@@ -238,15 +236,15 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         cls,
         schema: DatasetSchema,
         soft_embedding_cardinalities: Optional[Dict[str, int]] = None,
-        default_soft_embedding_cardinality: Optional[int] = 10,
+        soft_embedding_cardinality_default: Optional[int] = 10,
         soft_embedding_dims: Optional[Dict[str, int]] = None,
-        default_soft_embedding_dim: Optional[int] = 8,
+        soft_embedding_dim_default: Optional[int] = 8,
+        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         layer_norm: bool = True,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
-        soft_embeddings_init_std=0.05,
         **kwargs,
     ) -> Optional["SoftEmbeddingFeatures"]:
         """
@@ -259,14 +257,16 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         soft_embedding_cardinalities : Optional[Dict[str, int]], optional
             The cardinality of the embedding table for each feature (key),
             by default None
-        default_soft_embedding_cardinality : Optional[int], optional
+        soft_embedding_cardinality_default : Optional[int], optional
             Default cardinality of the embedding table, when the feature
             is not found in ``soft_embedding_cardinalities``, by default 10
         soft_embedding_dims : Optional[Dict[str, int]], optional
             The dimension of the embedding table for each feature (key), by default None
-        default_soft_embedding_dim : Optional[int], optional
+        soft_embedding_dim_default : Optional[int], optional
             Default dimension of the embedding table, when the feature
-            is not found in ``default_soft_embedding_dim``, by default 8
+            is not found in ``soft_embedding_dim_default``, by default 8
+        embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]]
+            Dict where keys are feature names and values are callable to initialize embedding tables
         combiner : Optional[str], optional
             Feature aggregation option, by default "mean"
         tags : Optional[Union[DefaultTags, list, str]], optional
@@ -288,33 +288,36 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
         soft_embedding_cardinalities = soft_embedding_cardinalities or {}
         soft_embedding_dims = soft_embedding_dims or {}
+        embeddings_initializers = embeddings_initializers or {}
 
         sizes = {}
         cardinalities = schema.cardinalities()
         for col_name in schema.column_names:
             # If this is NOT a categorical feature
             if col_name not in cardinalities:
-                embedding_size = soft_embedding_dims.get(col_name, default_soft_embedding_dim)
+                embedding_size = soft_embedding_dims.get(col_name, soft_embedding_dim_default)
                 cardinality = soft_embedding_cardinalities.get(
-                    col_name, default_soft_embedding_cardinality
+                    col_name, soft_embedding_cardinality_default
                 )
-                sizes[col_name] = (cardinality, embedding_size)
+                emb_initializer = embeddings_initializers.get(col_name, None)
+                sizes[col_name] = (cardinality, embedding_size, emb_initializer)
 
         feature_config: Dict[str, FeatureConfig] = {}
-        for name, (vocab_size, dim) in sizes.items():
+        for name, (vocab_size, dim, emb_initializer) in sizes.items():
             feature_config[name] = FeatureConfig(
                 TableConfig(
                     vocabulary_size=vocab_size,
                     dim=dim,
                     name=name,
                     combiner=combiner,
+                    initializer=emb_initializer,
                 )
             )
 
         if not feature_config:
             return None
 
-        output = cls(feature_config, soft_embeddings_init_std, layer_norm=layer_norm, **kwargs)
+        output = cls(feature_config, layer_norm=layer_norm, **kwargs)
 
         if automatic_build and schema._schema:
             output.build(
@@ -328,7 +331,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         return output
 
     def table_to_embedding_module(self, table: "TableConfig") -> "SoftEmbedding":
-        return SoftEmbedding(table.vocabulary_size, table.dim, self.soft_embeddings_init_std)
+        return SoftEmbedding(table.vocabulary_size, table.dim, table.initializer)
 
 
 class LayerNormalizationFeatures(TabularModule):
@@ -419,7 +422,7 @@ class SoftEmbedding(torch.nn.Module):
     In a nutshell, it represents a continuous feature as a weighted average of embeddings
     """
 
-    def __init__(self, num_embeddings, embeddings_dim, embeddings_init_std=0.05):
+    def __init__(self, num_embeddings, embeddings_dim, emb_initializer=None):
         """
 
         Parameters
@@ -428,6 +431,8 @@ class SoftEmbedding(torch.nn.Module):
         embeddings_dim: The dimension of the vector space for projecting the scalar value.
         embeddings_init_std: The standard deviation factor for normal initialization of the
             embedding matrix weights.
+        emb_initializer: Dict where keys are feature names and values are callable to initialize
+            embedding tables
         """
 
         assert (
@@ -439,8 +444,9 @@ class SoftEmbedding(torch.nn.Module):
 
         super(SoftEmbedding, self).__init__()
         self.embedding_table = torch.nn.Embedding(num_embeddings, embeddings_dim)
-        with torch.no_grad():
-            self.embedding_table.weight.normal_(0.0, embeddings_init_std)
+        if emb_initializer:
+            emb_initializer(self.embedding_table.weight)
+
         self.projection_layer = torch.nn.Linear(1, num_embeddings, bias=True)
         self.softmax = torch.nn.Softmax(dim=-1)
 

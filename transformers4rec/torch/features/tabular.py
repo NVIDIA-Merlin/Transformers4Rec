@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 from ...types import DatasetSchema, DefaultTags, Tag
 from ..block.base import SequentialBlock
@@ -74,7 +74,7 @@ class TabularFeatures(MergeTabular):
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
         continuous_projection: Optional[Union[List[int], int]] = None,
-        continuous_soft_embeddings_shape: Optional[Union[Tuple[int, int], List[int]]] = None,
+        continuous_soft_embeddings: bool = False,
         **kwargs,
     ) -> "TabularFeatures":
         """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
@@ -95,10 +95,9 @@ class TabularFeatures(MergeTabular):
         continuous_projection : Optional[Union[List[int], int]], optional
             If set, concatenate all numerical features and projet them by a number of MLP layers.
             The argument accepts a list with the dimensions of the MLP layers, by default None
-        continuous_soft_embeddings_shape : Optional[Union[Tuple[int, int], List[int, int]]]
-            If set, uses soft one-hot encoding technique to represent continuous features.
-            The argument accepts a tuple with 2 elements: [embeddings cardinality, embeddings dim],
-            by default None
+        continuous_soft_embeddings : bool
+            Indicates if the  soft one-hot encoding technique must be used to
+            represent continuous features, by default False
 
         Returns
         -------
@@ -107,35 +106,19 @@ class TabularFeatures(MergeTabular):
         """
         maybe_continuous_module, maybe_categorical_module = None, None
         if continuous_tags:
-            if continuous_soft_embeddings_shape:
-                assert (
-                    isinstance(continuous_soft_embeddings_shape, (list, tuple))
-                    and len(continuous_soft_embeddings_shape) == 2
-                ), (
-                    "The continuous_soft_embeddings_shape must be a list/tuple with "
-                    "2 elements corresponding to the default shape "
-                    "for the soft embedding tables of continuous features"
-                )
-
-                (
-                    default_soft_embedding_cardinality,
-                    default_soft_embedding_dim,
-                ) = continuous_soft_embeddings_shape
+            if continuous_soft_embeddings:
                 maybe_continuous_module = cls.SOFT_EMBEDDING_MODULE_CLASS.from_schema(
                     schema,
                     tags=continuous_tags,
-                    default_soft_embedding_cardinality=default_soft_embedding_cardinality,
-                    default_soft_embedding_dim=default_soft_embedding_dim,
+                    **kwargs,
                 )
             else:
                 maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
-                    schema,
-                    tags=continuous_tags,
+                    schema, tags=continuous_tags, **kwargs
                 )
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(
-                schema,
-                tags=categorical_tags,
+                schema, tags=categorical_tags, **kwargs
             )
 
         output = cls(

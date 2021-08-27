@@ -1,5 +1,6 @@
 from functools import partial
 
+import numpy as np
 import pytest
 
 from transformers4rec.utils.tags import Tag
@@ -18,6 +19,20 @@ def test_embedding_features(torch_cat_features):
 
     assert list(embeddings.keys()) == list(feature_config.keys())
     assert all([emb.shape[-1] == dim for emb in embeddings.values()])
+
+
+def test_embedding_features_layernorm(torch_cat_features):
+    dim = 15
+    feature_config = {
+        f: torch4rec.FeatureConfig(torch4rec.TableConfig(100, dim, name=f))
+        for f in torch_cat_features.keys()
+    }
+
+    embeddings = torch4rec.EmbeddingFeatures(feature_config, layer_norm=True)(torch_cat_features)
+    assert all(
+        [emb.detach().numpy().mean() == pytest.approx(0.0, abs=0.1) for emb in embeddings.values()]
+    )
+    assert all([emb.detach().numpy().std() > 0.5 for emb in embeddings.values()])
 
 
 def test_embedding_features_custom_init(torch_cat_features):
@@ -63,7 +78,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoocho
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
-        schema, embedding_dims={"item_id/list": 100}, default_embedding_dim=64
+        schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
     )
 
     assert emb_module.embedding_tables["item_id/list"].weight.shape[1] == 100
@@ -139,8 +154,34 @@ def test_soft_embedding():
     embeddings_dim = 16
     num_embeddings = 64
 
+    soft_embedding = torch4rec.SoftEmbedding(num_embeddings, embeddings_dim)
+    assert soft_embedding.embedding_table.weight.shape == pytorch.Size(
+        [num_embeddings, embeddings_dim]
+    ), "Internal soft embedding table does not have the expected shape"
+
+    batch_size = 10
+    seq_length = 20
+    cont_feature_inputs = pytorch.rand((batch_size, seq_length))
+    output = soft_embedding(cont_feature_inputs)
+
+    assert output.shape == pytorch.Size(
+        [batch_size, seq_length, embeddings_dim]
+    ), "Soft embedding output has not the expected shape"
+
+    # Checking the default embedding initialization
+    assert output.detach().numpy().mean() == pytest.approx(0.0, abs=0.1)
+    assert output.detach().numpy().std() == pytest.approx(0.05, abs=0.2)
+
+
+def test_soft_embedding_with_custom_init():
+    embeddings_dim = 16
+    num_embeddings = 64
+
+    INIT_MEAN = 1.0
+    INIT_STD = 0.05
+    emb_initializer = partial(pytorch.nn.init.normal_, mean=INIT_MEAN, std=INIT_STD)
     soft_embedding = torch4rec.SoftEmbedding(
-        num_embeddings, embeddings_dim, embeddings_init_std=0.05
+        num_embeddings, embeddings_dim, emb_initializer=emb_initializer
     )
     assert soft_embedding.embedding_table.weight.shape == pytorch.Size(
         [num_embeddings, embeddings_dim]
@@ -155,22 +196,44 @@ def test_soft_embedding():
         [batch_size, seq_length, embeddings_dim]
     ), "Soft embedding output has not the expected shape"
 
+    assert output.detach().numpy().mean() == pytest.approx(INIT_MEAN, abs=0.1)
+    assert output.detach().numpy().std() == pytest.approx(INIT_STD, abs=0.1)
+
 
 def test_soft_continuous_features(torch_con_features):
     dim = 16
     num_embeddings = 64
+
+    emb_initializer = partial(pytorch.nn.init.normal_, mean=1.0, std=0.05)
+
     feature_config = {
-        f: torch4rec.FeatureConfig(torch4rec.TableConfig(num_embeddings, dim, name=f))
+        f: torch4rec.FeatureConfig(
+            torch4rec.TableConfig(num_embeddings, dim, initializer=emb_initializer, name=f)
+        )
         for f in torch_con_features.keys()
     }
-    con_embeddings = torch4rec.SoftEmbeddingFeatures(feature_config, soft_embeddings_init_std=0.05)(
-        torch_con_features
+
+    soft_embeddings = torch4rec.SoftEmbeddingFeatures(feature_config)
+    output = soft_embeddings(torch_con_features)
+
+    assert list(output.keys()) == list(feature_config.keys())
+    assert all(
+        [list(v.shape) == list(torch_con_features[k].shape) + [dim] for k, v in output.items()]
     )
 
-    assert list(con_embeddings.keys()) == list(feature_config.keys())
+
+def test_layer_norm_features():
+    ln = torch4rec.LayerNormalizationFeatures(features_dim={"a": 100, "b": 200})
+    inputs = {
+        "a": pytorch.tensor(np.random.uniform(1.0, 4.0, (500, 100)), dtype=pytorch.float32),
+        "b": pytorch.tensor(np.random.uniform(2.0, 10.0, (500, 200)), dtype=pytorch.float32),
+    }
+
+    outputs = ln(inputs)
+
     assert all(
-        [
-            list(v.shape) == list(torch_con_features[k].shape) + [dim]
-            for k, v in con_embeddings.items()
-        ]
+        [val.detach().numpy().mean() == pytest.approx(0.0, abs=0.1) for val in outputs.values()]
+    )
+    assert all(
+        [val.detach().numpy().std() == pytest.approx(1.0, abs=0.1) for val in outputs.values()]
     )
