@@ -5,12 +5,7 @@ import torch
 import torchmetrics as tm
 
 from ..utils.registry import Registry
-from .common import (
-    _check_inputs,
-    _create_output_placeholder,
-    _extract_topk,
-    _tranform_label_to_onehot,
-)
+from .utils import torch_utils
 
 ranking_metrics_registry = Registry.class_registry("torch.ranking_metrics")
 
@@ -35,7 +30,7 @@ class RankingMetric(tm.Metric):
     def update(self, preds: torch.Tensor, target: torch.Tensor, **kwargs):
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
-            target = _tranform_label_to_onehot(target, preds.size(-1))
+            target = torch_utils.tranform_label_to_onehot(target, preds.size(-1))
         metric = self._metric(torch.LongTensor(self.top_ks), preds.view(-1, preds.size(-1)), target)
         self.metric_mean.append(metric)
 
@@ -66,9 +61,9 @@ class PrecisionAt(RankingMetric):
             torch.Tensor: list of precisions at cutoffs
         """
 
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        _, _, topk_labels = _extract_topk(ks, scores, labels)
-        precisions = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        _, _, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        precisions = torch_utils.create_output_placeholder(scores, ks)
 
         for index, k in enumerate(ks):
             precisions[:, index] = torch.sum(topk_labels[:, : int(k)], dim=1) / float(k)
@@ -91,9 +86,9 @@ class RecallAt(RankingMetric):
             torch.Tensor: list of recalls at cutoffs
         """
 
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        _, _, topk_labels = _extract_topk(ks, scores, labels)
-        recalls = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        _, _, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        recalls = torch_utils.create_output_placeholder(scores, ks)
 
         # Compute recalls at K
         num_relevant = torch.sum(labels, dim=-1)
@@ -130,9 +125,9 @@ class AvgPrecisionAt(RankingMetric):
         Returns:
             torch.Tensor: list of average precisions at cutoffs
         """
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        topk_scores, _, topk_labels = _extract_topk(ks, scores, labels)
-        avg_precisions = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        topk_scores, _, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        avg_precisions = torch_utils.create_output_placeholder(scores, ks)
 
         # Compute average precisions at K
         num_relevant = torch.sum(labels, dim=1)
@@ -167,9 +162,9 @@ class DCGAt(RankingMetric):
         Returns:
             torch.Tensor: list of discounted cumulative gains at cutoffs
         """
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        topk_scores, topk_indices, topk_labels = _extract_topk(ks, scores, labels)
-        dcgs = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        topk_scores, topk_indices, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        dcgs = torch_utils.create_output_placeholder(scores, ks)
 
         # Compute discounts
         discount_positions = torch.arange(ks.max().item()).to(
@@ -211,8 +206,8 @@ class NDCGAt(RankingMetric):
         Returns:
             torch.Tensor: list of discounted cumulative gains at cutoffs
         """
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        topk_scores, topk_indices, topk_labels = _extract_topk(ks, scores, labels)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        topk_scores, topk_indices, topk_labels = torch_utils.extract_topk(ks, scores, labels)
         # ndcgs = _create_output_placeholder(scores, ks) #TODO track if this line is needed
 
         # Compute discounted cumulative gains
