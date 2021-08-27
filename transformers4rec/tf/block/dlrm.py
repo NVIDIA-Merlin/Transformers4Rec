@@ -68,7 +68,7 @@ class DLRMBlock(Block):
         embedding_layer = EmbeddingFeatures.from_schema(
             schema.select_by_tag(Tag.CATEGORICAL),
             infer_embedding_sizes=False,
-            default_embedding_dim=bottom_mlp.layers[-1].units,
+            embedding_dim_default=bottom_mlp.layers[-1].units,
         )
 
         continuous_features = ContinuousFeatures.from_schema(

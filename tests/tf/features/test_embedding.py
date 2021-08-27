@@ -34,7 +34,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, tf_yoochoose
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = tf4rec.EmbeddingFeatures.from_schema(
-        schema, embedding_dims={"item_id/list": 100}, default_embedding_dim=64
+        schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
     )
 
     embeddings = emb_module(tf_yoochoose_like)
