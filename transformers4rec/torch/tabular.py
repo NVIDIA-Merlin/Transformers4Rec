@@ -6,6 +6,7 @@ from ..types import DatasetSchema
 from . import aggregation as agg
 from . import augmentation as aug
 from .typing import TabularData
+from .utils.torch_utils import OutputSizeMixin
 
 
 class TabularModule(torch.nn.Module):
@@ -148,8 +149,13 @@ class TabularModule(torch.nn.Module):
 
         return outputs
 
+    def __rrshift__(self, other):
+        from .block.base import right_shift_block
 
-class FilterFeatures(torch.nn.Module):
+        return right_shift_block(self, other)
+
+
+class FilterFeatures(torch.nn.Module, OutputSizeMixin):
     def __init__(self, to_include, pop=False):
         super().__init__()
         self.to_include = to_include
@@ -170,7 +176,7 @@ class FilterFeatures(torch.nn.Module):
 
 
 def merge_tabular(self, other, **kwargs):
-    from .block.base import MergeTabular
+    from .block.tabular import MergeTabular
 
     return MergeTabular(self, other)
 

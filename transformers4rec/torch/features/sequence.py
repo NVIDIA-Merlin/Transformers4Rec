@@ -4,8 +4,9 @@ import torch
 
 from ...types import DatasetSchema, DefaultTags, Tag
 from ...utils.masking import MaskSequence
-from ..block.base import AsTabular, BuildableBlock, SequentialBlock
+from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
+from ..block.tabular import AsTabular
 from ..masking import masking_registry
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig

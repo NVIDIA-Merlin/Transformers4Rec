@@ -25,11 +25,16 @@ from typing import Any, Dict
 logger = logging.getLogger(__name__)
 
 
-def filter_kwargs(kwargs, thing_with_kwargs):
+def filter_kwargs(kwargs, thing_with_kwargs, filter_positional_or_keyword=True):
     sig = inspect.signature(thing_with_kwargs)
-    filter_keys = [
-        param.name for param in sig.parameters.values() if param.kind == param.POSITIONAL_OR_KEYWORD
-    ]
+    if filter_positional_or_keyword:
+        filter_keys = [
+            param.name
+            for param in sig.parameters.values()
+            if param.kind == param.POSITIONAL_OR_KEYWORD
+        ]
+    else:
+        filter_keys = [param.name for param in sig.parameters.values()]
     filtered_dict = {
         filter_key: kwargs[filter_key] for filter_key in filter_keys if filter_key in kwargs
     }

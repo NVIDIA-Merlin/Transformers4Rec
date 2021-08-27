@@ -16,17 +16,9 @@
 
 from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
 from .augmentation import StochasticSwapNoise
-from .block.base import (
-    AsTabular,
-    Block,
-    BlockBase,
-    MergeTabular,
-    SequentialBlock,
-    TabularBlock,
-    build_blocks,
-    right_shift_block,
-)
+from .block.base import Block, BlockBase, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
+from .block.tabular import AsTabular, MergeTabular, TabularBlock
 from .block.transformer import TransformerBlock
 from .features.continuous import ContinuousFeatures
 from .features.embedding import (

@@ -1,8 +1,9 @@
 from typing import List, Optional, Union
 
 from ...types import DatasetSchema, DefaultTags, Tag
-from ..block.base import AsTabular, MergeTabular, SequentialBlock
+from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
+from ..block.tabular import AsTabular, MergeTabular
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
