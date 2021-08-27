@@ -30,6 +30,28 @@ def test_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
     )
 
 
+def test_sequential_tabular_features_with_feature_modules_kwargs(
+    yoochoose_schema, torch_yoochoose_like
+):
+    schema = yoochoose_schema
+    EMB_DIM = 200
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
+        schema,
+        embedding_dim_default=EMB_DIM,
+    )
+
+    outputs = tab_module(torch_yoochoose_like)
+
+    assert (
+        list(outputs.keys())
+        == schema.select_by_tag(Tag.CONTINUOUS).column_names
+        + schema.select_by_tag(Tag.CATEGORICAL).column_names
+    )
+
+    categ_features = schema.select_by_tag(Tag.CATEGORICAL).column_names
+    assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
+
+
 def test_sequential_tabular_features_with_projection(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(
