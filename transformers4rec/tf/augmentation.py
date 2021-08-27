@@ -40,12 +40,32 @@ class StochasticSwapNoise(DataAugmentation):
         self.replacement_prob = replacement_prob
 
     def augment(self, input_tensor: tf.Tensor, **kwargs) -> tf.Tensor:
-        mask_matrix = backend.random_binomial(
-            array_ops.shape(input_tensor), p=self.replacement_prob
-        )
-        swaps = tf.gather(input_tensor, tf.random.shuffle(tf.range(tf.shape(input_tensor)[0])))
-        output = tf.where(
-            (mask_matrix == 1) & (input_tensor != self.pad_token), swaps, input_tensor
+        mask = tf.cast(input_tensor != self.pad_token, tf.int32)
+        replacement_mask_matrix = (
+            tf.cast(
+                backend.random_binomial(array_ops.shape(input_tensor), p=self.replacement_prob),
+                tf.int32,
+            )
+            * mask
         )
 
-        return output
+        n_values_to_replace = tf.reduce_sum(replacement_mask_matrix)
+
+        input_flattened_non_zero = tf.boolean_mask(
+            input_tensor, tf.cast(replacement_mask_matrix, tf.bool)
+        )
+
+        sampled_values_to_replace = tf.gather(
+            input_flattened_non_zero,
+            tf.random.shuffle(tf.range(tf.shape(input_flattened_non_zero)[0]))[
+                :n_values_to_replace
+            ],
+        )
+
+        replacement_indices = tf.sparse.from_dense(replacement_mask_matrix).indices
+
+        output_tensor = tf.tensor_scatter_nd_update(
+            input_tensor, replacement_indices, sampled_values_to_replace
+        )
+
+        return output_tensor

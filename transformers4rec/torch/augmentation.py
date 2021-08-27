@@ -38,23 +38,22 @@ class StochasticSwapNoise(DataAugmentation):
 
     def augment(self, input_tensor: torch.Tensor, **kwargs) -> torch.Tensor:
         with torch.no_grad():
-            cdata_non_zero_mask = input_tensor != self.pad_token
+            padded_mask = input_tensor != self.pad_token
             sse_prob_replacement_matrix = torch.full(
                 input_tensor.shape,
                 self.replacement_prob,
                 device=input_tensor.device,
             )
-            sse_replacement_mask = (
-                torch.bernoulli(sse_prob_replacement_matrix).bool() & cdata_non_zero_mask
-            )
+            sse_replacement_mask = torch.bernoulli(sse_prob_replacement_matrix).bool() & padded_mask
             n_values_to_replace = sse_replacement_mask.sum()
 
-            cdata_flattened_non_zero = torch.masked_select(input_tensor, cdata_non_zero_mask)
+            input_flattened_non_zero = torch.masked_select(input_tensor, padded_mask)
 
-            sampled_values_to_replace = cdata_flattened_non_zero[
-                torch.randperm(cdata_flattened_non_zero.shape[0])
+            sampled_values_to_replace = input_flattened_non_zero[
+                torch.randperm(input_flattened_non_zero.shape[0])
             ][:n_values_to_replace]
 
-            input_tensor[sse_replacement_mask] = sampled_values_to_replace
+            output_tensor = input_tensor.clone()
+            output_tensor[sse_replacement_mask] = sampled_values_to_replace
 
-        return input_tensor
+        return output_tensor
