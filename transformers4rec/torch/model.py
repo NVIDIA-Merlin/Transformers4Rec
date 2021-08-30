@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from .features.sequence import TabularSequenceFeatures
 from .head import Head
 from .typing import TensorOrTabularData
 
@@ -16,8 +17,12 @@ class Model(torch.nn.Module):
         head_weights: Optional[List[float]] = None,
         head_reduction: Optional[str] = "mean",
         optimizer=torch.optim.Adam,
+        device=None,
         name=None
     ):
+        """
+        #TODO
+        """
         if head_weights:
             if not isinstance(head_weights, list):
                 raise ValueError("`head_weights` must be a list")
@@ -33,6 +38,12 @@ class Model(torch.nn.Module):
         self.head_weights = head_weights or [1.0] * len(head)
         self.head_reduction = head_reduction
         self.optimizer = optimizer
+        # Move heads to specified device
+        self.heads.to(device)
+        # Set the device for masking modules
+        for head in self.heads:
+            if isinstance(head.body.inputs, TabularSequenceFeatures) and head.body.inputs.masking:
+                head.body.inputs.masking.device = device
 
     def forward(self, inputs: TensorOrTabularData, **kwargs):
         # TODO: Optimize this
