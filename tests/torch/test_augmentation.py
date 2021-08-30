@@ -31,19 +31,12 @@ def test_stochastic_swap_noise(replacement_prob):
         assert replacement_rate == pytest.approx(replacement_prob, abs=0.1)
 
 
-@pytest.mark.skip(
-    reason="Temporarilly skipped because it expects embedding features to be 3D "
-    " (batch_size x seq_len x embedding dim) but they are currently 2D because "
-    " of embedding bag combiner eliminates the seq_len dim."
-    "We need an option to disable the multi-hot behaviour (combiner of embedding bag)"
-    "to support sequential features."
-)
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
 def test_stochastic_swap_noise_with_tabular_features(
     yoochoose_schema, torch_yoochoose_like, replacement_prob
 ):
     inputs = torch_yoochoose_like
-    tab_module = torch4rec.TabularFeatures.from_schema(yoochoose_schema)
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(yoochoose_schema)
     out_features = tab_module(inputs)
 
     PAD_TOKEN = 0
