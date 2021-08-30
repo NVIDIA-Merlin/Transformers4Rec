@@ -120,6 +120,7 @@ class PyarrowDataLoaderBuilder(DataLoaderBuilder, PyTorchDataLoader):
         continuous_features=None,
         categorical_features=None,
         targets=None,
+        shuffle=False,
         shuffle_buffer_size=0,
         num_workers=1,
         pin_memory=True,
@@ -140,6 +141,7 @@ class PyarrowDataLoaderBuilder(DataLoaderBuilder, PyTorchDataLoader):
             conts=continuous_features,
             cats=categorical_features,
             labels=targets,
+            shuffle=shuffle,
             shuffle_buffer_size=0,
             num_workers=1,
             pin_memory=True,
@@ -164,6 +166,7 @@ if nvtabular is not None:
             self,
             paths_or_dataset,
             batch_size,
+            max_sequence_length,
             conts=None,
             cats=None,
             labels=None,
@@ -216,6 +219,7 @@ if nvtabular is not None:
                 drop_last=self.drop_last,
             )
             self.schema = schema
+            self.max_sequence_length = max_sequence_length
 
         def set_dataset(self, buffer_size, engine, reader_kwargs):
             dataset = _validate_dataset(
@@ -233,6 +237,7 @@ if nvtabular is not None:
             schema: DatasetSchema,
             paths_or_dataset,
             batch_size,
+            max_sequence_length,
             continuous_features=None,
             categorical_features=None,
             targets=None,
@@ -242,6 +247,8 @@ if nvtabular is not None:
             parts_per_chunk=1,
             separate_labels=True,
             named_labels=False,
+            sparse_names=None,
+            sparse_max=None,
             **kwargs,
         ):
             categorical_features = (
@@ -252,9 +259,13 @@ if nvtabular is not None:
             )
             targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
+            sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
+            sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
+
             nvt_loader = cls(
                 paths_or_dataset,
                 batch_size=batch_size,
+                max_sequence_length=max_sequence_length,
                 labels=targets if separate_labels else [],
                 cats=categorical_features if separate_labels else categorical_features + targets,
                 conts=continuous_features,
@@ -263,6 +274,8 @@ if nvtabular is not None:
                 shuffle=shuffle,
                 buffer_size=buffer_size,  # how many batches to load at once
                 parts_per_chunk=parts_per_chunk,
+                sparse_names=sparse_names,
+                sparse_max=sparse_max,
                 schema=schema,
                 **kwargs,
             )
