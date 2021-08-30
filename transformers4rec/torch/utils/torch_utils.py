@@ -20,6 +20,11 @@ class OutputSizeMixin(abc.ABC):
     def forward_output_size(self, input_size):
         raise NotImplementedError()
 
+    def __rrshift__(self, other):
+        from ..block.base import right_shift_block
+
+        return right_shift_block(self, other)
+
 
 def check_gpu(module):
     try:

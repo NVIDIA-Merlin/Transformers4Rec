@@ -6,7 +6,7 @@ from ...types import DatasetSchema, DefaultTags, Tag
 from ...utils.masking import MaskSequence
 from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
-from ..block.tabular import AsTabular
+from ..block.tabular.tabular import AsTabular
 from ..masking import masking_registry
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
@@ -46,9 +46,18 @@ class TabularSequenceFeatures(TabularFeatures):
         text_embedding_module=None,
         projection_module=None,
         masking=None,
+        pre=None,
+        post=None,
         aggregation=None,
     ):
-        super().__init__(continuous_module, categorical_module, text_embedding_module, aggregation)
+        super().__init__(
+            continuous_module,
+            categorical_module,
+            text_embedding_module,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+        )
         if masking:
             self.masking = masking
         self.projection_module = projection_module
@@ -197,7 +206,7 @@ class TabularSequenceFeatures(TabularFeatures):
         for in_layer in self.merge_values:
             output_sizes.update(in_layer.forward_output_size(input_size))
 
-        output_sizes = self._check_aggregation_output_size(output_sizes)
+        output_sizes = self._check_post_output_size(output_sizes)
 
         if self.projection_module:
             output_sizes = self.projection_module.output_size()

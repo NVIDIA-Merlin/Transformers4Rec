@@ -3,44 +3,25 @@ from typing import Any, Callable, Dict, Optional, Text, Union
 
 import torch
 
-from transformers4rec.torch.utils.torch_utils import (
-    calculate_batch_size_from_input_size,
-    get_output_sizes_from_schema,
-)
-
 from ...types import DatasetSchema, DefaultTags
-from ..tabular import FilterFeatures, TabularModule
+from ..block.tabular.tabular import FilterFeatures, TabularModule
 from ..typing import TabularData
+from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
 from .base import InputBlock
 
 
-class EmbeddingModule(InputBlock):
-    def __init__(self, aggregation=None, augmentation=None, **kwargs):
-        super().__init__(aggregation, augmentation)
-        self.normalization = None
-
-    def add_normalization(self, feature_config: Dict[str, "FeatureConfig"]):
-        self.normalization = LayerNormalizationFeatures.from_feature_config(feature_config)
-
-    def forward(self, inputs, **kwargs):
-        if self.normalization:
-            return self.normalization(inputs)
-
-        return inputs
-
-
-class EmbeddingFeatures(EmbeddingModule):
+class EmbeddingFeatures(InputBlock):
     def __init__(
         self,
         feature_config: Dict[str, "FeatureConfig"],
         item_id: Optional[str] = None,
-        layer_norm: bool = False,
-        **kwargs,
+        aggregation=None,
+        pre=None,
+        post=None,
     ):
-        super().__init__(**kwargs)
+        super().__init__(pre=pre, post=post, aggregation=aggregation)
         self.item_id = item_id
         self.feature_config = feature_config
-        self.layer_norm = layer_norm
         self.filter_features = FilterFeatures(list(feature_config.keys()))
 
         embedding_tables = {}
@@ -56,9 +37,6 @@ class EmbeddingFeatures(EmbeddingModule):
             embedding_tables[name] = self.table_to_embedding_module(table)
 
         self.embedding_tables = torch.nn.ModuleDict(embedding_tables)
-
-        if layer_norm:
-            self.add_normalization(feature_config)
 
     @property
     def item_embedding_table(self):
@@ -84,12 +62,14 @@ class EmbeddingFeatures(EmbeddingModule):
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
-        layer_norm: bool = False,
         combiner: Optional[str] = "mean",
         tags: Optional[Union[DefaultTags, list, str]] = None,
         item_id: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
+        aggregation=None,
+        pre=None,
+        post=None,
         **kwargs,
     ) -> Optional["EmbeddingFeatures"]:
         """Instantitates ``EmbeddingFeatures`` from a ``DatasetSchema``.
@@ -165,7 +145,7 @@ class EmbeddingFeatures(EmbeddingModule):
         if not feature_config:
             return None
 
-        output = cls(feature_config, item_id=item_id, layer_norm=layer_norm, **kwargs)
+        output = cls(feature_config, item_id=item_id, pre=pre, post=post, aggregation=aggregation)
 
         if automatic_build and schema._schema:
             output.build(
@@ -227,9 +207,16 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         self,
         feature_config: Dict[str, "FeatureConfig"],
         layer_norm: bool = True,
-        **kwargs,
+        aggregation=None,
+        pre=None,
+        post=None,
     ):
-        super().__init__(feature_config, layer_norm=layer_norm, **kwargs)
+        if layer_norm:
+            from transformers4rec.torch import TabularLayerNorm
+
+            post = TabularLayerNorm.from_feature_config(feature_config)
+
+        super().__init__(feature_config, pre=pre, post=post, aggregation=aggregation)
 
     @classmethod
     def from_schema(

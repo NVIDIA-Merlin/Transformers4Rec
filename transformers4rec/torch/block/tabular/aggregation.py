@@ -1,54 +1,15 @@
-import abc
 from functools import reduce
 
 import torch
 
-from ..types import Tag
-from ..utils.registry import Registry
-from .typing import TabularData
-from .utils.torch_utils import calculate_batch_size_from_input_size
+from transformers4rec.utils.tags import Tag
 
-aggregation_registry: Registry = Registry.class_registry("torch.aggregation_registry")
+from ...utils.torch_utils import calculate_batch_size_from_input_size
+from .tabular import TabularAggregation, tabular_aggregation_registry
 
 
-class FeatureAggregation(torch.nn.Module):
-    def __rrshift__(self, other):
-        from .block.base import right_shift_block
-
-        return right_shift_block(self, other)
-
-    def forward(self, inputs: TabularData) -> torch.tensor:
-        return super(FeatureAggregation, self).forward(inputs)
-
-    @abc.abstractmethod
-    def forward_output_size(self, input_size):
-        raise NotImplementedError
-
-    def build(self, input_size, device=None):
-        if device:
-            self.to(device)
-        self.input_size = input_size
-
-        return self
-
-    def output_size(self):
-        if not self.input_size:
-            # TODO: log warning here
-            pass
-
-        return self.forward_output_size(self.input_size)
-
-    @property
-    def schema(self):
-        return self._schema
-
-    @schema.setter
-    def schema(self, value):
-        self._schema = value
-
-
-@aggregation_registry.register("concat")
-class ConcatFeatures(FeatureAggregation):
+@tabular_aggregation_registry.register("concat")
+class ConcatFeatures(TabularAggregation):
     def __init__(self, axis=-1):
         super().__init__()
         self.axis = axis
@@ -66,8 +27,8 @@ class ConcatFeatures(FeatureAggregation):
         return batch_size, sum([i[1] for i in input_size.values()])
 
 
-@aggregation_registry.register("sequential_concat")
-class SequentialConcatFeatures(FeatureAggregation):
+@tabular_aggregation_registry.register("sequential_concat")
+class SequentialConcatFeatures(TabularAggregation):
     def forward(self, inputs):
         tensors = []
         for name in sorted(inputs.keys()):
@@ -94,8 +55,8 @@ class SequentialConcatFeatures(FeatureAggregation):
         )
 
 
-@aggregation_registry.register("stack")
-class StackFeatures(FeatureAggregation):
+@tabular_aggregation_registry.register("stack")
+class StackFeatures(TabularAggregation):
     def __init__(self, axis=-1):
         super().__init__()
         self.axis = axis
@@ -114,7 +75,7 @@ class StackFeatures(FeatureAggregation):
         return batch_size, len(input_size), last_dim
 
 
-class ElementwiseFeatureAggregation(FeatureAggregation):
+class ElementwiseFeatureAggregation(TabularAggregation):
     def _check_input_shapes_equal(self, inputs):
         all_input_shapes_equal = reduce((lambda a, b: a.shape == b.shape), inputs.values())
         if not all_input_shapes_equal:
@@ -124,7 +85,7 @@ class ElementwiseFeatureAggregation(FeatureAggregation):
             )
 
 
-@aggregation_registry.register("element-wise-sum")
+@tabular_aggregation_registry.register("element-wise-sum")
 class ElementwiseSum(ElementwiseFeatureAggregation):
     def __init__(self):
         super().__init__()
@@ -141,7 +102,7 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
         return batch_size, last_dim
 
 
-@aggregation_registry.register("element-wise-sum-item-multi")
+@tabular_aggregation_registry.register("element-wise-sum-item-multi")
 class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
     def __init__(self, schema=None):
         super().__init__()

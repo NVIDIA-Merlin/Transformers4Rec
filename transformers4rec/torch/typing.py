@@ -29,6 +29,9 @@ BlockWithHead = ForwardRef("transformers4rec.torch.block.with_head.BlockWithHead
 BlockType = typing.Union[Block, BuildableBlock]
 BlockOrModule = typing.Union[Block, BuildableBlock, torch.nn.Module]
 
+FeatureConfig = ForwardRef("transformers4rec.torch.features.embedding.FeatureConfig")
+TableConfig = ForwardRef("transformers4rec.torch.features.embedding.TableConfig")
+
 
 Head = ForwardRef("transformers4rec.torch.head.Head")
 PredictionTask = ForwardRef("transformers4rec.torch.head.PredictionTask")
@@ -45,8 +48,9 @@ __all__ = [
     "BlockType",
     "BlockOrModule",
     "SequentialBlock",
+    "TableConfig",
+    "FeatureConfig",
     "BuildableBlock",
-    "BlockWithHead",
     "Head",
     "PredictionTask",
 ]

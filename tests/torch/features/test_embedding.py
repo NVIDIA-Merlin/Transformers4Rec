@@ -28,7 +28,8 @@ def test_embedding_features_layernorm(torch_cat_features):
         for f in torch_cat_features.keys()
     }
 
-    embeddings = torch4rec.EmbeddingFeatures(feature_config, layer_norm=True)(torch_cat_features)
+    layer_norm = torch4rec.TabularLayerNorm.from_feature_config(feature_config)
+    embeddings = torch4rec.EmbeddingFeatures(feature_config, post=layer_norm)(torch_cat_features)
     assert all(
         [emb.detach().numpy().mean() == pytest.approx(0.0, abs=0.1) for emb in embeddings.values()]
     )
@@ -45,7 +46,7 @@ def test_embedding_features_custom_init(torch_cat_features):
         )
         for f in torch_cat_features.keys()
     }
-    embeddings = torch4rec.EmbeddingFeatures(feature_config, layer_norm=False)(torch_cat_features)
+    embeddings = torch4rec.EmbeddingFeatures(feature_config)(torch_cat_features)
 
     assert list(embeddings.keys()) == list(feature_config.keys())
     assert all(

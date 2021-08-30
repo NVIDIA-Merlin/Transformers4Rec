@@ -1,10 +1,10 @@
-from ..tabular import FilterFeatures
+from ..block.tabular.tabular import FilterFeatures
 from .base import InputBlock
 
 
 class ContinuousFeatures(InputBlock):
-    def __init__(self, features, aggregation=None, augmentation=None, **kwargs):
-        super().__init__(aggregation=aggregation, augmentation=augmentation)
+    def __init__(self, features, aggregation=None, pre=None, post=None, **kwargs):
+        super().__init__(aggregation=aggregation, pre=pre, post=post)
         self.filter_features = FilterFeatures(features)
 
     @classmethod

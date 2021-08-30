@@ -14,12 +14,29 @@
 # limitations under the License.
 #
 
-from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
-from .augmentation import StochasticSwapNoise
+# Block related imports
 from .block.base import Block, BlockBase, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
-from .block.tabular import AsTabular, MergeTabular, TabularBlock
+from .block.tabular.aggregation import (
+    ConcatFeatures,
+    ElementwiseSum,
+    ElementwiseSumItemMulti,
+    StackFeatures,
+)
+from .block.tabular.augmentation import StochasticSwapNoise, TabularLayerNorm
+from .block.tabular.tabular import (
+    AsTabular,
+    FilterFeatures,
+    MergeTabular,
+    TabularAggregation,
+    TabularBlock,
+    TabularModule,
+    TabularTransformation,
+    TabularTransformations,
+)
 from .block.transformer import TransformerBlock
+
+# Features related imports
 from .features.continuous import ContinuousFeatures
 from .features.embedding import (
     EmbeddingFeatures,
@@ -31,15 +48,16 @@ from .features.embedding import (
 )
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
-from .head import (
+
+# Model related imports
+from .model.head import (
     BinaryClassificationTask,
     Head,
     NextItemPredictionTask,
     PredictionTask,
     RegressionTask,
 )
-from .model import Model
-from .tabular import FilterFeatures, TabularModule
+from .model.model import Model
 
 __all__ = [
     "SequentialBlock",
@@ -49,7 +67,11 @@ __all__ = [
     "TabularBlock",
     "Block",
     "MLPBlock",
+    "TabularTransformation",
+    "TabularTransformations",
+    "TabularAggregation",
     "StochasticSwapNoise",
+    "TabularLayerNorm",
     "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",

@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 from ...types import DatasetSchema, DefaultTags, Tag
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..block.tabular import AsTabular, MergeTabular
+from ..block.tabular.tabular import AsTabular, MergeTabular
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
@@ -19,8 +19,9 @@ class TabularFeatures(MergeTabular):
         continuous_module=None,
         categorical_module=None,
         text_embedding_module=None,
+        pre=None,
+        post=None,
         aggregation=None,
-        augmentation=None,
     ):
         to_merge = {}
         if continuous_module:
@@ -31,9 +32,7 @@ class TabularFeatures(MergeTabular):
             to_merge["text_embedding_module"] = text_embedding_module
 
         assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(
-            to_merge, aggregation=aggregation, augmentation=augmentation
-        )
+        super(TabularFeatures, self).__init__(to_merge, pre=pre, post=post, aggregation=aggregation)
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]

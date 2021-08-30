@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
+from ..typing import TensorOrTabularData
 from .head import Head
-from .typing import TensorOrTabularData
 
 
 class Model(torch.nn.Module):

@@ -7,10 +7,10 @@ import torch
 import torchmetrics as tm
 from transformers.modeling_utils import SequenceSummary
 
-from ..types import DatasetSchema
-from ..utils.tags import Tag
-from .block.base import Block, BuildableBlock, SequentialBlock
-from .typing import BlockOrModule, BlockType
+from ...types import DatasetSchema
+from ...utils.tags import Tag
+from ..block.base import Block, BuildableBlock, SequentialBlock
+from ..typing import BlockOrModule, BlockType
 
 
 class PredictionTask(torch.nn.Module):

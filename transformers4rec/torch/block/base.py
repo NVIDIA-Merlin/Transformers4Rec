@@ -8,7 +8,6 @@ import torch
 from torch.nn import Module
 
 from ...utils.misc_utils import filter_kwargs
-from ..tabular import FilterFeatures, merge_tabular
 from ..typing import Head, PredictionTask
 from ..utils import torch_utils
 
@@ -17,8 +16,9 @@ LOG = logging.getLogger("transformers4rec")
 
 class BlockBase(torch.nn.Module, torch_utils.OutputSizeMixin, metaclass=abc.ABCMeta):
     def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
-        from ..head import Head, PredictionTask
-        from ..model import Model
+        from transformers4rec.torch.model.head import Head, PredictionTask
+
+        from ..model.model import Model
 
         if isinstance(prediction_task_or_head, PredictionTask):
             head = prediction_task_or_head.to_head(self, inputs=inputs, **kwargs)
@@ -100,6 +100,8 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
             return first
 
     def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
+        from .tabular.tabular import FilterFeatures
+
         if isinstance(module, list):
             module = FilterFeatures(module)
         super().add_module(name, module)
@@ -142,6 +144,8 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return SequentialBlock(self, AsTabular(name))
 
     def __add__(self, other):
+        from .tabular.tabular import merge_tabular
+
         return merge_tabular(self, other)
 
     def forward_output_size(self, input_size):
@@ -199,6 +203,8 @@ class BuildableBlock(abc.ABC):
 
 
 def right_shift_block(self, other):
+    from .tabular.tabular import FilterFeatures
+
     if isinstance(other, list):
         left_side = [FilterFeatures(other)]
     else:
