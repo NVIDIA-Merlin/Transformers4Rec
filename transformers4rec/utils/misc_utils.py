@@ -22,6 +22,13 @@ import sys
 import time
 from typing import Any, Dict
 
+try:
+    import nvtabular
+    from nvtabular.io.dataset import Dataset
+
+except ImportError:
+    nvtabular = None
+
 logger = logging.getLogger(__name__)
 
 
@@ -168,3 +175,43 @@ def get_object_size(obj, seen=None):
     elif hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes, bytearray)):
         size += sum([get_object_size(i, seen) for i in obj])
     return size
+
+
+def _validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs):
+    # TODO: put this in parent class and allow
+    # torch dataset to leverage as well?
+
+    # if a dataset was passed, just return it
+    if isinstance(paths_or_dataset, Dataset):
+        return paths_or_dataset
+
+    # otherwise initialize a dataset
+    # from paths or glob pattern
+    if isinstance(paths_or_dataset, str):
+        files = glob.glob(paths_or_dataset)
+        _is_empty_msg = "Couldn't find file pattern {} in directory {}".format(
+            *os.path.split(paths_or_dataset)
+        )
+    else:
+        # TODO: some checking around attribute
+        # error here?
+        files = list(paths_or_dataset)
+        _is_empty_msg = "paths_or_dataset list must contain at least one filename"
+
+    assert isinstance(files, list)
+    if len(files) == 0:
+        raise ValueError(_is_empty_msg)
+
+    # implement buffer size logic
+    # TODO: IMPORTANT
+    # should we divide everything by 3 to account
+    # for extra copies laying around due to asynchronicity?
+    reader_kwargs = reader_kwargs or {}
+    if buffer_size >= 1:
+        if buffer_size < batch_size:
+            reader_kwargs["batch_size"] = int(batch_size * buffer_size)
+        else:
+            reader_kwargs["batch_size"] = buffer_size
+    else:
+        reader_kwargs["part_mem_fraction"] = buffer_size
+    return Dataset(files, engine=engine, **reader_kwargs)

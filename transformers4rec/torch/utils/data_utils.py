@@ -16,10 +16,10 @@ except ImportError:
 
 try:
     import nvtabular
-    from nvtabular.loader.tensorflow import _validate_dataset
     from nvtabular.loader.torch import DLDataLoader
 
     from transformers4rec.torch.data import DataLoader
+    from transformers4rec.utils.misc_utils import _validate_dataset
 
 except ImportError:
     nvtabular = None
