@@ -1,5 +1,7 @@
 import pytest
 
+from transformers4rec.utils.tags import Tag
+
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
@@ -54,3 +56,17 @@ def test_stochastic_swap_noise_with_tabular_features(
         replaced_mask_non_padded = pytorch.masked_select(replaced_mask, feat_non_padding_mask)
         replacement_rate = replaced_mask_non_padded.float().mean()
         assert replacement_rate == pytest.approx(replacement_prob, abs=0.1)
+
+
+@pytest.mark.parametrize("layer_norm", ["layer-norm", torch4rec.TabularLayerNorm()])
+def test_layer_norm(yoochoose_schema, torch_yoochoose_like, layer_norm):
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+
+    emb_module = torch4rec.EmbeddingFeatures.from_schema(
+        schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64, post=layer_norm
+    )
+
+    out = emb_module(torch_yoochoose_like)
+
+    assert list(out["item_id/list"].shape) == [100, 100]
+    assert list(out["category/list"].shape) == [100, 64]

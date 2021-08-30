@@ -313,14 +313,17 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         return output_size
 
     def build(self, input_size, **kwargs):
+        output_size = input_size
         if self.pre:
-            self.pre.build(input_size, **kwargs)
+            output_size = self.pre.output_size(self.pre.build(input_size, **kwargs))
+
+        output_size = self.forward_output_size(output_size)
 
         if self.post:
-            self.post.build(input_size, **kwargs)
+            output_size = self.post.output_size(self.post.build(output_size, **kwargs))
 
         if self.aggregation:
-            self.aggregation.build(input_size, **kwargs)
+            self.aggregation.build(output_size, **kwargs)
 
         return super().build(input_size, **kwargs)
 
