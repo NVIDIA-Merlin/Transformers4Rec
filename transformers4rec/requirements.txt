@@ -1,4 +1,0 @@
-transformers==4.6.0
-wandb 
-pyyaml
-git+https://github.com/NVIDIA/dllogger.git
