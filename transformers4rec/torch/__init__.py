@@ -23,7 +23,6 @@ from .block.tabular.aggregation import (
     ElementwiseSumItemMulti,
     StackFeatures,
 )
-from .block.tabular.augmentation import StochasticSwapNoise, TabularLayerNorm
 from .block.tabular.tabular import (
     AsTabular,
     FilterFeatures,
@@ -34,6 +33,7 @@ from .block.tabular.tabular import (
     TabularTransformation,
     TabularTransformations,
 )
+from .block.tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .block.transformer import TransformerBlock
 
 # Features related imports
