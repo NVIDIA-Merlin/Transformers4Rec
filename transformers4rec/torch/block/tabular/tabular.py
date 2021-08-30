@@ -7,41 +7,25 @@ import torch
 from ....types import DatasetSchema
 from ....utils.registry import Registry
 from ...typing import TabularData, TensorOrTabularData
-from ...utils.torch_utils import OutputSizeMixin
+from ...utils.torch_utils import OutputSizeMixin, SchemaMixin
 from ..base import BlockBase, SequentialBlock, right_shift_block
 
 tabular_transformation_registry: Registry = Registry.class_registry("torch.tabular_transformations")
 tabular_aggregation_registry: Registry = Registry.class_registry("torch.tabular_aggregations")
 
 
-class TabularTransformation(torch.nn.Module, OutputSizeMixin, ABC):
+class TabularTransformation(torch.nn.Module, OutputSizeMixin, SchemaMixin, ABC):
     def forward(self, inputs: TabularData, **kwargs) -> TabularData:
         raise NotImplementedError()
-
-    @property
-    def schema(self):
-        return self._schema
-
-    @schema.setter
-    def schema(self, value):
-        self._schema = value
 
     @classmethod
     def parse(cls, class_or_str):
         return tabular_transformation_registry.parse(class_or_str)
 
 
-class TabularAggregation(torch.nn.Module, OutputSizeMixin, ABC):
+class TabularAggregation(torch.nn.Module, OutputSizeMixin, SchemaMixin, ABC):
     def forward(self, inputs: TabularData) -> torch.Tensor:
         raise NotImplementedError()
-
-    @property
-    def schema(self):
-        return self._schema
-
-    @schema.setter
-    def schema(self, value):
-        self._schema = value
 
     @classmethod
     def parse(cls, class_or_str):

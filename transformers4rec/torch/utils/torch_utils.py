@@ -1,6 +1,10 @@
 import abc
+from typing import Optional
 
 import torch
+
+from ...types import Tag
+from ..typing import TabularData
 
 
 class OutputSizeMixin(abc.ABC):
@@ -24,6 +28,42 @@ class OutputSizeMixin(abc.ABC):
         from ..block.base import right_shift_block
 
         return right_shift_block(self, other)
+
+
+class SchemaMixin:
+    @property
+    def schema(self):
+        return getattr(self, "_schema", None)
+
+    @schema.setter
+    def schema(self, value):
+        self._schema = value
+
+    @property
+    def item_id_column_name(self):
+        if not hasattr(self, "_item_id_column_name"):
+            if self.schema is None:
+                raise ValueError(
+                    "The schema is necessary to infer the item id column name, "
+                    "but it has not been set."
+                )
+
+            item_id_col = self.schema.select_by_tag(Tag.ITEM_ID)
+            if len(item_id_col.columns) == 0:
+                raise ValueError("There is no column tagged as item id.")
+
+            self._item_id_column_name = item_id_col.column_names[0]
+
+        return self._item_id_column_name
+
+    def get_item_ids(self, inputs: TabularData):
+        return inputs[self.item_id_column_name]
+
+    def get_mask(self, inputs: TabularData, mask_token=0) -> Optional[torch.Tensor]:
+        if self.item_id_column_name:
+            return self.get_item_ids(inputs) != mask_token
+
+        return None
 
 
 def check_gpu(module):

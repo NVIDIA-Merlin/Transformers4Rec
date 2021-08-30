@@ -12,34 +12,38 @@ class StochasticSwapNoise(TabularTransformation):
     Applies Stochastic replacement of sequence features
     """
 
-    def __init__(self, pad_token=0, replacement_prob=0.1):
+    def __init__(self, schema=None, pad_token=0, replacement_prob=0.1):
         super().__init__()
+        self.schema = schema
         self.pad_token = pad_token
         self.replacement_prob = replacement_prob
 
     def forward(self, inputs: TensorOrTabularData, **kwargs) -> TensorOrTabularData:
+        maybe_mask = self.get_mask(inputs, self.pad_token)
         if isinstance(inputs, dict):
-            return {key: self.augment(val) for key, val in inputs.items()}
+            return {key: self.augment(val, maybe_mask) for key, val in inputs.items()}
 
-        return self.augment(inputs)
+        return self.augment(inputs, maybe_mask)
 
     def forward_output_size(self, input_size):
         return input_size
 
-    def augment(self, input_tensor: torch.Tensor, **kwargs) -> torch.Tensor:
+    def augment(
+        self, input_tensor: torch.Tensor, mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
+        # TODO: make this work when `mask = None`
         with torch.no_grad():
-            cdata_non_zero_mask = input_tensor != self.pad_token
             sse_prob_replacement_matrix = torch.full(
                 input_tensor.shape,
                 self.replacement_prob,
                 device=input_tensor.device,
             )
-            sse_replacement_mask = (
-                torch.bernoulli(sse_prob_replacement_matrix).bool() & cdata_non_zero_mask
-            )
+            sse_replacement_mask = torch.bernoulli(sse_prob_replacement_matrix).bool()
+            if mask is not None:
+                sse_replacement_mask = sse_replacement_mask & mask
             n_values_to_replace = sse_replacement_mask.sum()
 
-            cdata_flattened_non_zero = torch.masked_select(input_tensor, cdata_non_zero_mask)
+            cdata_flattened_non_zero = torch.masked_select(input_tensor, mask)
 
             sampled_values_to_replace = cdata_flattened_non_zero[
                 torch.randperm(cdata_flattened_non_zero.shape[0])
