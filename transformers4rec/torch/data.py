@@ -22,7 +22,6 @@ import torch
 # from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tensorflow import _validate_dataset
 from nvtabular.loader.torch import TorchAsyncItr as BaseDataLoader
-from torch.utils.dlpack import from_dlpack
 
 from ..utils.schema import DatasetSchema
 from ..utils.tags import Tag
@@ -214,68 +213,7 @@ class DataLoader(BaseDataLoader):
     def output_sizes(self) -> Dict[str, torch.Size]:
         return get_output_sizes_from_schema(self.schema, self.batch_size)
 
-    def __iter__(self):
-        return BaseDataLoader.__iter__(self)
-
-    def _get_device_ctx(self, dev):
-        if dev == "cpu":
-            return torch.device("cpu")
-        return torch.cuda.device("cuda:{}".format(dev))
-
-    def _pack(self, gdf):
-        if self.device == "cpu":
-            return gdf
-        return gdf.to_dlpack()
-
-    def _unpack(self, dlpack):
-        if self.device == "cpu":
-            return torch.Tensor(dlpack.values).squeeze(1)
-        return from_dlpack(dlpack)
-
-    def _to_tensor(self, gdf, dtype=None):
-        dl_pack = self._pack(gdf)
-        tensor = self._unpack(dl_pack)
-        return tensor.type(dtype)
-
-    def _split_fn(self, tensor, idx, axis=0):
-        return torch.split(tensor, idx, dim=axis)
-
-    def _tensor_split(self, tensor, idx, axis=0):
-        return torch.tensor_split(tensor, idx, axis=axis)
-
-    @property
-    def _LONG_DTYPE(self):
-        return torch.long
-
-    @property
-    def _FLOAT32_DTYPE(self):
-        return torch.float32
-
-    def _pull_values_offsets(self, values_offset):
-        # pull_values_offsets, return values offsets diff_offsets
-        if isinstance(values_offset, tuple):
-            values = values_offset[0].flatten()
-            offsets = values_offset[1].flatten()
-        else:
-            values = values_offset.flatten()
-            offsets = torch.arange(values.size()[0], device=self.device)
-        num_rows = len(offsets)
-        offsets = torch.cat([offsets, torch.cuda.LongTensor([len(values)])])
-        diff_offsets = offsets[1:] - offsets[:-1]
-        return values, offsets, diff_offsets, num_rows
-
-    def _get_max_seq_len(self, diff_offsets):
-        return int(diff_offsets.max())
-
     # Building the indices to reconstruct the sparse tensors
-
-    def _get_indices(self, offsets, diff_offsets):
-        row_ids = torch.arange(len(offsets) - 1, device=self.device)
-        row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
-        row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
-        col_ids = torch.arange(len(row_offset_repeated), device=self.device) - row_offset_repeated
-        indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1)
-        return indices
 
     def _get_sparse_tensor(self, values, indices, num_rows, seq_limit):
         sparse_tensor = torch.sparse_coo_tensor(
@@ -285,12 +223,8 @@ class DataLoader(BaseDataLoader):
             sparse_tensor = sparse_tensor.to_dense()
         return sparse_tensor
 
-    def _build_sparse_tensor(self, values, offsets, diff_offsets, num_rows, seq_limit):
-        indices = self._get_indices(offsets, diff_offsets)
-        return self._get_sparse_tensor(values, indices, num_rows, seq_limit)
 
-
-class FastAIDataLoader(torch.utils.data.DataLoader):
+class DLDataLoader(torch.utils.data.DataLoader):
     """
     This class is an extension of the torch dataloader.
     It is required to support the FastAI framework.
