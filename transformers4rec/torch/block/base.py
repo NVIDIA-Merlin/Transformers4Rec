@@ -33,7 +33,7 @@ class BlockBase(torch.nn.Module, torch_utils.OutputSizeMixin, metaclass=abc.ABCM
         return Model(head, **kwargs)
 
     def as_tabular(self, name=None):
-        from .tabular import AsTabular
+        from .tabular.tabular import AsTabular
 
         if not name:
             name = self.name
@@ -138,7 +138,10 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
     def build(self, input_size, **kwargs):
         output_size = input_size
         for module in self:
-            output_size = module.forward_output_size(module.build(output_size))
+            if not hasattr(module, "build"):
+                break
+            module.build(output_size)
+            output_size = module.output_size()
 
         return super(SequentialBlock, self).build(input_size)
 

@@ -77,6 +77,8 @@ class TabularLayerNorm(TabularTransformation):
         return cls(features_dim)
 
     def forward(self, inputs: TabularData, **kwargs) -> TabularData:
+        if len(self.feature_layer_norm) == 0:
+            raise ValueError("`features_dim is empty.`")
         return {key: self.feature_layer_norm[key](val) for key, val in inputs.items()}
 
     def forward_output_size(self, input_size):
