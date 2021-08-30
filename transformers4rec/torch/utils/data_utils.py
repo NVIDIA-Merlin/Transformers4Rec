@@ -2,14 +2,17 @@ import logging
 from random import randint
 
 import numpy as np
-
-# Pyarrow dependencies
-import pyarrow.parquet as pq
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
 from transformers4rec.utils.schema import DatasetSchema
 from transformers4rec.utils.tags import Tag
+
+try:
+    import pyarrow
+    import pyarrow.parquet as pq
+except ImportError:
+    pyarrow = None
 
 try:
     import nvtabular
@@ -52,102 +55,107 @@ class DataLoaderBuilder:
         raise NotImplementedError
 
 
-class PyarrowDataLoaderBuilder(DataLoaderBuilder, PyTorchDataLoader):
-    # TODO fix device mismatch error when calling eval after training
-    def __init__(
-        self,
-        paths_or_dataset,
-        batch_size,
-        max_sequence_length,
-        conts=None,
-        cats=None,
-        labels=None,
-        shuffle=False,
-        shuffle_buffer_size=0,
-        num_workers=1,
-        pin_memory=True,
-        drop_last=False,
-        **kwargs,
-    ):
-        self.shuffle_buffer_size = shuffle_buffer_size
-        self.num_workers = num_workers
-        self.pin_memory = pin_memory
-        self.max_sequence_length = max_sequence_length
+if pyarrow is not None:
 
-        DataLoaderBuilder.__init__(self, paths_or_dataset, batch_size, drop_last, shuffle)
-
-        self.set_dataset(cols_to_read=conts + cats + labels)
-
-        PyTorchDataLoader.__init__(
+    class PyarrowDataLoaderBuilder(DataLoaderBuilder, PyTorchDataLoader):
+        # TODO fix device mismatch error when calling eval after training
+        def __init__(
             self,
-            self.dataset,
-            batch_size=self.batch_size,
-            drop_last=self.drop_last,
-            num_workers=self.num_workers,
-            pin_memory=self.pin_memory,
-        )
-        # set _batch_size attribute needed by HF trainer
-        self._batch_size = self.batch_size
-
-    def set_dataset(self, cols_to_read):
-        """
-        set the Parquet dataset
-        Args:
-        ------
-            cols_to_read: str
-                The list of features names to load
-        """
-
-        if isinstance(self.paths_or_dataset, ParquetDataset):
-            dataset = self.paths_or_dataset
-        dataset = ParquetDataset(
-            self.paths_or_dataset,
-            cols_to_read,
-            seq_features_len_pad_trim=self.max_sequence_length,
-        )
-        if self.shuffle and self.shuffle_buffer_size > 0:
-            dataset = ShuffleDataset(dataset, buffer_size=self.shuffle_buffer_size)
-
-        self.dataset = dataset
-
-    @classmethod
-    def from_schema(
-        cls,
-        schema,
-        paths_or_dataset,
-        batch_size,
-        max_sequence_length,
-        continuous_features=None,
-        categorical_features=None,
-        targets=None,
-        shuffle=False,
-        shuffle_buffer_size=0,
-        num_workers=1,
-        pin_memory=True,
-        **kwargs,
-    ):
-        categorical_features = (
-            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
-        )
-        continuous_features = (
-            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
-        )
-        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
-
-        return cls(
             paths_or_dataset,
             batch_size,
             max_sequence_length,
-            conts=continuous_features,
-            cats=categorical_features,
-            labels=targets,
-            shuffle=shuffle,
+            conts=None,
+            cats=None,
+            labels=None,
+            shuffle=False,
+            shuffle_buffer_size=0,
+            num_workers=1,
+            pin_memory=True,
+            drop_last=False,
+            **kwargs,
+        ):
+            self.shuffle_buffer_size = shuffle_buffer_size
+            self.num_workers = num_workers
+            self.pin_memory = pin_memory
+            self.max_sequence_length = max_sequence_length
+
+            DataLoaderBuilder.__init__(self, paths_or_dataset, batch_size, drop_last, shuffle)
+
+            self.set_dataset(cols_to_read=conts + cats + labels)
+
+            PyTorchDataLoader.__init__(
+                self,
+                self.dataset,
+                batch_size=self.batch_size,
+                drop_last=self.drop_last,
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory,
+            )
+            # set _batch_size attribute needed by HF trainer
+            self._batch_size = self.batch_size
+
+        def set_dataset(self, cols_to_read):
+            """
+            set the Parquet dataset
+            Args:
+            ------
+                cols_to_read: str
+                    The list of features names to load
+            """
+
+            if isinstance(self.paths_or_dataset, ParquetDataset):
+                dataset = self.paths_or_dataset
+            dataset = ParquetDataset(
+                self.paths_or_dataset,
+                cols_to_read,
+                seq_features_len_pad_trim=self.max_sequence_length,
+            )
+            if self.shuffle and self.shuffle_buffer_size > 0:
+                dataset = ShuffleDataset(dataset, buffer_size=self.shuffle_buffer_size)
+
+            self.dataset = dataset
+
+        @classmethod
+        def from_schema(
+            cls,
+            schema,
+            paths_or_dataset,
+            batch_size,
+            max_sequence_length,
+            continuous_features=None,
+            categorical_features=None,
+            targets=None,
+            shuffle=False,
             shuffle_buffer_size=0,
             num_workers=1,
             pin_memory=True,
             **kwargs,
-        )
+        ):
+            categorical_features = (
+                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+            )
+            continuous_features = (
+                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+            )
+            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
+            return cls(
+                paths_or_dataset,
+                batch_size,
+                max_sequence_length,
+                conts=continuous_features,
+                cats=categorical_features,
+                labels=targets,
+                shuffle=shuffle,
+                shuffle_buffer_size=0,
+                num_workers=1,
+                pin_memory=True,
+                **kwargs,
+            )
+
+
+else:
+    PyarrowDataLoaderBuilder = None
 
 if nvtabular is not None:
 
@@ -281,6 +289,10 @@ if nvtabular is not None:
             )
 
             return nvt_loader
+
+
+else:
+    NVTDataLoaderBuilder = None
 
 
 class ParquetDataset(Dataset):
