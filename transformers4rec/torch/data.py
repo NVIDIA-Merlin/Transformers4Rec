@@ -18,15 +18,16 @@ from typing import Dict
 
 import pandas as pd
 import torch
-
-# from nvtabular.loader.backend import DataLoader as BaseDataLoader
-from nvtabular.loader.tensorflow import _validate_dataset
 from nvtabular.loader.torch import TorchAsyncItr as BaseDataLoader
 from torch.utils.dlpack import from_dlpack
+
+from transformers4rec.utils.misc_utils import _validate_dataset
 
 from ..utils.schema import DatasetSchema
 from ..utils.tags import Tag
 from .utils.torch_utils import get_output_sizes_from_schema
+
+# from nvtabular.loader.backend import DataLoader as BaseDataLoader
 
 
 class IterDL(torch.utils.data.IterableDataset):
