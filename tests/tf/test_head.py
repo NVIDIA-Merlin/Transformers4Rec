@@ -8,7 +8,7 @@ def assert_loss_and_metrics_are_valid(head, inputs, targets):
     loss = head.compute_loss(inputs, targets, call_body=True)
     metrics = head.metric_results()
 
-    assert 0 <= loss <= 1
+    assert loss is not None
     assert len(metrics) == len(head.metrics)
 
 
