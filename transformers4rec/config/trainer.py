@@ -65,11 +65,24 @@ class T4RecTrainingArguments(TrainingArguments):
         },
     )
 
+    max_sequence_length: int = field(
+        default=None,
+        metadata={"help": "maximum length of sequence"},
+    )
+
     shuffle_buffer_size: int = field(
         default=0,
         metadata={
             "help": "Number of samples to keep in the buffer for shuffling."
             "shuffle_buffer_size=0 means no shuffling"
+        },
+    )
+
+    data_loader_engine: str = field(
+        default="nvtabular",
+        metadata={
+            "help": "Parquet data loader engine. "
+            "'nvtabular': GPU-accelerated parquet data loader from NVTabular, 'pyarrow': read whole parquet into memory."
         },
     )
 

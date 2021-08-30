@@ -1,8 +1,7 @@
 import collections
-import gc
 import inspect
+import random
 from collections.abc import Sized
-from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -11,20 +10,26 @@ from torch.cuda.amp import autocast
 from torch.optim import Optimizer
 from torch.utils.data.dataloader import DataLoader
 from torch.utils.data.dataset import Dataset
-from transformers import Trainer
+from transformers import Trainer as HF_Trainer
 from transformers.optimization import TYPE_TO_SCHEDULER_FUNCTION
 from transformers.trainer_callback import TrainerCallback
-from transformers.trainer_pt_utils import DistributedTensorGatherer, nested_concat
-from transformers.trainer_utils import EvalLoopOutput, SchedulerType
+from transformers.trainer_pt_utils import (
+    find_batch_size,
+    nested_concat,
+    nested_numpify,
+    nested_truncate,
+)
+from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalLoopOutput, SchedulerType
 from transformers.utils import logging
 
 from ..config.trainer import T4RecTrainingArguments
 from .model import Model
+from .utils.data_utils import NVTDataLoaderBuilder, PyarrowDataLoaderBuilder
 
 logger = logging.get_logger(__name__)
 
 
-class Trainer(Trainer):
+class Trainer(HF_Trainer):
     """
     An :class:`~transformers.Trainer` specialized for sequential recommendation
     including (session-based and sequtial recommendation)
@@ -34,20 +39,42 @@ class Trainer(Trainer):
         self,
         model: Model,
         args: T4RecTrainingArguments,
-        train_dataloader: Optional[Dataset] = None,
-        eval_dataloader: Optional[Dataset] = None,
-        compute_metrics: Optional[bool] = None,
+        schema=None,
+        train_dataset_or_path=None,
+        eval_dataset_or_path=None,
+        train_dataloader: Optional[DataLoader] = None,
+        eval_dataloader: Optional[DataLoader] = None,
+        compute_metrics=None,
         **kwargs,
     ):
         """
         Parameters:
         -----------
-            #TODO
+            model: Model,
+                The Model defined using Transformers4Rec api.
+            args: T4RecTrainingArguments,
+                The training arguments needed to setup training and evaluation
+                experiments.
+            schema: Optional[Dataset.schema], optional
+                The schema object including features to use and their properties.
+                by default None
+            train_dataset_or_path: Optional[str, Dataset], optional
+                Path of parquet files or DataSet to use for training.
+                by default None
+            eval_dataset_or_path: Optional[str, Dataset], optional
+                Path of parquet files or DataSet to use for evaluation.
+                by default None
+            train_dataloader: Optional[DataLoader], optional
+                The data generator to use for training.
+                by default None
+            eval_dataloader: Optional[DataLoader], optional
+                The data generator to use for evaluation.
+                by default None
+            compute_metrics: Optional[bool], optional
+                Whether to compute metrics defined by Model class or not.
+                by default None
         """
 
-        self.past_global_steps = 0
-
-        t4rec_callback = T4RecTrainerCallback(self)
         mock_dataset = DatasetMock()
         hf_model = HFWrapper(model)
 
@@ -56,46 +83,83 @@ class Trainer(Trainer):
             args=args,
             train_dataset=mock_dataset,
             eval_dataset=mock_dataset,
-            callbacks=[t4rec_callback],
+            callbacks=[TrainerCallback],
             **kwargs,
         )
+
         self.compute_metrics = compute_metrics
+        self.train_dataset = train_dataset_or_path
+        self.eval_dataset = eval_dataset_or_path
+        self.train_dataloader = train_dataloader
+        self.eval_dataloader = eval_dataloader
+        self.schema = schema
 
-        if train_dataloader is not None:
-            self.train_dataloader = train_dataloader
-        if eval_dataloader is not None:
-            self.eval_dataloader = eval_dataloader
+    def get_train_dataloader(self):
+        if self.train_dataloader is not None:
+            return self.train_dataloader
+        else:
+            assert self.schema is not None, "schema is required to generate Train Dataloader"
+            if self.args.data_loader_engine == "pyarrow":
+                return PyarrowDataLoaderBuilder.from_schema(
+                    self.schema,
+                    self.train_dataset,
+                    self.args.per_device_train_batch_size,
+                    max_sequence_length=self.args.max_sequence_length,
+                    drop_last=self.args.dataloader_drop_last,
+                    shuffle=True,
+                    shuffle_buffer_size=self.args.shuffle_buffer_size,
+                )
+            elif self.args.data_loader_engine == "nvtabular":
+                return NVTDataLoaderBuilder.from_schema(
+                    self.schema,
+                    paths_or_dataset=self.train_dataset,
+                    batch_size=self.args.per_device_train_batch_size,
+                    max_sequence_length=self.args.max_sequence_length,
+                    drop_last=self.args.dataloader_drop_last,
+                    shuffle=True,
+                    sparse_as_dense=True,
+                )
+            else:
+                raise ValueError(
+                    f"{self.args.data_loader_engine} is not supported, please choose one of "
+                    '["pyarrow", "nvtabular"] as dataloader generators'
+                )
 
-    def get_train_dataloader(self) -> DataLoader:
-        return self.train_dataloader
+    def get_eval_dataloader(self, eval_dataset=None):
+        if self.eval_dataloader is not None:
+            return self.eval_dataloader
 
-    def get_eval_dataloader(self, eval_dataset) -> DataLoader:
-        return self.eval_dataloader
+        if eval_dataset is None and self.eval_dataset is None:
+            raise ValueError("Trainer: evaluation requires an eval_dataset.")
+        eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
+        assert self.schema is not None, "schema is required to generate Eval Dataloader"
 
-    def set_train_dataloader(self, dataloader: DataLoader):
-        # Check that values are consistent between data-loader
-        # and TrainingArg class
-        assert (
-            dataloader._batch_size == self.args.per_device_train_batch_size
-        ), "batch size of dataloader {} should match ".format(dataloader._batch_size)
-        "train batch size of T4RecTrainingArguments {}".format(
-            self.args.per_device_train_batch_size
-        )
+        if self.args.data_loader_engine == "pyarrow":
+            return PyarrowDataLoaderBuilder.from_schema(
+                self.schema,
+                eval_dataset,
+                self.args.per_device_eval_batch_size,
+                max_sequence_length=self.args.max_sequence_length,
+                drop_last=self.args.dataloader_drop_last,
+                shuffle=False,
+                shuffle_buffer_size=self.args.shuffle_buffer_size,
+            )
 
-        assert (
-            dataloader.drop_last == self.args.dataloader_drop_last
-        ), "Make sure drop_last is set to '{}' ".format(dataloader.drop_last)
-        "in dataloader.drop_last and T4RecTrainingArguments.dataloader_drop_last"
-
-        self.train_dataloader = dataloader
-
-    def set_eval_dataloader(self, dataloader: DataLoader):
-        assert (
-            dataloader._batch_size == self.args.per_device_eval_batch_size
-        ), "batch size of dataloader {} should match ".format(dataloader._batch_size)
-        "eval batch size of T4RecTrainingArguments {}".format(self.args.per_device_eval_batch_size)
-
-        self.eval_dataloader = dataloader
+        elif self.args.data_loader_engine == "nvtabular":
+            return NVTDataLoaderBuilder.from_schema(
+                self.schema,
+                paths_or_dataset=eval_dataset,
+                batch_size=self.args.per_device_eval_batch_size,
+                max_sequence_length=self.args.max_sequence_length,
+                drop_last=self.args.dataloader_drop_last,
+                shuffle=False,
+                sparse_as_dense=True,
+            )
+        else:
+            raise ValueError(
+                f"{self.args.data_loader_engine} is not supported, please choose one of "
+                '["pyarrow", "nvtabular"] as dataloader generators'
+            )
 
     def num_examples(self, dataloader: DataLoader):
         """
@@ -111,15 +175,6 @@ class Trainer(Trainer):
             batch_size = self.args.per_device_eval_batch_size
         """
         return len(dataloader) * dataloader._batch_size
-
-    def _increment_past_global_steps(self, current_global_step: int):
-        self.past_global_steps += current_global_step
-
-    def _get_general_global_step(self) -> int:
-        general_global_step = self.past_global_steps
-        if self.model.training:
-            general_global_step += self.state.global_step
-        return general_global_step
 
     def reset_lr_scheduler(self) -> None:
         """
@@ -142,9 +197,8 @@ class Trainer(Trainer):
                 * self.args.num_train_epochs,
             )
 
-    # What if we override the method get_scheduler to accept num_cycle params ?
-    # The advantage is to use the unified HF API offering a variety
-    # of scheduler
+    # Override the method get_scheduler to accept num_cycle params ?
+    # The advantage is to use the unified HF API with many scheduler
     # we can also send a PR to HF ?
     @staticmethod
     def get_scheduler(
@@ -234,7 +288,7 @@ class Trainer(Trainer):
         predictions = outputs["predictions"].detach()
         labels = outputs["labels"].detach()
 
-        # TODO: define metadata dict in the model
+        # TODO: define metadata dict in the model for logging
         # other_outputs = {
         #    k: v.detach() if isinstance(v, torch.Tensor) else v
         #    for k, v in outputs.items()
@@ -270,7 +324,7 @@ class Trainer(Trainer):
         model = self.model
         # reset metrics for the dataset (Train, Valid or Test)
         if self.compute_metrics:
-            model._model.reset_metrics()
+            model.module.reset_metrics()
 
         if not isinstance(dataloader.dataset, collections.abc.Sized):
             raise ValueError("dataset must implement __len__")
@@ -283,11 +337,6 @@ class Trainer(Trainer):
         preds_item_ids_scores_host: Union[torch.Tensor, List[torch.Tensor]] = None
         labels_host: Union[torch.Tensor, List[torch.Tensor]] = None
 
-        losses = []
-
-        # TODO support distributed prediction loop
-        world_size = 1
-
         if metric_key_prefix == "train" and self.args.eval_steps_on_train_set:
             num_examples = self.args.eval_steps_on_train_set * batch_size
         else:
@@ -295,28 +344,29 @@ class Trainer(Trainer):
 
         logger.info("  Num sessions (examples) = %d", num_examples)
 
-        PADDING_INDEX = -100  # TODO get padding_index from model
-        preds_item_ids_scores_gatherer = DistributedTensorGatherer(
-            world_size,
-            num_examples,
-            make_multiple_of=batch_size,
-            padding_index=PADDING_INDEX,
-        )
-        labels_gatherer = DistributedTensorGatherer(
-            world_size,
-            num_examples,
-            make_multiple_of=batch_size,
-            padding_index=PADDING_INDEX,
-        )
-
         model.eval()
 
-        if self.args.past_index >= 0:
-            self._past = None
         self.callback_handler.eval_dataloader = dataloader
+
+        # Initialize containers
+        # losses/preds/labels on GPU/TPU (accumulated for eval_accumulation_steps)
+        losses_host = None
+        preds_item_ids_scores_host = None
+        labels_host = None
+        # losses/preds/labels on CPU (final containers)
+        all_losses = None
+        all_preds_item_ids_scores = None
+        all_labels = None
+        # Will be useful when we have an iterable dataset so don't know its length.
+        observed_num_examples = 0
 
         # Iterate over dataloader
         for step, inputs in enumerate(dataloader):
+            # Update the observed num examples
+            observed_batch_size = find_batch_size(inputs)
+            if observed_batch_size is not None:
+                observed_num_examples += observed_batch_size
+
             # Limits the number of evaluation steps on train set (which is usually larger)
             if (
                 metric_key_prefix == "train"
@@ -329,28 +379,32 @@ class Trainer(Trainer):
                 model, inputs, prediction_loss_only, ignore_keys=ignore_keys
             )
 
-            losses.append(loss.item())
-
             # Updates metrics
             # TODO: compute metrics each N eval_steps to speedup evaluation
             metrics_results_detailed = None
             if self.compute_metrics:
-                metrics_results_detailed = model._model.calculate_metrics(
+                metrics_results_detailed = model.module.calculate_metrics(
                     inputs, labels, mode=metric_key_prefix
                 )
 
+            # Update containers on host
+            if loss is not None:
+                losses = self._nested_gather(loss.repeat(batch_size))
+                losses_host = (
+                    losses if losses_host is None else torch.cat((losses_host, losses), dim=0)
+                )
             if labels is not None:
+                labels = self._pad_across_processes(labels)
+                labels = self._nested_gather(labels)
                 labels_host = (
                     labels
                     if labels_host is None
-                    else nested_concat(labels_host, labels, padding_index=PADDING_INDEX)
+                    else nested_concat(labels_host, labels, padding_index=0)
                 )
-
             if preds is not None and self.args.predict_top_k > 0:
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(
                     preds, k=self.args.predict_top_k, dim=-1
                 )
-
                 self._maybe_log_predictions(
                     labels,
                     preds_sorted_item_ids,
@@ -371,7 +425,6 @@ class Trainer(Trainer):
                     else nested_concat(
                         preds_item_ids_scores_host,
                         preds_item_ids_scores,
-                        padding_index=-100,
                     )
                 )
 
@@ -385,65 +438,98 @@ class Trainer(Trainer):
                 self.args.eval_accumulation_steps is not None
                 and (step + 1) % self.args.eval_accumulation_steps == 0
             ):
-                if not prediction_loss_only:
-                    preds_item_ids_scores_gatherer.add_arrays(
-                        self._gather_and_numpify(
-                            preds_item_ids_scores_host, "preds_item_ids_scores"
-                        )
+                if losses_host is not None:
+                    losses = nested_numpify(losses_host)
+                    all_losses = (
+                        losses
+                        if all_losses is None
+                        else np.concatenate((all_losses, losses), axis=0)
                     )
-                    labels_gatherer.add_arrays(
-                        self._gather_and_numpify(labels_host, "eval_label_ids")
+                if labels_host is not None:
+                    labels = nested_numpify(labels_host)
+                    all_labels = (
+                        labels
+                        if all_labels is None
+                        else nested_concat(all_labels, labels, padding_index=0)
+                    )
+                if preds_item_ids_scores_host is not None:
+                    preds_item_ids_scores = nested_numpify(preds_item_ids_scores_host)
+                    all_preds_item_ids_scores = (
+                        preds_item_ids_scores
+                        if all_preds_item_ids_scores is None
+                        else nested_concat(
+                            all_preds_item_ids_scores,
+                            preds_item_ids_scores,
+                        )
                     )
 
                 # Set back to None to begin a new accumulation
-                preds_item_ids_scores_host, labels_host = None, None
+                losses_host, preds_item_ids_scores_host, labels_host = None, None, None
 
         if self.args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop
             delattr(self, "_past")
 
         # Gather all remaining tensors and put them back on the CPU
-        if not prediction_loss_only:
-            preds_item_ids_scores_gatherer.add_arrays(
-                self._gather_and_numpify(preds_item_ids_scores_host, "preds_item_ids_scores")
+        if losses_host is not None:
+            losses = nested_numpify(losses_host)
+            all_losses = (
+                losses if all_losses is None else np.concatenate((all_losses, losses), axis=0)
             )
-            labels_gatherer.add_arrays(self._gather_and_numpify(labels_host, "eval_label_ids"))
-
-            preds_item_ids_scores = (
-                preds_item_ids_scores_gatherer.finalize() if not prediction_loss_only else None
+        if labels_host is not None:
+            labels = nested_numpify(labels_host)
+            all_labels = (
+                labels if all_labels is None else nested_concat(all_labels, labels, padding_index=0)
             )
-            label_ids = labels_gatherer.finalize() if not prediction_loss_only else None
-            if label_ids is not None:
-                # Truncating labels and predictions (because the last batch is usually not complete)
-                valid_preds_mask = label_ids != PADDING_INDEX
-                label_ids = label_ids[valid_preds_mask]
-            if isinstance(preds_item_ids_scores, tuple):
-                preds_item_ids_scores = tuple(
-                    [pred_section[valid_preds_mask] for pred_section in preds_item_ids_scores]
+        if preds_item_ids_scores_host is not None:
+            preds_item_ids_scores = nested_numpify(preds_item_ids_scores_host)
+            all_preds_item_ids_scores = (
+                preds_item_ids_scores
+                if all_preds_item_ids_scores is None
+                else nested_concat(
+                    all_preds_item_ids_scores,
+                    preds_item_ids_scores,
                 )
-            else:
-                preds_item_ids_scores = preds_item_ids_scores[valid_preds_mask]
+            )
+        # Get Number of samples :
+        # the data loaders for this project do not return the dataset size,
+        num_samples = observed_num_examples
 
+        # Number of losses has been rounded to a multiple of batch_size
+        # and in a distributed training, the number of
+        # samplers has been rounded to a multiple of batch_size, so we truncate.
+        if all_losses is not None:
+            all_losses = all_losses[:num_samples]
+        if all_preds_item_ids_scores is not None:
+            all_preds_item_ids_scores = nested_truncate(all_preds_item_ids_scores, num_samples)
+        if all_labels is not None:
+            all_labels = nested_truncate(all_labels, num_samples)
+
+        # Get metrics :
         metrics = {}
         # Computing the metrics results as the average of all steps
         if self.compute_metrics:
-            streaming_metrics_results = model._model.compute_metrics(mode=metric_key_prefix)
+            streaming_metrics_results = model.module.compute_metrics(mode=metric_key_prefix)
             metrics = {**metrics, **streaming_metrics_results}
-        metrics[f"{metric_key_prefix}_loss"] = np.mean(losses)
+        metrics[f"{metric_key_prefix}_loss"] = all_losses.mean().item()
 
         # Prefix all keys with metric_key_prefix + '_'
         for key in list(metrics.keys()):
             if not key.startswith(f"{metric_key_prefix}_"):
-                metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key).cpu().numpy()
+                metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key).cpu().numpy().item()
 
         return EvalLoopOutput(
-            predictions=preds_item_ids_scores,
-            label_ids=label_ids,
+            predictions=all_preds_item_ids_scores,
+            label_ids=all_labels,
             metrics=metrics,
             num_samples=num_examples,
         )
 
-    def _save_model_checkpoint(rec_model, trial=None, metrics=None):
+    def _save_model_and_checkpoint(self, trial=None, metrics=None):
+        import os
+
+        import cloudpickle
+
         """
         Save the serialized model + optimizer states
         """
@@ -453,18 +539,45 @@ class Trainer(Trainer):
         torch.save(self.lr_scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
         torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
         """
-        # TODO: serialize the model class and save it as well
-        # torch.save(dict(model=model, model_state=model.state_dict()), "/path/model.tar")
-        pass
 
-    def load_model_trainer_states_from_checkpoint(checkpoint_path, rec_model, trainer):
+        logger.info("Saving model...")
+        output_dir = os.path.join(
+            self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
+        )
+        # save model parameters
+        self._save_checkpoint(self.model, trial=None, metrics=None)
+        # save the serialized model
+        with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
+            cloudpickle.dump(self.model, out)
+
+    def load_model_trainer_states_from_checkpoint(self, checkpoint_path):
+        import os
+
+        import cloudpickle
+
         """
         This method loads from checkpoints states of the model, trainer and random states.
         It does not loads the optimizer and LR scheduler states (for that call trainer.train()
         with resume_from_checkpoint argument for a complete load)
         """
-        # TODO : load serialized model and its states.
-        pass
+        logger.info("Loading model class")
+        self.model = cloudpickle.load(open(os.path.join(checkpoint_path, "model_class.pkl"), "rb"))
+        logger.info("Loading previously trained model")
+        # Restoring model weights
+        self.model.load_state_dict(
+            # torch.load(os.path.join(training_args.output_dir, "pytorch_model.bin"))
+            torch.load(os.path.join(checkpoint_path, "pytorch_model.bin"))
+        )
+        # Restoring random state
+        rng_file = os.path.join(checkpoint_path, "rng_state.pth")
+        checkpoint_rng_state = torch.load(rng_file)
+        random.setstate(checkpoint_rng_state["python"])
+        np.random.set_state(checkpoint_rng_state["numpy"])
+        torch.random.set_rng_state(checkpoint_rng_state["cpu"])
+        torch.cuda.random.set_rng_state_all(checkpoint_rng_state["cuda"])
+        # Restoring AMP scaler
+        if self.use_amp:
+            self.scaler.load_state_dict(torch.load(os.path.join(checkpoint_path, "scaler.pt")))
 
     @property
     def log_predictions_callback(self) -> Callable:
@@ -503,60 +616,47 @@ class Trainer(Trainer):
                 dataset_type=metric_key_prefix,
             )
 
-    def log(self, logs: Dict[str, float]) -> None:
-        """
-        Overriding :obj:`Trainer.log()` to ensure that the global step
-        used for logging to W&B and Tensorboard is incremental
-        across multiple :obj:`Trainer.train()` methods
-        so that the logged values do not overlap
-        """
-        if self.state.epoch is not None:
-            logs["epoch"] = self.state.epoch
 
-        # Incremental global steps across train() calls so that
-        # logs to W&B and Tensorboard do not overlap
-        state_copy = deepcopy(self.state)
-        state_copy.global_step = self._get_general_global_step()
+class IncrementalTrainer(Trainer):
+    """
+    An :class:`~transformers.Trainer` specialized for
+    incremental training of  sequential recommendation
+    including (session-based and sequtial recommendation)
+    """
 
-        self.control = self.callback_handler.on_log(self.args, state_copy, self.control, logs)
-        output = {**logs, **{"step": state_copy.global_step}}
-        self.state.log_history.append(output)
+    def __init__(
+        self,
+        model: Model,
+        args: T4RecTrainingArguments,
+        schema=None,
+        train_dataset_or_path=None,
+        eval_dataset_or_path=None,
+        start_time_window_index=None,
+        final_time_window_index=None,
+        compute_metrics=None,
+        **kwargs,
+    ):
+        super().init(
+            self,
+            model,
+            args,
+            schema,
+        )
 
-    def wipe_memory(self):
-        gc.collect()
-        torch.cuda.empty_cache()
+        # TODO
 
 
-# Mock to inform HF Trainer that the dataset is sized, and can be obtained via the data loader
-# This is needed because we are decoupling dataloading from the trainer
 class DatasetMock(Dataset, Sized):
+    """
+    Mock to inform HF Trainer that the dataset is sized,
+    and can be obtained via the generated/provided data loader
+    """
+
     def __init__(self, nsteps=1):
         self.nsteps = nsteps
 
     def __len__(self):
         return self.nsteps
-
-
-class T4RecTrainerCallback(TrainerCallback):
-    """
-    An :class:`~transformers.TrainerCallback` that changes the state of the Trainer
-    on specific hooks for the purpose of the RecSysTrainer
-    """
-
-    def __init__(self, trainer: Trainer):
-        self.trainer = trainer
-
-    def on_train_begin(self, args, state, control, model=None, **kwargs):
-        pass
-
-    def on_train_end(self, args, state, control, model=None, **kwargs):
-        # Increments the global steps for logging with the global steps of the last train()
-        self.trainer._increment_past_global_steps(state.global_step)
-
-    def on_epoch_end(self, args, state, control, model=None, **kwargs):
-        # Evaluates on eval set
-        # self.trainer.evaluate()
-        pass
 
 
 class HFWrapper(torch.nn.Module):
@@ -567,8 +667,8 @@ class HFWrapper(torch.nn.Module):
 
     def __init__(self, model):
         super().__init__()
-        self._model = model
+        self.module = model
 
     def forward(self, *args, **kwargs):
         inputs = kwargs
-        return self._model(inputs, *args)
+        return self.module(inputs, *args)
