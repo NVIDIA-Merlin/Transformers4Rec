@@ -141,7 +141,7 @@ def test_item_prediction_loss_and_metrics(
     metrics = head.prediction_tasks["0"].calculate_metrics(
         predictions=body_outputs, targets=labels_all
     )
-    assert all(len(m) == 3 for m in metrics.values())
+    assert all(len(m) == 2 for m in metrics.values())
     assert loss != 0
 
 

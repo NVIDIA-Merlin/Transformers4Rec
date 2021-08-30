@@ -10,6 +10,7 @@ from transformers.modeling_utils import SequenceSummary
 from ..types import DatasetSchema
 from ..utils.tags import Tag
 from .block.base import Block, BuildableBlock, SequentialBlock
+from .ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from .typing import BlockOrModule, BlockType
 
 
@@ -211,10 +212,17 @@ class RegressionTask(PredictionTask):
 
 
 class NextItemPredictionTask(PredictionTask):
+    DEFAULT_METRICS = (
+        # default metrics suppose labels are int encoded
+        NDCGAt(top_ks=[10, 20], labels_onehot=True),
+        AvgPrecisionAt(top_ks=[10, 20], labels_onehot=True),
+        RecallAt(top_ks=[10, 20], labels_onehot=True),
+    )
+
     def __init__(
         self,
         loss=torch.nn.NLLLoss(ignore_index=0),
-        metrics=None,
+        metrics=DEFAULT_METRICS,
         task_block: Optional[torch.nn.Module] = None,
         weight_tying: bool = False,
         softmax_temperature: float = 1,
@@ -359,7 +367,7 @@ class NextItemPredictionTask(PredictionTask):
         results = {}
         for name, metric in metrics.items():
             for measure, k in zip(metric, topks[name]):
-                results[f"{name}_@{k}"] = measure
+                results[f"{name}_{k}"] = measure
         return results
 
 
