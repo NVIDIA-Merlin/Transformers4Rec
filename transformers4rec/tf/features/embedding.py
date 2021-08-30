@@ -27,7 +27,7 @@ class EmbeddingFeatures(InputLayer):
         cls,
         schema: DatasetSchema,
         embedding_dims: Optional[Dict[str, int]] = None,
-        default_embedding_dim: Optional[int] = 64,
+        embedding_dim_default: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
@@ -52,7 +52,7 @@ class EmbeddingFeatures(InputLayer):
         emb_config = {}
         cardinalities = schema.cardinalities()
         for key, cardinality in cardinalities.items():
-            embedding_size = embedding_dims.get(key, default_embedding_dim)
+            embedding_size = embedding_dims.get(key, embedding_dim_default)
             embedding_initializer = embeddings_initializers.get(key, None)
             emb_config[key] = (cardinality, embedding_size, embedding_initializer)
 

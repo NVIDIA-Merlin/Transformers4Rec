@@ -1,9 +1,10 @@
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Union
 
 import torch
 
-from ...types import DatasetSchema, Tag
-from ..block.base import SequentialBlock
+from ...types import DatasetSchema, DefaultTags, Tag
+from ...utils.masking import MaskSequence
+from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
 from ..tabular import TabularModule
@@ -18,7 +19,12 @@ class SequenceEmbeddingFeatures(EmbeddingFeatures):
         super().__init__(feature_config, **kwargs)
 
     def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Embedding:
-        return torch.nn.Embedding(table.vocabulary_size, table.dim, padding_idx=self.padding_idx)
+        embedding_table = torch.nn.Embedding(
+            table.vocabulary_size, table.dim, padding_idx=self.padding_idx
+        )
+        if table.initializer is not None:
+            table.initializer(embedding_table.weight)
+        return embedding_table
 
     def forward_output_size(self, input_sizes):
         sizes = {}
@@ -51,16 +57,16 @@ class TabularSequenceFeatures(TabularFeatures):
     def from_schema(
         cls,
         schema: DatasetSchema,
-        continuous_tags=Tag.CONTINUOUS,
-        categorical_tags=Tag.CATEGORICAL,
-        aggregation=None,
-        automatic_build=True,
-        max_sequence_length=None,
-        continuous_projection=None,
-        continuous_soft_embeddings_shape=None,
-        projection=None,
-        d_output=None,
-        masking=None,
+        continuous_tags: Optional[Union[DefaultTags, list, str]] = Tag.CONTINUOUS,
+        categorical_tags: Optional[Union[DefaultTags, list, str]] = Tag.CATEGORICAL,
+        aggregation: Optional[str] = None,
+        automatic_build: bool = True,
+        max_sequence_length: Optional[int] = None,
+        continuous_projection: Optional[Union[List[int], int]] = None,
+        continuous_soft_embeddings: bool = False,
+        projection: Optional[Union[torch.nn.Module, BuildableBlock]] = None,
+        d_output: Optional[int] = None,
+        masking: Optional[Union[str, MaskSequence]] = None,
         **kwargs
     ) -> "TabularSequenceFeatures":
         """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
@@ -81,11 +87,10 @@ class TabularSequenceFeatures(TabularFeatures):
         continuous_projection : Optional[Union[List[int], int]], optional
             If set, concatenate all numerical features and projet them by a number of MLP layers.
             The argument accepts a list with the dimensions of the MLP layers, by default None
-        continuous_soft_embeddings_shape : Optional[Union[Tuple[int, int], List[int, int]]]
-            If set, uses soft one-hot encoding technique to represent continuous features.
-            The argument accepts a tuple with 2 elements: [embeddings cardinality, embeddings dim],
-            by default None
-        projection: Optional[torch.nn.Module, BuildableBlock], optional
+        continuous_soft_embeddings : bool
+            Indicates if the  soft one-hot encoding technique must be used to represent
+            continuous features, by default False
+        projection: Optional[Union[torch.nn.Module, BuildableBlock]], optional
             If set, project the aggregated embeddings vectors into hidden dimension vector space,
             by default None
         d_output: Optional[int], optional
@@ -101,14 +106,14 @@ class TabularSequenceFeatures(TabularFeatures):
             Returns ``TabularFeatures`` from a dataset schema
         """
         output = super().from_schema(
-            schema,
-            continuous_tags,
-            categorical_tags,
-            aggregation,
-            automatic_build,
-            max_sequence_length,
-            continuous_projection,
-            continuous_soft_embeddings_shape,
+            schema=schema,
+            continuous_tags=continuous_tags,
+            categorical_tags=categorical_tags,
+            aggregation=aggregation,
+            automatic_build=automatic_build,
+            max_sequence_length=max_sequence_length,
+            continuous_projection=continuous_projection,
+            continuous_soft_embeddings=continuous_soft_embeddings,
             **kwargs
         )
         if d_output and projection:

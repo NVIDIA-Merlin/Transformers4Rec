@@ -3,7 +3,7 @@ from .base import InputModule
 
 
 class ContinuousFeatures(InputModule):
-    def __init__(self, features, aggregation=None, augmentation=None):
+    def __init__(self, features, aggregation=None, augmentation=None, **kwargs):
         super().__init__(aggregation=aggregation, augmentation=augmentation)
         self.filter_features = FilterFeatures(features)
 
