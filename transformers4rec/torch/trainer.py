@@ -1,4 +1,5 @@
 import collections
+import gc
 import inspect
 import random
 from collections.abc import Sized
@@ -615,6 +616,10 @@ class Trainer(BaseTrainer):
                 metrics=metrics,
                 dataset_type=metric_key_prefix,
             )
+
+    def wipe_memory(self):
+        gc.collect()
+        torch.cuda.empty_cache()
 
 
 class IncrementalTrainer(Trainer):
