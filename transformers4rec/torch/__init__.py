@@ -72,8 +72,8 @@ __all__ = [
     "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
-    "LayerNormalizationFeatures",
     "Trainer",
+    "LayerNormalizationFeatures",
 ]
 
 try:
