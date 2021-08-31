@@ -387,8 +387,14 @@ class FilterFeatures(TabularTransformation):
         return {k: v for k, v in input_shape.items() if k in self.to_include}
 
 
+@docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
 class TabularBlock(BlockBase, TabularModule, ABC):
-    """TabularBlock extends TabularModule to turn it into a block with output size info."""
+    """TabularBlock extends TabularModule to turn it into a block with output size info.
+
+    Parameters
+    ----------
+    {tabular_module_parameters}
+    """
 
     REQUIRES_SCHEMA = False
 
