@@ -19,7 +19,9 @@ class StochasticSwapNoise(TabularTransformation):
         self.replacement_prob = replacement_prob
 
     def forward(self, inputs: TensorOrTabularData, **kwargs) -> TensorOrTabularData:
-        maybe_mask = self.get_mask(inputs, self.pad_token)
+        maybe_mask = None
+        if self.schema:
+            maybe_mask = self.schema.get_mask_from_inputs(inputs, self.pad_token)
         if isinstance(inputs, dict):
             return {key: self.augment(val, maybe_mask) for key, val in inputs.items()}
 

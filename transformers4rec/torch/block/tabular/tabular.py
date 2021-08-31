@@ -15,7 +15,7 @@ tabular_transformation_registry: Registry = Registry.class_registry("torch.tabul
 tabular_aggregation_registry: Registry = Registry.class_registry("torch.tabular_aggregations")
 
 
-class TabularTransformation(torch.nn.Module, OutputSizeMixin, ABC):
+class TabularTransformation(OutputSizeMixin, torch.nn.Module, ABC):
     """Transformation that takes in `TabularData` and outputs `TabularData`."""
 
     def forward(self, inputs: TabularData, **kwargs) -> TabularData:
@@ -26,7 +26,7 @@ class TabularTransformation(torch.nn.Module, OutputSizeMixin, ABC):
         return tabular_transformation_registry.parse(class_or_str)
 
 
-class TabularAggregation(torch.nn.Module, OutputSizeMixin, ABC):
+class TabularAggregation(OutputSizeMixin, torch.nn.Module, ABC):
     """Aggregation of `TabularData` that outputs a single `Tensor`"""
 
     def forward(self, inputs: TabularData) -> torch.Tensor:
@@ -390,6 +390,18 @@ class FilterFeatures(TabularTransformation):
 class TabularBlock(BlockBase, TabularModule, ABC):
     """TabularBlock extends TabularModule to turn it into a block with output size info."""
 
+    REQUIRES_SCHEMA = False
+
+    def __init__(
+        self,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
+    ):
+        super().__init__(pre, post, aggregation)
+        self.schema = schema
+
     def to_module(self, shape_or_module, device=None):
         shape = shape_or_module
         if isinstance(shape_or_module, torch.nn.Module):
@@ -408,6 +420,7 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         return output_size
 
     def build(self, input_size, schema=None, **kwargs):
+        output = super().build(input_size, schema=schema, **kwargs)
         output_size = input_size
         if self.pre:
             output_size = self.pre.output_size(self.pre.build(input_size, schema=schema, **kwargs))
@@ -422,7 +435,7 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         if self.aggregation:
             self.aggregation.build(output_size, schema=schema, **kwargs)
 
-        return super().build(input_size, schema=schema, **kwargs)
+        return output
 
     def _check_post_output_size(self, input_size):
         output_size = input_size

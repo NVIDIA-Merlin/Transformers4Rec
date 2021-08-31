@@ -2,7 +2,7 @@ from functools import reduce
 
 import torch
 
-from ...utils.torch_utils import calculate_batch_size_from_input_size
+from ...utils.torch_utils import calculate_batch_size_from_input_size, requires_schema
 from .tabular import TabularAggregation, tabular_aggregation_registry
 
 
@@ -101,6 +101,7 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
 
 
 @tabular_aggregation_registry.register("element-wise-sum-item-multi")
+@requires_schema
 class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
     def __init__(self, schema=None):
         super().__init__()
@@ -109,7 +110,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         self.item_id_col_name = None
 
     def forward(self, inputs):
-        item_id_inputs = self.get_item_ids(inputs)
+        item_id_inputs = self.schema.get_item_ids_from_inputs(inputs)
         self._check_input_shapes_equal(inputs)
 
         other_inputs = {k: v for k, v in inputs.items() if k != self.item_id_col_name}

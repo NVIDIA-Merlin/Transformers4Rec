@@ -3,12 +3,15 @@ from typing import Optional
 
 import torch
 
-from ...types import Tag
-from ..typing import TabularData
+from ...utils.schema import DatasetSchema
 
 
 class OutputSizeMixin(abc.ABC):
+    REQUIRES_SCHEMA = False
+
     def build(self, input_size, schema=None, **kwargs):
+        self.check_schema(schema=schema)
+
         self.input_size = input_size
         if schema and not getattr(self, "schema", None):
             self.schema = schema
@@ -32,38 +35,27 @@ class OutputSizeMixin(abc.ABC):
         return right_shift_block(self, other)
 
     @property
-    def schema(self):
+    def schema(self) -> Optional[DatasetSchema]:
         return getattr(self, "_schema", None)
 
     @schema.setter
     def schema(self, value):
         self._schema = value
 
-    @property
-    def item_id_column_name(self):
-        if not hasattr(self, "_item_id_column_name"):
-            if self.schema is None:
-                raise ValueError(
-                    "The schema is necessary to infer the item id column name, "
-                    "but it has not been set."
-                )
+    def check_schema(self, schema=None):
+        if self.REQUIRES_SCHEMA and not getattr(self, "schema", None) and not schema:
+            raise ValueError(f"{self.__class__.__name__} requires a schema.")
 
-            item_id_col = self.schema.select_by_tag(Tag.ITEM_ID)
-            if len(item_id_col.columns) == 0:
-                raise ValueError("There is no column tagged as item id.")
+    def __call__(self, *args, **kwargs):
+        self.check_schema()
 
-            self._item_id_column_name = item_id_col.column_names[0]
+        return super().__call__(*args, **kwargs)
 
-        return self._item_id_column_name
 
-    def get_item_ids(self, inputs: TabularData):
-        return inputs[self.item_id_column_name]
+def requires_schema(module):
+    module.REQUIRES_SCHEMA = True
 
-    def get_mask(self, inputs: TabularData, mask_token=0) -> Optional[torch.Tensor]:
-        if not self.schema:
-            return None
-
-        return self.get_item_ids(inputs) != mask_token
+    return module
 
 
 def check_gpu(module):

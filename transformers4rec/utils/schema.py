@@ -1,6 +1,7 @@
 import collections.abc
 import math
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import List, Optional, Text, Union
 
 from google.protobuf import text_format
@@ -277,6 +278,20 @@ class DatasetSchema:
         # A rule-of-thumb from Google.
         embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
         return embedding_size
+
+    @cached_property
+    def item_id_column_name(self):
+        item_id_col = self.select_by_tag(Tag.ITEM_ID)
+        if len(item_id_col.columns) == 0:
+            raise ValueError("There is no column tagged as item id.")
+
+        return item_id_col.column_names[0]
+
+    def get_item_ids_from_inputs(self, inputs):
+        return inputs[self.item_id_column_name]
+
+    def get_mask_from_inputs(self, inputs, mask_token=0):
+        return self.get_item_ids_from_inputs(inputs) != mask_token
 
 
 def _convert_col(col, tags=None):
