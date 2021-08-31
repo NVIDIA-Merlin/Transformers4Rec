@@ -3,8 +3,7 @@ from functools import reduce
 
 import torch
 
-from transformers4rec.utils.tags import Tag
-
+from ..types import Tag
 from ..utils.registry import Registry
 from .typing import TabularData
 from .utils.torch_utils import calculate_batch_size_from_input_size
