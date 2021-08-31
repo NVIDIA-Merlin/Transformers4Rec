@@ -25,7 +25,7 @@ from transformers.utils import logging
 
 from ..config.trainer import T4RecTrainingArguments
 from .model import Model
-from .utils.data_utils import NVTDataLoaderBuilder, PyarrowDataLoaderBuilder
+from .utils.data_utils import T4RecDataLoader
 
 logger = logging.get_logger(__name__)
 
@@ -96,37 +96,33 @@ class Trainer(BaseTrainer):
         self.schema = schema
 
     def get_train_dataloader(self):
+        """
+        Set the train dataloader to use by Trainer.
+        It supports user defined data-loader set as an attribute in the constructor.
+        When the attribute is None, The data-loader is defined using train_dataset
+        and the `data_loader_engine` specified in Training Arguments.
+        """
         if self.train_dataloader is not None:
             return self.train_dataloader
-        else:
-            assert self.schema is not None, "schema is required to generate Train Dataloader"
-            if self.args.data_loader_engine == "pyarrow":
-                return PyarrowDataLoaderBuilder.from_schema(
-                    self.schema,
-                    self.train_dataset,
-                    self.args.per_device_train_batch_size,
-                    max_sequence_length=self.args.max_sequence_length,
-                    drop_last=self.args.dataloader_drop_last,
-                    shuffle=True,
-                    shuffle_buffer_size=self.args.shuffle_buffer_size,
-                )
-            elif self.args.data_loader_engine == "nvtabular":
-                return NVTDataLoaderBuilder.from_schema(
-                    self.schema,
-                    paths_or_dataset=self.train_dataset,
-                    batch_size=self.args.per_device_train_batch_size,
-                    max_sequence_length=self.args.max_sequence_length,
-                    drop_last=self.args.dataloader_drop_last,
-                    shuffle=True,
-                    sparse_as_dense=True,
-                )
-            else:
-                raise ValueError(
-                    f"{self.args.data_loader_engine} is not supported, please choose one of "
-                    '["pyarrow", "nvtabular"] as dataloader generators'
-                )
+
+        assert self.schema is not None, "schema is required to generate Train Dataloader"
+        return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
+            self.schema,
+            self.train_dataset,
+            self.args.per_device_train_batch_size,
+            max_sequence_length=self.args.max_sequence_length,
+            drop_last=self.args.dataloader_drop_last,
+            shuffle=True,
+            shuffle_buffer_size=self.args.shuffle_buffer_size,
+        )
 
     def get_eval_dataloader(self, eval_dataset=None):
+        """
+        Set the eval dataloader to use by Trainer.
+        It supports user defined data-loader set as an attribute in the constructor.
+        When the attribute is None, The data-loader is defined using eval_dataset
+        and the `data_loader_engine` specified in Training Arguments.
+        """
         if self.eval_dataloader is not None:
             return self.eval_dataloader
 
@@ -134,33 +130,15 @@ class Trainer(BaseTrainer):
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         assert self.schema is not None, "schema is required to generate Eval Dataloader"
-
-        if self.args.data_loader_engine == "pyarrow":
-            return PyarrowDataLoaderBuilder.from_schema(
-                self.schema,
-                eval_dataset,
-                self.args.per_device_eval_batch_size,
-                max_sequence_length=self.args.max_sequence_length,
-                drop_last=self.args.dataloader_drop_last,
-                shuffle=False,
-                shuffle_buffer_size=self.args.shuffle_buffer_size,
-            )
-
-        elif self.args.data_loader_engine == "nvtabular":
-            return NVTDataLoaderBuilder.from_schema(
-                self.schema,
-                paths_or_dataset=eval_dataset,
-                batch_size=self.args.per_device_eval_batch_size,
-                max_sequence_length=self.args.max_sequence_length,
-                drop_last=self.args.dataloader_drop_last,
-                shuffle=False,
-                sparse_as_dense=True,
-            )
-        else:
-            raise ValueError(
-                f"{self.args.data_loader_engine} is not supported, please choose one of "
-                '["pyarrow", "nvtabular"] as dataloader generators'
-            )
+        return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
+            self.schema,
+            self.eval_dataset,
+            self.args.per_device_eval_batch_size,
+            max_sequence_length=self.args.max_sequence_length,
+            drop_last=self.args.dataloader_drop_last,
+            shuffle=True,
+            shuffle_buffer_size=self.args.shuffle_buffer_size,
+        )
 
     def num_examples(self, dataloader: DataLoader):
         """
@@ -526,11 +504,7 @@ class Trainer(BaseTrainer):
             num_samples=num_examples,
         )
 
-    def _save_model_and_checkpoint(self, trial=None, metrics=None):
-        import os
-
-        import cloudpickle
-
+    def _save_model_and_checkpoint(self, trial=None, metrics=None, save_model_class=True):
         """
         Save the serialized model + optimizer states
         """
@@ -540,6 +514,12 @@ class Trainer(BaseTrainer):
         torch.save(self.lr_scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
         torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
         """
+        import os
+
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ImportError("cloudpickle is required to load model class")
 
         logger.info("Saving model...")
         output_dir = os.path.join(
@@ -547,22 +527,32 @@ class Trainer(BaseTrainer):
         )
         # save model parameters
         self._save_checkpoint(self.model, trial=None, metrics=None)
+
         # save the serialized model
-        with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
-            cloudpickle.dump(self.model, out)
+        if save_model_class:
+            if cloudpickle is None:
+                raise ValueError("cloudpickle is required to save model class")
+
+            with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
+                cloudpickle.dump(self.model, out)
 
     def load_model_trainer_states_from_checkpoint(self, checkpoint_path):
-        import os
-
-        import cloudpickle
-
         """
-        This method loads from checkpoints states of the model, trainer and random states.
+        This method loads the model class and the checkpoints states of the model,
+        trainer and random states.
         It does not loads the optimizer and LR scheduler states (for that call trainer.train()
         with resume_from_checkpoint argument for a complete load)
         """
+        import os
+
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ImportError("cloudpickle is required to load model class")
+
         logger.info("Loading model class")
         self.model = cloudpickle.load(open(os.path.join(checkpoint_path, "model_class.pkl"), "rb"))
+
         logger.info("Loading previously trained model")
         # Restoring model weights
         self.model.load_state_dict(

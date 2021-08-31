@@ -1,3 +1,6 @@
+import os
+import tempfile
+
 import pytest
 
 from transformers4rec.config import trainer
@@ -158,3 +161,61 @@ def test_trainer_eval_loop(
     default_metric = ["eval_ndcgat_10", "eval_ndcgat_20", "eval_recallat_10", "eval_recallat_20"]
     assert set(default_metric).issubset(set(eval_metrics.keys()))
     assert eval_metrics["eval_loss"] is not None
+
+
+try:
+    import cloudpickle
+except ImportError:
+    cloudpickle = None
+save_model_class = [False]
+if cloudpickle:
+    save_model_class.append(True)
+
+
+@pytest.mark.parametrize("save_class", save_model_class)
+def test_saves_checkpoints(
+    yoochoose_schema, yoochoose_path_file, torch_yoochoose_next_item_prediction_model, save_class
+):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        batch_size = 16
+        args = trainer.T4RecTrainingArguments(
+            output_dir=tmpdir,
+            avg_session_length=20,
+            per_device_train_batch_size=batch_size,
+            per_device_eval_batch_size=batch_size // 2,
+            data_loader_engine="pyarrow",
+            max_sequence_length=20,
+            fp16=False,
+            no_cuda=True,
+            report_to=[],
+            debug=["r"],
+        )
+        recsys_trainer = torch4rec.Trainer(
+            model=torch_yoochoose_next_item_prediction_model,
+            args=args,
+            schema=yoochoose_schema,
+            train_dataset_or_path=yoochoose_path_file,
+            eval_dataset_or_path=yoochoose_path_file,
+            compute_metrics=True,
+        )
+
+        recsys_trainer.train()
+        recsys_trainer._save_model_and_checkpoint(save_model_class=save_class)
+
+        file_list = [
+            "pytorch_model.bin",
+            "training_args.bin",
+            "optimizer.pt",
+            "scheduler.pt",
+            "rng_state.pth",
+            "trainer_state.json",
+        ]
+        if save_class:
+            file_list.append("model_class.pkl")
+
+        step = recsys_trainer.state.global_step
+        checkpoint = os.path.join(tmpdir, f"checkpoint-{step}")
+
+        assert os.path.isdir(checkpoint)
+        for filename in file_list:
+            assert os.path.isfile(os.path.join(checkpoint, filename))
