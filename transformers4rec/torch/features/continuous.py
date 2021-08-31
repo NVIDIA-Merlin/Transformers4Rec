@@ -1,9 +1,29 @@
-from ..block.tabular.tabular import FilterFeatures
+from typing import List, Optional
+
+from ...utils.misc_utils import docstring_parameter
+from .. import typing
+from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from .base import InputBlock
 
 
+@docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
 class ContinuousFeatures(InputBlock):
-    def __init__(self, features, aggregation=None, pre=None, post=None, **kwargs):
+    """Input block for continuous features.
+
+    Parameters
+    ----------
+    features: List[str]
+        List of continuous features to include in this module.
+    {tabular_module_parameters}
+    """
+
+    def __init__(
+        self,
+        features: List[str],
+        pre: Optional[typing.TabularTransformationType] = None,
+        post: Optional[typing.TabularTransformationType] = None,
+        aggregation: Optional[typing.TabularAggregationType] = None,
+    ):
         super().__init__(aggregation=aggregation, pre=pre, post=post)
         self.filter_features = FilterFeatures(features)
 

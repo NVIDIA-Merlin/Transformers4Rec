@@ -4,20 +4,43 @@ from typing import Any, Callable, Dict, Optional, Text, Union
 import torch
 
 from ...types import DatasetSchema, DefaultTags
-from ..block.tabular.tabular import FilterFeatures, TabularModule
-from ..typing import TabularData
+from ...utils.misc_utils import docstring_parameter
+from .. import typing
+from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
 from .base import InputBlock
 
+EMBEDDING_FEATURES_PARAMS_DOCSTRING = """
+    feature_config: Dict[str, FeatureConfig]
+        This specifies what TableConfig to use for each feature. For shared embeddings, the same
+        TableConfig can be used for multiple features.
+    item_id: str, optional
+        The name of the feature that's used for the item_id.
+"""
 
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    embedding_features_parameters=EMBEDDING_FEATURES_PARAMS_DOCSTRING,
+)
 class EmbeddingFeatures(InputBlock):
+    """Input block for embedding-lookups for categorical features.
+
+    For multi-hot features, the embeddings will be aggregated into a single tensor using the mean.
+
+    Parameters
+    ----------
+    {embedding_features_parameters}
+    {tabular_module_parameters}
+    """
+
     def __init__(
         self,
         feature_config: Dict[str, "FeatureConfig"],
         item_id: Optional[str] = None,
-        aggregation=None,
-        pre=None,
-        post=None,
+        pre: Optional[typing.TabularTransformationType] = None,
+        post: Optional[typing.TabularTransformationType] = None,
+        aggregation: Optional[typing.TabularAggregationType] = None,
     ):
         super().__init__(pre=pre, post=post, aggregation=aggregation)
         self.item_id = item_id
@@ -196,21 +219,34 @@ class EmbeddingFeatures(InputBlock):
         return sizes
 
 
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    embedding_features_parameters=EMBEDDING_FEATURES_PARAMS_DOCSTRING,
+)
 class SoftEmbeddingFeatures(EmbeddingFeatures):
     """
     Encapsulate continuous features encoded using the Soft-one hot encoding
     embedding technique (SoftEmbedding),    from https://arxiv.org/pdf/1708.00065.pdf
     In a nutshell, it keeps an embedding table for each continuous feature,
     which is represented as a weighted average of embeddings.
+
+    Parameters
+    ----------
+    feature_config: Dict[str, FeatureConfig]
+        This specifies what TableConfig to use for each feature. For shared embeddings, the same
+        TableConfig can be used for multiple features.
+    layer_norm: boolean
+        When layer_norm is true, TabularLayerNorm will be used in post.
+    {tabular_module_parameters}
     """
 
     def __init__(
         self,
         feature_config: Dict[str, "FeatureConfig"],
         layer_norm: bool = True,
-        aggregation=None,
-        pre=None,
-        post=None,
+        pre: Optional[typing.TabularTransformationType] = None,
+        post: Optional[typing.TabularTransformationType] = None,
+        aggregation: Optional[typing.TabularAggregationType] = None,
     ):
         if layer_norm:
             from transformers4rec.torch import TabularLayerNorm
@@ -320,30 +356,6 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
     def table_to_embedding_module(self, table: "TableConfig") -> "SoftEmbedding":
         return SoftEmbedding(table.vocabulary_size, table.dim, table.initializer)
-
-
-class LayerNormalizationFeatures(TabularModule):
-    """
-    Applies Layer norm to each input feature individually, before the aggregation
-    """
-
-    def __init__(self, features_dim: Dict[str, int]):
-        super().__init__()
-        feature_layer_norm = {}
-        for fname, dim in features_dim.items():
-            feature_layer_norm[fname] = torch.nn.LayerNorm(normalized_shape=dim)
-        self.feature_layer_norm = torch.nn.ModuleDict(feature_layer_norm)
-
-    @classmethod
-    def from_feature_config(cls, feature_config: Dict[str, "FeatureConfig"]):
-        features_dim = {}
-        for name, feature in feature_config.items():
-            table: TableConfig = feature.table
-            features_dim[name] = table.dim
-        return cls(features_dim)
-
-    def forward(self, inputs: TabularData, **kwargs) -> TabularData:
-        return {key: self.feature_layer_norm[key](val) for key, val in inputs.items()}
 
 
 class TableConfig:

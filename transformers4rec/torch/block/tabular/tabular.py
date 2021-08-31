@@ -1,6 +1,6 @@
 from abc import ABC
 from functools import reduce
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import torch
 
@@ -466,7 +466,7 @@ class MergeTabular(TabularBlock):
 
     def __init__(
         self,
-        *modules_to_merge: TabularModule,
+        *modules_to_merge: Union[TabularModule, Dict[str, TabularModule]],
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None

@@ -4,21 +4,52 @@ import torch
 
 from ...types import DatasetSchema, DefaultTags, Tag
 from ...utils.masking import MaskSequence
+from ...utils.misc_utils import docstring_parameter
+from .. import typing
 from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
-from ..block.tabular.tabular import AsTabular
+from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
 from ..masking import masking_registry
 from ..utils.torch_utils import calculate_batch_size_from_input_size
-from .embedding import EmbeddingFeatures, FeatureConfig, TableConfig
-from .tabular import TabularFeatures
+from . import embedding
+from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
 
-class SequenceEmbeddingFeatures(EmbeddingFeatures):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], padding_idx: int = 0, **kwargs):
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    embedding_features_parameters=embedding.EMBEDDING_FEATURES_PARAMS_DOCSTRING,
+)
+class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
+    """Input block for embedding-lookups for categorical features. This module produces 3-D tensors,
+    this is useful for sequential models like transformers.
+
+    Parameters
+    ----------
+    {embedding_features_parameters}
+    padding_idx: int
+        The symbol to use for padding.
+    {tabular_module_parameters}
+    """
+
+    def __init__(
+        self,
+        feature_config: Dict[str, embedding.FeatureConfig],
+        item_id: Optional[str] = None,
+        padding_idx: int = 0,
+        pre: Optional[typing.TabularTransformationType] = None,
+        post: Optional[typing.TabularTransformationType] = None,
+        aggregation: Optional[typing.TabularAggregationType] = None,
+    ):
+        super(SequenceEmbeddingFeatures, self).__init__(
+            feature_config=feature_config,
+            item_id=item_id,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+        )
         self.padding_idx = padding_idx
-        super().__init__(feature_config, **kwargs)
 
-    def table_to_embedding_module(self, table: TableConfig) -> torch.nn.Embedding:
+    def table_to_embedding_module(self, table: embedding.TableConfig) -> torch.nn.Embedding:
         embedding_table = torch.nn.Embedding(
             table.vocabulary_size, table.dim, padding_idx=self.padding_idx
         )
@@ -36,19 +67,37 @@ class SequenceEmbeddingFeatures(EmbeddingFeatures):
         return sizes
 
 
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
+)
 class TabularSequenceFeatures(TabularFeatures):
+    """Input module that combines different types of features to a sequence: continuous,
+    categorical & text.
+
+    Parameters
+    ----------
+    {tabular_features_parameters}
+    projection_module: BlockOrModule, optional
+        Module that's used to project the output of this module, typically done by an MLPBlock.
+    masking: MaskSequence, optional
+         Masking to apply to the inputs.
+    {tabular_module_parameters}
+
+    """
+
     EMBEDDING_MODULE_CLASS = SequenceEmbeddingFeatures
 
     def __init__(
         self,
-        continuous_module=None,
-        categorical_module=None,
-        text_embedding_module=None,
-        projection_module=None,
-        masking=None,
-        pre=None,
-        post=None,
-        aggregation=None,
+        continuous_module: Optional[typing.TabularModule] = None,
+        categorical_module: Optional[typing.TabularModule] = None,
+        text_embedding_module: Optional[typing.TabularModule] = None,
+        projection_module: Optional[typing.BlockOrModule] = None,
+        masking: Optional[typing.MaskSequence] = None,
+        pre: Optional[typing.TabularTransformationType] = None,
+        post: Optional[typing.TabularTransformationType] = None,
+        aggregation: Optional[typing.TabularAggregationType] = None,
     ):
         super().__init__(
             continuous_module,
