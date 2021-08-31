@@ -40,12 +40,8 @@ class T4RecTrainingArguments(TrainingArguments):
         Logs the inputs and attention weights
         each --eval_steps (only test set)"
         bu default False
-    learning_rate_schedule: Optional[str], str
-        Learning Rate schedule (restarted for each training day).
-        Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup
-        by defaut constant_with_warmup
     learning_rate_num_cosine_cycles_by_epoch : Optional[int], int
-        Number of cycles for by epoch when --learning_rate_schedule = cosine_with_warmup.
+        Number of cycles for by epoch when --lr_scheduler_type = cosine_with_warmup.
         The number of waves in the cosine schedule
         (e.g. 0.5 is to just decrease from the max value to 0, following a half-cosine).
         by default 1.25
@@ -125,14 +121,6 @@ class T4RecTrainingArguments(TrainingArguments):
         },
     )
 
-    learning_rate_schedule: str = field(
-        default="constant_with_warmup",
-        metadata={
-            "help": "Learning Rate schedule (restarted for each training day). "
-            "Valid values: constant_with_warmup | linear_with_warmup | cosine_with_warmup"
-        },
-    )
-
     learning_rate_num_cosine_cycles_by_epoch: float = field(
         default=1.25,
         metadata={
@@ -146,6 +134,15 @@ class T4RecTrainingArguments(TrainingArguments):
         default="default",
         metadata={"help": "Name of the Experiments Group, for organizing job runs logged on W&B"},
     )
+
+    @property
+    def place_model_on_device(self):
+        """
+        Override the method to allow running training on cpu
+        """
+        if self.device.type == "cuda":
+            return True
+        return False
 
 
 class T4RecTrainingArgumentsTF(T4RecTrainingArguments, TFTrainingArguments):
