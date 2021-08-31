@@ -22,7 +22,7 @@ def test_stochastic_swap_noise(replacement_prob):
     }
 
     ssn = torch4rec.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
-    out_features_ssn = ssn(seq_inputs)
+    out_features_ssn = ssn(seq_inputs, mask=seq_inputs["categ_feat"] != PAD_TOKEN)
 
     for fname in seq_inputs:
         replaced_mask = out_features_ssn[fname] != seq_inputs[fname]
@@ -37,13 +37,16 @@ def test_stochastic_swap_noise(replacement_prob):
 def test_stochastic_swap_noise_with_tabular_features(
     yoochoose_schema, torch_yoochoose_like, replacement_prob
 ):
+    PAD_TOKEN = 0
+
     inputs = torch_yoochoose_like
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(yoochoose_schema)
     out_features = tab_module(inputs)
 
-    PAD_TOKEN = 0
-    ssn = torch4rec.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
-    out_features_ssn = ssn(out_features)
+    ssn = torch4rec.StochasticSwapNoise(
+        pad_token=PAD_TOKEN, replacement_prob=replacement_prob, schema=yoochoose_schema
+    )
+    out_features_ssn = tab_module(inputs, pre=ssn)
 
     for fname in out_features:
         replaced_mask = out_features_ssn[fname] != out_features[fname]

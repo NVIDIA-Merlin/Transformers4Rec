@@ -18,14 +18,15 @@ class StochasticSwapNoise(TabularTransformation):
         self.pad_token = pad_token
         self.replacement_prob = replacement_prob
 
-    def forward(self, inputs: TensorOrTabularData, **kwargs) -> TensorOrTabularData:
-        maybe_mask = None
+    def forward(
+        self, inputs: TensorOrTabularData, mask: Optional[torch.Tensor] = None, **kwargs
+    ) -> TensorOrTabularData:
         if self.schema:
-            maybe_mask = self.schema.get_mask_from_inputs(inputs, self.pad_token)
+            mask = mask or self.schema.get_mask_from_inputs(inputs, self.pad_token)
         if isinstance(inputs, dict):
-            return {key: self.augment(val, maybe_mask) for key, val in inputs.items()}
+            return {key: self.augment(val, mask) for key, val in inputs.items()}
 
-        return self.augment(inputs, maybe_mask)
+        return self.augment(inputs, mask)
 
     def forward_output_size(self, input_size):
         return input_size
@@ -34,6 +35,12 @@ class StochasticSwapNoise(TabularTransformation):
         self, input_tensor: torch.Tensor, mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         with torch.no_grad():
+            if mask:
+                if input_tensor.ndim == mask.ndim - 1:
+                    mask = mask[:, 0]
+                elif input_tensor.ndim == mask.ndim - 2:
+                    mask = mask[:, 0, 0]
+
             sse_prob_replacement_matrix = torch.full(
                 input_tensor.shape,
                 self.replacement_prob,
@@ -51,11 +58,14 @@ class StochasticSwapNoise(TabularTransformation):
 
             input_permutation = torch.randperm(masked.shape[0])
             sampled_values_to_replace = masked[input_permutation][:n_values_to_replace]
-            if sampled_values_to_replace.ndim == 2:
-                sampled_values_to_replace = torch.squeeze(sampled_values_to_replace)
-            input_tensor[sse_replacement_mask] = sampled_values_to_replace
+            output_tensor = input_tensor.clone()
 
-        return input_tensor
+            if input_tensor[sse_replacement_mask].size() != sampled_values_to_replace:
+                sampled_values_to_replace = torch.squeeze(sampled_values_to_replace)
+
+            output_tensor[sse_replacement_mask] = sampled_values_to_replace
+
+        return output_tensor
 
 
 @tabular_transformation_registry.register_with_multiple_names("layer-norm")
