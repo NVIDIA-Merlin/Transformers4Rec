@@ -153,7 +153,8 @@ class EmbeddingFeatures(InputBlock):
                     schema._schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
-                )
+                ),
+                schema=schema,
             )
 
         return output

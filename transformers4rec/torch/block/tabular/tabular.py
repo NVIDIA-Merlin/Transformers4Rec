@@ -8,14 +8,14 @@ from ....types import DatasetSchema
 from ....utils.misc_utils import docstring_parameter
 from ....utils.registry import Registry
 from ...typing import TabularData, TensorOrTabularData
-from ...utils.torch_utils import OutputSizeMixin, SchemaMixin
+from ...utils.torch_utils import OutputSizeMixin
 from ..base import BlockBase, SequentialBlock, right_shift_block
 
 tabular_transformation_registry: Registry = Registry.class_registry("torch.tabular_transformations")
 tabular_aggregation_registry: Registry = Registry.class_registry("torch.tabular_aggregations")
 
 
-class TabularTransformation(torch.nn.Module, OutputSizeMixin, SchemaMixin, ABC):
+class TabularTransformation(torch.nn.Module, OutputSizeMixin, ABC):
     """Transformation that takes in `TabularData` and outputs `TabularData`."""
 
     def forward(self, inputs: TabularData, **kwargs) -> TabularData:
@@ -26,7 +26,7 @@ class TabularTransformation(torch.nn.Module, OutputSizeMixin, SchemaMixin, ABC):
         return tabular_transformation_registry.parse(class_or_str)
 
 
-class TabularAggregation(torch.nn.Module, OutputSizeMixin, SchemaMixin, ABC):
+class TabularAggregation(torch.nn.Module, OutputSizeMixin, ABC):
     """Aggregation of `TabularData` that outputs a single `Tensor`"""
 
     def forward(self, inputs: TabularData) -> torch.Tensor:
@@ -407,20 +407,22 @@ class TabularBlock(BlockBase, TabularModule, ABC):
 
         return output_size
 
-    def build(self, input_size, **kwargs):
+    def build(self, input_size, schema=None, **kwargs):
         output_size = input_size
         if self.pre:
-            output_size = self.pre.output_size(self.pre.build(input_size, **kwargs))
+            output_size = self.pre.output_size(self.pre.build(input_size, schema=schema, **kwargs))
 
         output_size = self.forward_output_size(output_size)
 
         if self.post:
-            output_size = self.post.output_size(self.post.build(output_size, **kwargs))
+            output_size = self.post.output_size(
+                self.post.build(output_size, schema=schema, **kwargs)
+            )
 
         if self.aggregation:
-            self.aggregation.build(output_size, **kwargs)
+            self.aggregation.build(output_size, schema=schema, **kwargs)
 
-        return super().build(input_size, **kwargs)
+        return super().build(input_size, schema=schema, **kwargs)
 
     def _check_post_output_size(self, input_size):
         output_size = input_size

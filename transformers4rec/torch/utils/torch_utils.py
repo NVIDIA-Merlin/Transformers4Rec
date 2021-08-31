@@ -8,8 +8,10 @@ from ..typing import TabularData
 
 
 class OutputSizeMixin(abc.ABC):
-    def build(self, input_size, **kwargs):
+    def build(self, input_size, schema=None, **kwargs):
         self.input_size = input_size
+        if schema and not getattr(self, "schema", None):
+            self.schema = schema
 
         return self
 
@@ -29,8 +31,6 @@ class OutputSizeMixin(abc.ABC):
 
         return right_shift_block(self, other)
 
-
-class SchemaMixin:
     @property
     def schema(self):
         return getattr(self, "_schema", None)

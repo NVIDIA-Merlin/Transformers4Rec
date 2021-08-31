@@ -135,15 +135,15 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
 
         return input
 
-    def build(self, input_size, **kwargs):
+    def build(self, input_size, schema=None, **kwargs):
         output_size = input_size
         for module in self:
             if not hasattr(module, "build"):
                 break
-            module.build(output_size)
+            module.build(output_size, schema=schema)
             output_size = module.output_size()
 
-        return super(SequentialBlock, self).build(input_size)
+        return super(SequentialBlock, self).build(input_size, schema=None, **kwargs)
 
     def as_tabular(self, name=None):
         from transformers4rec.torch import AsTabular

@@ -127,16 +127,14 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
         )
 
-        if output.aggregation is not None:
-            output.aggregation.schema = schema
-
         if automatic_build and schema._schema:
             output.build(
                 get_output_sizes_from_schema(
                     schema._schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
-                )
+                ),
+                schema=schema,
             )
 
         if continuous_projection:
