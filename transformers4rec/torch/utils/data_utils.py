@@ -10,6 +10,7 @@ from transformers4rec.utils.schema import DatasetSchema
 from transformers4rec.utils.tags import Tag
 
 from ...utils.registry import Registry
+from .torch_utils import is_nvtabular_available
 
 try:
     import pyarrow
@@ -17,24 +18,15 @@ try:
 except ImportError:
     pyarrow = None
 
-try:
-    import nvtabular
-    from nvtabular.loader.torch import DLDataLoader
-
-    from transformers4rec.torch.data import DataLoader
-    from transformers4rec.utils.misc_utils import _validate_dataset
-
-except ImportError:
-    nvtabular = None
-
 logger = logging.getLogger(__name__)
 
-dataloader_builder_registry: Registry = Registry.class_registry("torch.dataloader_builder")
+dataloader_registry: Registry = Registry("torch.dataloader_builder")
 
 
-class DataLoaderBuilder(ABC):
+class T4RecDataLoader(ABC):
     """
-    Base Helper class to build dataloader from the schema
+    Base Helper class to build dataloader from the schema with properties
+    required by T4Rec Trainer class.
     """
 
     @classmethod
@@ -42,22 +34,20 @@ class DataLoaderBuilder(ABC):
         # Build the data-loader from the schema
         raise NotImplementedError
 
-    def get_dataset(self, paths_or_dataset):
-        # Load the dataset from paths
-        # Or return dataset object
+    def set_dataset(self, paths_or_dataset):
+        # set the dataset from paths
+        # or from provided dataset
         raise NotImplementedError
 
     @classmethod
     def parse(cls, class_or_str):
-        return dataloader_builder_registry.parse(class_or_str)
+        return dataloader_registry.parse(class_or_str)
 
 
 if pyarrow is not None:
 
-    @dataloader_builder_registry.register_with_multiple_names("pyarrow_builder", "pyarrow")
-    class PyarrowDataLoaderBuilder(DataLoaderBuilder, PyTorchDataLoader):
-        # TODO fix device mismatch error when calling eval after training
-
+    @dataloader_registry.register_with_multiple_names("pyarrow_builder", "pyarrow")
+    class PyarrowDataLoader(T4RecDataLoader, PyTorchDataLoader):
         def __init__(
             self,
             paths_or_dataset,
@@ -73,7 +63,7 @@ if pyarrow is not None:
             drop_last=False,
             **kwargs,
         ):
-            DataLoaderBuilder.__init__(self)
+            T4RecDataLoader.__init__(self)
             self.paths_or_dataset = paths_or_dataset
             self.batch_size = batch_size
             self.shuffle = shuffle
@@ -133,6 +123,19 @@ if pyarrow is not None:
             pin_memory=True,
             **kwargs,
         ):
+            """
+               Instantitates ``PyarrowDataLoader`` from a ``DatasetSchema``.
+            Parameters
+            ----------
+                schema: DatasetSchema
+                    Dataset schema
+                paths_or_dataset: Union[str, Dataset]
+                    Path to paquet data of Dataset object.
+                batch_size: int
+                    batch size of Dataloader.
+                max_sequence_length: int
+                    The maximum length of list features.
+            """
             categorical_features = (
                 categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
             )
@@ -157,22 +160,30 @@ if pyarrow is not None:
 
 
 else:
-    PyarrowDataLoaderBuilder = None
+    PyarrowDataLoader = None
 
-if nvtabular is not None:
+
+if is_nvtabular_available():
+    from nvtabular.loader.torch import DLDataLoader
+
+    from transformers4rec.torch.data import DataLoader
+    from transformers4rec.utils.misc_utils import _validate_dataset
 
     class DLDataLoaderWrapper(DLDataLoader):
+        """
+        Setting the batch size directly to DLDataLoader makes it 3x slower.
+        So we set as an alternative attribute and use it within
+        T4Rec Trainer during evaluation
+        # TODO : run experiments with new nvt dataloader
+        """
+
         def __init__(self, *args, **kwargs) -> None:
             if "batch_size" in kwargs:
-                # Setting the batch size directly to DLDataLoader makes it 3x slower.
-                # So we set as an alternative attribute and use
-                # it within T4Rec Trainer during evaluation
-                # TODO : run experiments with new nvt dataloader
                 self._batch_size = kwargs.pop("batch_size")
                 super().__init__(*args, **kwargs)
 
-    @dataloader_builder_registry.register_with_multiple_names("nvtabular_builder, " "nvtabular")
-    class NVTDataLoaderBuilder(DataLoaderBuilder, DLDataLoaderWrapper):
+    @dataloader_registry.register_with_multiple_names("nvtabular_dataloader", "nvtabular")
+    class NVTabularDataLoader(T4RecDataLoader, DLDataLoaderWrapper):
         def __init__(
             self,
             paths_or_dataset,
@@ -193,14 +204,19 @@ if nvtabular is not None:
             global_rank=None,
             sparse_names=None,
             sparse_max=None,
-            sparse_as_dense=False,
+            sparse_as_dense=True,
             drop_last=False,
             schema=None,
             **kwargs,
         ):
-            DataLoaderBuilder.__init__(self)
+            T4RecDataLoader.__init__(self)
 
             self.paths_or_dataset = paths_or_dataset
+            self.batch_size = batch_size
+            self.shuffle = shuffle
+            self.max_sequence_length = max_sequence_length
+            self.drop_last = drop_last
+
             self.set_dataset(buffer_size, engine, reader_kwargs)
 
             loader = DataLoader(
@@ -261,6 +277,19 @@ if nvtabular is not None:
             sparse_max=None,
             **kwargs,
         ):
+            """
+               Instantitates ``NVTabularDataLoader`` from a ``DatasetSchema``.
+            Parameters
+            ----------
+                schema: DatasetSchema
+                    Dataset schema
+                paths_or_dataset: Union[str, Dataset]
+                    Path to paquet data of Dataset object.
+                batch_size: int
+                    batch size of Dataloader.
+                max_sequence_length: int
+                    The maximum length of list features.
+            """
             categorical_features = (
                 categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
             )
@@ -271,7 +300,6 @@ if nvtabular is not None:
 
             sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
             sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
-
             nvt_loader = cls(
                 paths_or_dataset,
                 batch_size=batch_size,
@@ -291,10 +319,6 @@ if nvtabular is not None:
             )
 
             return nvt_loader
-
-
-else:
-    NVTDataLoaderBuilder = None
 
 
 class ParquetDataset(Dataset):
