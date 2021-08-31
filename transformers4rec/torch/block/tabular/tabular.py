@@ -396,8 +396,6 @@ class TabularBlock(BlockBase, TabularModule, ABC):
     {tabular_module_parameters}
     """
 
-    REQUIRES_SCHEMA = False
-
     def __init__(
         self,
         pre: Optional[TabularTransformationType] = None,
