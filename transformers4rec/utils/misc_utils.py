@@ -26,6 +26,14 @@ from typing import Any, Dict
 logger = logging.getLogger(__name__)
 
 
+def docstring_parameter(*args, **kwargs):
+    def dec(obj):
+        obj.__doc__ = obj.__doc__.format(*args, **kwargs)
+        return obj
+
+    return dec
+
+
 class lazy_property(property):
     """Decorator for a property that is lazily evaluated."""
 

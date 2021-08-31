@@ -27,11 +27,11 @@ from .block.tabular.tabular import (
     AsTabular,
     FilterFeatures,
     MergeTabular,
+    SequentialTabularTransformations,
     TabularAggregation,
     TabularBlock,
     TabularModule,
     TabularTransformation,
-    TabularTransformations,
 )
 from .block.tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .block.transformer import TransformerBlock
@@ -68,7 +68,7 @@ __all__ = [
     "Block",
     "MLPBlock",
     "TabularTransformation",
-    "TabularTransformations",
+    "SequentialTabularTransformations",
     "TabularAggregation",
     "StochasticSwapNoise",
     "TabularLayerNorm",

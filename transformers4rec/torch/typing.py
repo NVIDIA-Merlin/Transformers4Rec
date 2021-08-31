@@ -13,7 +13,14 @@ else:
 TabularData = Dict[str, torch.Tensor]
 TensorOrTabularData = typing.Union[torch.Tensor, TabularData]
 
-TabularModule = ForwardRef("transformers4rec.torch.tabular.TabularModule")
+_tabular_module = "transformers4rec.torch.block.tabular.tabular"
+TabularTransformation = ForwardRef(f"{_tabular_module}.TabularTransformation")
+TabularAggregation = ForwardRef(f"{_tabular_module}.TabularAggregation")
+SequentialTabularTransformations = ForwardRef(f"{_tabular_module}.SequentialTabularTransformations")
+TabularTransformationType = ForwardRef(f"{_tabular_module}.TabularTransformationType")
+TabularAggregationType = ForwardRef(f"{_tabular_module}.TabularAggregationType")
+TabularModule = ForwardRef(f"{_tabular_module}.TabularModule")
+TabularBlock = ForwardRef(f"{_tabular_module}.TabularBlock")
 
 ProcessedSequence = ForwardRef("transformers4rec.torch.features.ProcessedSequence")
 
