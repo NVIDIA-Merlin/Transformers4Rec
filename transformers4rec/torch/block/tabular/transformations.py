@@ -35,7 +35,7 @@ class StochasticSwapNoise(TabularTransformation):
         self, input_tensor: torch.Tensor, mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         with torch.no_grad():
-            if mask:
+            if mask is not None:
                 if input_tensor.ndim == mask.ndim - 1:
                     mask = mask[:, 0]
                 elif input_tensor.ndim == mask.ndim - 2:
