@@ -17,7 +17,6 @@ class Model(torch.nn.Module):
         head_weights: Optional[List[float]] = None,
         head_reduction: Optional[str] = "mean",
         optimizer=torch.optim.Adam,
-        device=None,
         name=None
     ):
         """
@@ -38,12 +37,6 @@ class Model(torch.nn.Module):
         self.head_weights = head_weights or [1.0] * len(head)
         self.head_reduction = head_reduction
         self.optimizer = optimizer
-        # Move heads to specified device
-        self.heads.to(device)
-        # Set the device for masking modules
-        for head in self.heads:
-            if isinstance(head.body.inputs, TabularSequenceFeatures) and head.body.inputs.masking:
-                head.body.inputs.masking.device = device
 
     def forward(self, inputs: TensorOrTabularData, **kwargs):
         # TODO: Optimize this
@@ -182,3 +175,14 @@ class Model(torch.nn.Module):
             return self.name
 
         return super(Model, self)._get_name()
+
+    def to(self, device):
+        """
+        Override to() method to set the device of masking module
+        """
+        # Set the device for masking modules
+        for head in self.heads:
+            if isinstance(head.body.inputs, TabularSequenceFeatures) and head.body.inputs.masking:
+                head.body.inputs.masking.device = device
+        # Move Modules to specified device
+        self.heads.to(device)
