@@ -1,4 +1,5 @@
 import logging
+from abc import ABC
 from random import randint
 
 import numpy as np
@@ -7,6 +8,8 @@ from torch.utils.data import Dataset, IterableDataset
 
 from transformers4rec.utils.schema import DatasetSchema
 from transformers4rec.utils.tags import Tag
+
+from ...utils.registry import Registry
 
 try:
     import pyarrow
@@ -26,23 +29,13 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+dataloader_builder_registry: Registry = Registry.class_registry("torch.dataloader_builder")
 
-class DataLoaderBuilder:
-    """
-    Base Helper class to build NVTabular or PyArrow dataloader
-    """
 
-    def __init__(
-        self,
-        paths_or_dataset,
-        batch_size,
-        drop_last=False,
-        shuffle=False,
-    ):
-        self.paths_or_dataset = paths_or_dataset
-        self.batch_size = batch_size
-        self.drop_last = drop_last
-        self.shuffle = shuffle
+class DataLoaderBuilder(ABC):
+    """
+    Base Helper class to build dataloader from the schema
+    """
 
     @classmethod
     def from_schema(self, schema: DatasetSchema):
@@ -54,11 +47,17 @@ class DataLoaderBuilder:
         # Or return dataset object
         raise NotImplementedError
 
+    @classmethod
+    def parse(cls, class_or_str):
+        return dataloader_builder_registry.parse(class_or_str)
+
 
 if pyarrow is not None:
 
+    @dataloader_builder_registry.register_with_multiple_names("pyarrow_builder", "pyarrow")
     class PyarrowDataLoaderBuilder(DataLoaderBuilder, PyTorchDataLoader):
         # TODO fix device mismatch error when calling eval after training
+
         def __init__(
             self,
             paths_or_dataset,
@@ -74,12 +73,15 @@ if pyarrow is not None:
             drop_last=False,
             **kwargs,
         ):
+            DataLoaderBuilder.__init__(self)
+            self.paths_or_dataset = paths_or_dataset
+            self.batch_size = batch_size
+            self.shuffle = shuffle
             self.shuffle_buffer_size = shuffle_buffer_size
             self.num_workers = num_workers
             self.pin_memory = pin_memory
             self.max_sequence_length = max_sequence_length
-
-            DataLoaderBuilder.__init__(self, paths_or_dataset, batch_size, drop_last, shuffle)
+            self.drop_last = drop_last
 
             self.set_dataset(cols_to_read=conts + cats + labels)
 
@@ -169,6 +171,7 @@ if nvtabular is not None:
                 self._batch_size = kwargs.pop("batch_size")
                 super().__init__(*args, **kwargs)
 
+    @dataloader_builder_registry.register_with_multiple_names("nvtabular_builder, " "nvtabular")
     class NVTDataLoaderBuilder(DataLoaderBuilder, DLDataLoaderWrapper):
         def __init__(
             self,
@@ -195,10 +198,9 @@ if nvtabular is not None:
             schema=None,
             **kwargs,
         ):
-            DataLoaderBuilder.__init__(
-                self, paths_or_dataset, batch_size=batch_size, drop_last=drop_last, shuffle=shuffle
-            )
+            DataLoaderBuilder.__init__(self)
 
+            self.paths_or_dataset = paths_or_dataset
             self.set_dataset(buffer_size, engine, reader_kwargs)
 
             loader = DataLoader(
@@ -213,7 +215,7 @@ if nvtabular is not None:
                 device=device,
                 global_size=global_size,
                 global_rank=global_rank,
-                drop_last=self.drop_last,
+                drop_last=drop_last,
                 sparse_names=sparse_names,
                 sparse_max=sparse_max,
                 sparse_as_dense=sparse_as_dense,
