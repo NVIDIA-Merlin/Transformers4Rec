@@ -144,7 +144,7 @@ def torch_yoochoose_next_item_prediction_model(
     body = torch4rec.SequentialBlock(
         inputs,
         torch4rec.MLPBlock([64]),
-        torch4rec.TransformerBlock(transformer=transformer_config, masking=inputs.masking),
+        torch4rec.TransformerBlock(transformer_config, masking=inputs.masking),
     )
     model = torch4rec.NextItemPredictionTask(weight_tying=True, hf_format=True).to_model(
         body, inputs
