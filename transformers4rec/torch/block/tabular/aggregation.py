@@ -2,17 +2,27 @@ from functools import reduce
 
 import torch
 
+from ....utils.schema import DatasetSchema
+from ...typing import TabularData
 from ...utils.torch_utils import calculate_batch_size_from_input_size, requires_schema
 from .tabular import TabularAggregation, tabular_aggregation_registry
 
 
 @tabular_aggregation_registry.register("concat")
 class ConcatFeatures(TabularAggregation):
-    def __init__(self, axis=-1):
+    """Aggregation by concatenating all values in the input dictionary in the given dimension.
+
+    Parameters
+    ----------
+    axis: int, default=-1
+        Axis to use for the concatenation operation.
+    """
+
+    def __init__(self, axis: int = -1):
         super().__init__()
         self.axis = axis
 
-    def forward(self, inputs):
+    def forward(self, inputs: TabularData) -> torch.Tensor:
         tensors = []
         for name in sorted(inputs.keys()):
             tensors.append(inputs[name])
@@ -27,7 +37,13 @@ class ConcatFeatures(TabularAggregation):
 
 @tabular_aggregation_registry.register("sequential_concat")
 class SequentialConcatFeatures(TabularAggregation):
-    def forward(self, inputs):
+    """Aggregation by stacking all values in TabularData, all non-sequential values will be
+    converted to a sequence.
+
+    The output of this concatenation will have 3 dimensions.
+    """
+
+    def forward(self, inputs: TabularData) -> torch.Tensor:
         tensors = []
         for name in sorted(inputs.keys()):
             val = inputs[name]
@@ -55,11 +71,19 @@ class SequentialConcatFeatures(TabularAggregation):
 
 @tabular_aggregation_registry.register("stack")
 class StackFeatures(TabularAggregation):
-    def __init__(self, axis=-1):
+    """Aggregation by stacking all values in input dictionary in the given dimension.
+
+    Parameters
+    ----------
+    axis: int, default=-1
+        Axis to use for the stacking operation.
+    """
+
+    def __init__(self, axis: int = -1):
         super().__init__()
         self.axis = axis
 
-    def forward(self, inputs):
+    def forward(self, inputs: TabularData) -> torch.Tensor:
         tensors = []
         for name in sorted(inputs.keys()):
             tensors.append(inputs[name])
@@ -85,11 +109,14 @@ class ElementwiseFeatureAggregation(TabularAggregation):
 
 @tabular_aggregation_registry.register("element-wise-sum")
 class ElementwiseSum(ElementwiseFeatureAggregation):
+    """Aggregation by first stacking all values in TabularData in the first dimension, and then
+    summing the result."""
+
     def __init__(self):
         super().__init__()
         self.stack = StackFeatures(axis=0)
 
-    def forward(self, inputs):
+    def forward(self, inputs: TabularData) -> torch.Tensor:
         self._check_input_shapes_equal(inputs)
         return self.stack(inputs).sum(dim=0)
 
@@ -103,13 +130,21 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
 @tabular_aggregation_registry.register("element-wise-sum-item-multi")
 @requires_schema
 class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
-    def __init__(self, schema=None):
+    """Aggregation by applying the `ElementwiseSum` aggregation to all features except the item-id,
+    and then multiplying this with the item-ids.
+
+    Parameters
+    ----------
+    schema: DatasetSchema
+    """
+
+    def __init__(self, schema: DatasetSchema = None):
         super().__init__()
         self.stack = StackFeatures(axis=0)
         self.schema = schema
         self.item_id_col_name = None
 
-    def forward(self, inputs):
+    def forward(self, inputs: TabularData) -> torch.Tensor:
         item_id_inputs = self.schema.get_item_ids_from_inputs(inputs)
         self._check_input_shapes_equal(inputs)
 
