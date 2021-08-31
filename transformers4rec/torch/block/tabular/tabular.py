@@ -85,7 +85,6 @@ class TabularModule(torch.nn.Module):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        **kwargs
     ):
         super().__init__()
         self.input_size = None
@@ -164,7 +163,7 @@ class TabularModule(torch.nn.Module):
 
         Returns
         -------
-
+        Optional[TabularModule]
         """
         if tags:
             schema = schema.select_by_tag(tags)
@@ -175,8 +174,31 @@ class TabularModule(torch.nn.Module):
         return cls.from_features(schema.column_names, **kwargs)
 
     @classmethod
-    def from_features(cls, features, **kwargs):
-        return SequentialBlock(features, **kwargs)
+    @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+    def from_features(
+        cls,
+        features: List[str],
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+    ) -> "TabularModule":
+        """Initializes a TabularModule instance where the contents of features will be filtered
+            out
+
+        Parameters
+        ----------
+        features: List[str]
+            A list of feature-names that will be used as the first pre-processing op to filter out
+            all other features not in this list.
+        {tabular_module_parameters}
+
+        Returns
+        -------
+        TabularModule
+        """
+        pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)
+
+        return cls(pre=pre, post=post, aggregation=aggregation)
 
     def pre_forward(
         self, inputs: TabularData, transformations: Optional[TabularAggregationType] = None
@@ -193,7 +215,9 @@ class TabularModule(torch.nn.Module):
         -------
         TabularData
         """
-        return self._maybe_apply_transformations(inputs, "pre", transformations=transformations)
+        return self._maybe_apply_transformations(
+            inputs, transformations=transformations or self.pre
+        )
 
     def forward(self, x: TabularData, *args, **kwargs) -> TabularData:
         return x
@@ -235,7 +259,7 @@ class TabularModule(torch.nn.Module):
                 outputs.update(to_add)
 
         outputs = self._maybe_apply_transformations(
-            outputs, "post", transformations=transformations
+            outputs, transformations=transformations or self.post
         )
 
         if aggregation:
@@ -289,7 +313,6 @@ class TabularModule(torch.nn.Module):
     def _maybe_apply_transformations(
         self,
         inputs: TabularData,
-        key: str,
         transformations: Optional[TabularTransformationType] = None,
     ) -> TabularData:
         """Apply transformations to the inputs if these are defined.
@@ -297,7 +320,6 @@ class TabularModule(torch.nn.Module):
         Parameters
         ----------
         inputs
-        key
         transformations
 
         Returns
@@ -306,9 +328,6 @@ class TabularModule(torch.nn.Module):
         """
         if transformations:
             transformations = TabularTransformation.parse(transformations)
-        transformations = transformations or getattr(self, key, None)
-
-        if transformations:
             return transformations(inputs)
 
         return inputs

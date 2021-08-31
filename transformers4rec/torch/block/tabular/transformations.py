@@ -31,7 +31,6 @@ class StochasticSwapNoise(TabularTransformation):
     def augment(
         self, input_tensor: torch.Tensor, mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
-        # TODO: make this work when `mask = None`
         with torch.no_grad():
             sse_prob_replacement_matrix = torch.full(
                 input_tensor.shape,
@@ -43,12 +42,15 @@ class StochasticSwapNoise(TabularTransformation):
                 sse_replacement_mask = sse_replacement_mask & mask
             n_values_to_replace = sse_replacement_mask.sum()
 
-            cdata_flattened_non_zero = torch.masked_select(input_tensor, mask)
+            if mask is not None:
+                masked = torch.masked_select(input_tensor, mask)
+            else:
+                masked = torch.clone(input_tensor)
 
-            sampled_values_to_replace = cdata_flattened_non_zero[
-                torch.randperm(cdata_flattened_non_zero.shape[0])
-            ][:n_values_to_replace]
-
+            input_permutation = torch.randperm(masked.shape[0])
+            sampled_values_to_replace = masked[input_permutation][:n_values_to_replace]
+            if sampled_values_to_replace.ndim == 2:
+                sampled_values_to_replace = torch.squeeze(sampled_values_to_replace)
             input_tensor[sse_replacement_mask] = sampled_values_to_replace
 
         return input_tensor

@@ -20,7 +20,6 @@ import logging
 import os
 import sys
 import time
-from functools import update_wrapper
 from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
@@ -32,37 +31,6 @@ def docstring_parameter(*args, **kwargs):
         return obj
 
     return dec
-
-
-class lazy_property(property):
-    """Decorator for a property that is lazily evaluated."""
-
-    def __init__(self, method, fget=None, fset=None, fdel=None, doc=None):
-
-        self.method = method
-        self.cache_name = "_{}".format(self.method.__name__)
-
-        doc = doc or method.__doc__
-        super(lazy_property, self).__init__(fget=fget, fset=fset, fdel=fdel, doc=doc)
-
-        update_wrapper(self, method)
-
-    def __get__(self, instance, owner):
-
-        if instance is None:
-            return self
-
-        if hasattr(instance, self.cache_name):
-            result = getattr(instance, self.cache_name)
-        else:
-            if self.fget is not None:
-                result = self.fget(instance)
-            else:
-                result = self.method(instance)
-
-            setattr(instance, self.cache_name, result)
-
-        return result
 
 
 def filter_kwargs(kwargs, thing_with_kwargs, filter_positional_or_keyword=True):

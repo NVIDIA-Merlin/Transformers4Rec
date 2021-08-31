@@ -60,10 +60,10 @@ class SchemaMixin:
         return inputs[self.item_id_column_name]
 
     def get_mask(self, inputs: TabularData, mask_token=0) -> Optional[torch.Tensor]:
-        if self.item_id_column_name:
-            return self.get_item_ids(inputs) != mask_token
+        if not self.schema:
+            return None
 
-        return None
+        return self.get_item_ids(inputs) != mask_token
 
 
 def check_gpu(module):
