@@ -41,7 +41,6 @@ from .features.continuous import ContinuousFeatures
 from .features.embedding import (
     EmbeddingFeatures,
     FeatureConfig,
-    LayerNormalizationFeatures,
     SoftEmbedding,
     SoftEmbeddingFeatures,
     TableConfig,
@@ -96,7 +95,6 @@ __all__ = [
     "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
-    "LayerNormalizationFeatures",
 ]
 
 try:

@@ -40,6 +40,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
     ):
+        self.padding_idx = padding_idx
         super(SequenceEmbeddingFeatures, self).__init__(
             feature_config=feature_config,
             item_id=item_id,
@@ -47,7 +48,6 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
             post=post,
             aggregation=aggregation,
         )
-        self.padding_idx = padding_idx
 
     def table_to_embedding_module(self, table: embedding.TableConfig) -> torch.nn.Embedding:
         embedding_table = torch.nn.Embedding(

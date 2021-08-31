@@ -136,7 +136,7 @@ class TabularFeatures(MergeTabular):
                 )
             else:
                 maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
-                    schema, tags=continuous_tags, **kwargs
+                    schema, tags=continuous_tags
                 )
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(

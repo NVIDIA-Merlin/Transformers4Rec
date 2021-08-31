@@ -224,7 +224,7 @@ def test_soft_continuous_features(torch_con_features):
 
 
 def test_layer_norm_features():
-    ln = torch4rec.LayerNormalizationFeatures(features_dim={"a": 100, "b": 200})
+    ln = torch4rec.TabularLayerNorm(features_dim={"a": 100, "b": 200})
     inputs = {
         "a": pytorch.tensor(np.random.uniform(1.0, 4.0, (500, 100)), dtype=pytorch.float32),
         "b": pytorch.tensor(np.random.uniform(2.0, 10.0, (500, 200)), dtype=pytorch.float32),
