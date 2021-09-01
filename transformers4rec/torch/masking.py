@@ -102,6 +102,15 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 @masking_registry.register_with_multiple_names("clm", "causal")
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class CausalLanguageModeling(MaskSequence):
+    """Causal Language Modeling class - Prepare labels for Next token predictions.
+
+    Parameters:
+    ----------
+    {mask_sequence_parameters}
+    train_on_last_item_seq_only: predict last item only during training
+    eval_on_last_item_seq_only: predict last item only during evaluation
+    """
+
     def __init__(
         self,
         hidden_size: int,
@@ -111,14 +120,6 @@ class CausalLanguageModeling(MaskSequence):
         train_on_last_item_seq_only=False,
         eval_on_last_item_seq_only=True,
     ):
-        """Causal Language Modeling class - Prepare labels for Next token predictions.
-
-        Parameters:
-        ----------
-        {mask_sequence_parameters}
-        train_on_last_item_seq_only: predict last item only during training
-        eval_on_last_item_seq_only: predict last item only during evaluation
-        """
         super(CausalLanguageModeling, self).__init__(
             hidden_size=hidden_size, device=device, pad_token=pad_token, schema=schema
         )
