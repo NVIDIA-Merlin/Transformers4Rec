@@ -74,12 +74,6 @@ class DenseBlock(SequentialBlock):
     def _get_name(self):
         return "DenseBlock"
 
-    def output_size(self):
-        if len(self._input_shape) == 3:
-            return torch.Size([self._input_shape[0], self._input_shape[1], self._output_size])
-
-        return torch.Size([self._input_shape[0], self._output_size])
-
     def forward_output_size(self, input_size):
         if len(input_size) == 3:
             return torch.Size([input_size[0], input_size[1], self._output_size])

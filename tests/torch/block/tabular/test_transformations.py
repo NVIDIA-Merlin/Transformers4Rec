@@ -1,5 +1,7 @@
 import pytest
 
+from transformers4rec.utils.tags import Tag
+
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
@@ -20,7 +22,7 @@ def test_stochastic_swap_noise(replacement_prob):
     }
 
     ssn = torch4rec.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
-    out_features_ssn = ssn(seq_inputs)
+    out_features_ssn = ssn(seq_inputs, mask=seq_inputs["categ_feat"] != PAD_TOKEN)
 
     for fname in seq_inputs:
         replaced_mask = out_features_ssn[fname] != seq_inputs[fname]
@@ -35,13 +37,16 @@ def test_stochastic_swap_noise(replacement_prob):
 def test_stochastic_swap_noise_with_tabular_features(
     yoochoose_schema, torch_yoochoose_like, replacement_prob
 ):
+    PAD_TOKEN = 0
+
     inputs = torch_yoochoose_like
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(yoochoose_schema)
     out_features = tab_module(inputs)
 
-    PAD_TOKEN = 0
-    ssn = torch4rec.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
-    out_features_ssn = ssn(out_features)
+    ssn = torch4rec.StochasticSwapNoise(
+        pad_token=PAD_TOKEN, replacement_prob=replacement_prob, schema=yoochoose_schema
+    )
+    out_features_ssn = tab_module(inputs, pre=ssn)
 
     for fname in out_features:
         replaced_mask = out_features_ssn[fname] != out_features[fname]
@@ -54,3 +59,17 @@ def test_stochastic_swap_noise_with_tabular_features(
         replaced_mask_non_padded = pytorch.masked_select(replaced_mask, feat_non_padding_mask)
         replacement_rate = replaced_mask_non_padded.float().mean()
         assert replacement_rate == pytest.approx(replacement_prob, abs=0.1)
+
+
+@pytest.mark.parametrize("layer_norm", ["layer-norm", torch4rec.TabularLayerNorm()])
+def test_layer_norm(yoochoose_schema, torch_yoochoose_like, layer_norm):
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+
+    emb_module = torch4rec.EmbeddingFeatures.from_schema(
+        schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64, post=layer_norm
+    )
+
+    out = emb_module(torch_yoochoose_like)
+
+    assert list(out["item_id/list"].shape) == [100, 100]
+    assert list(out["category/list"].shape) == [100, 64]
