@@ -586,14 +586,10 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         prediction_tasks: Union[List[PredictionTask], PredictionTask],
         task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
         task_weights: Optional[List[float]] = None,
-        body_output_size=None,
         loss_reduction: str = "mean",
         inputs: Optional[TabularFeaturesType] = None,
     ):
         super().__init__()
-        if isinstance(body_output_size, int):
-            body_output_size = [body_output_size]
-        self.body_output_size = body_output_size
         self.body = body
         self.loss_reduction = loss_reduction
         self.prediction_tasks = torch.nn.ModuleDict()
@@ -608,23 +604,25 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             for key, val in task_weights.items():
                 self._task_weights[key] = val
 
-        self.build(body_output_size or body.output_size(), inputs=inputs, task_blocks=task_blocks)
+        self.build(inputs=inputs, task_blocks=task_blocks)
 
-    def build(self, input_size, inputs=None, device=None, task_blocks=None):
+    def build(self, inputs=None, device=None, task_blocks=None):
         """Build each prediction task that's part of the head.
 
         Parameters
         ----------
-        input_size
+        body
         inputs
         device
         task_blocks
         """
-        if not getattr(self.body, "output_size", lambda: None)() and not self.body_output_size:
+        if not getattr(self.body, "output_size", lambda: None)():
             raise ValueError(
-                "Can't infer output-size of the body, please provide this either "
-                "in the `body_output_size` parameter or pass in a `Block` with a output-size."
+                "Can't infer output-size of the body, please provide  "
+                "a `Block` with a output-size. You can wrap any torch.Module in a Block."
             )
+
+        input_size = self.body.output_size()
 
         if device:
             self.to(device)
@@ -711,7 +709,13 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         return outputs
 
-    def forward(self, body_outputs, call_body=False, always_output_dict=False, **kwargs):
+    def forward(
+        self,
+        body_outputs: Union[torch.Tensor, TabularData],
+        call_body: bool = False,
+        always_output_dict: bool = False,
+        **kwargs,
+    ) -> Union[torch.Tensor, TabularData]:
         outputs = {}
 
         if call_body:
@@ -745,7 +749,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         Returns
         -------
-
+        torch.Tensor
         """
         losses = []
 
@@ -795,7 +799,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         return _output_metrics(metrics)
 
-    def compute_metrics(self, mode=None):
+    def compute_metrics(self, mode: str = None) -> Dict[str, Union[float, torch.Tensor]]:
         def name_fn(x):
             return "_".join([mode, x]) if mode else x
 

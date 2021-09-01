@@ -206,12 +206,12 @@ def test_item_prediction_head_with_input_size(
         input_module,
         tr.MLPBlock([64]),
         pytorch.nn.GRU(input_size=64, hidden_size=64, num_layers=2),
+        output_size=[None, 20, 64],
     )
     head = tr.Head(
         body,
         tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
         inputs=input_module,
-        body_output_size=[None, 20, 64],
     )
 
     outputs = head(body(torch_yoochoose_like))
