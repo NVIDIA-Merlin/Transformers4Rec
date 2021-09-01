@@ -112,7 +112,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         return outputs
 
-    def compute_metrics(self, mode=None):
+    def compute_metrics(self, mode=None) -> Dict[str, Union[float, torch.Tensor]]:
         metrics = {}
         for head in self.heads:
             metrics.update(head.compute_metrics(mode=mode))

@@ -15,12 +15,15 @@
 #
 
 import abc
+from typing import Dict, Optional, Union
 
 import torch
 
 from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.proto_utils import has_field
-from transformers4rec.config.schema import SchemaMixin
+
+from ..typing import TabularData
+from ...config.schema import SchemaMixin
 
 
 class OutputSizeMixin(SchemaMixin, abc.ABC):
@@ -48,6 +51,81 @@ class OutputSizeMixin(SchemaMixin, abc.ABC):
         from ..block.base import right_shift_block
 
         return right_shift_block(self, other)
+
+
+class LossMixin:
+    """Mixin to use for torch.Modules that can calculate a loss."""
+
+    def compute_loss(
+        self,
+        inputs: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        compute_metrics: bool = True,
+        **kwargs,
+    ) -> torch.Tensor:
+        """Compute the loss on a batch of data.
+
+        Parameters
+        ----------
+        inputs: Union[torch.Tensor, TabularData]
+            TODO
+        targets: Union[torch.Tensor, TabularData]
+            TODO
+        compute_metrics: bool, default=True
+            Boolean indicating whether or not to update the state of the metrics
+            (if they are defined).
+        """
+        raise NotImplementedError()
+
+
+class MetricsMixin:
+    """Mixin to use for torch.Modules that can calculate metrics."""
+
+    def calculate_metrics(
+        self,
+        inputs: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        mode: str = "val",
+    ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
+
+        The state of each metric can be retrieved by calling the `compute_metrics` method.
+
+        Parameters
+        ----------
+        inputs: Union[torch.Tensor, TabularData]
+            TODO
+        targets: Union[torch.Tensor, TabularData]
+            TODO
+        mode: str, default="val"
+
+        """
+        raise NotImplementedError()
+
+    def compute_metrics(self, mode: str = None) -> Dict[str, Union[float, torch.Tensor]]:
+        """Returns the current state of each metric.
+
+        The state is typically updated each batch by calling the `calculate_metrics` method.
+
+        Parameters
+        ----------
+        mode: str, default="val"
+
+        Returns
+        -------
+        Dict[str, Union[float, torch.Tensor]]
+        """
+        raise NotImplementedError()
+
+    def reset_metrics(self):
+        """Reset all metrics."""
+        raise NotImplementedError()
+
+
+def requires_schema(module):
+    module.REQUIRES_SCHEMA = True
+
+    return module
 
 
 def check_gpu(module):

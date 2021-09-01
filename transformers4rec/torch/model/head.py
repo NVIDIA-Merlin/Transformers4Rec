@@ -597,6 +597,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         if task_weights:
             for key, val in task_weights.items():
                 self._task_weights[key] = val
+
         self.build(body_output_size or body.output_size(), inputs=inputs, task_blocks=task_blocks)
 
     def build(self, input_size, inputs=None, device=None, task_blocks=None):
@@ -767,17 +768,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         return _output_metrics(metrics)
 
     def compute_metrics(self, mode=None):
-        """
-
-        Parameters
-        ----------
-        mode
-
-        Returns
-        -------
-
-        """
-
         def name_fn(x):
             return "_".join([mode, x]) if mode else x
 
@@ -797,15 +787,11 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         return {name: task.task_block for name, task in self.prediction_tasks.items()}
 
     def to_model(self, **kwargs) -> Model:
-        """
-
-        Parameters
-        ----------
-        kwargs
+        """Convert the head to a Model.
 
         Returns
         -------
-
+        Model
         """
         from .model import Model as _Model
 
