@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import Tuple
+
 import torch
 from torch import nn
 
-from ..utils.masking import MaskSequence as _MaskSequence
 from ..utils.registry import Registry
+from .utils.torch_utils import OutputSizeMixin
 
 masking_registry = Registry("torch.masking")
 
@@ -25,7 +27,7 @@ MaskingSchema = torch.Tensor
 MaskedTargets = torch.Tensor
 
 
-class MaskSequence(_MaskSequence, nn.Module):
+class MaskSequence(OutputSizeMixin, torch.nn.Module):
     """
     Base class to define masked inputs for LM tasks
 
@@ -39,32 +41,39 @@ class MaskSequence(_MaskSequence, nn.Module):
                   batch of sequences with the same length
     """
 
-    # TODO add doc-strings to each method
-    def __init__(self, hidden_size: int, device: str = "cpu", pad_token: int = 0, **kwargs):
-        super().__init__(hidden_size, device, pad_token)
-        nn.Module.__init__(self)
-        self.schema = None
+    def __init__(
+        self, hidden_size: int, device: str = "cpu", pad_token: int = 0, schema=None, **kwargs
+    ):
+        super(MaskSequence, self).__init__()
+        self.pad_token = pad_token
+        self.hidden_size = hidden_size
+        self.device = device
+        self.schema = schema
+        self.mask_schema = None
+        self.masked_targets = None
 
     def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingSchema:
-        # TODO: assert inputs has 3 dims
         raise NotImplementedError
-
-    def compute_masked_targets(self, item_ids: torch.Tensor, training=False, return_targets=False):
-        self.mask_schema, self.masked_targets = self._compute_masked_targets(
-            item_ids, training=training
-        )
-        if return_targets:
-            return self.masked_targets
 
     def apply_mask_to_inputs(self, inputs: torch.Tensor, schema: MaskingSchema):
         raise NotImplementedError
 
-    def apply_mask_to_targets(self, target: torch.Tensor, schema: MaskingSchema):
-        raise NotImplementedError
+    def compute_masked_targets(
+        self, item_ids: torch.Tensor, training=False
+    ) -> Tuple[MaskingSchema, MaskedTargets]:
+        assert item_ids.ndim == 2, "`item_ids` must have 2 dimensions."
+        self.mask_schema, self.masked_targets = self._compute_masked_targets(
+            item_ids, training=training
+        )
+
+        return self.mask_schema, self.masked_targets
 
     def forward(self, inputs: torch.Tensor, item_ids: torch.Tensor, training=False) -> torch.Tensor:
         self.compute_masked_targets(item_ids=item_ids, training=training)
         return self.apply_mask_to_inputs(inputs, self.mask_schema)
+
+    def forward_output_size(self, input_size):
+        return input_size
 
     def transformer_required_arguments(self):
         return {}
@@ -72,6 +81,7 @@ class MaskSequence(_MaskSequence, nn.Module):
     def transformer_optional_arguments(self):
         return {}
 
+    @property
     def transformer_arguments(self):
         return {**self.transformer_required_arguments(), **self.transformer_optional_arguments()}
 
@@ -98,7 +108,7 @@ class CausalLanguageModeling(MaskSequence):
 
         # Create a trainable embedding to replace masked inputs for Causal LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(self.hidden_size)).to(self.device)
-        nn.init.normal_(
+        torch.nn.init.normal_(
             self.masked_item_embedding,
             mean=0,
             std=0.001,
@@ -177,7 +187,7 @@ class MaskedLanguageModeling(MaskSequence):
         self.mlm_probability = mlm_probability
         # Create a trainable embedding to replace masked inputs for Masked LM
         self.masked_item_embedding = nn.Parameter(torch.Tensor(self.hidden_size)).to(self.device)
-        nn.init.normal_(
+        torch.nn.init.normal_(
             self.masked_item_embedding,
             mean=0,
             std=0.001,
@@ -444,15 +454,15 @@ class PermutationLanguageModeling(MaskSequence):
 
         return mask_labels, labels, target_mapping, perm_mask
 
-    def compute_masked_targets(self, item_ids: torch.Tensor, training=False, return_targets=False):
+    def compute_masked_targets(self, item_ids: torch.Tensor, training=False):
         (
             self.mask_schema,
             self.masked_targets,
             self.target_mapping,
             self.perm_mask,
         ) = self._compute_masked_targets(item_ids, training=training)
-        if return_targets:
-            return self.masked_targets
+
+        return self.mask_schema, self.masked_targets
 
     def apply_mask_to_inputs(self, inputs: torch.Tensor, mask_schema: MaskingSchema):
         inputs = torch.where(
