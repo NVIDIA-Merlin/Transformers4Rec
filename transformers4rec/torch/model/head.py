@@ -31,7 +31,7 @@ from merlin_standard_lib.registry import camelcase_to_snakecase
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
-from ..typing import BlockOrModule, BlockType, Model, TabularFeaturesType
+from ..typing import BlockOrModule, BlockType, Model, TabularData, TabularFeaturesType
 from ..utils.torch_utils import LossMixin, MetricsMixin
 
 LOG = logging.getLogger("transformers4rec")
@@ -148,7 +148,12 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         self.metrics = torch.nn.ModuleList(metrics)
 
     def compute_loss(
-        self, inputs, targets, training: bool = False, compute_metrics=True
+        self,
+        inputs: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        compute_metrics: bool = True,
+        training: bool = False,
+        **kwargs,
     ) -> torch.Tensor:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
@@ -164,8 +169,13 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         return loss
 
     def calculate_metrics(
-        self, predictions, targets, mode="val", forward=True
-    ) -> Dict[str, torch.Tensor]:
+        self,
+        predictions: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        mode: str = "val",
+        forward: bool = True,
+        **kwargs,
+    ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
@@ -181,7 +191,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
         return outputs
 
-    def compute_metrics(self):
+    def compute_metrics(self, **kwargs):
         return {
             self.child_name(camelcase_to_snakecase(metric.__class__.__name__)): metric.compute()
             for metric in self.metrics
@@ -703,7 +713,12 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         return outputs
 
     def compute_loss(
-        self, body_outputs, targets, compute_metrics=True, call_body=False, **kwargs
+        self,
+        body_outputs: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        compute_metrics: bool = True,
+        call_body: bool = False,
+        **kwargs,
     ) -> torch.Tensor:
         """
 
@@ -736,10 +751,10 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
     def calculate_metrics(
         self,
-        body_outputs,
-        targets,
-        mode="val",
-        call_body=False,
+        body_outputs: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        mode: str = "val",
+        call_body: bool = False,
         forward=True,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         """

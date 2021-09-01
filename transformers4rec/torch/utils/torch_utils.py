@@ -54,7 +54,7 @@ class OutputSizeMixin(SchemaMixin, abc.ABC):
 
 
 class LossMixin:
-    """Mixin to use for torch.Modules that can calculate a loss."""
+    """Mixin to use for `torch.Module`s that can calculate a loss."""
 
     def compute_loss(
         self,
@@ -79,13 +79,14 @@ class LossMixin:
 
 
 class MetricsMixin:
-    """Mixin to use for torch.Modules that can calculate metrics."""
+    """Mixin to use for `torch.Module`s that can calculate metrics."""
 
     def calculate_metrics(
         self,
         inputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
+        **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
 
