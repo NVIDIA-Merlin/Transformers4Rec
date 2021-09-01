@@ -21,7 +21,7 @@ With such an approach, the RecSys community is now able to easily compare differ
 
 Differently from most implementations of Transformers for RecSys, which use only the sequence of interacted item ids to model users preferences over time, this framework allows to use **multiple input features** (side information) to represent the item (e.g. product category and price, news content embedding) and the user context (e.g. time, location, device), for more accurate recommendations.
 
-# Project Organization
+## Project Organization
 
 - [`transfomers4rec`](transfomers4rec/README.md) - Here are the main scripts for train and evaluating of Transformer-based RecSys models. The train and evaluation pipelines are PyTorch-based. 
 - [`containers`](containers/README.md) - Dockerfiles to get the development and deployment enviroments setup
