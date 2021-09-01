@@ -5,6 +5,7 @@ torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
 def test_pyarrow_load(yoochoose_schema, yoochoose_path_file):
+    pytest.importorskip("pyarrow")
     max_sequence_length = 20
     batch_size = 16
     loader = torch4rec.utils.data_utils.PyarrowDataLoader.from_schema(
@@ -23,6 +24,7 @@ def test_pyarrow_load(yoochoose_schema, yoochoose_path_file):
 
 
 def test_features_from_schema(yoochoose_schema, yoochoose_path_file):
+    pytest.importorskip("pyarrow")
     max_sequence_length = 20
     batch_size = 16
     loader = torch4rec.utils.data_utils.PyarrowDataLoader.from_schema(
@@ -47,7 +49,8 @@ else:
 
 
 @pytest.mark.parametrize("engine", engines)
-def test_pyarrow_loader_from_registry(yoochoose_schema, yoochoose_path_file, engine):
+def test_loader_from_registry(yoochoose_schema, yoochoose_path_file, engine):
+    pytest.importorskip("pyarrow")
     max_sequence_length = 70
     batch_size = 16
     loader = torch4rec.utils.data_utils.T4RecDataLoader.parse(engine).from_schema(

@@ -98,6 +98,7 @@ def test_create_scheduler(
     torch_yoochoose_next_item_prediction_model,
     scheduler,
 ):
+    pytest.importorskip("pyarrow")
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
@@ -133,6 +134,7 @@ def test_trainer_eval_loop(
     yoochoose_path_file,
     torch_yoochoose_next_item_prediction_model,
 ):
+    pytest.importorskip("pyarrow")
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
@@ -172,6 +174,7 @@ def test_saves_checkpoints(
     yoochoose_path_file,
     torch_yoochoose_next_item_prediction_model,
 ):
+    pytest.importorskip("pyarrow")
     with tempfile.TemporaryDirectory() as tmpdir:
         batch_size = 16
         args = trainer.T4RecTrainingArguments(
