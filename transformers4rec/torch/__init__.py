@@ -57,7 +57,6 @@ from .model.head import (
     RegressionTask,
 )
 from .model.model import Model
-
 from .trainer import Trainer
 
 __all__ = [

@@ -515,6 +515,7 @@ class Trainer(BaseTrainer):
         torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
         """
         import os
+
         try:
             import cloudpickle
         except ImportError:
@@ -535,7 +536,8 @@ class Trainer(BaseTrainer):
 
             with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
                 cloudpickle.dump(
-                    self.model.module.heads[0].body.inputs.to_merge['continuous_module'][0], out)
+                    self.model.module.heads[0].body.inputs.to_merge["continuous_module"][0], out
+                )
 
     def load_model_trainer_states_from_checkpoint(self, checkpoint_path):
         """

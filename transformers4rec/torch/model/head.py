@@ -10,8 +10,8 @@ from transformers.modeling_utils import SequenceSummary
 from ...types import DatasetSchema
 from ...utils.tags import Tag
 from ..block.base import Block, BuildableBlock, SequentialBlock
+from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockOrModule, BlockType
-from ..ranking_metric import NDCGAt, RecallAt, AvgPrecisionAt
 
 
 class PredictionTask(torch.nn.Module):
@@ -255,6 +255,7 @@ class NextItemPredictionTask(PredictionTask):
         Output the dictionary of outputs needed by RecSysTrainer, if set to False,
         return the predictions tensor.
     """
+
     DEFAULT_METRICS = (
         # default metrics suppose labels are int encoded
         NDCGAt(top_ks=[10, 20], labels_onehot=True),
