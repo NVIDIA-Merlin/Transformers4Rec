@@ -38,12 +38,13 @@ TabularAggregationType = ForwardRef(f"{_tabular_module}.TabularAggregationType")
 TabularModule = ForwardRef(f"{_tabular_module}.TabularModule")
 TabularBlock = ForwardRef(f"{_tabular_module}.TabularBlock")
 
-ProcessedSequence = ForwardRef("transformers4rec.torch.features.ProcessedSequence")
-
-FeatureAggregator = ForwardRef("transformers4rec.torch.aggregator.FeatureAggregation")
+_features_module = "transformers4rec.torch.features"
+TabularFeatures = ForwardRef(f"{_features_module}.tabular.TabularFeatures")
+TabularSequenceFeatures = ForwardRef(f"{_features_module}.sequence.TabularSequenceFeatures")
+TabularFeaturesType = typing.Union[TabularSequenceFeatures, TabularFeatures]
 
 MaskSequence = ForwardRef("transformers4rec.torch.masking.MaskSequence")
-MaskedSequence = ForwardRef("transformers4rec.torch.masking.MaskedSequence")
+
 
 Block = ForwardRef("transformers4rec.torch.block.base.Block")
 SequentialBlock = ForwardRef("transformers4rec.torch.block.base.SequentialBlock")
@@ -56,17 +57,18 @@ FeatureConfig = ForwardRef("transformers4rec.torch.features.embedding.FeatureCon
 TableConfig = ForwardRef("transformers4rec.torch.features.embedding.TableConfig")
 
 
-Head = ForwardRef("transformers4rec.torch.head.Head")
-PredictionTask = ForwardRef("transformers4rec.torch.head.PredictionTask")
+Head = ForwardRef("transformers4rec.torch.model.head.Head")
+PredictionTask = ForwardRef("transformers4rec.torch.model.head.PredictionTask")
+Model = ForwardRef("transformers4rec.torch.model.model.Model")
 
 __all__ = [
     "TabularData",
     "TensorOrTabularData",
     "TabularModule",
-    "ProcessedSequence",
-    "FeatureAggregator",
+    "TabularFeatures",
+    "TabularSequenceFeatures",
+    "TabularFeaturesType",
     "MaskSequence",
-    "MaskedSequence",
     "Block",
     "BlockType",
     "BlockOrModule",
@@ -76,4 +78,5 @@ __all__ = [
     "BuildableBlock",
     "Head",
     "PredictionTask",
+    "Model",
 ]

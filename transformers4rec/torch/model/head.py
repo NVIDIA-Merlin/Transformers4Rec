@@ -29,7 +29,7 @@ from merlin_standard_lib import Schema, Tag
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
-from ..typing import BlockOrModule, BlockType
+from ..typing import BlockOrModule, BlockType, Model, TabularFeaturesType
 
 LOG = logging.getLogger("transformers4rec")
 
@@ -175,10 +175,10 @@ class PredictionTask(torch.nn.Module):
     def to_head(self, body, inputs=None, **kwargs) -> "Head":
         return Head(body, self, inputs=inputs, **kwargs)
 
-    def to_model(self, body, inputs=None, **kwargs):
-        from .model import Model
+    def to_model(self, body, inputs=None, **kwargs) -> Model:
+        from .model import Model as _Model
 
-        return Model(Head(body, self, inputs=inputs, **kwargs), **kwargs)
+        return _Model(Head(body, self, inputs=inputs, **kwargs), **kwargs)
 
 
 class BinaryClassificationPrepareBlock(BuildableBlock):
@@ -548,10 +548,10 @@ class Head(torch.nn.Module):
         body: SequentialBlock,
         prediction_tasks: Optional[Union[List[PredictionTask], PredictionTask]] = None,
         task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
-        task_weights=None,
+        task_weights: Optional[List[float]] = None,
         body_output_size=None,
-        loss_reduction="mean",
-        inputs=None,
+        loss_reduction: str = "mean",
+        inputs: Optional[TabularFeaturesType] = None,
     ):
         super().__init__()
         if isinstance(body_output_size, int):
@@ -696,10 +696,10 @@ class Head(torch.nn.Module):
     def task_blocks(self) -> Dict[str, Optional[BlockOrModule]]:
         return {name: task.task_block for name, task in self.prediction_tasks.items()}
 
-    def to_model(self, **kwargs):
-        from .model import Model
+    def to_model(self, **kwargs) -> Model:
+        from .model import Model as _Model
 
-        return Model(self, **kwargs)
+        return _Model(self, **kwargs)
 
 
 class LambdaModule(torch.nn.Module):
