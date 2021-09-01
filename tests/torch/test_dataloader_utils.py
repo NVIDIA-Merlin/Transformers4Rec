@@ -42,18 +42,11 @@ def test_features_from_schema(yoochoose_schema, yoochoose_path_file):
     assert set(batch.keys()).issubset(set(features))
 
 
-if torch4rec.utils.torch_utils.is_nvtabular_available() and torch.cuda.is_available():
-    engines = ["pyarrow", "nvtabular"]
-else:
-    engines = ["pyarrow"]
-
-
-@pytest.mark.parametrize("engine", engines)
-def test_loader_from_registry(yoochoose_schema, yoochoose_path_file, engine):
+def test_loader_from_registry(yoochoose_schema, yoochoose_path_file):
     pytest.importorskip("pyarrow")
     max_sequence_length = 70
     batch_size = 16
-    loader = torch4rec.utils.data_utils.T4RecDataLoader.parse(engine).from_schema(
+    loader = torch4rec.utils.data_utils.T4RecDataLoader.parse("pyarrow").from_schema(
         yoochoose_schema,
         str(yoochoose_path_file),
         batch_size=batch_size,
