@@ -13,3 +13,47 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+from .config.transformer import (
+    AlbertConfig,
+    ElectraConfig,
+    GPT2Config,
+    LongformerConfig,
+    ReformerConfig,
+    T4RecConfig,
+    XLNetConfig,
+)
+
+# TODO check for NVTabular, and if it's installed import these from there
+from .utils.schema import ColumnSchema, DatasetSchema
+
+__all__ = [
+    "DatasetSchema",
+    "ColumnSchema",
+    "T4RecConfig",
+    "GPT2Config",
+    "XLNetConfig",
+    "LongformerConfig",
+    "AlbertConfig",
+    "ReformerConfig",
+    "ElectraConfig",
+]
+
+
+try:
+    from . import tf as tensorflow
+
+    tf = tensorflow
+
+    __all__.append("tf")
+except ImportError:
+    pass
+
+try:
+    from . import torch as t
+
+    torch = t
+
+    __all__.append("torch")
+except ImportError:
+    pass
