@@ -60,3 +60,11 @@ def create_output_placeholder(scores, ks):
 
 def tranform_label_to_onehot(labels, vocab_size):
     return torch.nn.functional.one_hot(labels.reshape(-1), vocab_size).detach()
+
+
+def is_nvtabular_available():
+    try:
+        import nvtabular
+    except ImportError:
+        nvtabular = None
+    return nvtabular is not None

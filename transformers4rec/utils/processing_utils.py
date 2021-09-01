@@ -14,10 +14,16 @@ def save_time_based_splits(
     val_size=0.1,
     overwrite=True,
 ):
-    import cudf
-    import cupy
-    import dask_cudf
-    import nvtabular as nvt
+    try:
+        import cudf
+        import cupy
+        import dask_cudf
+        import nvtabular as nvt
+    except ImportError as error:
+        raise ImportError(
+            "ModuleNotFoundError: '%s' package is required to use save_time_based_splits function"
+            % error.name
+        )
 
     """
     Args:
