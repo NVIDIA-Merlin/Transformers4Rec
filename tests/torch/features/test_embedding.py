@@ -28,7 +28,8 @@ def test_embedding_features_layernorm(torch_cat_features):
         for f in torch_cat_features.keys()
     }
 
-    embeddings = torch4rec.EmbeddingFeatures(feature_config, layer_norm=True)(torch_cat_features)
+    layer_norm = torch4rec.TabularLayerNorm.from_feature_config(feature_config)
+    embeddings = torch4rec.EmbeddingFeatures(feature_config, post=layer_norm)(torch_cat_features)
     assert all(
         [emb.detach().numpy().mean() == pytest.approx(0.0, abs=0.1) for emb in embeddings.values()]
     )
@@ -45,7 +46,7 @@ def test_embedding_features_custom_init(torch_cat_features):
         )
         for f in torch_cat_features.keys()
     }
-    embeddings = torch4rec.EmbeddingFeatures(feature_config, layer_norm=False)(torch_cat_features)
+    embeddings = torch4rec.EmbeddingFeatures(feature_config)(torch_cat_features)
 
     assert list(embeddings.keys()) == list(feature_config.keys())
     assert all(
@@ -223,7 +224,7 @@ def test_soft_continuous_features(torch_con_features):
 
 
 def test_layer_norm_features():
-    ln = torch4rec.LayerNormalizationFeatures(features_dim={"a": 100, "b": 200})
+    ln = torch4rec.TabularLayerNorm(features_dim={"a": 100, "b": 200})
     inputs = {
         "a": pytorch.tensor(np.random.uniform(1.0, 4.0, (500, 100)), dtype=pytorch.float32),
         "b": pytorch.tensor(np.random.uniform(2.0, 10.0, (500, 200)), dtype=pytorch.float32),

@@ -6,6 +6,7 @@ from transformers import GPT2Model, PretrainedConfig, PreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
+from .base import BlockBase
 
 TransformerBody = Union[PreTrainedModel, T4RecConfig]
 
@@ -34,7 +35,7 @@ class GPT2Prepare(TransformerPrepare):
         return {"input_embeds": inputs_embeds, "head_mask": head_mask}
 
 
-class TransformerBlock(torch.nn.Module):
+class TransformerBlock(BlockBase):
     TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {
         GPT2Model: GPT2Prepare
     }
@@ -149,10 +150,3 @@ class TransformerBlock(torch.nn.Module):
     def forward_output_size(self, input_size):
         assert len(input_size) == 3
         return torch.Size([input_size[0], input_size[1], self.transformer.config.hidden_size])
-
-    # TODO: Implement output-size based on the body
-    # def output_size(self):
-    #     if len(input_shape) == 3:
-    #         return torch.Size([input_shape[0], input_shape[1], dense_output_size])
-    #
-    #     return torch.Size([input_shape[0], dense_output_size])
