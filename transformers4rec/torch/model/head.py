@@ -18,7 +18,7 @@ import copy
 import logging
 from collections import defaultdict
 from types import SimpleNamespace
-from typing import Callable, Dict, Iterable, List, Optional, Text, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union
 
 import torch
 import torchmetrics as tm
@@ -582,8 +582,8 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
     def __init__(
         self,
-        body: SequentialBlock,
-        prediction_tasks: Optional[Union[List[PredictionTask], PredictionTask]] = None,
+        body: BlockType,
+        prediction_tasks: Union[List[PredictionTask], PredictionTask],
         task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
         task_weights: Optional[List[float]] = None,
         body_output_size=None,
@@ -611,6 +611,15 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         self.build(body_output_size or body.output_size(), inputs=inputs, task_blocks=task_blocks)
 
     def build(self, input_size, inputs=None, device=None, task_blocks=None):
+        """Build each prediction task that's part of the head.
+
+        Parameters
+        ----------
+        input_size
+        inputs
+        device
+        task_blocks
+        """
         if not getattr(self.body, "output_size", lambda: None)() and not self.body_output_size:
             raise ValueError(
                 "Can't infer output-size of the body, please provide this either "
@@ -628,30 +637,45 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         self.input_size = input_size
 
     @classmethod
-    def from_schema(cls, schema: Schema, body, task_weights=None, input_size=None):
+    def from_schema(
+        cls,
+        schema: Schema,
+        body: BlockType,
+        task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
+        task_weight_dict: Optional[Dict[str, float]] = None,
+        loss_reduction: str = "mean",
+        inputs: Optional[TabularFeaturesType] = None,
+    ) -> "Head":
         """Instantiate a Head from a Schema through tagged targets.
 
         Parameters
         ----------
-        schema
+        schema: DatasetSchema
+            Schema to use for inferring all targets based on the tags.
         body
-        task_weights
-        input_size
+        task_blocks
+        task_weight_dict
+        loss_reduction
+        inputs
 
         Returns
         -------
-
+        Head
         """
-        if task_weights is None:
-            task_weights = {}
-        to_return = cls(body, body_output_size=input_size)
+        tasks, task_weights = [], []
 
+        for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
+            tasks.append(BinaryClassificationTask(binary_target))
+            task_weights.append(task_weight_dict.get(binary_target, 1.0))
         for binary_target in schema.select_by_tag(Tag.BINARY_CLASSIFICATION).column_names:
             to_return = to_return.add_task(
                 BinaryClassificationTask(binary_target),
                 task_weight=task_weights.get(binary_target, 1),
             )
 
+        for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
+            tasks.append(RegressionTask(regression_target))
+            task_weights.append(task_weight_dict.get(regression_target, 1.0))
         for regression_target in schema.select_by_tag(Tag.REGRESSION).column_names:
             to_return = to_return.add_task(
                 RegressionTask(regression_target),
@@ -660,37 +684,26 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         # TODO: Add multi-class classification here. Figure out how to get number of classes
 
-        return to_return
+        return cls(
+            body,
+            tasks,
+            task_blocks=task_blocks,
+            task_weights=task_weights,
+            loss_reduction=loss_reduction,
+            inputs=inputs,
+        )
 
-    def add_task(self, task: PredictionTask, task_weight=1):
-        """
-
-        Parameters
-        ----------
-        task
-        task_weight
-
-        Returns
-        -------
-
-        """
-        key = task.target_name
-        self.prediction_tasks[key] = task
-        if task_weight:
-            self._task_weights[key] = task_weight
-
-        return self
-
-    def pop_labels(self, inputs: Dict[Text, torch.Tensor]) -> Dict[Text, torch.Tensor]:
-        """
+    def pop_labels(self, inputs: TabularData) -> TabularData:
+        """Pop the labels from the different prediction_tasks from the inputs.
 
         Parameters
         ----------
-        inputs
+        inputs: TabularData
+            Input dictionary containing all targets.
 
         Returns
         -------
-
+        TabularData
         """
         outputs = {}
         for name in self.prediction_tasks.keys():
