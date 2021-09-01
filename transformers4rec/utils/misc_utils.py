@@ -22,13 +22,6 @@ import sys
 import time
 from typing import Any, Dict
 
-try:
-    import nvtabular
-    from nvtabular.io.dataset import Dataset
-
-except ImportError:
-    nvtabular = None
-
 logger = logging.getLogger(__name__)
 
 
@@ -191,6 +184,11 @@ def get_object_size(obj, seen=None):
 
 
 def _validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs):
+    try:
+        from nvtabular.io.dataset import Dataset
+    except ImportError:
+        raise ImportError("nvtabular is need to use NVTabular DataLoader")
+
     # TODO: put this in parent class and allow
     # torch dataset to leverage as well?
 
