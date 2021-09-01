@@ -497,7 +497,9 @@ class PermutationLanguageModeling(MaskSequence):
 
         return mask_labels, labels, target_mapping, perm_mask
 
-    def compute_masked_targets(self, item_ids: torch.Tensor, training=False):
+    def compute_masked_targets(
+        self, item_ids: torch.Tensor, training=False
+    ) -> Tuple[MaskingSchema, MaskedTargets]:
         (
             self.mask_schema,
             self.masked_targets,
