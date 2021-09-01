@@ -22,9 +22,11 @@ from typing import Callable, Dict, Iterable, List, Optional, Text, Union
 
 import torch
 import torchmetrics as tm
+from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_utils import SequenceSummary
 
 from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.registry import camelcase_to_snakecase
 
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
@@ -32,6 +34,10 @@ from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockOrModule, BlockType, Model, TabularFeaturesType
 
 LOG = logging.getLogger("transformers4rec")
+
+
+def name_fn(name, inp):
+    return "/".join([name, inp]) if name else None
 
 
 class PredictionTask(torch.nn.Module):
@@ -128,6 +134,15 @@ class PredictionTask(torch.nn.Module):
 
         return x
 
+    @property
+    def task_name(self):
+        base_name = generic_utils.to_snake_case(self.__class__.__name__)
+
+        return name_fn(self.target_name, base_name) if self.target_name else base_name
+
+    def child_name(self, name):
+        return name_fn(self.task_name, name)
+
     def set_metrics(self, metrics):
         self.metrics = torch.nn.ModuleList(metrics)
 
@@ -166,7 +181,10 @@ class PredictionTask(torch.nn.Module):
         return outputs
 
     def compute_metrics(self):
-        return {f"{metric.__class__.__name__.lower()}": metric.compute() for metric in self.metrics}
+        return {
+            self.child_name(camelcase_to_snakecase(metric.__class__.__name__)): metric.compute()
+            for metric in self.metrics
+        }
 
     def reset_metrics(self):
         for metric in self.metrics:
@@ -415,6 +433,7 @@ class NextItemPredictionTask(PredictionTask):
 
         for metric in self.metrics:
             outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, targets)
+
         return outputs
 
     def compute_metrics(self):
