@@ -1,22 +1,41 @@
 import inspect
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Type, Union
 
 import numpy as np
 import torch
 from tqdm import tqdm
 
+<<<<<<< HEAD:transformers4rec/torch/model.py
 from .features.sequence import TabularSequenceFeatures
+=======
+from ..typing import TensorOrTabularData
+>>>>>>> 238fdc8176b2fe43d72e92c5ebb259904f94810d:transformers4rec/torch/model/model.py
 from .head import Head
-from .typing import TensorOrTabularData
 
 
 class Model(torch.nn.Module):
+    """Model class that can aggregate one of multiple heads.
+
+    Parameters
+    ----------
+    head: Head
+        One or more heads of the model.
+    head_weights: List[float], optional
+        Weight-value to use for each head.
+    head_reduction: str, optional
+        How to reduce the losses into a single tensor when multiple heads are used.
+    optimizer: Type[torch.optim.Optimizer]
+        Optimizer-class to use during fitting
+    name: str, optional
+        Name of the model.
+    """
+
     def __init__(
         self,
         *head: Head,
         head_weights: Optional[List[float]] = None,
         head_reduction: Optional[str] = "mean",
-        optimizer=torch.optim.Adam,
+        optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name=None
     ):
         """
