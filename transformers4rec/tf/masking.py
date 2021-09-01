@@ -1,8 +1,5 @@
-from dataclasses import dataclass
-
 import tensorflow as tf
 
-from ..utils.masking import MaskSequence as _MaskSequence
 from ..utils.registry import Registry
 
 masking_registry = Registry("tf.masking")
@@ -11,32 +8,10 @@ MaskingSchema = tf.Tensor
 MaskedTargets = tf.Tensor
 
 
-@dataclass
-class MaskedSequence:
-    """
-    Class to store the masked inputs, labels and boolean masking scheme
-    resulting from the related LM task.
-
-    Parameters
-    ----------
-        masked_input: the masked interactions tensor
-        masked_label: the masked sequence of item ids
-        mask_schema: the boolean mask indicating the position of masked items
-        plm_target_mapping: boolean mapping needed by XLNET-PLM
-        plm_perm_mask:  boolean mapping needed by XLNET-PLM
-    """
-
-    masked_input: tf.Tensor
-    masked_label: tf.Tensor
-    mask_schema: tf.Tensor
-    plm_target_mapping: tf.Tensor = None
-    plm_perm_mask: tf.Tensor = None
-
-
-class MaskSequence(_MaskSequence, tf.keras.layers.Layer):
+class MaskSequence(tf.keras.layers.Layer):
     def __init__(self, pad_token: int = 0, **kwargs):
-        super().__init__(None, pad_token)
-        tf.keras.layers.Layer.__init__(**kwargs)
+        self.pad_token = pad_token
+        super(MaskSequence, self).__init__(**kwargs)
         self.schema = None
 
     def _compute_masked_targets(self, item_ids: tf.Tensor, training=False) -> MaskingSchema:
