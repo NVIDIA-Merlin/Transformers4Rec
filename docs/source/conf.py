@@ -14,7 +14,8 @@ import os
 import sys
 
 from recommonmark.parser import CommonMarkParser
-sys.path.insert(0, os.path.abspath('../../transformers4rec'))
+
+sys.path.insert(0, os.path.abspath("../../transformers4rec"))
 
 
 # -- Project information -----------------------------------------------------
