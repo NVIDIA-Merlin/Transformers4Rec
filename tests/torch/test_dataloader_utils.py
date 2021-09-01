@@ -40,7 +40,7 @@ def test_features_from_schema(yoochoose_schema, yoochoose_path_file):
     assert set(batch.keys()).issubset(set(features))
 
 
-if torch4rec.utils.torch_utils.is_nvtabular_available():
+if torch4rec.utils.torch_utils.is_nvtabular_available() and torch.cuda.is_available():
     engines = ["pyarrow", "nvtabular"]
 else:
     engines = ["pyarrow"]
