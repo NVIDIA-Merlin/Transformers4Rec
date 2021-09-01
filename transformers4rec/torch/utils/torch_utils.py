@@ -132,3 +132,11 @@ def is_nvtabular_available():
     except ImportError:
         nvtabular = None
     return nvtabular is not None
+
+
+def is_pyarrow_available():
+    try:
+        import pyarrow
+    except ImportError:
+        pyarrow = None
+    return pyarrow is not None

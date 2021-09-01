@@ -10,13 +10,7 @@ from transformers4rec.utils.schema import DatasetSchema
 from transformers4rec.utils.tags import Tag
 
 from ...utils.registry import Registry
-from .torch_utils import is_nvtabular_available
-
-try:
-    import pyarrow
-    import pyarrow.parquet as pq
-except ImportError:
-    pyarrow = None
+from .torch_utils import is_nvtabular_available, is_pyarrow_available
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +38,8 @@ class T4RecDataLoader(ABC):
         return dataloader_registry.parse(class_or_str)
 
 
-if pyarrow is not None:
+if is_pyarrow_available():
+    import pyarrow.parquet as pq
 
     @dataloader_registry.register_with_multiple_names("pyarrow_builder", "pyarrow")
     class PyarrowDataLoader(T4RecDataLoader, PyTorchDataLoader):
@@ -157,10 +152,6 @@ if pyarrow is not None:
                 pin_memory=True,
                 **kwargs,
             )
-
-
-else:
-    PyarrowDataLoader = None
 
 
 if is_nvtabular_available():
