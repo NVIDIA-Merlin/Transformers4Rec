@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 from torch import nn
@@ -66,14 +66,45 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         self.masked_targets = None
 
     def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingSchema:
+        """
+
+        Parameters
+        ----------
+        item_ids: torch.Tensor
+
+        training: bool
+
+        """
         raise NotImplementedError
 
-    def apply_mask_to_inputs(self, inputs: torch.Tensor, schema: MaskingSchema):
+    def apply_mask_to_inputs(self, inputs: torch.Tensor, schema: MaskingSchema) -> torch.Tensor:
+        """
+
+        Parameters
+        ----------
+        inputs: torch.Tensor
+            TODO
+        schema: torch.Tensor
+            TODO
+        """
         raise NotImplementedError
 
     def compute_masked_targets(
         self, item_ids: torch.Tensor, training=False
     ) -> Tuple[MaskingSchema, MaskedTargets]:
+        """
+
+        Parameters
+        ----------
+        item_ids: torch.Tensor
+            TODO
+        training: bool
+            Boolean flag indicating whether it's training or not.
+
+        Returns
+        -------
+        Tuple[MaskingSchema, MaskedTargets]
+        """
         assert item_ids.ndim == 2, "`item_ids` must have 2 dimensions."
         self.mask_schema, self.masked_targets = self._compute_masked_targets(
             item_ids, training=training
@@ -88,14 +119,14 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
     def forward_output_size(self, input_size):
         return input_size
 
-    def transformer_required_arguments(self):
+    def transformer_required_arguments(self) -> Dict[str, Any]:
         return {}
 
-    def transformer_optional_arguments(self):
+    def transformer_optional_arguments(self) -> Dict[str, Any]:
         return {}
 
     @property
-    def transformer_arguments(self):
+    def transformer_arguments(self) -> Dict[str, Any]:
         return {**self.transformer_required_arguments(), **self.transformer_optional_arguments()}
 
 
@@ -164,7 +195,9 @@ class CausalLanguageModeling(MaskSequence):
             mask_labels = label_seq_trg_eval != self.pad_token
         return mask_labels, labels
 
-    def apply_mask_to_inputs(self, inputs: torch.Tensor, mask_schema: MaskingSchema):
+    def apply_mask_to_inputs(
+        self, inputs: torch.Tensor, mask_schema: MaskingSchema
+    ) -> torch.Tensor:
         # shift sequence of interaction embeddings
         pos_emb_inp = inputs[:, :-1]
         # Adding a masked item in the sequence to return to the initial sequence.
@@ -290,7 +323,9 @@ class MaskedLanguageModeling(MaskSequence):
 
         return mask_labels, labels
 
-    def apply_mask_to_inputs(self, inputs: torch.Tensor, mask_schema: MaskingSchema):
+    def apply_mask_to_inputs(
+        self, inputs: torch.Tensor, mask_schema: MaskingSchema
+    ) -> torch.Tensor:
         inputs = torch.where(
             mask_schema.unsqueeze(-1).bool(),
             self.masked_item_embedding.to(inputs.dtype),
@@ -350,7 +385,7 @@ class PermutationLanguageModeling(MaskSequence):
         self,
         item_ids: torch.Tensor,
         training=False,
-    ):
+    ) -> torch.Tensor:
         """
         Prepare the attention masks needed for permutation language modeling
         The function is based on HuggingFace's transformers/data/data_collator.py
@@ -509,7 +544,9 @@ class PermutationLanguageModeling(MaskSequence):
 
         return self.mask_schema, self.masked_targets
 
-    def apply_mask_to_inputs(self, inputs: torch.Tensor, mask_schema: MaskingSchema):
+    def apply_mask_to_inputs(
+        self, inputs: torch.Tensor, mask_schema: MaskingSchema
+    ) -> torch.Tensor:
         inputs = torch.where(
             mask_schema.unsqueeze(-1).bool(),
             self.masked_item_embedding.to(inputs.dtype),
@@ -517,7 +554,7 @@ class PermutationLanguageModeling(MaskSequence):
         )
         return inputs
 
-    def transformer_required_arguments(self):
+    def transformer_required_arguments(self) -> Dict[str, Any]:
         return dict(target_mapping=self.target_mapping, perm_mask=self.perm_mask)
 
 
@@ -526,7 +563,7 @@ class PermutationLanguageModeling(MaskSequence):
 class ReplacementLanguageModeling(MaskedLanguageModeling):
     """
     Extend the Masked Language Modeling class with token replacement detection function
-    to prepate data of the RTD discriminator
+    to prepare data of the RTD discriminator
 
     Parameters:
     ----------
@@ -607,7 +644,7 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
             batch_updates,
         )
 
-    def sample_from_softmax(self, logits):
+    def sample_from_softmax(self, logits: torch.Tensor) -> torch.Tensor:
         """
         Sampling method for replacement token modeling (ELECTRA):
         INPUT:
