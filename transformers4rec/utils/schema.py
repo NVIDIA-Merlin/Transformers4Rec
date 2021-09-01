@@ -1,7 +1,12 @@
 import collections.abc
 import math
 from dataclasses import dataclass, field
-from functools import cached_property
+try:
+   from functools import cached_property
+except ImportError:
+   # polyfill cached_property for python <= 3.7 (using lru_cache which was introduced in python3.2)
+   from functools import lru_cache
+   cached_property = lambda func: property(lru_cache()(func))
 from typing import List, Optional, Text, Union
 
 from google.protobuf import text_format
