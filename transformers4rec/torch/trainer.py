@@ -24,7 +24,7 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalLoopOutput, Sc
 from transformers.utils import logging
 
 from ..config.trainer import T4RecTrainingArguments
-from .model import Model
+from .model.model import Model
 from .utils.data_utils import T4RecDataLoader
 
 logger = logging.get_logger(__name__)
@@ -504,7 +504,7 @@ class Trainer(BaseTrainer):
             num_samples=num_examples,
         )
 
-    def _save_model_and_checkpoint(self, trial=None, metrics=None, save_model_class=True):
+    def _save_model_and_checkpoint(self, trial=None, metrics=None, save_model_class=False):
         """
         Save the serialized model + optimizer states
         """
@@ -515,26 +515,27 @@ class Trainer(BaseTrainer):
         torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
         """
         import os
-
         try:
             import cloudpickle
         except ImportError:
-            raise ImportError("cloudpickle is required to load model class")
+            cloudpickle = None
 
         logger.info("Saving model...")
         output_dir = os.path.join(
             self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
         )
+
         # save model parameters
         self._save_checkpoint(self.model, trial=None, metrics=None)
-
         # save the serialized model
         if save_model_class:
+            # TODO : fix serialization of DatasetSchema object
             if cloudpickle is None:
                 raise ValueError("cloudpickle is required to save model class")
 
             with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
-                cloudpickle.dump(self.model, out)
+                cloudpickle.dump(
+                    self.model.module.heads[0].body.inputs.to_merge['continuous_module'][0], out)
 
     def load_model_trainer_states_from_checkpoint(self, checkpoint_path):
         """

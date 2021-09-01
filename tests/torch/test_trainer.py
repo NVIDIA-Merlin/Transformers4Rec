@@ -42,6 +42,7 @@ def test_set_train_eval_loaders_pyarrow(
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         avg_session_length=20,
+        num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
         data_loader_engine="pyarrow",
@@ -69,6 +70,7 @@ def test_set_train_eval_loaders_pyarrow_no_schema(
         args = trainer.T4RecTrainingArguments(
             output_dir=".",
             avg_session_length=20,
+            num_train_epochs=1,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size // 2,
             data_loader_engine="pyarrow",
@@ -100,6 +102,7 @@ def test_create_scheduler(
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         avg_session_length=20,
+        num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
         data_loader_engine="pyarrow",
@@ -134,6 +137,7 @@ def test_trainer_eval_loop(
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         avg_session_length=20,
+        num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
         data_loader_engine="pyarrow",
@@ -163,23 +167,16 @@ def test_trainer_eval_loop(
     assert eval_metrics["eval_loss"] is not None
 
 
-try:
-    import cloudpickle
-except ImportError:
-    cloudpickle = None
-save_model_class = [False]
-if cloudpickle:
-    save_model_class.append(True)
-
-
-@pytest.mark.parametrize("save_class", save_model_class)
 def test_saves_checkpoints(
-    yoochoose_schema, yoochoose_path_file, torch_yoochoose_next_item_prediction_model, save_class
+    yoochoose_schema,
+    yoochoose_path_file,
+    torch_yoochoose_next_item_prediction_model,
 ):
     with tempfile.TemporaryDirectory() as tmpdir:
         batch_size = 16
         args = trainer.T4RecTrainingArguments(
             output_dir=tmpdir,
+            num_train_epochs=1,
             avg_session_length=20,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size // 2,
@@ -200,7 +197,7 @@ def test_saves_checkpoints(
         )
 
         recsys_trainer.train()
-        recsys_trainer._save_model_and_checkpoint(save_model_class=save_class)
+        recsys_trainer._save_model_and_checkpoint()
 
         file_list = [
             "pytorch_model.bin",
@@ -210,9 +207,6 @@ def test_saves_checkpoints(
             "rng_state.pth",
             "trainer_state.json",
         ]
-        if save_class:
-            file_list.append("model_class.pkl")
-
         step = recsys_trainer.state.global_step
         checkpoint = os.path.join(tmpdir, f"checkpoint-{step}")
 
