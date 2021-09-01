@@ -22,10 +22,11 @@ import torch
 from tqdm import tqdm
 
 from ..typing import TensorOrTabularData
+from ..utils.torch_utils import LossMixin, MetricsMixin
 from .head import Head
 
 
-class Model(torch.nn.Module):
+class Model(torch.nn.Module, LossMixin, MetricsMixin):
     """Model class that can aggregate one of multiple heads.
 
     Parameters

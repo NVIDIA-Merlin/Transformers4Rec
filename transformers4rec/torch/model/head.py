@@ -32,6 +32,7 @@ from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockOrModule, BlockType, Model, TabularFeaturesType
+from ..utils.torch_utils import LossMixin, MetricsMixin
 
 LOG = logging.getLogger("transformers4rec")
 
@@ -40,7 +41,7 @@ def name_fn(name, inp):
     return "/".join([name, inp]) if name else None
 
 
-class PredictionTask(torch.nn.Module):
+class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     """Individual prediction-task of a model.
 
     Parameters
@@ -544,22 +545,29 @@ class _NextItemPredictionTask(torch.nn.Module):
 
         return predictions
 
-    def _get_name(self):
+    def _get_name(self) -> str:
         return "NextItemPredictionTask"
 
 
-class Head(torch.nn.Module):
-    """
+class Head(torch.nn.Module, LossMixin, MetricsMixin):
+    """Head of a Model, a head has a single body but could have multiple prediction-tasks.
 
     Parameters
     ----------
-    body
-    prediction_tasks
+    body: Block
+        TODO
+    prediction_tasks: Union[List[PredictionTask], PredictionTask], optional
+        TODO
     task_blocks
-    task_weights
+        TODO
+    task_weights: List[float], optional
+        TODO
     body_output_size
-    loss_reduction
-    inputs
+        TODO
+    loss_reduction: str, default="mean"
+        TODO
+    inputs: TabularFeaturesType, optional
+        TODO
     """
 
     def __init__(
@@ -610,6 +618,19 @@ class Head(torch.nn.Module):
 
     @classmethod
     def from_schema(cls, schema: Schema, body, task_weights=None, input_size=None):
+        """Instantiate a Head from a Schema through tagged targets.
+
+        Parameters
+        ----------
+        schema
+        body
+        task_weights
+        input_size
+
+        Returns
+        -------
+
+        """
         if task_weights is None:
             task_weights = {}
         to_return = cls(body, body_output_size=input_size)
@@ -631,6 +652,17 @@ class Head(torch.nn.Module):
         return to_return
 
     def add_task(self, task: PredictionTask, task_weight=1):
+        """
+
+        Parameters
+        ----------
+        task
+        task_weight
+
+        Returns
+        -------
+
+        """
         key = task.target_name
         self.prediction_tasks[key] = task
         if task_weight:
@@ -638,7 +670,17 @@ class Head(torch.nn.Module):
 
         return self
 
-    def pop_labels(self, inputs: Dict[Text, torch.Tensor]):
+    def pop_labels(self, inputs: Dict[Text, torch.Tensor]) -> Dict[Text, torch.Tensor]:
+        """
+
+        Parameters
+        ----------
+        inputs
+
+        Returns
+        -------
+
+        """
         outputs = {}
         for name in self.prediction_tasks.keys():
             outputs[name] = inputs.pop(name)
@@ -662,6 +704,20 @@ class Head(torch.nn.Module):
     def compute_loss(
         self, body_outputs, targets, compute_metrics=True, call_body=False, **kwargs
     ) -> torch.Tensor:
+        """
+
+        Parameters
+        ----------
+        body_outputs
+        targets
+        compute_metrics
+        call_body
+        kwargs
+
+        Returns
+        -------
+
+        """
         losses = []
 
         if call_body:
@@ -685,6 +741,19 @@ class Head(torch.nn.Module):
         call_body=False,
         forward=True,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        """
+
+        Parameters
+        ----------
+        body_outputs
+        targets
+        mode
+        call_body
+
+        Returns
+        -------
+
+        """
         metrics = {}
 
         if call_body:
@@ -698,6 +767,17 @@ class Head(torch.nn.Module):
         return _output_metrics(metrics)
 
     def compute_metrics(self, mode=None):
+        """
+
+        Parameters
+        ----------
+        mode
+
+        Returns
+        -------
+
+        """
+
         def name_fn(x):
             return "_".join([mode, x]) if mode else x
 
@@ -708,6 +788,7 @@ class Head(torch.nn.Module):
         return _output_metrics(metrics)
 
     def reset_metrics(self):
+        """"""
         for task in self.prediction_tasks.values():
             task.reset_metrics()
 
@@ -716,6 +797,16 @@ class Head(torch.nn.Module):
         return {name: task.task_block for name, task in self.prediction_tasks.items()}
 
     def to_model(self, **kwargs) -> Model:
+        """
+
+        Parameters
+        ----------
+        kwargs
+
+        Returns
+        -------
+
+        """
         from .model import Model as _Model
 
         return _Model(self, **kwargs)
