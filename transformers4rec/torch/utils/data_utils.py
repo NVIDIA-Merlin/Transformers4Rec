@@ -20,7 +20,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-dataloader_registry: Registry = Registry("torch.dataloader_builder")
+dataloader_registry: Registry = Registry("torch.dataloader_loader")
 
 
 class T4RecDataLoader(ABC):

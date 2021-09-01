@@ -58,6 +58,8 @@ from .model.head import (
 )
 from .model.model import Model
 
+from .trainer import Trainer
+
 __all__ = [
     "SequentialBlock",
     "right_shift_block",

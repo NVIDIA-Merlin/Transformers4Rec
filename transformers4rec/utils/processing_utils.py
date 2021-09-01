@@ -20,7 +20,7 @@ def save_time_based_splits(
         import dask_cudf
         import nvtabular as nvt
     except ImportError as error:
-        raise ImportError(
+        print(
             "ModuleNotFoundError: '%s' package is required to use save_time_based_splits function"
             % error.name
         )

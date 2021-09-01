@@ -11,6 +11,7 @@ from ...types import DatasetSchema
 from ...utils.tags import Tag
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..typing import BlockOrModule, BlockType
+from ..ranking_metric import NDCGAt, RecallAt, AvgPrecisionAt
 
 
 class PredictionTask(torch.nn.Module):

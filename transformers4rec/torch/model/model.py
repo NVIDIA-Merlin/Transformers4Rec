@@ -5,11 +5,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-<<<<<<< HEAD:transformers4rec/torch/model.py
-from .features.sequence import TabularSequenceFeatures
-=======
+from ..features.sequence import TabularSequenceFeatures
 from ..typing import TensorOrTabularData
->>>>>>> 238fdc8176b2fe43d72e92c5ebb259904f94810d:transformers4rec/torch/model/model.py
 from .head import Head
 
 
