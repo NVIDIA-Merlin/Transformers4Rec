@@ -13,12 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Tuple
+from typing import Optional, Tuple
 
 import torch
 from torch import nn
 
+from ..utils.misc_utils import docstring_parameter
 from ..utils.registry import Registry
+from ..utils.schema import DatasetSchema
 from .utils.torch_utils import OutputSizeMixin
 
 masking_registry = Registry("torch.masking")
@@ -26,23 +28,34 @@ masking_registry = Registry("torch.masking")
 MaskingSchema = torch.Tensor
 MaskedTargets = torch.Tensor
 
+MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
+    hidden_size: int
+        The hidden dimension of input tensors, needed to initialize trainable vector of masked
+        positions.
+    device: str, default = "cpu"
+        Device to store the module on.
+    pad_token: int, default = 0
+        Index of the padding token used for getting batch of sequences with the same length
+    schema: DatasetSchema, optional
+        Schema to use for masking.
+"""
 
+
+@docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class MaskSequence(OutputSizeMixin, torch.nn.Module):
-    """
-    Base class to define masked inputs for LM tasks
+    """Base class to define masked inputs for sequence-modeling tasks.
 
     Parameters
     ----------
-        hidden_size: The hidden dimension of input tensors,
-                    needed to initialize trainable vector of
-                    masked positions.
-        pad_token: int, default = 0
-            Index of the padding token used for getting
-                  batch of sequences with the same length
+    {mask_sequence_parameters}
     """
 
     def __init__(
-        self, hidden_size: int, device: str = "cpu", pad_token: int = 0, schema=None, **kwargs
+        self,
+        hidden_size: int,
+        device: str = "cpu",
+        pad_token: int = 0,
+        schema: Optional[DatasetSchema] = None,
     ):
         super(MaskSequence, self).__init__()
         self.pad_token = pad_token
@@ -87,22 +100,28 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 
 
 @masking_registry.register_with_multiple_names("clm", "causal")
+@docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class CausalLanguageModeling(MaskSequence):
     def __init__(
         self,
-        hidden_size,
+        hidden_size: int,
+        device: str = "cpu",
+        pad_token: int = 0,
+        schema: Optional[DatasetSchema] = None,
         train_on_last_item_seq_only=False,
         eval_on_last_item_seq_only=True,
-        **kwargs
     ):
-        """
-        Causal Language Modeling class - Prepare labels for Next token predictions
+        """Causal Language Modeling class - Prepare labels for Next token predictions.
+
         Parameters:
         ----------
-            train_on_last_item_seq_only: predict last item only during training
-            eval_on_last_item_seq_only: predict last item only during evaluation
+        {mask_sequence_parameters}
+        train_on_last_item_seq_only: predict last item only during training
+        eval_on_last_item_seq_only: predict last item only during evaluation
         """
-        super(CausalLanguageModeling, self).__init__(hidden_size, **kwargs)
+        super(CausalLanguageModeling, self).__init__(
+            hidden_size=hidden_size, device=device, pad_token=pad_token, schema=schema
+        )
         self.train_on_last_item_seq_only = train_on_last_item_seq_only
         self.eval_on_last_item_seq_only = eval_on_last_item_seq_only
 
@@ -168,21 +187,30 @@ class CausalLanguageModeling(MaskSequence):
 
 
 @masking_registry.register_with_multiple_names("mlm", "masked")
+@docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class MaskedLanguageModeling(MaskSequence):
-    def __init__(self, hidden_size, mlm_probability=0.15, **kwargs):
-        """
-        Masked Language Modeling class - Prepare labels for masked item prediction
-        Parameters:
-        -----------
-            hidden_size: int
-                The dimension of input embedding vectors.
-            mlm_probability: Optional[float], default = 0.15
-                Probability of an item to be selected (masked) to be a label for this
-                             sequence.
-                                p.s. We enforce that at least one item is masked for each sequence,
-                                so that the network can learn something with it.
-        """
-        super(MaskedLanguageModeling, self).__init__(hidden_size, **kwargs)
+    """Masked Language Modeling class - Prepare labels for masked item prediction
+
+    Parameters:
+    -----------
+    {mask_sequence_parameters}
+    mlm_probability: Optional[float], default = 0.15
+        Probability of an item to be selected (masked) to be a label for this sequence.
+        p.s. We enforce that at least one item is masked for each sequence, so that the network can
+        learn something with it.
+    """
+
+    def __init__(
+        self,
+        hidden_size: int,
+        device: str = "cpu",
+        pad_token: int = 0,
+        schema: Optional[DatasetSchema] = None,
+        mlm_probability: float = 0.15,
+    ):
+        super(MaskedLanguageModeling, self).__init__(
+            hidden_size=hidden_size, device=device, pad_token=pad_token, schema=schema
+        )
 
         self.mlm_probability = mlm_probability
         # Create a trainable embedding to replace masked inputs for Masked LM
@@ -271,21 +299,35 @@ class MaskedLanguageModeling(MaskSequence):
 
 
 @masking_registry.register_with_multiple_names("plm", "permutation")
+@docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class PermutationLanguageModeling(MaskSequence):
-    def __init__(
-        self, hidden_size, plm_probability=1 / 6, max_span_length=5, permute_all=False, **kwargs
-    ):
-        """
-        Masked Language Modeling class - Prepare labels for permuted item prediction
+    """Masked Language Modeling class - Prepare labels for permuted item prediction
 
-        Parameters:
-        ----------
-            max_span_length: maximum length of a span of masked items
-            plm_probability: The ratio of surrounding items to unmask to define the context of the
-                            span-based prediction segment of items
-            permute_all: Compute partial span-based prediction (=False) or not.
-        """
-        super(PermutationLanguageModeling, self).__init__(hidden_size, **kwargs)
+    Parameters:
+    ----------
+    {mask_sequence_parameters}
+    max_span_length: int
+        maximum length of a span of masked items
+    plm_probability: float
+        The ratio of surrounding items to unmask to define the context of the span-based
+        prediction segment of items
+    permute_all: bool
+        Compute partial span-based prediction (=False) or not.
+    """
+
+    def __init__(
+        self,
+        hidden_size: int,
+        device: str = "cpu",
+        pad_token: int = 0,
+        schema: Optional[DatasetSchema] = None,
+        plm_probability: float = 1 / 6,
+        max_span_length: int = 5,
+        permute_all: bool = False,
+    ):
+        super(PermutationLanguageModeling, self).__init__(
+            hidden_size=hidden_size, device=device, pad_token=pad_token, schema=schema
+        )
 
         self.plm_probability = plm_probability
         self.max_span_length = max_span_length
@@ -477,16 +519,30 @@ class PermutationLanguageModeling(MaskSequence):
 
 
 @masking_registry.register_with_multiple_names("rtd", "replacement")
+@docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class ReplacementLanguageModeling(MaskedLanguageModeling):
-    def __init__(self, hidden_size, sample_from_batch=False, **kwargs):
-        """
-        Extend the Masked Language Modeling class with token replacement detection function
-        to prepate data of the RTD discriminator
-        Parameters:
-            sample_from_batch: whether to sample replacement item ids from the same batch or not
-        """
+    """
+    Extend the Masked Language Modeling class with token replacement detection function
+    to prepate data of the RTD discriminator
 
-        super(ReplacementLanguageModeling, self).__init__(hidden_size=hidden_size, **kwargs)
+    Parameters:
+    ----------
+    {mask_sequence_parameters}
+    sample_from_batch: bool
+        Whether to sample replacement item ids from the same batch or not
+    """
+
+    def __init__(
+        self,
+        hidden_size: int,
+        device: str = "cpu",
+        pad_token: int = 0,
+        schema: Optional[DatasetSchema] = None,
+        sample_from_batch: bool = False,
+    ):
+        super(ReplacementLanguageModeling, self).__init__(
+            hidden_size=hidden_size, device=device, pad_token=pad_token, schema=schema
+        )
 
         self.sample_from_batch = sample_from_batch
 
