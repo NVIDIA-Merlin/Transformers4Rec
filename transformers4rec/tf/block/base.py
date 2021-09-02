@@ -7,9 +7,10 @@ import tensorflow as tf
 
 from ...utils.misc_utils import filter_kwargs
 from ..typing import Head, PredictionTask
+from ..utils.tf_utils import SchemaMixin
 
 
-class Block(tf.keras.layers.Layer):
+class Block(SchemaMixin, tf.keras.layers.Layer):
     def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
         from ..model.head import Head, PredictionTask
         from ..model.model import Model
@@ -32,7 +33,7 @@ class Block(tf.keras.layers.Layer):
         if not name:
             name = self.name
 
-        return SequentialBlock(self, AsTabular(name))
+        return SequentialBlock([self, AsTabular(name)])
 
 
 class SequentialBlock(Block):
@@ -111,6 +112,12 @@ class SequentialBlock(Block):
             input_shape = layer.compute_output_shape(input_shape)
             last_layer = layer
         self.built = True
+
+    def set_schema(self, schema=None):
+        for layer in self.layers:
+            self._maybe_set_schema(layer, schema)
+
+        return super().set_schema(schema)
 
     def _get_name(self):
         return self.block_name if self.block_name else f"{self.__class__.__name__}"

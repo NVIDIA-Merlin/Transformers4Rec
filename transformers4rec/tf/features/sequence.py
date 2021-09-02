@@ -8,7 +8,7 @@ from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
 from ..tabular.tabular import AsTabular, TabularBlock
-from ..typing import TabularAggregationType, TabularTransformationType
+from ..typing import Block, MaskSequence, TabularAggregationType, TabularTransformationType
 from .embedding import EmbeddingFeatures, TableConfig
 from .tabular import TabularFeatures
 
@@ -32,7 +32,8 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
             pre=pre,
             post=post,
             aggregation=aggregation,
-            name=name ** kwargs,
+            name=name,
+            **kwargs,
         )
         self.padding_idx = padding_idx
         self.mask_zero = mask_zero
@@ -57,10 +58,8 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
     def compute_mask(self, inputs, mask=None):
         if not self.mask_zero:
             return None
-        filtered_inputs = self.filter_features(inputs)
-
         outputs = {}
-        for key, val in filtered_inputs.items():
+        for key, val in inputs.items():
             outputs[key] = tf.not_equal(val, self.padding_idx)
 
         return outputs
@@ -71,18 +70,28 @@ class TabularSequenceFeatures(TabularFeatures):
 
     def __init__(
         self,
-        continuous_layer=None,
-        categorical_layer=None,
-        text_embedding_layer=None,
-        projection_module=None,
-        masking=None,
-        aggregation=None,
+        continuous_layer: Optional[TabularBlock] = None,
+        categorical_layer: Optional[TabularBlock] = None,
+        text_embedding_layer: Optional[TabularBlock] = None,
+        projection_block: Optional[Block] = None,
+        masking: Optional[MaskSequence] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        name=None,
         **kwargs
     ):
         super().__init__(
-            continuous_layer, categorical_layer, text_embedding_layer, aggregation, **kwargs
+            continuous_layer=continuous_layer,
+            categorical_layer=categorical_layer,
+            text_embedding_layer=text_embedding_layer,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            name=name,
+            **kwargs,
         )
-        self.projection_module = projection_module
+        self.projection_block = projection_block
         if masking:
             self.masking = masking
 
@@ -145,8 +154,7 @@ class TabularSequenceFeatures(TabularFeatures):
             aggregation=aggregation,
             max_sequence_length=max_sequence_length,
             continuous_projection=continuous_projection,
-            # continuous_soft_embeddings_shape=,
-            **kwargs
+            **kwargs,
         )
         if d_output and projection:
             raise ValueError("You cannot specify both d_output and projection at the same time")
@@ -187,11 +195,11 @@ class TabularSequenceFeatures(TabularFeatures):
     def call(self, inputs, training=True):
         outputs = super(TabularSequenceFeatures, self).call(inputs)
 
-        if self.masking or self.projection_module:
+        if self.masking or self.projection_block:
             outputs = self.aggregation(outputs)
 
-        if self.projection_module:
-            outputs = self.projection_module(outputs)
+        if self.projection_block:
+            outputs = self.projection_block(outputs)
 
         if self.masking:
             outputs = self.masking(

@@ -55,7 +55,7 @@ def test_element_wise_sum_item_multi_no_col_group():
     with pytest.raises(ValueError) as excinfo:
         element_wise_op = tf4rec.ElementwiseSumItemMulti()
         element_wise_op(None)
-    assert "schema is necessary" in str(excinfo.value)
+    assert "requires a schema." in str(excinfo.value)
 
 
 def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
@@ -91,16 +91,15 @@ def test_element_wise_sum_item_multi_aggregation_yoochoose(yoochoose_schema, tf_
     assert out.shape[-1] == 64
 
 
-# Uncomment this when `TabularSequenceFeatures` is ported to TF.
-# def test_element_wise_sum_item_multi_aggregation_registry_yoochoose(
-#     yoochoose_schema, tf_yoochoose_like
-# ):
-#     categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-#
-#     tab_module = tf4rec.TabularSequenceFeatures.from_schema(
-#         categ_schema, aggregation="element-wise-sum-item-multi"
-#     )
-#
-#     out = tab_module(tf_yoochoose_like)
-#
-#     assert out.shape[-1] == 64
+def test_element_wise_sum_item_multi_aggregation_registry_yoochoose(
+    yoochoose_schema, tf_yoochoose_like
+):
+    categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+
+    tab_module = tf4rec.TabularSequenceFeatures.from_schema(
+        categ_schema, aggregation="element-wise-sum-item-multi"
+    )
+
+    out = tab_module(tf_yoochoose_like)
+
+    assert out.shape[-1] == 64

@@ -107,6 +107,7 @@ class TabularFeatures(InputBlock, MergeTabular):
             categorical_layer=maybe_categorical_layer,
             text_embedding_layer=text_model,
             aggregation=aggregation,
+            schema=schema,
             **kwargs
         )
 

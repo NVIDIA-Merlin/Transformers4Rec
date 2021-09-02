@@ -3,25 +3,17 @@ from typing import List
 
 import tensorflow as tf
 
-from transformers4rec.tf.typing import TabularData
-from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
-from transformers4rec.types import Tag
-from transformers4rec.utils.registry import Registry
-
-aggregation_registry: Registry = Registry.class_registry("tf.aggregation_registry")
-
+from ..typing import TabularData
+from ..utils.tf_utils import calculate_batch_size_from_input_shapes, requires_schema
+from .tabular import TabularAggregation, tabular_aggregation_registry
 
 # pylint has issues with TF array ops, so disable checks until fixed:
 # https://github.com/PyCQA/pylint/issues/3613
 # pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
-class FeatureAggregation(tf.keras.layers.Layer):
-    pass
-
-
-@aggregation_registry.register("concat")
-class ConcatFeatures(FeatureAggregation):
+@tabular_aggregation_registry.register("concat")
+class ConcatFeatures(TabularAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.axis = axis
@@ -46,9 +38,9 @@ class ConcatFeatures(FeatureAggregation):
         }
 
 
-@aggregation_registry.register("sequential_concat")
-class SequentialConcatFeatures(FeatureAggregation):
-    def call(self, inputs, **kwargs):
+@tabular_aggregation_registry.register("sequential_concat")
+class SequentialConcatFeatures(TabularAggregation):
+    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         tensors = []
         for name in sorted(inputs.keys()):
             val = inputs[name]
@@ -74,8 +66,8 @@ class SequentialConcatFeatures(FeatureAggregation):
         )
 
 
-@aggregation_registry.register("stack")
-class StackFeatures(FeatureAggregation):
+@tabular_aggregation_registry.register("stack")
+class StackFeatures(TabularAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.axis = axis
@@ -101,7 +93,7 @@ class StackFeatures(FeatureAggregation):
         }
 
 
-class ElementwiseFeatureAggregation(FeatureAggregation):
+class ElementwiseFeatureAggregation(TabularAggregation):
     def _check_input_shapes_equal(self, inputs):
         all_input_shapes_equal = reduce((lambda a, b: a.shape == b.shape), inputs.values())
         if not all_input_shapes_equal:
@@ -111,13 +103,13 @@ class ElementwiseFeatureAggregation(FeatureAggregation):
             )
 
 
-@aggregation_registry.register("element-wise-sum")
+@tabular_aggregation_registry.register("element-wise-sum")
 class ElementwiseSum(ElementwiseFeatureAggregation):
     def __init__(self):
         super().__init__()
         self.stack = StackFeatures(axis=0)
 
-    def call(self, inputs, **kwargs):
+    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         self._check_input_shapes_equal(inputs)
         return tf.reduce_sum(self.stack(inputs), axis=0)
 
@@ -128,30 +120,19 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
         return batch_size, last_dim
 
 
-@aggregation_registry.register("element-wise-sum-item-multi")
+@tabular_aggregation_registry.register("element-wise-sum-item-multi")
+@requires_schema
 class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
     def __init__(self, schema=None):
         super().__init__()
         self.stack = StackFeatures(axis=0)
-        self.schema = schema
+        self._schema = schema
         self.item_id_col_name = None
 
-    def _set_item_id_from_col_group(self):
-        if self.schema is None:
-            raise ValueError(
-                "The schema is necessary to infer the item id column name, but it has not been set."
-            )
-        elif self.item_id_col_name is None:
-            item_id_col = self.schema.select_by_tag(Tag.ITEM_ID)
-            if len(item_id_col.columns) == 0:
-                raise ValueError("There is no column tagged as item id.")
-            self.item_id_col_name = item_id_col.column_names[0]
-
-    def call(self, inputs, **kwargs):
-        self._set_item_id_from_col_group()
+    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
+        item_id_inputs = self.schema.get_item_ids_from_inputs(inputs)
         self._check_input_shapes_equal(inputs)
 
-        item_id_inputs = inputs[self.item_id_col_name]
         other_inputs = {k: v for k, v in inputs.items() if k != self.item_id_col_name}
         other_inputs_sum = tf.reduce_sum(self.stack(other_inputs), axis=0)
         result = item_id_inputs * other_inputs_sum

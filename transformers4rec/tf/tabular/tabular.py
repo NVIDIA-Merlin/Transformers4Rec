@@ -85,6 +85,7 @@ class TabularBlock(Block):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -92,6 +93,9 @@ class TabularBlock(Block):
         self.set_pre(pre)
         self.set_post(post)
         self.set_aggregation(aggregation)
+
+        if schema:
+            self.set_schema(schema)
 
     @classmethod
     def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularBlock"]:
@@ -113,7 +117,7 @@ class TabularBlock(Block):
         if not schema.columns:
             return None
 
-        return cls.from_features(schema.column_names, **kwargs)
+        return cls.from_features(schema.column_names, schema=schema, **kwargs)
 
     @classmethod
     @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
@@ -123,6 +127,8 @@ class TabularBlock(Block):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
+        name=None,
+        **kwargs
     ) -> "TabularBlock":
         """Initializes a TabularLayer instance where the contents of features will be filtered
             out
@@ -140,7 +146,7 @@ class TabularBlock(Block):
         """
         pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)
 
-        return cls(pre=pre, post=post, aggregation=aggregation)
+        return cls(pre=pre, post=post, aggregation=aggregation, name=name, **kwargs)
 
     def pre_call(
         self, inputs: TabularData, transformations: Optional[TabularAggregationType] = None
@@ -279,7 +285,7 @@ class TabularBlock(Block):
 
     def compute_output_shape(self, input_shapes):
         if self.pre:
-            input_shapes = self.pre.output_size(input_shapes)
+            input_shapes = self.pre.compute_output_shape(input_shapes)
 
         output_shapes = self._check_post_output_size(self.compute_call_output_shape(input_shapes))
 
@@ -302,6 +308,13 @@ class TabularBlock(Block):
         outputs = tf.nest.map_structure(self, inputs)
 
         return outputs
+
+    def set_schema(self, schema=None):
+        self._maybe_set_schema(self.pre, schema)
+        self._maybe_set_schema(self.post, schema)
+        self._maybe_set_schema(self.aggregation, schema)
+
+        return super().set_schema(schema)
 
     def set_pre(
         self, value: Union[str, TabularTransformation, List[str], List[TabularTransformation]]

@@ -9,22 +9,17 @@ from ...utils.schema import DatasetSchema
 class SchemaMixin(abc.ABC):
     REQUIRES_SCHEMA = False
 
-    def build(self, input_size, schema=None, **kwargs):
+    def set_schema(self, schema=None):
         self.check_schema(schema=schema)
 
-        self.input_size = input_size
         if schema and not getattr(self, "schema", None):
-            self.schema = schema
+            self._schema = schema
 
         return self
 
     @property
     def schema(self) -> Optional[DatasetSchema]:
         return getattr(self, "_schema", None)
-
-    @schema.setter
-    def schema(self, value):
-        self._schema = value
 
     def check_schema(self, schema=None):
         if self.REQUIRES_SCHEMA and not getattr(self, "schema", None) and not schema:
@@ -34,6 +29,10 @@ class SchemaMixin(abc.ABC):
         self.check_schema()
 
         return super().__call__(*args, **kwargs)
+
+    def _maybe_set_schema(self, layer, schema):
+        if layer and getattr(layer, "set_schema"):
+            layer.set_schema(schema)
 
 
 def requires_schema(module):
