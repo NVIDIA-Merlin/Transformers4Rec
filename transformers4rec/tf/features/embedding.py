@@ -6,8 +6,9 @@ from tensorflow.python.keras import backend
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
 from ...types import DatasetSchema
+from ...utils.misc_utils import docstring_parameter
 from ...utils.tags import DefaultTags
-from ..tabular.tabular import FilterFeatures
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from ..tabular.transformations import AsSparseFeatures
 from ..typing import TabularAggregationType, TabularData, TabularTransformationType
 from .base import InputBlock
@@ -17,7 +18,30 @@ from .base import InputBlock
 # pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
+EMBEDDING_FEATURES_PARAMS_DOCSTRING = """
+    feature_config: Dict[str, FeatureConfig]
+        This specifies what TableConfig to use for each feature. For shared embeddings, the same
+        TableConfig can be used for multiple features.
+    item_id: str, optional
+        The name of the feature that's used for the item_id.
+"""
+
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    embedding_features_parameters=EMBEDDING_FEATURES_PARAMS_DOCSTRING,
+)
 class EmbeddingFeatures(InputBlock):
+    """Input block for embedding-lookups for categorical features.
+
+    For multi-hot features, the embeddings will be aggregated into a single tensor using the mean.
+
+    Parameters
+    ----------
+    {embedding_features_parameters}
+    {tabular_module_parameters}
+    """
+
     def __init__(
         self,
         feature_config: Dict[str, "FeatureConfig"],
@@ -54,9 +78,6 @@ class EmbeddingFeatures(InputBlock):
 
         if tags:
             _schema = _schema.select_by_tag(tags)
-
-        if not item_id and schema.parent.select_by_tag(["item_id"]).column_names:
-            item_id = _schema.parent.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
             embedding_dims = _schema.embedding_sizes(infer_embedding_sizes_multiplier)

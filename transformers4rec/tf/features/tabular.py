@@ -1,17 +1,39 @@
 from typing import List, Optional, Union
 
 from ...types import DatasetSchema, DefaultTags, Tag
+from ...utils.misc_utils import docstring_parameter
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular.tabular import AsTabular, MergeTabular
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
 from ..typing import TabularAggregationType, TabularBlock, TabularTransformationType
 from .base import InputBlock
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
 from .text import TextEmbeddingFeaturesWithTransformers
 
+TABULAR_FEATURES_PARAMS_DOCSTRING = """
+    continuous_layer: TabularBlock, optional
+        Block used to process continuous features.
+    categorical_layer: TabularBlock, optional
+        Block used to process categorical features.
+    text_embedding_layer: TabularBlock, optional
+        Block used to process text features.
+"""
 
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
+)
 class TabularFeatures(InputBlock, MergeTabular):
+    """Input block that combines different types of features: continuous, categorical & text.
+
+    Parameters
+    ----------
+    {tabular_features_parameters}
+    {tabular_module_parameters}
+    """
+
     CONTINUOUS_MODULE_CLASS = ContinuousFeatures
     EMBEDDING_MODULE_CLASS = EmbeddingFeatures
 

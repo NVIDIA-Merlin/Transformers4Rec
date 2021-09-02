@@ -1,22 +1,37 @@
 from typing import Dict, Optional
 
 import tensorflow as tf
-from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig
 
 from ...types import DatasetSchema, Tag
+from ...utils.misc_utils import docstring_parameter
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
-from ..tabular.tabular import AsTabular, TabularBlock
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, TabularBlock
 from ..typing import Block, MaskSequence, TabularAggregationType, TabularTransformationType
-from .embedding import EmbeddingFeatures
-from .tabular import TabularFeatures
+from . import embedding
+from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
 
-class SequentialEmbeddingFeatures(EmbeddingFeatures):
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    embedding_features_parameters=embedding.EMBEDDING_FEATURES_PARAMS_DOCSTRING,
+)
+class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
+    """Input block for embedding-lookups for categorical features. This module produces 3-D tensors,
+    this is useful for sequential models like transformers.
+
+    Parameters
+    ----------
+    {embedding_features_parameters}
+    padding_idx: int
+        The symbol to use for padding.
+    {tabular_module_parameters}
+    """
+
     def __init__(
         self,
-        feature_config: Dict[str, FeatureConfig],
+        feature_config: Dict[str, embedding.FeatureConfig],
         item_id: Optional[str] = None,
         mask_zero: bool = True,
         padding_idx: int = 0,
@@ -39,7 +54,7 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
         self.mask_zero = mask_zero
 
     def lookup_feature(self, name, val, **kwargs):
-        return super(SequentialEmbeddingFeatures, self).lookup_feature(
+        return super(SequenceEmbeddingFeatures, self).lookup_feature(
             name, val, output_sequence=True
         )
 
@@ -65,8 +80,26 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
         return outputs
 
 
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
+)
 class TabularSequenceFeatures(TabularFeatures):
-    EMBEDDING_MODULE_CLASS = SequentialEmbeddingFeatures
+    """Input module that combines different types of features to a sequence: continuous,
+    categorical & text.
+
+    Parameters
+    ----------
+    {tabular_features_parameters}
+    projection_module: BlockOrModule, optional
+        Module that's used to project the output of this module, typically done by an MLPBlock.
+    masking: MaskSequence, optional
+         Masking to apply to the inputs.
+    {tabular_module_parameters}
+
+    """
+
+    EMBEDDING_MODULE_CLASS = SequenceEmbeddingFeatures
 
     def __init__(
         self,

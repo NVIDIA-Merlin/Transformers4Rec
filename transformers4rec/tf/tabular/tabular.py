@@ -69,6 +69,8 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
         Transformations to apply on the inputs after the module is called (so **after** `call`).
     aggregation: Union[str, TabularAggregation], optional
         Aggregation to apply after processing the `call`-method to output a single Tensor.
+    name: Optional[str]
+        Name of the layer.
 """
 
 
