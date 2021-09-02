@@ -164,12 +164,12 @@ class Trainer(BaseTrainer):
         """
         self.lr_scheduler = None
 
-    def create_scheduler(self, num_training_steps: int):
+    def create_scheduler(self, num_training_steps: int, optimizer: torch.optim.Optimizer = None):
         # flexibility in scheduler with num_cycles as hyperparams
         if self.lr_scheduler is None:
             self.lr_scheduler = self.get_scheduler(
                 self.args.lr_scheduler_type,
-                self.optimizer,
+                optimizer=self.optimizer if optimizer is None else optimizer,
                 num_warmup_steps=self.args.warmup_steps,
                 num_training_steps=num_training_steps,
                 num_cycles=self.args.learning_rate_num_cosine_cycles_by_epoch
