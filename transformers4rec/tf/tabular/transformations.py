@@ -3,15 +3,20 @@ from tensorflow.keras import backend
 from tensorflow.python.keras.utils import control_flow_util
 from tensorflow.python.ops import array_ops
 
-from transformers4rec.tf.typing import TensorOrTabularData
-from transformers4rec.utils.registry import Registry
-
-augmentation_registry: Registry = Registry.class_registry("tf.augmentation_registry")
+from ..typing import TensorOrTabularData
+from .tabular import TabularTransformation, tabular_transformation_registry
 
 
-class DataAugmentation(tf.keras.layers.Layer):
-    def augment(self, inputs: tf.Tensor, **kwargs) -> tf.Tensor:
-        raise NotImplementedError()
+@tabular_transformation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")
+class StochasticSwapNoise(TabularTransformation):
+    """
+    Applies Stochastic replacement of sequence features
+    """
+
+    def __init__(self, pad_token=0, replacement_prob=0.1):
+        super().__init__()
+        self.pad_token = pad_token
+        self.replacement_prob = replacement_prob
 
     def call(self, inputs: TensorOrTabularData, training=True, **kwargs) -> TensorOrTabularData:
         def augment():
@@ -23,21 +28,6 @@ class DataAugmentation(tf.keras.layers.Layer):
         output = control_flow_util.smart_cond(training, augment, lambda: inputs)
 
         return output
-
-    def compute_output_shape(self, input_shape):
-        return input_shape
-
-
-@augmentation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")
-class StochasticSwapNoise(DataAugmentation):
-    """
-    Applies Stochastic replacement of sequence features
-    """
-
-    def __init__(self, pad_token=0, replacement_prob=0.1):
-        super().__init__()
-        self.pad_token = pad_token
-        self.replacement_prob = replacement_prob
 
     def augment(self, input_tensor: tf.Tensor, **kwargs) -> tf.Tensor:
         mask = tf.cast(input_tensor != self.pad_token, tf.int32)
@@ -69,3 +59,6 @@ class StochasticSwapNoise(DataAugmentation):
         )
 
         return output_tensor
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
