@@ -1,6 +1,7 @@
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import tensorflow as tf
+from tensorflow.python.keras import backend
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
 from transformers4rec.utils.tags import DefaultTags
@@ -102,19 +103,31 @@ class EmbeddingFeatures(InputLayer):
     def item_ids(self, inputs) -> tf.Tensor:
         return inputs[self.item_id]
 
-    def lookup_feature(self, name, val):
+    def lookup_feature(self, name, val, output_sequence=False):
+        dtype = backend.dtype(val)
+        if dtype != "int32" and dtype != "int64":
+            val = tf.cast(val, "int32")
+
         table: TableConfig = self.embeddings[name].table
         table_var = self.embedding_tables[table.name]
         if isinstance(val, tf.SparseTensor):
-            return tf.nn.safe_embedding_lookup_sparse(
-                table_var, tf.cast(val, tf.int32), None, combiner=table.combiner
-            )
+            out = tf.nn.safe_embedding_lookup_sparse(table_var, val, None, combiner=table.combiner)
+        else:
+            if output_sequence:
+                out = tf.gather(table_var, tf.cast(val, tf.int32))
+            else:
+                out = tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
 
-        # embedded_outputs[name] = tf.gather(table_var, tf.cast(val, tf.int32))
-        return tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
+        if self._dtype_policy.compute_dtype != self._dtype_policy.variable_dtype:
+            # Instead of casting the variable as in most layers, cast the output, as
+            # this is mathematically equivalent but is faster.
+            out = tf.cast(out, self._dtype_policy.compute_dtype)
+
+        return out
 
     def compute_output_shape(self, input_shapes):
         input_shapes = self.filter_features.compute_output_shape(input_shapes)
+
         batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
 
         output_shapes = {}
@@ -127,6 +140,8 @@ class EmbeddingFeatures(InputLayer):
     def call(self, inputs, **kwargs):
         embedded_outputs = {}
         sparse_inputs = self.convert_to_sparse(self.filter_features(inputs))
+
+        # sparse_inputs = self.convert_to_sparse(self.filter_features(inputs))
         for name, val in sparse_inputs.items():
             embedded_outputs[name] = self.lookup_feature(name, val)
 
