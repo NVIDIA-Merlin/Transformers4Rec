@@ -281,7 +281,7 @@ class TabularBlock(Block):
         return inputs
 
     def compute_call_output_shape(self, input_shapes):
-        raise NotImplementedError()
+        return input_shapes
 
     def compute_output_shape(self, input_shapes):
         if self.pre:

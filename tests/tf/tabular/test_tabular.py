@@ -25,7 +25,6 @@ def test_tabular_module(tf_con_features):
     assert tabular(tf_con_features) == tf_con_features
     assert tabular(tf_con_features, aggregation="concat").shape[1] == 6
     assert tabular(tf_con_features, aggregation=tf4rec.ConcatFeatures()).shape[1] == 6
-    assert tabular(tf_con_features, concat_outputs=True, filter_columns=["b"]).shape[1] == 1
 
     tabular_concat = _DummyTabular(aggregation="concat")
     assert tabular_concat(tf_con_features).shape[1] == 6
@@ -33,4 +32,4 @@ def test_tabular_module(tf_con_features):
     tab_a = ["a"] >> _DummyTabular()
     tab_b = ["b"] >> _DummyTabular()
 
-    assert tab_a(tf_con_features, merge_with=tab_b, stack_outputs=True).shape[1] == 1
+    assert tab_a(tf_con_features, merge_with=tab_b, aggregation="stack").shape[1] == 1

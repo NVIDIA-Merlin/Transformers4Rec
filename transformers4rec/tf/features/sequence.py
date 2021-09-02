@@ -17,8 +17,8 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
     def __init__(
         self,
         feature_config: Dict[str, FeatureConfig],
-        item_id=None,
-        mask_zero=True,
+        item_id: Optional[str] = None,
+        mask_zero: bool = True,
         padding_idx: int = 0,
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,

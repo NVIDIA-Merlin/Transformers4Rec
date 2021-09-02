@@ -19,19 +19,6 @@ from tensorflow.python.keras.metrics import Metric
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.training.tracking.data_structures import ListWrapper, _DictWrapper
 
-from transformers4rec.tf.model.head import (
-    BinaryClassificationTask,
-    Head,
-    PredictionTask,
-    RegressionTask,
-)
-from transformers4rec.tf.tabular.aggregation import (
-    ConcatFeatures,
-    ElementwiseSum,
-    ElementwiseSumItemMulti,
-    StackFeatures,
-)
-
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
@@ -40,6 +27,23 @@ from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.sequence import SequentialEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
+from .model.head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
+from .model.model import Model
+from .tabular.aggregation import (
+    ConcatFeatures,
+    ElementwiseSum,
+    ElementwiseSumItemMulti,
+    StackFeatures,
+)
+from .tabular.tabular import (
+    AsDenseFeatures,
+    AsSparseFeatures,
+    AsTabular,
+    FilterFeatures,
+    MergeTabular,
+    TabularBlock,
+)
+from .tabular.transformations import StochasticSwapNoise
 from .utils import repr_utils
 
 ListWrapper.__repr__ = repr_utils.list_wrapper_repr
@@ -58,6 +62,7 @@ __all__ = [
     "right_shift_layer",
     "DLRMBlock",
     "MLPBlock",
+    "TabularBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SequentialEmbeddingFeatures",
@@ -76,7 +81,6 @@ __all__ = [
     "FilterFeatures",
     "MergeTabular",
     "StackFeatures",
-    "TabularLayer",
     "PredictionTask",
     "BinaryClassificationTask",
     "RegressionTask",
