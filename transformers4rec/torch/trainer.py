@@ -137,7 +137,7 @@ class Trainer(BaseTrainer):
             self.args.per_device_eval_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
-            shuffle=True,
+            shuffle=False,
             shuffle_buffer_size=self.args.shuffle_buffer_size,
         )
 
@@ -523,15 +523,15 @@ class Trainer(BaseTrainer):
             num_samples=num_examples,
         )
 
-    def _save_model_and_checkpoint(self, trial=None, metrics=None, save_model_class=False):
+    def _save_model_and_checkpoint(self, save_model_class=False):
         """
         Save the serialized model + trainer and random states.
-        """
-        """
-        Previsous code :  Only state dict is saved  ==>  The HF model class is known before hand
-        torch.save(self.optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-        torch.save(self.lr_scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-        torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
+
+        Parameters:
+        ----------
+        save_model_class: Optioanl[bool]
+            Wether to save the Model class or not.
+            by default False
         """
         import os
 
@@ -546,7 +546,7 @@ class Trainer(BaseTrainer):
         )
 
         # save model parameters
-        self._save_checkpoint(self.model, trial=trial, metrics=metrics)
+        self._save_checkpoint(self.model, trial=None, metrics=None)
         # save the serialized model
         if save_model_class:
             # TODO : fix serialization of DatasetSchema object
