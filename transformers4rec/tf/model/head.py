@@ -6,8 +6,8 @@ import tensorflow as tf
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
-from ..types import DatasetSchema
-from ..utils.tags import Tag
+from transformers4rec.types import DatasetSchema
+from transformers4rec.utils.tags import Tag
 
 
 def name_fn(name, inp):

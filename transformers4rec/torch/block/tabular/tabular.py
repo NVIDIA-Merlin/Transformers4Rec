@@ -66,7 +66,7 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
         Transformations to apply on the inputs when the module is called (so **before** `forward`).
     post: Union[str, TabularTransformation, List[str], List[TabularTransformation]], optional
         Transformations to apply on the inputs after the module is called (so **after** `forward`).
-    aggregation: Union[str, agg.FeatureAggregation], optional
+    aggregation: Union[str, TabularAggregation], optional
         Aggregation to apply after processing the `forward`-method to output a single Tensor.
 """
 
@@ -91,6 +91,55 @@ class TabularModule(torch.nn.Module):
         self.pre = pre
         self.post = post
         self.aggregation = aggregation
+
+    @classmethod
+    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
+        """Instantiate a TabularModule instance from a DatasetSchema.
+
+        Parameters
+        ----------
+        schema
+        tags
+        kwargs
+
+        Returns
+        -------
+        Optional[TabularModule]
+        """
+        if tags:
+            schema = schema.select_by_tag(tags)
+
+        if not schema.columns:
+            return None
+
+        return cls.from_features(schema.column_names, **kwargs)
+
+    @classmethod
+    @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+    def from_features(
+        cls,
+        features: List[str],
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+    ) -> "TabularModule":
+        """Initializes a TabularModule instance where the contents of features will be filtered
+            out
+
+        Parameters
+        ----------
+        features: List[str]
+            A list of feature-names that will be used as the first pre-processing op to filter out
+            all other features not in this list.
+        {tabular_module_parameters}
+
+        Returns
+        -------
+        TabularModule
+        """
+        pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)
+
+        return cls(pre=pre, post=post, aggregation=aggregation)
 
     @property
     def pre(self) -> Optional[SequentialTabularTransformations]:
@@ -150,55 +199,6 @@ class TabularModule(torch.nn.Module):
             self._aggregation = TabularAggregation.parse(value)
         else:
             self._aggregation = None
-
-    @classmethod
-    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
-        """Instantiate a TabularModule instance from a DatasetSchema.
-
-        Parameters
-        ----------
-        schema
-        tags
-        kwargs
-
-        Returns
-        -------
-        Optional[TabularModule]
-        """
-        if tags:
-            schema = schema.select_by_tag(tags)
-
-        if not schema.columns:
-            return None
-
-        return cls.from_features(schema.column_names, **kwargs)
-
-    @classmethod
-    @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
-    def from_features(
-        cls,
-        features: List[str],
-        pre: Optional[TabularTransformationType] = None,
-        post: Optional[TabularTransformationType] = None,
-        aggregation: Optional[TabularAggregationType] = None,
-    ) -> "TabularModule":
-        """Initializes a TabularModule instance where the contents of features will be filtered
-            out
-
-        Parameters
-        ----------
-        features: List[str]
-            A list of feature-names that will be used as the first pre-processing op to filter out
-            all other features not in this list.
-        {tabular_module_parameters}
-
-        Returns
-        -------
-        TabularModule
-        """
-        pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)
-
-        return cls(pre=pre, post=post, aggregation=aggregation)
 
     def pre_forward(
         self, inputs: TabularData, transformations: Optional[TabularAggregationType] = None
@@ -417,7 +417,7 @@ class TabularBlock(BlockBase, TabularModule, ABC):
 
     def output_size(self, input_size=None):
         if self.pre:
-            output_size = self.pre.output_size(input_size)
+            input_size = self.pre.output_size(input_size)
 
         output_size = self._check_post_output_size(super().output_size(input_size))
 

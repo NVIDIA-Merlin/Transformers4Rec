@@ -3,10 +3,10 @@ from typing import List
 
 import tensorflow as tf
 
-from ..types import Tag
-from ..utils.registry import Registry
-from .typing import TabularData
-from .utils.tf_utils import calculate_batch_size_from_input_shapes
+from transformers4rec.tf.typing import TabularData
+from transformers4rec.tf.utils.tf_utils import calculate_batch_size_from_input_shapes
+from transformers4rec.types import Tag
+from transformers4rec.utils.registry import Registry
 
 aggregation_registry: Registry = Registry.class_registry("tf.aggregation_registry")
 

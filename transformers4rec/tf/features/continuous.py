@@ -1,21 +1,21 @@
-from typing import List
+from typing import List, Optional
 
-from ..tabular import FilterFeatures
-from .base import InputLayer
+from .. import typing
+from ..tabular.tabular import FilterFeatures
+from .base import InputBlock
 
 
-class ContinuousFeatures(InputLayer):
+class ContinuousFeatures(InputBlock):
     def __init__(
         self,
-        features,
-        aggregation=None,
-        trainable=True,
+        features: List[str],
+        pre: Optional[typing.TabularTransformationType] = None,
+        post: Optional[typing.TabularTransformationType] = None,
+        aggregation: Optional[typing.TabularAggregationType] = None,
         name=None,
-        dtype=None,
-        dynamic=False,
         **kwargs
     ):
-        super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, name=name, **kwargs)
         self.filter_features = FilterFeatures(features)
 
     @classmethod
@@ -25,10 +25,8 @@ class ContinuousFeatures(InputLayer):
     def call(self, inputs, *args, **kwargs):
         return self.filter_features(inputs)
 
-    def compute_output_shape(self, input_shapes):
-        filtered = self.filter_features.compute_output_shape(input_shapes)
-
-        return super(ContinuousFeatures, self).compute_output_shape(filtered)
+    def compute_call_output_shape(self, input_shapes):
+        return self.filter_features.compute_output_shape(input_shapes)
 
     def _get_name(self):
         return "ContinuousFeatures"

@@ -3,23 +3,27 @@ from typing import List, Optional, Union
 from ...types import DatasetSchema, DefaultTags, Tag
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular import AsTabular, MergeTabular
-from .base import InputLayer
+from ..tabular.tabular import AsTabular, MergeTabular
+from ..typing import TabularAggregationType, TabularBlock, TabularTransformationType
+from .base import InputBlock
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
 from .text import TextEmbeddingFeaturesWithTransformers
 
 
-class TabularFeatures(InputLayer, MergeTabular):
+class TabularFeatures(InputBlock, MergeTabular):
     CONTINUOUS_MODULE_CLASS = ContinuousFeatures
     EMBEDDING_MODULE_CLASS = EmbeddingFeatures
 
     def __init__(
         self,
-        continuous_layer=None,
-        categorical_layer=None,
-        text_embedding_layer=None,
-        aggregation=None,
+        continuous_layer: Optional[TabularBlock] = None,
+        categorical_layer: Optional[TabularBlock] = None,
+        text_embedding_layer: Optional[TabularBlock] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        name=None,
         **kwargs
     ):
         to_merge = {}
@@ -31,7 +35,9 @@ class TabularFeatures(InputLayer, MergeTabular):
             to_merge["text_embedding_layer"] = text_embedding_layer
 
         assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(to_merge, aggregation=aggregation, **kwargs)
+        super(TabularFeatures, self).__init__(
+            to_merge, pre=pre, post=post, aggregation=aggregation, name=name, **kwargs
+        )
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]

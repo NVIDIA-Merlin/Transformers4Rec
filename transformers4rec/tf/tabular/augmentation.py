@@ -3,8 +3,8 @@ from tensorflow.keras import backend
 from tensorflow.python.keras.utils import control_flow_util
 from tensorflow.python.ops import array_ops
 
-from ..utils.registry import Registry
-from .typing import TensorOrTabularData
+from transformers4rec.tf.typing import TensorOrTabularData
+from transformers4rec.utils.registry import Registry
 
 augmentation_registry: Registry = Registry.class_registry("tf.augmentation_registry")
 

@@ -1,27 +1,37 @@
-from typing import Any, Callable, Dict, List, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 import tensorflow as tf
 from tensorflow.python.keras import backend
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from transformers4rec.utils.tags import DefaultTags
-
 from ...types import DatasetSchema
-from ..tabular import AsSparseFeatures, FilterFeatures
-from .base import InputLayer
+from ...utils.tags import DefaultTags
+from ..tabular.tabular import AsSparseFeatures, FilterFeatures
+from ..typing import TabularAggregationType, TabularData, TabularTransformationType
+from .base import InputBlock
 
 # pylint has issues with TF array ops, so disable checks until fixed:
 # https://github.com/PyCQA/pylint/issues/3613
 # pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
-class EmbeddingFeatures(InputLayer):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
-        self.filter_features = FilterFeatures(list(feature_config.keys()))
-        self.convert_to_sparse = AsSparseFeatures()
+class EmbeddingFeatures(InputBlock):
+    def __init__(
+        self,
+        feature_config: Dict[str, "FeatureConfig"],
+        item_id: Optional[str] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        name=None,
+        **kwargs,
+    ):
+        embedding_pre = [FilterFeatures(list(feature_config.keys())), AsSparseFeatures()]
+        pre = [embedding_pre, pre] if pre else embedding_pre
         self.embeddings = feature_config
         self.item_id = item_id
-        super().__init__(**kwargs)
+
+        super().__init__(pre=pre, post=post, aggregation=aggregation, name=name, **kwargs)
 
     @classmethod
     def from_schema(
@@ -94,6 +104,27 @@ class EmbeddingFeatures(InputLayer):
             )
         super().build(input_shapes)
 
+    def call(self, inputs: TabularData, **kwargs) -> TabularData:
+        embedded_outputs = {}
+        for name, val in inputs.items():
+            embedded_outputs[name] = self.lookup_feature(name, val)
+
+        # Store raw item ids for masking and/or negative sampling
+        # This makes this module stateful.
+        if self.item_id:
+            self.item_seq = self.item_ids(inputs)
+
+        return embedded_outputs
+
+    def compute_call_output_shape(self, input_shapes):
+        batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
+
+        output_shapes = {}
+        for name, val in input_shapes.items():
+            output_shapes[name] = tf.TensorShape([batch_size, self.embeddings[name].table.dim])
+
+        return output_shapes
+
     @property
     def item_embedding_table(self):
         assert self.item_id is not None
@@ -124,33 +155,3 @@ class EmbeddingFeatures(InputLayer):
             out = tf.cast(out, self._dtype_policy.compute_dtype)
 
         return out
-
-    def compute_output_shape(self, input_shapes):
-        input_shapes = self.filter_features.compute_output_shape(input_shapes)
-
-        batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
-
-        output_shapes = {}
-
-        for name, val in input_shapes.items():
-            output_shapes[name] = tf.TensorShape([batch_size, self.embeddings[name].table.dim])
-
-        return super().compute_output_shape(output_shapes)
-
-    def call(self, inputs, **kwargs):
-        embedded_outputs = {}
-        sparse_inputs = self.convert_to_sparse(self.filter_features(inputs))
-
-        # sparse_inputs = self.convert_to_sparse(self.filter_features(inputs))
-        for name, val in sparse_inputs.items():
-            embedded_outputs[name] = self.lookup_feature(name, val)
-
-        # Store raw item ids for masking and/or negative sampling
-        # This makes this module stateful.
-        if self.item_id:
-            self.item_seq = self.item_ids(inputs)
-
-        return embedded_outputs
-
-    def repr_ignore(self) -> List[str]:
-        return ["filter_features"]

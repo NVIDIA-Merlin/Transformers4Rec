@@ -18,7 +18,7 @@ def test_as_tabular(tf_con_features):
 
 
 def test_tabular_module(tf_con_features):
-    _DummyTabular = tf4rec.TabularLayer
+    _DummyTabular = tf4rec.TabularBlock
 
     tabular = _DummyTabular()
 

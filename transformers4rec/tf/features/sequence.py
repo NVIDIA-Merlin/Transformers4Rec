@@ -7,8 +7,9 @@ from ...types import DatasetSchema, Tag
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
-from ..tabular import AsTabular, TabularLayer
-from .embedding import EmbeddingFeatures
+from ..tabular.tabular import AsTabular, TabularBlock
+from ..typing import TabularAggregationType, TabularTransformationType
+from .embedding import EmbeddingFeatures, TableConfig
 from .tabular import TabularFeatures
 
 
@@ -19,9 +20,20 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
         item_id=None,
         mask_zero=True,
         padding_idx: int = 0,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        name=None,
         **kwargs
     ):
-        super().__init__(feature_config, item_id, **kwargs)
+        super().__init__(
+            feature_config,
+            item_id=item_id,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            name=name ** kwargs,
+        )
         self.padding_idx = padding_idx
         self.mask_zero = mask_zero
 
@@ -30,19 +42,17 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
             name, val, output_sequence=True
         )
 
-    def compute_output_shape(self, input_shapes):
-        input_shapes = self.filter_features.compute_output_shape(input_shapes)
-
+    def compute_call_output_shape(self, input_shapes):
         batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
         sequence_length = input_shapes[list(self.embeddings.keys())[0]][1]
-        output_shapes = {}
 
+        output_shapes = {}
         for name, val in input_shapes.items():
             output_shapes[name] = tf.TensorShape(
                 [batch_size, sequence_length, self.embeddings[name].table.dim]
             )
 
-        return TabularLayer.compute_output_shape(self, output_shapes)
+        return output_shapes
 
     def compute_mask(self, inputs, mask=None):
         if not self.mask_zero:
@@ -196,7 +206,7 @@ class TabularSequenceFeatures(TabularFeatures):
         for layer in self.merge_values:
             output_shapes.update(layer.compute_output_shape(input_shape))
 
-        output_shapes = TabularLayer.compute_output_shape(self, output_shapes)
+        output_shapes = TabularBlock.compute_output_shape(self, output_shapes)
 
         if self.projection_module:
             output_shapes = self.projection_module.compute_output_shape(output_shapes)
