@@ -3,12 +3,13 @@ import random
 
 import pytest
 
+from transformers4rec import torch as torch4rec
 from transformers4rec.config import transformer as tconf
 from transformers4rec.utils.schema import DatasetSchema
 
 pytorch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
-torch4rec = pytest.importorskip("transformers4rec.torch")
+# torch4rec = pytest.importorskip("transformers4rec.torch")
 
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets"
 
