@@ -1,4 +1,5 @@
 from abc import ABC
+from copy import deepcopy
 from functools import reduce
 from typing import Dict, List, Optional, Union
 
@@ -111,13 +112,14 @@ class TabularBlock(Block):
         -------
         Optional[TabularModule]
         """
+        _schema = deepcopy(schema)
         if tags:
-            schema = schema.select_by_tag(tags)
+            _schema = _schema.select_by_tag(tags)
 
-        if not schema.columns:
+        if not _schema.columns:
             return None
 
-        return cls.from_features(schema.column_names, schema=schema, **kwargs)
+        return cls.from_features(_schema.column_names, schema=_schema, **kwargs)
 
     @classmethod
     @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)

@@ -52,9 +52,13 @@ class DatasetSchema:
         self,
         columns: Union[Text, List[Text], ColumnSchema, List[ColumnSchema], "DatasetSchema"],
         tags: Optional[Union[List[Text], DefaultTags]] = None,
+        parent: Optional["DatasetSchema"] = None,
     ):
         if isinstance(columns, str):
             columns = [columns]
+
+        if not parent:
+            parent = self
 
         if not tags:
             tags = []
@@ -65,6 +69,7 @@ class DatasetSchema:
 
         self.columns: List[ColumnSchema] = [_convert_col(col, tags=tags) for col in columns]
         self.set_schema(None)
+        self.parent = parent
 
     @staticmethod
     def read_schema(schema_path):
@@ -166,7 +171,7 @@ class DatasetSchema:
             if all(x in column.tags for x in tags):
                 output_cols.append(column)
 
-        child = DatasetSchema(output_cols, tags=tags)
+        child = DatasetSchema(output_cols, tags=tags, parent=self.parent)
 
         if self._schema:
             child._schema = self.filter_schema(child.column_names)
@@ -192,7 +197,7 @@ class DatasetSchema:
             if column.name in names:
                 output_cols.append(column)
 
-        child = DatasetSchema(output_cols)
+        child = DatasetSchema(output_cols, parent=self.parent)
         # TODO : set update method of the _schema
         # To keep it consistent over ops
         child._schema = self.filter_schema(child.column_names)
@@ -288,7 +293,7 @@ class DatasetSchema:
 
     @cached_property
     def item_id_column_name(self):
-        item_id_col = self.select_by_tag(Tag.ITEM_ID)
+        item_id_col = self.parent.select_by_tag(Tag.ITEM_ID)
         if len(item_id_col.columns) == 0:
             raise ValueError("There is no column tagged as item id.")
 

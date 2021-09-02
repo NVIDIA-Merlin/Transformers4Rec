@@ -94,10 +94,8 @@ def test_element_wise_sum_item_multi_aggregation_yoochoose(yoochoose_schema, tf_
 def test_element_wise_sum_item_multi_aggregation_registry_yoochoose(
     yoochoose_schema, tf_yoochoose_like
 ):
-    categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-
     tab_module = tf4rec.TabularSequenceFeatures.from_schema(
-        categ_schema, aggregation="element-wise-sum-item-multi"
+        yoochoose_schema.select_by_tag(Tag.CATEGORICAL), aggregation="element-wise-sum-item-multi"
     )
 
     out = tab_module(tf_yoochoose_like)

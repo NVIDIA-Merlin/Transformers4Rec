@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any, Callable, Dict, Optional, Union
 
 import tensorflow as tf
@@ -48,14 +49,16 @@ class EmbeddingFeatures(InputBlock):
         max_sequence_length: Optional[int] = None,
         **kwargs,
     ) -> Optional["EmbeddingFeatures"]:
+        _schema = deepcopy(schema)
+
         if tags:
-            schema = schema.select_by_tag(tags)
+            _schema = _schema.select_by_tag(tags)
 
         if not item_id and schema.select_by_tag(["item_id"]).column_names:
-            item_id = schema.select_by_tag(["item_id"]).column_names[0]
+            _schema = _schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            embedding_dims = schema.embedding_sizes(infer_embedding_sizes_multiplier)
+            embedding_dims = _schema.embedding_sizes(infer_embedding_sizes_multiplier)
 
         embedding_dims = embedding_dims or {}
         embeddings_initializers = embeddings_initializers or {}
@@ -82,7 +85,7 @@ class EmbeddingFeatures(InputBlock):
         if not feature_config:
             return None
 
-        output = cls(feature_config, item_id=item_id, **kwargs)
+        output = cls(feature_config, item_id=item_id, schema=_schema, **kwargs)
 
         return output
 

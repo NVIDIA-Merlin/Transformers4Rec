@@ -3,11 +3,10 @@ import random
 
 import pytest
 
-from transformers4rec import tf as tf4rec
 from transformers4rec.utils.schema import DatasetSchema
 
 tf = pytest.importorskip("tensorflow")
-# tf4rec = pytest.importorskip("transformers4rec.tf")
+tf4rec = pytest.importorskip("transformers4rec.tf")
 
 NUM_EXAMPLES = 1000
 MAX_CARDINALITY = 100
