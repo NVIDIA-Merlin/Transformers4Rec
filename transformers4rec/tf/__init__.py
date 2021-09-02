@@ -24,7 +24,7 @@ from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
-from .features.sequence import SequentialEmbeddingFeatures, TabularSequenceFeatures
+from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
 from .model.head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
@@ -58,7 +58,7 @@ __all__ = [
     "TabularBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
-    "SequentialEmbeddingFeatures",
+    "SequenceEmbeddingFeatures",
     "FeatureConfig",
     "TableConfig",
     "TabularFeatures",

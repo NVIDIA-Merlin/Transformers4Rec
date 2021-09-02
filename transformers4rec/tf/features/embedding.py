@@ -49,15 +49,21 @@ class EmbeddingFeatures(InputBlock):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
         name=None,
         **kwargs,
     ):
+        if not item_id and schema and schema.parent.select_by_tag(["item_id"]).column_names:
+            item_id = schema.parent.select_by_tag(["item_id"]).column_names[0]
+
         embedding_pre = [FilterFeatures(list(feature_config.keys())), AsSparseFeatures()]
         pre = [embedding_pre, pre] if pre else embedding_pre
         self.embeddings = feature_config
         self.item_id = item_id
 
-        super().__init__(pre=pre, post=post, aggregation=aggregation, name=name, **kwargs)
+        super().__init__(
+            pre=pre, post=post, aggregation=aggregation, name=name, schema=schema, **kwargs
+        )
 
     @classmethod
     def from_schema(
