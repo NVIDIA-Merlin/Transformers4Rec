@@ -1,5 +1,5 @@
 numpy
 tensorflow-metadata
-transformers
+transformers<4.9
 tqdm
 pyarrow>=1.0
