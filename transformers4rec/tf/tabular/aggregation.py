@@ -134,8 +134,12 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         self._check_input_shapes_equal(inputs)
 
         other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}
-        other_inputs_sum = tf.reduce_sum(self.stack(other_inputs), axis=0)
-        result = item_id_inputs * other_inputs_sum
+        # Sum other inputs when there are multiple features.
+        if len(other_inputs) > 1:
+            other_inputs = tf.reduce_sum(self.stack(other_inputs), axis=0)
+        else:
+            other_inputs = list(other_inputs.values())[0]
+        result = item_id_inputs * other_inputs
         return result
 
     def compute_output_shape(self, input_shape):
