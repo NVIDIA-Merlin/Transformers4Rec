@@ -9,7 +9,7 @@ from ..block.mlp import MLPBlock
 from ..masking import masking_registry
 from ..tabular.tabular import AsTabular, TabularBlock
 from ..typing import Block, MaskSequence, TabularAggregationType, TabularTransformationType
-from .embedding import EmbeddingFeatures, TableConfig
+from .embedding import EmbeddingFeatures
 from .tabular import TabularFeatures
 
 
@@ -208,16 +208,19 @@ class TabularSequenceFeatures(TabularFeatures):
 
         return outputs
 
-    def compute_output_shape(self, input_shape):
+    def compute_call_output_shape(self, input_shape):
         output_shapes = {}
 
         for layer in self.merge_values:
             output_shapes.update(layer.compute_output_shape(input_shape))
 
-        output_shapes = TabularBlock.compute_output_shape(self, output_shapes)
+        return output_shapes
 
-        if self.projection_module:
-            output_shapes = self.projection_module.compute_output_shape(output_shapes)
+    def compute_output_shape(self, input_shapes):
+        output_shapes = super().compute_output_shape(input_shapes)
+
+        if self.projection_block:
+            output_shapes = self.projection_block.compute_output_shape(output_shapes)
 
         return output_shapes
 
