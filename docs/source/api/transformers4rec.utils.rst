@@ -28,21 +28,6 @@ transformers4rec.utils.registry module
    :undoc-members:
    :show-inheritance:
 
-transformers4rec.utils.schema module
-------------------------------------
-
-.. automodule:: transformers4rec.utils.schema
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-transformers4rec.utils.tags module
-----------------------------------
-
-.. automodule:: transformers4rec.utils.tags
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Module contents
 ---------------

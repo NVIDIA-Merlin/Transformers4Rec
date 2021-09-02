@@ -1,14 +1,6 @@
 transformers4rec.torch.block package
 ====================================
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   transformers4rec.torch.block.tabular
-
 Submodules
 ----------
 

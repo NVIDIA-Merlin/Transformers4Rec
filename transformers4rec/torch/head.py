@@ -37,9 +37,13 @@ class PredictionTask(torch.nn.Module):
         """
         The method will be called when block is convert to_model,
         i.e when linked to prediction head
-        Inputs:
-            block: (BlockType) the model block to link with head
-            device: set the device for the metrics and layers of the task
+
+        Parameters
+        ----------
+            block:
+                the model block to link with head
+            device:
+                set the device for the metrics and layers of the task
         """
         if task_block:
             # TODO: What to do when `self.task_block is not None`?

@@ -85,7 +85,8 @@ class TabularSequenceFeatures(TabularFeatures):
         masking=None,
         **kwargs
     ) -> "TabularSequenceFeatures":
-        """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
+        """Instantiates ``TabularFeatures`` from a ``DatasetSchema``
+
         Parameters
         ----------
         schema : DatasetSchema
@@ -101,7 +102,7 @@ class TabularSequenceFeatures(TabularFeatures):
         max_sequence_length : Optional[int], optional
             Maximum sequence length for list features by default None
         continuous_projection : Optional[Union[List[int], int]], optional
-            If set, concatenate all numerical features and projet them by a number of MLP layers.
+            If set, concatenate all numerical features and project them by a number of MLP layers
             The argument accepts a list with the dimensions of the MLP layers, by default None
         continuous_soft_embeddings_shape : Optional[Union[Tuple[int, int], List[int, int]]]
             If set, uses soft one-hot encoding technique to represent continuous features.
@@ -119,9 +120,8 @@ class TabularSequenceFeatures(TabularFeatures):
 
         Returns
         -------
-        TabularFeatures
-            Returns ``TabularFeatures`` from a dataset schema
-        """
+        TabularFeatures:
+            Returns ``TabularFeatures`` from a dataset schema"""
         output = super().from_schema(
             schema=schema,
             continuous_tags=continuous_tags,
