@@ -280,7 +280,6 @@ class RegressionTask(PredictionTask):
             summary_type=summary_type,
             task_block=task_block,
             pre=RegressionPrepareBlock(),
-            forward_to_prediction_fn=lambda x: torch.round(x).int(),
         )
 
 
@@ -571,8 +570,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
     task_blocks
         TODO
     task_weights: List[float], optional
-        TODO
-    body_output_size
         TODO
     loss_reduction: str, default="mean"
         TODO
