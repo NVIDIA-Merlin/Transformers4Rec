@@ -398,6 +398,16 @@ class TabularBlock(Block):
 
 
 class FilterFeatures(TabularTransformation):
+    """Transformation that filters out certain features from `TabularData`."
+
+    Parameters
+    ----------
+    to_include: List[str]
+        List of features to include in the result of calling the module
+    pop: bool
+        Boolean indicating whether to pop the features to exclude from the inputs dictionary.
+    """
+
     def __init__(
         self, to_include, trainable=False, name=None, dtype=None, dynamic=False, pop=False, **kwargs
     ):
@@ -405,7 +415,18 @@ class FilterFeatures(TabularTransformation):
         self.to_include = to_include
         self.pop = pop
 
-    def call(self, inputs, **kwargs):
+    def call(self, inputs: TabularData, **kwargs) -> TabularData:
+        """Filter out features from inputs.
+
+        Parameters
+        ----------
+        inputs: TabularData
+            Input dictionary containing features to filter.
+
+        Returns Filtered TabularData that only contains the feature-names in `self.to_include`.
+        -------
+
+        """
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
         outputs = {k: v for k, v in inputs.items() if k in self.to_include}
@@ -425,6 +446,16 @@ class FilterFeatures(TabularTransformation):
 
 
 class MergeTabular(TabularBlock):
+    """Merge multiple TabularModule's into a single output of TabularData.
+
+    Parameters
+    ----------
+    blocks_to_merge: Union[TabularModule, Dict[str, TabularBlock]]
+        TabularBlocks to merge into, this can also be one or multiple dictionaries keyed by the
+        name the module should have.
+    {tabular_module_parameters}
+    """
+
     def __init__(
         self,
         *blocks_to_merge: Union[TabularBlock, Dict[str, TabularBlock]],
@@ -470,6 +501,14 @@ class MergeTabular(TabularBlock):
 
 
 class AsTabular(tf.keras.layers.Layer):
+    """Converts a Tensor to TabularData by converting it to a dictionary.
+
+    Parameters
+    ----------
+    output_name: str
+        Name that should be used as the key in the output dictionary.
+    """
+
     def __init__(
         self, output_name, trainable=False, name=None, dtype=None, dynamic=False, **kwargs
     ):
