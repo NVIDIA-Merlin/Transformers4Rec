@@ -8,7 +8,7 @@ from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
 from ..tabular import AsTabular, TabularLayer
-from .embedding import EmbeddingFeatures, TableConfig
+from .embedding import EmbeddingFeatures
 from .tabular import TabularFeatures
 
 
@@ -25,18 +25,24 @@ class SequentialEmbeddingFeatures(EmbeddingFeatures):
         self.padding_idx = padding_idx
         self.mask_zero = mask_zero
 
-    def lookup_feature(self, name, val):
-        table: TableConfig = self.embeddings[name].table
-        table_var = self.embedding_tables[table.name]
-        if isinstance(val, tf.SparseTensor):
-            return tf.nn.safe_embedding_lookup_sparse(
-                table_var, tf.cast(val, tf.int32), None, combiner=table.combiner
-            )
-
-        return tf.gather(table_var, tf.cast(val, tf.int32))
+    def lookup_feature(self, name, val, **kwargs):
+        return super(SequentialEmbeddingFeatures, self).lookup_feature(
+            name, val, output_sequence=True
+        )
 
     def compute_output_shape(self, input_shapes):
-        return super().compute_output_shape(input_shapes)
+        input_shapes = self.filter_features.compute_output_shape(input_shapes)
+
+        batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
+        sequence_length = input_shapes[list(self.embeddings.keys())[0]][1]
+        output_shapes = {}
+
+        for name, val in input_shapes.items():
+            output_shapes[name] = tf.TensorShape(
+                [batch_size, sequence_length, self.embeddings[name].table.dim]
+            )
+
+        return TabularLayer.compute_output_shape(self, output_shapes)
 
     def compute_mask(self, inputs, mask=None):
         if not self.mask_zero:
