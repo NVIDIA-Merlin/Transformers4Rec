@@ -184,10 +184,29 @@ def get_object_size(obj, seen=None):
 
 
 def _validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs):
+    """
+    Util function to load NVTabular Dataset from disk
+
+    Parameters:
+    ----------
+        paths_or_dataset: Union[nvtabular.Dataset, str]
+            Path  to dataset to load of nvtabular Dataset,
+            if Dataset, return the object.
+        batch_size: int
+            batch size for Dataloader.
+        buffer_size: float
+            parameter, which refers to the fraction of batches
+            to load at once.
+        engine: str
+            parameter to specify the file format,
+            possible values are: ["parquet", "csv", "csv-no-header"].
+        reader_kwargs: dict
+            Additional arguments of the specified reader.
+    """
     try:
         from nvtabular.io.dataset import Dataset
     except ImportError:
-        raise ImportError("nvtabular is need to use NVTabular DataLoader")
+        raise ValueError("NVTabular is necessary for this function, please install: " "nvtabular.")
 
     # TODO: put this in parent class and allow
     # torch dataset to leverage as well?

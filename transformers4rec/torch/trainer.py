@@ -24,6 +24,7 @@ from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalLoopOutput, Sc
 from transformers.utils import logging
 
 from ..config.trainer import T4RecTrainingArguments
+from ..utils.schema import DatasetSchema
 from .model.model import Model
 from .utils.data_utils import T4RecDataLoader
 
@@ -40,7 +41,7 @@ class Trainer(BaseTrainer):
         self,
         model: Model,
         args: T4RecTrainingArguments,
-        schema=None,
+        schema: DatasetSchema = None,
         train_dataset_or_path=None,
         eval_dataset_or_path=None,
         train_dataloader: Optional[DataLoader] = None,
@@ -59,7 +60,7 @@ class Trainer(BaseTrainer):
             schema: Optional[Dataset.schema], optional
                 The schema object including features to use and their properties.
                 by default None
-            train_dataset_or_path: Optional[str, Dataset], optional
+            train_dataset_or_path: Optional[Union[str, Dataset]], optional
                 Path of parquet files or DataSet to use for training.
                 by default None
             eval_dataset_or_path: Optional[str, Dataset], optional
@@ -283,7 +284,7 @@ class Trainer(BaseTrainer):
         description: str,
         prediction_loss_only: Optional[bool] = None,
         ignore_keys: Optional[List[str]] = None,
-        metric_key_prefix: str = "eval",
+        metric_key_prefix: Optional[str] = "eval",
     ) -> EvalLoopOutput:
         """
         Overriding :obj:`Trainer.prediction_loop()`
@@ -292,6 +293,24 @@ class Trainer(BaseTrainer):
         (computed at each eval batch) and
         to log with the outputs of the model
         (e.g. prediction scores, prediction metadata, attention weights)
+
+        Parameters:
+        -----------
+        dataloader: DataLoader
+            DataLoader object to use to iterate over evaluation data
+        description: str
+            Parameter to describe the evaluation experiment.
+            e.g: `Prediction`, `test`
+        prediction_loss_only: Optional[bool]
+            Whether or not to return the loss only.
+            by default None
+        ignore_keys: Optional[List[str]]
+            Columns not accepted by the ``model.forward()`` method
+            are automatically removed.
+            by default None
+        metric_key_prefix: Optional[str]
+            Prefix to use when logging evaluation metrics.
+            by default `eval`
         """
         prediction_loss_only = (
             prediction_loss_only
@@ -506,7 +525,7 @@ class Trainer(BaseTrainer):
 
     def _save_model_and_checkpoint(self, trial=None, metrics=None, save_model_class=False):
         """
-        Save the serialized model + optimizer states
+        Save the serialized model + trainer and random states.
         """
         """
         Previsous code :  Only state dict is saved  ==>  The HF model class is known before hand
@@ -527,7 +546,7 @@ class Trainer(BaseTrainer):
         )
 
         # save model parameters
-        self._save_checkpoint(self.model, trial=None, metrics=None)
+        self._save_checkpoint(self.model, trial=trial, metrics=metrics)
         # save the serialized model
         if save_model_class:
             # TODO : fix serialization of DatasetSchema object
@@ -535,28 +554,36 @@ class Trainer(BaseTrainer):
                 raise ValueError("cloudpickle is required to save model class")
 
             with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
-                cloudpickle.dump(
-                    self.model.module.heads[0].body.inputs.to_merge["continuous_module"][0], out
-                )
+                cloudpickle.dump(self.model.module, out)
 
-    def load_model_trainer_states_from_checkpoint(self, checkpoint_path):
+    def load_model_trainer_states_from_checkpoint(self, checkpoint_path, model=None):
         """
-        This method loads the model class and the checkpoints states of the model,
-        trainer and random states.
+        This method loads the checkpoints states of the model, trainer and random states.
+        If model is None the serialized model class is loaded from checkpoint.
         It does not loads the optimizer and LR scheduler states (for that call trainer.train()
         with resume_from_checkpoint argument for a complete load)
+
+        Parameters:
+        ----------
+            checkpoint_path: str
+                Path to the checkpoint directory.
+            model: Optional[Model]
+                Model class used by Trainer. by default None
         """
         import os
 
-        try:
-            import cloudpickle
-        except ImportError:
-            raise ImportError("cloudpickle is required to load model class")
+        if model is None:
+            try:
+                import cloudpickle
+            except ImportError:
+                raise ImportError("cloudpickle is required to load model class")
+            logger.info("Loading model class")
+            self.model = cloudpickle.load(
+                open(os.path.join(checkpoint_path, "model_class.pkl"), "rb")
+            )
 
-        logger.info("Loading model class")
-        self.model = cloudpickle.load(open(os.path.join(checkpoint_path, "model_class.pkl"), "rb"))
-
-        logger.info("Loading previously trained model")
+        self.model = HFWrapper(model)
+        logger.info("Loading weights of previously trained model")
         # Restoring model weights
         self.model.load_state_dict(
             # torch.load(os.path.join(training_args.output_dir, "pytorch_model.bin"))
@@ -586,14 +613,31 @@ class Trainer(BaseTrainer):
         labels: torch.Tensor,
         pred_item_ids: torch.Tensor,
         pred_item_scores: torch.Tensor,
-        # pred_metadata: Dict[str, torch.Tensor],
         metrics: Dict[str, np.ndarray],
         metric_key_prefix: str,
     ):
         """
         If --log_predictions is enabled, calls a callback function to
-        log predicted item ids, scores, metadata and metrics
+        log predicted item ids, scores, metadata and metrics.
+        Parameters:
+        ----------
+            labels: torch.Tensor
+                True labels.
+            pred_item_ids: torch.Tensor
+                The predicted items ids. if top_k is set:
+                we return to top-k items for each
+                next-item prediction.
+            pred_item_scores: torch.Tensor
+                The prediction scores, if top_k is set:
+                we return to top-k predictions for each
+                next-item prediction.
+            metrics: Dict[str, np.ndarray]
+                Dictionary of metrics computed by Model.
+            metric_key_prefix: str
+                Prefix to use when logging evaluation metrics.
+                by default `eval`
         """
+        # TODO Add pred_metadata: Dict[str, torch.Tensor],
 
         if self.args.log_predictions and self.log_predictions_callback is not None:
             # Converting torch Tensors to NumPy and callback predictions logging function
