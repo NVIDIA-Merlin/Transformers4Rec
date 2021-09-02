@@ -7,7 +7,8 @@ from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableCon
 
 from ...types import DatasetSchema
 from ...utils.tags import DefaultTags
-from ..tabular.tabular import AsSparseFeatures, FilterFeatures
+from ..tabular.tabular import FilterFeatures
+from ..tabular.transformations import AsSparseFeatures
 from ..typing import TabularAggregationType, TabularData, TabularTransformationType
 from .base import InputBlock
 
