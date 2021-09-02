@@ -3,8 +3,44 @@ from tensorflow.keras import backend
 from tensorflow.python.keras.utils import control_flow_util
 from tensorflow.python.ops import array_ops
 
-from ..typing import TensorOrTabularData
+from ..typing import TabularData, TensorOrTabularData
 from .tabular import TabularTransformation, tabular_transformation_registry
+
+
+@tabular_transformation_registry.register("as-sparse")
+class AsSparseFeatures(TabularTransformation):
+    def call(self, inputs: TabularData, **kwargs) -> TabularData:
+        outputs = {}
+        for name, val in inputs.items():
+            if isinstance(val, tuple):
+                values = val[0][:, 0]
+                row_lengths = val[1][:, 0]
+                outputs[name] = tf.RaggedTensor.from_row_lengths(values, row_lengths).to_sparse()
+            else:
+                outputs[name] = val
+
+        return outputs
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+
+
+@tabular_transformation_registry.register("as-dense")
+class AsDenseFeatures(TabularTransformation):
+    def call(self, inputs: TabularData, **kwargs) -> TabularData:
+        outputs = {}
+        for name, val in inputs.items():
+            if isinstance(val, tuple):
+                values = val[0][:, 0]
+                row_lengths = val[1][:, 0]
+                outputs[name] = tf.RaggedTensor.from_row_lengths(values, row_lengths).to_tensor()
+            else:
+                outputs[name] = val
+
+        return outputs
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
 
 
 @tabular_transformation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")

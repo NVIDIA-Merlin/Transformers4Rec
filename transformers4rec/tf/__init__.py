@@ -35,15 +35,8 @@ from .tabular.aggregation import (
     ElementwiseSumItemMulti,
     StackFeatures,
 )
-from .tabular.tabular import (
-    AsDenseFeatures,
-    AsSparseFeatures,
-    AsTabular,
-    FilterFeatures,
-    MergeTabular,
-    TabularBlock,
-)
-from .tabular.transformations import StochasticSwapNoise
+from .tabular.tabular import AsTabular, FilterFeatures, MergeTabular, TabularBlock
+from .tabular.transformations import AsDenseFeatures, AsSparseFeatures, StochasticSwapNoise
 from .utils import repr_utils
 
 ListWrapper.__repr__ = repr_utils.list_wrapper_repr

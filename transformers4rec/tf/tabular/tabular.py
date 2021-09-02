@@ -489,31 +489,3 @@ def merge_tabular(self, other, aggregation=None, **kwargs):
 
 TabularBlock.__add__ = merge_tabular
 TabularBlock.merge = merge_tabular
-
-
-class AsSparseFeatures(TabularTransformation):
-    def call(self, inputs: TabularData, **kwargs) -> TabularData:
-        outputs = {}
-        for name, val in inputs.items():
-            if isinstance(val, tuple):
-                values = val[0][:, 0]
-                row_lengths = val[1][:, 0]
-                outputs[name] = tf.RaggedTensor.from_row_lengths(values, row_lengths).to_sparse()
-            else:
-                outputs[name] = val
-
-        return outputs
-
-
-class AsDenseFeatures(TabularTransformation):
-    def call(self, inputs: TabularData, **kwargs) -> TabularData:
-        outputs = {}
-        for name, val in inputs.items():
-            if isinstance(val, tuple):
-                values = val[0][:, 0]
-                row_lengths = val[1][:, 0]
-                outputs[name] = tf.RaggedTensor.from_row_lengths(values, row_lengths).to_tensor()
-            else:
-                outputs[name] = val
-
-        return outputs
