@@ -9,8 +9,8 @@ from torch.utils.data import Dataset, IterableDataset
 from transformers4rec.utils.schema import DatasetSchema
 from transformers4rec.utils.tags import Tag
 
+from ...utils import dependencies
 from ...utils.registry import Registry
-from .torch_utils import is_nvtabular_available, is_pyarrow_available
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class T4RecDataLoader(ABC):
         return dataloader_registry.parse(class_or_str)
 
 
-if is_pyarrow_available():
+if dependencies.is_pyarrow_available():
     import pyarrow.parquet as pq
 
     @dataloader_registry.register_with_multiple_names("pyarrow_builder", "pyarrow")
@@ -154,7 +154,7 @@ if is_pyarrow_available():
             )
 
 
-if is_nvtabular_available():
+if dependencies.is_rapids_available():
     from nvtabular.loader.torch import DLDataLoader
 
     from transformers4rec.torch.data import DataLoader
