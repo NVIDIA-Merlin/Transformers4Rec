@@ -54,8 +54,8 @@ class EmbeddingFeatures(InputBlock):
         if tags:
             _schema = _schema.select_by_tag(tags)
 
-        if not item_id and schema.select_by_tag(["item_id"]).column_names:
-            _schema = _schema.select_by_tag(["item_id"]).column_names[0]
+        if not item_id and schema.parent.select_by_tag(["item_id"]).column_names:
+            item_id = _schema.parent.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
             embedding_dims = _schema.embedding_sizes(infer_embedding_sizes_multiplier)
