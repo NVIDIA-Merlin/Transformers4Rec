@@ -1,20 +1,11 @@
 import tensorflow as tf
 
-from .base import InputLayer
+from .base import InputBlock
 
 
-class ParseTokenizedText(InputLayer):
-    def __init__(
-        self,
-        max_text_length=None,
-        aggregation=None,
-        trainable=True,
-        name=None,
-        dtype=None,
-        dynamic=False,
-        **kwargs
-    ):
-        super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
+class ParseTokenizedText(InputBlock):
+    def __init__(self, max_text_length=None, aggregation=None, **kwargs):
+        super().__init__(aggregation, **kwargs)
         self.max_text_length = max_text_length
 
     def call(self, inputs, **kwargs):
@@ -56,7 +47,7 @@ class ParseTokenizedText(InputLayer):
         return output_shapes
 
 
-class TextEmbeddingFeaturesWithTransformers(InputLayer):
+class TextEmbeddingFeaturesWithTransformers(InputBlock):
     def __init__(
         self,
         transformer_model,
