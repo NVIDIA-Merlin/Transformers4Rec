@@ -126,7 +126,8 @@ class TabularSequenceFeatures(TabularFeatures):
         masking: Optional[Union[str, MaskSequence]] = None,
         **kwargs
     ) -> "TabularSequenceFeatures":
-        """Instantiates ``TabularFeatures`` from a ```DatasetSchema`
+        """Instantiates ``TabularFeatures`` from a ``DatasetSchema``
+
         Parameters
         ----------
         schema : DatasetSchema

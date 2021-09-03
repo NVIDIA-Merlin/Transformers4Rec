@@ -36,19 +36,20 @@ class GPT2Prepare(TransformerPrepare):
 
 
 class TransformerBlock(BlockBase):
-    TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {
-        GPT2Model: GPT2Prepare
-    }
-
     """
     Class to support HF Transformers for session-based and sequential-based recommendation models.
 
-    Parameters:
-    -----------
-        transformer: TransformerBody
-            The T4RecConfig or a pre-trained HF object related to specific transformer architecture.
-        masking: Needed when masking is applied on the inputs.
+    Parameters
+    ----------
+    transformer: TransformerBody
+        The T4RecConfig or a pre-trained HF object related to specific transformer architecture.
+    masking:
+        Needed when masking is applied on the inputs.
     """
+
+    TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {
+        GPT2Model: GPT2Prepare
+    }
 
     def __init__(
         self,
@@ -99,18 +100,20 @@ class TransformerBlock(BlockBase):
     ):
         """
         Load the HF transformer architecture based on its name
-        Parameters:
-           transformer: str
-               name of the Transformer to use. Possible values are :
-               ["reformer", "gtp2", "longformer", "electra", "albert", "xlnet"]
-           d_model: int
-               size of hidden states for Transformers
-           n_head:
-               Number of attention heads for Transformers
-           n_layer: int
-               Number of layers for RNNs and Transformers"
-           total_seq_length: int
-               The maximum sequence length
+
+        Parameters
+        ----------
+        transformer: str
+            Name of the Transformer to use. Possible values are :
+            ["reformer", "gtp2", "longformer", "electra", "albert", "xlnet"]
+        d_model: int
+            size of hidden states for Transformers
+        n_head:
+            Number of attention heads for Transformers
+        n_layer: int
+            Number of layers for RNNs and Transformers"
+        total_seq_length: int
+            The maximum sequence length
         """
         transformer = transformer_registry.parse(transformer).build(
             d_model=d_model,

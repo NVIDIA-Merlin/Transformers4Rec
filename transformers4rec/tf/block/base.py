@@ -41,21 +41,26 @@ class SequentialBlock(TabularBlock):
     SavedModels, without having to pre-declare input and output shapes.  In turn,
     this layer is usable as a preprocessing layer for TF Agents Networks, and
     can be exported via PolicySaver.
-    Usage:
-    ```python
-    c = SequentialLayer([layer1, layer2, layer3])
-    output = c(inputs)    # Equivalent to: output = layer3(layer2(layer1(inputs)))
-    ```
+    Usage::
+
+        c = SequentialLayer([layer1, layer2, layer3])
+        output = c(inputs)    # Equivalent to: output = layer3(layer2(layer1(inputs)))
     """
 
     def __init__(self, layers, filter_features=None, block_name=None, **kwargs):
         """Create a composition.
-        Args:
-          layers: A list or tuple of layers to compose.
-          **kwargs: Arguments to pass to `Keras` layer initializer, including
-            `name`.
-        Raises:
-          TypeError: If any of the layers are not instances of keras `Layer`.
+
+        Parameters
+        ----------
+        layers:
+            A list or tuple of layers to compose.
+        **kwargs:
+            Arguments to pass to `Keras` layer initializer, including `name`.
+
+        Raises
+        ------
+        TypeError:
+            If any of the layers are not instances of keras `Layer`.
         """
         self.block_name = block_name
         for layer in layers:
