@@ -31,12 +31,11 @@ class MaskSequence(_MaskSequence, nn.Module):
 
     Parameters
     ----------
-        hidden_size: The hidden dimension of input tensors,
-                    needed to initialize trainable vector of
-                    masked positions.
-        pad_token: int, default = 0
-            Index of the padding token used for getting
-                  batch of sequences with the same length
+    hidden_size:
+        The hidden dimension of input tensors, needed to initialize trainable vector of
+        masked positions.
+    pad_token: int, default = 0
+        Index of the padding token used for getting batch of sequences with the same length
     """
 
     # TODO add doc-strings to each method
@@ -483,26 +482,30 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
     def get_fake_tokens(self, itemid_seq, target_flat, logits):
         """
         Second task of RTD is binary classification to train the discriminator
-        ==> Generate fake data by replacing [MASK] positions by random items to train
-            ELECTRA discriminator
-        #TODO: Generate fake interactions embeddings using metadatainfo in addition to
-            item ids.
-        INPUT:
-        -----
-            itemid_seq: (bs, max_seq_len), input sequence of item ids
-            target_flat: (bs*max_seq_len), flattened masked label sequences
-            logits: (#pos_item, vocab_size or #pos_item),
-                    mlm probabilities of positive items computed by the generator model.
-                    The logits are over the whole corpus if sample_from_batch = False,
-                    over the positive items (masked) of the current batch otherwise
-        OUTPUT:
-        ------
-            corrupted_inputs: (bs, max_seq_len) input sequence of item ids with fake replacement
-            discriminator_labels: (bs, max_seq_len) binary labels to distinguish between original
-                and replaced items
-            batch_updates: (#pos_item) the indices of replacement item within the current batch
-                if sample_from_batch is enabled
+        Generate fake data by replacing [MASK] positions by random items to train ELECTRA
+        discriminator
+
+        Parameters
+        ----------
+        itemid_seq: (bs, max_seq_len)
+            input sequence of item ids
+        target_flat: (bs*max_seq_len)
+            flattened masked label sequences
+        logits: (#pos_item, vocab_size or #pos_item),
+            mlm probabilities of positive items computed by the generator model.
+            The logits are over the whole corpus if sample_from_batch = False,
+            over the positive items (masked) of the current batch otherwise
+
+        Returns
+        -------
+        corrupted_inputs: (bs, max_seq_len)
+            input sequence of item ids with fake replacement
+        discriminator_labels: (bs, max_seq_len)
+            binary labels to distinguish between original and replaced items
+        batch_updates: (#pos_item)
+            the indices of replacement item within the current batch if sample_from_batch is enabled
         """
+        # TODO: Generate fake interactions embeddings using metadatainfo in addition to  item ids.
         # Replace only items that were masked during MLM
         non_pad_mask = target_flat != self.pad_token
         pos_labels = torch.masked_select(target_flat, non_pad_mask)
@@ -540,11 +543,17 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
 
     def sample_from_softmax(self, logits):
         """
-        Sampling method for replacement token modeling (ELECTRA):
-        INPUT:
-            logits: (pos_item, vocab_size), mlm probabilities computed by the generator model
-        OUTPUT:
-            samples: (#pos_item), ids of replacements items
+        Sampling method for replacement token modeling (ELECTRA)
+
+        Parameters
+        ----------
+        logits: (pos_item, vocab_size)
+            mlm probabilities computed by the generator model
+
+        Returns
+        -------
+        samples: (#pos_item)
+            ids of replacements items
         """
         # add noise to logits to prevent from the case where the generator learn to exactly
         # retrieve the true item that was masked

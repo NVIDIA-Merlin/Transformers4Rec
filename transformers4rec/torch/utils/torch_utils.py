@@ -1,14 +1,11 @@
 import abc
-from typing import Optional
 
 import torch
 
-from ...utils.schema import DatasetSchema
+from ...utils.schema import SchemaMixin
 
 
-class OutputSizeMixin(abc.ABC):
-    REQUIRES_SCHEMA = False
-
+class OutputSizeMixin(SchemaMixin, abc.ABC):
     def build(self, input_size, schema=None, **kwargs):
         self.check_schema(schema=schema)
 
@@ -33,29 +30,6 @@ class OutputSizeMixin(abc.ABC):
         from ..block.base import right_shift_block
 
         return right_shift_block(self, other)
-
-    @property
-    def schema(self) -> Optional[DatasetSchema]:
-        return getattr(self, "_schema", None)
-
-    @schema.setter
-    def schema(self, value):
-        self._schema = value
-
-    def check_schema(self, schema=None):
-        if self.REQUIRES_SCHEMA and not getattr(self, "schema", None) and not schema:
-            raise ValueError(f"{self.__class__.__name__} requires a schema.")
-
-    def __call__(self, *args, **kwargs):
-        self.check_schema()
-
-        return super().__call__(*args, **kwargs)
-
-
-def requires_schema(module):
-    module.REQUIRES_SCHEMA = True
-
-    return module
 
 
 def check_gpu(module):

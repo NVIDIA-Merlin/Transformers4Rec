@@ -6,8 +6,8 @@ import tensorflow as tf
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
-from ..types import DatasetSchema
-from ..utils.tags import Tag
+from transformers4rec.types import DatasetSchema
+from transformers4rec.utils.tags import Tag
 
 
 def name_fn(name, inp):
@@ -37,14 +37,21 @@ class PredictionTask(TaskMixin, Layer):
         summary_type="last",
     ) -> None:
         """Initializes the task.
-        Args:
-          loss: Loss function. Defaults to BinaryCrossentropy.
-          metrics: List of Keras metrics to be evaluated.
-          prediction_metrics: List of Keras metrics used to summarize the
-            predictions.
-          label_metrics: List of Keras metrics used to summarize the labels.
-          loss_metrics: List of Keras metrics used to summarize the loss.
-          name: Optional task name.
+
+        Parameters
+        ----------
+        loss:
+            Loss function. Defaults to BinaryCrossentropy.
+        metrics:
+            List of Keras metrics to be evaluated.
+        prediction_metrics:
+            List of Keras metrics used to summarize the predictions.
+        label_metrics:
+            List of Keras metrics used to summarize the labels.
+        loss_metrics:
+            List of Keras metrics used to summarize the loss.
+        name:
+            Optional task name.
         """
 
         super().__init__(name=name)
