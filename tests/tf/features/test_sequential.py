@@ -1,5 +1,6 @@
 import pytest
 
+from tests.tf import _utils as test_utils
 from transformers4rec.utils.tags import Tag
 
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -15,6 +16,19 @@ def test_sequential_embedding_features(yoochoose_schema, tf_yoochoose_like):
     assert all(len(tensor.shape) == 3 for tensor in list(outputs.values()))
     assert all(tensor.shape[1] == 20 for tensor in list(outputs.values()))
     assert all(tensor.shape[2] == 64 for tensor in list(outputs.values()))
+
+
+@test_utils.mark_run_eagerly_modes
+def test_sequential_embedding_features_yoochoose_model(
+    yoochoose_schema, tf_yoochoose_like, run_eagerly
+):
+    inputs = tf4rec.TabularSequenceFeatures.from_schema(
+        yoochoose_schema, max_sequence_length=20, aggregation="sequential_concat"
+    )
+
+    body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
+
+    test_utils.assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
 
 
 def test_sequential_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
@@ -66,7 +80,6 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, tf_yoocho
 
 def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-
         tf4rec.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,

@@ -1,28 +1,48 @@
 import copy
 from collections import defaultdict
 from types import SimpleNamespace
-from typing import Dict, List, Optional, Text, Union
+from typing import Callable, Dict, Iterable, List, Optional, Text, Union
 
 import torch
 import torchmetrics as tm
 from transformers.modeling_utils import SequenceSummary
 
-from ..types import DatasetSchema
-from ..utils.tags import Tag
-from .block.base import Block, BuildableBlock, SequentialBlock
-from .typing import BlockOrModule, BlockType
+from ...types import DatasetSchema
+from ...utils.tags import Tag
+from ..block.base import Block, BuildableBlock, SequentialBlock
+from ..typing import BlockOrModule, BlockType
 
 
 class PredictionTask(torch.nn.Module):
+    """Individual prediction-task of a model.
+
+    Parameters
+    ----------
+    loss: torch.nn.Module
+        The loss to use during training of this task.
+    metrics: torch.nn.Module
+        The metrics to calculate during training & evaluation.
+    target_name: str, optional
+        Name of the target, this is needed when there are multiple targets.
+    forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor]
+        Function to apply before the prediction
+    task_block: BlockType
+        Module to transform input tensor before computing predictions.
+    pre: BlockType
+        Module to compute the predictions probabilities.
+    summary_type: str
+        This is used to summarize a sequence into a single tensor.
+    """
+
     def __init__(
         self,
-        loss,
-        metrics=None,
-        target_name=None,
-        forward_to_prediction_fn=lambda x: x,
+        loss: torch.nn.Module,
+        metrics: Iterable[tm.Metric] = None,
+        target_name: Optional[str] = None,
+        forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
         task_block: Optional[BlockType] = None,
         pre: Optional[BlockType] = None,
-        summary_type="last",
+        summary_type: str = "last",
     ):
         super().__init__()
         self.sequence_summary = SequenceSummary(SimpleNamespace(summary_type=summary_type))  # noqa
@@ -157,7 +177,7 @@ class BinaryClassificationTask(PredictionTask):
         tm.Precision(num_classes=2),
         tm.Recall(num_classes=2),
         tm.Accuracy(),
-        # tm.AUC()
+        # TODO: Fix this: tm.AUC()
     )
 
     def __init__(
@@ -214,10 +234,34 @@ class RegressionTask(PredictionTask):
 
 
 class NextItemPredictionTask(PredictionTask):
+    """Next-item prediction task.
+
+    Parameters:
+    ----------
+    loss: torch.nn.Module
+        Loss function to use. Defaults to NLLLos.
+    metrics: Iterable[torchmetrics.Metric]
+        List of ranking metrics to use for evaluation.
+    task_block:
+        Module to transform input tensor before computing predictions.
+    weight_tying: bool
+        The item id embedding table weights are shared with the prediction network layer.
+    softmax_temperature: float
+        Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
+        Value 1.0 reduces to regular softmax.
+    pad_token: str
+        pad token id.
+    target_dim: int
+        vocabulary size of item ids
+    hf_format: bool
+        Output the dictionary of outputs needed by RecSysTrainer, if set to False,
+        return the predictions tensor.
+    """
+
     def __init__(
         self,
-        loss=torch.nn.NLLLoss(ignore_index=0),
-        metrics=None,
+        loss: torch.nn.Module = torch.nn.NLLLoss(ignore_index=0),
+        metrics: Iterable[tm.Metric] = None,
         task_block: Optional[torch.nn.Module] = None,
         weight_tying: bool = False,
         softmax_temperature: float = 1,
@@ -225,23 +269,6 @@ class NextItemPredictionTask(PredictionTask):
         target_dim: int = None,
         hf_format=False,
     ):
-        """
-        Class to support Next Item prediction task:
-        Parameters:
-        ----------
-            loss : the loss function to use.
-            metrics: list of ranking metrics to use for evaluation.
-            body: network to transform input tensor before computing predictions.
-            pre: classifier network to compute the item predictions probabilities.
-            weight_tying: the item id embedding table weights are shared
-                        with the prediction network layer.
-            softmax_temperature: Softmax temperature, used to reduce model overconfidence,
-                        so that softmax(logits / T). Value 1.0 reduces to regular softmax.
-            pad_token: pad token id.
-            target_dim: vocabulary size of item ids
-            hf_format: output the dictionary of outputs needed by RecSysTrained,
-                        if set to False, return the predictions tensor.
-        """
         super().__init__(loss=loss, metrics=metrics, task_block=task_block)
         self.softmax_temperature = softmax_temperature
         self.weight_tying = weight_tying
@@ -361,6 +388,27 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
 
 
 class _NextItemPredictionTask(torch.nn.Module):
+    """Predict the interacted item-id probabilities.
+
+    - During inference, the task consists of predicting the next item.
+    - During training, the class supports the following Language modeling tasks:
+        Causal LM, Masked LM, Permutation LM and Replacement Token Detection
+
+    Parameters:
+    -----------
+        input_size: int
+            Input size of this module.
+        target_dim: int
+            Dimension of the target.
+        weight_tying: bool
+            The item id embedding table weights are shared with the prediction network layer.
+        item_embedding_table: torch.nn.Module
+            Module that's used to store the embedding table for the item.
+        softmax_temperature: float
+            Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
+            Value 1.0 reduces to regular softmax.
+    """
+
     def __init__(
         self,
         input_size: int,
@@ -369,19 +417,6 @@ class _NextItemPredictionTask(torch.nn.Module):
         item_embedding_table: Optional[torch.nn.Module] = None,
         softmax_temperature: float = 0,
     ):
-        """
-        Predict the interacted item-id probabilities.
-        - During inference, the task consists of predicting the next item.
-        - During training, the class supports the following Language modeling tasks:
-            Causal LM, Masked LM, Permutation LM and Replacement Token Detection
-        Parameters:
-        -----------
-            input_size:
-            target_dim:
-            weight_tying:
-            item_embedding_table:
-            softmax_temperature:
-        """
         super().__init__()
         self.input_size = input_size
         self.target_dim = target_dim
@@ -420,6 +455,19 @@ class _NextItemPredictionTask(torch.nn.Module):
 
 
 class Head(torch.nn.Module):
+    """
+
+    Parameters
+    ----------
+    body
+    prediction_tasks
+    task_blocks
+    task_weights
+    body_output_size
+    loss_reduction
+    inputs
+    """
+
     def __init__(
         self,
         body: SequentialBlock,

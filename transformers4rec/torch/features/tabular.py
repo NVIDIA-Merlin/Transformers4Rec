@@ -1,26 +1,50 @@
 from typing import List, Optional, Union
 
 from ...types import DatasetSchema, DefaultTags, Tag
+from ...utils.misc_utils import docstring_parameter
+from .. import typing
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular import AsTabular, MergeTabular, TabularModule
+from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
 
+TABULAR_FEATURES_PARAMS_DOCSTRING = """
+    continuous_module: TabularModule, optional
+        Module used to process continuous features.
+    categorical_module: TabularModule, optional
+        Module used to process categorical features.
+    text_embedding_module: TabularModule, optional
+        Module used to process text features.
+"""
 
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
+)
 class TabularFeatures(MergeTabular):
+    """Input module that combines different types of features: continuous, categorical & text.
+
+    Parameters
+    ----------
+    {tabular_features_parameters}
+    {tabular_module_parameters}
+    """
+
     CONTINUOUS_MODULE_CLASS = ContinuousFeatures
     EMBEDDING_MODULE_CLASS = EmbeddingFeatures
     SOFT_EMBEDDING_MODULE_CLASS = SoftEmbeddingFeatures
 
     def __init__(
         self,
-        continuous_module=None,
-        categorical_module=None,
-        text_embedding_module=None,
-        aggregation=None,
-        augmentation=None,
+        continuous_module: Optional[typing.TabularModule] = None,
+        categorical_module: Optional[typing.TabularModule] = None,
+        text_embedding_module: Optional[typing.TabularModule] = None,
+        pre: Optional[typing.TabularTransformationType] = None,
+        post: Optional[typing.TabularTransformationType] = None,
+        aggregation: Optional[typing.TabularAggregationType] = None,
     ):
         to_merge = {}
         if continuous_module:
@@ -31,9 +55,7 @@ class TabularFeatures(MergeTabular):
             to_merge["text_embedding_module"] = text_embedding_module
 
         assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(
-            to_merge, aggregation=aggregation, augmentation=augmentation
-        )
+        super(TabularFeatures, self).__init__(to_merge, pre=pre, post=post, aggregation=aggregation)
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]
@@ -115,7 +137,7 @@ class TabularFeatures(MergeTabular):
                 )
             else:
                 maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
-                    schema, tags=continuous_tags, **kwargs
+                    schema, tags=continuous_tags
                 )
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(
@@ -129,16 +151,14 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
         )
 
-        if output.aggregation is not None:
-            output.aggregation.schema = schema
-
         if automatic_build and schema._schema:
             output.build(
                 get_output_sizes_from_schema(
                     schema._schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
-                )
+                ),
+                schema=schema,
             )
 
         if continuous_projection:
@@ -155,17 +175,17 @@ class TabularFeatures(MergeTabular):
         for in_layer in self.merge_values:
             output_sizes.update(in_layer.forward_output_size(input_size))
 
-        return TabularModule.forward_output_size(self, output_sizes)
+        return output_sizes
 
     @property
-    def continuous_module(self):
+    def continuous_module(self) -> Optional[typing.TabularModule]:
         if "continuous_module" in self.to_merge:
             return self.to_merge["continuous_module"]
 
         return None
 
     @property
-    def categorical_module(self):
+    def categorical_module(self) -> Optional[typing.TabularModule]:
         if "categorical_module" in self.to_merge:
             return self.to_merge["categorical_module"]
 
