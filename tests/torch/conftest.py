@@ -7,7 +7,7 @@ from transformers4rec.utils.schema import DatasetSchema
 
 pytorch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
-
+torch4rec = pytest.importorskip("transformers4rec.torch")
 
 ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets"
 
@@ -111,6 +111,27 @@ def torch_seq_prediction_head_link_to_block():
 
 
 @pytest.fixture
+def torch_yoochoose_tabular_features(yoochoose_schema):
+    return torch4rec.TabularFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        aggregation="concat",
+    )
+
+
+@pytest.fixture
+def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
+    return torch4rec.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=100,
+        masking="causal",
+    )
+
+
+@pytest.fixture
 def torch_yoochoose_like():
     NUM_ROWS = 100
     MAX_CARDINALITY = 100
@@ -129,8 +150,8 @@ def torch_yoochoose_like():
             is_int_feature = feature.HasField("int_domain")
 
             if is_int_feature:
+                max_num = MAX_CARDINALITY
                 if is_session_feature:
-                    max_num = MAX_CARDINALITY
                     if not feature.int_domain.is_categorical:
                         max_num = feature.int_domain.max
                     row = pytorch.randint(max_num, (session_length,))

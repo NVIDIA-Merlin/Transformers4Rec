@@ -13,11 +13,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
-from .block.base import Block, SequentialBlock, build_blocks, right_shift_block
+
+# Block related imports
+from .block.base import Block, BlockBase, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
+from .block.tabular.aggregation import (
+    ConcatFeatures,
+    ElementwiseSum,
+    ElementwiseSumItemMulti,
+    StackFeatures,
+)
+from .block.tabular.tabular import (
+    AsTabular,
+    FilterFeatures,
+    MergeTabular,
+    SequentialTabularTransformations,
+    TabularAggregation,
+    TabularBlock,
+    TabularModule,
+    TabularTransformation,
+)
+from .block.tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .block.transformer import TransformerBlock
-from .block.with_head import BlockWithHead
+
+# Features related imports
 from .features.continuous import ContinuousFeatures
 from .features.embedding import (
     EmbeddingFeatures,
@@ -26,28 +45,43 @@ from .features.embedding import (
     SoftEmbeddingFeatures,
     TableConfig,
 )
-from .features.sequential import SequentialEmbeddingFeatures, SequentialTabularFeatures
+from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
-from .head import Head, PredictionTask
-from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
+
+# Model related imports
+from .model.head import (
+    BinaryClassificationTask,
+    Head,
+    NextItemPredictionTask,
+    PredictionTask,
+    RegressionTask,
+)
+from .model.model import Model
 
 __all__ = [
     "SequentialBlock",
     "right_shift_block",
     "build_blocks",
+    "BlockBase",
+    "TabularBlock",
     "Block",
     "MLPBlock",
-    "BlockWithHead",
+    "TabularTransformation",
+    "SequentialTabularTransformations",
+    "TabularAggregation",
+    "StochasticSwapNoise",
+    "TabularLayerNorm",
     "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
     "SoftEmbeddingFeatures",
-    "SequentialTabularFeatures",
-    "SequentialEmbeddingFeatures",
+    "TabularSequenceFeatures",
+    "SequenceEmbeddingFeatures",
     "FeatureConfig",
     "TableConfig",
     "TabularFeatures",
     "Head",
+    "Model",
     "PredictionTask",
     "AsTabular",
     "ConcatFeatures",
@@ -56,6 +90,9 @@ __all__ = [
     "ElementwiseSumItemMulti",
     "MergeTabular",
     "StackFeatures",
+    "BinaryClassificationTask",
+    "RegressionTask",
+    "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
 ]

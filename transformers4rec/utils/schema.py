@@ -1,5 +1,14 @@
 import collections.abc
+import math
 from dataclasses import dataclass, field
+
+try:
+    from functools import cached_property
+except ImportError:
+    # polyfill cached_property for python <= 3.7 (using lru_cache which was introduced in python3.2)
+    from functools import lru_cache
+
+    cached_property = lambda func: property(lru_cache()(func))  # noqa
 from typing import List, Optional, Text, Union
 
 from google.protobuf import text_format
@@ -189,13 +198,64 @@ class DatasetSchema:
         child._schema = self.filter_schema(child.column_names)
         return child
 
-    def embedding_sizes(self):
-        if self._schema:
-            cardinalities = self.cardinalities()
+    def embedding_sizes(self, multiplier: float) -> int:
+        """Heuristic method to suggest the embedding sizes based on the categorical feature cardinality
 
-            from nvtabular.ops.categorify import _emb_sz_rule
+        Parameters
+        ----------
+        multiplier : float
+            multiplier used by the heuristic to infer the embedding dimension from
+            its cardinality. Generally reasonable values range between 2.0 and 10.0
+        Returns
+        -------
+        int
+            The suggested embedding dimension
+        """
+        if not self._schema:
+            raise ValueError(
+                "The internal schema is required to retrieve "
+                " the features cardinality and infer embeddings dim."
+            )
 
-            return {key: _emb_sz_rule(val) for key, val in cardinalities.items()}
+        if not (multiplier is not None and multiplier > 0.0):
+            raise ValueError("The multiplier of the embedding size needs to be greater than 0.")
+
+        cardinalities = self.cardinalities()
+        return {
+            key: DatasetSchema.get_embedding_size_from_cardinality(val, multiplier=multiplier)
+            for key, val in cardinalities.items()
+        }
+
+    def embedding_sizes_nvt(self, minimum_size=16, maximum_size=512) -> int:
+        """Heuristic method from NVTabular to suggest the embedding sizes
+        based on the categorical feature cardinality.
+
+        Parameters
+        ----------
+        minimum_size : int, optional
+            Minimum embedding size, by default 16
+        maximum_size : int, optional
+            Minimum embedding size, by default 512
+
+        Returns
+        -------
+        int
+            The suggested embedding dimension
+        """
+        if not self._schema:
+            raise ValueError(
+                "The internal schema is required to retrieve "
+                "the features cardinality and infer embeddings dim."
+            )
+
+        cardinalities = self.cardinalities()
+
+        from nvtabular.ops.categorify import _emb_sz_rule
+
+        return {
+            key: _emb_sz_rule(val, minimum_size=minimum_size, maximum_size=maximum_size)[1]
+            for key, val in cardinalities.items()
+        }
 
     def cardinalities(self):
         if self._schema:
@@ -219,6 +279,26 @@ class DatasetSchema:
                 f.CopyFrom(feat)
 
         return schema
+
+    @staticmethod
+    def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
+        # A rule-of-thumb from Google.
+        embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
+        return embedding_size
+
+    @cached_property
+    def item_id_column_name(self):
+        item_id_col = self.select_by_tag(Tag.ITEM_ID)
+        if len(item_id_col.columns) == 0:
+            raise ValueError("There is no column tagged as item id.")
+
+        return item_id_col.column_names[0]
+
+    def get_item_ids_from_inputs(self, inputs):
+        return inputs[self.item_id_column_name]
+
+    def get_mask_from_inputs(self, inputs, mask_token=0):
+        return self.get_item_ids_from_inputs(inputs) != mask_token
 
 
 def _convert_col(col, tags=None):

@@ -1,9 +1,10 @@
 from typing import List
 
-from ..tabular import FilterFeatures, TabularLayer
+from ..tabular import FilterFeatures
+from .base import InputLayer
 
 
-class ContinuousFeatures(TabularLayer):
+class ContinuousFeatures(InputLayer):
     def __init__(
         self,
         features,
@@ -36,4 +37,4 @@ class ContinuousFeatures(TabularLayer):
         return ["filter_features"]
 
     def repr_extra(self):
-        return ", ".join(sorted(self.filter_features.columns))
+        return ", ".join(sorted(self.filter_features.to_include))

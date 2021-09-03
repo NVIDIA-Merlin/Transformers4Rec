@@ -19,16 +19,18 @@ from tensorflow.python.keras.metrics import Metric
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.training.tracking.data_structures import ListWrapper, _DictWrapper
 
-from .aggregation import ConcatFeatures, StackFeatures, aggregation_registry
+from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
+from .augmentation import StochasticSwapNoise
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
-from .block.with_head import BlockWithHead
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
+from .features.sequence import SequentialEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
-from .head import Head
+from .head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
+from .model import Model
 from .tabular import (
     AsDenseFeatures,
     AsSparseFeatures,
@@ -55,23 +57,30 @@ __all__ = [
     "right_shift_layer",
     "DLRMBlock",
     "MLPBlock",
-    "BlockWithHead",
     "ContinuousFeatures",
     "EmbeddingFeatures",
+    "SequentialEmbeddingFeatures",
     "FeatureConfig",
     "TableConfig",
     "TabularFeatures",
+    "TabularSequenceFeatures",
     "TextEmbeddingFeaturesWithTransformers",
     "Head",
     "AsDenseFeatures",
     "AsSparseFeatures",
+    "ElementwiseSum",
+    "ElementwiseSumItemMulti",
     "AsTabular",
     "ConcatFeatures",
     "FilterFeatures",
-    "aggregation_registry",
     "MergeTabular",
     "StackFeatures",
     "TabularLayer",
+    "PredictionTask",
+    "BinaryClassificationTask",
+    "RegressionTask",
+    "Model",
+    "StochasticSwapNoise",
 ]
 
 try:

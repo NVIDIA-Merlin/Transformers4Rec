@@ -1,0 +1,226 @@
+from typing import Dict, Optional
+
+import tensorflow as tf
+from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig
+
+from ...types import DatasetSchema, Tag
+from ..block.base import SequentialBlock
+from ..block.mlp import MLPBlock
+from ..masking import masking_registry
+from ..tabular import AsTabular, TabularLayer
+from .embedding import EmbeddingFeatures
+from .tabular import TabularFeatures
+
+
+class SequentialEmbeddingFeatures(EmbeddingFeatures):
+    def __init__(
+        self,
+        feature_config: Dict[str, FeatureConfig],
+        item_id=None,
+        mask_zero=True,
+        padding_idx: int = 0,
+        **kwargs
+    ):
+        super().__init__(feature_config, item_id, **kwargs)
+        self.padding_idx = padding_idx
+        self.mask_zero = mask_zero
+
+    def lookup_feature(self, name, val, **kwargs):
+        return super(SequentialEmbeddingFeatures, self).lookup_feature(
+            name, val, output_sequence=True
+        )
+
+    def compute_output_shape(self, input_shapes):
+        input_shapes = self.filter_features.compute_output_shape(input_shapes)
+
+        batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
+        sequence_length = input_shapes[list(self.embeddings.keys())[0]][1]
+        output_shapes = {}
+
+        for name, val in input_shapes.items():
+            output_shapes[name] = tf.TensorShape(
+                [batch_size, sequence_length, self.embeddings[name].table.dim]
+            )
+
+        return TabularLayer.compute_output_shape(self, output_shapes)
+
+    def compute_mask(self, inputs, mask=None):
+        if not self.mask_zero:
+            return None
+        filtered_inputs = self.filter_features(inputs)
+
+        outputs = {}
+        for key, val in filtered_inputs.items():
+            outputs[key] = tf.not_equal(val, self.padding_idx)
+
+        return outputs
+
+
+class TabularSequenceFeatures(TabularFeatures):
+    EMBEDDING_MODULE_CLASS = SequentialEmbeddingFeatures
+
+    def __init__(
+        self,
+        continuous_layer=None,
+        categorical_layer=None,
+        text_embedding_layer=None,
+        projection_module=None,
+        masking=None,
+        aggregation=None,
+        **kwargs
+    ):
+        super().__init__(
+            continuous_layer, categorical_layer, text_embedding_layer, aggregation, **kwargs
+        )
+        self.projection_module = projection_module
+        if masking:
+            self.masking = masking
+
+    @classmethod
+    def from_schema(
+        cls,
+        schema: DatasetSchema,
+        continuous_tags=Tag.CONTINUOUS,
+        categorical_tags=Tag.CATEGORICAL,
+        aggregation=None,
+        max_sequence_length=None,
+        continuous_projection=None,
+        continuous_soft_embeddings_shape=None,
+        projection=None,
+        d_output=None,
+        masking=None,
+        **kwargs
+    ) -> "TabularSequenceFeatures":
+        """Instantiates ``TabularFeatures`` from a ``DatasetSchema``
+
+        Parameters
+        ----------
+        schema : DatasetSchema
+            Dataset schema
+        continuous_tags : Optional[Union[DefaultTags, list, str]], optional
+            Tags to filter the continuous features, by default Tag.CONTINUOUS
+        categorical_tags : Optional[Union[DefaultTags, list, str]], optional
+            Tags to filter the categorical features, by default Tag.CATEGORICAL
+        aggregation : Optional[str], optional
+            Feature aggregation option, by default None
+        automatic_build : bool, optional
+            Automatically infers input size from features, by default True
+        max_sequence_length : Optional[int], optional
+            Maximum sequence length for list features by default None
+        continuous_projection : Optional[Union[List[int], int]], optional
+            If set, concatenate all numerical features and project them by a number of MLP layers
+            The argument accepts a list with the dimensions of the MLP layers, by default None
+        continuous_soft_embeddings_shape : Optional[Union[Tuple[int, int], List[int, int]]]
+            If set, uses soft one-hot encoding technique to represent continuous features.
+            The argument accepts a tuple with 2 elements: [embeddings cardinality, embeddings dim],
+            by default None
+        projection: Optional[torch.nn.Module, BuildableBlock], optional
+            If set, project the aggregated embeddings vectors into hidden dimension vector space,
+            by default None
+        d_output: Optional[int], optional
+            If set, init a MLPBlock as projection module to project embeddings vectors,
+            by default None
+        masking: Optional[Union[str, MaskSequence]], optional
+            If set, Apply masking to the input embeddings and compute masked labels, It requires
+            a categorical_module including an item_id column, by default None
+
+        Returns
+        -------
+        TabularFeatures:
+            Returns ``TabularFeatures`` from a dataset schema"""
+        output = super().from_schema(
+            schema=schema,
+            continuous_tags=continuous_tags,
+            categorical_tags=categorical_tags,
+            aggregation=aggregation,
+            max_sequence_length=max_sequence_length,
+            continuous_projection=continuous_projection,
+            # continuous_soft_embeddings_shape=,
+            **kwargs
+        )
+        if d_output and projection:
+            raise ValueError("You cannot specify both d_output and projection at the same time")
+        if (projection or masking or d_output) and not aggregation:
+            # TODO: print warning here for clarity
+            output.set_aggregation("sequential_concat")
+        # hidden_size = output.output_size()
+
+        if d_output and not projection:
+            projection = MLPBlock([d_output])
+
+        if projection:
+            output.projection_module = projection
+
+        if isinstance(masking, str):
+            masking = masking_registry.parse(masking)(**kwargs)
+        if masking and not getattr(output, "item_id", None):
+            raise ValueError("For masking a categorical_module is required including an item_id.")
+        output.masking = masking
+
+        return output
+
+    def project_continuous_features(self, dimensions):
+        if isinstance(dimensions, int):
+            dimensions = [dimensions]
+
+        continuous = self.continuous_layer
+        continuous.set_aggregation("sequential_concat")
+
+        continuous = SequentialBlock(
+            [continuous, MLPBlock(dimensions), AsTabular("continuous_projection")]
+        )
+
+        self.to_merge["continuous_layer"] = continuous
+
+        return self
+
+    def call(self, inputs, training=True):
+        outputs = super(TabularSequenceFeatures, self).call(inputs)
+
+        if self.masking or self.projection_module:
+            outputs = self.aggregation(outputs)
+
+        if self.projection_module:
+            outputs = self.projection_module(outputs)
+
+        if self.masking:
+            outputs = self.masking(
+                outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
+            )
+
+        return outputs
+
+    def compute_output_shape(self, input_shape):
+        output_shapes = {}
+
+        for layer in self.merge_values:
+            output_shapes.update(layer.compute_output_shape(input_shape))
+
+        output_shapes = TabularLayer.compute_output_shape(self, output_shapes)
+
+        if self.projection_module:
+            output_shapes = self.projection_module.compute_output_shape(output_shapes)
+
+        return output_shapes
+
+    @property
+    def masking(self):
+        return self._masking
+
+    @masking.setter
+    def masking(self, value):
+        self._masking = value
+
+    @property
+    def item_id(self) -> Optional[str]:
+        if "categorical_layer" in self.to_merge:
+            return getattr(self.to_merge["categorical_layer"], "item_id", None)
+
+        return None
+
+    @property
+    def item_embedding_table(self):
+        if "categorical_module" in self.to_merge:
+            return getattr(self.to_merge["categorical_layer"], "item_embedding_table", None)
+
+        return None

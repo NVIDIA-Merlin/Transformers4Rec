@@ -1,49 +1,48 @@
 import abc
 import inspect
+import logging
 from collections import OrderedDict
-from typing import Optional, Union
+from typing import List, Optional, Union
 
 import torch
 from torch.nn import Module
 
-from transformers4rec.torch.typing import MaskSequence
-from transformers4rec.torch.utils.torch_utils import calculate_batch_size_from_input_size
+from ...utils.misc_utils import filter_kwargs
+from ..typing import Head, PredictionTask
+from ..utils import torch_utils
 
-from ..head import Head
-from ..tabular import AsTabular, FilterFeatures, TabularMixin, TabularModule, merge_tabular
-
-
-class BlockMixin:
-    def to_model(
-        self,
-        head: Head,
-        masking: Optional[Union[MaskSequence, str]] = None,
-        optimizer=torch.optim.Adam,
-        block_output_size=None,
-        **kwargs
-    ):
-        from .with_head import BlockWithHead
-
-        if not block_output_size:
-            if getattr(self, "input_size", None) and getattr(self, "forward_output_size", None):
-                block_output_size = self.forward_output_size(self.input_size)
-        if block_output_size:
-            self.output_size = block_output_size
-
-        out = BlockWithHead(self, head, masking=masking, optimizer=optimizer, **kwargs)
-
-        if next(self.parameters()).is_cuda:
-            out.to("cuda")
-
-        return out
+LOG = logging.getLogger("transformers4rec")
 
 
-class TabularBlock(TabularModule, BlockMixin):
-    pass
+class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCMeta):
+    def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
+        from transformers4rec.torch.model.head import Head, PredictionTask
+
+        from ..model.model import Model
+
+        if isinstance(prediction_task_or_head, PredictionTask):
+            head = prediction_task_or_head.to_head(self, inputs=inputs, **kwargs)
+        elif isinstance(prediction_task_or_head, Head):
+            head = prediction_task_or_head
+        else:
+            raise ValueError(
+                "`prediction_task_or_head` needs to be a `Head` or `PredictionTask` "
+                f"found: {type(prediction_task_or_head)}"
+            )
+
+        return Model(head, **kwargs)
+
+    def as_tabular(self, name=None):
+        from .tabular.tabular import AsTabular
+
+        if not name:
+            name = self.name
+
+        return SequentialBlock(self, AsTabular(name))
 
 
-class Block(BlockMixin, torch.nn.Module):
-    def __init__(self, module: torch.nn.Module, output_size):
+class Block(BlockBase):
+    def __init__(self, module: torch.nn.Module, output_size: Union[List[int], torch.Size]):
         super().__init__()
         self.module = module
         self._output_size = output_size
@@ -51,50 +50,58 @@ class Block(BlockMixin, torch.nn.Module):
     def forward(self, inputs):
         return self.module(inputs)
 
-    def as_tabular(self, name=None):
-        if not name:
-            name = self.name
-
-        return self >> AsTabular(name)
-
-    def output_size(self):
-        if self._output_size[0] is None:
-            batch_size = calculate_batch_size_from_input_size(self.input_shape)
-
-            return batch_size + self._output_size
-
-        return self._output_size
-
     def forward_output_size(self, input_size):
         if self._output_size[0] is None:
-            batch_size = calculate_batch_size_from_input_size(input_size)
+            batch_size = torch_utils.calculate_batch_size_from_input_size(input_size)
 
             return [batch_size] + self._output_size[1:]
 
         return self._output_size
 
-    def build(self, input_shape):
-        self.input_shape = input_shape
-        self._built = True
 
-        return self
+class SequentialBlock(BlockBase, torch.nn.Sequential):
+    def __init__(self, *args, output_size=None):
+        from transformers4rec.torch import TabularSequenceFeatures, TransformerBlock
 
+        if isinstance(args[0], TabularSequenceFeatures) and any(
+            isinstance(arg, TransformerBlock) for arg in args
+        ):
+            masking = args[0].masking
+            for arg in args:
+                if isinstance(arg, TransformerBlock):
+                    if arg.masking != masking:
+                        LOG.warning(
+                            "Masking is set in the input module but not in the "
+                            "TransformerBlock, provide this through the masking argument"
+                        )
 
-class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
-    def __init__(self, *args):
         super().__init__()
+        self._static_output_size = output_size
         self.input_size = None
+
         if len(args) == 1 and isinstance(args[0], OrderedDict):
             last = None
             for idx, key, module in enumerate(args[0].items()):
                 self.add_module_and_maybe_build(key, module, last, idx)
                 last = module
         else:
+            if len(args) == 1 and isinstance(args[0], list):
+                args = args[0]
             last = None
             for idx, module in enumerate(args):
                 last = self.add_module_and_maybe_build(str(idx), module, last, idx)
 
+    @property
+    def inputs(self):
+        from transformers4rec.torch import TabularFeatures, TabularSequenceFeatures
+
+        first = list(self)[0]
+        if isinstance(first, (TabularSequenceFeatures, TabularFeatures)):
+            return first
+
     def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
+        from .tabular.tabular import FilterFeatures
+
         if isinstance(module, list):
             module = FilterFeatures(module)
         super().add_module(name, module)
@@ -118,33 +125,52 @@ class SequentialBlock(TabularMixin, BlockMixin, torch.nn.Sequential):
         # pylint: disable=arguments-out-of-order
         return right_shift_block(other, self)
 
+    def forward(self, input, **kwargs):
+        for i, module in enumerate(self):
+            if i == len(self) - 1:
+                filtered_kwargs = filter_kwargs(kwargs, module, filter_positional_or_keyword=False)
+                input = module(input, **filtered_kwargs)
+            else:
+                input = module(input)
+
+        return input
+
+    def build(self, input_size, schema=None, **kwargs):
+        output_size = input_size
+        for module in self:
+            if not hasattr(module, "build"):
+                break
+            module.build(output_size, schema=schema)
+            output_size = module.output_size()
+
+        return super(SequentialBlock, self).build(input_size, schema=None, **kwargs)
+
     def as_tabular(self, name=None):
+        from transformers4rec.torch import AsTabular
+
         if not name:
             name = self.name
 
-        return self >> AsTabular(name)
+        return SequentialBlock(self, AsTabular(name))
 
     def __add__(self, other):
+        from .tabular.tabular import merge_tabular
+
         return merge_tabular(self, other)
 
     def forward_output_size(self, input_size):
+        if self._static_output_size:
+            return self._static_output_size
+
         x = input_size
         for module in list(self):
-            if getattr(module, "forward_output_size", None):
-                x = module.forward_output_size(x)
+            if getattr(module, "output_size", None):
+                x = module.output_size(x)
             else:
                 # TODO log warning here
                 return None
 
         return x
-
-    # TODO: seems like this gets overriden on line 28?
-    # pylint: disable=method-hidden
-    def output_size(self):
-        if not getattr(self, "input_size", None):
-            # TODO: log warning here
-            pass
-        return self.forward_output_size(self.input_size)
 
     @staticmethod
     def get_children_by_class_name(parent, *class_name):
@@ -170,7 +196,7 @@ def build_blocks(*modules):
 
 class BuildableBlock(abc.ABC):
     @abc.abstractmethod
-    def build(self, input_shape) -> Union[TabularBlock, Block, SequentialBlock]:
+    def build(self, input_size) -> BlockBase:
         raise NotImplementedError
 
     def __rrshift__(self, other):
@@ -186,10 +212,9 @@ class BuildableBlock(abc.ABC):
         return self.build(shape)
 
 
-BlockType = Union[torch.nn.Module, Block]
-
-
 def right_shift_block(self, other):
+    from .tabular.tabular import FilterFeatures
+
     if isinstance(other, list):
         left_side = [FilterFeatures(other)]
     else:
@@ -216,9 +241,9 @@ def right_shift_block(self, other):
 
     need_moving_to_gpu = False
     if isinstance(self, torch.nn.Module):
-        need_moving_to_gpu = need_moving_to_gpu or _check_gpu(self)
+        need_moving_to_gpu = need_moving_to_gpu or torch_utils.check_gpu(self)
     if isinstance(other, torch.nn.Module):
-        need_moving_to_gpu = need_moving_to_gpu or _check_gpu(other)
+        need_moving_to_gpu = need_moving_to_gpu or torch_utils.check_gpu(other)
 
     out = SequentialBlock(*sequential)
     if getattr(left_side[-1], "input_size", None) and left_side[-1].input_size:
@@ -228,10 +253,3 @@ def right_shift_block(self, other):
         out.to("cuda")
 
     return out
-
-
-def _check_gpu(module):
-    try:
-        return next(module.parameters()).is_cuda
-    except StopIteration:
-        return False

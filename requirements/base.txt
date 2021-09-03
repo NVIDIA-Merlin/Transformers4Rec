@@ -1,0 +1,4 @@
+numpy
+tensorflow-metadata
+transformers
+tqdm
