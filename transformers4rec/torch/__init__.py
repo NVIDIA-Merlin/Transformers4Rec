@@ -14,39 +14,63 @@
 # limitations under the License.
 #
 
-from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
-from .augmentation import StochasticSwapNoise
-from .block.base import Block, SequentialBlock, build_blocks, right_shift_block
+# Block related imports
+from .block.base import Block, BlockBase, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
+from .block.tabular.aggregation import (
+    ConcatFeatures,
+    ElementwiseSum,
+    ElementwiseSumItemMulti,
+    StackFeatures,
+)
+from .block.tabular.tabular import (
+    AsTabular,
+    FilterFeatures,
+    MergeTabular,
+    SequentialTabularTransformations,
+    TabularAggregation,
+    TabularBlock,
+    TabularModule,
+    TabularTransformation,
+)
+from .block.tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .block.transformer import TransformerBlock
+
+# Features related imports
 from .features.continuous import ContinuousFeatures
 from .features.embedding import (
     EmbeddingFeatures,
     FeatureConfig,
-    LayerNormalizationFeatures,
     SoftEmbedding,
     SoftEmbeddingFeatures,
     TableConfig,
 )
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
-from .head import (
+
+# Model related imports
+from .model.head import (
     BinaryClassificationTask,
     Head,
     NextItemPredictionTask,
     PredictionTask,
     RegressionTask,
 )
-from .model import Model
-from .tabular import AsTabular, FilterFeatures, MergeTabular, TabularModule
+from .model.model import Model
 
 __all__ = [
     "SequentialBlock",
     "right_shift_block",
     "build_blocks",
+    "BlockBase",
+    "TabularBlock",
     "Block",
     "MLPBlock",
+    "TabularTransformation",
+    "SequentialTabularTransformations",
+    "TabularAggregation",
     "StochasticSwapNoise",
+    "TabularLayerNorm",
     "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
@@ -71,7 +95,6 @@ __all__ = [
     "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
-    "LayerNormalizationFeatures",
 ]
 
 try:

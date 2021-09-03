@@ -13,7 +13,13 @@ else:
 TabularData = Dict[str, tf.Tensor]
 TensorOrTabularData = typing.Union[tf.Tensor, TabularData]
 
-TabularModule = ForwardRef("transformers4rec.tf.tabular.TabularModule")
+_tabular_module = "transformers4rec.tf.tabular.tabular"
+TabularTransformation = ForwardRef(f"{_tabular_module}.TabularTransformation")
+TabularAggregation = ForwardRef(f"{_tabular_module}.TabularAggregation")
+SequentialTabularTransformations = ForwardRef(f"{_tabular_module}.SequentialTabularTransformations")
+TabularTransformationType = ForwardRef(f"{_tabular_module}.TabularTransformationType")
+TabularAggregationType = ForwardRef(f"{_tabular_module}.TabularAggregationType")
+TabularBlock = ForwardRef(f"{_tabular_module}.TabularBlock")
 
 FeatureAggregator = ForwardRef("transformers4rec.tf.aggregator.FeatureAggregation")
 MaskSequence = ForwardRef("transformers4rec.tf.masking.MaskSequence")
@@ -31,7 +37,12 @@ LossReduction = typing.Callable[[typing.List[tf.Tensor]], tf.Tensor]
 __all__ = [
     "TabularData",
     "TensorOrTabularData",
-    "TabularModule",
+    "TabularTransformation",
+    "TabularAggregation",
+    "SequentialTabularTransformations",
+    "TabularTransformationType",
+    "TabularAggregationType",
+    "TabularBlock",
     "LossReduction",
     "FeatureAggregator",
     "MaskSequence",

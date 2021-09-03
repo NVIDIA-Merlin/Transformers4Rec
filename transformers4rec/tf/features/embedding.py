@@ -1,26 +1,69 @@
-from typing import Any, Callable, Dict, List, Optional, Union
+from copy import deepcopy
+from typing import Any, Callable, Dict, Optional, Union
 
 import tensorflow as tf
+from tensorflow.python.keras import backend
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from transformers4rec.utils.tags import DefaultTags
-
 from ...types import DatasetSchema
-from ..tabular import AsSparseFeatures, FilterFeatures
-from .base import InputLayer
+from ...utils.misc_utils import docstring_parameter
+from ...utils.tags import DefaultTags
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.transformations import AsSparseFeatures
+from ..typing import TabularAggregationType, TabularData, TabularTransformationType
+from .base import InputBlock
 
 # pylint has issues with TF array ops, so disable checks until fixed:
 # https://github.com/PyCQA/pylint/issues/3613
 # pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
-class EmbeddingFeatures(InputLayer):
-    def __init__(self, feature_config: Dict[str, FeatureConfig], item_id=None, **kwargs):
-        self.filter_features = FilterFeatures(list(feature_config.keys()))
-        self.convert_to_sparse = AsSparseFeatures()
+EMBEDDING_FEATURES_PARAMS_DOCSTRING = """
+    feature_config: Dict[str, FeatureConfig]
+        This specifies what TableConfig to use for each feature. For shared embeddings, the same
+        TableConfig can be used for multiple features.
+    item_id: str, optional
+        The name of the feature that's used for the item_id.
+"""
+
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    embedding_features_parameters=EMBEDDING_FEATURES_PARAMS_DOCSTRING,
+)
+class EmbeddingFeatures(InputBlock):
+    """Input block for embedding-lookups for categorical features.
+
+    For multi-hot features, the embeddings will be aggregated into a single tensor using the mean.
+
+    Parameters
+    ----------
+    {embedding_features_parameters}
+    {tabular_module_parameters}
+    """
+
+    def __init__(
+        self,
+        feature_config: Dict[str, "FeatureConfig"],
+        item_id: Optional[str] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
+        name=None,
+        **kwargs,
+    ):
+        if not item_id and schema and schema.select_by_tag(["item_id"]).column_names:
+            item_id = schema.select_by_tag(["item_id"]).column_names[0]
+
+        embedding_pre = [FilterFeatures(list(feature_config.keys())), AsSparseFeatures()]
+        pre = [embedding_pre, pre] if pre else embedding_pre
         self.embeddings = feature_config
         self.item_id = item_id
-        super().__init__(**kwargs)
+
+        super().__init__(
+            pre=pre, post=post, aggregation=aggregation, name=name, schema=schema, **kwargs
+        )
 
     @classmethod
     def from_schema(
@@ -37,14 +80,13 @@ class EmbeddingFeatures(InputLayer):
         max_sequence_length: Optional[int] = None,
         **kwargs,
     ) -> Optional["EmbeddingFeatures"]:
-        if tags:
-            schema = schema.select_by_tag(tags)
+        _schema = deepcopy(schema)
 
-        if not item_id and schema.select_by_tag(["item_id"]).column_names:
-            item_id = schema.select_by_tag(["item_id"]).column_names[0]
+        if tags:
+            _schema = _schema.select_by_tag(tags)
 
         if infer_embedding_sizes:
-            embedding_dims = schema.embedding_sizes(infer_embedding_sizes_multiplier)
+            embedding_dims = _schema.embedding_sizes(infer_embedding_sizes_multiplier)
 
         embedding_dims = embedding_dims or {}
         embeddings_initializers = embeddings_initializers or {}
@@ -71,7 +113,7 @@ class EmbeddingFeatures(InputLayer):
         if not feature_config:
             return None
 
-        output = cls(feature_config, item_id=item_id, **kwargs)
+        output = cls(feature_config, item_id=item_id, schema=_schema, **kwargs)
 
         return output
 
@@ -93,41 +135,9 @@ class EmbeddingFeatures(InputLayer):
             )
         super().build(input_shapes)
 
-    @property
-    def item_embedding_table(self):
-        assert self.item_id is not None
-
-        return self.embedding_tables[self.item_id]
-
-    def item_ids(self, inputs) -> tf.Tensor:
-        return inputs[self.item_id]
-
-    def lookup_feature(self, name, val):
-        table: TableConfig = self.embeddings[name].table
-        table_var = self.embedding_tables[table.name]
-        if isinstance(val, tf.SparseTensor):
-            return tf.nn.safe_embedding_lookup_sparse(
-                table_var, tf.cast(val, tf.int32), None, combiner=table.combiner
-            )
-
-        # embedded_outputs[name] = tf.gather(table_var, tf.cast(val, tf.int32))
-        return tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
-
-    def compute_output_shape(self, input_shapes):
-        input_shapes = self.filter_features.compute_output_shape(input_shapes)
-        batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
-
-        output_shapes = {}
-
-        for name, val in input_shapes.items():
-            output_shapes[name] = tf.TensorShape([batch_size, self.embeddings[name].table.dim])
-
-        return super().compute_output_shape(output_shapes)
-
-    def call(self, inputs, **kwargs):
+    def call(self, inputs: TabularData, **kwargs) -> TabularData:
         embedded_outputs = {}
-        sparse_inputs = self.convert_to_sparse(self.filter_features(inputs))
-        for name, val in sparse_inputs.items():
+        for name, val in inputs.items():
             embedded_outputs[name] = self.lookup_feature(name, val)
 
         # Store raw item ids for masking and/or negative sampling
@@ -137,5 +147,42 @@ class EmbeddingFeatures(InputLayer):
 
         return embedded_outputs
 
-    def repr_ignore(self) -> List[str]:
-        return ["filter_features"]
+    def compute_call_output_shape(self, input_shapes):
+        batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
+
+        output_shapes = {}
+        for name, val in input_shapes.items():
+            output_shapes[name] = tf.TensorShape([batch_size, self.embeddings[name].table.dim])
+
+        return output_shapes
+
+    @property
+    def item_embedding_table(self):
+        assert self.item_id is not None
+
+        return self.embedding_tables[self.item_id]
+
+    def item_ids(self, inputs) -> tf.Tensor:
+        return inputs[self.item_id]
+
+    def lookup_feature(self, name, val, output_sequence=False):
+        dtype = backend.dtype(val)
+        if dtype != "int32" and dtype != "int64":
+            val = tf.cast(val, "int32")
+
+        table: TableConfig = self.embeddings[name].table
+        table_var = self.embedding_tables[table.name]
+        if isinstance(val, tf.SparseTensor):
+            out = tf.nn.safe_embedding_lookup_sparse(table_var, val, None, combiner=table.combiner)
+        else:
+            if output_sequence:
+                out = tf.gather(table_var, tf.cast(val, tf.int32))
+            else:
+                out = tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
+
+        if self._dtype_policy.compute_dtype != self._dtype_policy.variable_dtype:
+            # Instead of casting the variable as in most layers, cast the output, as
+            # this is mathematically equivalent but is faster.
+            out = tf.cast(out, self._dtype_policy.compute_dtype)
+
+        return out

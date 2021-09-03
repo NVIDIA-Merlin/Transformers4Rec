@@ -1,8 +1,0 @@
-#Current session features
-item_id/list_trim:
-    dtype: categorical
-    cardinality: 52740
-    is_seq_label: True
-    is_itemid: True
-    emb_table: item_id-list
-    log_with_preds_as_metadata: True

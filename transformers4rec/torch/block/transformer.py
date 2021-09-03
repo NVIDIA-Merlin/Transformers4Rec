@@ -6,6 +6,7 @@ from transformers import GPT2Model, PretrainedConfig, PreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
+from .base import BlockBase
 
 TransformerBody = Union[PreTrainedModel, T4RecConfig]
 
@@ -34,20 +35,21 @@ class GPT2Prepare(TransformerPrepare):
         return {"input_embeds": inputs_embeds, "head_mask": head_mask}
 
 
-class TransformerBlock(torch.nn.Module):
-    TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {
-        GPT2Model: GPT2Prepare
-    }
-
+class TransformerBlock(BlockBase):
     """
     Class to support HF Transformers for session-based and sequential-based recommendation models.
 
-    Parameters:
-    -----------
-        transformer: TransformerBody
-            The T4RecConfig or a pre-trained HF object related to specific transformer architecture.
-        masking: Needed when masking is applied on the inputs.
+    Parameters
+    ----------
+    transformer: TransformerBody
+        The T4RecConfig or a pre-trained HF object related to specific transformer architecture.
+    masking:
+        Needed when masking is applied on the inputs.
     """
+
+    TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {
+        GPT2Model: GPT2Prepare
+    }
 
     def __init__(
         self,
@@ -98,18 +100,20 @@ class TransformerBlock(torch.nn.Module):
     ):
         """
         Load the HF transformer architecture based on its name
-        Parameters:
-           transformer: str
-               name of the Transformer to use. Possible values are :
-               ["reformer", "gtp2", "longformer", "electra", "albert", "xlnet"]
-           d_model: int
-               size of hidden states for Transformers
-           n_head:
-               Number of attention heads for Transformers
-           n_layer: int
-               Number of layers for RNNs and Transformers"
-           total_seq_length: int
-               The maximum sequence length
+
+        Parameters
+        ----------
+        transformer: str
+            Name of the Transformer to use. Possible values are :
+            ["reformer", "gtp2", "longformer", "electra", "albert", "xlnet"]
+        d_model: int
+            size of hidden states for Transformers
+        n_head:
+            Number of attention heads for Transformers
+        n_layer: int
+            Number of layers for RNNs and Transformers"
+        total_seq_length: int
+            The maximum sequence length
         """
         transformer = transformer_registry.parse(transformer).build(
             d_model=d_model,
@@ -149,10 +153,3 @@ class TransformerBlock(torch.nn.Module):
     def forward_output_size(self, input_size):
         assert len(input_size) == 3
         return torch.Size([input_size[0], input_size[1], self.transformer.config.hidden_size])
-
-    # TODO: Implement output-size based on the body
-    # def output_size(self):
-    #     if len(input_shape) == 3:
-    #         return torch.Size([input_shape[0], input_shape[1], dense_output_size])
-    #
-    #     return torch.Size([input_shape[0], dense_output_size])
