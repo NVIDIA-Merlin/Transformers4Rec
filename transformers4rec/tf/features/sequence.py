@@ -194,7 +194,7 @@ class TabularSequenceFeatures(TabularFeatures):
             raise ValueError("You cannot specify both d_output and projection at the same time")
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
-            output.set_aggregation("sequential_concat")
+            output.set_aggregation("sequential-concat")
         # hidden_size = output.output_size()
 
         if d_output and not projection:
