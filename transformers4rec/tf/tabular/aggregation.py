@@ -127,7 +127,8 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
     def __init__(self, schema=None):
         super().__init__()
         self.stack = StackFeatures(axis=0)
-        self._schema = schema
+        if schema:
+            self.set_schema(schema)
         self.item_id_col_name = None
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
