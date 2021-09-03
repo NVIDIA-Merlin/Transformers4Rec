@@ -2,9 +2,9 @@ from functools import reduce
 
 import torch
 
-from ....utils.schema import DatasetSchema
+from ....utils.schema import DatasetSchema, requires_schema
 from ...typing import TabularData
-from ...utils.torch_utils import calculate_batch_size_from_input_size, requires_schema
+from ...utils.torch_utils import calculate_batch_size_from_input_size
 from .tabular import TabularAggregation, tabular_aggregation_registry
 
 

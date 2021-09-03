@@ -1,44 +1,4 @@
-import abc
-from typing import Optional
-
 import tensorflow as tf
-
-from ...utils.schema import DatasetSchema
-
-
-class SchemaMixin(abc.ABC):
-    REQUIRES_SCHEMA = False
-
-    def set_schema(self, schema=None):
-        self.check_schema(schema=schema)
-
-        if schema and not getattr(self, "schema", None):
-            self._schema = schema
-
-        return self
-
-    @property
-    def schema(self) -> Optional[DatasetSchema]:
-        return getattr(self, "_schema", None)
-
-    def check_schema(self, schema=None):
-        if self.REQUIRES_SCHEMA and not getattr(self, "schema", None) and not schema:
-            raise ValueError(f"{self.__class__.__name__} requires a schema.")
-
-    def __call__(self, *args, **kwargs):
-        self.check_schema()
-
-        return super().__call__(*args, **kwargs)
-
-    def _maybe_set_schema(self, layer, schema):
-        if layer and getattr(layer, "set_schema"):
-            layer.set_schema(schema)
-
-
-def requires_schema(module):
-    module.REQUIRES_SCHEMA = True
-
-    return module
 
 
 def get_output_sizes_from_schema(schema, batch_size=0, max_sequence_length=None):

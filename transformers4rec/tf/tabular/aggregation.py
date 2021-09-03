@@ -3,8 +3,9 @@ from typing import List
 
 import tensorflow as tf
 
+from ...utils.schema import requires_schema
 from ..typing import TabularData
-from ..utils.tf_utils import calculate_batch_size_from_input_shapes, requires_schema
+from ..utils.tf_utils import calculate_batch_size_from_input_shapes
 from .tabular import TabularAggregation, tabular_aggregation_registry
 
 # pylint has issues with TF array ops, so disable checks until fixed:

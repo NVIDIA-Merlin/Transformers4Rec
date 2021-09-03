@@ -6,8 +6,8 @@ import six
 import tensorflow as tf
 
 from ...utils.misc_utils import filter_kwargs
+from ...utils.schema import SchemaMixin
 from ..typing import Head, PredictionTask
-from ..utils.tf_utils import SchemaMixin
 
 
 class Block(SchemaMixin, tf.keras.layers.Layer):

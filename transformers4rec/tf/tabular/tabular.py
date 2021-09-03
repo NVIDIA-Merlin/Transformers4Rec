@@ -8,9 +8,10 @@ import tensorflow as tf
 from ...types import DatasetSchema
 from ...utils.misc_utils import docstring_parameter
 from ...utils.registry import Registry
+from ...utils.schema import SchemaMixin
 from ..block.base import Block, SequentialBlock
 from ..typing import TabularData, TensorOrTabularData
-from ..utils.tf_utils import SchemaMixin, calculate_batch_size_from_input_shapes
+from ..utils.tf_utils import calculate_batch_size_from_input_shapes
 
 tabular_transformation_registry: Registry = Registry.class_registry("tf.tabular_transformations")
 tabular_aggregation_registry: Registry = Registry.class_registry("tf.tabular_aggregations")
