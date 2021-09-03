@@ -59,7 +59,11 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
     This class can be extended to add different a masking scheme.
 
     ----------
-    {mask_sequence_parameters}
+    hidden_size:
+        The hidden dimension of input tensors, needed to initialize trainable vector of
+        masked positions.
+    pad_token: int, default = 0
+        Index of the padding token used for getting batch of sequences with the same length
     """
 
     # TODO: Link to masking-class in the doc-string.
