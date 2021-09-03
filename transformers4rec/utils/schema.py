@@ -66,9 +66,7 @@ class DatasetSchema:
 
         self.tags = tags
 
-        self.columns: List[ColumnSchema] = sorted(
-            [_convert_col(col, tags=tags) for col in columns], key=lambda x: x.name
-        )
+        self.columns: List[ColumnSchema] = [_convert_col(col, tags=tags) for col in columns]
         self.set_schema(None)
 
     @staticmethod
@@ -176,7 +174,10 @@ class DatasetSchema:
         return self.select_by_name(columns)
 
     def __eq__(self, other: "DatasetSchema") -> bool:
-        return all(x == y for x, y in zip(self.columns, other.columns))
+        sorted_cols = sorted(self.columns, key=lambda x: x.name)
+        sorted_other_cols = sorted(other.columns, key=lambda x: x.name)
+
+        return all(x == y for x, y in zip(sorted_cols, sorted_other_cols))
 
     def select_by_tag(self, tags):
         if isinstance(tags, DefaultTags):
