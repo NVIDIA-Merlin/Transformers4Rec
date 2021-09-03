@@ -1,5 +1,5 @@
-from ..tabular import TabularLayer
+from transformers4rec.tf.tabular.tabular import TabularBlock
 
 
-class InputLayer(TabularLayer):
+class InputBlock(TabularBlock):
     pass

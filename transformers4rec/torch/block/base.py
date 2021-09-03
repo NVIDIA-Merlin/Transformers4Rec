@@ -16,8 +16,7 @@ LOG = logging.getLogger("transformers4rec")
 
 class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCMeta):
     def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
-        from transformers4rec.torch.model.head import Head, PredictionTask
-
+        from ..model.head import Head, PredictionTask
         from ..model.model import Model
 
         if isinstance(prediction_task_or_head, PredictionTask):

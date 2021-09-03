@@ -2,9 +2,9 @@ from functools import reduce
 
 import torch
 
-from ....utils.schema import DatasetSchema
+from ....utils.schema import DatasetSchema, requires_schema
 from ...typing import TabularData
-from ...utils.torch_utils import calculate_batch_size_from_input_size, requires_schema
+from ...utils.torch_utils import calculate_batch_size_from_input_size
 from .tabular import TabularAggregation, tabular_aggregation_registry
 
 
@@ -148,7 +148,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         item_id_inputs = self.schema.get_item_ids_from_inputs(inputs)
         self._check_input_shapes_equal(inputs)
 
-        other_inputs = {k: v for k, v in inputs.items() if k != self.item_id_col_name}
+        other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}
         other_inputs_sum = self.stack(other_inputs).sum(dim=0)
         result = item_id_inputs.multiply(other_inputs_sum)
         return result
