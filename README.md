@@ -16,11 +16,14 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 ## Project Organization
 
 - **Winning and SOTA solution**: We have leveraged and evolved the Transformers4Rec library to win two recent session-based recommendation competitions: the [WSDM WebTour Workshop Challenge 2021, organized by Booking.com](https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/), and the [SIGIR eCommerce Workshop Data Challenge 2021, organized by Coveo](https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994). Furthermore, we have also done extensive empirical evaluation on the usage of Transformers4Rec for session-based recommendation, which was able to provide higher accuracy than baselines algorithms, as published in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
-- **Support to multiple input features**: Interaction and sequence-level input features can be normalized and combined in different ways
+
 - **Flexibility**: The building blocks are modularized and are compatible with vanilla PyTorch modules and TF Keras layers. You can create custom architectures, e.g. with multiple towers, multiple heads/tasks and losses.
 
 - **Production-ready**: Exports trained models to serve with Triton Inference Server in a single pipeline that includes online features preprocessing and model inference.
+
 - **Leverages cutting-edge NLP research**: With the integration with [HuggingFace Transformers](https://github.com/huggingface/transformers), you have available more than 64 different Transformer architectures (and counting) to evaluate for your sequential and session-based recommendation task.
+
+- **Support to multiple input features**: HF Transformers supports only sequence of token id as input, as it was originally designed for NLP. Due to the rich features available in RecSys datasets, transformers4Rec enables the usage of HF Transformers with any type of sequential tabular data. The library uses a schema format to configure the input features, and automatically creates the necessary layers (e.g. embedding tables, projection layers, output layers based on the target) without requiring code changes to include new features. Interaction and sequence-level input features can be normalized and combined in configurable ways. 
 
 - **Seamless preprocessing and feature engineering**: The integration with NVTabular has common preprocessing ops for session-based recommendation and exports a dataset schema compatible with Transformers4Rec, so that input features can be configured automatically.
 
@@ -38,7 +41,7 @@ Check the getting started and advanced examples [here](docs/source/core_features
 
 ## When to use it?
 ### Sequential and Session-based recommendation
-Traditional recommendation algorithms usually ignore the temporal dynamics and the sequence of interactions when trying to model user behaviour. Generally, the next user interaction is related to the sequence of his previous choices. In some cases, it might be even a repeated purchase or song play. User interests might also suffer from the interest drift, as his preferences might change over time. Those challenges are addressed by the **sequential recommendation** task. 
+Traditional recommendation algorithms usually ignore the temporal dynamics and the sequence of interactions when trying to model user behaviour. Generally, the next user interaction is related to the sequence of user's previous choices. In some cases, it might be even a repeated purchase or song play. User interests might also suffer from the interest drift, as preferences might change over time. Those challenges are addressed by the **sequential recommendation** task. 
 A special case of sequential-recommendation is the **session-based recommendation** task, where you have only access to the short sequence of interactions within the current session. This is very common in online services like e-commerce, news and media portals where the user might choose to browse anonymously (and due to GDPR compliance no cookies are collected), or because it is a new user. This task is also relevant for scenarios were users interests change a lot over time depending on the user context or intent, so leveraging the current session interactions is more promissing than old interactions to provide relevant recommendations.
 
 To deal with sequential and session-based recommendation, many sequence learning algorithms previously applied in machine learning and NLP research have been explored for RecSys, based on k-Nearest Neighbors, Frequent Pattern Mining, Hidden Markov Models, Recurrent Neural Networks, and more recently neural architectures using the Self-Attention Mechanism and the Transformer architectures. 
