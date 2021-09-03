@@ -38,7 +38,8 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        name=None,
+        schema: Optional[DatasetSchema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
         super().__init__(
@@ -47,6 +48,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
             pre=pre,
             post=post,
             aggregation=aggregation,
+            schema=schema,
             name=name,
             **kwargs,
         )

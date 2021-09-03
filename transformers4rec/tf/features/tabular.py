@@ -46,7 +46,8 @@ class TabularFeatures(InputBlock, MergeTabular):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        name=None,
+        schema: Optional[DatasetSchema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
         to_merge = {}
@@ -59,7 +60,13 @@ class TabularFeatures(InputBlock, MergeTabular):
 
         assert to_merge != [], "Please provide at least one input layer"
         super(TabularFeatures, self).__init__(
-            to_merge, pre=pre, post=post, aggregation=aggregation, name=name, **kwargs
+            to_merge,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            schema=schema,
+            name=name,
+            **kwargs
         )
 
         if continuous_projection:

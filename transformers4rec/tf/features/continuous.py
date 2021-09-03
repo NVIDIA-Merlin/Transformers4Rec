@@ -1,8 +1,9 @@
 from typing import List, Optional
 
+from ...types import DatasetSchema
 from ...utils.misc_utils import docstring_parameter
-from .. import typing
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..typing import TabularAggregationType, TabularTransformationType
 from .base import InputBlock
 
 
@@ -20,13 +21,16 @@ class ContinuousFeatures(InputBlock):
     def __init__(
         self,
         features: List[str],
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
-        name=None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation, name=name, **kwargs)
+        super().__init__(
+            pre=pre, post=post, aggregation=aggregation, schema=schema, name=name, **kwargs
+        )
         self.filter_features = FilterFeatures(features)
 
     @classmethod
