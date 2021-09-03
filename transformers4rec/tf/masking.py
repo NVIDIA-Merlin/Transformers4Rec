@@ -9,8 +9,8 @@ MaskedTargets = tf.Tensor
 
 
 class MaskSequence(tf.keras.layers.Layer):
-    def __init__(self, pad_token: int = 0, **kwargs):
-        self.pad_token = pad_token
+    def __init__(self, padding_idx: int = 0, **kwargs):
+        self.padding_idx = padding_idx
         super(MaskSequence, self).__init__(**kwargs)
         self.schema = None
 
