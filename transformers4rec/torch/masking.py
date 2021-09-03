@@ -72,15 +72,15 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 
         Parameters
         ----------
-            item_ids: torch.Tensor
-                The sequence of input item ids used for deriving labels of
-                next item prediction task.
+        item_ids: torch.Tensor
+            The sequence of input item ids used for deriving labels of
+            next item prediction task.
 
-            training: bool
-                Flag to indicate whether we are in `Training` mode or not.
-                During training, the labels can be any items within the sequence
-                based on the selected masking task.
-                During evaluation, we are predicting the last item in the sequence.
+        training: bool
+            Flag to indicate whether we are in `Training` mode or not.
+            During training, the labels can be any items within the sequence
+            based on the selected masking task.
+            During evaluation, we are predicting the last item in the sequence.
         """
         raise NotImplementedError
 
@@ -110,15 +110,15 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 
         Parameters
         ----------
-            item_ids: torch.Tensor
-                The sequence of input item ids used for deriving labels of
-                next item prediction task.
+        item_ids: torch.Tensor
+            The sequence of input item ids used for deriving labels of
+            next item prediction task.
 
-            training: bool
-                Flag to indicate whether we are in `Training` mode or not.
-                During training, the labels can be any items within the sequence
-                based on the selected masking task.
-                During evaluation, we are predicting the last item in the sequence.
+        training: bool
+            Flag to indicate whether we are in `Training` mode or not.
+            During training, the labels can be any items within the sequence
+            based on the selected masking task.
+            During evaluation, we are predicting the last item in the sequence.
         Returns
         -------
         Tuple[MaskingSchema, MaskedTargets]
@@ -134,17 +134,18 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         """
         Prepare labels for all next item predictions instead of
         last-item predictions in a user's sequence.
-        #TODO : Add option to predict N-last items
 
         Parameters
         ----------
-            item_ids: torch.Tensor
-                The sequence of input item ids used for deriving labels of
-                next item prediction task.
+        item_ids: torch.Tensor
+            The sequence of input item ids used for deriving labels of
+            next item prediction task.
+
         Returns
         -------
         Tuple[MaskingSchema, MaskedTargets]
         """
+        # TODO : Add option to predict N-last items
         # shift sequence of item-ids
         labels = item_ids[:, 1:]
         # As after shifting the sequence length will be subtracted by one, adding a masked item in
@@ -295,14 +296,18 @@ class MaskedLanguageModeling(MaskSequence):
         """
         Prepare sequence with mask schema for masked language modeling prediction
         the function is based on HuggingFace's transformers/data/data_collator.py
-        INPUTS:
-        -----
-        item_ids: sequence of input itemid (target) column
 
-        OUTPUTS:
-        ------
-        labels: sequence of masked item ids
-        mask_labels: masking schema for masked targets positions
+        Parameters:
+        -----------
+        item_ids: torch.Tensor
+            Sequence of input itemid (target) column
+
+        Returns
+        -------
+        labels: torch.Tensor
+            Sequence of masked item ids.
+        mask_labels: torch.Tensor
+            Masking schema for masked targets positions.
         """
 
         labels = torch.full(
@@ -423,18 +428,22 @@ class PermutationLanguageModeling(MaskSequence):
         """
         Prepare the attention masks needed for permutation language modeling
         The function is based on HuggingFace's transformers/data/data_collator.py
-        INPUT:
-        -----
-            item_ids: sequence of input itemid (target) column
 
-        OUTPUT:
-        ------
-            labels: sequence of masked item ids
-            mask_labels: masking schema for masked targets positions
-            perm_mask: of shape (bs, seq_len, seq_len) : The random factorization order attention
-                                                        mask for each target
-            target_mapping: of shape (bs, seq_len, seq_len) : Binary mask to specify
-                                                        the items to predict
+        Parameters:
+        -----------
+        item_ids: torch.Tensor
+            Sequence of input itemid (target) column.
+
+        Returns
+        -------
+        labels: torch.Tensor
+            Sequence of masked item ids.
+        mask_labels: torch.Tensor
+            Masking schema for masked targets positions.
+        perm_mask: torch.Tensor of shape (bs, seq_len, seq_len)
+            The random factorization order attention mask for each target
+        target_mapping: torch.Tensor of shape (bs, seq_len, seq_len) :
+            Binary mask to specify the items to predict.
         """
 
         labels = torch.full(
@@ -713,12 +722,12 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
 
         Parameters
         ----------
-        logits: (pos_item, vocab_size)
+        logits: torch.Tensor(pos_item, vocab_size)
             scores of probability of masked positions returned  by the generator model
 
         Returns
         -------
-        samples: (#pos_item)
+        samples: torch.Tensor(#pos_item)
             ids of replacements items. Sampling method for replacement token modeling (ELECTRA)
         """
         # add noise to logits to prevent from the case where the generator learn to exactly
