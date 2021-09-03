@@ -69,6 +69,8 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
         Transformations to apply on the inputs after the module is called (so **after** `call`).
     aggregation: Union[str, TabularAggregation], optional
         Aggregation to apply after processing the `call`-method to output a single Tensor.
+    schema: Optional[DatasetSchema]
+        DatasetSchema containing the columns used in this block.
     name: Optional[str]
         Name of the layer.
 """
@@ -89,9 +91,10 @@ class TabularBlock(Block):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[DatasetSchema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(name=name, **kwargs)
         self.input_size = None
         self.set_pre(pre)
         self.set_post(post)
@@ -462,15 +465,22 @@ class MergeTabular(TabularBlock):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        name=None,
+        schema: Optional[DatasetSchema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation, name=name, **kwargs)
+        super().__init__(
+            pre=pre, post=post, aggregation=aggregation, schema=schema, name=name, **kwargs
+        )
         if all(isinstance(x, dict) for x in blocks_to_merge):
             blocks_to_merge = reduce(lambda a, b: dict(a, **b), blocks_to_merge)
             self.to_merge = blocks_to_merge
         else:
             self.to_merge = list(blocks_to_merge)
+
+        # Merge schemas if necessary.
+        if not schema and all(m.schema for m in self.merge_values):
+            self.set_schema(reduce(lambda a, b: a + b, [m.schema for m in self.merge_values]))
 
     @property
     def merge_values(self):

@@ -42,6 +42,7 @@ class TabularFeatures(InputBlock, MergeTabular):
         continuous_layer: Optional[TabularBlock] = None,
         categorical_layer: Optional[TabularBlock] = None,
         text_embedding_layer: Optional[TabularBlock] = None,
+        continuous_projection: Optional[Union[List[int], int]] = None,
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
@@ -60,6 +61,9 @@ class TabularFeatures(InputBlock, MergeTabular):
         super(TabularFeatures, self).__init__(
             to_merge, pre=pre, post=post, aggregation=aggregation, name=name, **kwargs
         )
+
+        if continuous_projection:
+            self.project_continuous_features(continuous_projection)
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]
@@ -129,12 +133,10 @@ class TabularFeatures(InputBlock, MergeTabular):
             categorical_layer=maybe_categorical_layer,
             text_embedding_layer=text_model,
             aggregation=aggregation,
+            continuous_projection=continuous_projection,
             schema=schema,
             **kwargs
         )
-
-        if continuous_projection:
-            output = output.project_continuous_features(continuous_projection)
 
         return output
 

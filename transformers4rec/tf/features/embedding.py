@@ -53,8 +53,8 @@ class EmbeddingFeatures(InputBlock):
         name=None,
         **kwargs,
     ):
-        if not item_id and schema and schema.parent.select_by_tag(["item_id"]).column_names:
-            item_id = schema.parent.select_by_tag(["item_id"]).column_names[0]
+        if not item_id and schema and schema.select_by_tag(["item_id"]).column_names:
+            item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         embedding_pre = [FilterFeatures(list(feature_config.keys())), AsSparseFeatures()]
         pre = [embedding_pre, pre] if pre else embedding_pre

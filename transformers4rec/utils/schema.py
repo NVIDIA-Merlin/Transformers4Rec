@@ -44,6 +44,9 @@ class ColumnSchema:
     def with_name(self, name) -> "ColumnSchema":
         return ColumnSchema(name, tags=self.tags)
 
+    def __eq__(self, other: "ColumnSchema") -> bool:
+        return self.name == other.name and set(self.tags) == set(other.tags)
+
 
 class DatasetSchema:
     """A collection of column schemas for a dataset."""
@@ -52,13 +55,9 @@ class DatasetSchema:
         self,
         columns: Union[Text, List[Text], ColumnSchema, List[ColumnSchema], "DatasetSchema"],
         tags: Optional[Union[List[Text], DefaultTags]] = None,
-        parent: Optional["DatasetSchema"] = None,
     ):
         if isinstance(columns, str):
             columns = [columns]
-
-        if not parent:
-            parent = self
 
         if not tags:
             tags = []
@@ -67,9 +66,10 @@ class DatasetSchema:
 
         self.tags = tags
 
-        self.columns: List[ColumnSchema] = [_convert_col(col, tags=tags) for col in columns]
+        self.columns: List[ColumnSchema] = sorted(
+            [_convert_col(col, tags=tags) for col in columns], key=lambda x: x.name
+        )
         self.set_schema(None)
-        self.parent = parent
 
     @staticmethod
     def read_schema(schema_path):
@@ -103,7 +103,7 @@ class DatasetSchema:
     def column_names(self):
         return [col.name for col in self.columns]
 
-    def __add__(self, other):
+    def add(self, other, strict=False):
         """Adds columns from this DatasetSchema with another to return a new DatasetSchema
         Parameters
         -----------
@@ -117,20 +117,35 @@ class DatasetSchema:
         elif isinstance(other, collections.abc.Sequence):
             other = DatasetSchema(other)
 
-        # check if there are any columns with the same name in both column groups
-        overlap = set(self.column_names).intersection(other.column_names)
+        if strict:
+            # check if there are any columns with the same name in both column groups
+            overlap = set(self.column_names).intersection(other.column_names)
 
-        if overlap:
-            raise ValueError(f"duplicate column names found: {overlap}")
+            if overlap:
+                raise ValueError(f"duplicate column names found: {overlap}")
+            new_columns = self.columns + other.columns
+        else:
+            self_column_dict = {col.name: col for col in self.columns}
+            other_column_dict = {col.name: col for col in other.columns}
 
-        new_schema = DatasetSchema(self.columns + other.columns)
+            new_columns = [col for col in self.columns]
+            for key, val in other_column_dict.items():
+                maybe_duplicate = self_column_dict.get(key, None)
+                if maybe_duplicate:
+                    merged_col = maybe_duplicate.with_tags(val.tags)
+                    new_columns[new_columns.index(maybe_duplicate)] = merged_col
+                else:
+                    new_columns.append(val)
+
+        new_schema = DatasetSchema(new_columns)
         # TODO : set update method of the _schema
         # To keep it consistent over ops
         new_schema._schema = self.filter_schema(new_schema.column_names)
         return new_schema
 
     # handle the "column_name" + DatasetSchema case
-    __radd__ = __add__
+    __radd__ = add
+    __add__ = add
 
     def __sub__(self, other):
         """Removes columns from this DatasetSchema with another to return a new DatasetSchema
@@ -160,6 +175,9 @@ class DatasetSchema:
     def __getitem__(self, columns):
         return self.select_by_name(columns)
 
+    def __eq__(self, other: "DatasetSchema") -> bool:
+        return all(x == y for x, y in zip(self.columns, other.columns))
+
     def select_by_tag(self, tags):
         if isinstance(tags, DefaultTags):
             tags = tags.value
@@ -171,7 +189,7 @@ class DatasetSchema:
             if all(x in column.tags for x in tags):
                 output_cols.append(column)
 
-        child = DatasetSchema(output_cols, tags=tags, parent=self.parent)
+        child = DatasetSchema(output_cols, tags=tags)
 
         if self._schema:
             child._schema = self.filter_schema(child.column_names)
@@ -197,7 +215,7 @@ class DatasetSchema:
             if column.name in names:
                 output_cols.append(column)
 
-        child = DatasetSchema(output_cols, parent=self.parent)
+        child = DatasetSchema(output_cols)
         # TODO : set update method of the _schema
         # To keep it consistent over ops
         child._schema = self.filter_schema(child.column_names)
@@ -293,7 +311,7 @@ class DatasetSchema:
 
     @cached_property
     def item_id_column_name(self):
-        item_id_col = self.parent.select_by_tag(Tag.ITEM_ID)
+        item_id_col = self.select_by_tag(Tag.ITEM_ID)
         if len(item_id_col.columns) == 0:
             raise ValueError("There is no column tagged as item id.")
 

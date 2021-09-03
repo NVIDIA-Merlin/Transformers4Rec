@@ -125,8 +125,7 @@ class TabularSequenceFeatures(TabularFeatures):
             **kwargs,
         )
         self.projection_block = projection_block
-        if masking:
-            self.masking = masking
+        self._masking = masking
 
     @classmethod
     def from_schema(
@@ -200,7 +199,7 @@ class TabularSequenceFeatures(TabularFeatures):
             projection = MLPBlock([d_output])
 
         if projection:
-            output.projection_module = projection
+            output.projection_block = projection
 
         if isinstance(masking, str):
             masking = masking_registry.parse(masking)(**kwargs)

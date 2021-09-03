@@ -43,6 +43,28 @@ def test_sequence_tabular_features_with_projection(yoochoose_schema, tf_yoochoos
     assert all(tensor.shape[1] == 20 for tensor in outputs.values())
 
 
+@test_utils.mark_run_eagerly_modes
+def test_tabular_features_yoochoose_direct(
+    yoochoose_schema,
+    tf_yoochoose_like,
+    run_eagerly,
+):
+    continuous_layer = tf4rec.ContinuousFeatures.from_schema(yoochoose_schema, tags=["continuous"])
+    categorical_layer = tf4rec.SequenceEmbeddingFeatures.from_schema(
+        yoochoose_schema, tags=["categorical"]
+    )
+
+    inputs = tf4rec.TabularSequenceFeatures(
+        continuous_layer=continuous_layer,
+        categorical_layer=categorical_layer,
+        aggregation="sequential_concat",
+    )
+    outputs = inputs(tf_yoochoose_like)
+
+    assert inputs.schema == categorical_layer.schema + continuous_layer.schema
+    assert len(outputs.shape) == 3
+
+
 # Add these tests when we port Masking to TF
 
 # def test_sequential_tabular_features_with_masking(yoochoose_schema, tf_yoochoose_like):
