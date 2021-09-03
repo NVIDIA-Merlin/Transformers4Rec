@@ -44,9 +44,25 @@ MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
 class MaskSequence(OutputSizeMixin, torch.nn.Module):
     """Base class to prepare masked items inputs/labels for language modeling tasks.
     Parameters
+
+    Transformer architectures can be trained in different ways. Depending of the training method,
+    there is a specific masking schema. The masking schema sets the items to be predicted (labels)
+    and mask (hide) some positions of the sequence that cannot be used by the Transformer layers
+    for prediction.
+
+    We currently provide 4 different masking schemes out of the box:
+        - Causal LM (clm)
+        - Masked LM (mlm)
+        - Permutation LM (plm)
+        - Replacement Token Detection (rtd)
+
+    This class can be extended to add different a masking scheme.
+
     ----------
     {mask_sequence_parameters}
     """
+
+    # TODO: Link to masking-class in the doc-string.
 
     def __init__(
         self,
@@ -186,7 +202,9 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 @masking_registry.register_with_multiple_names("clm", "causal")
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class CausalLanguageModeling(MaskSequence):
-    """Causal Language Modeling class - Prepare labels for Next token predictions.
+    """
+    In Causal Language Modeling (clm) you predict the next item based on past positions of the
+    sequence. Future positions are masked.
 
     Parameters:
     ----------
@@ -259,7 +277,12 @@ class CausalLanguageModeling(MaskSequence):
 @masking_registry.register_with_multiple_names("mlm", "masked")
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class MaskedLanguageModeling(MaskSequence):
-    """Masked Language Modeling class - Prepare labels for masked item prediction
+    """
+    In Masked Language Modeling (mlm) you randomly select some positions of the sequence to be
+    predicted, which are masked.
+    During training, the Transformer layer is allowed to use positions on the right (future info).
+    During inference, all past items are visible for the Transformer layer, which tries to predict
+    the next item.
 
     Parameters:
     -----------
@@ -377,7 +400,9 @@ class MaskedLanguageModeling(MaskSequence):
 @masking_registry.register_with_multiple_names("plm", "permutation")
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class PermutationLanguageModeling(MaskSequence):
-    """Masked Language Modeling class - Prepare labels for permuted item prediction
+    """
+    In Permutation Language Modeling (plm) you use a permutation factorization at the level of the
+    self-attention layer to define the accessible bidirectional context.
 
     Parameters:
     ----------
@@ -612,8 +637,11 @@ class PermutationLanguageModeling(MaskSequence):
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class ReplacementLanguageModeling(MaskedLanguageModeling):
     """
-    Extend the Masked Language Modeling class with token replacement detection function
-    to prepare data of the RTD discriminator
+    Replacement Language Modeling (rtd) you use MLM to randomly select some items, but replace
+    them by random tokens.
+    Then, a discriminator model (that can share the weights with the generator or not), is asked
+    to classify whether the item at each position belongs or not to the original sequence.
+    The generator-discriminator architecture was jointly trained using Masked LM and RTD tasks.
 
     Parameters:
     ----------
