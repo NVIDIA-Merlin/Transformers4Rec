@@ -4,10 +4,10 @@ class MaskSequence:
 
     Parameters
     ----------
-        pad_token:
-            index of padding.
-        hidden_size:
-            dimension of the interaction embeddings
+    pad_token:
+        index of padding.
+    hidden_size:
+        dimension of the interaction embeddings
     """
 
     def __init__(self, hidden_size: int, device: str, pad_token: int = 0):

@@ -21,7 +21,7 @@ def default_name(class_or_fn):
     functions.
 
     Parameters
-    ---------=
+    ----------
     class_or_fn:
         class or function to be named.
 

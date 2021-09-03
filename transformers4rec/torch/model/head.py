@@ -60,10 +60,10 @@ class PredictionTask(torch.nn.Module):
 
         Parameters
         ----------
-            block:
-                the model block to link with head
-            device:
-                set the device for the metrics and layers of the task
+        block:
+            the model block to link with head
+        device:
+            set the device for the metrics and layers of the task
         """
         if task_block:
             # TODO: What to do when `self.task_block is not None`?
