@@ -1,32 +1,88 @@
 # Transformers4Rec
-## Transformer-based neural architectures and pipelines for sequential, session-based and session-aware recommendations
 
+Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation, available for both PyTorch and Tensorflow. 
 
-## Objective
-The objective of this project is to be a **bridge between NLP and recommender systems research**, by leveraging the most popular framework for Transformer architectures -- the [HuggingFace Transformers project](https://github.com/huggingface/transformers) -- and making those SOTA NLP building blocks available for researchers and industry practitioners working on sequential, session-based, and session-aware recommendation tasks.
-
-
-## Context
-Traditional recommendation algorithms usually ignore the temporal dynamics and the sequence of interactions when trying to model user behaviour. Generally, the next user interaction is related to the sequence of his previous choices. Inclusive, it can be a repeated purchase or song play. But his interests might also suffer from the interest drift, as his preferences might change over time. Those challenges are addressed by the problem of **sequential recommendation**. 
-A special case of sequential-recommendation is the **session-based recommendation** task, where you have only access to the short sequence of interactions within the current session. This is very common in online services like e-commerce, news and media portals where the user might choose to browse anonymously (and due to GDPR compliance no cookies are collected), or because it is a new user. In the **session-aware recommendation** task,  you can leverage both information about the current session and past user sessions. 
-
-To deal with sequential recommendation, many sequence learning techniques previously applied in NLP research have been explored for RecSys, like Frequent Pattern Mining, Hidden Markov Models, Recurrent Neural Networks, and more recently neural architectures using the Self-Attention Mechanism and the Transformer architectures.
-
-## Project Overview
-As many of the inspirations for sequential recommendation come from NLP, this research project aims to build a bridge between those research areas.
-The [HuggingFace transformers project](https://github.com/huggingface/transformers) is by far the most popular framework on the Transformers Architecture, where top researchers have been contributing with their new fancy Transformers architectures for NLP.
-
-The Transformers4Rec framework uses the HuggingFace Transformers library to **leverage the increasing number of Transformer architectures for sequential recommendation**.
-With such an approach, the RecSys community is now able to easily compare different neural architectures for sequential / session-based / session-aware recommendation and investigate those that perform better for different use cases and datasets.
-
-Differently from most implementations of Transformers for RecSys, which use only the sequence of interacted item ids to model users preferences over time, this framework allows to use **multiple input features** (side information) to represent the item (e.g. product category and price, news content embedding) and the user context (e.g. time, location, device), for more accurate recommendations.
-
-# Project Organization
-
-- [`transfomers4rec`](transfomers4rec/README.md) - Here are the main scripts for train and evaluating of Transformer-based RecSys models. The train and evaluation pipelines are PyTorch-based. 
-- [`containers`](containers/README.md) - Dockerfiles to get the development and deployment enviroments setup
-- [`datasets`](datasets/README.md) - Resources for each dataset used in the experiments, including preprocessing scripts and config files of the available features for the models.
-- [`resources`](resources) - Additional resources, like examples of Visual Studio Code config files (launch.json, settings.json).
+It works as a bridge between NLP and recommender systems by an integration with one the most popular NLP frameworks [HuggingFace Transformers](https://github.com/huggingface/transformers), making state-of-the-art Transformer architectures available for RecSys researchers and industry practitioners. 
 
 
 
+<div style="text-align: center; margin: 20pt"><img src="images/sequential_rec.png" alt="Sequential and Session-based recommendation with Transformers4Rec" style="width:800px;"/><figcaption>Sequential and Session-based recommendation with Transformers4Rec</figcaption></div>
+
+Transformers4Rec supports multiple input features and provides configurable building blocks that can be easily combined for custom architectures.
+
+
+You can build a fully GPU-accelerated pipeline for sequential and session-based recommendation with Transformers4Rec and its smooth integration with other components of [NVIDIA Merlin](https://developer.nvidia.com/nvidia-merlin):  [NVTabular](https://github.com/NVIDIA/NVTabular) for preprocessing and [Triton Inference Server](https://github.com/NVIDIA/tensorrt-inference-server).
+
+## Highlights
+
+- **Winning and SOTA solution**: We have leveraged and evolved the Transformers4Rec library to win two recent session-based recommendation competitions: the [WSDM WebTour Workshop Challenge 2021, organized by Booking.com](https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/), and the [SIGIR eCommerce Workshop Data Challenge 2021, organized by Coveo](https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994). Furthermore, we have also done extensive empirical evaluation on the usage of Transformers4Rec for session-based recommendation, which was able to provide higher accuracy than baselines algorithms, as published in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
+- **Support to multiple input features**: interaction- and sequence-level input features can be normalized and combined in different ways
+- **Flexibility**: The building blocks are modularized and are compatible with vanilla PyTorch modules and TF Keras layers. You can create custom architectures, e.g. with multiple towers, multiple heads/tasks and losses.
+
+- **Production-ready**: Exports trained models to serve with Triton Inference Server in a single pipeline that includes online features preprocessing and model inference.
+- **Leverages cutting-edge NLP research**: With the integration with [HuggingFace Transformers](https://github.com/huggingface/transformers), you have available more  than 64 different Transformer architectures (and counting) to evaluate for your sequential and session-based recommendation task.
+
+- **Seamless preprocessing and feature engineering**: The integration with NVTabular have common preprocessing ops for session-based recommendation and exports a dataset schema compatible with Transformers4Rec, so that input features can be configured automatically.
+
+
+<div style="text-align: center; margin: 20pt"><img src="images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;"/><figcaption>GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+
+More details on the **core features** of the Transformers4Rec library can be found [here](docs/source/core_features.md).
+
+
+## Simple like this!
+
+**TODO: Simple code snippet showing how the building blocks are defined and connected with a few lines**
+
+Check the getting started and advanced examples [here](docs/source/core_features.md).
+
+## When to use it?
+### Sequential and Session-based recommendation
+Traditional recommendation algorithms usually ignore the temporal dynamics and the sequence of interactions when trying to model user behaviour. Generally, the next user interaction is related to the sequence of his previous choices. In some cases, it might be even a repeated purchase or song play. User interests might also suffer from the interest drift, as his preferences might change over time. Those challenges are addressed by the **sequential recommendation** task. 
+A special case of sequential-recommendation is the **session-based recommendation** task, where you have only access to the short sequence of interactions within the current session. This is very common in online services like e-commerce, news and media portals where the user might choose to browse anonymously (and due to GDPR compliance no cookies are collected), or because it is a new user. This task is also relevant for scenarios were users interests change a lot over time depending on the user context or intent, so leveraging the current session interactions is more promissing than old interactions to provide relevant recommendations.
+
+To deal with sequential and session-based recommendation, many sequence learning algorithms previously applied in machine learning and NLP research have been explored for RecSys, based on k-Nearest Neighbors, Frequent Pattern Mining, Hidden Markov Models, Recurrent Neural Networks, and more recently neural architectures using the Self-Attention Mechanism and the Transformer architectures. 
+
+Differently from Transformers4Rec, existing frameworks for such task are generally focused for research, accept only sequence of item ids as input and do not provide a modularized and scalable implementation for production usage.
+
+
+## Installation
+
+
+
+
+### Installing with pip
+
+Transformers4Rec comes in two flavors: PyTorch and Tensorflow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended. 
+Those components can be installed as optional args for the pip install package.
+
+- All  
+`pip install transformers4rec[all]`
+- PyTorch  
+`pip install transformers4rec[torch,nvtabular]`  
+- Tensorflow:  
+`pip install transformers4rec[tensorflow,nvtabular]`
+
+**TODO: Describe how Transformers4Rec can be installed to use only on CPUs (including the NVTabular dataloader) and how nvtabular shoulbe installed to use GPUs (e.g. installing nvtabular using conda with RAPIDS dependencies)**
+
+
+### Installing with conda
+**TODO: Include install commands from conda when available**
+
+### Installing with Docker
+
+Transformers4Rec library is pre-installed in the NVIDIA Merlin Docker containers, that are available in the [NVIDIA container repository](https://ngc.nvidia.com/catalog/containers/nvidia:merlin). There are four different containers:
+
+
+| Container Name             | Container Location | Functionality |
+| -------------------------- | ------------------ | ------------- |
+| merlin-tensorflow-training | https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-tensorflow-training | Transformers4Rec, NVTabular, TensorFlow, and HugeCTR Tensorflow Embedding plugin |
+| merlin-pytorch-training    | https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-pytorch-training    | Transformers4Rec, NVTabular and PyTorch                    |
+
+**TODO: Check if Triton is going to be pre-installed in TF and PyTorch images**
+
+To use these Docker containers, you'll first need to install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to provide GPU support for Docker. You can use the NGC links referenced in the table above to obtain more information about how to launch and run these containers. 
+
+## Feedback and Support
+
+**TODO: Define the support process and create this section**
