@@ -23,7 +23,7 @@ def test_sequence_embedding_features_yoochoose_model(
     yoochoose_schema, tf_yoochoose_like, run_eagerly
 ):
     inputs = tf4rec.TabularSequenceFeatures.from_schema(
-        yoochoose_schema, max_sequence_length=20, aggregation="sequential_concat"
+        yoochoose_schema, max_sequence_length=20, aggregation="sequential-concat"
     )
 
     body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
@@ -57,7 +57,7 @@ def test_tabular_features_yoochoose_direct(
     inputs = tf4rec.TabularSequenceFeatures(
         continuous_layer=continuous_layer,
         categorical_layer=categorical_layer,
-        aggregation="sequential_concat",
+        aggregation="sequential-concat",
     )
     outputs = inputs(tf_yoochoose_like)
 

@@ -75,7 +75,6 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
         the name that the class is registered in the `tabular_aggregation_registry`. Out of the box
         this contains: "concat", "stack", "sequential-concat", "element-wise-sum" &
         "element-wise-sum-item-multi".
-
     schema: Optional[DatasetSchema]
         DatasetSchema containing the columns used in this block.
     name: Optional[str]

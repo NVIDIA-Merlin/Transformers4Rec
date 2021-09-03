@@ -39,7 +39,7 @@ class ConcatFeatures(TabularAggregation):
         }
 
 
-@tabular_aggregation_registry.register_with_multiple_names("sequential_concat", "sequential-concat")
+@tabular_aggregation_registry.register("sequential-concat")
 class SequentialConcatFeatures(TabularAggregation):
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         tensors = []

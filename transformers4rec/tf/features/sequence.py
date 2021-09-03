@@ -216,7 +216,7 @@ class TabularSequenceFeatures(TabularFeatures):
             dimensions = [dimensions]
 
         continuous = self.continuous_layer
-        continuous.set_aggregation("sequential_concat")
+        continuous.set_aggregation("sequential-concat")
 
         continuous = SequentialBlock(
             [continuous, MLPBlock(dimensions), AsTabular("continuous_projection")]
