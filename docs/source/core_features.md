@@ -1,8 +1,8 @@
 # The relationship between NLP and RecSys
 
-Over the past decade there has been a trend toward leveraging and adapting approaches proposed by Natural Language Processing (NLP) research like Word2Vec, GRU, and Attention for recommender systems (RecSys). The phenomena is especially noticeable for sequential and session-based recommendation where the sequential processing of users interactions is analogous to the language modeling (LM) task and many key RecSys architectures have been adapted from NLP, like  GRU4Rec -- the seminal Recurrent Neural Network (RNN)-based architecture for session-based recommendation.
+Over the past decade there has been a trend toward leveraging and adapting approaches proposed by Natural Language Processing (NLP) research like Word2Vec, GRU, and Attention for recommender systems (RecSys). The phenomena is especially noticeable for sequential and session-based recommendation where the sequential processing of users interactions is analogous to the language modeling (LM) task and many key RecSys architectures have been adapted from NLP, like GRU4Rec -- the seminal Recurrent Neural Network (RNN)-based architecture for session-based recommendation.
 
-More recently, Transformer architectures have become the dominant technique over convolutional and recurrent neural networks for language modeling tasks. Because of their efficient parallel training, these architectures scale well with training data and model size, and are effective at modeling long-range sequences.   They have similarly been applied to sequential recommendation in architectures like SASRec, BERT4Rec and BST and more recently to session-based recommendation.
+More recently, Transformer architectures have become the dominant technique over convolutional and recurrent neural networks for language modeling tasks. Because of their efficient parallel training, these architectures scale well with training data and model size, and are effective at modeling long-range sequences. They have similarly been applied to sequential recommendation in architectures like SASRec, BERT4Rec and BST and more recently to session-based recommendation.
 
 You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
 
@@ -12,13 +12,13 @@ You can read more about this relationship between NLP and RecSys and the evoluti
 
 # Integration with HuggingFace Transformers
 
-Transformers4Rec integrates with the [HuggingFace (HF) Transformers](https://github.com/huggingface/transformers) library, allowing RecSys researchers and practitioners easily experiment with the latest and state-of-the-art NLP Transformer architectures for sequential and session-based recommendation tasks and deploy those models into production.
+Transformers4Rec integrates with the [HuggingFace (HF) Transformers](https://github.com/huggingface/transformers) library, allowing RecSys researchers and practitioners to easily experiment with the latest and state-of-the-art NLP Transformer architectures for sequential and session-based recommendation tasks and deploy those models into production.
 
 The HF Transformers was *"established with the goal of opening up advancements in NLP to the wider machine learning community"*. It became very popular among NLP researchers and practitioners (more than 900 contributors), providing standardized implementations of the state-of-the-art Transformer architectures (more than 68 and counting) produced by the research community, often within days or weeks of their publication. 
 
 HF Transformers is designed for both research and production. Models are composed of three building blocks: (a) a tokenizer, which converts raw text to sparse index encodings; (b) a transformer architecture; and (c) a head for NLP tasks, like Text Classification, Generation, Sentiment Analysis, Translation, Summarization, among others. 
 
-In Transformers4Rec we leverage from HF Transformers only the transformer architectures building block (b) and their configuration classes, and provide additional blocks necessary for recommendation, e.g.input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their `Trainer` class to allow for the evaluation with RecSys metrics.
+In Transformers4Rec we leverage from HF Transformers only the transformer architectures building block (b) and their configuration classes, and provide additional blocks necessary for recommendation, e.g. input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their `Trainer` class to allow for the evaluation with RecSys metrics.
 
 
 # Flexibility in Model Architecture
@@ -30,9 +30,9 @@ In Fig. 2, we provide a reference architecture for next-item prediction with Tra
 
 
 ## Features Processing 
-Here the input features are processed. Categorical features are represented by embeddings. Numerical features can be represented as a scalar, projected by a FC layer to multiple dimensions, or represented as a weighted average of embeddings by the technique Soft One-Hot embeddings (more info in our [paper online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md)).
+Here the input features are processed. Categorical features are represented by embeddings. Numerical features can be represented as a scalar, projected by a fully-connected (FC) layer to multiple dimensions, or represented as a weighted average of embeddings by the technique Soft One-Hot embeddings (more info in our [paper online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md)).
 
-The features are optionally normalized (with layer normalization) and them aggregated. The current feature aggregation options are:
+The features are optionally normalized (with layer normalization) and then aggregated. The current feature aggregation options are:
 - **Concat** - Concatenation of the features
 - **Element-wise sum** - Features are summed. For that, all features must have the same dimension, i.e. categorical embeddings must have the same dim and continuous features are projected to that dim.
 - **Element-wise sum & item multiplication** - Similar to *Element-wise sum*, as all features are summed. except for the item id embedding, which is multiplied by the other features sum. The aggregation formula is available in our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
@@ -95,7 +95,7 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
 
 
 ## PyTorch Training
-For PyTorch we extend the HF Transformers `Trainer` class, but keep its `train()` method. That means that we leverage the efficient training implementation from that library, which manages for example half-precision (FP16) a multi-GPU training.
+For PyTorch we extend the HF Transformers `Trainer` class, but keep its `train()` method. That means that we leverage the efficient training implementation from that library, which manages for example half-precision (FP16) and multi-GPU training.
 
 Two [approaches](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) are available for PyTorch multi-GPU training: `DataParallel` and `DistributedDataParallel`. `DataParallel` uses a single process and multiple threads on a single machine. `DistributedDataParallel` is more efficient for assigning separate processes for each GPU. Transformers4Rec supports both training approaches when using the NVTabular Dataloader.
 
