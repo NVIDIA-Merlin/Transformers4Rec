@@ -19,26 +19,24 @@ from tensorflow.python.keras.metrics import Metric
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.training.tracking.data_structures import ListWrapper, _DictWrapper
 
-from .aggregation import ConcatFeatures, ElementwiseSum, ElementwiseSumItemMulti, StackFeatures
-from .augmentation import StochasticSwapNoise
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
-from .features.sequence import SequentialEmbeddingFeatures, TabularSequenceFeatures
+from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
-from .head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
-from .model import Model
-from .tabular import (
-    AsDenseFeatures,
-    AsSparseFeatures,
-    AsTabular,
-    FilterFeatures,
-    MergeTabular,
-    TabularLayer,
+from .model.head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
+from .model.model import Model
+from .tabular.aggregation import (
+    ConcatFeatures,
+    ElementwiseSum,
+    ElementwiseSumItemMulti,
+    StackFeatures,
 )
+from .tabular.tabular import AsTabular, FilterFeatures, MergeTabular, TabularBlock
+from .tabular.transformations import AsDenseFeatures, AsSparseFeatures, StochasticSwapNoise
 from .utils import repr_utils
 
 ListWrapper.__repr__ = repr_utils.list_wrapper_repr
@@ -57,9 +55,10 @@ __all__ = [
     "right_shift_layer",
     "DLRMBlock",
     "MLPBlock",
+    "TabularBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
-    "SequentialEmbeddingFeatures",
+    "SequenceEmbeddingFeatures",
     "FeatureConfig",
     "TableConfig",
     "TabularFeatures",
@@ -75,7 +74,6 @@ __all__ = [
     "FilterFeatures",
     "MergeTabular",
     "StackFeatures",
-    "TabularLayer",
     "PredictionTask",
     "BinaryClassificationTask",
     "RegressionTask",

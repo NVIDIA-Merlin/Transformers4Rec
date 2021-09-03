@@ -1,3 +1,4 @@
+import abc
 import collections.abc
 import math
 from dataclasses import dataclass, field
@@ -43,6 +44,9 @@ class ColumnSchema:
 
     def with_name(self, name) -> "ColumnSchema":
         return ColumnSchema(name, tags=self.tags)
+
+    def __eq__(self, other: "ColumnSchema") -> bool:
+        return self.name == other.name and set(self.tags) == set(other.tags)
 
 
 class DatasetSchema:
@@ -98,7 +102,7 @@ class DatasetSchema:
     def column_names(self):
         return [col.name for col in self.columns]
 
-    def __add__(self, other):
+    def add(self, other, strict=False):
         """Adds columns from this DatasetSchema with another to return a new DatasetSchema
         Parameters
         -----------
@@ -112,20 +116,35 @@ class DatasetSchema:
         elif isinstance(other, collections.abc.Sequence):
             other = DatasetSchema(other)
 
-        # check if there are any columns with the same name in both column groups
-        overlap = set(self.column_names).intersection(other.column_names)
+        if strict:
+            # check if there are any columns with the same name in both column groups
+            overlap = set(self.column_names).intersection(other.column_names)
 
-        if overlap:
-            raise ValueError(f"duplicate column names found: {overlap}")
+            if overlap:
+                raise ValueError(f"duplicate column names found: {overlap}")
+            new_columns = self.columns + other.columns
+        else:
+            self_column_dict = {col.name: col for col in self.columns}
+            other_column_dict = {col.name: col for col in other.columns}
 
-        new_schema = DatasetSchema(self.columns + other.columns)
+            new_columns = [col for col in self.columns]
+            for key, val in other_column_dict.items():
+                maybe_duplicate = self_column_dict.get(key, None)
+                if maybe_duplicate:
+                    merged_col = maybe_duplicate.with_tags(val.tags)
+                    new_columns[new_columns.index(maybe_duplicate)] = merged_col
+                else:
+                    new_columns.append(val)
+
+        new_schema = DatasetSchema(new_columns)
         # TODO : set update method of the _schema
         # To keep it consistent over ops
         new_schema._schema = self.filter_schema(new_schema.column_names)
         return new_schema
 
     # handle the "column_name" + DatasetSchema case
-    __radd__ = __add__
+    __radd__ = add
+    __add__ = add
 
     def __sub__(self, other):
         """Removes columns from this DatasetSchema with another to return a new DatasetSchema
@@ -154,6 +173,12 @@ class DatasetSchema:
 
     def __getitem__(self, columns):
         return self.select_by_name(columns)
+
+    def __eq__(self, other: "DatasetSchema") -> bool:
+        sorted_cols = sorted(self.columns, key=lambda x: x.name)
+        sorted_other_cols = sorted(other.columns, key=lambda x: x.name)
+
+        return all(x == y for x, y in zip(sorted_cols, sorted_other_cols))
 
     def select_by_tag(self, tags):
         if isinstance(tags, DefaultTags):
@@ -299,6 +324,48 @@ class DatasetSchema:
 
     def get_mask_from_inputs(self, inputs, mask_token=0):
         return self.get_item_ids_from_inputs(inputs) != mask_token
+
+
+class SchemaMixin(abc.ABC):
+    REQUIRES_SCHEMA = False
+
+    def set_schema(self, schema=None):
+        self.check_schema(schema=schema)
+
+        if schema and not getattr(self, "schema", None):
+            self._schema = schema
+
+        return self
+
+    @property
+    def schema(self) -> Optional[DatasetSchema]:
+        return getattr(self, "_schema", None)
+
+    @schema.setter
+    def schema(self, value):
+        if value:
+            self.set_schema(value)
+        else:
+            self._schema = value
+
+    def check_schema(self, schema=None):
+        if self.REQUIRES_SCHEMA and not getattr(self, "schema", None) and not schema:
+            raise ValueError(f"{self.__class__.__name__} requires a schema.")
+
+    def __call__(self, *args, **kwargs):
+        self.check_schema()
+
+        return super().__call__(*args, **kwargs)
+
+    def _maybe_set_schema(self, input, schema):
+        if input and getattr(input, "set_schema"):
+            input.set_schema(schema)
+
+
+def requires_schema(module):
+    module.REQUIRES_SCHEMA = True
+
+    return module
 
 
 def _convert_col(col, tags=None):

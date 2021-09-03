@@ -6,9 +6,9 @@ from transformers4rec.utils.tags import Tag
 tf4rec = pytest.importorskip("transformers4rec.tf")
 
 
-def test_sequential_embedding_features(yoochoose_schema, tf_yoochoose_like):
+def test_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-    emb_module = tf4rec.SequentialEmbeddingFeatures.from_schema(schema)
+    emb_module = tf4rec.SequenceEmbeddingFeatures.from_schema(schema)
 
     outputs = emb_module(tf_yoochoose_like)
 
@@ -19,11 +19,11 @@ def test_sequential_embedding_features(yoochoose_schema, tf_yoochoose_like):
 
 
 @test_utils.mark_run_eagerly_modes
-def test_sequential_embedding_features_yoochoose_model(
+def test_sequence_embedding_features_yoochoose_model(
     yoochoose_schema, tf_yoochoose_like, run_eagerly
 ):
     inputs = tf4rec.TabularSequenceFeatures.from_schema(
-        yoochoose_schema, max_sequence_length=20, aggregation="sequential_concat"
+        yoochoose_schema, max_sequence_length=20, aggregation="sequential-concat"
     )
 
     body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
@@ -31,7 +31,7 @@ def test_sequential_embedding_features_yoochoose_model(
     test_utils.assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
 
 
-def test_sequential_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
+def test_sequence_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
     tab_module = tf4rec.TabularSequenceFeatures.from_schema(
         yoochoose_schema, max_sequence_length=20, continuous_projection=64
     )
@@ -41,6 +41,28 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, tf_yoocho
     assert len(outputs.keys()) == 3
     assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
     assert all(tensor.shape[1] == 20 for tensor in outputs.values())
+
+
+@test_utils.mark_run_eagerly_modes
+def test_tabular_features_yoochoose_direct(
+    yoochoose_schema,
+    tf_yoochoose_like,
+    run_eagerly,
+):
+    continuous_layer = tf4rec.ContinuousFeatures.from_schema(yoochoose_schema, tags=["continuous"])
+    categorical_layer = tf4rec.SequenceEmbeddingFeatures.from_schema(
+        yoochoose_schema, tags=["categorical"]
+    )
+
+    inputs = tf4rec.TabularSequenceFeatures(
+        continuous_layer=continuous_layer,
+        categorical_layer=categorical_layer,
+        aggregation="sequential-concat",
+    )
+    outputs = inputs(tf_yoochoose_like)
+
+    assert inputs.schema == categorical_layer.schema + continuous_layer.schema
+    assert len(outputs.shape) == 3
 
 
 # Add these tests when we port Masking to TF
@@ -78,7 +100,7 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, tf_yoocho
 #     assert "For masking a categorical_module is required including an item_id" in str(err)
 
 
-def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_schema):
+def test_sequence_tabular_features_with_projection_and_d_output(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
         tf4rec.TabularSequenceFeatures.from_schema(
             yoochoose_schema,

@@ -1,25 +1,53 @@
 from typing import List, Optional, Union
 
 from ...types import DatasetSchema, DefaultTags, Tag
+from ...utils.misc_utils import docstring_parameter
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular import AsTabular, MergeTabular
-from .base import InputLayer
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
+from ..typing import TabularAggregationType, TabularBlock, TabularTransformationType
+from .base import InputBlock
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
 from .text import TextEmbeddingFeaturesWithTransformers
 
+TABULAR_FEATURES_PARAMS_DOCSTRING = """
+    continuous_layer: TabularBlock, optional
+        Block used to process continuous features.
+    categorical_layer: TabularBlock, optional
+        Block used to process categorical features.
+    text_embedding_layer: TabularBlock, optional
+        Block used to process text features.
+"""
 
-class TabularFeatures(InputLayer, MergeTabular):
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
+)
+class TabularFeatures(InputBlock, MergeTabular):
+    """Input block that combines different types of features: continuous, categorical & text.
+
+    Parameters
+    ----------
+    {tabular_features_parameters}
+    {tabular_module_parameters}
+    """
+
     CONTINUOUS_MODULE_CLASS = ContinuousFeatures
     EMBEDDING_MODULE_CLASS = EmbeddingFeatures
 
     def __init__(
         self,
-        continuous_layer=None,
-        categorical_layer=None,
-        text_embedding_layer=None,
-        aggregation=None,
+        continuous_layer: Optional[TabularBlock] = None,
+        categorical_layer: Optional[TabularBlock] = None,
+        text_embedding_layer: Optional[TabularBlock] = None,
+        continuous_projection: Optional[Union[List[int], int]] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
         to_merge = {}
@@ -31,7 +59,18 @@ class TabularFeatures(InputLayer, MergeTabular):
             to_merge["text_embedding_layer"] = text_embedding_layer
 
         assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(to_merge, aggregation=aggregation, **kwargs)
+        super(TabularFeatures, self).__init__(
+            to_merge,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            schema=schema,
+            name=name,
+            **kwargs
+        )
+
+        if continuous_projection:
+            self.project_continuous_features(continuous_projection)
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]
@@ -101,11 +140,10 @@ class TabularFeatures(InputLayer, MergeTabular):
             categorical_layer=maybe_categorical_layer,
             text_embedding_layer=text_model,
             aggregation=aggregation,
+            continuous_projection=continuous_projection,
+            schema=schema,
             **kwargs
         )
-
-        if continuous_projection:
-            output = output.project_continuous_features(continuous_projection)
 
         return output
 
