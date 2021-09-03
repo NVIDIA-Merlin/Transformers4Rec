@@ -81,6 +81,11 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
 class TabularBlock(Block):
     """Layer that's specialized for tabular-data by integrating many often used operations.
 
+    Note, when extending this class, typically you want to overwrite the `compute_call_output_shape`
+    method instead of the normal `compute_output_shape`. This because a Block can contain pre- and
+    post-processing and the output-shapes are handled automatically in `compute_output_shape`. The
+    output of `compute_call_output_shape` should be the shape that's outputted by the `call`-method.
+
     Parameters
     ----------
     {tabular_module_parameters}
@@ -480,7 +485,7 @@ class MergeTabular(TabularBlock):
             self.to_merge = list(blocks_to_merge)
 
         # Merge schemas if necessary.
-        if not schema and all(m.schema for m in self.merge_values):
+        if not schema and all(getattr(m, "schema", False) for m in self.merge_values):
             self.set_schema(reduce(lambda a, b: a + b, [m.schema for m in self.merge_values]))
 
     @property
@@ -518,12 +523,12 @@ class AsTabular(tf.keras.layers.Layer):
     ----------
     output_name: str
         Name that should be used as the key in the output dictionary.
+    name: str
+        Name of the layer.
     """
 
-    def __init__(
-        self, output_name, trainable=False, name=None, dtype=None, dynamic=False, **kwargs
-    ):
-        super().__init__(trainable, name, dtype, dynamic, **kwargs)
+    def __init__(self, output_name: str, name=None, **kwargs):
+        super().__init__(name=name, **kwargs)
         self.output_name = output_name
 
     def call(self, inputs, **kwargs):
