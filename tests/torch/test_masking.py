@@ -48,6 +48,33 @@ def test_mask_only_last_item_for_eval(torch_masking_inputs, task):
     assert all(last_labels == out_last)
 
 
+@pytest.mark.parametrize("task", lm_tasks)
+def test_mask_all_next_item_for_eval(torch_masking_inputs, task):
+    hidden_dim = torch_masking_inputs["input_tensor"].size(2)
+    lm = torch_masking.masking_registry[task](
+        hidden_dim,
+        padding_idx=torch_masking_inputs["padding_idx"],
+        device="cpu",
+        eval_on_last_item_seq_only=False,
+    )
+    mask_schema, masked_targets = lm.compute_masked_targets(
+        torch_masking_inputs["labels"], training=False
+    )
+    # get the labels from output
+    trgt_pad = masked_targets != torch_masking_inputs["padding_idx"]
+    labels = masked_targets[trgt_pad].flatten().numpy()
+    # get non padded items when shifting input sequence
+    shift_inputs = torch_masking_inputs["labels"][:, 1:]
+    non_padded_mask = shift_inputs != torch_masking_inputs["padding_idx"]
+    n_labels_sessions = non_padded_mask.sum(axis=1)
+    all_labels = shift_inputs[non_padded_mask].flatten().numpy()
+
+    # check that number of labels per session matches
+    assert all(mask_schema.sum(1) == n_labels_sessions)
+    # check all next items are masked
+    assert all(all_labels == labels)
+
+
 # Test only last item is masked when training clm on last item
 def test_clm_training_on_last_item(torch_masking_inputs):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
