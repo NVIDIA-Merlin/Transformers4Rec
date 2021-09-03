@@ -2,9 +2,11 @@
 
 Over the past decade there has been a trend toward leveraging and adapting approaches proposed by Natural Language Processing (NLP) research like Word2Vec, GRU, and Attention for recommender systems (RecSys). The phenomena is especially noticeable for sequential and session-based recommendation where the sequential processing of users interactions is analogous to the language modeling (LM) task and many key RecSys architectures have been adapted from NLP, like GRU4Rec -- the seminal Recurrent Neural Network (RNN)-based architecture for session-based recommendation.
 
-More recently, Transformer architectures have become the dominant technique over convolutional and recurrent neural networks for language modeling tasks. Because of their efficient parallel training, these architectures scale well with training data and model size, and are effective at modeling long-range sequences. They have similarly been applied to sequential recommendation in architectures like SASRec, BERT4Rec and BST and more recently to session-based recommendation.
+More recently, Transformer architectures have become the dominant technique over convolutional and recurrent neural networks for language modeling tasks. Because of their efficient parallel training, these architectures scale well with training data and model size, and are effective at modeling long-range sequences. 
 
-You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
+Transformers have similarly been applied to sequential recommendation in architectures like [SASRec](https://arxiv.org/abs/1808.09781), [BERT4Rec](https://arxiv.org/abs/1904.06690) and [BST](https://arxiv.org/pdf/1905.06874.pdf%C2%A0), providing higher accuracy than architectures based on CNN and RNNs, as can be seen in their reported experiments and also in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf). 
+
+You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation towards Transformers in our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) too.
 
 <div style="text-align: center; margin: 20pt"><img src="../../images/nlp_x_recsys.png" alt="A timeline illustrating the influence of NLP research in Recommender Systems" style="width:800px;"/><figcaption>Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf)">Transformers4Rec paper</a></figcaption></div>
 
@@ -14,11 +16,11 @@ You can read more about this relationship between NLP and RecSys and the evoluti
 
 Transformers4Rec integrates with the [HuggingFace (HF) Transformers](https://github.com/huggingface/transformers) library, allowing RecSys researchers and practitioners to easily experiment with the latest and state-of-the-art NLP Transformer architectures for sequential and session-based recommendation tasks and deploy those models into production.
 
-The HF Transformers was *"established with the goal of opening up advancements in NLP to the wider machine learning community"*. It became very popular among NLP researchers and practitioners (more than 900 contributors), providing standardized implementations of the state-of-the-art Transformer architectures (more than 68 and counting) produced by the research community, often within days or weeks of their publication. 
+The HF Transformers was *"established with the goal of opening up advancements in NLP to the wider machine learning community"*. It has become very popular among NLP researchers and practitioners (more than 900 contributors), providing standardized implementations of the state-of-the-art Transformer architectures (more than 68 and counting) produced by the research community, often within days or weeks of their publication. 
 
 HF Transformers is designed for both research and production. Models are composed of three building blocks: (a) a tokenizer, which converts raw text to sparse index encodings; (b) a transformer architecture; and (c) a head for NLP tasks, like Text Classification, Generation, Sentiment Analysis, Translation, Summarization, among others. 
 
-In Transformers4Rec we leverage from HF Transformers only the transformer architectures building block (b) and their configuration classes, and provide additional blocks necessary for recommendation, e.g. input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their `Trainer` class to allow for the evaluation with RecSys metrics.
+In Transformers4Rec we leverage from HF Transformers only the transformer architectures building block (b) and their configuration classes. Transformers4Rec provides additional blocks necessary for recommendation, e.g., input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their `Trainer` class to allow for the evaluation with RecSys metrics.
 
 
 # Flexibility in Model Architecture
@@ -162,7 +164,21 @@ groupby_features = [
 )
 ```
 
+### Outputs
+
+NVTabular outputs parquet files with the preprocessed data. The parquet files can be (Hive) partitioned by a categorical column (e.g. day, company).
+
+**TODO: Include code snippet on how to save the output parquet files partitioned by a column**
+
+NVTabular also outputs a schema of the parquet columns in Profobuf Text format, e.g. including the cardinality of categorical features, the max squence length for sequential features and tags that can be associated to features (e.g. to indicate what is the item id, what are item and user features, what are categorical or continuous features). You can see [here](../../tests/assets/yoochoose/schema.pbtxt) an example of such schema in Protobuf Text format.
+P.s. If you don't use NVTabular to preprocess your data, you can generate the Schema via code.  
+
+**TODO: Include code snippet of how to define the Schema manualy using code**
+
 The NVTabular workflow can be saved after `workflow.fit()` is called, so that the same preproc workflow can be applied to new input data, either in batch or online (via integration with Triton Inference Server), described in the next section.
+
+**TODO: Include code snippet on how to save the NVTabular workflow**
+
 
 ## Integration with Triton Inference Server
 
