@@ -1,3 +1,4 @@
+import abc
 import re
 
 # Camel case to snake case utils
@@ -246,6 +247,16 @@ class Registry:
             return self[class_or_str]
 
         return class_or_str
+
+
+class RegistryMixin(abc.ABC):
+    @classmethod
+    def parse(cls, class_or_str):
+        return cls.registry().parse(class_or_str)
+
+    @classmethod
+    def registry(cls) -> Registry:
+        raise NotImplementedError
 
 
 def display_list_by_prefix(names_list, starting_spaces=0):

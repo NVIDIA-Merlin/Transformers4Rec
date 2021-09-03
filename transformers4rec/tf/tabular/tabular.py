@@ -7,7 +7,7 @@ import tensorflow as tf
 
 from ...types import DatasetSchema
 from ...utils.misc_utils import docstring_parameter
-from ...utils.registry import Registry
+from ...utils.registry import Registry, RegistryMixin
 from ...utils.schema import SchemaMixin
 from ..block.base import Block, SequentialBlock
 from ..typing import TabularData, TensorOrTabularData
@@ -17,26 +17,26 @@ tabular_transformation_registry: Registry = Registry.class_registry("tf.tabular_
 tabular_aggregation_registry: Registry = Registry.class_registry("tf.tabular_aggregations")
 
 
-class TabularTransformation(SchemaMixin, tf.keras.layers.Layer, ABC):
+class TabularTransformation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC):
     """Transformation that takes in `TabularData` and outputs `TabularData`."""
 
     def call(self, inputs: TabularData, **kwargs) -> TabularData:
         raise NotImplementedError()
 
     @classmethod
-    def parse(cls, class_or_str):
-        return tabular_transformation_registry.parse(class_or_str)
+    def registry(cls) -> Registry:
+        return tabular_aggregation_registry
 
 
-class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, ABC):
+class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC):
     """Aggregation of `TabularData` that outputs a single `Tensor`"""
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         raise NotImplementedError()
 
     @classmethod
-    def parse(cls, class_or_str):
-        return tabular_aggregation_registry.parse(class_or_str)
+    def registry(cls) -> Registry:
+        return tabular_aggregation_registry
 
 
 TabularTransformationType = Union[
@@ -70,6 +70,12 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
         Transformations to apply on the inputs after the module is called (so **after** `call`).
     aggregation: Union[str, TabularAggregation], optional
         Aggregation to apply after processing the `call`-method to output a single Tensor.
+
+        Next to providing a class that extends TabularAggregation, it's also possible to provide
+        the name that the class is registered in the `tabular_aggregation_registry`. Out of the box
+        this contains: "concat", "stack", "sequential-concat", "element-wise-sum" &
+        "element-wise-sum-item-multi".
+
     schema: Optional[DatasetSchema]
         DatasetSchema containing the columns used in this block.
     name: Optional[str]
