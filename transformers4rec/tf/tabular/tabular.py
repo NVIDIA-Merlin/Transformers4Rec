@@ -25,7 +25,7 @@ class TabularTransformation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, A
 
     @classmethod
     def registry(cls) -> Registry:
-        return tabular_aggregation_registry
+        return tabular_transformation_registry
 
 
 class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC):
@@ -45,6 +45,7 @@ TabularTransformationType = Union[
 TabularAggregationType = Union[str, TabularAggregation]
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class SequentialTabularTransformations(SequentialBlock):
     """A sequential container, modules will be added to it in the order they are passed in.
 
@@ -57,7 +58,7 @@ class SequentialTabularTransformations(SequentialBlock):
     def __init__(self, *transformation: TabularTransformationType):
         if len(transformation) == 1 and isinstance(transformation, list):
             transformation = transformation[0]
-        super().__init__(*[TabularTransformation.parse(t) for t in transformation])
+        super().__init__([TabularTransformation.parse(t) for t in transformation])
 
     def append(self, transformation):
         self.transformations.append(TabularTransformation.parse(transformation))
@@ -83,6 +84,7 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
 
 
 @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class TabularBlock(Block):
     """Layer that's specialized for tabular-data by integrating many often used operations.
 
@@ -308,6 +310,33 @@ class TabularBlock(Block):
         output_shapes = self._check_post_output_size(self.compute_call_output_shape(input_shapes))
 
         return output_shapes
+
+    def get_config(self):
+        config = super(TabularBlock, self).get_config()
+
+        if self.pre:
+            config["pre"] = tf.keras.utils.serialize_keras_object(self.pre)
+        if self.post:
+            config["post"] = tf.keras.utils.serialize_keras_object(self.post)
+        if self.aggregation:
+            config["aggregation"] = tf.keras.utils.serialize_keras_object(self.aggregation)
+        if self.schema:
+            config["schema"] = self.schema.to_proto_str()
+
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        if "schema" in config:
+            config["schema"] = DatasetSchema.from_proto(config["schema"])
+        if "pre" in config:
+            config["pre"] = tf.keras.utils.deserialize_keras_object(config["pre"])
+        if "post" in config:
+            config["post"] = tf.keras.utils.deserialize_keras_object(config["post"])
+        if "aggregation" in config:
+            config["aggregation"] = tf.keras.utils.deserialize_keras_object(config["aggregation"])
+
+        return super().from_config(config)
 
     def _check_post_output_size(self, input_shapes):
         output_shapes = input_shapes

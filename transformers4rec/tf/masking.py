@@ -84,11 +84,11 @@ class MaskedLanguageModeling(MaskSequence):
     pass
 
 
-@masking_registry.register_with_multiple_names("mlm", "permutation")
+@masking_registry.register_with_multiple_names("plm", "permutation")
 class PermutationLanguageModeling(MaskSequence):
     pass
 
 
-@masking_registry.register_with_multiple_names("mlm", "replacement")
+@masking_registry.register_with_multiple_names("rtd", "replacement")
 class ReplacementLanguageModeling(MaskSequence):
     pass

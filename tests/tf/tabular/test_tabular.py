@@ -1,5 +1,7 @@
 import pytest
 
+from tests.tf._utils import assert_serialization
+
 tf4rec = pytest.importorskip("transformers4rec.tf")
 
 
@@ -33,3 +35,22 @@ def test_tabular_module(tf_con_features):
     tab_b = ["b"] >> _DummyTabular()
 
     assert tab_a(tf_con_features, merge_with=tab_b, aggregation="stack").shape[1] == 1
+
+
+@pytest.mark.parametrize("pre", [None, "stochastic-swap-noise"])
+@pytest.mark.parametrize("post", [None, "stochastic-swap-noise"])
+@pytest.mark.parametrize("aggregation", [None, "concat"])
+@pytest.mark.parametrize("include_schema", [True, False])
+def test_serialization_continuous_features(
+    yoochoose_schema, tf_yoochoose_like, pre, post, aggregation, include_schema
+):
+    schema = yoochoose_schema if include_schema else None
+    inputs = tf4rec.TabularBlock(pre=pre, post=post, aggregation=aggregation, schema=schema)
+
+    copy_layer = assert_serialization(inputs)
+
+    assert copy_layer(tf_yoochoose_like) is not None
+    assert inputs.pre.__class__.__name__ == copy_layer.pre.__class__.__name__
+    assert inputs.post.__class__.__name__ == copy_layer.post.__class__.__name__
+    assert inputs.aggregation.__class__.__name__ == copy_layer.aggregation.__class__.__name__
+    assert inputs.schema == schema

@@ -43,6 +43,13 @@ class ContinuousFeatures(InputBlock):
     def compute_call_output_shape(self, input_shapes):
         return self.filter_features.compute_output_shape(input_shapes)
 
+    def get_config(self):
+        config = super().get_config()
+
+        config["features"] = self.filter_features.to_include
+
+        return config
+
     def _get_name(self):
         return "ContinuousFeatures"
 
