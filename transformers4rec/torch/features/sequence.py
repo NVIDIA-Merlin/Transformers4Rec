@@ -192,10 +192,6 @@ class TabularSequenceFeatures(TabularFeatures):
             output.projection_module = projection
             hidden_size = projection.output_size()
 
-        if isinstance(masking, str):
-            masking = masking_registry.parse(masking)(hidden_size=hidden_size[-1], **kwargs)
-        if masking and not getattr(output, "item_id", None):
-            raise ValueError("For masking a categorical_module is required including an item_id.")
         output.masking = masking
 
         return output
@@ -205,7 +201,12 @@ class TabularSequenceFeatures(TabularFeatures):
         return self._masking
 
     @masking.setter
-    def masking(self, value):
+    def masking(self, value, **kwargs):
+        if isinstance(value, str):
+            value = masking_registry.parse(value)(hidden_size=self.output_size()[-1], **kwargs)
+        if value and not getattr(self, "item_id", None):
+            raise ValueError("For masking a categorical_module is required including an item_id.")
+
         self._masking = value
 
     @property
