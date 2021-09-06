@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from ...utils.misc_utils import docstring_parameter
+from ...utils.schema import DatasetSchema
 from .. import typing
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from .base import InputBlock
@@ -23,8 +24,9 @@ class ContinuousFeatures(InputBlock):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
-        super().__init__(aggregation=aggregation, pre=pre, post=post)
+        super().__init__(aggregation=aggregation, pre=pre, post=post, schema=schema)
         self.filter_features = FilterFeatures(features)
 
     @classmethod

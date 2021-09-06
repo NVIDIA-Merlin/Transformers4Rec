@@ -1,4 +1,5 @@
 from abc import ABC
+from copy import deepcopy
 from functools import reduce
 from typing import Dict, List, Optional, Union
 
@@ -85,12 +86,14 @@ class TabularModule(torch.nn.Module):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
         super().__init__()
         self.input_size = None
         self.pre = pre
         self.post = post
         self.aggregation = aggregation
+        self.schema = schema
 
     @classmethod
     def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
@@ -106,13 +109,14 @@ class TabularModule(torch.nn.Module):
         -------
         Optional[TabularModule]
         """
+        _schema = deepcopy(schema)
         if tags:
-            schema = schema.select_by_tag(tags)
+            _schema = _schema.select_by_tag(tags)
 
-        if not schema.columns:
+        if not _schema.columns:
             return None
 
-        return cls.from_features(schema.column_names, **kwargs)
+        return cls.from_features(_schema.column_names, schema=_schema, **kwargs)
 
     @classmethod
     @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
@@ -275,7 +279,7 @@ class TabularModule(torch.nn.Module):
         post: Optional[TabularTransformationType] = None,
         merge_with: Union["TabularModule", List["TabularModule"]] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        **kwargs
+        **kwargs,
     ) -> TensorOrTabularData:
         """We overwrite the call method in order to be able to do pre- and post-processing.
 
@@ -403,7 +407,7 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[DatasetSchema] = None,
     ):
-        super().__init__(pre, post, aggregation)
+        super().__init__(pre=pre, post=post, aggregation=aggregation)
         self.schema = schema
 
     def to_module(self, shape_or_module, device=None):
@@ -473,14 +477,19 @@ class MergeTabular(TabularBlock):
         *modules_to_merge: Union[TabularModule, Dict[str, TabularModule]],
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
-        aggregation: Optional[TabularAggregationType] = None
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
         if all(isinstance(x, dict) for x in modules_to_merge):
             modules_to_merge = reduce(lambda a, b: dict(a, **b), modules_to_merge)
             self.to_merge = torch.nn.ModuleDict(modules_to_merge)
         else:
             self.to_merge = torch.nn.ModuleList(modules_to_merge)
+
+        # Merge schemas if necessary.
+        if not schema and all(getattr(m, "schema", False) for m in self.merge_values):
+            self.schema = reduce(lambda a, b: a + b, [m.schema for m in self.merge_values])
 
     @property
     def merge_values(self):

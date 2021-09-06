@@ -35,7 +35,7 @@ class ConcatFeatures(TabularAggregation):
         return batch_size, sum([i[1] for i in input_size.values()])
 
 
-@tabular_aggregation_registry.register("sequential_concat")
+@tabular_aggregation_registry.register("sequential-concat")
 class SequentialConcatFeatures(TabularAggregation):
     """Aggregation by stacking all values in TabularData, all non-sequential values will be
     converted to a sequence.

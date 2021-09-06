@@ -41,8 +41,9 @@ class EmbeddingFeatures(InputBlock):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
         self.item_id = item_id
         self.feature_config = feature_config
         self.filter_features = FilterFeatures(list(feature_config.keys()))
