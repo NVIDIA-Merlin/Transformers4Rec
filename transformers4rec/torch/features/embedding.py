@@ -6,7 +6,7 @@ import torch
 from ...types import DatasetSchema, DefaultTags
 from ...utils.misc_utils import docstring_parameter
 from .. import typing
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
 from .base import InputBlock
 

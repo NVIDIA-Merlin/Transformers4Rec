@@ -5,7 +5,7 @@ from ...utils.misc_utils import docstring_parameter
 from .. import typing
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures

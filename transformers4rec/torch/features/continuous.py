@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from ...utils.misc_utils import docstring_parameter
 from .. import typing
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from .base import InputBlock
 
 

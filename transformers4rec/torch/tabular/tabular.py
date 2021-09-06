@@ -4,12 +4,12 @@ from typing import Dict, List, Optional, Union
 
 import torch
 
-from ....types import DatasetSchema
-from ....utils.misc_utils import docstring_parameter
-from ....utils.registry import Registry
-from ...typing import TabularData, TensorOrTabularData
-from ...utils.torch_utils import OutputSizeMixin
-from ..base import BlockBase, SequentialBlock, right_shift_block
+from ...types import DatasetSchema
+from ...utils.misc_utils import docstring_parameter
+from ...utils.registry import Registry
+from ..block.base import BlockBase, SequentialBlock, right_shift_block
+from ..typing import TabularData, TensorOrTabularData
+from ..utils.torch_utils import OutputSizeMixin
 
 tabular_transformation_registry: Registry = Registry.class_registry("torch.tabular_transformations")
 tabular_aggregation_registry: Registry = Registry.class_registry("torch.tabular_aggregations")
