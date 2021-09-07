@@ -6,7 +6,7 @@ It works as a bridge between NLP and recommender systems by integrating with one
 
 
 
-<div style="text-align: center; margin: 20pt"><img src="images/sequential_rec.png" alt="Sequential and Session-based recommendation with Transformers4Rec" style="width:800px;"/><figcaption>Sequential and Session-based recommendation with Transformers4Rec</figcaption></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/sequential_rec.png" alt="Sequential and Session-based recommendation with Transformers4Rec" style="width:800px;"/><br><figcaption>Sequential and Session-based recommendation with Transformers4Rec</figcaption></div>
 
 Transformers4Rec supports multiple input features and provides configurable building blocks that can be easily combined for custom architectures.
 
@@ -28,7 +28,7 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 - **Seamless preprocessing and feature engineering**: The integration with NVTabular has common preprocessing ops for session-based recommendation and exports a dataset schema compatible with Transformers4Rec, so that input features can be configured automatically.
 
 
-<div style="text-align: center; margin: 20pt"><img src="images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;"/><figcaption>GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;"/><br><figcaption>GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
 
 More details on the **core features** of the Transformers4Rec library can be found [here](docs/source/core_features.md).
 

@@ -1,4 +1,6 @@
-# The relationship between NLP and RecSys
+# Core Features
+
+## The relationship between NLP and RecSys
 
 Over the past decade there has been a trend toward leveraging and adapting approaches proposed by Natural Language Processing (NLP) research like Word2Vec, GRU, and Attention for recommender systems (RecSys). The phenomena is especially noticeable for sequential and session-based recommendation where the sequential processing of users interactions is analogous to the language modeling (LM) task and many key RecSys architectures have been adapted from NLP, like GRU4Rec -- the seminal Recurrent Neural Network (RNN)-based architecture for session-based recommendation.
 
@@ -8,11 +10,12 @@ Transformers have similarly been applied to sequential recommendation in archite
 
 You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation towards Transformers in our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) too.
 
-<div style="text-align: center; margin: 20pt"><img src="../../images/nlp_x_recsys.png" alt="A timeline illustrating the influence of NLP research in Recommender Systems" style="width:800px;"/><figcaption>Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf)">Transformers4Rec paper</a></figcaption></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/nlp_x_recsys.png" alt="A timeline illustrating the influence of NLP research in Recommender Systems" style="width:800px;"/><br><figcaption>Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf)">Transformers4Rec paper</a></figcaption></div>
 
 
 
-# Integration with HuggingFace Transformers
+
+## Integration with HuggingFace Transformers
 
 Transformers4Rec integrates with the [HuggingFace (HF) Transformers](https://github.com/huggingface/transformers) library, allowing RecSys researchers and practitioners to easily experiment with the latest and state-of-the-art NLP Transformer architectures for sequential and session-based recommendation tasks and deploy those models into production.
 
@@ -23,15 +26,15 @@ HF Transformers is designed for both research and production. Models are compose
 In Transformers4Rec we leverage from HF Transformers only the transformer architectures building block (b) and their configuration classes. Transformers4Rec provides additional blocks necessary for recommendation, e.g., input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their `Trainer` class to allow for the evaluation with RecSys metrics.
 
 
-# Flexibility in Model Architecture
+## Flexibility in Model Architecture
 Transformers4Rec provides modularized building blocks that can be combined with plain PyTorch modules and Keras layers. This provides a great flexibility in the model definition, as you can use the blocks to build custom architectures, e.g., with multiple towers, multiple heads and losses (multi-task).
 
 In Fig. 2, we provide a reference architecture for next-item prediction with Transformers, that can be used for both sequential and session-based recommendation. We can divide that reference architecture in four conceptual layers, described next.
 
-<div style="text-align: center; margin: 20pt"><img src="../../images/transformers4rec_metaarchitecture.png" alt="Transformers4Rec meta-architecture" style="width:600px;"/><figcaption>Fig. 2 - Transformers4Rec meta-architecture</figcaption></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/transformers4rec_metaarchitecture.png" alt="Transformers4Rec meta-architecture" style="width:600px;"/><br><figcaption>Fig. 2 - Transformers4Rec meta-architecture</figcaption></div>
 
 
-## Features Processing 
+### Features Processing 
 Here the input features are processed. Categorical features are represented by embeddings. Numerical features can be represented as a scalar, projected by a fully-connected (FC) layer to multiple dimensions, or represented as a weighted average of embeddings by the technique Soft One-Hot embeddings (more info in our [paper online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md)).
 
 The features are optionally normalized (with layer normalization) and then aggregated. The current feature aggregation options are:
@@ -41,7 +44,7 @@ The features are optionally normalized (with layer normalization) and then aggre
 
 **TODO: Include some snippets of `TabularSequenceFeatures`**
 
-## Sequence Masking
+### Sequence Masking
 Transformer architectures can be trained in different ways. Depending of the training method, there is a specific masking schema. The masking schema sets the items to be predicted (labels) and mask (hide) some positions of the sequence that cannot be used by the Transformer layers for prediction. Currently supports the following training approaches, inspired by NLP:
 
 - **Causal LM (CLM)** - Predicts the next item based on past positions of the sequence. Future positions are masked.
@@ -51,14 +54,14 @@ Transformer architectures can be trained in different ways. Depending of the tra
 
 **TODO: Include snippets of CausalLanguageModeling, MaskedLanguageModeling, PermutationLanguageModeling, ReplacementLanguageModeling**
 
-## Sequence Processing
+### Sequence Processing
 Processes the input sequences of interaction vectors. It can the `RNNBlock` for RNN architectures (e.g. LSTM or GRU) or the `TransformerBlock` for supported Transformer architectures.
 
 **TODO: Describe the main options of the TransformerBlock**
 
 **TODO: Include snippets of the RNNBlock and of TransformerBlock with causal and masked LM**
 
-## Prediction head
+### Prediction head
 The library supports the following prediction heads. They can have multiple losses, that can be combined for multi-task learning and multiple metrics.
 
 - **Item Prediction** - Predicts items for a given sequence of interactions. During training it can be the next item or randomly selected items, depending on the masking scheme. For inference it is meant to always predict the next interacted item. Currently cross-entropy and some pairwise losses are supported. 
@@ -80,9 +83,9 @@ The library supports a number of regularization techniques like Dropout, Weight 
 
 More details of the options available for each building block can be found in our **API Documentation**.
 
-# Training and evaluation
+## Training and evaluation
 
-## Data loading
+### Data loading
 Transformers4Rec leverages by default the NVTabular dataloader for GPU-accelerated loading of preprocessed data stored in Parquet format, which is a suitable format for being structured and queryable. 
 The data in Parquet files are directly loaded to GPU memory as feature tensors. CPUs are also supported when GPUs are not available.
 
@@ -96,7 +99,7 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
 **TODO: Describe the data loading options for TF**
 
 
-## PyTorch Training
+### PyTorch Training
 For PyTorch we extend the HF Transformers `Trainer` class, but keep its `train()` method. That means that we leverage the efficient training implementation from that library, which manages for example half-precision (FP16) and multi-GPU training.
 
 Two [approaches](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) are available for PyTorch multi-GPU training: `DataParallel` and `DistributedDataParallel`. `DataParallel` uses a single process and multiple threads on a single machine. `DistributedDataParallel` is more efficient for assigning separate processes for each GPU. Transformers4Rec supports both training approaches when using the NVTabular Dataloader.
@@ -111,7 +114,7 @@ Two [approaches](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) a
 
 **TODO: Include code snippets for training with PyTorch**
 
-## Evaluation
+### Evaluation
 For the Item Prediction head, the following top-N metrics are supported:
 
 Top-N metrics
@@ -126,19 +129,19 @@ Ranking metrics
 
 During training, the metrics are computed each N steps for both training and evaluation sets. During evaluation, the metrics are computed for all evaluation batches and averaged.
 
-### Incremental Evaluation
+#### Incremental Evaluation
 You can implement incremental evaluation by splitting your data into time windows (e.g. week, day or hour). Then you can have a loop that trains (or fine-tune a pre-trained model) with session of time window T and evaluates on sessions of time window T+1.
 
 **TODO: Include a snippet with a for loop for incremental evaluation**
 
 
-# End-to-end pipeline with Merlin
+## End-to-end pipeline with Merlin
 
 Transformers4Rec has a first-class integration with NVIDIA Merlin components, to build end-to-end GPU accelerated pipelines for sequential and session-based recommendation.
 
-<div style="text-align: center; margin: 20pt"><img src="../../images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><figcaption>Fig.3 Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><br><figcaption>Fig.3 -cPipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
 
-## Integration with NVTabular
+### Integration with NVTabular
 
 [NVTabular](https://github.com/NVIDIA/NVTabular/) is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate terabyte scale datasets and train deep learning (DL) based recommender systems. 
 
@@ -146,7 +149,7 @@ It has some popular [techniques](https://nvidia.github.io/NVTabular/main/api/ind
 
 Usually the input RecSys datasets contains one example per user interaction. For sequential recommendation, the training example is a sequence of user interactions, and for session-based recommendation it is a sequence of session interactions. In practice, each interaction-level feature needs to be converted to a sequence grouped by user/session and their sequence length must match, as each position of the sequence correspond to one interaction. You can see in Fig. 4 how the preprocessed parquet should look like.
 
-<div style="text-align: center; margin: 20pt"><img src="../../images/preproc_data_example.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:800px;"/><figcaption>Fig.3 Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/preproc_data_example.png" alt="Example of preprocessed parquet file" style="width:800px;"/><br><figcaption>Example of preprocessed parquet file</figcaption></div>
 
 NVTabular can easily prepare such data with the [Groupby](https://nvidia.github.io/NVTabular/main/api/ops/groupby.html) op, which allows grouping by a categorical column (e.g. user id, session id), sorting by another column (e.g. timestamp) and aggregating other columns as sequences (`list`) or by taking the `first` or `last` element of the sequence, as exemplified below. 
 
@@ -164,7 +167,7 @@ groupby_features = [
 )
 ```
 
-### Outputs
+#### Outputs
 
 NVTabular outputs parquet files with the preprocessed data. The parquet files can be (Hive) partitioned by a categorical column (e.g. day, company).
 
@@ -180,6 +183,6 @@ The NVTabular workflow can be saved after `workflow.fit()` is called, so that th
 **TODO: Include code snippet on how to save the NVTabular workflow**
 
 
-## Integration with Triton Inference Server
+### Integration with Triton Inference Server
 
 **TODO: Describe the integration with Triton**
