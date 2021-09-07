@@ -30,3 +30,11 @@ def assert_body_works_in_model(data, inputs, body, run_eagerly):
     assert len(metrics.keys()) == 7
     assert len(losses.epoch) == 5
     assert len(losses.history["loss"]) == 5
+
+
+def assert_serialization(layer):
+    copy_layer = layer.from_config(layer.get_config())
+
+    assert isinstance(copy_layer, layer.__class__)
+
+    return copy_layer

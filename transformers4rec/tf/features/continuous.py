@@ -1,5 +1,7 @@
 from typing import List, Optional
 
+import tensorflow as tf
+
 from ...types import DatasetSchema
 from ...utils.misc_utils import docstring_parameter
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
@@ -8,6 +10,7 @@ from .base import InputBlock
 
 
 @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ContinuousFeatures(InputBlock):
     """Input block for continuous features.
 
@@ -42,6 +45,13 @@ class ContinuousFeatures(InputBlock):
 
     def compute_call_output_shape(self, input_shapes):
         return self.filter_features.compute_output_shape(input_shapes)
+
+    def get_config(self):
+        config = super().get_config()
+
+        config["features"] = self.filter_features.to_include
+
+        return config
 
     def _get_name(self):
         return "ContinuousFeatures"

@@ -14,6 +14,7 @@ from .tabular import TabularAggregation, tabular_aggregation_registry
 
 
 @tabular_aggregation_registry.register("concat")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ConcatFeatures(TabularAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
@@ -34,12 +35,14 @@ class ConcatFeatures(TabularAggregation):
         return ["flatten"]
 
     def get_config(self):
-        return {
-            "axis": self.axis,
-        }
+        config = super().get_config()
+        config["axis"] = self.axis
+
+        return config
 
 
 @tabular_aggregation_registry.register("sequential-concat")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class SequentialConcatFeatures(TabularAggregation):
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         tensors = []
@@ -68,6 +71,7 @@ class SequentialConcatFeatures(TabularAggregation):
 
 
 @tabular_aggregation_registry.register("stack")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class StackFeatures(TabularAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
@@ -89,9 +93,10 @@ class StackFeatures(TabularAggregation):
         return ["flatten"]
 
     def get_config(self):
-        return {
-            "axis": self.axis,
-        }
+        config = super().get_config()
+        config["axis"] = self.axis
+
+        return config
 
 
 class ElementwiseFeatureAggregation(TabularAggregation):
@@ -105,9 +110,10 @@ class ElementwiseFeatureAggregation(TabularAggregation):
 
 
 @tabular_aggregation_registry.register("element-wise-sum")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ElementwiseSum(ElementwiseFeatureAggregation):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.stack = StackFeatures(axis=0)
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
@@ -122,10 +128,11 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
 
 
 @tabular_aggregation_registry.register("element-wise-sum-item-multi")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 @requires_schema
 class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
-    def __init__(self, schema=None):
-        super().__init__()
+    def __init__(self, schema=None, **kwargs):
+        super().__init__(**kwargs)
         self.stack = StackFeatures(axis=0)
         if schema:
             self.set_schema(schema)
@@ -149,3 +156,10 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         last_dim = list(input_shape.values())[0][-1]
 
         return batch_size, last_dim
+
+    def get_config(self):
+        config = super().get_config()
+        if self.schema:
+            config["schema"] = self.schema.to_proto_str()
+
+        return config
