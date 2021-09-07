@@ -2,7 +2,7 @@ from typing import Dict, Optional
 
 import torch
 
-from ...typing import FeatureConfig, TableConfig, TabularData, TensorOrTabularData
+from ..typing import FeatureConfig, TableConfig, TabularData, TensorOrTabularData
 from .tabular import TabularTransformation, tabular_transformation_registry
 
 

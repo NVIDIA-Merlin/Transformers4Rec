@@ -2,9 +2,9 @@ from functools import reduce
 
 import torch
 
-from ....utils.schema import DatasetSchema, requires_schema
-from ...typing import TabularData
-from ...utils.torch_utils import calculate_batch_size_from_input_size
+from ...utils.schema import DatasetSchema, requires_schema
+from ..typing import TabularData
+from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .tabular import TabularAggregation, tabular_aggregation_registry
 
 
@@ -35,7 +35,7 @@ class ConcatFeatures(TabularAggregation):
         return batch_size, sum([i[1] for i in input_size.values()])
 
 
-@tabular_aggregation_registry.register("sequential_concat")
+@tabular_aggregation_registry.register("sequential-concat")
 class SequentialConcatFeatures(TabularAggregation):
     """Aggregation by stacking all values in TabularData, all non-sequential values will be
     converted to a sequence.

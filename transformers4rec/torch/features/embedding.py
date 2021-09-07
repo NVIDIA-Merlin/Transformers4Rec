@@ -6,7 +6,7 @@ import torch
 from ...types import DatasetSchema, DefaultTags
 from ...utils.misc_utils import docstring_parameter
 from .. import typing
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
 from .base import InputBlock
 
@@ -41,8 +41,9 @@ class EmbeddingFeatures(InputBlock):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
         self.item_id = item_id
         self.feature_config = feature_config
         self.filter_features = FilterFeatures(list(feature_config.keys()))

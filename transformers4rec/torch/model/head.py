@@ -303,11 +303,11 @@ class NextItemPredictionTask(PredictionTask):
                 "For Item Prediction task a categorical_module "
                 "including an item_id column is required."
             )
-        embeddings = inputs.categorical_module
+        self.embeddings = inputs.categorical_module
         if not self.target_dim:
-            self.target_dim = embeddings.item_embedding_table.num_embeddings
+            self.target_dim = self.embeddings.item_embedding_table.num_embeddings
         if self.weight_tying:
-            self.item_embedding_table = embeddings.item_embedding_table
+            self.item_embedding_table = self.embeddings.item_embedding_table
 
         # Retrieve the masking if used in the model block
         self.masking = inputs.masking

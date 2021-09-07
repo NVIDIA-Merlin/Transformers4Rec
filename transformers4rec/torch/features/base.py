@@ -1,6 +1,6 @@
 from abc import ABC
 
-from ..block.tabular.tabular import TabularBlock
+from ..tabular.tabular import TabularBlock
 
 
 class InputBlock(TabularBlock, ABC):

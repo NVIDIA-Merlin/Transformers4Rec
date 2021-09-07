@@ -99,7 +99,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
             return first
 
     def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
-        from .tabular.tabular import FilterFeatures
+        from ..tabular.tabular import FilterFeatures
 
         if isinstance(module, list):
             module = FilterFeatures(module)
@@ -153,7 +153,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return SequentialBlock(self, AsTabular(name))
 
     def __add__(self, other):
-        from .tabular.tabular import merge_tabular
+        from ..tabular.tabular import merge_tabular
 
         return merge_tabular(self, other)
 
@@ -212,7 +212,7 @@ class BuildableBlock(abc.ABC):
 
 
 def right_shift_block(self, other):
-    from .tabular.tabular import FilterFeatures
+    from ..tabular.tabular import FilterFeatures
 
     if isinstance(other, list):
         left_side = [FilterFeatures(other)]
