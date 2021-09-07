@@ -57,6 +57,7 @@ from .model.head import (
     RegressionTask,
 )
 from .model.model import Model
+from .trainer import Trainer
 
 __all__ = [
     "SequentialBlock",
@@ -95,6 +96,7 @@ __all__ = [
     "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
+    "Trainer",
 ]
 
 try:
