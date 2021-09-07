@@ -107,9 +107,7 @@ if dependencies.is_pyarrow_available():
             paths_or_dataset,
             batch_size,
             max_sequence_length,
-            continuous_features=None,
-            categorical_features=None,
-            targets=None,
+            cols_to_read=None,
             shuffle=False,
             shuffle_buffer_size=0,
             num_workers=1,
@@ -129,25 +127,17 @@ if dependencies.is_pyarrow_available():
                 max_sequence_length: int
                     The maximum length of list features.
             """
-            categorical_features = (
-                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
-            )
-            continuous_features = (
-                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
-            )
-            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+            cols_to_read = schema.column_names
 
             return cls(
                 paths_or_dataset,
                 batch_size,
                 max_sequence_length,
-                conts=continuous_features,
-                cats=categorical_features,
-                labels=targets,
+                cols_to_read=cols_to_read,
                 shuffle=shuffle,
-                shuffle_buffer_size=0,
-                num_workers=1,
-                pin_memory=True,
+                shuffle_buffer_size=shuffle_buffer_size,
+                num_workers=num_workers,
+                pin_memory=pin_memory,
                 **kwargs,
             )
 
