@@ -81,9 +81,27 @@ def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoocho
     assert outputs.shape[1] == 20
 
 
+def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_like):
+    continuous_module = torch4rec.ContinuousFeatures.from_schema(
+        yoochoose_schema, tags=["continuous"]
+    )
+    categorical_module = torch4rec.SequenceEmbeddingFeatures.from_schema(
+        yoochoose_schema, tags=["categorical"]
+    )
+
+    inputs = torch4rec.TabularSequenceFeatures(
+        continuous_module=continuous_module,
+        categorical_module=categorical_module,
+        aggregation="sequential-concat",
+    )
+    outputs = inputs(torch_yoochoose_like)
+
+    assert inputs.schema == continuous_module.schema + categorical_module.schema
+    assert len(outputs.shape) == 3
+
+
 def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-
         yoochoose_schema = yoochoose_schema - ["item_id/list"]
 
         torch4rec.TabularSequenceFeatures.from_schema(
@@ -99,7 +117,6 @@ def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
 
 def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-
         torch4rec.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,

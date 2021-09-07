@@ -5,7 +5,7 @@ from ...utils.misc_utils import docstring_parameter
 from .. import typing
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
@@ -45,6 +45,7 @@ class TabularFeatures(MergeTabular):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
         to_merge = {}
         if continuous_module:
@@ -55,7 +56,9 @@ class TabularFeatures(MergeTabular):
             to_merge["text_embedding_module"] = text_embedding_module
 
         assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(to_merge, pre=pre, post=post, aggregation=aggregation)
+        super(TabularFeatures, self).__init__(
+            to_merge, pre=pre, post=post, aggregation=aggregation, schema=schema
+        )
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]
