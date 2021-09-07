@@ -46,15 +46,15 @@ def test_features_from_schema(yoochoose_schema, yoochoose_path_file):
 def test_loader_from_registry(yoochoose_schema, yoochoose_path_file):
     pytest.importorskip("pyarrow")
     max_sequence_length = 70
-    batch_size = 16
+    batch_size = 8
     loader = torch4rec.utils.data_utils.T4RecDataLoader.parse("pyarrow").from_schema(
         yoochoose_schema,
         str(yoochoose_path_file),
         batch_size=batch_size,
         max_sequence_length=max_sequence_length,
         drop_last=True,
-        shuffle=True,
-        shuffle_buffer_size=0.1,
+        shuffle=False,
+        shuffle_buffer_size=0,
     )
     batch = next(iter(loader))
     features = yoochoose_schema.column_names

@@ -1,6 +1,5 @@
 import logging
 from abc import ABC
-from random import randint
 
 import numpy as np
 from torch.utils.data import DataLoader as PyTorchDataLoader
@@ -107,7 +106,9 @@ if dependencies.is_pyarrow_available():
             paths_or_dataset,
             batch_size,
             max_sequence_length,
-            cols_to_read=None,
+            continuous_features=None,
+            categorical_features=None,
+            targets=None,
             shuffle=False,
             shuffle_buffer_size=0,
             num_workers=1,
@@ -127,7 +128,16 @@ if dependencies.is_pyarrow_available():
                 max_sequence_length: int
                     The maximum length of list features.
             """
-            cols_to_read = schema.column_names
+
+            categorical_features = (
+                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+            )
+            continuous_features = (
+                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+            )
+            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+
+            cols_to_read = categorical_features + continuous_features + targets
 
             return cls(
                 paths_or_dataset,
@@ -338,40 +348,7 @@ class ShuffleDataset(IterableDataset):
         logger.info("[SHUFFLE] INITIALIZING BUFFER_SIZE: {}".format(self.buffer_size))
 
         raise StopIteration()
-
-        shufbuf = []
-        try:
-            dataset_iter = iter(self.dataset)
-            for i in range(self.buffer_size):
-                shufbuf.append(next(dataset_iter))
-        except GeneratorExit:
-            self.buffer_size = len(shufbuf)
-
-        try:
-            logger.info(
-                "[SHUFFLE] RETRIEVING FROM BUFFER AND REPLACING FROM ITERATOR: {}".format(
-                    len(shufbuf)
-                )
-            )
-            while True:
-                try:
-                    item = next(dataset_iter)
-                    evict_idx = randint(0, self.buffer_size - 1)
-                    yield shufbuf[evict_idx]
-                    shufbuf[evict_idx] = item
-                except StopIteration as e:
-                    logger.info("[SHUFFLE] StopIteration EXCEPTION: {}".format(e))
-                    break
-
-            logger.info("[SHUFFLE] STARTING TO RETRIEVE ONLY FROM BUFFER: {}".format(len(shufbuf)))
-
-            while len(shufbuf) > 0:
-                yield shufbuf.pop()
-
-            logger.info("[SHUFFLE] FINISHED ITERATING")
-
-        except GeneratorExit:
-            pass
+        # TODO define The shuffle method for pyarrow dataloader
 
     def __len__(self):
         return len(self.dataset)
