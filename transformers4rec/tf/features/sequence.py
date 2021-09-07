@@ -17,6 +17,7 @@ from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
     tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
     embedding_features_parameters=embedding.EMBEDDING_FEATURES_PARAMS_DOCSTRING,
 )
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
     """Input block for embedding-lookups for categorical features. This module produces 3-D tensors,
     this is useful for sequential models like transformers.

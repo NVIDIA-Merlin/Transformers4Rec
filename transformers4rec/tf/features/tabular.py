@@ -1,5 +1,7 @@
 from typing import List, Optional, Union
 
+import tensorflow as tf
+
 from ...types import DatasetSchema, DefaultTags, Tag
 from ...utils.misc_utils import docstring_parameter
 from ..block.base import SequentialBlock
@@ -25,6 +27,7 @@ TABULAR_FEATURES_PARAMS_DOCSTRING = """
     tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
     tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
 )
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class TabularFeatures(InputBlock, MergeTabular):
     """Input block that combines different types of features: continuous, categorical & text.
 

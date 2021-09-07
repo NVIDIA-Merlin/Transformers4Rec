@@ -31,6 +31,7 @@ EMBEDDING_FEATURES_PARAMS_DOCSTRING = """
     tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
     embedding_features_parameters=EMBEDDING_FEATURES_PARAMS_DOCSTRING,
 )
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class EmbeddingFeatures(InputBlock):
     """Input block for embedding-lookups for categorical features.
 
@@ -51,14 +52,16 @@ class EmbeddingFeatures(InputBlock):
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[DatasetSchema] = None,
         name=None,
+        add_default_pre=True,
         **kwargs,
     ):
         if not item_id and schema and schema.select_by_tag(["item_id"]).column_names:
             item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
-        embedding_pre = [FilterFeatures(list(feature_config.keys())), AsSparseFeatures()]
-        pre = [embedding_pre, pre] if pre else embedding_pre
-        self.embeddings = feature_config
+        if add_default_pre:
+            embedding_pre = [FilterFeatures(list(feature_config.keys())), AsSparseFeatures()]
+            pre = [embedding_pre, pre] if pre else embedding_pre
+        self.feature_config = feature_config
         self.item_id = item_id
 
         super().__init__(
@@ -120,7 +123,7 @@ class EmbeddingFeatures(InputBlock):
     def build(self, input_shapes):
         self.embedding_tables = {}
         tables: Dict[str, TableConfig] = {}
-        for name, feature in self.embeddings.items():
+        for name, feature in self.feature_config.items():
             table: TableConfig = feature.table
             if table.name not in tables:
                 tables[table.name] = table
@@ -170,7 +173,7 @@ class EmbeddingFeatures(InputBlock):
         if dtype != "int32" and dtype != "int64":
             val = tf.cast(val, "int32")
 
-        table: TableConfig = self.embeddings[name].table
+        table: TableConfig = self.feature_config[name].table
         table_var = self.embedding_tables[table.name]
         if isinstance(val, tf.SparseTensor):
             out = tf.nn.safe_embedding_lookup_sparse(table_var, val, None, combiner=table.combiner)
@@ -186,3 +189,78 @@ class EmbeddingFeatures(InputBlock):
             out = tf.cast(out, self._dtype_policy.compute_dtype)
 
         return out
+
+    def get_config(self):
+        config = super().get_config()
+
+        feature_configs = {}
+
+        for key, val in self.feature_config.items():
+            feature_config_dict = dict(name=val.name, max_sequence_length=val.max_sequence_length)
+            table = deepcopy(val.table.__dict__)
+            if "initializer" in table:
+                table["initializer"] = tf.keras.initializers.serialize(table["initializer"])
+            if "optimizer" in table:
+                table["optimizer"] = tf.keras.optimizers.serialize(table["optimizer"])
+
+            feature_config_dict["table"] = table
+            feature_configs[key] = feature_config_dict
+
+        config["feature_config"] = feature_configs
+        if self.item_id:
+            config["item_id"] = self.item_id
+
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        # Deserialize feature_config
+        feature_configs, table_configs = {}, {}
+        for key, val in config["feature_config"].items():
+            feature_params = deepcopy(val)
+            table_params = feature_params["table"]
+            if "name" in table_configs:
+                feature_params["table"] = table_configs["name"]
+            else:
+                table = deserialize_table_config(table_params)
+                if table.name:
+                    table_configs[table.name] = table
+                feature_params["table"] = table
+            feature_configs[key] = FeatureConfig(**feature_params)
+        config["feature_config"] = feature_configs
+
+        # Set `add_default_pre to False` since pre will be provided from the config
+        config["add_default_pre"] = False
+
+        return super().from_config(config)
+
+
+def serialize_table_config(table_config: TableConfig) -> Dict[str, Any]:
+    table = deepcopy(table_config.__dict__)
+    if "initializer" in table:
+        table["initializer"] = tf.keras.initializers.serialize(table["initializer"])
+    if "optimizer" in table:
+        table["optimizer"] = tf.keras.optimizers.serialize(table["optimizer"])
+
+    return table
+
+
+def deserialize_table_config(table_params: Dict[str, Any]) -> TableConfig:
+    if "initializer" in table_params and table_params["initializer"]:
+        table_params["initializer"] = tf.keras.initializers.deserialize(table_params["initializer"])
+    if "optimizer" in table_params and table_params["optimizer"]:
+        table_params["optimizer"] = tf.keras.optimizers.deserialize(table_params["optimizer"])
+    table = TableConfig(**table_params)
+
+    return table
+
+
+def serialize_feature_config(feature_config: FeatureConfig) -> Dict[str, Any]:
+    outputs = {}
+
+    for key, val in feature_config.items():
+        feature_config_dict = dict(name=val.name, max_sequence_length=val.max_sequence_length)
+        feature_config_dict["table"] = serialize_table_config(feature_config_dict["table"])
+        outputs[key] = feature_config_dict
+
+    return outputs
