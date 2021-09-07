@@ -9,6 +9,7 @@ from ..block.mlp import MLPBlock
 from ..masking import masking_registry
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, TabularBlock
 from ..typing import Block, MaskSequence, TabularAggregationType, TabularTransformationType
+from ..utils import tf_utils
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
@@ -82,6 +83,13 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
 
         return outputs
 
+    def get_config(self):
+        config = super().get_config()
+        config["mask_zero"] = self.mask_zero
+        config["padding_idx"] = self.padding_idx
+
+        return config
+
 
 @docstring_parameter(
     tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
@@ -128,7 +136,7 @@ class TabularSequenceFeatures(TabularFeatures):
             **kwargs,
         )
         self.projection_block = projection_block
-        self._masking = masking
+        self.set_masking(masking)
 
     @classmethod
     def from_schema(
@@ -208,7 +216,7 @@ class TabularSequenceFeatures(TabularFeatures):
             masking = masking_registry.parse(masking)(**kwargs)
         if masking and not getattr(output, "item_id", None):
             raise ValueError("For masking a categorical_module is required including an item_id.")
-        output.masking = masking
+        output.set_masking(masking)
 
         return output
 
@@ -263,8 +271,7 @@ class TabularSequenceFeatures(TabularFeatures):
     def masking(self):
         return self._masking
 
-    @masking.setter
-    def masking(self, value):
+    def set_masking(self, value):
         self._masking = value
 
     @property
@@ -280,3 +287,17 @@ class TabularSequenceFeatures(TabularFeatures):
             return getattr(self.to_merge["categorical_layer"], "item_embedding_table", None)
 
         return None
+
+    def get_config(self):
+        config = super().get_config()
+        config = tf_utils.maybe_serialize_keras_objects(
+            self, config, ["projection_block", "masking"]
+        )
+
+        return config
+
+    @classmethod
+    def from_config(cls, config, **kwargs):
+        config = tf_utils.maybe_deserialize_keras_objects(config, ["projection_block", "masking"])
+
+        return super().from_config(config)

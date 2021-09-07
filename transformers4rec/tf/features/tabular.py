@@ -8,6 +8,7 @@ from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
 from ..typing import TabularAggregationType, TabularBlock, TabularTransformationType
+from ..utils import tf_utils
 from .base import InputBlock
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
@@ -163,3 +164,29 @@ class TabularFeatures(InputBlock, MergeTabular):
             return self.to_merge["categorical_layer"]
 
         return None
+
+    @property
+    def text_embedding_layer(self):
+        if "text_embedding_layer" in self.to_merge:
+            return self.to_merge["text_embedding_layer"]
+
+        return None
+
+    def get_config(self):
+        from transformers4rec.tf import TabularBlock as _TabularBlock
+
+        config = tf_utils.maybe_serialize_keras_objects(
+            self,
+            _TabularBlock.get_config(self),
+            ["continuous_layer", "categorical_layer", "text_embedding_layer"],
+        )
+
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        config = tf_utils.maybe_deserialize_keras_objects(
+            config, ["continuous_layer", "categorical_layer", "text_embedding_layer"]
+        )
+
+        return super().from_config(config)
