@@ -142,7 +142,7 @@ if dependencies.is_pyarrow_available():
             )
 
 
-if dependencies.is_rapids_available():
+if dependencies.is_gpu_dataloader_available():
     from nvtabular.loader.torch import DLDataLoader
 
     from transformers4rec.torch.data import DataLoader
