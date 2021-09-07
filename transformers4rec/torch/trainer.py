@@ -578,9 +578,7 @@ class Trainer(BaseTrainer):
             except ImportError:
                 raise ImportError("cloudpickle is required to load model class")
             logger.info("Loading model class")
-            self.model = cloudpickle.load(
-                open(os.path.join(checkpoint_path, "model_class.pkl"), "rb")
-            )
+            model = cloudpickle.load(open(os.path.join(checkpoint_path, "model_class.pkl"), "rb"))
 
         self.model = HFWrapper(model)
         logger.info("Loading weights of previously trained model")
