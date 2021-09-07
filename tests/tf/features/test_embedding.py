@@ -31,6 +31,21 @@ def test_embedding_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
     assert emb_module.item_embedding_table.shape[0] == 51996
 
 
+def test_serialization_embedding_features(yoochoose_schema, tf_yoochoose_like):
+    inputs = tf4rec.EmbeddingFeatures.from_schema(yoochoose_schema)
+
+    copy_layer = test_utils.assert_serialization(inputs)
+
+    assert list(inputs.feature_config.keys()) == list(copy_layer.feature_config.keys())
+
+    from transformers4rec.tf.features.embedding import serialize_table_config as ser
+
+    assert all(
+        ser(inputs.feature_config[key].table) == ser(copy_layer.feature_config[key].table)
+        for key in copy_layer.feature_config
+    )
+
+
 @test_utils.mark_run_eagerly_modes
 def test_embedding_features_yoochoose_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)

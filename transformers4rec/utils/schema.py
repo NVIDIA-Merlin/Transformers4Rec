@@ -1,6 +1,7 @@
 import abc
 import collections.abc
 import math
+import os
 from dataclasses import dataclass, field
 
 try:
@@ -71,10 +72,13 @@ class DatasetSchema:
         self.set_schema(None)
 
     @staticmethod
-    def read_schema(schema_path):
-        with open(schema_path, "rb") as f:
-            schema = schema_pb2.Schema()
-            text_format.Parse(f.read(), schema)
+    def read_proto_txt(path_or_protostr):
+        proto_str = path_or_protostr
+        if os.path.isfile(path_or_protostr):
+            with open(path_or_protostr, "rb") as f:
+                proto_str = f.read()
+        schema = schema_pb2.Schema()
+        text_format.Parse(proto_str, schema)
 
         return schema
 
@@ -82,9 +86,9 @@ class DatasetSchema:
         self._schema = schema
 
     @classmethod
-    def from_schema(cls, schema) -> "DatasetSchema":
+    def from_proto(cls, schema) -> "DatasetSchema":
         if isinstance(schema, str):
-            schema = cls.read_schema(schema)
+            schema = cls.read_proto_txt(schema)
 
         columns = []
         for feat in schema.feature:
@@ -324,6 +328,9 @@ class DatasetSchema:
 
     def get_mask_from_inputs(self, inputs, mask_token=0):
         return self.get_item_ids_from_inputs(inputs) != mask_token
+
+    def to_proto_str(self):
+        return text_format.MessageToString(self._schema)
 
 
 class SchemaMixin(abc.ABC):

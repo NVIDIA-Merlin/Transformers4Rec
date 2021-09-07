@@ -145,13 +145,17 @@ class Registry:
         """
         if key is None:
             key = self.default_key(value)
-        if key in self:
-            raise KeyError("key %s already registered in registry %s" % (key, self._name))
-        if not callable(value):
-            raise ValueError("value must be callable")
-        self.validate(key, value)
-        self._registry[key] = value
-        self.on_set(key, value)
+        if not isinstance(key, tuple):
+            key = (key,)
+
+        for k in key:
+            if k in self:
+                raise KeyError("key %s already registered in registry %s" % (k, self._name))
+            if not callable(value):
+                raise ValueError("value must be callable")
+            self.validate(k, value)
+            self._registry[k] = value
+            self.on_set(k, value)
 
     def register(self, key_or_value=None):
         """Decorator to register a function, or registration itself.
@@ -203,11 +207,7 @@ class Registry:
             return lambda value: decorator(value, key=key_or_value)
 
     def register_with_multiple_names(self, *names):
-        out = None
-        for name in names:
-            out = self.register(name)
-
-        return out
+        return self.register(names)
 
     def __getitem__(self, key):
         if key not in self:

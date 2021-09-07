@@ -18,6 +18,21 @@ def test_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
     assert all(tensor.shape[2] == 64 for tensor in list(outputs.values()))
 
 
+def test_serialization_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
+    inputs = tf4rec.SequenceEmbeddingFeatures.from_schema(yoochoose_schema)
+
+    copy_layer = test_utils.assert_serialization(inputs)
+
+    assert list(inputs.feature_config.keys()) == list(copy_layer.feature_config.keys())
+
+    from transformers4rec.tf.features.embedding import serialize_table_config as ser
+
+    assert all(
+        ser(inputs.feature_config[key].table) == ser(copy_layer.feature_config[key].table)
+        for key in copy_layer.feature_config
+    )
+
+
 @test_utils.mark_run_eagerly_modes
 def test_sequence_embedding_features_yoochoose_model(
     yoochoose_schema, tf_yoochoose_like, run_eagerly
@@ -41,6 +56,14 @@ def test_sequence_tabular_features_with_projection(yoochoose_schema, tf_yoochoos
     assert len(outputs.keys()) == 3
     assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
     assert all(tensor.shape[1] == 20 for tensor in outputs.values())
+
+
+def test_serialization_sequence_tabular_features(yoochoose_schema, tf_yoochoose_like):
+    inputs = tf4rec.TabularSequenceFeatures.from_schema(yoochoose_schema)
+
+    copy_layer = test_utils.assert_serialization(inputs)
+
+    assert list(inputs.to_merge.keys()) == list(copy_layer.to_merge.keys())
 
 
 @test_utils.mark_run_eagerly_modes
