@@ -15,7 +15,7 @@
 #
 
 import abc
-from typing import Dict, Optional, Union
+from typing import Dict, Union
 
 import torch
 
@@ -24,7 +24,6 @@ from merlin_standard_lib.utils.proto_utils import has_field
 
 from ..typing import TabularData
 from ...config.schema import SchemaMixin
-
 
 class OutputSizeMixin(SchemaMixin, abc.ABC):
     def build(self, input_size, schema=None, **kwargs):
