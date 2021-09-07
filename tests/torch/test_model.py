@@ -5,6 +5,11 @@ from transformers4rec.config import transformer as tconf
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
+if pytorch.cuda.is_available():
+    devices = ["cpu", "cuda"]
+else:
+    devices = ["cpu"]
+
 
 def test_simple_model(torch_yoochoose_tabular_features, torch_yoochoose_like):
     targets = {"target": pytorch.randint(2, (100,)).float()}
@@ -101,7 +106,7 @@ def test_model_with_multiple_heads_and_tasks(
         "eval_regression_session",
     ]
     assert len(losses) == 5
-    assert all(loss.min() >= 0 and loss.max() <= 1 for loss in losses)
+    assert all(loss is not None for loss in losses)
 
 
 def test_multi_head_model_wrong_weights(torch_yoochoose_tabular_features, torch_yoochoose_like):
@@ -169,3 +174,12 @@ def test_item_prediction_transformer_torch_model_from_config(
 
     assert out.size()[1] == task.target_dim
     assert len(out.size()) == 2
+
+
+@pytest.mark.parametrize("device", devices)
+def test_set_model_to_device(torch_yoochoose_next_item_prediction_model, device):
+    model = torch_yoochoose_next_item_prediction_model
+    model.to(device)
+
+    assert model.heads[0].body.inputs.masking.device == device
+    assert next(model.parameters()).device.type == device
