@@ -129,7 +129,7 @@ def test_item_prediction_loss_and_metrics(
     body_outputs = body(torch_yoochoose_like)
 
     trg_flat = input_module.masking.masked_targets.flatten()
-    non_pad_mask = trg_flat != input_module.masking.pad_token
+    non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
 
     loss = head.prediction_tasks["0"].compute_loss(
