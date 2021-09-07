@@ -251,7 +251,7 @@ class NextItemPredictionTask(PredictionTask):
     softmax_temperature: float
         Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
         Value 1.0 reduces to regular softmax.
-    pad_token: str
+    padding_idx: int
         pad token id.
     target_dim: int
         vocabulary size of item ids
@@ -274,14 +274,14 @@ class NextItemPredictionTask(PredictionTask):
         task_block: Optional[torch.nn.Module] = None,
         weight_tying: bool = False,
         softmax_temperature: float = 1,
-        pad_token: int = 0,
+        padding_idx: int = 0,
         target_dim: int = None,
         hf_format=False,
     ):
         super().__init__(loss=loss, metrics=metrics, task_block=task_block)
         self.softmax_temperature = softmax_temperature
         self.weight_tying = weight_tying
-        self.pad_token = pad_token
+        self.padding_idx = padding_idx
         self.target_dim = target_dim
         self.hf_format = hf_format
 
@@ -312,7 +312,7 @@ class NextItemPredictionTask(PredictionTask):
         # Retrieve the masking if used in the model block
         self.masking = inputs.masking
         if self.masking:
-            self.pad_token = self.masking.pad_token
+            self.padding_idx = self.masking.padding_idx
 
         pre = NextItemPredictionPrepareBlock(
             target_dim=self.target_dim,
@@ -337,7 +337,7 @@ class NextItemPredictionTask(PredictionTask):
 
         # remove padded items
         trg_flat = labels.flatten()
-        non_pad_mask = trg_flat != self.pad_token
+        non_pad_mask = trg_flat != self.padding_idx
         labels_all = torch.masked_select(trg_flat, non_pad_mask)
         x = self.remove_pad_3d(x, non_pad_mask)
 

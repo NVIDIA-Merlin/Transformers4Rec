@@ -55,7 +55,7 @@ def torch_masking_inputs():
     # replace last 2 items by zeros to mimic padding
     labels[:, MAX_LEN - 2 :] = 0
     features["labels"] = labels
-    features["pad_token"] = PAD_TOKEN
+    features["padding_idx"] = PAD_TOKEN
     features["vocab_size"] = MAX_CARDINALITY
 
     return features
