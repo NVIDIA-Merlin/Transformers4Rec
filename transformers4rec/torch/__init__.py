@@ -40,7 +40,6 @@ from .model.head import (
     RegressionTask,
 )
 from .model.model import Model
-from .trainer import Trainer
 from .tabular.aggregation import (
     ConcatFeatures,
     ElementwiseSum,
@@ -58,6 +57,7 @@ from .tabular.tabular import (
     TabularTransformation,
 )
 from .tabular.transformations import StochasticSwapNoise, TabularLayerNorm
+from .trainer import Trainer
 
 __all__ = [
     "SequentialBlock",
