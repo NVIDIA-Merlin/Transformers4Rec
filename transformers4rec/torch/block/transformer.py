@@ -132,7 +132,7 @@ class TransformerBlock(BlockBase):
         if self.prepare_module:
             transformer_kwargs = self.prepare_module(inputs_embeds)
         if self.masking:
-            masking_kwargs = self.masking.transformer_arguments()
+            masking_kwargs = self.masking.transformer_arguments
             if masking_kwargs:
                 transformer_kwargs.update(masking_kwargs)
 
