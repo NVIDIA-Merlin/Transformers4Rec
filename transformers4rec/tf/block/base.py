@@ -191,7 +191,7 @@ class SequentialBlock(Block):
             for conf in config.values()
         ]
 
-        return cls(layers)
+        return SequentialBlock(layers)
 
     def __rrshift__(self, other):
         return right_shift_layer(self, other)

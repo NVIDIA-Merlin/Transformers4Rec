@@ -65,6 +65,15 @@ class SequentialTabularTransformations(SequentialBlock):
     def append(self, transformation):
         self.transformations.append(TabularTransformation.parse(transformation))
 
+    @classmethod
+    def from_config(cls, config, custom_objects=None):
+        layers = [
+            tf.keras.layers.deserialize(conf, custom_objects=custom_objects)
+            for conf in config.values()
+        ]
+
+        return SequentialTabularTransformations(layers)
+
 
 TABULAR_MODULE_PARAMS_DOCSTRING = """
     pre: Union[str, TabularTransformation, List[str], List[TabularTransformation]], optional
