@@ -63,12 +63,12 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
 
     def compute_call_output_shape(self, input_shapes):
         batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
-        sequence_length = input_shapes[list(self.embeddings.keys())[0]][1]
+        sequence_length = input_shapes[list(self.feature_config.keys())[0]][1]
 
         output_shapes = {}
         for name, val in input_shapes.items():
             output_shapes[name] = tf.TensorShape(
-                [batch_size, sequence_length, self.embeddings[name].table.dim]
+                [batch_size, sequence_length, self.feature_config[name].table.dim]
             )
 
         return output_shapes

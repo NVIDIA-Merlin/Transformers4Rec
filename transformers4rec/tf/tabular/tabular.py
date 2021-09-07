@@ -58,6 +58,8 @@ class SequentialTabularTransformations(SequentialBlock):
     def __init__(self, transformation: TabularTransformationType):
         if len(transformation) == 1 and isinstance(transformation, list):
             transformation = transformation[0]
+        if not isinstance(transformation, (list, tuple)):
+            transformation = [transformation]
         super().__init__([TabularTransformation.parse(t) for t in transformation])
 
     def append(self, transformation):

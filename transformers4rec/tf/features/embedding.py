@@ -155,7 +155,7 @@ class EmbeddingFeatures(InputBlock):
 
         output_shapes = {}
         for name, val in input_shapes.items():
-            output_shapes[name] = tf.TensorShape([batch_size, self.embeddings[name].table.dim])
+            output_shapes[name] = tf.TensorShape([batch_size, self.feature_config[name].table.dim])
 
         return output_shapes
 
