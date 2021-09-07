@@ -18,6 +18,12 @@ def schema_file():
 
 
 YOOCHOOSE_SCHEMA = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
+YOOCHOOSE_PATH = ASSETS_DIR / "yoochoose" / "data.parquet"
+
+
+@pytest.fixture
+def yoochoose_path_file():
+    return YOOCHOOSE_PATH
 
 
 @pytest.fixture

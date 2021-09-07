@@ -10,6 +10,7 @@ from transformers.modeling_utils import SequenceSummary
 from ...types import DatasetSchema
 from ...utils.tags import Tag
 from ..block.base import Block, BuildableBlock, SequentialBlock
+from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockOrModule, BlockType
 
 
@@ -136,6 +137,7 @@ class PredictionTask(torch.nn.Module):
         if forward:
             predictions = self(predictions)
         predictions = self.forward_to_prediction_fn(predictions)
+
         for metric in self.metrics:
             if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
                 targets = targets.int()
@@ -258,10 +260,17 @@ class NextItemPredictionTask(PredictionTask):
         return the predictions tensor.
     """
 
+    DEFAULT_METRICS = (
+        # default metrics suppose labels are int encoded
+        NDCGAt(top_ks=[10, 20], labels_onehot=True),
+        AvgPrecisionAt(top_ks=[10, 20], labels_onehot=True),
+        RecallAt(top_ks=[10, 20], labels_onehot=True),
+    )
+
     def __init__(
         self,
         loss: torch.nn.Module = torch.nn.NLLLoss(ignore_index=0),
-        metrics: Iterable[tm.Metric] = None,
+        metrics: Iterable[tm.Metric] = DEFAULT_METRICS,
         task_block: Optional[torch.nn.Module] = None,
         weight_tying: bool = False,
         softmax_temperature: float = 1,
@@ -357,6 +366,40 @@ class NextItemPredictionTask(PredictionTask):
         )
         out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
         return out_tensor
+
+    def calculate_metrics(
+        self, predictions, targets, mode="val", forward=True
+    ) -> Dict[str, torch.Tensor]:
+        if isinstance(targets, dict) and self.target_name:
+            targets = targets[self.target_name]
+
+        outputs = {}
+        if forward:
+            predictions = self(predictions)
+        predictions = self.forward_to_prediction_fn(predictions)
+        if self.hf_format:
+            predictions = predictions["predictions"]
+
+        for metric in self.metrics:
+            outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, targets)
+
+        return outputs
+
+    def compute_metrics(self):
+        metrics = {
+            f"{metric.__class__.__name__.lower()}": metric.compute()
+            for metric in self.metrics
+            if getattr(metric, "top_ks", None)
+        }
+        # Explode metrics for each cut-off
+        # TODO make result generic:
+        # To accept a mix of ranking metrics and others not requiring top_ks ?
+        topks = {f"{metric.__class__.__name__.lower()}": metric.top_ks for metric in self.metrics}
+        results = {}
+        for name, metric in metrics.items():
+            for measure, k in zip(metric, topks[name]):
+                results[f"{name}_{k}"] = measure
+        return results
 
 
 class NextItemPredictionPrepareBlock(BuildableBlock):
