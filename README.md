@@ -37,6 +37,29 @@ More details on the **core features** of the Transformers4Rec library can be fou
 
 **TODO: Simple code snippet showing how the building blocks are defined and connected with a few lines**
 
+```python
+# Define feature processing module
+inputs = TabularSequenceFeatures.from_schema(
+        schema,
+        max_sequence_length=20,
+	aggregation="sequential-concat",
+        masking="causal",
+    )
+# Define the config of the XLNet Transformer architecture
+transformer_config = transformer.XLNetConfig.build(
+    d_model=64, n_head=4, n_layer=2, total_seq_length=20
+)
+# Define the model body connecting the inputs, projection, transformer block and masking
+body = SequentialBlock(
+    inputs, MLPBlock([64]), TransformerBlock(transformer_config, masking=inputs.masking)
+)
+# Link the body to prediction task 
+head = Head(body, NextItemPredictionTask(weight_tying=True, hf_format=True), inputs=inputs,
+)
+# Get the end-to-end Model class 
+model = Model(head)
+```
+
 Check the getting started and advanced examples [here](docs/source/core_features.md).
 
 ## When to use it?
