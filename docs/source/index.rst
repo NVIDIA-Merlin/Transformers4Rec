@@ -13,7 +13,7 @@ Welcome to Transformers4Rec's documentation!
    Getting Started <getting_started>
    Core features <core_features>
    Examples <examples/index>
-   API Documentation <api/index>
+   API Documentation <api/modules>
    Additional Resources <resources>
 
 
