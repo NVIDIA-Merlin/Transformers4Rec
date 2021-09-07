@@ -9,39 +9,17 @@ Subpackages
 
    transformers4rec.torch.block
    transformers4rec.torch.features
+   transformers4rec.torch.model
+   transformers4rec.torch.tabular
    transformers4rec.torch.utils
 
 Submodules
 ----------
 
-transformers4rec.torch.aggregation module
------------------------------------------
-
-.. automodule:: transformers4rec.torch.aggregation
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-transformers4rec.torch.augmentation module
-------------------------------------------
-
-.. automodule:: transformers4rec.torch.augmentation
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 transformers4rec.torch.data module
 ----------------------------------
 
 .. automodule:: transformers4rec.torch.data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-transformers4rec.torch.head module
-----------------------------------
-
-.. automodule:: transformers4rec.torch.head
    :members:
    :undoc-members:
    :show-inheritance:
@@ -54,14 +32,6 @@ transformers4rec.torch.masking module
    :undoc-members:
    :show-inheritance:
 
-transformers4rec.torch.model module
------------------------------------
-
-.. automodule:: transformers4rec.torch.model
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 transformers4rec.torch.ranking\_metric module
 ---------------------------------------------
 
@@ -70,10 +40,10 @@ transformers4rec.torch.ranking\_metric module
    :undoc-members:
    :show-inheritance:
 
-transformers4rec.torch.tabular module
+transformers4rec.torch.trainer module
 -------------------------------------
 
-.. automodule:: transformers4rec.torch.tabular
+.. automodule:: transformers4rec.torch.trainer
    :members:
    :undoc-members:
    :show-inheritance:

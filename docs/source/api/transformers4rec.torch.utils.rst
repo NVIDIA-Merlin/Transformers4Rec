@@ -4,18 +4,18 @@ transformers4rec.torch.utils package
 Submodules
 ----------
 
-transformers4rec.torch.utils.torch\_utils module
-------------------------------------------------
+transformers4rec.torch.utils.data\_utils module
+-----------------------------------------------
 
-.. automodule:: transformers4rec.torch.utils.torch_utils
+.. automodule:: transformers4rec.torch.utils.data_utils
    :members:
    :undoc-members:
    :show-inheritance:
 
-transformers4rec.torch.utils.trainer module
--------------------------------------------
+transformers4rec.torch.utils.torch\_utils module
+------------------------------------------------
 
-.. automodule:: transformers4rec.torch.utils.trainer
+.. automodule:: transformers4rec.torch.utils.torch_utils
    :members:
    :undoc-members:
    :show-inheritance:
