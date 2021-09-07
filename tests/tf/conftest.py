@@ -65,7 +65,7 @@ def tf_yoochoose_like():
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
 
-    schema = DatasetSchema.read_schema(str(schema_file))
+    schema = DatasetSchema.read_proto_txt(str(schema_file))
     data = {}
 
     for i in range(NUM_ROWS):

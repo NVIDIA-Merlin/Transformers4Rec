@@ -18,6 +18,14 @@ def test_tabular_features(yoochoose_schema, tf_yoochoose_like):
     )
 
 
+def test_serialization_tabular_features(yoochoose_schema, tf_yoochoose_like):
+    inputs = tf4rec.TabularFeatures.from_schema(yoochoose_schema)
+
+    copy_layer = test_utils.assert_serialization(inputs)
+
+    assert list(inputs.to_merge.keys()) == list(copy_layer.to_merge.keys())
+
+
 def test_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
     tab_module = tf4rec.TabularFeatures.from_schema(yoochoose_schema, continuous_projection=64)
 
