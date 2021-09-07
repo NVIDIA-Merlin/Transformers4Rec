@@ -7,8 +7,8 @@ from ...utils.misc_utils import docstring_parameter
 from .. import typing
 from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
 from ..masking import MaskSequence, masking_registry
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
@@ -38,6 +38,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
         self.padding_idx = padding_idx
         super(SequenceEmbeddingFeatures, self).__init__(
@@ -46,6 +47,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
             pre=pre,
             post=post,
             aggregation=aggregation,
+            schema=schema,
         )
 
     def table_to_embedding_module(self, table: embedding.TableConfig) -> torch.nn.Embedding:
@@ -97,6 +99,7 @@ class TabularSequenceFeatures(TabularFeatures):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
     ):
         super().__init__(
             continuous_module,
@@ -105,9 +108,9 @@ class TabularSequenceFeatures(TabularFeatures):
             pre=pre,
             post=post,
             aggregation=aggregation,
+            schema=schema,
         )
-        if masking:
-            self.masking = masking
+        self.masking = masking
         self.projection_module = projection_module
 
     @classmethod
@@ -178,7 +181,7 @@ class TabularSequenceFeatures(TabularFeatures):
             raise ValueError("You cannot specify both d_output and projection at the same time")
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
-            output.aggregation = "sequential_concat"
+            output.aggregation = "sequential-concat"
         hidden_size = output.output_size()
 
         if d_output and not projection:
@@ -189,10 +192,6 @@ class TabularSequenceFeatures(TabularFeatures):
             output.projection_module = projection
             hidden_size = projection.output_size()
 
-        if isinstance(masking, str):
-            masking = masking_registry.parse(masking)(hidden_size=hidden_size[-1], **kwargs)
-        if masking and not getattr(output, "item_id", None):
-            raise ValueError("For masking a categorical_module is required including an item_id.")
         output.masking = masking
 
         return output
@@ -202,7 +201,12 @@ class TabularSequenceFeatures(TabularFeatures):
         return self._masking
 
     @masking.setter
-    def masking(self, value):
+    def masking(self, value, **kwargs):
+        if isinstance(value, str):
+            value = masking_registry.parse(value)(hidden_size=self.output_size()[-1], **kwargs)
+        if value and not getattr(self, "item_id", None):
+            raise ValueError("For masking a categorical_module is required including an item_id.")
+
         self._masking = value
 
     @property
@@ -240,7 +244,7 @@ class TabularSequenceFeatures(TabularFeatures):
             dimensions = [dimensions]
 
         continuous = self.to_merge["continuous_module"]
-        continuous.aggregation = "sequential_concat"
+        continuous.aggregation = "sequential-concat"
 
         continuous = SequentialBlock(
             continuous, MLPBlock(dimensions), AsTabular("continuous_projection")

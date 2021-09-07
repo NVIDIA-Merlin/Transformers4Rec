@@ -48,7 +48,7 @@ def test_tabular_module(torch_con_features):
 def test_tabular_module_to_device(yoochoose_schema, device):
     schema = yoochoose_schema
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(
-        schema, max_sequence_length=20, aggregation="sequential_concat"
+        schema, max_sequence_length=20, aggregation="sequential-concat"
     )
     tab_module.to(device)
 

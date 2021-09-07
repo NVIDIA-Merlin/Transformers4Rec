@@ -17,23 +17,6 @@
 # Block related imports
 from .block.base import Block, BlockBase, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
-from .block.tabular.aggregation import (
-    ConcatFeatures,
-    ElementwiseSum,
-    ElementwiseSumItemMulti,
-    StackFeatures,
-)
-from .block.tabular.tabular import (
-    AsTabular,
-    FilterFeatures,
-    MergeTabular,
-    SequentialTabularTransformations,
-    TabularAggregation,
-    TabularBlock,
-    TabularModule,
-    TabularTransformation,
-)
-from .block.tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .block.transformer import TransformerBlock
 
 # Features related imports
@@ -57,6 +40,23 @@ from .model.head import (
     RegressionTask,
 )
 from .model.model import Model
+from .tabular.aggregation import (
+    ConcatFeatures,
+    ElementwiseSum,
+    ElementwiseSumItemMulti,
+    StackFeatures,
+)
+from .tabular.tabular import (
+    AsTabular,
+    FilterFeatures,
+    MergeTabular,
+    SequentialTabularTransformations,
+    TabularAggregation,
+    TabularBlock,
+    TabularModule,
+    TabularTransformation,
+)
+from .tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .trainer import Trainer
 
 __all__ = [
