@@ -7,8 +7,8 @@ from ...utils.misc_utils import docstring_parameter
 from .. import typing
 from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
 from ..masking import MaskSequence, masking_registry
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
