@@ -6,7 +6,7 @@ def is_nvtabular_available():
     return nvtabular is not None
 
 
-def is_cudf_available():
+def is_gpu_dataloader_available():
     try:
         import cudf
         import cupy
