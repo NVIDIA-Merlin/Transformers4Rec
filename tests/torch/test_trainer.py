@@ -25,13 +25,15 @@ def test_set_train_eval_loaders_attributes(
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
     )
-    resys_trainer = torch4rec.Trainer(model=torch_yoochoose_next_item_prediction_model, args=args)
+    recsys_trainer = torch4rec.Trainer(
+        model=torch_yoochoose_next_item_prediction_model,
+        args=args,
+        train_dataloader=train_loader,
+        eval_dataloader=eval_loader,
+    )
 
-    resys_trainer.train_dataloader = train_loader
-    resys_trainer.eval_dataloader = eval_loader
-
-    assert resys_trainer.get_train_dataloader().batch_size == batch_size
-    assert resys_trainer.get_eval_dataloader().batch_size == batch_size // 2
+    assert recsys_trainer.get_train_dataloader() == train_loader
+    assert recsys_trainer.get_eval_dataloader() == eval_loader
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])

@@ -19,6 +19,7 @@ def test_pyarrow_load(yoochoose_schema, yoochoose_path_file):
     )
     batch = next(iter(loader))
     assert all(feat.ndim == 2 for feat in batch.values())
+    assert all(feat.size()[0] == batch_size for feat in batch.values())
     assert all(feat.size()[-1] == max_sequence_length for feat in batch.values())
     assert all(feat.device == torch.device("cpu") for feat in batch.values())
 

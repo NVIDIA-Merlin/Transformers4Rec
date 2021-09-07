@@ -18,7 +18,7 @@ from typing import Dict
 
 import pandas as pd
 import torch
-from nvtabular.loader.torch import TorchAsyncItr as BaseDataLoader
+from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
 from transformers4rec.utils.misc_utils import _validate_dataset
 
@@ -46,7 +46,7 @@ class IterDL(torch.utils.data.IterableDataset):
                 yield df
 
 
-class DataLoader(BaseDataLoader):
+class DataLoader(NVTDataLoader):
     """This class creates batches of tensor. Each batch size is specified by the user.
     The data input requires an NVTabular dataset. Handles spillover to ensure all
     batches are the specified size until the final batch.
@@ -102,7 +102,7 @@ class DataLoader(BaseDataLoader):
             paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs
         )
 
-        BaseDataLoader.__init__(
+        NVTDataLoader.__init__(
             self,
             dataset,
             cats,
@@ -132,12 +132,23 @@ class DataLoader(BaseDataLoader):
         buffer_size=0.06,
         parts_per_chunk=1,
         separate_labels=True,
-        named_labels=False,
         continuous_features=None,
         categorical_features=None,
         targets=None,
         **kwargs
     ):
+        """
+        Define NVTabular dataloader from schema
+
+        Parameters
+        ----------
+        schema: DatasetSchema
+            Dataset schema
+        paths_or_dataset: Union[str, Dataset]
+            Path to paquet data of Dataset object.
+        separate_labels: bool
+            Whether to exclude labels from inputs or not
+        """
         categorical_features = (
             categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
         )
@@ -170,7 +181,6 @@ class DataLoader(BaseDataLoader):
         buffer_size=0.06,
         parts_per_chunk=1,
         separate_labels=True,
-        named_labels=False,
         schema_path=None,
         continuous_features=None,
         categorical_features=None,

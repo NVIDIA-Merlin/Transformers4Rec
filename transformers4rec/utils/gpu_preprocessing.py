@@ -14,7 +14,9 @@ def save_time_based_splits(
     val_size: float = 0.1,
     overwrite: bool = True,
 ):
-    """Split a dataset into time-based splits. Note, this function requires Rapids to be installed.
+    """Split a dataset into time-based splits.
+    Note, this function requires Rapids dependencies to be installed:
+    cudf, cupy and dask_cudf
 
     Parameters:
     -----

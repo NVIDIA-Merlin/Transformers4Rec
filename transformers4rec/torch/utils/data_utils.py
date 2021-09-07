@@ -48,9 +48,7 @@ if dependencies.is_pyarrow_available():
             paths_or_dataset,
             batch_size,
             max_sequence_length,
-            conts=None,
-            cats=None,
-            labels=None,
+            cols_to_read=None,
             shuffle=False,
             shuffle_buffer_size=0,
             num_workers=1,
@@ -68,7 +66,7 @@ if dependencies.is_pyarrow_available():
             self.max_sequence_length = max_sequence_length
             self.drop_last = drop_last
 
-            self.set_dataset(cols_to_read=conts + cats + labels)
+            self.set_dataset(cols_to_read=cols_to_read)
 
             PyTorchDataLoader.__init__(
                 self,
