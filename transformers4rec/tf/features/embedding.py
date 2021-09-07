@@ -197,13 +197,8 @@ class EmbeddingFeatures(InputBlock):
 
         for key, val in self.feature_config.items():
             feature_config_dict = dict(name=val.name, max_sequence_length=val.max_sequence_length)
-            table = deepcopy(val.table.__dict__)
-            if "initializer" in table:
-                table["initializer"] = tf.keras.initializers.serialize(table["initializer"])
-            if "optimizer" in table:
-                table["optimizer"] = tf.keras.optimizers.serialize(table["optimizer"])
 
-            feature_config_dict["table"] = table
+            feature_config_dict["table"] = serialize_table_config(val.table)
             feature_configs[key] = feature_config_dict
 
         config["feature_config"] = feature_configs
