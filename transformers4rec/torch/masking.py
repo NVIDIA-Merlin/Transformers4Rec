@@ -31,8 +31,6 @@ MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
     hidden_size: int
         The hidden dimension of input tensors, needed to initialize trainable vector of masked
         positions.
-    device: str, default = "cpu"
-        Device to store the module on.
     padding_idx: int, default = 0
         Index of padding item used for getting batch of sequences with the same length
     eval_on_last_item_seq_only: bool, default = True
@@ -67,20 +65,18 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
     def __init__(
         self,
         hidden_size: int,
-        device: str = "cpu",
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
     ):
         super(MaskSequence, self).__init__()
         self.padding_idx = padding_idx
         self.hidden_size = hidden_size
-        self.device = device
         self.eval_on_last_item_seq_only = eval_on_last_item_seq_only
         self.mask_schema = None
         self.masked_targets = None
 
         # Create a trainable embedding to replace masked interactions
-        self.masked_item_embedding = nn.Parameter(torch.Tensor(self.hidden_size)).to(self.device)
+        self.masked_item_embedding = nn.Parameter(torch.Tensor(self.hidden_size))
         torch.nn.init.normal_(
             self.masked_item_embedding,
             mean=0,
@@ -184,7 +180,7 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         labels = torch.cat(
             [
                 labels,
-                torch.zeros((labels.shape[0], 1), dtype=labels.dtype).to(self.device),
+                torch.zeros((labels.shape[0], 1), dtype=labels.dtype).to(item_ids.device),
             ],
             axis=-1,
         )
@@ -229,14 +225,12 @@ class CausalLanguageModeling(MaskSequence):
     def __init__(
         self,
         hidden_size: int,
-        device: str = "cpu",
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         train_on_last_item_seq_only: bool = False,
     ):
         super(CausalLanguageModeling, self).__init__(
             hidden_size=hidden_size,
-            device=device,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
         )
@@ -250,9 +244,9 @@ class CausalLanguageModeling(MaskSequence):
         if (self.eval_on_last_item_seq_only and not training) or (
             self.train_on_last_item_seq_only and training
         ):
-            rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=self.device)
+            rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=item_ids.device)
             last_item_sessions = mask_labels.sum(axis=1) - 1
-            label_seq_trg_eval = torch.zeros(labels.shape, dtype=torch.long, device=self.device)
+            label_seq_trg_eval = torch.zeros(labels.shape, dtype=torch.long, device=item_ids.device)
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
@@ -271,7 +265,7 @@ class CausalLanguageModeling(MaskSequence):
                 torch.zeros(
                     (pos_emb_inp.shape[0], 1, pos_emb_inp.shape[2]),
                     dtype=pos_emb_inp.dtype,
-                ).to(self.device),
+                ).to(inputs.device),
             ],
             axis=1,
         )
@@ -306,14 +300,12 @@ class MaskedLanguageModeling(MaskSequence):
     def __init__(
         self,
         hidden_size: int,
-        device: str = "cpu",
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         mlm_probability: float = 0.15,
     ):
         super(MaskedLanguageModeling, self).__init__(
             hidden_size=hidden_size,
-            device=device,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
         )
@@ -340,17 +332,17 @@ class MaskedLanguageModeling(MaskSequence):
         """
 
         labels = torch.full(
-            item_ids.shape, self.padding_idx, dtype=item_ids.dtype, device=self.device
+            item_ids.shape, self.padding_idx, dtype=item_ids.dtype, device=item_ids.device
         )
         non_padded_mask = item_ids != self.padding_idx
 
-        rows_ids = torch.arange(item_ids.size(0), dtype=torch.long, device=self.device)
+        rows_ids = torch.arange(item_ids.size(0), dtype=torch.long, device=item_ids.device)
         # During training, masks labels to be predicted according to a probability, ensuring that
         #   each session has at least one label to predict
         if training:
             # Selects a percentage of items to be masked (selected as labels)
             probability_matrix = torch.full(
-                item_ids.shape, self.mlm_probability, device=self.device
+                item_ids.shape, self.mlm_probability, device=item_ids.device
             )
             mask_labels = torch.bernoulli(probability_matrix).bool() & non_padded_mask
             labels = torch.where(
@@ -415,7 +407,6 @@ class PermutationLanguageModeling(MaskSequence):
     def __init__(
         self,
         hidden_size: int,
-        device: str = "cpu",
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         plm_probability: float = 1 / 6,
@@ -424,7 +415,6 @@ class PermutationLanguageModeling(MaskSequence):
     ):
         super(PermutationLanguageModeling, self).__init__(
             hidden_size=hidden_size,
-            device=device,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
         )
@@ -464,12 +454,12 @@ class PermutationLanguageModeling(MaskSequence):
         """
 
         labels = torch.full(
-            item_ids.shape, self.padding_idx, dtype=item_ids.dtype, device=self.device
+            item_ids.shape, self.padding_idx, dtype=item_ids.dtype, device=item_ids.device
         )
         non_padded_mask = item_ids != self.padding_idx
 
-        rows_ids = torch.arange(item_ids.size(0), dtype=torch.long, device=self.device)
-        mask_labels = torch.full(labels.shape, 0, dtype=torch.bool, device=self.device)
+        rows_ids = torch.arange(item_ids.size(0), dtype=torch.long, device=item_ids.device)
+        mask_labels = torch.full(labels.shape, 0, dtype=torch.bool, device=item_ids.device)
         # During training:
         # Masks a span of consecutive items to be predicted according to plm_probability,
         # While ensuring that each session has at least one  item to predict
@@ -477,12 +467,12 @@ class PermutationLanguageModeling(MaskSequence):
             target_mapping = torch.zeros(
                 (labels.size(0), labels.size(1), labels.size(1)),
                 dtype=torch.float32,
-                device=self.device,
+                device=item_ids.device,
             )
             perm_mask = torch.zeros(
                 (labels.size(0), labels.size(1), labels.size(1)),
                 dtype=torch.float32,
-                device=self.device,
+                device=item_ids.device,
             )
             if self.permute_all:
                 # Permute all non padded items
@@ -550,7 +540,7 @@ class PermutationLanguageModeling(MaskSequence):
                 #  This will determine which tokens a given token can attend to
                 # (encoded in `perm_mask`).
                 # Create a linear factorisation order
-                perm_index = torch.arange(labels.size(1), dtype=torch.long, device=self.device)
+                perm_index = torch.arange(labels.size(1), dtype=torch.long, device=item_ids.device)
                 # randomly permute indices of each session
                 perm_index = perm_index[torch.randperm(labels.size(1))]
                 # Set the permutation indices of non-masked (non-functional) tokens to the
@@ -635,14 +625,12 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
     def __init__(
         self,
         hidden_size: int,
-        device: str = "cpu",
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         sample_from_batch: bool = False,
     ):
         super(ReplacementLanguageModeling, self).__init__(
             hidden_size=hidden_size,
-            device=device,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
         )
@@ -728,7 +716,7 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
         """
         # add noise to logits to prevent from the case where the generator learn to exactly
         # retrieve the true item that was masked
-        uniform_noise = torch.rand(logits.shape, dtype=logits.dtype, device=self.device)
+        uniform_noise = torch.rand(logits.shape, dtype=logits.dtype, device=logits.device)
         gumbel_noise = -torch.log(-torch.log(uniform_noise + 1e-9) + 1e-9)
         s = logits + gumbel_noise
 

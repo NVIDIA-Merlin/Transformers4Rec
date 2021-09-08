@@ -177,9 +177,14 @@ def test_item_prediction_transformer_torch_model_from_config(
 
 
 @pytest.mark.parametrize("device", devices)
-def test_set_model_to_device(torch_yoochoose_next_item_prediction_model, device):
+def test_set_model_to_device(
+    torch_yoochoose_like, torch_yoochoose_next_item_prediction_model, device
+):
     model = torch_yoochoose_next_item_prediction_model
     model.to(device)
 
-    assert model.heads[0].body.inputs.masking.device == device
+    assert model.heads[0].body.inputs.masking.masked_item_embedding.device.type == device
     assert next(model.parameters()).device.type == device
+
+    inputs = {k: v.to(device) for k, v in torch_yoochoose_like.items()}
+    assert model(inputs)
