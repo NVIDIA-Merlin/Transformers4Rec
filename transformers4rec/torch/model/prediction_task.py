@@ -440,7 +440,7 @@ class NextItemPredictionTask(PredictionTask):
 
     def compute_metrics(self):
         metrics = {
-            f"{metric.__class__.__name__.lower()}": metric.compute()
+            self.child_name(camelcase_to_snakecase(metric.__class__.__name__)): metric.compute()
             for metric in self.metrics
             if getattr(metric, "top_ks", None)
         }

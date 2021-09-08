@@ -181,9 +181,16 @@ def test_trainer_eval_loop(
     )
 
     assert isinstance(eval_metrics, dict)
-    default_metric = ["eval_ndcgat_10", "eval_ndcgat_20", "eval_recallat_10", "eval_recallat_20"]
+    default_metric = [
+        "eval/next-item/ndcg_at_10",
+        "eval/next-item/ndcg_at_20",
+        "eval/next-item/avg_precision_at_10",
+        "eval/next-item/avg_precision_at_20",
+        "eval/next-item/recall_at_10",
+        "eval/next-item/recall_at_20",
+    ]
     assert set(default_metric).issubset(set(eval_metrics.keys()))
-    assert eval_metrics["eval_loss"] is not None
+    assert eval_metrics["eval/loss"] is not None
 
 
 def test_saves_checkpoints(
