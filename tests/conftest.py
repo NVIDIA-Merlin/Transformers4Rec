@@ -18,6 +18,12 @@ def schema_file():
 
 
 YOOCHOOSE_SCHEMA = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
+YOOCHOOSE_PATH = ASSETS_DIR / "yoochoose" / "data.parquet"
+
+
+@pytest.fixture
+def yoochoose_path_file():
+    return YOOCHOOSE_PATH
 
 
 @pytest.fixture
@@ -32,7 +38,7 @@ def yoochoose_data_file():
 
 @pytest.fixture
 def yoochoose_schema():
-    return DatasetSchema.from_schema(str(YOOCHOOSE_SCHEMA))
+    return DatasetSchema.from_proto(str(YOOCHOOSE_SCHEMA))
 
 
 from tests.tf.conftest import *  # noqa

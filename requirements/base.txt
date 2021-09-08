@@ -1,0 +1,5 @@
+numpy
+tensorflow-metadata
+transformers
+tqdm
+pyarrow>=1.0

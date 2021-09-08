@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import glob
+import inspect
 import itertools
 import logging
 import os
@@ -22,6 +23,30 @@ import time
 from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
+
+
+def docstring_parameter(*args, **kwargs):
+    def dec(obj):
+        obj.__doc__ = obj.__doc__.format(*args, **kwargs)
+        return obj
+
+    return dec
+
+
+def filter_kwargs(kwargs, thing_with_kwargs, filter_positional_or_keyword=True):
+    sig = inspect.signature(thing_with_kwargs)
+    if filter_positional_or_keyword:
+        filter_keys = [
+            param.name
+            for param in sig.parameters.values()
+            if param.kind == param.POSITIONAL_OR_KEYWORD
+        ]
+    else:
+        filter_keys = [param.name for param in sig.parameters.values()]
+    filtered_dict = {
+        filter_key: kwargs[filter_key] for filter_key in filter_keys if filter_key in kwargs
+    }
+    return filtered_dict
 
 
 def safe_json(data):
@@ -156,3 +181,67 @@ def get_object_size(obj, seen=None):
     elif hasattr(obj, "__iter__") and not isinstance(obj, (str, bytes, bytearray)):
         size += sum([get_object_size(i, seen) for i in obj])
     return size
+
+
+def _validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs):
+    """
+    Util function to load NVTabular Dataset from disk
+
+    Parameters:
+    ----------
+        paths_or_dataset: Union[nvtabular.Dataset, str]
+            Path  to dataset to load of nvtabular Dataset,
+            if Dataset, return the object.
+        batch_size: int
+            batch size for Dataloader.
+        buffer_size: float
+            parameter, which refers to the fraction of batches
+            to load at once.
+        engine: str
+            parameter to specify the file format,
+            possible values are: ["parquet", "csv", "csv-no-header"].
+        reader_kwargs: dict
+            Additional arguments of the specified reader.
+    """
+    try:
+        from nvtabular.io.dataset import Dataset
+    except ImportError:
+        raise ValueError("NVTabular is necessary for this function, please install: " "nvtabular.")
+
+    # TODO: put this in parent class and allow
+    # torch dataset to leverage as well?
+
+    # if a dataset was passed, just return it
+    if isinstance(paths_or_dataset, Dataset):
+        return paths_or_dataset
+
+    # otherwise initialize a dataset
+    # from paths or glob pattern
+    if isinstance(paths_or_dataset, str):
+        files = glob.glob(paths_or_dataset)
+        _is_empty_msg = "Couldn't find file pattern {} in directory {}".format(
+            *os.path.split(paths_or_dataset)
+        )
+    else:
+        # TODO: some checking around attribute
+        # error here?
+        files = list(paths_or_dataset)
+        _is_empty_msg = "paths_or_dataset list must contain at least one filename"
+
+    assert isinstance(files, list)
+    if len(files) == 0:
+        raise ValueError(_is_empty_msg)
+
+    # implement buffer size logic
+    # TODO: IMPORTANT
+    # should we divide everything by 3 to account
+    # for extra copies laying around due to asynchronicity?
+    reader_kwargs = reader_kwargs or {}
+    if buffer_size >= 1:
+        if buffer_size < batch_size:
+            reader_kwargs["batch_size"] = int(batch_size * buffer_size)
+        else:
+            reader_kwargs["batch_size"] = buffer_size
+    else:
+        reader_kwargs["part_mem_fraction"] = buffer_size
+    return Dataset(files, engine=engine, **reader_kwargs)

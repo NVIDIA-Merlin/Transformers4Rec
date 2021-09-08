@@ -18,13 +18,15 @@ from typing import Dict
 
 import pandas as pd
 import torch
-from nvtabular.loader.backend import DataLoader as BaseDataLoader
-from nvtabular.loader.tensorflow import _validate_dataset
-from torch.utils.dlpack import from_dlpack
+from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
+
+from transformers4rec.utils.misc_utils import _validate_dataset
 
 from ..utils.schema import DatasetSchema
 from ..utils.tags import Tag
 from .utils.torch_utils import get_output_sizes_from_schema
+
+# from nvtabular.loader.backend import DataLoader as BaseDataLoader
 
 
 class IterDL(torch.utils.data.IterableDataset):
@@ -44,7 +46,7 @@ class IterDL(torch.utils.data.IterableDataset):
                 yield df
 
 
-class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
+class DataLoader(NVTDataLoader):
     """This class creates batches of tensor. Each batch size is specified by the user.
     The data input requires an NVTabular dataset. Handles spillover to ensure all
     batches are the specified size until the final batch.
@@ -100,7 +102,7 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
             paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs
         )
 
-        BaseDataLoader.__init__(
+        NVTDataLoader.__init__(
             self,
             dataset,
             cats,
@@ -121,6 +123,56 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
         self.schema = schema
 
     @classmethod
+    def from_schema(
+        cls,
+        schema: DatasetSchema,
+        paths_or_dataset,
+        batch_size,
+        shuffle=True,
+        buffer_size=0.06,
+        parts_per_chunk=1,
+        separate_labels=True,
+        continuous_features=None,
+        categorical_features=None,
+        targets=None,
+        **kwargs
+    ):
+        """
+        Define NVTabular dataloader from schema
+
+        Parameters
+        ----------
+        schema: DatasetSchema
+            Dataset schema
+        paths_or_dataset: Union[str, Dataset]
+            Path to paquet data of Dataset object.
+        separate_labels: bool
+            Whether to exclude labels from inputs or not
+        """
+        categorical_features = (
+            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+        )
+        continuous_features = (
+            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+        )
+        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+
+        torch_dataset = cls(
+            paths_or_dataset,
+            batch_size=batch_size,
+            labels=targets if separate_labels else [],
+            cats=categorical_features if separate_labels else categorical_features + targets,
+            conts=continuous_features,
+            engine="parquet",
+            shuffle=shuffle,
+            buffer_size=buffer_size,  # how many batches to load at once
+            parts_per_chunk=parts_per_chunk,
+            schema=schema,
+            **kwargs
+        )
+        return torch_dataset
+
+    @classmethod
     def from_directory(
         cls,
         directory,
@@ -129,7 +181,6 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
         buffer_size=0.06,
         parts_per_chunk=1,
         separate_labels=True,
-        named_labels=False,
         schema_path=None,
         continuous_features=None,
         categorical_features=None,
@@ -173,68 +224,7 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
     def output_sizes(self) -> Dict[str, torch.Size]:
         return get_output_sizes_from_schema(self.schema, self.batch_size)
 
-    def __iter__(self):
-        return BaseDataLoader.__iter__(self)
-
-    def _get_device_ctx(self, dev):
-        if dev == "cpu":
-            return torch.device("cpu")
-        return torch.cuda.device("cuda:{}".format(dev))
-
-    def _pack(self, gdf):
-        if self.device == "cpu":
-            return gdf
-        return gdf.to_dlpack()
-
-    def _unpack(self, dlpack):
-        if self.device == "cpu":
-            return torch.Tensor(dlpack.values).squeeze(1)
-        return from_dlpack(dlpack)
-
-    def _to_tensor(self, gdf, dtype=None):
-        dl_pack = self._pack(gdf)
-        tensor = self._unpack(dl_pack)
-        return tensor.type(dtype)
-
-    def _split_fn(self, tensor, idx, axis=0):
-        return torch.split(tensor, idx, dim=axis)
-
-    def _tensor_split(self, tensor, idx, axis=0):
-        return torch.tensor_split(tensor, idx, axis=axis)
-
-    @property
-    def _LONG_DTYPE(self):
-        return torch.long
-
-    @property
-    def _FLOAT32_DTYPE(self):
-        return torch.float32
-
-    def _pull_values_offsets(self, values_offset):
-        # pull_values_offsets, return values offsets diff_offsets
-        if isinstance(values_offset, tuple):
-            values = values_offset[0].flatten()
-            offsets = values_offset[1].flatten()
-        else:
-            values = values_offset.flatten()
-            offsets = torch.arange(values.size()[0], device=self.device)
-        num_rows = len(offsets)
-        offsets = torch.cat([offsets, torch.cuda.LongTensor([len(values)])])
-        diff_offsets = offsets[1:] - offsets[:-1]
-        return values, offsets, diff_offsets, num_rows
-
-    def _get_max_seq_len(self, diff_offsets):
-        return int(diff_offsets.max())
-
     # Building the indices to reconstruct the sparse tensors
-
-    def _get_indices(self, offsets, diff_offsets):
-        row_ids = torch.arange(len(offsets) - 1, device=self.device)
-        row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
-        row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
-        col_ids = torch.arange(len(row_offset_repeated), device=self.device) - row_offset_repeated
-        indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1)
-        return indices
 
     def _get_sparse_tensor(self, values, indices, num_rows, seq_limit):
         sparse_tensor = torch.sparse_coo_tensor(
@@ -244,12 +234,8 @@ class DataLoader(torch.utils.data.IterableDataset, BaseDataLoader):
             sparse_tensor = sparse_tensor.to_dense()
         return sparse_tensor
 
-    def _build_sparse_tensor(self, values, offsets, diff_offsets, num_rows, seq_limit):
-        indices = self._get_indices(offsets, diff_offsets)
-        return self._get_sparse_tensor(values, indices, num_rows, seq_limit)
 
-
-class FastAIDataLoader(torch.utils.data.DataLoader):
+class DLDataLoader(torch.utils.data.DataLoader):
     """
     This class is an extension of the torch dataloader.
     It is required to support the FastAI framework.

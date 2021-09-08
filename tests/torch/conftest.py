@@ -3,6 +3,7 @@ import random
 
 import pytest
 
+from transformers4rec.config import transformer as tconf
 from transformers4rec.utils.schema import DatasetSchema
 
 pytorch = pytest.importorskip("torch")
@@ -54,7 +55,7 @@ def torch_masking_inputs():
     # replace last 2 items by zeros to mimic padding
     labels[:, MAX_LEN - 2 :] = 0
     features["labels"] = labels
-    features["pad_token"] = PAD_TOKEN
+    features["padding_idx"] = PAD_TOKEN
     features["vocab_size"] = MAX_CARDINALITY
 
     return features
@@ -121,14 +122,34 @@ def torch_yoochoose_tabular_features(yoochoose_schema):
 
 
 @pytest.fixture
-def torch_yoochoose_sequential_tabular_features(yoochoose_schema):
-    return torch4rec.SequentialTabularFeatures.from_schema(
+def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
+    return torch4rec.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=100,
         masking="causal",
     )
+
+
+@pytest.fixture
+def torch_yoochoose_next_item_prediction_model(
+    torch_yoochoose_tabular_transformer_features, yoochoose_schema
+):
+    # define Transformer-based model
+    inputs = torch_yoochoose_tabular_transformer_features
+    transformer_config = tconf.XLNetConfig.build(
+        d_model=64, n_head=4, n_layer=2, total_seq_length=20
+    )
+    body = torch4rec.SequentialBlock(
+        inputs,
+        torch4rec.MLPBlock([64]),
+        torch4rec.TransformerBlock(transformer_config, masking=inputs.masking),
+    )
+    model = torch4rec.NextItemPredictionTask(weight_tying=True, hf_format=True).to_model(
+        body, inputs
+    )
+    return model
 
 
 @pytest.fixture
@@ -139,7 +160,7 @@ def torch_yoochoose_like():
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
 
-    schema = DatasetSchema.read_schema(str(schema_file))
+    schema = DatasetSchema.read_proto_txt(str(schema_file))
     data = {}
 
     for i in range(NUM_ROWS):

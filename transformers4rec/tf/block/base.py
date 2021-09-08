@@ -1,37 +1,42 @@
 import copy
+import sys
 from typing import Union
 
+import six
 import tensorflow as tf
 
-from .. import tabular
-from ..head import Head
+from ...utils.misc_utils import filter_kwargs
+from ...utils.schema import SchemaMixin
+from ..typing import Head, PredictionTask
 
 
-class BlockMixin:
-    def to_model(self, head: Head, name=None, **kwargs):
-        from with_head import BlockWithHead
+class Block(SchemaMixin, tf.keras.layers.Layer):
+    def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
+        from ..model.head import Head, PredictionTask
+        from ..model.model import Model
 
-        model = BlockWithHead(self, head, model_name=name)
+        if isinstance(prediction_task_or_head, PredictionTask):
+            head = prediction_task_or_head.to_head(self, inputs=inputs, **kwargs)
+        elif isinstance(prediction_task_or_head, Head):
+            head = prediction_task_or_head
+        else:
+            raise ValueError(
+                "`prediction_task_or_head` needs to be a `Head` or `PredictionTask` "
+                f"found: {type(prediction_task_or_head)}"
+            )
 
-        if kwargs:
-            model.compile(**kwargs)
+        return Model(head, **kwargs)
 
-        return model
-
-
-class TabularBlock(tabular.TabularLayer, BlockMixin):
-    pass
-
-
-class Block(tf.keras.layers.Layer, BlockMixin):
     def as_tabular(self, name=None):
+        from ..tabular.tabular import AsTabular
+
         if not name:
             name = self.name
 
-        return self >> tabular.AsTabular(name)
+        return SequentialBlock([self, AsTabular(name)])
 
 
-class SequentialBlock(TabularBlock):
+class SequentialBlock(Block):
     """The SequentialLayer represents a sequence of Keras layers.
     It is a Keras Layer that can be used instead of tf.keras.layers.Sequential,
     which is actually a Keras Model.  In contrast to keras Sequential, this
@@ -39,21 +44,26 @@ class SequentialBlock(TabularBlock):
     SavedModels, without having to pre-declare input and output shapes.  In turn,
     this layer is usable as a preprocessing layer for TF Agents Networks, and
     can be exported via PolicySaver.
-    Usage:
-    ```python
-    c = SequentialLayer([layer1, layer2, layer3])
-    output = c(inputs)    # Equivalent to: output = layer3(layer2(layer1(inputs)))
-    ```
+    Usage::
+
+        c = SequentialLayer([layer1, layer2, layer3])
+        output = c(inputs)    # Equivalent to: output = layer3(layer2(layer1(inputs)))
     """
 
     def __init__(self, layers, filter_features=None, block_name=None, **kwargs):
         """Create a composition.
-        Args:
-          layers: A list or tuple of layers to compose.
-          **kwargs: Arguments to pass to `Keras` layer initializer, including
-            `name`.
-        Raises:
-          TypeError: If any of the layers are not instances of keras `Layer`.
+
+        Parameters
+        ----------
+        layers:
+            A list or tuple of layers to compose.
+        **kwargs:
+            Arguments to pass to `Keras` layer initializer, including `name`.
+
+        Raises
+        ------
+        TypeError:
+            If any of the layers are not instances of keras `Layer`.
         """
         self.block_name = block_name
         for layer in layers:
@@ -65,9 +75,10 @@ class SequentialBlock(TabularBlock):
                 )
 
         super(SequentialBlock, self).__init__(**kwargs)
-        self.filter_features = filter_features
         if filter_features:
-            self.layers = [tabular.FilterFeatures(filter_features), *copy.copy(layers)]
+            from ..tabular.tabular import FilterFeatures
+
+            self.layers = [FilterFeatures(filter_features), *copy.copy(layers)]
         else:
             self.layers = copy.copy(layers)
 
@@ -84,10 +95,29 @@ class SequentialBlock(TabularBlock):
         return output_signature
 
     def build(self, input_shape=None):
+        from ..tabular.tabular import TabularBlock
+
+        last_layer = None
         for layer in self.layers:
-            layer.build(input_shape)
+            try:
+                layer.build(input_shape)
+            except TypeError:
+                t, v, tb = sys.exc_info()
+                if isinstance(input_shape, dict) and isinstance(last_layer, TabularBlock):
+                    v = TypeError(
+                        f"Couldn't build {layer}, "
+                        f"did you forget to add aggregation to {last_layer}?"
+                    )
+                six.reraise(t, v, tb)
             input_shape = layer.compute_output_shape(input_shape)
+            last_layer = layer
         self.built = True
+
+    def set_schema(self, schema=None):
+        for layer in self.layers:
+            self._maybe_set_schema(layer, schema)
+
+        return super().set_schema(schema)
 
     def _get_name(self):
         return self.block_name if self.block_name else f"{self.__class__.__name__}"
@@ -133,21 +163,26 @@ class SequentialBlock(TabularBlock):
             values.update(layer.regularizers)
         return list(values)
 
-    def call(self, inputs, training=False, **kwargs):
+    def call(self, inputs, **kwargs):
         outputs = inputs
-        for layer in self.layers:
-            outputs = layer(outputs, training=training)
+        for i, layer in enumerate(self.layers):
+            if i == len(self.layers) - 1:
+                filtered_kwargs = filter_kwargs(kwargs, layer, filter_positional_or_keyword=False)
+                outputs = layer(outputs, **filtered_kwargs)
+            else:
+                outputs = layer(outputs)
+
         return outputs
 
     def get_config(self):
-        config = {"filter_features": self.filter_features}
+        config = {}
         for i, layer in enumerate(self.layers):
-            config[i] = {
-                "class_name": layer.__class__.__name__,
-                "config": copy.deepcopy(layer.get_config()),
-            }
+            config[i] = tf.keras.layers.serialize(layer)
 
         return config
+
+    def __getitem__(self, key):
+        return self.layers[key]
 
     @classmethod
     def from_config(cls, config, custom_objects=None):
@@ -155,7 +190,8 @@ class SequentialBlock(TabularBlock):
             tf.keras.layers.deserialize(conf, custom_objects=custom_objects)
             for conf in config.values()
         ]
-        return cls(layers)
+
+        return SequentialBlock(layers)
 
     def __rrshift__(self, other):
         return right_shift_layer(self, other)
@@ -169,8 +205,10 @@ BlockType = Union[tf.keras.layers.Layer, Block]
 
 
 def right_shift_layer(self, other):
+    from ..tabular.tabular import FilterFeatures
+
     if isinstance(other, list):
-        left_side = [tabular.FilterFeatures(other)]
+        left_side = [FilterFeatures(other)]
     else:
         left_side = other.layers if isinstance(other, SequentialBlock) else [other]
     right_side = self.layers if isinstance(self, SequentialBlock) else [self]

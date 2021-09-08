@@ -1,20 +1,39 @@
-from typing import List
+from typing import List, Optional
 
-from ..tabular import FilterFeatures, TabularLayer
+import tensorflow as tf
+
+from ...types import DatasetSchema
+from ...utils.misc_utils import docstring_parameter
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..typing import TabularAggregationType, TabularTransformationType
+from .base import InputBlock
 
 
-class ContinuousFeatures(TabularLayer):
+@docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
+class ContinuousFeatures(InputBlock):
+    """Input block for continuous features.
+
+    Parameters
+    ----------
+    features: List[str]
+        List of continuous features to include in this module.
+    {tabular_module_parameters}
+    """
+
     def __init__(
         self,
-        features,
-        aggregation=None,
-        trainable=True,
-        name=None,
-        dtype=None,
-        dynamic=False,
+        features: List[str],
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[DatasetSchema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
-        super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
+        super().__init__(
+            pre=pre, post=post, aggregation=aggregation, schema=schema, name=name, **kwargs
+        )
         self.filter_features = FilterFeatures(features)
 
     @classmethod
@@ -24,10 +43,15 @@ class ContinuousFeatures(TabularLayer):
     def call(self, inputs, *args, **kwargs):
         return self.filter_features(inputs)
 
-    def compute_output_shape(self, input_shapes):
-        filtered = self.filter_features.compute_output_shape(input_shapes)
+    def compute_call_output_shape(self, input_shapes):
+        return self.filter_features.compute_output_shape(input_shapes)
 
-        return super(ContinuousFeatures, self).compute_output_shape(filtered)
+    def get_config(self):
+        config = super().get_config()
+
+        config["features"] = self.filter_features.to_include
+
+        return config
 
     def _get_name(self):
         return "ContinuousFeatures"
@@ -36,4 +60,4 @@ class ContinuousFeatures(TabularLayer):
         return ["filter_features"]
 
     def repr_extra(self):
-        return ", ".join(sorted(self.filter_features.columns))
+        return ", ".join(sorted(self.filter_features.to_include))

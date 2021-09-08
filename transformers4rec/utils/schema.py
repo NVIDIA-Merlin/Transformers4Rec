@@ -1,5 +1,16 @@
+import abc
 import collections.abc
+import math
+import os
 from dataclasses import dataclass, field
+
+try:
+    from functools import cached_property
+except ImportError:
+    # polyfill cached_property for python <= 3.7 (using lru_cache which was introduced in python3.2)
+    from functools import lru_cache
+
+    cached_property = lambda func: property(lru_cache()(func))  # noqa
 from typing import List, Optional, Text, Union
 
 from google.protobuf import text_format
@@ -35,6 +46,9 @@ class ColumnSchema:
     def with_name(self, name) -> "ColumnSchema":
         return ColumnSchema(name, tags=self.tags)
 
+    def __eq__(self, other: "ColumnSchema") -> bool:
+        return self.name == other.name and set(self.tags) == set(other.tags)
+
 
 class DatasetSchema:
     """A collection of column schemas for a dataset."""
@@ -58,10 +72,13 @@ class DatasetSchema:
         self.set_schema(None)
 
     @staticmethod
-    def read_schema(schema_path):
-        with open(schema_path, "rb") as f:
-            schema = schema_pb2.Schema()
-            text_format.Parse(f.read(), schema)
+    def read_proto_txt(path_or_protostr):
+        proto_str = path_or_protostr
+        if os.path.isfile(path_or_protostr):
+            with open(path_or_protostr, "rb") as f:
+                proto_str = f.read()
+        schema = schema_pb2.Schema()
+        text_format.Parse(proto_str, schema)
 
         return schema
 
@@ -69,9 +86,9 @@ class DatasetSchema:
         self._schema = schema
 
     @classmethod
-    def from_schema(cls, schema) -> "DatasetSchema":
+    def from_proto(cls, schema) -> "DatasetSchema":
         if isinstance(schema, str):
-            schema = cls.read_schema(schema)
+            schema = cls.read_proto_txt(schema)
 
         columns = []
         for feat in schema.feature:
@@ -89,7 +106,7 @@ class DatasetSchema:
     def column_names(self):
         return [col.name for col in self.columns]
 
-    def __add__(self, other):
+    def add(self, other, strict=False):
         """Adds columns from this DatasetSchema with another to return a new DatasetSchema
         Parameters
         -----------
@@ -103,20 +120,35 @@ class DatasetSchema:
         elif isinstance(other, collections.abc.Sequence):
             other = DatasetSchema(other)
 
-        # check if there are any columns with the same name in both column groups
-        overlap = set(self.column_names).intersection(other.column_names)
+        if strict:
+            # check if there are any columns with the same name in both column groups
+            overlap = set(self.column_names).intersection(other.column_names)
 
-        if overlap:
-            raise ValueError(f"duplicate column names found: {overlap}")
+            if overlap:
+                raise ValueError(f"duplicate column names found: {overlap}")
+            new_columns = self.columns + other.columns
+        else:
+            self_column_dict = {col.name: col for col in self.columns}
+            other_column_dict = {col.name: col for col in other.columns}
 
-        new_schema = DatasetSchema(self.columns + other.columns)
+            new_columns = [col for col in self.columns]
+            for key, val in other_column_dict.items():
+                maybe_duplicate = self_column_dict.get(key, None)
+                if maybe_duplicate:
+                    merged_col = maybe_duplicate.with_tags(val.tags)
+                    new_columns[new_columns.index(maybe_duplicate)] = merged_col
+                else:
+                    new_columns.append(val)
+
+        new_schema = DatasetSchema(new_columns)
         # TODO : set update method of the _schema
         # To keep it consistent over ops
         new_schema._schema = self.filter_schema(new_schema.column_names)
         return new_schema
 
     # handle the "column_name" + DatasetSchema case
-    __radd__ = __add__
+    __radd__ = add
+    __add__ = add
 
     def __sub__(self, other):
         """Removes columns from this DatasetSchema with another to return a new DatasetSchema
@@ -145,6 +177,12 @@ class DatasetSchema:
 
     def __getitem__(self, columns):
         return self.select_by_name(columns)
+
+    def __eq__(self, other: "DatasetSchema") -> bool:
+        sorted_cols = sorted(self.columns, key=lambda x: x.name)
+        sorted_other_cols = sorted(other.columns, key=lambda x: x.name)
+
+        return all(x == y for x, y in zip(sorted_cols, sorted_other_cols))
 
     def select_by_tag(self, tags):
         if isinstance(tags, DefaultTags):
@@ -189,13 +227,64 @@ class DatasetSchema:
         child._schema = self.filter_schema(child.column_names)
         return child
 
-    def embedding_sizes(self):
-        if self._schema:
-            cardinalities = self.cardinalities()
+    def embedding_sizes(self, multiplier: float) -> int:
+        """Heuristic method to suggest the embedding sizes based on the categorical feature cardinality
 
-            from nvtabular.ops.categorify import _emb_sz_rule
+        Parameters
+        ----------
+        multiplier : float
+            multiplier used by the heuristic to infer the embedding dimension from
+            its cardinality. Generally reasonable values range between 2.0 and 10.0
+        Returns
+        -------
+        int
+            The suggested embedding dimension
+        """
+        if not self._schema:
+            raise ValueError(
+                "The internal schema is required to retrieve "
+                " the features cardinality and infer embeddings dim."
+            )
 
-            return {key: _emb_sz_rule(val) for key, val in cardinalities.items()}
+        if not (multiplier is not None and multiplier > 0.0):
+            raise ValueError("The multiplier of the embedding size needs to be greater than 0.")
+
+        cardinalities = self.cardinalities()
+        return {
+            key: DatasetSchema.get_embedding_size_from_cardinality(val, multiplier=multiplier)
+            for key, val in cardinalities.items()
+        }
+
+    def embedding_sizes_nvt(self, minimum_size=16, maximum_size=512) -> int:
+        """Heuristic method from NVTabular to suggest the embedding sizes
+        based on the categorical feature cardinality.
+
+        Parameters
+        ----------
+        minimum_size : int, optional
+            Minimum embedding size, by default 16
+        maximum_size : int, optional
+            Minimum embedding size, by default 512
+
+        Returns
+        -------
+        int
+            The suggested embedding dimension
+        """
+        if not self._schema:
+            raise ValueError(
+                "The internal schema is required to retrieve "
+                "the features cardinality and infer embeddings dim."
+            )
+
+        cardinalities = self.cardinalities()
+
+        from nvtabular.ops.categorify import _emb_sz_rule
+
+        return {
+            key: _emb_sz_rule(val, minimum_size=minimum_size, maximum_size=maximum_size)[1]
+            for key, val in cardinalities.items()
+        }
 
     def cardinalities(self):
         if self._schema:
@@ -219,6 +308,71 @@ class DatasetSchema:
                 f.CopyFrom(feat)
 
         return schema
+
+    @staticmethod
+    def get_embedding_size_from_cardinality(cardinality, multiplier=2.0):
+        # A rule-of-thumb from Google.
+        embedding_size = int(math.ceil(math.pow(cardinality, 0.25) * multiplier))
+        return embedding_size
+
+    @cached_property
+    def item_id_column_name(self):
+        item_id_col = self.select_by_tag(Tag.ITEM_ID)
+        if len(item_id_col.columns) == 0:
+            raise ValueError("There is no column tagged as item id.")
+
+        return item_id_col.column_names[0]
+
+    def get_item_ids_from_inputs(self, inputs):
+        return inputs[self.item_id_column_name]
+
+    def get_mask_from_inputs(self, inputs, mask_token=0):
+        return self.get_item_ids_from_inputs(inputs) != mask_token
+
+    def to_proto_str(self):
+        return text_format.MessageToString(self._schema)
+
+
+class SchemaMixin(abc.ABC):
+    REQUIRES_SCHEMA = False
+
+    def set_schema(self, schema=None):
+        self.check_schema(schema=schema)
+
+        if schema and not getattr(self, "schema", None):
+            self._schema = schema
+
+        return self
+
+    @property
+    def schema(self) -> Optional[DatasetSchema]:
+        return getattr(self, "_schema", None)
+
+    @schema.setter
+    def schema(self, value):
+        if value:
+            self.set_schema(value)
+        else:
+            self._schema = value
+
+    def check_schema(self, schema=None):
+        if self.REQUIRES_SCHEMA and not getattr(self, "schema", None) and not schema:
+            raise ValueError(f"{self.__class__.__name__} requires a schema.")
+
+    def __call__(self, *args, **kwargs):
+        self.check_schema()
+
+        return super().__call__(*args, **kwargs)
+
+    def _maybe_set_schema(self, input, schema):
+        if input and getattr(input, "set_schema"):
+            input.set_schema(schema)
+
+
+def requires_schema(module):
+    module.REQUIRES_SCHEMA = True
+
+    return module
 
 
 def _convert_col(col, tags=None):

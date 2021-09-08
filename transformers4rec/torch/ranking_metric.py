@@ -5,12 +5,7 @@ import torch
 import torchmetrics as tm
 
 from ..utils.registry import Registry
-from .common import (
-    _check_inputs,
-    _create_output_placeholder,
-    _extract_topk,
-    _tranform_label_to_onehot,
-)
+from .utils import torch_utils
 
 ranking_metrics_registry = Registry.class_registry("torch.ranking_metrics")
 
@@ -19,10 +14,12 @@ class RankingMetric(tm.Metric):
     """
     Metric wrapper for computing ranking metrics@K for session-based task.
 
-    Parameters:
-    -----------
-        - top_ks (list default [2, 5]): list of cutoffs
-        - labels_onehot (bool): Enable transform the labels to one-hot representation
+    Parameters
+    ----------
+    top_ks : list, default [2, 5])
+        list of cutoffs
+    labels_onehot : bool
+        Enable transform the labels to one-hot representation
     """
 
     def __init__(self, top_ks=None, labels_onehot=False):
@@ -35,7 +32,7 @@ class RankingMetric(tm.Metric):
     def update(self, preds: torch.Tensor, target: torch.Tensor, **kwargs):
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
-            target = _tranform_label_to_onehot(target, preds.size(-1))
+            target = torch_utils.tranform_label_to_onehot(target, preds.size(-1))
         metric = self._metric(torch.LongTensor(self.top_ks), preds.view(-1, preds.size(-1)), target)
         self.metric_mean.append(metric)
 
@@ -58,17 +55,25 @@ class PrecisionAt(RankingMetric):
 
     def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Compute precision@K for each of the provided cutoffs
-        Args:
-            ks (torch.Tensor or list): list of cutoffs
-            scores (torch.Tensor): predicted item scores
-            labels (torch.Tensor): true item labels
-        Returns:
-            torch.Tensor: list of precisions at cutoffs
+
+        Parameters
+        ----------
+        ks : torch.Tensor or list
+            list of cutoffs
+        scores : torch.Tensor
+            predicted item scores
+        labels : torch.Tensor
+            true item labels
+
+        Returns
+        -------
+        torch.Tensor:
+            list of precisions at cutoffs
         """
 
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        _, _, topk_labels = _extract_topk(ks, scores, labels)
-        precisions = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        _, _, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        precisions = torch_utils.create_output_placeholder(scores, ks)
 
         for index, k in enumerate(ks):
             precisions[:, index] = torch.sum(topk_labels[:, : int(k)], dim=1) / float(k)
@@ -83,17 +88,24 @@ class RecallAt(RankingMetric):
 
     def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Compute recall@K for each of the provided cutoffs
-        Args:
-            ks (torch.Tensor or list): list of cutoffs
-            scores (torch.Tensor): predicted item scores
-            labels (torch.Tensor): true item labels
-        Returns:
+
+        Parameters
+        ----------
+        ks : torch.Tensor or list
+            list of cutoffs
+        scores : torch.Tensor
+            predicted item scores
+        labels : torch.Tensor
+            true item labels
+
+        Returns
+        -------
             torch.Tensor: list of recalls at cutoffs
         """
 
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        _, _, topk_labels = _extract_topk(ks, scores, labels)
-        recalls = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        _, _, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        recalls = torch_utils.create_output_placeholder(scores, ks)
 
         # Compute recalls at K
         num_relevant = torch.sum(labels, dim=-1)
@@ -122,17 +134,23 @@ class AvgPrecisionAt(RankingMetric):
     def _metric(self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         """Compute average precision at K for provided cutoffs
 
-        Args:
-            ks (torch.Tensor or list): list of cutoffs
-            scores (torch.Tensor): 2-dim tensor of predicted item scores
-            labels (torch.Tensor): 2-dim tensor of true item labels
+        Parameters
+        ----------
+        ks : torch.Tensor or list
+            list of cutoffs
+        scores : torch.Tensor
+            2-dim tensor of predicted item scores
+        labels : torch.Tensor
+            2-dim tensor of true item labels
 
-        Returns:
-            torch.Tensor: list of average precisions at cutoffs
+        Returns
+        -------
+        torch.Tensor:
+            list of average precisions at cutoffs
         """
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        topk_scores, _, topk_labels = _extract_topk(ks, scores, labels)
-        avg_precisions = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        topk_scores, _, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        avg_precisions = torch_utils.create_output_placeholder(scores, ks)
 
         # Compute average precisions at K
         num_relevant = torch.sum(labels, dim=1)
@@ -160,16 +178,24 @@ class DCGAt(RankingMetric):
     ) -> torch.Tensor:
 
         """Compute discounted cumulative gain at K for provided cutoffs (ignoring ties)
-        Args:
-            ks (torch.Tensor or list): list of cutoffs
-            scores (torch.Tensor): predicted item scores
-            labels (torch.Tensor): true item labels
-        Returns:
-            torch.Tensor: list of discounted cumulative gains at cutoffs
+
+        Parameters
+        ----------
+        ks : torch.Tensor or list
+            list of cutoffs
+        scores : torch.Tensor
+            predicted item scores
+        labels : torch.Tensor
+            true item labels
+
+        Returns
+        -------
+        torch.Tensor :
+            list of discounted cumulative gains at cutoffs
         """
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        topk_scores, topk_indices, topk_labels = _extract_topk(ks, scores, labels)
-        dcgs = _create_output_placeholder(scores, ks)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        topk_scores, topk_indices, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+        dcgs = torch_utils.create_output_placeholder(scores, ks)
 
         # Compute discounts
         discount_positions = torch.arange(ks.max().item()).to(
@@ -204,15 +230,23 @@ class NDCGAt(RankingMetric):
     ) -> torch.Tensor:
 
         """Compute normalized discounted cumulative gain at K for provided cutoffs (ignoring ties)
-        Args:
-            ks (torch.Tensor or list): list of cutoffs
-            scores (torch.Tensor): predicted item scores
-            labels (torch.Tensor): true item labels
-        Returns:
-            torch.Tensor: list of discounted cumulative gains at cutoffs
+
+        Parameters
+        ----------
+        ks : torch.Tensor or list
+            list of cutoffs
+        scores : torch.Tensor
+            predicted item scores
+        labels : torch.Tensor
+            true item labels
+
+        Returns
+        -------
+        torch.Tensor :
+            list of discounted cumulative gains at cutoffs
         """
-        ks, scores, labels = _check_inputs(ks, scores, labels)
-        topk_scores, topk_indices, topk_labels = _extract_topk(ks, scores, labels)
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        topk_scores, topk_indices, topk_labels = torch_utils.extract_topk(ks, scores, labels)
         # ndcgs = _create_output_placeholder(scores, ks) #TODO track if this line is needed
 
         # Compute discounted cumulative gains

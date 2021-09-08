@@ -4,9 +4,9 @@ import tensorflow as tf
 
 from ...types import DatasetSchema
 from ...utils.schema import Tag
-from .. import tabular
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
+from ..tabular.tabular import TabularBlock
 from .base import Block, BlockType
 
 
@@ -18,7 +18,7 @@ class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
 class DLRMBlock(Block):
     def __init__(
         self,
-        continuous_features: Union[List[str], DatasetSchema, tabular.TabularLayer],
+        continuous_features: Union[List[str], DatasetSchema, TabularBlock],
         embedding_layer: EmbeddingFeatures,
         bottom_mlp: BlockType,
         top_mlp: Optional[BlockType] = None,
@@ -68,7 +68,7 @@ class DLRMBlock(Block):
         embedding_layer = EmbeddingFeatures.from_schema(
             schema.select_by_tag(Tag.CATEGORICAL),
             infer_embedding_sizes=False,
-            default_embedding_dim=bottom_mlp.layers[-1].units,
+            embedding_dim_default=bottom_mlp.layers[-1].units,
         )
 
         continuous_features = ContinuousFeatures.from_schema(

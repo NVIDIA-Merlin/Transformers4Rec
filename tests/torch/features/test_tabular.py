@@ -19,6 +19,18 @@ def test_tabular_features(yoochoose_schema, torch_yoochoose_like):
     )
 
 
+def test_tabular_features_embeddings_options(yoochoose_schema, torch_yoochoose_like):
+    schema = yoochoose_schema
+
+    EMB_DIM = 100
+    tab_module = torch4rec.TabularFeatures.from_schema(schema, embedding_dim_default=EMB_DIM)
+
+    outputs = tab_module(torch_yoochoose_like)
+
+    categ_features = schema.select_by_tag(Tag.CATEGORICAL).column_names
+    assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
+
+
 def test_tabular_features_with_projection(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
     tab_module = torch4rec.TabularFeatures.from_schema(
@@ -37,7 +49,10 @@ def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):
     emb_cardinality = 10
     emb_dim = 8
     tab_module = torch4rec.TabularFeatures.from_schema(
-        schema, continuous_soft_embeddings_shape=(emb_cardinality, emb_dim)
+        schema,
+        continuous_soft_embeddings=True,
+        soft_embedding_cardinality_default=emb_cardinality,
+        soft_embedding_dim_default=emb_dim,
     )
 
     outputs = tab_module(torch_yoochoose_like)
@@ -51,14 +66,4 @@ def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):
     assert all(
         list(outputs[col_name].shape) == list(torch_yoochoose_like[col_name].shape) + [emb_dim]
         for col_name in schema.select_by_tag(Tag.CONTINUOUS).column_names
-    )
-
-
-def test_tabular_features_soft_encoding_invalid_shape(yoochoose_schema):
-    with pytest.raises(AssertionError) as excinfo:
-        torch4rec.TabularFeatures.from_schema(
-            yoochoose_schema, continuous_soft_embeddings_shape=(10)
-        )
-    assert "continuous_soft_embeddings_shape must be a list/tuple with 2 elements" in str(
-        excinfo.value
     )
