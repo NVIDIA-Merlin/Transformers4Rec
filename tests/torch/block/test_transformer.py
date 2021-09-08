@@ -1,9 +1,9 @@
 import pytest
-import torch
 
 from transformers4rec.config import transformer as tconf
 
 torch4rec = pytest.importorskip("transformers4rec.torch")
+pytorch = pytest.importorskip("torch")
 
 config_classes = [
     tconf.XLNetConfig,
@@ -118,7 +118,7 @@ def test_transformer_block_clm(yoochoose_schema, torch_yoochoose_like, transform
     transformer_model = transformer_body.build(d_model=64, n_head=4, n_layer=2, total_seq_length=20)
     model = torch4rec.TransformerBlock(transformer=transformer_model)
 
-    block = torch.nn.Sequential(tab_module, model)
+    block = pytorch.nn.Sequential(tab_module, model)
 
     outputs = block(torch_yoochoose_like)
 
@@ -141,7 +141,7 @@ def test_reformer_block_clm(yoochoose_schema, torch_yoochoose_like):
         transformer="reformer", d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
 
-    block = torch.nn.Sequential(tab_module, model)
+    block = pytorch.nn.Sequential(tab_module, model)
 
     outputs = block(torch_yoochoose_like)
 
