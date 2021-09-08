@@ -1,9 +1,9 @@
-## Session-based Recommendation on GPU with Transformers4Rec
+# Session-based Recommendation on GPU with Transformers4Rec
 
 Session-based recommendation, a sub-area of sequential recommendation, has been an important task in online services like e-commerce and news portals. Session-based recommenders provide relevant and  personalized recommendations even when prior user history is not available or their tastes change over time. They recently gained popularity due to their ability to capture short-term or contextual user preferences towards items.
 
 
-** Learning Objectives **
+**Learning Objectives**
 
 In this tutorial section, we created a series of notebooks that will help you to learn:
 
@@ -13,7 +13,7 @@ In this tutorial section, we created a series of notebooks that will help you to
 - how to deploy a trained model to the [Triton Inference Server](https://github.com/triton-inference-server/server)
 
 
-** Each Jupyter notebook covers the following:<br> **
+**Each Jupyter notebook covers the following:<br>**
 
 - Preprocessing with cuDF and NVTabular
 - Feature engineering with NVTabular
