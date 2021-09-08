@@ -22,6 +22,17 @@ class TransformerPrepare(tf.keras.layers.Layer):
 
 
 class TransformerBlock(Block):
+    """
+    Class to support HF Transformers for session-based and sequential-based recommendation models.
+
+    Parameters
+    ----------
+    transformer: TransformerBody
+        The T4RecConfig or a pre-trained HF object related to specific transformer architecture.
+    masking:
+        Needed when masking is applied on the inputs.
+    """
+
     TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {}
 
     # TODO: Add {GPT2Model: GPT2Prepare}
@@ -98,12 +109,19 @@ class TransformerBlock(Block):
 
         return cls(transformer, masking)
 
-    def call(self, inputs_embeds, **kwargs):
+    def call(self, inputs_embeds: tf.Tensor, **kwargs):
         """
-        Transformer Models
+
+        Parameters
+        ----------
+        inputs_embeds `tf.Tensor` of shape ({0}, hidden_size)`
+            An embedded representation of a sequence.
+
+        Returns
+        -------
+        `tf.Tensor`
         """
         transformer_kwargs = {"inputs_embeds": inputs_embeds}
-        # transformer_kwargs = {}
         if self.prepare_module:
             transformer_kwargs = self.prepare_module(inputs_embeds)
         if self.masking:
