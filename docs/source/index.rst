@@ -11,9 +11,10 @@ Welcome to Transformers4Rec's documentation!
    :caption: Contents:
 
    Getting Started <getting_started>
+   Core features <core_features>
    Examples <examples/index>
-   API Documentation <api/index>
-   Additional Resources <resources/index>
+   API Documentation <api/modules>
+   Additional Resources <resources>
 
 
 Indices and tables
