@@ -67,7 +67,8 @@ def save_time_based_splits(
             out_dir = os.path.join(output_dir, split_name)
             os.makedirs(out_dir, exist_ok=True)
             df.to_parquet(os.path.join(out_dir, "train.parquet"))
-
+            
+            cupy.random.seed(1)
             random_values = cupy.random.rand(len(df))
 
             # Extracts 10% for valid and test set.
