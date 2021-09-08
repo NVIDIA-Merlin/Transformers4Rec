@@ -3,7 +3,7 @@ feature {
   type: INT
   int_domain {
     name: "session_id"
-    min: 2
+    min: 1
     max: 11562158
     is_categorical: false
   }
@@ -15,7 +15,7 @@ feature {
   name: "category-list_trim"
   value_count {
     min: 2
-    max: 185
+    max: 20
   }
   type: INT
   int_domain {
@@ -34,7 +34,7 @@ feature {
   name: "item_id-list_trim"
   value_count {
     min: 2
-    max: 185
+    max: 20
   }
   type: INT
   int_domain {
@@ -54,7 +54,7 @@ feature {
   name: "timestamp/age_days-list_trim"
   value_count {
     min: 2
-    max: 185
+    max: 20
   }
   type: FLOAT
   float_domain {
@@ -71,7 +71,7 @@ feature {
   name: "timestamp/weekday/sin-list_trim"
   value_count {
     min: 2
-    max: 185
+    max: 20
   }
   type: FLOAT
   float_domain {
