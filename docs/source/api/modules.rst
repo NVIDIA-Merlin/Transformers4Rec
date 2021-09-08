@@ -1,5 +1,5 @@
-API Documentation
-=================
+transformers4rec
+================
 
 .. toctree::
    :maxdepth: 4
