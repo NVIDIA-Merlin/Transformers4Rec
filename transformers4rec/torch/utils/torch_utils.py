@@ -194,3 +194,15 @@ def create_output_placeholder(scores, ks):
 
 def tranform_label_to_onehot(labels, vocab_size):
     return torch.nn.functional.one_hot(labels.reshape(-1), vocab_size).detach()
+
+
+class LambdaModule(torch.nn.Module):
+    def __init__(self, lambda_fn):
+        super().__init__()
+        import types
+
+        assert isinstance(lambda_fn, types.LambdaType)
+        self.lambda_fn = lambda_fn
+
+    def forward(self, x):
+        return self.lambda_fn(x)

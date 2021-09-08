@@ -7,12 +7,11 @@ import torchmetrics as tm
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_utils import SequenceSummary
 
-from transformers4rec.utils.registry import camelcase_to_snakecase
-
+from ...utils.registry import camelcase_to_snakecase
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockType, Head, Model, TabularData
-from ..utils.torch_utils import LossMixin, MetricsMixin
+from ..utils.torch_utils import LambdaModule, LossMixin, MetricsMixin
 
 
 def name_fn(name, inp):
@@ -529,15 +528,3 @@ class _NextItemPredictionTask(torch.nn.Module):
 
     def _get_name(self) -> str:
         return "NextItemPredictionTask"
-
-
-class LambdaModule(torch.nn.Module):
-    def __init__(self, lambda_fn):
-        super().__init__()
-        import types
-
-        assert isinstance(lambda_fn, types.LambdaType)
-        self.lambda_fn = lambda_fn
-
-    def forward(self, x):
-        return self.lambda_fn(x)
