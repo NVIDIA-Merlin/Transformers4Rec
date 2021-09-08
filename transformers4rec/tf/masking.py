@@ -63,24 +63,12 @@ class MaskSequence(tf.keras.layers.Layer):
 
     # TODO: Link to masking-class in the doc-string.
 
-    def __init__(
-        self,
-        hidden_size: int,
-        padding_idx: int = 0,
-        eval_on_last_item_seq_only: bool = True,
-    ):
-        super(MaskSequence, self).__init__()
+    def __init__(self, padding_idx: int = 0, eval_on_last_item_seq_only: bool = True, **kwargs):
+        super(MaskSequence, self).__init__(**kwargs)
         self.padding_idx = padding_idx
-        self.hidden_size = hidden_size
         self.eval_on_last_item_seq_only = eval_on_last_item_seq_only
         self.mask_schema = None
         self.masked_targets = None
-
-        # Create a trainable embedding to replace masked interactions
-        initializer = tf.random_normal_initializer(mean=0.0, stddev=0.001)
-        self.masked_item_embedding = tf.Variable(
-            initializer(shape=[self.hidden_size], dtype=tf.float32)
-        )
 
     def _compute_masked_targets(
         self, item_ids: tf.Tensor, training=False
@@ -203,6 +191,12 @@ class MaskSequence(tf.keras.layers.Layer):
 
     def build(self, input_shape):
         self.hidden_size = input_shape[-1]
+        # Create a trainable embedding to replace masked interactions
+        initializer = tf.random_normal_initializer(mean=0.0, stddev=0.001)
+        self.masked_item_embedding = tf.Variable(
+            initializer(shape=[self.hidden_size], dtype=tf.float32)
+        )
+
         return super().build(input_shape)
 
 
@@ -221,15 +215,13 @@ class CausalLanguageModeling(MaskSequence):
 
     def __init__(
         self,
-        hidden_size: int,
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         train_on_last_item_seq_only: bool = False,
+        **kwargs
     ):
         super(CausalLanguageModeling, self).__init__(
-            hidden_size=hidden_size,
-            padding_idx=padding_idx,
-            eval_on_last_item_seq_only=eval_on_last_item_seq_only,
+            padding_idx=padding_idx, eval_on_last_item_seq_only=eval_on_last_item_seq_only, **kwargs
         )
         self.train_on_last_item_seq_only = train_on_last_item_seq_only
 
@@ -296,15 +288,13 @@ class MaskedLanguageModeling(MaskSequence):
 
     def __init__(
         self,
-        hidden_size: int,
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         mlm_probability: float = 0.15,
+        **kwargs
     ):
         super(MaskedLanguageModeling, self).__init__(
-            hidden_size=hidden_size,
-            padding_idx=padding_idx,
-            eval_on_last_item_seq_only=eval_on_last_item_seq_only,
+            padding_idx=padding_idx, eval_on_last_item_seq_only=eval_on_last_item_seq_only, **kwargs
         )
         self.mlm_probability = mlm_probability
 
@@ -330,7 +320,7 @@ class MaskedLanguageModeling(MaskSequence):
 
         labels = tf.cast(tf.fill(item_ids.shape, self.padding_idx), dtype=item_ids.dtype)
         non_padded_mask = tf.cast(item_ids != self.padding_idx, labels.dtype)
-        rows_ids = tf.range(labels.shape[0], dtype=labels.dtype)
+        rows_ids = tf.range(labels.shape[0], dtype=tf.int64)
         # During training, masks labels to be predicted according to a probability, ensuring that
         #   each session has at least one label to predict
         if training:
@@ -391,11 +381,11 @@ class MaskedLanguageModeling(MaskSequence):
         return mask_labels, labels
 
 
-@masking_registry.register_with_multiple_names("plm", "permutation")
-class PermutationLanguageModeling(MaskSequence):
-    pass
-
-
-@masking_registry.register_with_multiple_names("rtd", "replacement")
-class ReplacementLanguageModeling(MaskSequence):
-    pass
+# @masking_registry.register_with_multiple_names("plm", "permutation")
+# class PermutationLanguageModeling(MaskSequence):
+#     pass
+#
+#
+# @masking_registry.register_with_multiple_names("rtd", "replacement")
+# class ReplacementLanguageModeling(MaskSequence):
+#     pass
