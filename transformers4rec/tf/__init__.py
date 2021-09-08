@@ -22,6 +22,7 @@ from tensorflow.python.training.tracking.data_structures import ListWrapper, _Di
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
+from .block.transformer import TransformerBlock
 from .features.continuous import ContinuousFeatures
 from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
@@ -55,6 +56,7 @@ __all__ = [
     "right_shift_layer",
     "DLRMBlock",
     "MLPBlock",
+    "TransformerBlock",
     "TabularBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
