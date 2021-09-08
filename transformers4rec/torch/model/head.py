@@ -46,7 +46,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             if not isinstance(prediction_tasks, list):
                 prediction_tasks = [prediction_tasks]
             for i, task in enumerate(prediction_tasks):
-                self.prediction_tasks[task.target_name or str(i)] = task
+                self.prediction_tasks[task.task_name] = task
 
         self._task_weights = defaultdict(lambda: 1)
         if task_weights:
@@ -176,20 +176,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         call_body: bool = False,
         **kwargs,
     ) -> torch.Tensor:
-        """
-
-        Parameters
-        ----------
-        body_outputs
-        targets
-        compute_metrics
-        call_body
-        kwargs
-
-        Returns
-        -------
-        torch.Tensor
-        """
         losses = []
 
         if call_body:
@@ -212,26 +198,13 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         mode: str = "val",
         call_body: bool = False,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
-        """
-
-        Parameters
-        ----------
-        body_outputs
-        targets
-        mode
-        call_body
-
-        Returns
-        -------
-
-        """
         metrics = {}
 
         if call_body:
             body_outputs = self.body(body_outputs)
 
         for name, task in self.prediction_tasks.items():
-            metrics[name] = task.calculate_metrics(body_outputs, targets, mode=mode)
+            metrics.update(task.calculate_metrics(body_outputs, targets, mode=mode))
 
         return _output_metrics(metrics)
 

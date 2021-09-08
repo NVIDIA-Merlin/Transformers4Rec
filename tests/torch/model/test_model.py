@@ -115,10 +115,10 @@ def test_model_with_multiple_heads_and_tasks(
     metrics = model.evaluate(dataset)
 
     assert list(metrics.keys()) == [
-        "eval_classification",
-        "eval_regression",
-        "eval_classification_session",
-        "eval_regression_session",
+        "eval_classification/binary_classification_task",
+        "eval_regression/regression_task",
+        "eval_classification_session/binary_classification_task",
+        "eval_regression_session/regression_task",
     ]
     assert len(losses) == 5
     assert all(loss is not None for loss in losses)

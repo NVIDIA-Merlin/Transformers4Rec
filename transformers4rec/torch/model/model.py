@@ -101,6 +101,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         mode="val",
         call_body=True,
         forward=True,
+        **kwargs
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         outputs = {}
         for head in self.heads:
@@ -108,6 +109,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 head.calculate_metrics(
                     inputs, targets, mode=mode, call_body=call_body, forward=forward
                 )
+            )
+            outputs.update(
+                head.calculate_metrics(inputs, targets, mode=mode, call_body=True, **kwargs)
             )
 
         return outputs

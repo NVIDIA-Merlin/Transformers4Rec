@@ -29,6 +29,9 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         The metrics to calculate during training & evaluation.
     target_name: str, optional
         Name of the target, this is needed when there are multiple targets.
+    task_name: str, optional
+        Name of the prediction task, if not provided a name will be automatically constructed based
+        on the target-name & class-name.
     forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor]
         Function to apply before the prediction
     task_block: BlockType
@@ -49,6 +52,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         loss: torch.nn.Module,
         metrics: Iterable[tm.Metric] = None,
         target_name: Optional[str] = None,
+        task_name: Optional[str] = None,
         forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
         task_block: Optional[BlockType] = None,
         pre: Optional[BlockType] = None,
@@ -62,6 +66,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         self.loss = loss
         self.pre = pre
         self.task_block = task_block
+        self._task_name = task_name
 
     def build(self, body, input_size, inputs=None, device=None, task_block=None, pre=None):
         """
@@ -119,6 +124,9 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
     @property
     def task_name(self):
+        if self._task_name:
+            return self._task_name
+
         base_name = generic_utils.to_snake_case(self.__class__.__name__)
 
         return name_fn(self.target_name, base_name) if self.target_name else base_name
@@ -169,7 +177,9 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         for metric in self.metrics:
             if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
                 targets = targets.int()
-            outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, targets)
+            outputs[self.child_name(camelcase_to_snakecase(metric.__class__.__name__))] = metric(
+                predictions, targets
+            )
 
         return outputs
 
@@ -218,7 +228,8 @@ class BinaryClassificationTask(PredictionTask):
 
     def __init__(
         self,
-        target_name=None,
+        target_name: Optional[str] = None,
+        task_name: Optional[str] = None,
         task_block: Optional[BlockType] = None,
         loss=DEFAULT_LOSS,
         metrics=DEFAULT_METRICS,
@@ -228,6 +239,7 @@ class BinaryClassificationTask(PredictionTask):
             loss=loss,
             metrics=metrics,
             target_name=target_name,
+            task_name=task_name,
             summary_type=summary_type,
             task_block=task_block,
             pre=BinaryClassificationPrepareBlock(),
@@ -252,7 +264,8 @@ class RegressionTask(PredictionTask):
 
     def __init__(
         self,
-        target_name=None,
+        target_name: Optional[str] = None,
+        task_name: Optional[str] = None,
         task_block: Optional[BlockType] = None,
         loss=DEFAULT_LOSS,
         metrics=DEFAULT_METRICS,
@@ -262,6 +275,7 @@ class RegressionTask(PredictionTask):
             loss=loss,
             metrics=metrics,
             target_name=target_name,
+            task_name=task_name,
             summary_type=summary_type,
             task_block=task_block,
             pre=RegressionPrepareBlock(),
@@ -279,6 +293,9 @@ class NextItemPredictionTask(PredictionTask):
         List of ranking metrics to use for evaluation.
     task_block:
         Module to transform input tensor before computing predictions.
+    task_name: str, optional
+        Name of the prediction task, if not provided a name will be automatically constructed based
+        on the target-name & class-name.
     weight_tying: bool
         The item id embedding table weights are shared with the prediction network layer.
     softmax_temperature: float
@@ -305,13 +322,14 @@ class NextItemPredictionTask(PredictionTask):
         loss: torch.nn.Module = torch.nn.NLLLoss(ignore_index=0),
         metrics: Iterable[tm.Metric] = DEFAULT_METRICS,
         task_block: Optional[torch.nn.Module] = None,
+        task_name: str = "next-item",
         weight_tying: bool = False,
         softmax_temperature: float = 1,
         padding_idx: int = 0,
         target_dim: int = None,
         hf_format=False,
     ):
-        super().__init__(loss=loss, metrics=metrics, task_block=task_block)
+        super().__init__(loss=loss, metrics=metrics, task_block=task_block, task_name=task_name)
         self.softmax_temperature = softmax_temperature
         self.weight_tying = weight_tying
         self.padding_idx = padding_idx
