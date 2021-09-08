@@ -246,7 +246,7 @@ class TabularSequenceFeatures(TabularFeatures):
 
         if self.masking:
             outputs = self.masking(
-                outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
+                outputs, item_ids=self.to_merge["categorical_layer"].item_seq, training=training
             )
 
         return outputs

@@ -103,6 +103,7 @@ class TransformerBlock(Block):
         Transformer Models
         """
         transformer_kwargs = {"inputs_embeds": inputs_embeds}
+        # transformer_kwargs = {}
         if self.prepare_module:
             transformer_kwargs = self.prepare_module(inputs_embeds)
         if self.masking:
@@ -111,11 +112,13 @@ class TransformerBlock(Block):
                 transformer_kwargs.update(masking_kwargs)
 
         filtered_transformer_kwargs = {}
-        for param in inspect.signature(self.transformer.forward).parameters:
+        for param in inspect.signature(self.transformer.call).parameters:
             if param in transformer_kwargs:
                 filtered_transformer_kwargs[param] = transformer_kwargs[param]
 
-        model_outputs = self.transformer(**filtered_transformer_kwargs)
+        # In Keras the first (inputs) arg always needs to be set, therefore we supply the
+        # transformer_kwargs both as arg and **kwargs
+        model_outputs = self.transformer(transformer_kwargs, **filtered_transformer_kwargs)
         outputs = self.output_fn(model_outputs)
 
         # TODO: store the attention outputs for meta-data logging
