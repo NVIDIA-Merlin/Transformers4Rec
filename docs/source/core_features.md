@@ -151,7 +151,6 @@ Two [approaches](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) a
 
 **TODO: Update the previous statement if we cannot have `DistributedDataParallel` working completely with our Data loader.**
 
-**TODO: Include code snippets for training with PyTorch**
 
 ```python
 from transformers4rec.config.trainer import T4RecTrainingArguments
