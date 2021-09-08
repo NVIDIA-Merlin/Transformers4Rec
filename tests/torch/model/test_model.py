@@ -188,3 +188,37 @@ def test_set_model_to_device(
 
     inputs = {k: v.to(device) for k, v in torch_yoochoose_like.items()}
     assert model(inputs)
+
+
+@pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
+def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, masking):
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking=masking,
+    )
+    task = torch4rec.NextItemPredictionTask(hf_format=True)
+    model = transformer_config.to_torch_model(input_module, task)
+    out = model(torch_yoochoose_like)
+    result = model.calculate_metrics(
+        inputs=out["predictions"], targets=out["labels"], call_body=False, forward=False
+    )
+    assert result is not None
+
+
+@pytest.mark.parametrize("d_model", [32, 64, 128])
+def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_schema, d_model):
+    transformer_config = tconf.XLNetConfig.build(d_model, 4, 2, 20)
+    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=d_model,
+        masking="mlm",
+    )
+    task = torch4rec.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    model = transformer_config.to_torch_model(input_module, task)
+    assert model(torch_yoochoose_like)
