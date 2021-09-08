@@ -3,7 +3,7 @@ feature {
   type: INT
   int_domain {
     name: "session_id"
-    min: 1
+    min: 2
     max: 11562158
     is_categorical: false
   }
@@ -21,7 +21,7 @@ feature {
   int_domain {
     name: "category-list_trim"
     min: 1
-    max: 332
+    max: 334
     is_categorical: true
   }
   annotation {
@@ -40,7 +40,7 @@ feature {
   int_domain {
     name: "item_id/list"
     min: 1
-    max: 51996
+    max: 51998
     is_categorical: true
   }
   annotation {
@@ -87,19 +87,5 @@ feature {
 feature {
   name: "day-first"
   annotation {
-  }
-}
-feature {
-  name: "purchase-first"
-  type: INT
-  int_domain {
-    name: "purchase"
-    min: 0
-    max: 1
-    is_categorical: True
-  }
-  annotation {
-    tag: "binary"
-    tag: "target"
   }
 }
