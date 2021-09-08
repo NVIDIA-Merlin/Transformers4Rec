@@ -22,9 +22,9 @@ requirements = {
 
 setup(
     name="transformers4rec",
-    version="0.01",
+    version="0.1",
     packages=find_packages(),
-    url="https://github.com/nvidia-merlin/transformers4Rec/",
+    url="https://github.com/NVIDIA-Merlin/Transformers4Rec",
     author="NVIDIA Corporation",
     license="Apache 2.0",
     long_description=open("README.md", encoding="utf8").read(),
