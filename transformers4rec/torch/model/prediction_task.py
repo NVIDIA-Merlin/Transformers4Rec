@@ -432,7 +432,9 @@ class NextItemPredictionTask(PredictionTask):
             predictions = predictions["predictions"]
 
         for metric in self.metrics:
-            outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, targets)
+            outputs[self.child_name(camelcase_to_snakecase(metric.__class__.__name__))] = metric(
+                predictions, targets
+            )
 
         return outputs
 
@@ -445,7 +447,10 @@ class NextItemPredictionTask(PredictionTask):
         # Explode metrics for each cut-off
         # TODO make result generic:
         # To accept a mix of ranking metrics and others not requiring top_ks ?
-        topks = {f"{metric.__class__.__name__.lower()}": metric.top_ks for metric in self.metrics}
+        topks = {
+            self.child_name(camelcase_to_snakecase(metric.__class__.__name__)): metric.top_ks
+            for metric in self.metrics
+        }
         results = {}
         for name, metric in metrics.items():
             for measure, k in zip(metric, topks[name]):
