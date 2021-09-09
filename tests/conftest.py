@@ -33,8 +33,8 @@ def schema_file():
     return ASSETS_DIR / "schema.pbtxt"
 
 
-YOOCHOOSE_SCHEMA = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
-YOOCHOOSE_PATH = ASSETS_DIR / "yoochoose" / "data.parquet"
+YOOCHOOSE_SCHEMA = ASSETS_DIR / "yoochoose" / "data_seq_schema.pbtxt"
+YOOCHOOSE_PATH = ASSETS_DIR / "yoochoose" / "data_seq.parquet"
 
 
 @pytest.fixture
@@ -48,12 +48,27 @@ def yoochoose_schema_file():
 
 
 @pytest.fixture
-def yoochoose_data_file():
-    return ASSETS_DIR / "yoochoose" / "data.parquet"
+def yoochoose_schema():
+    schema = Schema().from_proto_text(str(YOOCHOOSE_SCHEMA))
+    return schema
+
+
+TABULAR_DATA_SCHEMA = ASSETS_DIR / "yoochoose" / "data_schema.pbtxt"
+TABULAR_DATA_PATH = ASSETS_DIR / "yoochoose" / "data.parquet"
 
 
 @pytest.fixture
-def yoochoose_schema():
+def tabular_data_file():
+    return TABULAR_DATA_PATH
+
+
+@pytest.fixture
+def tabular_schema_file():
+    return TABULAR_DATA_SCHEMA
+
+
+@pytest.fixture
+def tabular_schema():
     schema = Schema().from_proto_text(str(YOOCHOOSE_SCHEMA))
 
     return schema.remove_by_name(["session_id", "session_start", "day_idx"])

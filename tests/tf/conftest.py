@@ -79,7 +79,7 @@ def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
 @pytest.fixture
 def tf_yoochoose_like():
     NUM_ROWS = 100
-    MAX_CARDINALITY = 100
+    DEFAULT_MAX_INT = 100
     MAX_SESSION_LENGTH = 20
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
@@ -96,10 +96,11 @@ def tf_yoochoose_like():
             is_int_feature = has_field(feature, "int_domain")
 
             if is_int_feature:
-                max_num = MAX_CARDINALITY
+                max_num = DEFAULT_MAX_INT
+                if feature.int_domain.is_categorical:
+                    max_num = feature.int_domain.max
+
                 if is_session_feature:
-                    if not feature.int_domain.is_categorical:
-                        max_num = feature.int_domain.max
                     row = tf.random.uniform((session_length,), maxval=max_num)
                 else:
                     row = tf.random.uniform((1,), maxval=max_num)
