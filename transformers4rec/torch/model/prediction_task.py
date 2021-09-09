@@ -177,17 +177,15 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         for metric in self.metrics:
             if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
                 targets = targets.int()
-            outputs[self.child_name(camelcase_to_snakecase(metric.__class__.__name__))] = metric(
-                predictions, targets
-            )
+            outputs[self.metric_name(metric)] = metric(predictions, targets)
 
         return outputs
 
     def compute_metrics(self, **kwargs):
-        return {
-            self.child_name(camelcase_to_snakecase(metric.__class__.__name__)): metric.compute()
-            for metric in self.metrics
-        }
+        return {self.metric_name(metric): metric.compute() for metric in self.metrics}
+
+    def metric_name(self, metric: tm.Metric) -> str:
+        return self.child_name(camelcase_to_snakecase(metric.__class__.__name__))
 
     def reset_metrics(self):
         for metric in self.metrics:
@@ -375,7 +373,7 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs, **kwargs):
+    def forward(self, inputs: torch.Tensor, **kwargs):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -432,25 +430,20 @@ class NextItemPredictionTask(PredictionTask):
             predictions = predictions["predictions"]
 
         for metric in self.metrics:
-            outputs[self.child_name(camelcase_to_snakecase(metric.__class__.__name__))] = metric(
-                predictions, targets
-            )
+            outputs[self.metric_name(metric)] = metric(predictions, targets)
 
         return outputs
 
     def compute_metrics(self):
         metrics = {
-            self.child_name(camelcase_to_snakecase(metric.__class__.__name__)): metric.compute()
+            self.metric_name(metric): metric.compute()
             for metric in self.metrics
             if getattr(metric, "top_ks", None)
         }
         # Explode metrics for each cut-off
         # TODO make result generic:
         # To accept a mix of ranking metrics and others not requiring top_ks ?
-        topks = {
-            self.child_name(camelcase_to_snakecase(metric.__class__.__name__)): metric.top_ks
-            for metric in self.metrics
-        }
+        topks = {self.metric_name(metric): metric.top_ks for metric in self.metrics}
         results = {}
         for name, metric in metrics.items():
             for measure, k in zip(metric, topks[name]):
