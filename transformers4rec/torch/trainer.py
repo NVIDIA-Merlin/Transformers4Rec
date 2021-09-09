@@ -382,7 +382,7 @@ class Trainer(BaseTrainer):
             metrics_results_detailed = None
             if self.compute_metrics:
                 metrics_results_detailed = model.module.calculate_metrics(
-                    inputs, labels, mode=metric_key_prefix
+                    preds, labels, mode=metric_key_prefix, forward=False, call_body=False
                 )
 
             # Update containers on host

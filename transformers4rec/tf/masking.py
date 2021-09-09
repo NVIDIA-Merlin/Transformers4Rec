@@ -340,7 +340,7 @@ class MaskedLanguageModeling(MaskSequence):
             # Set at least one item in the sequence to mask, so that the network
             # can learn something with this session
             one_random_index_by_session = tf.random.categorical(
-                tf.cast(non_padded_mask, tf.float32), num_samples=1
+                tf.math.log(tf.cast(non_padded_mask, tf.float32)), num_samples=1
             )
             indices = tf.concat([tf.expand_dims(rows_ids, 1), one_random_index_by_session], axis=1)
             labels = tf.tensor_scatter_nd_update(
@@ -353,7 +353,7 @@ class MaskedLanguageModeling(MaskSequence):
                 non_padded_mask, axis=1
             )
             sampled_labels_to_unmask = tf.random.categorical(
-                tf.cast(mask_labels, tf.float32), num_samples=1
+                tf.math.log(tf.cast(mask_labels, tf.float32)), num_samples=1
             )
 
             labels_to_unmask = tf.boolean_mask(sampled_labels_to_unmask, sequences_with_only_labels)
