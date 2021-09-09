@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+
 class MaskSequence:
     """
     Module to prepare masked data for LM tasks
