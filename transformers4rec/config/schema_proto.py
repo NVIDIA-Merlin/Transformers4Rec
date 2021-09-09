@@ -79,7 +79,7 @@ class Path(betterproto.Message):
 
 
 @dataclass
-class Schema(betterproto.Message):
+class _Schema(betterproto.Message):
     """Message to represent schema information. NextID: 14"""
 
     # Features described in this schema.

@@ -1,6 +1,13 @@
 import pytest
 
-from transformers4rec.config import schema_v2 as schema
+from transformers4rec.config import schema
+
+
+def test_column_proto_txt():
+    col = schema.ColumnSchema(name="qa")
+
+    assert col.to_proto_text() == 'name: "qa"\n'
+    assert schema.Schema([col]).to_proto_text() == 'feature {\n  name: "qa"\n}\n'
 
 
 def test_column_schema():
@@ -17,6 +24,8 @@ def test_column_schema_categorical_with_shape():
     col = schema.ColumnSchema.create_categorical("cat_1", 1000, shape=(1,))
 
     assert col.shape.dim[0].size == 1
+
+    assert schema.Schema([col]).categorical_cardinalities() == dict(cat_1=1000 + 1)
 
 
 def test_column_schema_categorical_with_value_count():
