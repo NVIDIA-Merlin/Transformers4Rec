@@ -31,36 +31,64 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 <div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;"/><br><figcaption style="font-style: italic;">GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
 
 
-## Simple like this!
+## Quick tour
+To train a model on a dataset, the first step is to provide the [schema](TODO/add/link) and use this to construct an input-module.
+For session-based recommendation problems you typically want to use [TabularSequenceFeatures](TODO/add/link), which 
+merges context features with sequential features. Next, we need to provide the prediction-task(s) 
+(the tasks we provide out of the box can be found [here](TODO/add/link)).
+Then all that's left is to construct a transformer-body and convert this to a model.
 
-
+Here is the PyTorch version:
 ```python
-from transformers4rec.torch import TabularSequenceFeatures, MLPBlock, SequentialBlock, Head, TransformerBlock
-from transformers4rec.torch.model.head import NextItemPredictionTask
-from transformers4rec.config import transformer
+import transformers4rec as tr
+from transformers4rec import torch as torch_rec
 
-# Define feature processing module
-inputs = TabularSequenceFeatures.from_schema(
-        schema,
-        max_sequence_length=20,
-	aggregation="sequential-concat",
-        masking="causal",
-    )
+SCHEMA_PATH = "..."
+max_sequence_length, d_model = 20, 64
+
+# Define input module to process tabular input-features
+input_module = torch_rec.TabularSequenceFeatures.from_schema(
+    tr.DatasetSchema.from_proto(SCHEMA_PATH),
+    max_sequence_length=max_sequence_length,
+    continuous_projection=d_model,
+    aggregation="sequential-concat",
+    masking="causal",
+)
+# Define one or multiple prediction-tasks
+prediction_tasks = [torch_rec.NextItemPredictionTask()]
+
 # Define the config of the XLNet Transformer architecture
-transformer_config = transformer.XLNetConfig.build(
-    d_model=64, n_head=4, n_layer=2, total_seq_length=20
+transformer_config = tr.XLNetConfig.build(
+    d_model=64, n_head=4, n_layer=2, total_seq_length=max_sequence_length
 )
-# Define the model body connecting the inputs, projection, transformer block and masking
-body = SequentialBlock(
-    inputs, MLPBlock([64]), TransformerBlock(transformer_config, masking=inputs.masking)
-)
-# Link the body to prediction task 
-head = Head(body, NextItemPredictionTask(weight_tying=True, hf_format=True), inputs=inputs,
-)
-# Get the end-to-end Model class 
-model = Model(head)
+model = transformer_config.to_torch_model(input_module, *prediction_tasks)
 ```
 
+And here is the equivalent code for TensorFlow:
+```python
+import transformers4rec as tr
+from transformers4rec import tf as tf_rec
+
+SCHEMA_PATH = "..."
+max_sequence_length, d_model = 20, 64
+
+# Define input module to process tabular input-features
+input_module = tf_rec.TabularSequenceFeatures.from_schema(
+    tr.DatasetSchema.from_proto(SCHEMA_PATH),
+    max_sequence_length=max_sequence_length,
+    continuous_projection=d_model,
+    aggregation="sequential-concat",
+    masking="causal",
+)
+# Define one or multiple prediction-tasks
+prediction_tasks = [tf_rec.NextItemPredictionTask()]
+
+# Define the config of the XLNet Transformer architecture
+transformer_config = tr.XLNetConfig.build(
+    d_model=64, n_head=4, n_layer=2, total_seq_length=max_sequence_length
+)
+model = transformer_config.to_tf_model(input_module, *prediction_tasks)
+```
 
 ## When to use it?
 ### Sequential and Session-based recommendation
