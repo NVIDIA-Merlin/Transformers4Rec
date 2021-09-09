@@ -33,7 +33,7 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 
 ## Quick tour
 To train a model on a dataset, the first step is to provide the [schema](TODO/add/link) and use this to construct an input-module.
-For session-based recommendation problems ypi typically want to use [TabularSequenceFeatures](TODO/add/link), which 
+For session-based recommendation problems you typically want to use [TabularSequenceFeatures](TODO/add/link), which 
 merges context features with sequential features. Next, we need to provide the prediction-task(s) 
 (the tasks we provide out of the box can be found [here](TODO/add/link)).
 Then all that's left is to construct a transformer-body and convert this to a model.
