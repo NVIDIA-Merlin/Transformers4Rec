@@ -10,7 +10,7 @@ from transformers.modeling_utils import SequenceSummary
 from ...utils.registry import camelcase_to_snakecase
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
-from ..typing import BlockType, Head, Model, TabularData
+from ..typing import BlockType, Head, InputBlock, Model, TabularData
 from ..utils.torch_utils import LambdaModule, LossMixin, MetricsMixin
 
 
@@ -68,10 +68,18 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         self.task_block = task_block
         self._task_name = task_name
 
-    def build(self, body, input_size, inputs=None, device=None, task_block=None, pre=None):
+    def build(
+        self,
+        body: BlockType,
+        input_size,
+        inputs: Optional[InputBlock] = None,
+        device=None,
+        task_block=None,
+        pre=None,
+    ):
         """
-        The method will be called when block is convert to_model,
-        i.e when linked to prediction head
+        The method will be called when block is converted to a model,
+        i.e when linked to prediction head.
 
         Parameters
         ----------
@@ -523,7 +531,7 @@ class _NextItemPredictionTask(torch.nn.Module):
         else:
             self.output_layer = torch.nn.Linear(self.input_size[-1], self.target_dim)
 
-    def forward(self, inputs):
+    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         if self.weight_tying:
             logits = torch.nn.functional.linear(
                 inputs,

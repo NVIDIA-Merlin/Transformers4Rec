@@ -42,6 +42,7 @@ _features_module = "transformers4rec.torch.features"
 TabularFeatures = ForwardRef(f"{_features_module}.tabular.TabularFeatures")
 TabularSequenceFeatures = ForwardRef(f"{_features_module}.sequence.TabularSequenceFeatures")
 TabularFeaturesType = typing.Union[TabularSequenceFeatures, TabularFeatures]
+InputBlock = ForwardRef(f"{_features_module}.base.InputBlock")
 
 MaskSequence = ForwardRef("transformers4rec.torch.masking.MaskSequence")
 
@@ -68,6 +69,7 @@ __all__ = [
     "TabularFeatures",
     "TabularSequenceFeatures",
     "TabularFeaturesType",
+    "InputBlock",
     "MaskSequence",
     "Block",
     "BlockType",
