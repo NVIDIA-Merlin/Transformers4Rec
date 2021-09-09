@@ -26,7 +26,6 @@ from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import MaskSequence, masking_registry
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
-from ..utils.torch_utils import calculate_batch_size_from_input_size
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
@@ -77,10 +76,10 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
 
     def forward_output_size(self, input_sizes):
         sizes = {}
-        batch_size = calculate_batch_size_from_input_size(input_sizes)
-        sequence_length = input_sizes[list(self.feature_config.keys())[0]][1]
-        for name, feature in self.feature_config.items():
-            sizes[name] = torch.Size([batch_size, sequence_length, feature.table.dim])
+
+        for fname, fconfig in self.feature_config.items():
+            fshape = input_sizes[fname]
+            sizes[fname] = torch.Size(list(fshape) + [fconfig.table.dim])
 
         return sizes
 

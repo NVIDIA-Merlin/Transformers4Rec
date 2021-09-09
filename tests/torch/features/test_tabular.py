@@ -46,16 +46,17 @@ def test_tabular_features_embeddings_options(yoochoose_schema, torch_yoochoose_l
     assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
 
 
-def test_tabular_features_with_projection(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
-    tab_module = torch4rec.TabularFeatures.from_schema(
-        schema, max_sequence_length=20, continuous_projection=64
-    )
+def test_tabular_features_with_projection(tabular_schema, torch_yoochoose_like_non_sequential):
+    schema = tabular_schema
+    tab_module = torch4rec.TabularFeatures.from_schema(schema, continuous_projection=64)
 
-    outputs = tab_module(torch_yoochoose_like)
+    outputs = tab_module(torch_yoochoose_like_non_sequential)
 
-    assert len(outputs.keys()) == 3
-    assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
+    continuous_feature_names = schema.select_by_tag(Tag.CONTINUOUS).column_names
+
+    assert len(set(continuous_feature_names).intersection(set(outputs.keys()))) == 0
+    assert "continuous_projection" in outputs
+    assert list(outputs["continuous_projection"].shape)[1] == 64
 
 
 def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):

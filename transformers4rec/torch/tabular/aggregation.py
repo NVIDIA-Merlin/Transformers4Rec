@@ -18,9 +18,9 @@ from functools import reduce
 
 import torch
 
-from merlin_standard_lib import Schema
-from transformers4rec.config.schema import requires_schema
+from merlin_standard_lib import Schema, Tag
 
+from ...config.schema import requires_schema
 from ..typing import TabularData
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .tabular import TabularAggregation, tabular_aggregation_registry
@@ -54,6 +54,7 @@ class ConcatFeatures(TabularAggregation):
 
 
 @tabular_aggregation_registry.register("sequential-concat")
+@requires_schema
 class SequentialConcatFeatures(TabularAggregation):
     """Aggregation by stacking all values in TabularData, all non-sequential values will be
     converted to a sequence.
@@ -61,30 +62,100 @@ class SequentialConcatFeatures(TabularAggregation):
     The output of this concatenation will have 3 dimensions.
     """
 
-    def forward(self, inputs: TabularData) -> torch.Tensor:
+    def __init__(self, schema: Schema = None):
+        super().__init__()
+        self.schema = schema
+
+    def forward(
+        self,
+        inputs: TabularData,
+    ) -> torch.Tensor:
+        continuous_features_names = self.schema.select_by_tag(Tag.CONTINUOUS).column_names
+        inputs_sizes = {k: v.shape for k, v in inputs.items()}
+        seq_features_shapes, sequence_length = self._get_seq_features_shapes(
+            inputs_sizes, continuous_features_names
+        )
+
+        if len(seq_features_shapes) > 0:
+            for fname in inputs:
+                if fname in continuous_features_names:
+                    # For continuous features, include and additional dim in the end to match
+                    # the number of dim of embedding features
+                    inputs[fname] = inputs[fname].unsqueeze(dim=-1)
+
+            non_seq_features = set(inputs.keys()).difference(set(seq_features_shapes.keys()))
+            for fname in non_seq_features:
+                # Including the 2nd dim and repeating for the sequence length
+                inputs[fname] = inputs[fname].unsqueeze(dim=1).repeat(1, sequence_length, 1)
+
+        output_sizes = {k: v.shape for k, v in inputs.items()}
+        self._check_concat_shapes(output_sizes)
+
         tensors = []
         for name in sorted(inputs.keys()):
             val = inputs[name]
-            if val.ndim == 2:
-                val = val.unsqueeze(dim=-1)
             tensors.append(val)
 
         return torch.cat(tensors, dim=-1)
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        converted_input_size = {}
-        for key, val in input_size.items():
-            if len(val) == 2:
-                converted_input_size[key] = val + (1,)
-            else:
-                converted_input_size[key] = val
 
-        return (
-            batch_size,
-            list(input_size.values())[0][1],
-            sum([i[-1] for i in converted_input_size.values()]),
+        continuous_features_names = self.schema.select_by_tag(Tag.CONTINUOUS).column_names
+
+        seq_features_shapes, sequence_length = self._get_seq_features_shapes(
+            input_size, continuous_features_names
         )
+
+        if len(seq_features_shapes) > 0:
+            last_dims = []
+            for fname, fvalue in input_size.items():
+                if fname in continuous_features_names:
+                    last_dims.append(1)
+                else:
+                    last_dims.append(fvalue[-1])
+
+            concat_last_dims = sum(last_dims)
+
+            return (
+                batch_size,
+                sequence_length,
+                concat_last_dims,
+            )
+
+        else:
+            self._check_concat_shapes(input_size)
+            concat_last_dims = sum([v[-1] for v in input_size.values()])
+            return (batch_size, concat_last_dims)
+
+    def _get_seq_features_shapes(self, inputs_sizes, continuous_features_names):
+
+        seq_features_shapes = dict()
+        for fname, fshape in inputs_sizes.items():
+            # Saves the shapes of sequential features
+            if (fname in continuous_features_names and len(fshape) >= 2) or (
+                fname not in continuous_features_names and len(fshape) >= 3
+            ):
+                seq_features_shapes[fname] = tuple(fshape[:2])
+
+        sequence_length = 0
+        if len(seq_features_shapes) > 0:
+            # all_shapes_equal = reduce((lambda a, b: a == b), seq_features_shapes.values())
+            if len(set(seq_features_shapes.values())) > 1:
+                raise ValueError(
+                    "All sequential features must share the same shape in the first two dims "
+                    "(batch_size, seq_length): {}".format(seq_features_shapes)
+                )
+
+            sequence_length = list(seq_features_shapes.values())[0][1]
+
+        return seq_features_shapes, sequence_length
+
+    def _check_concat_shapes(self, input_sizes):
+        if len(set(list([v[:-1] for v in input_sizes.values()]))) > 1:
+            raise Exception(
+                "All features dimensions except the last one must match: {}".format(input_sizes)
+            )
 
 
 @tabular_aggregation_registry.register("stack")

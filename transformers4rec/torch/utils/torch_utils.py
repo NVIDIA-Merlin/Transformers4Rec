@@ -71,7 +71,8 @@ def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_len
         elif has_field(feature, "shape"):
             sizes[name] = torch.Size([batch_size] + [d.size for d in feature.shape.dim])
         else:
-            sizes[name] = torch.Size([batch_size, 1])
+            # sizes[name] = torch.Size([batch_size, 1])
+            sizes[name] = torch.Size([batch_size])
 
     return sizes
 

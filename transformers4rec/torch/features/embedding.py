@@ -87,9 +87,7 @@ class EmbeddingFeatures(InputBlock):
         return self.embedding_tables[self.item_id]
 
     def table_to_embedding_module(self, table: "TableConfig") -> torch.nn.Module:
-        embedding_table = torch.nn.EmbeddingBag(
-            table.vocabulary_size, table.dim, mode=table.combiner
-        )
+        embedding_table = EmbeddingBagWrapper(table.vocabulary_size, table.dim, mode=table.combiner)
 
         if table.initializer is not None:
             table.initializer(embedding_table.weight)
@@ -218,8 +216,8 @@ class EmbeddingFeatures(InputBlock):
                     values = values.unsqueeze(0)
                 embedded_outputs[name] = self.embedding_tables[name](values, offsets[:, 0])
             else:
-                if len(val.shape) <= 1:
-                    val = val.unsqueeze(0)
+                # if len(val.shape) <= 1:
+                #    val = val.unsqueeze(0)
                 embedded_outputs[name] = self.embedding_tables[name](val)
 
         # Store raw item ids for masking and/or negative sampling
@@ -238,6 +236,14 @@ class EmbeddingFeatures(InputBlock):
             sizes[name] = torch.Size([batch_size, feature.table.dim])
 
         return sizes
+
+
+class EmbeddingBagWrapper(torch.nn.EmbeddingBag):
+    def forward(self, input, **kwargs):
+        # EmbeddingBag requires 2D tensors (or offsets)
+        if len(input.shape) == 1:
+            input = input.unsqueeze(-1)
+        return super().forward(input, **kwargs)
 
 
 @docstring_parameter(
