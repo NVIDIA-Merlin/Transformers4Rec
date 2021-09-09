@@ -1,4 +1,5 @@
 import copy
+import logging
 from collections import defaultdict
 from types import SimpleNamespace
 from typing import Callable, Dict, Iterable, List, Optional, Text, Union
@@ -10,8 +11,11 @@ from transformers.modeling_utils import SequenceSummary
 from ...types import DatasetSchema
 from ...utils.tags import Tag
 from ..block.base import Block, BuildableBlock, SequentialBlock
+from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockOrModule, BlockType
+
+LOG = logging.getLogger("transformers4rec")
 
 
 class PredictionTask(torch.nn.Module):
@@ -308,6 +312,15 @@ class NextItemPredictionTask(PredictionTask):
             self.target_dim = self.embeddings.item_embedding_table.num_embeddings
         if self.weight_tying:
             self.item_embedding_table = self.embeddings.item_embedding_table
+            item_dim = self.item_embedding_table.weight.shape[1]
+            if input_size[-1] != item_dim and not task_block:
+                LOG.warning(
+                    f"Projecting interaction embeddings to '{item_dim}' "
+                    f"As weight tying requires the hidden dimension '{input_size[-1]}' "
+                    f"to be equal to the item-id embedding dimenstion '{item_dim}'"
+                )
+                # project input tensors to same dimension as item-id embeddings
+                task_block = MLPBlock([item_dim])
 
         # Retrieve the masking if used in the model block
         self.masking = inputs.masking
@@ -328,6 +341,9 @@ class NextItemPredictionTask(PredictionTask):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
+
+        if self.task_block:
+            x = self.task_block(x)
 
         # Retrieve labels either from masking or input module
         if self.masking:
@@ -376,13 +392,13 @@ class NextItemPredictionTask(PredictionTask):
         outputs = {}
         if forward:
             predictions = self(predictions)
+            if self.hf_format:
+                targets = predictions["labels"]
+                predictions = predictions["predictions"]
         predictions = self.forward_to_prediction_fn(predictions)
-        if self.hf_format:
-            predictions = predictions["predictions"]
 
         for metric in self.metrics:
             outputs[f"{mode}_{metric.__class__.__name__.lower()}"] = metric(predictions, targets)
-
         return outputs
 
     def compute_metrics(self):
@@ -627,7 +643,12 @@ class Head(torch.nn.Module):
         return getattr(loss_tensor, self.loss_reduction)()
 
     def calculate_metrics(
-        self, body_outputs, targets, mode="val", call_body=False
+        self,
+        body_outputs,
+        targets,
+        mode="val",
+        call_body=False,
+        forward=True,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
 
@@ -635,7 +656,9 @@ class Head(torch.nn.Module):
             body_outputs = self.body(body_outputs)
 
         for name, task in self.prediction_tasks.items():
-            metrics[name] = task.calculate_metrics(body_outputs, targets, mode=mode)
+            metrics[name] = task.calculate_metrics(
+                body_outputs, targets, forward=forward, mode=mode
+            )
 
         return _output_metrics(metrics)
 

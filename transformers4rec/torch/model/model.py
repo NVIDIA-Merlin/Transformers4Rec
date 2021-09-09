@@ -78,11 +78,20 @@ class Model(torch.nn.Module):
         return getattr(loss_tensor, self.head_reduction)()
 
     def calculate_metrics(
-        self, inputs, targets, mode="val"
+        self,
+        inputs,
+        targets,
+        mode="val",
+        call_body=True,
+        forward=True,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         outputs = {}
         for head in self.heads:
-            outputs.update(head.calculate_metrics(inputs, targets, mode=mode, call_body=True))
+            outputs.update(
+                head.calculate_metrics(
+                    inputs, targets, mode=mode, call_body=call_body, forward=forward
+                )
+            )
 
         return outputs
 
