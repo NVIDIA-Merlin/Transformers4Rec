@@ -1,6 +1,25 @@
-from typing import Optional, Tuple, Union
+from copy import deepcopy
+from typing import Any, Optional, Tuple, Type, Union
+
+from betterproto import Casing, Message
 
 from .schema_proto import *  # noqa
+
+
+def _parse_shape_and_value_count(shape, value_count) -> Dict[str, Any]:
+    output = {}
+    if shape:
+        output["shape"] = FixedShape([FixedShapeDim(d) for d in shape])
+
+    if value_count:
+        if isinstance(value_count, ValueCount):
+            output["value_count"] = value_count
+        elif isinstance(value_count, ValueCountList):
+            output["value_counts"] = value_count
+        else:
+            raise ValueError("Unknown value_count type.")
+
+    return output
 
 
 class ColumnSchema(Feature):
@@ -12,30 +31,51 @@ class ColumnSchema(Feature):
         shape: Optional[Union[Tuple[int, ...], List[int]]] = None,
         value_count: Optional[Union[ValueCount, ValueCountList]] = None,
         min_index: int = 0,
+        tags: Optional[List[str]] = None,
         **kwargs,
     ) -> "ColumnSchema":
-        if shape:
-            kwargs["shape"] = FixedShape([FixedShapeDim(d) for d in shape])
-
-        if value_count:
-            if isinstance(value_count, ValueCount):
-                kwargs["value_count"] = value_count
-            elif isinstance(value_count, ValueCountList):
-                kwargs["value_counts"] = value_count
-            else:
-                raise ValueError("Unknown value_count type.")
+        extra = _parse_shape_and_value_count(shape, value_count)
         int_domain = IntDomain(name=name, min=min_index, max=num_items, is_categorical=True)
+        tags = list(set(tags or [] + ["categorical"]))
 
-        return cls(name=name, int_domain=int_domain, **kwargs)
+        return cls(name=name, int_domain=int_domain, **extra, **kwargs).with_tags(tags)
 
-    # @classmethod
-    # def create_continuous(cls)
+    @classmethod
+    def create_continuous(
+        cls,
+        name: str,
+        is_float: bool = True,
+        min_value: Optional[Union[int, float]] = None,
+        max_value: Optional[Union[int, float]] = None,
+        disallow_nan: bool = False,
+        disallow_inf: bool = False,
+        is_embedding: bool = False,
+        shape: Optional[Union[Tuple[int, ...], List[int]]] = None,
+        value_count: Optional[Union[ValueCount, ValueCountList]] = None,
+        tags: Optional[List[str]] = None,
+        **kwargs,
+    ) -> "ColumnSchema":
+        extra = _parse_shape_and_value_count(shape, value_count)
+        if min_value is not None and max_value is not None:
+            if is_float:
+                extra["float_domain"] = FloatDomain(
+                    name=name,
+                    min=float(min_value),
+                    max=float(max_value),
+                    disallow_nan=disallow_nan,
+                    disallow_inf=disallow_inf,
+                    is_embedding=is_embedding,
+                )
+            else:
+                extra["int_domain"] = IntDomain(
+                    name=name, min=int(min_value), max=int(max_value), is_categorical=False
+                )
+        tags = list(set(tags or [] + ["continuous"]))
 
-    def __str__(self) -> str:
-        return self.name
+        return cls(name=name, **extra, **kwargs).with_tags(tags)
 
     def copy(self, **kwargs) -> "ColumnSchema":
-        output = self.from_json(self.to_json())
+        output = self.parse(bytes(self))
         for key, val in kwargs.items():
             setattr(output, key, val)
 
@@ -50,6 +90,18 @@ class ColumnSchema(Feature):
             self.annotation.tag = list(set(list(self.annotation.tag) + tags))
         else:
             self.annotation = Annotation(tag=tags)
+
+        return output
+
+    def with_properties(self, properties: Dict[str, Union[str, int, float]]) -> "ColumnSchema":
+        output = self.copy()
+        if self.annotation:
+            if len(self.annotation.extra_metadata) > 0:
+                self.annotation.extra_metadata[0].update(properties)
+            else:
+                self.annotation.extra_metadata = properties
+        else:
+            self.annotation = Annotation(extra_metadata=[properties])
 
         return output
 
