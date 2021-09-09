@@ -7,12 +7,9 @@ from setuptools import find_packages, setup
 
 def read_requirements(filename):
     base = os.path.abspath(os.path.dirname(__file__))
-
-    parsed = []
     with codecs.open(os.path.join(base, filename), "rb", "utf-8") as f:
-        parsed.append(f.read())
-
-    return parsed
+        lineiter = (line.strip() for line in f)
+        return [line for line in lineiter if line and not line.startswith("#")]
 
 
 requirements = {
@@ -25,9 +22,9 @@ requirements = {
 
 setup(
     name="transformers4rec",
-    version="0.01",
+    version="0.1",
     packages=find_packages(),
-    url="https://github.com/NVIDIA/NVTabular",
+    url="https://github.com/NVIDIA-Merlin/Transformers4Rec",
     author="NVIDIA Corporation",
     license="Apache 2.0",
     long_description=open("README.md", encoding="utf8").read(),

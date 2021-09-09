@@ -1,0 +1,33 @@
+# Copyright (c) 2021, NVIDIA CORPORATION.
+
+# Usage:
+#   conda build . -c defaults -c conda-forge
+
+{% set setup_py_data = load_setup_py_data() %}
+
+package:
+  name: transformers4rec
+  version: 0.0.1
+
+source:
+  path: ../../
+
+build:
+  number: 0
+  noarch: python
+  script: python -m pip install . -vvv
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+    {% for req in setup_py_data.get('install_requires', []) %}
+    - {{ req }}
+    {% endfor %}
+
+about:
+  home: https://github.com/NVIDIA-Merlin/Transformers4Rec
+  license_file: LICENSE
+  summary: Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation, available for both PyTorch and Tensorflow.
