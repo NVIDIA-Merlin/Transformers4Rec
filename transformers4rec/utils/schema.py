@@ -349,7 +349,7 @@ class DatasetSchema:
         return text_format.MessageToString(self._schema)
 
 
-class SchemaMixin(abc.ABC):
+class SchemaMixin:
     REQUIRES_SCHEMA = False
 
     def set_schema(self, schema=None):
