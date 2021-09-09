@@ -1,7 +1,4 @@
-from copy import deepcopy
 from typing import Any, Optional, Tuple, Type, Union
-
-from betterproto import Casing, Message
 
 from .schema_proto import *  # noqa
 
