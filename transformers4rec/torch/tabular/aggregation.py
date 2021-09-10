@@ -163,7 +163,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         self.item_id_col_name = None
 
     def forward(self, inputs: TabularData) -> torch.Tensor:
-        item_id_inputs = self.schema.get_item_ids_from_inputs(inputs)
+        item_id_inputs = self.get_item_ids_from_inputs(inputs)
         self._check_input_shapes_equal(inputs)
 
         other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}

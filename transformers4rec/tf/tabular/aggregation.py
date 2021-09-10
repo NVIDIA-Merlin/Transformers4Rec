@@ -155,7 +155,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         self.item_id_col_name = None
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        item_id_inputs = self.schema.get_item_ids_from_inputs(inputs)
+        item_id_inputs = self.get_item_ids_from_inputs(inputs)
         self._check_input_shapes_equal(inputs)
 
         other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}
@@ -176,6 +176,6 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
     def get_config(self):
         config = super().get_config()
         if self.schema:
-            config["schema"] = self.schema.to_proto_str()
+            config["schema"] = self.schema.to_json()
 
         return config

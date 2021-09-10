@@ -47,11 +47,6 @@ def _parse_shape_and_value_count(shape, value_count) -> Dict[str, Any]:
 
 
 class ColumnSchema(Feature):
-    def __post_init__(self) -> None:
-        super().__post_init__()
-
-        self._set_tags_based_on_properties()
-
     @classmethod
     def create_categorical(
         cls,
@@ -118,6 +113,27 @@ class ColumnSchema(Feature):
 
         return output
 
+    def with_tags_based_on_properties(
+        self, using_value_count=True, using_domain=True
+    ) -> "ColumnSchema":
+        from .. import Tags
+
+        extra_tags = []
+
+        if using_value_count and has_field(self, "value_count"):
+            extra_tags.append(str(Tags.LIST))
+
+        if using_domain and has_field(self, "int_domain"):
+            if self.int_domain.is_categorical:
+                extra_tags.append(str(Tags.CATEGORICAL))
+            else:
+                extra_tags.append(str(Tags.CONTINUOUS))
+
+        if using_domain and has_field(self, "float_domain"):
+            extra_tags.append(str(Tags.CONTINUOUS))
+
+        return self.with_tags(extra_tags) if extra_tags else self.copy()
+
     def _set_tags(self, tags: List[str]):
         if self.annotation:
             self.annotation.tag = list(set(list(self.annotation.tag) + tags))
@@ -146,38 +162,6 @@ class ColumnSchema(Feature):
 
     def __str__(self) -> str:
         return self.name
-
-    def _set_tags_based_on_properties(self):
-        from .. import Tags
-
-        # Setting tags based on properties of the column
-        if has_field(self, "value_count"):
-            self._set_tags([str(Tags.LIST)])
-
-        if has_field(self, "int_domain"):
-            if self.int_domain.is_categorical:
-                self._set_tags([str(Tags.CATEGORICAL)])
-            else:
-                self._set_tags([str(Tags.CONTINUOUS)])
-
-        if has_field(self, "float_domain"):
-            self._set_tags([str(Tags.CONTINUOUS)])
-
-    def parse(self, data: bytes) -> "ColumnSchema":
-        output: ColumnSchema = super().parse(data)
-        output._set_tags_based_on_properties()
-
-        return output
-
-    # def to_proto_text(self):
-    #     from tensorflow_metadata.proto.v0 import schema_pb2
-    #
-    #     serialized = bytes(self)
-    #
-    #     feature = schema_pb2.Feature()
-    #     feature.ParseFromString(serialized)
-    #
-    #     return text_format.MessageToString(feature)
 
 
 ColumnSchemaOrStr = Union[ColumnSchema, str]

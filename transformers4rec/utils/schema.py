@@ -53,6 +53,12 @@ class SchemaMixin:
         if input and getattr(input, "set_schema"):
             input.set_schema(schema)
 
+    def get_item_ids_from_inputs(self, inputs):
+        return inputs[self.schema.item_id_column_name]
+
+    def get_mask_from_inputs(self, inputs, mask_token=0):
+        return self.get_item_ids_from_inputs(inputs) != mask_token
+
 
 def requires_schema(module):
     module.REQUIRES_SCHEMA = True
