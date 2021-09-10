@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 
@@ -28,8 +28,8 @@ def test_schema_from_yoochoose_schema(yoochoose_schema_file):
     schema = Schema().from_proto_text(str(yoochoose_schema_file))
 
     assert len(schema.column_names) == 20
-    assert len(schema.select_by_tag(Tags.CONTINUOUS).column_schemas) == 6
-    assert len(schema.select_by_tag(Tags.CATEGORICAL).column_schemas) == 2
+    assert len(schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 6
+    assert len(schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 2
 
 
 # def test_schema_embedding_sizes_nvt(yoochoose_schema_file):

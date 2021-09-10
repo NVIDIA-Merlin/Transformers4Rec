@@ -16,7 +16,7 @@
 
 import pytest
 
-from merlin_standard_lib import Tags
+from merlin_standard_lib import Tag
 
 tf = pytest.importorskip("tensorflow")
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -76,7 +76,7 @@ def test_element_wise_sum_item_multi_no_col_group():
 
 def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        categ_schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+        categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
         # Remove the item id from col_group
         categ_schema = categ_schema.remove_by_name("item_id/list")
         element_wise_op = tf4rec.ElementwiseSumItemMulti(categ_schema)
@@ -86,7 +86,7 @@ def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
 
 def test_element_wise_sum_item_multi_features_different_shapes(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        categ_schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+        categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
         element_wise_op = tf4rec.ElementwiseSumItemMulti(categ_schema)
         input = {
             "item_id/list": tf.random.uniform((10, 20)),
@@ -111,7 +111,7 @@ def test_element_wise_sum_item_multi_aggregation_registry_yoochoose(
     yoochoose_schema, tf_yoochoose_like
 ):
     tab_module = tf4rec.TabularSequenceFeatures.from_schema(
-        yoochoose_schema.select_by_tag(Tags.CATEGORICAL), aggregation="element-wise-sum-item-multi"
+        yoochoose_schema.select_by_tag(Tag.CATEGORICAL), aggregation="element-wise-sum-item-multi"
     )
 
     out = tab_module(tf_yoochoose_like)

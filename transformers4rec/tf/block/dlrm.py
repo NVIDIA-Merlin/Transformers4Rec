@@ -18,7 +18,7 @@ from typing import List, Optional, Union
 
 import tensorflow as tf
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
@@ -78,13 +78,13 @@ class DLRMBlock(Block):
         cls, schema: Schema, bottom_mlp: BlockType, top_mlp: Optional[BlockType] = None, **kwargs
     ):
         embedding_layer = EmbeddingFeatures.from_schema(
-            schema.select_by_tag(Tags.CATEGORICAL),
+            schema.select_by_tag(Tag.CATEGORICAL),
             infer_embedding_sizes=False,
             embedding_dim_default=bottom_mlp.layers[-1].units,
         )
 
         continuous_features = ContinuousFeatures.from_schema(
-            schema.select_by_tag(Tags.CONTINUOUS), aggregation="concat"
+            schema.select_by_tag(Tag.CONTINUOUS), aggregation="concat"
         )
 
         return cls(continuous_features, embedding_layer, bottom_mlp, top_mlp=top_mlp, **kwargs)

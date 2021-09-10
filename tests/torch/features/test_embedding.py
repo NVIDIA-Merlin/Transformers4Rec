@@ -19,7 +19,7 @@ from functools import partial
 import numpy as np
 import pytest
 
-from merlin_standard_lib import Tags
+from merlin_standard_lib import Tag
 
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
@@ -80,7 +80,7 @@ def test_table_config_invalid_embedding_initializer():
 
 
 def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(schema)
     embeddings = emb_module(torch_yoochoose_like)
@@ -92,7 +92,7 @@ def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
 
 
 def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
@@ -108,7 +108,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoocho
 
 
 def test_embedding_features_yoochoose_infer_embedding_sizes(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema, infer_embedding_sizes=True, infer_embedding_sizes_multiplier=3.0
@@ -130,7 +130,7 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
     CATEGORY_MEAN = 2.0
     CATEGORY_STD = 0.1
 
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema,
         layer_norm=False,

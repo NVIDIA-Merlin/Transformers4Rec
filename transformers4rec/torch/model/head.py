@@ -24,7 +24,7 @@ import torch
 import torchmetrics as tm
 from transformers.modeling_utils import SequenceSummary
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
@@ -595,13 +595,13 @@ class Head(torch.nn.Module):
             task_weights = {}
         to_return = cls(body, body_output_size=input_size)
 
-        for binary_target in schema.select_by_tag(Tags.BINARY_CLASSIFICATION).column_names:
+        for binary_target in schema.select_by_tag(Tag.BINARY_CLASSIFICATION).column_names:
             to_return = to_return.add_task(
                 BinaryClassificationTask(binary_target),
                 task_weight=task_weights.get(binary_target, 1),
             )
 
-        for regression_target in schema.select_by_tag(Tags.REGRESSION).column_names:
+        for regression_target in schema.select_by_tag(Tag.REGRESSION).column_names:
             to_return = to_return.add_task(
                 RegressionTask(regression_target),
                 task_weight=task_weights.get(regression_target, 1),

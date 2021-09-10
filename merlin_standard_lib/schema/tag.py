@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class Tags(Enum):
+class Tag(Enum):
     # Feature types
     CATEGORICAL = "categorical"
     CONTINUOUS = "continuous"

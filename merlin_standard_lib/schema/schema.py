@@ -113,21 +113,21 @@ class ColumnSchema(Feature):
     def with_tags_based_on_properties(
         self, using_value_count=True, using_domain=True
     ) -> "ColumnSchema":
-        from .. import Tags
+        from .. import Tag
 
         extra_tags = []
 
         if using_value_count and proto_utils.has_field(self, "value_count"):
-            extra_tags.append(str(Tags.LIST))
+            extra_tags.append(str(Tag.LIST))
 
         if using_domain and proto_utils.has_field(self, "int_domain"):
             if self.int_domain.is_categorical:
-                extra_tags.append(str(Tags.CATEGORICAL))
+                extra_tags.append(str(Tag.CATEGORICAL))
             else:
-                extra_tags.append(str(Tags.CONTINUOUS))
+                extra_tags.append(str(Tag.CONTINUOUS))
 
         if using_domain and proto_utils.has_field(self, "float_domain"):
-            extra_tags.append(str(Tags.CONTINUOUS))
+            extra_tags.append(str(Tag.CONTINUOUS))
 
         return self.with_tags(extra_tags) if extra_tags else self.copy()
 
@@ -223,9 +223,9 @@ class Schema(_Schema):
             return self
 
     def select_by_tag(self, tags) -> "Schema":
-        from .. import Tags
+        from .. import Tag
 
-        if isinstance(tags, (str, Tags)):
+        if isinstance(tags, (str, Tag)):
             tags = [tags]
 
         if isinstance(tags, (list, tuple)):
@@ -241,9 +241,9 @@ class Schema(_Schema):
         return self._filter_by_tag_fn(check_fn)
 
     def remove_by_tag(self, tags) -> "Schema":
-        from .. import Tags
+        from .. import Tag
 
-        if isinstance(tags, (str, Tags)):
+        if isinstance(tags, (str, Tag)):
             tags = [tags]
 
         if isinstance(tags, (list, tuple)):

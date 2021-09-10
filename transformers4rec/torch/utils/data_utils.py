@@ -21,7 +21,7 @@ import numpy as np
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
-from merlin_standard_lib import Registry, Schema, Tags
+from merlin_standard_lib import Registry, Schema, Tag
 
 from ...utils import dependencies
 
@@ -146,12 +146,12 @@ if dependencies.is_pyarrow_available():
             """
 
             categorical_features = (
-                categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
+                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
             )
             continuous_features = (
-                continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
+                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
             )
-            targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
+            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
             cols_to_read = categorical_features + continuous_features + targets
 
@@ -296,14 +296,14 @@ if dependencies.is_gpu_dataloader_available():
                     The maximum length of list features.
             """
             categorical_features = (
-                categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
+                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
             )
             continuous_features = (
-                continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
+                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
             )
-            targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
+            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
-            sparse_names = sparse_names or schema.select_by_tag(Tags.LIST).column_names
+            sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
             sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
             nvt_loader = cls(
                 paths_or_dataset,

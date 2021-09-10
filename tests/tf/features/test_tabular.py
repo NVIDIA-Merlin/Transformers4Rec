@@ -16,7 +16,7 @@
 
 import pytest
 
-from merlin_standard_lib import Tags
+from merlin_standard_lib import Tag
 from tests.tf import _utils as test_utils
 
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -28,8 +28,8 @@ def test_tabular_features(yoochoose_schema, tf_yoochoose_like):
     outputs = tab_module(tf_yoochoose_like)
 
     assert set(outputs.keys()) == set(
-        yoochoose_schema.select_by_tag(Tags.CONTINUOUS).column_names
-        + yoochoose_schema.select_by_tag(Tags.CATEGORICAL).column_names
+        yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_names
+        + yoochoose_schema.select_by_tag(Tag.CATEGORICAL).column_names
     )
 
 

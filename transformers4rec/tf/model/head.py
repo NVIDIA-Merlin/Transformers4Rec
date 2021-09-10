@@ -22,7 +22,7 @@ import tensorflow as tf
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 
 
 def name_fn(name, inp):
@@ -265,13 +265,13 @@ class Head(tf.keras.layers.Layer):
             task_weights = {}
         to_return = cls(body)
 
-        for binary_target in schema.select_by_tag(Tags.TARGETS_BINARY).column_names:
+        for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
             to_return = to_return.add_task(
                 BinaryClassificationTask(binary_target),
                 task_weight=task_weights.get(binary_target, 1),
             )
 
-        for regression_target in schema.select_by_tag(Tags.TARGETS_REGRESSION).column_names:
+        for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
             to_return = to_return.add_task(
                 RegressionTask(regression_target),
                 task_weight=task_weights.get(regression_target, 1),

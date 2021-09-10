@@ -20,7 +20,7 @@ import pandas as pd
 import torch
 from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
-from merlin_standard_lib import Tags
+from merlin_standard_lib import Tag
 from merlin_standard_lib.utils.misc_utils import validate_dataset
 
 from ..utils.schema import DatasetSchema
@@ -148,12 +148,12 @@ class DataLoader(NVTDataLoader):
             Whether to exclude labels from inputs or not
         """
         categorical_features = (
-            categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
         )
-        targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
         torch_dataset = cls(
             paths_or_dataset,
@@ -192,12 +192,12 @@ class DataLoader(NVTDataLoader):
         schema = DatasetSchema.from_schema(schema_path)
 
         categorical_features = (
-            categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
         )
-        targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
 
         torch_dataset = cls(
             directory,

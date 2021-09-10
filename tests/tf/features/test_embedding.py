@@ -17,7 +17,7 @@
 import pytest
 from tensorflow.python.ops import init_ops_v2
 
-from merlin_standard_lib import Tags
+from merlin_standard_lib import Tag
 from tests.tf import _utils as test_utils
 
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -36,7 +36,7 @@ def test_embedding_features(tf_cat_features):
 
 
 def test_embedding_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = tf4rec.EmbeddingFeatures.from_schema(schema)
     embeddings = emb_module(tf_yoochoose_like)
@@ -64,7 +64,7 @@ def test_serialization_embedding_features(yoochoose_schema, tf_yoochoose_like):
 
 @test_utils.mark_run_eagerly_modes
 def test_embedding_features_yoochoose_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     inputs = tf4rec.EmbeddingFeatures.from_schema(schema, aggregation="concat")
     body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
@@ -73,7 +73,7 @@ def test_embedding_features_yoochoose_model(yoochoose_schema, tf_yoochoose_like,
 
 
 def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, tf_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = tf4rec.EmbeddingFeatures.from_schema(
         schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
@@ -89,7 +89,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, tf_yoochoose
 
 
 def test_embedding_features_yoochoose_infer_embedding_sizes(yoochoose_schema, tf_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
     emb_module = tf4rec.EmbeddingFeatures.from_schema(
         schema, infer_embedding_sizes=True, infer_embedding_sizes_multiplier=3.0
@@ -111,7 +111,7 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, tf_y
     CATEGORY_MEAN = 2.0
     CATEGORY_STD = 0.1
 
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
     emb_module = tf4rec.EmbeddingFeatures.from_schema(
         schema,
         embeddings_initializers={

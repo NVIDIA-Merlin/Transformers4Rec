@@ -16,7 +16,7 @@
 
 import pytest
 
-from merlin_standard_lib import Tags
+from merlin_standard_lib import Tag
 from tests.tf import _utils as test_utils
 
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -30,7 +30,7 @@ def test_continuous_features(tf_con_features):
 
 
 def test_continuous_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CONTINUOUS)
+    schema = yoochoose_schema.select_by_tag(Tag.CONTINUOUS)
 
     inputs = tf4rec.ContinuousFeatures.from_schema(schema)
     outputs = inputs(tf_yoochoose_like)
@@ -48,7 +48,7 @@ def test_serialization_continuous_features(yoochoose_schema, tf_yoochoose_like):
 
 @pytest.mark.parametrize("run_eagerly", [True, False])
 def test_continuous_features_yoochoose_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
-    schema = yoochoose_schema.select_by_tag(Tags.CONTINUOUS)
+    schema = yoochoose_schema.select_by_tag(Tag.CONTINUOUS)
 
     inputs = tf4rec.ContinuousFeatures.from_schema(schema, aggregation="concat")
     body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])

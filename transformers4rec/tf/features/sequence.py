@@ -18,7 +18,7 @@ from typing import Dict, Optional
 
 import tensorflow as tf
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import SequentialBlock
@@ -159,8 +159,8 @@ class TabularSequenceFeatures(TabularFeatures):
     def from_schema(
         cls,
         schema: Schema,
-        continuous_tags=(Tags.CONTINUOUS,),
-        categorical_tags=(Tags.CATEGORICAL,),
+        continuous_tags=(Tag.CONTINUOUS,),
+        categorical_tags=(Tag.CATEGORICAL,),
         aggregation=None,
         max_sequence_length=None,
         continuous_projection=None,

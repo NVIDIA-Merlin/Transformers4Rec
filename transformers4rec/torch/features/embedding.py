@@ -19,7 +19,7 @@ from typing import Any, Callable, Dict, Optional, Text, Union
 
 import torch
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
@@ -105,7 +105,7 @@ class EmbeddingFeatures(InputBlock):
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         combiner: Optional[str] = "mean",
-        tags: Optional[Union[Tags, list, str]] = None,
+        tags: Optional[Union[Tag, list, str]] = None,
         item_id: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -287,7 +287,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         layer_norm: bool = True,
         combiner: Optional[str] = "mean",
-        tags: Optional[Union[Tags, list, str]] = None,
+        tags: Optional[Union[Tag, list, str]] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
         **kwargs,

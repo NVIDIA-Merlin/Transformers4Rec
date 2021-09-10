@@ -16,7 +16,7 @@
 
 import pytest
 
-from merlin_standard_lib import Tags
+from merlin_standard_lib import Tag
 
 torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_utils = pytest.importorskip("transformers4rec.torch.utils.torch_utils")
@@ -29,8 +29,8 @@ def test_tabular_features(yoochoose_schema, torch_yoochoose_like):
     outputs = tab_module(torch_yoochoose_like)
 
     assert set(outputs.keys()) == set(
-        schema.select_by_tag(Tags.CONTINUOUS).column_names
-        + schema.select_by_tag(Tags.CATEGORICAL).column_names
+        schema.select_by_tag(Tag.CONTINUOUS).column_names
+        + schema.select_by_tag(Tag.CATEGORICAL).column_names
     )
 
 
@@ -42,7 +42,7 @@ def test_tabular_features_embeddings_options(yoochoose_schema, torch_yoochoose_l
 
     outputs = tab_module(torch_yoochoose_like)
 
-    categ_features = schema.select_by_tag(Tags.CATEGORICAL).column_names
+    categ_features = schema.select_by_tag(Tag.CATEGORICAL).column_names
     assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
 
 
@@ -74,11 +74,11 @@ def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):
 
     assert (
         list(outputs.keys())
-        == schema.select_by_tag(Tags.CONTINUOUS).column_names
-        + schema.select_by_tag(Tags.CATEGORICAL).column_names
+        == schema.select_by_tag(Tag.CONTINUOUS).column_names
+        + schema.select_by_tag(Tag.CATEGORICAL).column_names
     )
 
     assert all(
         list(outputs[col_name].shape) == list(torch_yoochoose_like[col_name].shape) + [emb_dim]
-        for col_name in schema.select_by_tag(Tags.CONTINUOUS).column_names
+        for col_name in schema.select_by_tag(Tag.CONTINUOUS).column_names
     )

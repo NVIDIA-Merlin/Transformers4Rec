@@ -18,7 +18,7 @@ from typing import List, Optional, Union
 
 import tensorflow as tf
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import SequentialBlock
@@ -126,12 +126,12 @@ class TabularFeatures(InputBlock, MergeTabular):
     def from_schema(
         cls,
         schema: Schema,
-        continuous_tags: Optional[Union[Tags, list, str]] = (Tags.CONTINUOUS,),
-        categorical_tags: Optional[Union[Tags, list, str]] = (Tags.CATEGORICAL,),
+        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         continuous_projection: Optional[Union[List[int], int]] = None,
         text_model=None,
-        text_tags=Tags.TEXT_TOKENIZED,
+        text_tags=Tag.TEXT_TOKENIZED,
         max_sequence_length=None,
         max_text_length=None,
         **kwargs

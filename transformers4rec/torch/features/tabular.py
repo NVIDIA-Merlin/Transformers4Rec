@@ -16,7 +16,7 @@
 
 from typing import List, Optional, Union
 
-from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from .. import typing
@@ -110,8 +110,8 @@ class TabularFeatures(MergeTabular):
     def from_schema(
         cls,
         schema: Schema,
-        continuous_tags: Optional[Union[Tags, list, str]] = (Tags.CONTINUOUS,),
-        categorical_tags: Optional[Union[Tags, list, str]] = (Tags.CATEGORICAL,),
+        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
