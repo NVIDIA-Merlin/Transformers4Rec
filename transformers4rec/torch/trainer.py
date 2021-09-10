@@ -106,8 +106,8 @@ class Trainer(BaseTrainer):
         )
 
         self.compute_metrics = compute_metrics
-        self.train_dataset = train_dataset_or_path
-        self.eval_dataset = eval_dataset_or_path
+        self.train_dataset_or_path = train_dataset_or_path
+        self.eval_dataset_or_path = eval_dataset_or_path
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
         self.schema = schema
@@ -125,7 +125,7 @@ class Trainer(BaseTrainer):
         assert self.schema is not None, "schema is required to generate Train Dataloader"
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
-            self.train_dataset,
+            self.train_dataset_or_path,
             self.args.per_device_train_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
@@ -149,7 +149,7 @@ class Trainer(BaseTrainer):
         assert self.schema is not None, "schema is required to generate Eval Dataloader"
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
-            self.eval_dataset,
+            self.eval_dataset_or_path,
             self.args.per_device_eval_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
