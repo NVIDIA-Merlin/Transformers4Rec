@@ -14,39 +14,36 @@
 # limitations under the License.
 #
 
-import pytest
-
-from transformers4rec.utils.schema import DatasetSchema
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 
 def test_schema_from_schema(schema_file):
-    schema = DatasetSchema.from_proto(str(schema_file))
+    schema = Schema().from_proto_text(str(schema_file))
 
-    assert len(schema.columns) == 18
-    assert schema.columns[1].tags == ["list"]
+    assert len(schema.column_names) == 18
 
 
 def test_schema_from_yoochoose_schema(yoochoose_schema_file):
-    schema = DatasetSchema.from_proto(str(yoochoose_schema_file))
+    schema = Schema().from_proto_text(str(yoochoose_schema_file))
 
-    assert len(schema.columns) == 20
-    assert len(schema.select_by_tag(Tag.CONTINUOUS).columns) == 6
-    assert len(schema.select_by_tag(Tag.CATEGORICAL).columns) == 2
+    assert len(schema.column_names) == 20
+    assert len(schema.select_by_tag(Tags.CONTINUOUS).column_schemas) == 6
+    assert len(schema.select_by_tag(Tags.CATEGORICAL).column_schemas) == 2
 
 
-def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
-    pytest.importorskip("nvtabular")
-    schema = DatasetSchema.from_proto(str(yoochoose_schema_file))
-
-    assert schema.cardinalities() == {"item_id/list": 51996, "category/list": 332}
-    embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
-    assert embedding_sizes == {"item_id/list": 512, "category/list": 41}
+# def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
+#     pytest.importorskip("nvtabular")
+#     schema = Schema().from_proto_text(str(yoochoose_schema_file))
+#
+#     assert schema.categorical_cardinalities() == {"item_id/list": 51996, "category/list": 332}
+#     embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
+#     assert embedding_sizes == {"item_id/list": 512, "category/list": 41}
 
 
 def test_schema_embedding_sizes(yoochoose_schema_file):
-    schema = DatasetSchema.from_proto(str(yoochoose_schema_file))
+    schema = Schema().from_proto_text(str(yoochoose_schema_file)).remove_by_name("session_id")
 
-    assert schema.cardinalities() == {"item_id/list": 51996, "category/list": 332}
-    embedding_sizes = schema.embedding_sizes(multiplier=3.0)
+    assert schema.categorical_cardinalities() == {"item_id/list": 51997, "category/list": 333}
+    embedding_sizes = get_embedding_sizes_from_schema(schema, multiplier=3.0)
     assert embedding_sizes == {"item_id/list": 46, "category/list": 13}

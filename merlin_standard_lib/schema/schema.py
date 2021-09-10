@@ -1,7 +1,7 @@
 import collections
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from ..utils.proto_utils import better_proto_to_proto_text, copy_better_proto_message, has_field
+from ..utils import proto_utils
 
 try:
     from functools import cached_property
@@ -96,7 +96,7 @@ class ColumnSchema(Feature):
         return cls(name=name, **extra, **kwargs).with_tags(tags)
 
     def copy(self, **kwargs) -> "ColumnSchema":
-        return copy_better_proto_message(self, **kwargs)
+        return proto_utils.copy_better_proto_message(self, **kwargs)
 
     def with_name(self, name: str):
         return self.copy(name=name)
@@ -117,16 +117,16 @@ class ColumnSchema(Feature):
 
         extra_tags = []
 
-        if using_value_count and has_field(self, "value_count"):
+        if using_value_count and proto_utils.has_field(self, "value_count"):
             extra_tags.append(str(Tags.LIST))
 
-        if using_domain and has_field(self, "int_domain"):
+        if using_domain and proto_utils.has_field(self, "int_domain"):
             if self.int_domain.is_categorical:
                 extra_tags.append(str(Tags.CATEGORICAL))
             else:
                 extra_tags.append(str(Tags.CONTINUOUS))
 
-        if using_domain and has_field(self, "float_domain"):
+        if using_domain and proto_utils.has_field(self, "float_domain"):
             extra_tags.append(str(Tags.CONTINUOUS))
 
         return self.with_tags(extra_tags) if extra_tags else self.copy()
@@ -166,7 +166,7 @@ class ColumnSchema(Feature):
     def to_proto_text(self):
         from tensorflow_metadata.proto.v0 import schema_pb2
 
-        return better_proto_to_proto_text(self, schema_pb2.Feature())
+        return proto_utils.better_proto_to_proto_text(self, schema_pb2.Feature())
 
 
 ColumnSchemaOrStr = Union[ColumnSchema, str]
@@ -313,7 +313,7 @@ class Schema(_Schema):
         return self.column_schemas == other.column_schemas
 
     def copy(self, **kwargs) -> "Schema":
-        return copy_better_proto_message(self, **kwargs)
+        return proto_utils.copy_better_proto_message(self, **kwargs)
 
     def add(self, other, allow_overlap=True) -> "Schema":
         if isinstance(other, str):
@@ -375,4 +375,9 @@ class Schema(_Schema):
     def to_proto_text(self):
         from tensorflow_metadata.proto.v0 import schema_pb2
 
-        return better_proto_to_proto_text(self, schema_pb2.Schema())
+        return proto_utils.better_proto_to_proto_text(self, schema_pb2.Schema())
+
+    def from_proto_text(self, path_or_proto_text):
+        from tensorflow_metadata.proto.v0 import schema_pb2
+
+        return proto_utils.proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
