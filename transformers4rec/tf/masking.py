@@ -42,7 +42,6 @@ MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class MaskSequence(tf.keras.layers.Layer):
     """Base class to prepare masked items inputs/labels for language modeling tasks.
-    Parameters
 
     Transformer architectures can be trained in different ways. Depending of the training method,
     there is a specific masking schema. The masking schema sets the items to be predicted (labels)
@@ -57,6 +56,7 @@ class MaskSequence(tf.keras.layers.Layer):
 
     This class can be extended to add different a masking scheme.
 
+    Parameters
     ----------
     {mask_sequence_parameters}
     """
@@ -207,7 +207,7 @@ class CausalLanguageModeling(MaskSequence):
     In Causal Language Modeling (clm) you predict the next item based on past positions of the
     sequence. Future positions are masked.
 
-    Parameters:
+    Parameters
     ----------
     {mask_sequence_parameters}
     train_on_last_item_seq_only: predict only last item during training
@@ -277,8 +277,8 @@ class MaskedLanguageModeling(MaskSequence):
     During inference, all past items are visible for the Transformer layer, which tries to predict
     the next item.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     {mask_sequence_parameters}
     mlm_probability: Optional[float], default = 0.15
         Probability of an item to be selected (masked) as a label of the given sequence.
@@ -305,8 +305,8 @@ class MaskedLanguageModeling(MaskSequence):
         Prepare sequence with mask schema for masked language modeling prediction
         the function is based on HuggingFace's transformers/data/data_collator.py
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         item_ids: tf.Tensor
             Sequence of input itemid (target) column
 

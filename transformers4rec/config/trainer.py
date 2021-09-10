@@ -25,25 +25,20 @@ class T4RecTrainingArguments(TrainingArguments):
     Class that inherits HF TrainingArguments and add on top of it arguments needed for
     session-based and sequential-based recommendation
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     avg_session_length : int
         the avg. session length (rounded up to the next int),
         It is used to estimate the number of interactions from the batch_size (# sessions)
         so that the tensor that accumulates all predictions is sufficient
         to concatenate all predictions
-
-    shuffle_buffer_size
-
+    shuffle_buffer_size:
     validate_every: Optional[int], int
         Run validation set every this epoch.
         -1 means no validation is used
         by default -1
-
-    eval_on_test_set
-
-    eval_steps_on_train_set
-
+    eval_on_test_set:
+    eval_steps_on_train_set:
     predict_top_k:  Option[int], int
         Truncate recommendation list to the highest top-K predicted items
         (do not affect evaluation metrics computation)

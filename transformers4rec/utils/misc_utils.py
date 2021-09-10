@@ -25,8 +25,16 @@ from typing import Any, Dict
 logger = logging.getLogger(__name__)
 
 
-def docstring_parameter(*args, **kwargs):
+def docstring_parameter(*args, extra_padding=None, **kwargs):
     def dec(obj):
+        if extra_padding:
+
+            def pad(value):
+                return ("\n" + " " * extra_padding).join(value.split("\n"))
+
+            nonlocal args, kwargs
+            kwargs = {key: pad(value) for key, value in kwargs.items()}
+            args = [pad(value) for value in args]
         obj.__doc__ = obj.__doc__.format(*args, **kwargs)
         return obj
 
@@ -187,21 +195,21 @@ def _validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_
     """
     Util function to load NVTabular Dataset from disk
 
-    Parameters:
+    Parameters
     ----------
-        paths_or_dataset: Union[nvtabular.Dataset, str]
-            Path  to dataset to load of nvtabular Dataset,
-            if Dataset, return the object.
-        batch_size: int
-            batch size for Dataloader.
-        buffer_size: float
-            parameter, which refers to the fraction of batches
-            to load at once.
-        engine: str
-            parameter to specify the file format,
-            possible values are: ["parquet", "csv", "csv-no-header"].
-        reader_kwargs: dict
-            Additional arguments of the specified reader.
+    paths_or_dataset: Union[nvtabular.Dataset, str]
+        Path  to dataset to load of nvtabular Dataset,
+        if Dataset, return the object.
+    batch_size: int
+        batch size for Dataloader.
+    buffer_size: float
+        parameter, which refers to the fraction of batches
+        to load at once.
+    engine: str
+        parameter to specify the file format,
+        possible values are: ["parquet", "csv", "csv-no-header"].
+    reader_kwargs: dict
+        Additional arguments of the specified reader.
     """
     try:
         from nvtabular.io.dataset import Dataset
