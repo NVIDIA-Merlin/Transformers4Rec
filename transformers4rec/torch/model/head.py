@@ -24,8 +24,8 @@ import torch
 import torchmetrics as tm
 from transformers.modeling_utils import SequenceSummary
 
-from ...types import DatasetSchema
-from ...utils.tags import Tag
+from merlin_standard_lib import Schema, Tags
+
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
@@ -590,18 +590,18 @@ class Head(torch.nn.Module):
         self.input_size = input_size
 
     @classmethod
-    def from_schema(cls, schema: DatasetSchema, body, task_weights=None, input_size=None):
+    def from_schema(cls, schema: Schema, body, task_weights=None, input_size=None):
         if task_weights is None:
             task_weights = {}
         to_return = cls(body, body_output_size=input_size)
 
-        for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
+        for binary_target in schema.select_by_tag(Tags.BINARY_CLASSIFICATION).column_names:
             to_return = to_return.add_task(
                 BinaryClassificationTask(binary_target),
                 task_weight=task_weights.get(binary_target, 1),
             )
 
-        for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
+        for regression_target in schema.select_by_tag(Tags.REGRESSION).column_names:
             to_return = to_return.add_task(
                 RegressionTask(regression_target),
                 task_weight=task_weights.get(regression_target, 1),

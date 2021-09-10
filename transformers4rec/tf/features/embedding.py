@@ -21,9 +21,10 @@ import tensorflow as tf
 from tensorflow.python.keras import backend
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from ...types import DatasetSchema
-from ...utils.misc_utils import docstring_parameter
-from ...utils.tags import DefaultTags
+from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
+
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from ..tabular.transformations import AsSparseFeatures
 from ..typing import TabularAggregationType, TabularData, TabularTransformationType
@@ -66,7 +67,7 @@ class EmbeddingFeatures(InputBlock):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
         name=None,
         add_default_pre=True,
         **kwargs,
@@ -87,31 +88,33 @@ class EmbeddingFeatures(InputBlock):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
+        schema: Schema,
         embedding_dims: Optional[Dict[str, int]] = None,
         embedding_dim_default: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         combiner: Optional[str] = "mean",
-        tags: Optional[Union[DefaultTags, list, str]] = None,
+        tags: Optional[Union[Tags, list, str]] = None,
         item_id: Optional[str] = None,
         max_sequence_length: Optional[int] = None,
         **kwargs,
     ) -> Optional["EmbeddingFeatures"]:
-        _schema = deepcopy(schema)
+        schema_copy = schema.copy()
 
         if tags:
-            _schema = _schema.select_by_tag(tags)
+            schema_copy = schema_copy.select_by_tag(tags)
 
         if infer_embedding_sizes:
-            embedding_dims = _schema.embedding_sizes(infer_embedding_sizes_multiplier)
+            embedding_dims = get_embedding_sizes_from_schema(
+                schema, infer_embedding_sizes_multiplier
+            )
 
         embedding_dims = embedding_dims or {}
         embeddings_initializers = embeddings_initializers or {}
 
         emb_config = {}
-        cardinalities = schema.cardinalities()
+        cardinalities = schema.categorical_cardinalities()
         for key, cardinality in cardinalities.items():
             embedding_size = embedding_dims.get(key, embedding_dim_default)
             embedding_initializer = embeddings_initializers.get(key, None)
@@ -132,7 +135,7 @@ class EmbeddingFeatures(InputBlock):
         if not feature_config:
             return None
 
-        output = cls(feature_config, item_id=item_id, schema=_schema, **kwargs)
+        output = cls(feature_config, item_id=item_id, schema=schema_copy, **kwargs)
 
         return output
 

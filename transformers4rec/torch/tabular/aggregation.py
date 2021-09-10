@@ -18,7 +18,9 @@ from functools import reduce
 
 import torch
 
-from ...utils.schema import DatasetSchema, requires_schema
+from merlin_standard_lib import Schema
+
+from ...utils.schema import requires_schema
 from ..typing import TabularData
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .tabular import TabularAggregation, tabular_aggregation_registry
@@ -154,7 +156,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
     schema: DatasetSchema
     """
 
-    def __init__(self, schema: DatasetSchema = None):
+    def __init__(self, schema: Schema = None):
         super().__init__()
         self.stack = StackFeatures(axis=0)
         self.schema = schema

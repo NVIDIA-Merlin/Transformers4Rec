@@ -18,7 +18,7 @@ import pathlib
 
 import pytest
 
-from transformers4rec.utils.schema import DatasetSchema
+from merlin_standard_lib import Schema
 
 ASSETS_DIR = pathlib.Path(__file__).parent / "assets"
 
@@ -54,7 +54,13 @@ def yoochoose_data_file():
 
 @pytest.fixture
 def yoochoose_schema():
-    return DatasetSchema.from_proto(str(YOOCHOOSE_SCHEMA))
+    from tensorflow_metadata.proto.v0 import schema_pb2
+
+    message = schema_pb2.Schema()
+
+    schema = Schema().from_proto_text(str(YOOCHOOSE_SCHEMA), message)
+
+    return schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
 
 from tests.tf.conftest import *  # noqa

@@ -20,10 +20,10 @@ import pandas as pd
 import torch
 from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
-from transformers4rec.utils.misc_utils import _validate_dataset
+from merlin_standard_lib import Tags
+from merlin_standard_lib.utils.misc_utils import validate_dataset
 
 from ..utils.schema import DatasetSchema
-from ..utils.tags import Tag
 from .utils.torch_utils import get_output_sizes_from_schema
 
 # from nvtabular.loader.backend import DataLoader as BaseDataLoader
@@ -98,9 +98,7 @@ class DataLoader(NVTDataLoader):
         sparse_as_dense=False,
         schema=None,
     ):
-        dataset = _validate_dataset(
-            paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs
-        )
+        dataset = validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs)
 
         NVTDataLoader.__init__(
             self,
@@ -150,12 +148,12 @@ class DataLoader(NVTDataLoader):
             Whether to exclude labels from inputs or not
         """
         categorical_features = (
-            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
         )
-        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
 
         torch_dataset = cls(
             paths_or_dataset,
@@ -194,12 +192,12 @@ class DataLoader(NVTDataLoader):
         schema = DatasetSchema.from_schema(schema_path)
 
         categorical_features = (
-            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
         )
-        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
 
         torch_dataset = cls(
             directory,

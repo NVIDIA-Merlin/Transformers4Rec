@@ -18,8 +18,9 @@ from typing import Dict, List, Optional, Union
 
 import torch
 
-from ...types import DatasetSchema, DefaultTags, Tag
-from ...utils.misc_utils import docstring_parameter
+from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from .. import typing
 from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
@@ -54,7 +55,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
     ):
         self.padding_idx = padding_idx
         super(SequenceEmbeddingFeatures, self).__init__(
@@ -115,7 +116,7 @@ class TabularSequenceFeatures(TabularFeatures):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
     ):
         super().__init__(
             continuous_module,
@@ -132,9 +133,9 @@ class TabularSequenceFeatures(TabularFeatures):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
-        continuous_tags: Optional[Union[DefaultTags, list, str]] = Tag.CONTINUOUS,
-        categorical_tags: Optional[Union[DefaultTags, list, str]] = Tag.CATEGORICAL,
+        schema: Schema,
+        continuous_tags: Optional[Union[Tags, list, str]] = (Tags.CONTINUOUS,),
+        categorical_tags: Optional[Union[Tags, list, str]] = (Tags.CATEGORICAL,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,

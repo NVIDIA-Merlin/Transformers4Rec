@@ -21,11 +21,9 @@ import numpy as np
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
-from transformers4rec.utils.schema import DatasetSchema
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Registry, Schema, Tags
 
 from ...utils import dependencies
-from ...utils.registry import Registry
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +37,7 @@ class T4RecDataLoader(ABC):
     """
 
     @classmethod
-    def from_schema(self, schema: DatasetSchema):
+    def from_schema(self, schema: Schema):
         # Build the data-loader from the schema
         raise NotImplementedError
 
@@ -148,12 +146,12 @@ if dependencies.is_pyarrow_available():
             """
 
             categorical_features = (
-                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+                categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
             )
             continuous_features = (
-                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+                continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
             )
-            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+            targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
 
             cols_to_read = categorical_features + continuous_features + targets
 
@@ -173,8 +171,8 @@ if dependencies.is_pyarrow_available():
 if dependencies.is_gpu_dataloader_available():
     from nvtabular.loader.torch import DLDataLoader
 
+    from merlin_standard_lib.utils.misc_utils import validate_dataset
     from transformers4rec.torch.data import DataLoader
-    from transformers4rec.utils.misc_utils import _validate_dataset
 
     class DLDataLoaderWrapper(DLDataLoader):
         """
@@ -255,7 +253,7 @@ if dependencies.is_gpu_dataloader_available():
             self.max_sequence_length = max_sequence_length
 
         def set_dataset(self, buffer_size, engine, reader_kwargs):
-            dataset = _validate_dataset(
+            dataset = validate_dataset(
                 self.paths_or_dataset,
                 self.batch_size,
                 buffer_size,
@@ -267,7 +265,7 @@ if dependencies.is_gpu_dataloader_available():
         @classmethod
         def from_schema(
             cls,
-            schema: DatasetSchema,
+            schema: Schema,
             paths_or_dataset,
             batch_size,
             max_sequence_length,
@@ -298,14 +296,14 @@ if dependencies.is_gpu_dataloader_available():
                     The maximum length of list features.
             """
             categorical_features = (
-                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+                categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
             )
             continuous_features = (
-                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+                continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
             )
-            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+            targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
 
-            sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
+            sparse_names = sparse_names or schema.select_by_tag(Tags.LIST).column_names
             sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
             nvt_loader = cls(
                 paths_or_dataset,

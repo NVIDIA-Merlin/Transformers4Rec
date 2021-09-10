@@ -25,11 +25,7 @@ from .config.transformer import (
 )
 
 # TODO check for NVTabular, and if it's installed import these from there
-from .utils.schema import ColumnSchema, DatasetSchema
-
 __all__ = [
-    "DatasetSchema",
-    "ColumnSchema",
     "T4RecConfig",
     "GPT2Config",
     "XLNetConfig",

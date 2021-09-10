@@ -18,8 +18,9 @@ from typing import Dict, Optional
 
 import tensorflow as tf
 
-from ...types import DatasetSchema, Tag
-from ...utils.misc_utils import docstring_parameter
+from merlin_standard_lib import Schema, Tags
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
@@ -56,7 +57,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
         name: Optional[str] = None,
         **kwargs
     ):
@@ -157,9 +158,9 @@ class TabularSequenceFeatures(TabularFeatures):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
-        continuous_tags=Tag.CONTINUOUS,
-        categorical_tags=Tag.CATEGORICAL,
+        schema: Schema,
+        continuous_tags=(Tags.CONTINUOUS,),
+        categorical_tags=(Tags.CATEGORICAL,),
         aggregation=None,
         max_sequence_length=None,
         continuous_projection=None,

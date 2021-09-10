@@ -16,7 +16,7 @@
 
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tags
 
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
@@ -79,7 +79,7 @@ def test_stochastic_swap_noise_with_tabular_features(
 
 @pytest.mark.parametrize("layer_norm", ["layer-norm", torch4rec.TabularLayerNorm()])
 def test_layer_norm(yoochoose_schema, torch_yoochoose_like, layer_norm):
-    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64, post=layer_norm

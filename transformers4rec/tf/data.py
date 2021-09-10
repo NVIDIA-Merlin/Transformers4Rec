@@ -24,8 +24,7 @@ from nvtabular.loader.backend import DataLoader as BaseDataLoader
 from nvtabular.loader.tf_utils import configure_tensorflow, get_dataset_schema_from_feature_columns
 from nvtabular.ops import _get_embedding_order
 
-from ..utils.schema import DatasetSchema
-from ..utils.tags import Tag
+from merlin_standard_lib import Schema, Tags
 
 from_dlpack = configure_tensorflow()
 
@@ -277,15 +276,15 @@ class DataLoader(tf.keras.utils.Sequence, BaseDataLoader):
         if not os.path.exists(schema_path):
             raise ValueError("Can't load from directory without a schema.")
 
-        schema = DatasetSchema.from_schema(schema_path)
+        schema = Schema().from_disk(schema_path)
 
         categorical_features = (
-            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
         )
-        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tags.TARGETS).column_names
 
         tf_dataset = cls(
             directory,

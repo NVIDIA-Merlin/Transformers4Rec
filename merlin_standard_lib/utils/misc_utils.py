@@ -191,7 +191,7 @@ def get_object_size(obj, seen=None):
     return size
 
 
-def _validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs):
+def validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs):
     """
     Util function to load NVTabular Dataset from disk
 

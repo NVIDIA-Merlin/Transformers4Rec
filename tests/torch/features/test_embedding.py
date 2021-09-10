@@ -19,7 +19,7 @@ from functools import partial
 import numpy as np
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tags
 
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
@@ -80,7 +80,7 @@ def test_table_config_invalid_embedding_initializer():
 
 
 def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(schema)
     embeddings = emb_module(torch_yoochoose_like)
@@ -88,11 +88,11 @@ def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
     assert list(embeddings.keys()) == schema.column_names
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
     assert emb_module.item_id == "item_id/list"
-    assert emb_module.item_embedding_table.num_embeddings == 51996
+    assert emb_module.item_embedding_table.num_embeddings == 51997
 
 
 def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
@@ -108,7 +108,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoocho
 
 
 def test_embedding_features_yoochoose_infer_embedding_sizes(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
 
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema, infer_embedding_sizes=True, infer_embedding_sizes_multiplier=3.0
@@ -130,7 +130,7 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
     CATEGORY_MEAN = 2.0
     CATEGORY_STD = 0.1
 
-    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
     emb_module = torch4rec.EmbeddingFeatures.from_schema(
         schema,
         layer_norm=False,

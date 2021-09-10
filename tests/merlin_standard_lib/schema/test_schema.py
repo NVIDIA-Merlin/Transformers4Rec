@@ -1,6 +1,5 @@
 import pytest
-
-from transformers4rec.config import schema
+from merlin_sl.schema import schema
 
 
 def test_column_proto_txt():

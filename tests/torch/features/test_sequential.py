@@ -16,18 +16,18 @@
 
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tags
 
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
 
 def test_sequential_embedding_features(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
     emb_module = torch4rec.SequenceEmbeddingFeatures.from_schema(schema)
 
     outputs = emb_module(torch_yoochoose_like)
 
-    assert list(outputs.keys()) == schema.select_by_tag(Tag.CATEGORICAL).column_names
+    assert list(outputs.keys()) == schema.select_by_tag(Tags.CATEGORICAL).column_names
     assert all(len(tensor.shape) == 3 for tensor in list(outputs.values()))
     assert all(tensor.shape[1] == 20 for tensor in list(outputs.values()))
     assert all(tensor.shape[2] == 64 for tensor in list(outputs.values()))
@@ -39,11 +39,10 @@ def test_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert (
-        list(outputs.keys())
-        == schema.select_by_tag(Tag.CONTINUOUS).column_names
-        + schema.select_by_tag(Tag.CATEGORICAL).column_names
-    )
+    tag_select = lambda tags: any(t in [Tags.CONTINUOUS, Tags.CATEGORICAL] for t in tags)  # noqa
+    cols = schema.select_by_tag(tag_select).column_names
+
+    assert list(outputs.keys()) == cols
 
 
 def test_sequential_tabular_features_with_feature_modules_kwargs(
@@ -58,13 +57,12 @@ def test_sequential_tabular_features_with_feature_modules_kwargs(
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert (
-        list(outputs.keys())
-        == schema.select_by_tag(Tag.CONTINUOUS).column_names
-        + schema.select_by_tag(Tag.CATEGORICAL).column_names
+    assert set(outputs.keys()) == set(
+        schema.select_by_tag(Tags.CONTINUOUS).column_names
+        + schema.select_by_tag(Tags.CATEGORICAL).column_names
     )
 
-    categ_features = schema.select_by_tag(Tag.CATEGORICAL).column_names
+    categ_features = schema.select_by_tag(Tags.CATEGORICAL).column_names
     assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
 
 
@@ -118,7 +116,7 @@ def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_lik
 
 def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        yoochoose_schema = yoochoose_schema - ["item_id/list"]
+        yoochoose_schema = yoochoose_schema.remove_by_name("item_id/list")
 
         torch4rec.TabularSequenceFeatures.from_schema(
             yoochoose_schema,

@@ -5,7 +5,7 @@ feature {
     name: "session_id"
     min: 1
     max: 11562158
-    is_categorical: false
+    is_categorical: true
   }
   annotation {
     tag: "groupby_col"
