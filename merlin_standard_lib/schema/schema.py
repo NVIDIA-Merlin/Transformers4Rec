@@ -1,9 +1,7 @@
 import collections
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
-from betterproto import T
-
-from ..utils.proto_utils import copy_better_proto_message, has_field
+from ..utils.proto_utils import better_proto_to_proto_text, copy_better_proto_message, has_field
 
 try:
     from functools import cached_property
@@ -14,7 +12,6 @@ except ImportError:
     cached_property = lambda func: property(lru_cache()(func))  # noqa
 
 import betterproto  # noqa
-from google.protobuf import text_format
 
 from ..proto.schema_bp import *  # noqa
 from ..proto.schema_bp import (
@@ -142,13 +139,13 @@ class ColumnSchema(Feature):
 
     def with_properties(self, properties: Dict[str, Union[str, int, float]]) -> "ColumnSchema":
         output = self.copy()
-        if self.annotation:
-            if len(self.annotation.extra_metadata) > 0:
-                self.annotation.extra_metadata[0].update(properties)
+        if output.annotation:
+            if len(output.annotation.extra_metadata) > 0:
+                output.annotation.extra_metadata[0].update(properties)
             else:
-                self.annotation.extra_metadata = properties
+                output.annotation.extra_metadata = [properties]
         else:
-            self.annotation = Annotation(extra_metadata=[properties])
+            output.annotation = Annotation(extra_metadata=[properties])
 
         return output
 
@@ -157,11 +154,19 @@ class ColumnSchema(Feature):
         return self.annotation.tag
 
     @property
-    def properties(self):
-        return self.annotation.extra_metadata
+    def properties(self) -> Dict[str, Union[str, float, int]]:
+        if self.annotation.extra_metadata:
+            return self.annotation.extra_metadata[0]
+
+        return {}
 
     def __str__(self) -> str:
         return self.name
+
+    def to_proto_text(self):
+        from tensorflow_metadata.proto.v0 import schema_pb2
+
+        return better_proto_to_proto_text(self, schema_pb2.Feature())
 
 
 ColumnSchemaOrStr = Union[ColumnSchema, str]
@@ -288,19 +293,6 @@ class Schema(_Schema):
 
         return outputs
 
-    def to_proto_text(self) -> str:
-        from tensorflow_metadata.proto.v0 import schema_pb2
-
-        schema = schema_pb2.Schema()
-        features = []
-        for col in self:
-            feature = schema_pb2.Feature()
-            feature.ParseFromString(bytes(col))
-            features.append(feature)
-        schema.feature.extend(features)
-
-        return text_format.MessageToString(schema)
-
     def __iter__(self):
         return iter(self.column_schemas)
 
@@ -372,11 +364,6 @@ class Schema(_Schema):
 
         return result
 
-    def parse(self: T, data: bytes) -> T:
-        output = super().parse(data)
-
-        return output
-
     @cached_property
     def item_id_column_name(self):
         item_id_col = self.select_by_tag("item_id")
@@ -384,3 +371,8 @@ class Schema(_Schema):
             raise ValueError("There is no column tagged as item id.")
 
         return item_id_col.column_names[0]
+
+    def to_proto_text(self):
+        from tensorflow_metadata.proto.v0 import schema_pb2
+
+        return better_proto_to_proto_text(self, schema_pb2.Schema())

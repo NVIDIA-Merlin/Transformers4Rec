@@ -1,5 +1,6 @@
 import pytest
-from merlin_sl.schema import schema
+
+from merlin_standard_lib.schema import schema
 
 
 def test_column_proto_txt():

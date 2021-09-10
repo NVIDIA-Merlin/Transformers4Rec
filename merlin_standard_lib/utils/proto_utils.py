@@ -24,9 +24,9 @@ def copy_better_proto_message(better_proto_message: ProtoMessageType, **kwargs) 
 def better_proto_to_proto_text(
     better_proto_message: BetterProtoMessage, message: ProtoMessage
 ) -> str:
-    serialized = bytes(better_proto_message)
+    message.ParseFromString(bytes(better_proto_message))
 
-    return text_format.MessageToString(message.ParseFromString(serialized))
+    return text_format.MessageToString(message)
 
 
 def proto_text_to_better_proto(
