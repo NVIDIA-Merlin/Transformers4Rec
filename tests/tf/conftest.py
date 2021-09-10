@@ -55,9 +55,9 @@ def tf_cat_features():
 
 
 @pytest.fixture
-def tf_yoochoose_tabular_features(yoochoose_schema):
+def tf_yoochoose_tabular_features(tabular_schema):
     return tf4rec.TabularFeatures.from_schema(
-        yoochoose_schema,
+        tabular_schema,
         max_sequence_length=20,
         continuous_projection=64,
         aggregation="concat",

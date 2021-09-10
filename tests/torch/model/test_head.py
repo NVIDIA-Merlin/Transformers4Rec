@@ -28,13 +28,13 @@ METRICS = [
 
 
 @pytest.mark.parametrize("task", [torch4rec.BinaryClassificationTask, torch4rec.RegressionTask])
-def test_simple_heads(torch_yoochoose_tabular_features, torch_yoochoose_like, task):
+def test_simple_heads(torch_tabular_features, torch_tabular_data, task):
     targets = {"target": pytorch.randint(2, (100,)).float()}
 
-    body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, torch4rec.MLPBlock([64]))
-    head = task("target").to_head(body, torch_yoochoose_tabular_features)
+    body = torch4rec.SequentialBlock(torch_tabular_features, torch4rec.MLPBlock([64]))
+    head = task("target").to_head(body, torch_tabular_features)
 
-    body_out = body(torch_yoochoose_like)
+    body_out = body(torch_tabular_data)
     loss = head.compute_loss(body_out, targets)
 
     assert loss.min() >= 0 and loss.max() <= 1
@@ -69,15 +69,13 @@ def test_simple_heads_on_sequence(
         dict(classification=torch4rec.MLPBlock([16]), regression=torch4rec.MLPBlock([20])),
     ],
 )
-def test_head_with_multiple_tasks(
-    torch_yoochoose_tabular_features, torch_yoochoose_like, task_blocks
-):
+def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, task_blocks):
     targets = {
         "classification": pytorch.randint(2, (100,)).float(),
         "regression": pytorch.randint(2, (100,)).float(),
     }
 
-    body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, torch4rec.MLPBlock([64]))
+    body = torch4rec.SequentialBlock(torch_tabular_features, torch4rec.MLPBlock([64]))
     tasks = [
         torch4rec.BinaryClassificationTask("classification"),
         torch4rec.RegressionTask("regression"),
@@ -86,7 +84,7 @@ def test_head_with_multiple_tasks(
     optimizer = pytorch.optim.Adam(head.parameters())
 
     with pytorch.set_grad_enabled(mode=True):
-        body_out = body(torch_yoochoose_like)
+        body_out = body(torch_tabular_data)
         loss = head.compute_loss(body_out, targets)
         metrics = head.calculate_metrics(body_out, targets)
 
@@ -182,9 +180,9 @@ def test_item_prediction_HF_output(
     ]
 
 
-def test_head_not_inferring_output_size_body(torch_yoochoose_tabular_features):
+def test_head_not_inferring_output_size_body(torch_tabular_features):
     with pytest.raises(ValueError) as excinfo:
-        body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, pytorch.nn.Dropout(0.5))
+        body = torch4rec.SequentialBlock(torch_tabular_features, pytorch.nn.Dropout(0.5))
         torch4rec.Head(
             body,
             torch4rec.BinaryClassificationTask(),
@@ -193,9 +191,9 @@ def test_head_not_inferring_output_size_body(torch_yoochoose_tabular_features):
         assert "Can't infer output-size of the body" in str(excinfo.value)
 
 
-def test_item_prediction_head_with_wrong_body(torch_yoochoose_tabular_features):
+def test_item_prediction_head_with_wrong_body(torch_tabular_features):
     with pytest.raises(ValueError) as excinfo:
-        body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, pytorch.nn.Dropout(0.5))
+        body = torch4rec.SequentialBlock(torch_tabular_features, pytorch.nn.Dropout(0.5))
         torch4rec.Head(
             body,
             torch4rec.NextItemPredictionTask(),

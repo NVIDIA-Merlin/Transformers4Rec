@@ -74,7 +74,7 @@ def test_stochastic_swap_noise_with_tabular_features(
             feat_non_padding_mask = feat_non_padding_mask.unsqueeze(-1)
         replaced_mask_non_padded = pytorch.masked_select(replaced_mask, feat_non_padding_mask)
         replacement_rate = replaced_mask_non_padded.float().mean()
-        assert replacement_rate == pytest.approx(replacement_prob, abs=0.1)
+        assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
 
 
 @pytest.mark.parametrize("layer_norm", ["layer-norm", torch4rec.TabularLayerNorm()])

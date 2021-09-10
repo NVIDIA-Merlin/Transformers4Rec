@@ -40,7 +40,7 @@ def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
-        aggregation="sequential-concat",
+        aggregation="concat",
         masking=task,
     )
 
@@ -67,7 +67,7 @@ def test_xlnet_with_plm(yoochoose_schema, torch_yoochoose_like):
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
-        aggregation="sequential-concat",
+        aggregation="concat",
         d_output=64,
         masking="permutation",
     )
@@ -95,7 +95,7 @@ def test_plm_wrong_transformer(yoochoose_schema, torch_yoochoose_like):
         tab_module = torch4rec.TabularSequenceFeatures.from_schema(
             col_group,
             max_sequence_length=20,
-            aggregation="sequential-concat",
+            aggregation="concat",
             d_output=64,
             masking="permutation",
         )
@@ -126,7 +126,7 @@ def test_transformer_block_clm(yoochoose_schema, torch_yoochoose_like, transform
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
-        aggregation="sequential-concat",
+        aggregation="concat",
         d_output=64,
         masking="causal",
     )
@@ -148,7 +148,7 @@ def test_reformer_block_clm(yoochoose_schema, torch_yoochoose_like):
     tab_module = torch4rec.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
-        aggregation="sequential-concat",
+        aggregation="concat",
         d_output=64,
         masking="causal",
     )

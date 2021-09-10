@@ -113,7 +113,7 @@ def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_lik
     tab_seq_features = torch4rec.TabularSequenceFeatures(
         continuous_module=continuous_module,
         categorical_module=categorical_module,
-        aggregation="sequential-concat",
+        aggregation="concat",
         schema=yoochoose_schema,
     )
     outputs = tab_seq_features(torch_yoochoose_like)
@@ -168,9 +168,7 @@ def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_sche
 
 def test_sequential_and_non_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
-    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
-        schema, aggregation="sequential-concat"
-    )
+    tab_module = torch4rec.TabularSequenceFeatures.from_schema(schema, aggregation="concat")
 
     outputs = tab_module(torch_yoochoose_like)
 

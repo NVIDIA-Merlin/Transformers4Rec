@@ -129,9 +129,9 @@ def torch_seq_prediction_head_link_to_block():
 
 
 @pytest.fixture
-def torch_yoochoose_tabular_features(yoochoose_schema):
+def torch_tabular_features(tabular_schema):
     return torch4rec.TabularFeatures.from_schema(
-        yoochoose_schema,
+        tabular_schema,
         max_sequence_length=20,
         continuous_projection=64,
         aggregation="concat",
@@ -150,9 +150,7 @@ def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
 
 
 @pytest.fixture
-def torch_yoochoose_next_item_prediction_model(
-    torch_yoochoose_tabular_transformer_features, yoochoose_schema
-):
+def torch_yoochoose_next_item_prediction_model(torch_yoochoose_tabular_transformer_features):
     # define Transformer-based model
     inputs = torch_yoochoose_tabular_transformer_features
     transformer_config = tconf.XLNetConfig.build(
@@ -242,7 +240,7 @@ def torch_yoochoose_like(yoochoose_schema_file):
 
 
 @pytest.fixture
-def torch_yoochoose_like_non_sequential(tabular_schema_file):
+def torch_tabular_data(tabular_schema_file):
     outputs = schema_like_generator(tabular_schema_file, lists_as_session_features=False)
     return outputs
 

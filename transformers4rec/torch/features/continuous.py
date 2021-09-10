@@ -16,6 +16,8 @@
 
 from typing import List, Optional
 
+import torch
+
 from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
@@ -51,7 +53,11 @@ class ContinuousFeatures(InputBlock):
         return cls(features, **kwargs)
 
     def forward(self, inputs, **kwargs):
-        return self.filter_features(inputs)
+        cont_features = self.filter_features(inputs)
+        cont_features = {k: v.unsqueeze(-1) for k, v in cont_features.items()}
+        return cont_features
 
     def forward_output_size(self, input_sizes):
-        return self.filter_features.forward_output_size(input_sizes)
+        cont_features_sizes = self.filter_features.forward_output_size(input_sizes)
+        cont_features_sizes = {k: torch.Size(list(v) + [1]) for k, v in cont_features_sizes.items()}
+        return cont_features_sizes

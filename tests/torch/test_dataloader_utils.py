@@ -34,10 +34,20 @@ def test_pyarrow_load(yoochoose_schema, yoochoose_path_file):
         shuffle_buffer_size=0.1,
     )
     batch = next(iter(loader))
-    assert all(feat.ndim == 2 for feat in batch.values())
+
     assert all(feat.size()[0] == batch_size for feat in batch.values())
-    assert all(feat.size()[-1] == max_sequence_length for feat in batch.values())
     assert all(feat.device == torch.device("cpu") for feat in batch.values())
+
+    non_seq_features_names = ["user_country", "user_age"]
+    seq_features = {k: v for k, v in batch.items() if k not in non_seq_features_names}
+    non_seq_features = {k: v for k, v in batch.items() if k in non_seq_features_names}
+
+    # Checking shape of sequential features
+    assert all(feat.ndim == 2 for feat in seq_features.values())
+    assert all(feat.size()[-1] == max_sequence_length for feat in seq_features.values())
+
+    # Checking shape of non-sequential features
+    assert all(feat.ndim == 1 for feat in non_seq_features.values())
 
 
 def test_features_from_schema(yoochoose_schema, yoochoose_path_file):

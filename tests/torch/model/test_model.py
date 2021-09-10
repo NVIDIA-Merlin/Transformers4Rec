@@ -27,14 +27,14 @@ else:
     devices = ["cpu"]
 
 
-def test_simple_model(torch_yoochoose_tabular_features, torch_yoochoose_like):
+def test_simple_model(torch_tabular_features, torch_tabular_data):
     targets = {"target": pytorch.randint(2, (100,)).float()}
 
-    inputs = torch_yoochoose_tabular_features
+    inputs = torch_tabular_features
     body = torch4rec.SequentialBlock(inputs, torch4rec.MLPBlock([64]))
     model = torch4rec.BinaryClassificationTask("target").to_model(body, inputs)
 
-    dataset = [(torch_yoochoose_like, targets)]
+    dataset = [(torch_tabular_data, targets)]
     losses = model.fit(dataset, num_epochs=5)
     metrics = model.evaluate(dataset, mode="eval")
 
@@ -71,7 +71,7 @@ def test_sequential_prediction_model(
 
 
 def test_model_with_multiple_heads_and_tasks(
-    torch_yoochoose_tabular_features,
+    yoochoose_schema,
     torch_yoochoose_tabular_transformer_features,
     torch_yoochoose_like,
 ):
@@ -80,7 +80,17 @@ def test_model_with_multiple_heads_and_tasks(
         "classification": pytorch.randint(2, (100,)).float(),
         "regression": pytorch.randint(2, (100,)).float(),
     }
-    body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, torch4rec.MLPBlock([64]))
+
+    non_sequential_features_schema = yoochoose_schema.select_by_name(["user_age", "user_country"])
+
+    tabular_features = torch4rec.TabularFeatures.from_schema(
+        non_sequential_features_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        aggregation="concat",
+    )
+
+    body = torch4rec.SequentialBlock(tabular_features, torch4rec.MLPBlock([64]))
     tasks = [
         torch4rec.BinaryClassificationTask("classification"),
         torch4rec.RegressionTask("regression"),
@@ -125,9 +135,9 @@ def test_model_with_multiple_heads_and_tasks(
     assert all(loss is not None for loss in losses)
 
 
-def test_multi_head_model_wrong_weights(torch_yoochoose_tabular_features, torch_yoochoose_like):
+def test_multi_head_model_wrong_weights(torch_tabular_features, torch_yoochoose_like):
     with pytest.raises(ValueError) as excinfo:
-        inputs = torch_yoochoose_tabular_features
+        inputs = torch_tabular_features
         body = torch4rec.SequentialBlock(inputs, torch4rec.MLPBlock([64]))
 
         head_1 = torch4rec.BinaryClassificationTask("classification").to_head(body, inputs)
