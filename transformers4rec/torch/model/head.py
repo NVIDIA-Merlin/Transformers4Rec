@@ -166,6 +166,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(
         self,
         body_outputs: Union[torch.Tensor, TabularData],
+        training: bool = True,
         call_body: bool = False,
         always_output_dict: bool = False,
         **kwargs,
@@ -173,7 +174,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         outputs = {}
 
         if call_body:
-            body_outputs = self.body(body_outputs)
+            body_outputs = self.body(body_outputs, training=training)
 
         for name, task in self.prediction_tasks.items():
             outputs[name] = task(body_outputs, **kwargs)
@@ -187,6 +188,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         self,
         body_outputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
+        training: bool = True,
         compute_metrics: bool = True,
         call_body: bool = False,
         **kwargs,
@@ -194,7 +196,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         losses = []
 
         if call_body:
-            body_outputs = self.body(body_outputs)
+            body_outputs = self.body(body_outputs, training=training)
 
         for name, task in self.prediction_tasks.items():
             loss = task.compute_loss(
