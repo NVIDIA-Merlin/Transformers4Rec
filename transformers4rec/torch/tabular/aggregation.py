@@ -23,34 +23,6 @@ from ..typing import TabularData
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .tabular import TabularAggregation, tabular_aggregation_registry
 
-'''
-@tabular_aggregation_registry.register("concat")
-class ConcatFeatures(TabularAggregation):
-    """Aggregation by concatenating all values in the input dictionary in the given dimension.
-
-    Parameters
-    ----------
-    axis: int, default=-1
-        Axis to use for the concatenation operation.
-    """
-
-    def __init__(self, axis: int = -1):
-        super().__init__()
-        self.axis = axis
-
-    def forward(self, inputs: TabularData) -> torch.Tensor:
-        tensors = []
-        for name in sorted(inputs.keys()):
-            tensors.append(inputs[name])
-
-        return torch.cat(tensors, dim=self.axis)
-
-    def forward_output_size(self, input_size):
-        batch_size = calculate_batch_size_from_input_size(input_size)
-
-        return batch_size, sum([i[1] for i in input_size.values()])
-'''
-
 
 @tabular_aggregation_registry.register("concat")
 class ConcatFeatures(TabularAggregation):

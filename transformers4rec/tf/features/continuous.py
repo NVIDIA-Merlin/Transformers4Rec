@@ -58,7 +58,9 @@ class ContinuousFeatures(InputBlock):
         return cls(features, **kwargs)
 
     def call(self, inputs, *args, **kwargs):
-        return self.filter_features(inputs)
+        cont_features = self.filter_features(inputs)
+        cont_features = {k: tf.expand_dims(v, -1) for k, v in cont_features.items()}
+        return cont_features
 
     def compute_call_output_shape(self, input_shapes):
         return self.filter_features.compute_output_shape(input_shapes)

@@ -27,14 +27,14 @@ tr = pytest.importorskip("transformers4rec.tf")
     "normalization", [None, "batch_norm", tf.keras.layers.BatchNormalization()]
 )
 def test_mlp_block_yoochoose(
-    yoochoose_schema, tf_yoochoose_like, dim, activation, dropout, normalization
+    tabular_schema, tf_tabular_data, dim, activation, dropout, normalization
 ):
-    inputs = tr.TabularFeatures.from_schema(yoochoose_schema, aggregation="concat")
+    inputs = tr.TabularFeatures.from_schema(tabular_schema, aggregation="concat")
 
     mlp = tr.MLPBlock([dim], activation=activation, dropout=dropout, normalization=normalization)
     body = tr.SequentialBlock([inputs, mlp])
 
-    outputs = body(tf_yoochoose_like)
+    outputs = body(tf_tabular_data)
 
     assert list(outputs.shape) == [100, dim]
     assert mlp.layers[0].units == dim

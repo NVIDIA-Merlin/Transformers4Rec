@@ -220,7 +220,7 @@ class TabularSequenceFeatures(TabularFeatures):
             raise ValueError("You cannot specify both d_output and projection at the same time")
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
-            output.set_aggregation("sequential-concat")
+            output.set_aggregation("concat")
         # hidden_size = output.output_size()
 
         if d_output and not projection:
@@ -242,7 +242,7 @@ class TabularSequenceFeatures(TabularFeatures):
             dimensions = [dimensions]
 
         continuous = self.continuous_layer
-        continuous.set_aggregation("sequential-concat")
+        continuous.set_aggregation("concat")
 
         continuous = SequentialBlock(
             [continuous, MLPBlock(dimensions), AsTabular("continuous_projection")]

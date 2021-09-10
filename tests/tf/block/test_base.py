@@ -19,22 +19,32 @@ import pytest
 tr = pytest.importorskip("transformers4rec.tf")
 
 
+<<<<<<< HEAD
 def test_sequential_block_yoochoose(yoochoose_schema, tf_yoochoose_like):
     inputs = tr.TabularFeatures.from_schema(yoochoose_schema, aggregation="concat")
+=======
+def test_sequential_block_yoochoose(tabular_schema, tf_tabular_data):
+    inputs = tf4rec.TabularFeatures.from_schema(tabular_schema, aggregation="concat")
+>>>>>>> Replicated from PyT to TF support to sequential and non-sequential features. Still some tests are failing
 
     body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
 
-    outputs = body(tf_yoochoose_like)
+    outputs = body(tf_tabular_data)
 
     assert list(outputs.shape) == [100, 64]
 
 
+<<<<<<< HEAD
 def test_sequential_block_yoochoose_without_aggregation(yoochoose_schema, tf_yoochoose_like):
     inputs = tr.TabularFeatures.from_schema(yoochoose_schema)
+=======
+def test_sequential_block_yoochoose_without_aggregation(tabular_schema, tf_tabular_data):
+    inputs = tf4rec.TabularFeatures.from_schema(tabular_schema)
+>>>>>>> Replicated from PyT to TF support to sequential and non-sequential features. Still some tests are failing
 
     with pytest.raises(TypeError) as excinfo:
         body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
 
-        body(tf_yoochoose_like)
+        body(tf_tabular_data)
 
         assert "did you forget to add aggregation to TabularFeatures" in str(excinfo.value)

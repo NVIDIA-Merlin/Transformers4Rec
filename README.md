@@ -50,7 +50,7 @@ input_module = tr.TabularSequenceFeatures.from_schema(
     tr.Schema().from_proto_text(SCHEMA_PATH),
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
-    aggregation="sequential-concat",
+    aggregation="concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks
@@ -75,7 +75,7 @@ input_module = tr.TabularSequenceFeatures.from_schema(
     tr.Schema().from_proto_text(SCHEMA_PATH),
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
-    aggregation="sequential-concat",
+    aggregation="concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks
