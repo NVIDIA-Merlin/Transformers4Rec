@@ -220,7 +220,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         metrics = {}
 
         if call_body:
-            body_outputs = self.body(body_outputs)
+            body_outputs = self.body(body_outputs, training=False)
 
         for name, task in self.prediction_tasks.items():
             metrics.update(
