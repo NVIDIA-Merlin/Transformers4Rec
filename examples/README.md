@@ -20,8 +20,9 @@ This example notebook is focusing primarily on the basic concepts of Transformer
 - Using the NVTabular dataloader with Tensorflow
 - Training an XLNET based session-based recommendation model
 
-### 2. [Tutorial with Rees46 Ecommerce dataset](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/tutorial/)
+### 2. [End-to-end session-based with Yoochoose dataset](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/end-to-end-session-based/)
 
+### 3. [Tutorial with Rees46 Ecommerce dataset](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/tutorial/)
 
 ## Running the Example Notebooks
 
@@ -41,7 +42,7 @@ To run the example notebooks using Docker containers, do the following:
    **NOTES**: 
    
    - If you are running on Docker version 19 and higher, change ```--runtime=nvidia``` to ```--gpus all```.
-   - If you are running `Getting Started with MovieLens` , `Advanced Ops with Outbrain` or `Tabular Problems with Rossmann` example notebooks you need to add ` -v ${PWD}:/root/ ` to the docker script above. Here `PWD` is a local directory in your system, and this very same directory should also be mounted to the `merlin-inference`container if you would like to run the inference example. Please follow the `start and launch triton server` instructions given in the inference notebooks. 
+   - If you are running `Tutorial notebooks`  you need to add `-v ${PWD}:/models/ -v <path to data>:/data/ ` to the docker script above. Here `PWD` is a local directory in your system, and the same directory should also be mounted to the `merlin-inference`container if you would like to run the inference example. Please follow the `start and launch triton server` instructions given in the inference notebook. 
 
    The container will open a shell when the run command execution is completed. You will have to start JupyterLab on the Docker container. It should look similar to this:
    ```
