@@ -25,7 +25,7 @@ from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import BlockBase, SequentialBlock, right_shift_block
 from ..typing import TabularData, TensorOrTabularData
-from ..utils.torch_utils import OutputSizeMixin
+from ..utils.torch_utils import OutputSizeMixin, calculate_batch_size_from_input_size
 
 tabular_transformation_registry: Registry = Registry.class_registry("torch.tabular_transformations")
 tabular_aggregation_registry: Registry = Registry.class_registry("torch.tabular_aggregations")
@@ -47,6 +47,56 @@ class TabularAggregation(OutputSizeMixin, torch.nn.Module, ABC):
 
     def forward(self, inputs: TabularData) -> torch.Tensor:
         raise NotImplementedError()
+
+    def _maybe_expand_non_sequential_features(self, inputs: TabularData) -> TabularData:
+        inputs_sizes = {k: v.shape for k, v in inputs.items()}
+        seq_features_shapes, sequence_length = self._get_seq_features_shapes(inputs_sizes)
+
+        if len(seq_features_shapes) > 0:
+            non_seq_features = set(inputs.keys()).difference(set(seq_features_shapes.keys()))
+            for fname in non_seq_features:
+                # Including the 2nd dim and repeating for the sequence length
+                inputs[fname] = inputs[fname].unsqueeze(dim=1).repeat(1, sequence_length, 1)
+
+    def _get_seq_features_shapes(self, inputs_sizes):
+        seq_features_shapes = dict()
+        for fname, fshape in inputs_sizes.items():
+            # Saves the shapes of sequential features
+            if len(fshape) >= 3:
+                seq_features_shapes[fname] = tuple(fshape[:2])
+
+        sequence_length = 0
+        if len(seq_features_shapes) > 0:
+            if len(set(seq_features_shapes.values())) > 1:
+                raise ValueError(
+                    "All sequential features must share the same shape in the first two dims "
+                    "(batch_size, seq_length): {}".format(seq_features_shapes)
+                )
+
+            sequence_length = list(seq_features_shapes.values())[0][1]
+
+        return seq_features_shapes, sequence_length
+
+    def _check_concat_shapes(self, inputs: TabularData):
+        input_sizes = {k: v.shape for k, v in inputs.items()}
+        if len(set(list([v[:-1] for v in input_sizes.values()]))) > 1:
+            raise Exception(
+                "All features dimensions except the last one must match: {}".format(input_sizes)
+            )
+
+    def _get_agg_output_size(self, input_size, agg_dim):
+        batch_size = calculate_batch_size_from_input_size(input_size)
+        seq_features_shapes, sequence_length = self._get_seq_features_shapes(input_size)
+
+        if len(seq_features_shapes) > 0:
+            return (
+                batch_size,
+                sequence_length,
+                agg_dim,
+            )
+
+        else:
+            return (batch_size, agg_dim)
 
     @classmethod
     def parse(cls, class_or_str):
@@ -283,7 +333,7 @@ class TabularModule(torch.nn.Module):
 
         if aggregation:
             schema = getattr(self, "schema", None)
-            self.aggregation.set_schema(schema)
+            aggregation.set_schema(schema)
             return aggregation(outputs)
 
         return outputs

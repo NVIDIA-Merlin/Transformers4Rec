@@ -22,27 +22,27 @@ pytorch = pytest.importorskip("torch")
 tr = pytest.importorskip("transformers4rec.torch")
 
 
-def test_concat_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+def test_concat_aggregation_yoochoose(tabular_schema, torch_tabular_data):
+    schema = tabular_schema
     tab_module = tr.features.tabular.TabularFeatures.from_schema(schema)
 
     block = tab_module >> tr.ConcatFeatures()
 
-    out = block(torch_yoochoose_like)
+    out = block(torch_tabular_data)
 
-    assert out.shape[-1] == 248
+    assert out.shape[-1] == 262
 
 
-def test_stack_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+def test_stack_aggregation_yoochoose(tabular_schema, torch_tabular_data):
+    schema = tabular_schema
     tab_module = tr.EmbeddingFeatures.from_schema(schema)
 
     block = tab_module >> tr.StackFeatures()
 
-    out = block(torch_yoochoose_like)
+    out = block(torch_tabular_data)
 
     assert out.shape[1] == 64
-    assert out.shape[2] == 2
+    assert out.shape[2] == 4
 
 
 def test_element_wise_sum_features_different_shapes():
@@ -56,13 +56,13 @@ def test_element_wise_sum_features_different_shapes():
     assert "shapes of all input features are not equal" in str(excinfo.value)
 
 
-def test_element_wise_sum_aggregation_yoochoose(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+def test_element_wise_sum_aggregation_yoochoose(tabular_schema, torch_tabular_data):
+    schema = tabular_schema
     tab_module = tr.EmbeddingFeatures.from_schema(schema)
 
     block = tab_module >> tr.ElementwiseSum()
 
-    out = block(torch_yoochoose_like)
+    out = block(torch_tabular_data)
 
     assert out.shape[-1] == 64
 

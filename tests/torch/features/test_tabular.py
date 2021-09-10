@@ -22,11 +22,11 @@ tr = pytest.importorskip("transformers4rec.torch")
 torch_utils = pytest.importorskip("transformers4rec.torch.utils.torch_utils")
 
 
-def test_tabular_features(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+def test_tabular_features(tabular_schema, torch_tabular_data):
+    schema = tabular_schema
     tab_module = tr.TabularFeatures.from_schema(schema)
 
-    outputs = tab_module(torch_yoochoose_like)
+    outputs = tab_module(torch_tabular_data)
 
     assert set(outputs.keys()) == set(
         schema.select_by_tag(Tag.CONTINUOUS).column_names
@@ -34,23 +34,23 @@ def test_tabular_features(yoochoose_schema, torch_yoochoose_like):
     )
 
 
-def test_tabular_features_embeddings_options(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+def test_tabular_features_embeddings_options(tabular_schema, torch_tabular_data):
+    schema = tabular_schema
 
     EMB_DIM = 100
     tab_module = tr.TabularFeatures.from_schema(schema, embedding_dim_default=EMB_DIM)
 
-    outputs = tab_module(torch_yoochoose_like)
+    outputs = tab_module(torch_tabular_data)
 
     categ_features = schema.select_by_tag(Tag.CATEGORICAL).column_names
     assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
 
 
-def test_tabular_features_with_projection(tabular_schema, torch_yoochoose_like_non_sequential):
+def test_tabular_features_with_projection(tabular_schema, torch_tabular_data):
     schema = tabular_schema
     tab_module = tr.TabularFeatures.from_schema(schema, continuous_projection=64)
 
-    outputs = tab_module(torch_yoochoose_like_non_sequential)
+    outputs = tab_module(torch_tabular_data)
 
     continuous_feature_names = schema.select_by_tag(Tag.CONTINUOUS).column_names
 
@@ -59,8 +59,8 @@ def test_tabular_features_with_projection(tabular_schema, torch_yoochoose_like_n
     assert list(outputs["continuous_projection"].shape)[1] == 64
 
 
-def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+def test_tabular_features_soft_encoding(tabular_schema, torch_tabular_data):
+    schema = tabular_schema
 
     emb_cardinality = 10
     emb_dim = 8
@@ -71,7 +71,7 @@ def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):
         soft_embedding_dim_default=emb_dim,
     )
 
-    outputs = tab_module(torch_yoochoose_like)
+    outputs = tab_module(torch_tabular_data)
 
     assert (
         list(outputs.keys())
@@ -80,6 +80,6 @@ def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):
     )
 
     assert all(
-        list(outputs[col_name].shape) == list(torch_yoochoose_like[col_name].shape) + [emb_dim]
+        list(outputs[col_name].shape) == list(torch_tabular_data[col_name].shape) + [emb_dim]
         for col_name in schema.select_by_tag(Tag.CONTINUOUS).column_names
     )

@@ -33,8 +33,8 @@ def schema_file():
     return ASSETS_DIR / "schema.pbtxt"
 
 
-YOOCHOOSE_SCHEMA = ASSETS_DIR / "yoochoose" / "data_seq_schema.pbtxt"
-YOOCHOOSE_PATH = ASSETS_DIR / "yoochoose" / "data_seq.parquet"
+YOOCHOOSE_SCHEMA = ASSETS_DIR / "data_schema" / "data_seq_schema.pbtxt"
+YOOCHOOSE_PATH = ASSETS_DIR / "data_schema" / "data_seq.parquet"
 
 
 @pytest.fixture
@@ -53,8 +53,8 @@ def yoochoose_schema():
     return schema
 
 
-TABULAR_DATA_SCHEMA = ASSETS_DIR / "yoochoose" / "data_schema.pbtxt"
-TABULAR_DATA_PATH = ASSETS_DIR / "yoochoose" / "data.parquet"
+TABULAR_DATA_SCHEMA = ASSETS_DIR / "data_schema" / "data_schema.pbtxt"
+TABULAR_DATA_PATH = ASSETS_DIR / "data_schema" / "data.parquet"
 
 
 @pytest.fixture
