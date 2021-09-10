@@ -1,1 +1,1 @@
-tensorflow
+tensorflow>=2.3
