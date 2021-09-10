@@ -167,7 +167,7 @@ class TabularBlock(Block):
         return cls.from_features(_schema.column_names, schema=_schema, **kwargs)
 
     @classmethod
-    @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+    @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING, extra_padding=4)
     def from_features(
         cls,
         features: List[str],
@@ -177,8 +177,8 @@ class TabularBlock(Block):
         name=None,
         **kwargs
     ) -> "TabularBlock":
-        """Initializes a TabularLayer instance where the contents of features will be filtered
-            out
+        """
+        Initializes a TabularLayer instance where the contents of features will be filtered out
 
         Parameters
         ----------

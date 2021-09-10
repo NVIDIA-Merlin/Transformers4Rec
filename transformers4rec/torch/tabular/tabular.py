@@ -135,7 +135,7 @@ class TabularModule(torch.nn.Module):
         return cls.from_features(_schema.column_names, schema=_schema, **kwargs)
 
     @classmethod
-    @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+    @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING, extra_padding=4)
     def from_features(
         cls,
         features: List[str],
