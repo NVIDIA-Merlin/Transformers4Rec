@@ -163,6 +163,9 @@ class ColumnSchema(Feature):
     def __str__(self) -> str:
         return self.name
 
+    def __eq__(self, other: "ColumnSchema") -> bool:
+        return self.to_dict() == other.to_dict()
+
     def to_proto_text(self):
         from tensorflow_metadata.proto.v0 import schema_pb2
 
@@ -310,7 +313,10 @@ class Schema(_Schema):
     def __eq__(self, other):
         if not isinstance(other, Schema) or len(self.column_schemas) != len(other.column_schemas):
             return False
-        return self.column_schemas == other.column_schemas
+
+        return sorted(self.column_schemas, key=lambda x: x.name) == sorted(
+            other.column_schemas, key=lambda x: x.name
+        )
 
     def copy(self, **kwargs) -> "Schema":
         return proto_utils.copy_better_proto_message(self, **kwargs)
