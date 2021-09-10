@@ -54,11 +54,7 @@ def yoochoose_data_file():
 
 @pytest.fixture
 def yoochoose_schema():
-    from tensorflow_metadata.proto.v0 import schema_pb2
-
-    message = schema_pb2.Schema()
-
-    schema = Schema().from_proto_text(str(YOOCHOOSE_SCHEMA), message)
+    schema = Schema().from_proto_text(str(YOOCHOOSE_SCHEMA))
 
     return schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
