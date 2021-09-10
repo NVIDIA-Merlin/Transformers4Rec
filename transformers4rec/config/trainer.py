@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from dataclasses import dataclass, field
 
 from transformers import TFTrainingArguments, TrainingArguments
@@ -9,25 +25,20 @@ class T4RecTrainingArguments(TrainingArguments):
     Class that inherits HF TrainingArguments and add on top of it arguments needed for
     session-based and sequential-based recommendation
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     avg_session_length : int
         the avg. session length (rounded up to the next int),
         It is used to estimate the number of interactions from the batch_size (# sessions)
         so that the tensor that accumulates all predictions is sufficient
         to concatenate all predictions
-
-    shuffle_buffer_size
-
+    shuffle_buffer_size:
     validate_every: Optional[int], int
         Run validation set every this epoch.
         -1 means no validation is used
         by default -1
-
-    eval_on_test_set
-
-    eval_steps_on_train_set
-
+    eval_on_test_set:
+    eval_steps_on_train_set:
     predict_top_k:  Option[int], int
         Truncate recommendation list to the highest top-K predicted items
         (do not affect evaluation metrics computation)

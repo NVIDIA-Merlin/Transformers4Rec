@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import os
 import shutil
 import tempfile
@@ -18,22 +34,22 @@ def save_time_based_splits(
     Note, this function requires Rapids dependencies to be installed:
     cudf, cupy and dask_cudf
 
-    Parameters:
+    Parameters
     -----
-        data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
-            Dataset to split into time-based splits.
-        output_dir: str
-            Output path the save the time-based splits.
-        partition_col: str
-            Time-column to partition the data on.
-        timestamp_col: str
-            Timestamp column to use to sort each split.
-        test_size: float
-            Size of the test split, needs to be a number between 0.0 & 1.0.
-        val_size: float
-            Size of the validation split, needs to be a number between 0.0 & 1.0.
-        overwrite: bool
-            Whether or not to overwrite the output_dir if it already exists.
+    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+        Dataset to split into time-based splits.
+    output_dir: str
+        Output path the save the time-based splits.
+    partition_col: str
+        Time-column to partition the data on.
+    timestamp_col: str
+        Timestamp column to use to sort each split.
+    test_size: float
+        Size of the test split, needs to be a number between 0.0 & 1.0.
+    val_size: float
+        Size of the validation split, needs to be a number between 0.0 & 1.0.
+    overwrite: bool
+        Whether or not to overwrite the output_dir if it already exists.
     """
 
     try:
@@ -67,7 +83,7 @@ def save_time_based_splits(
             out_dir = os.path.join(output_dir, split_name)
             os.makedirs(out_dir, exist_ok=True)
             df.to_parquet(os.path.join(out_dir, "train.parquet"))
-            
+
             cupy.random.seed(1)
             random_values = cupy.random.rand(len(df))
 

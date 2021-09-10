@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import collections
 import gc
 import inspect
@@ -35,6 +51,32 @@ class Trainer(BaseTrainer):
     """
     An :class:`~transformers.Trainer` specialized for sequential recommendation
     including (session-based and sequtial recommendation)
+
+    Parameters
+    ----------
+    model: Model
+        The Model defined using Transformers4Rec api.
+    args: T4RecTrainingArguments
+        The training arguments needed to setup training and evaluation
+        experiments.
+    schema: Optional[Dataset.schema], optional
+        The schema object including features to use and their properties.
+        by default None
+    train_dataset_or_path: Optional[Union[str, Dataset]], optional
+        Path of parquet files or DataSet to use for training.
+        by default None
+    eval_dataset_or_path: Optional[str, Dataset], optional
+        Path of parquet files or DataSet to use for evaluation.
+        by default None
+    train_dataloader: Optional[DataLoader], optional
+        The data generator to use for training.
+        by default None
+    eval_dataloader: Optional[DataLoader], optional
+        The data generator to use for evaluation.
+        by default None
+    compute_metrics: Optional[bool], optional
+        Whether to compute metrics defined by Model class or not.
+        by default None
     """
 
     def __init__(
@@ -49,33 +91,6 @@ class Trainer(BaseTrainer):
         compute_metrics=None,
         **kwargs,
     ):
-        """
-        Parameters:
-        -----------
-            model: Model,
-                The Model defined using Transformers4Rec api.
-            args: T4RecTrainingArguments,
-                The training arguments needed to setup training and evaluation
-                experiments.
-            schema: Optional[Dataset.schema], optional
-                The schema object including features to use and their properties.
-                by default None
-            train_dataset_or_path: Optional[Union[str, Dataset]], optional
-                Path of parquet files or DataSet to use for training.
-                by default None
-            eval_dataset_or_path: Optional[str, Dataset], optional
-                Path of parquet files or DataSet to use for evaluation.
-                by default None
-            train_dataloader: Optional[DataLoader], optional
-                The data generator to use for training.
-                by default None
-            eval_dataloader: Optional[DataLoader], optional
-                The data generator to use for evaluation.
-                by default None
-            compute_metrics: Optional[bool], optional
-                Whether to compute metrics defined by Model class or not.
-                by default None
-        """
 
         mock_dataset = DatasetMock()
         hf_model = HFWrapper(model)
@@ -90,8 +105,8 @@ class Trainer(BaseTrainer):
         )
 
         self.compute_metrics = compute_metrics
-        self.train_dataset = train_dataset_or_path
-        self.eval_dataset = eval_dataset_or_path
+        self.train_dataset_or_path = train_dataset_or_path
+        self.eval_dataset_or_path = eval_dataset_or_path
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
         self.schema = schema
@@ -109,7 +124,7 @@ class Trainer(BaseTrainer):
         assert self.schema is not None, "schema is required to generate Train Dataloader"
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
-            self.train_dataset,
+            self.train_dataset_or_path,
             self.args.per_device_train_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
@@ -133,7 +148,7 @@ class Trainer(BaseTrainer):
         assert self.schema is not None, "schema is required to generate Eval Dataloader"
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
-            self.eval_dataset,
+            self.eval_dataset_or_path,
             self.args.per_device_eval_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
@@ -190,22 +205,24 @@ class Trainer(BaseTrainer):
     ):
         """
         Unified API to get any scheduler from its name.
-        Args:
-            name (:obj:`str` or `:obj:`SchedulerType`):
-                The name of the scheduler to use.
-            optimizer (:obj:`torch.optim.Optimizer`):
-                The optimizer that will be used during training.
-            num_warmup_steps (:obj:`int`, `optional`):
-                The number of warmup steps to do. This is not required by all schedulers
-                (hence the argument being optional),
-                the function will raise an error if it's unset and the scheduler type requires it.
-            num_training_steps (:obj:`int`, `optional`):
-                The number of training steps to do. This is not required by all schedulers
-                (hence the argument being optional),
-                the function will raise an error if it's unset and the scheduler type requires it.
-            num_cycles: (:obj:`int`, `optional`):
-                The number of waves in the cosine schedule /
-                hard restarts to use for cosine scheduler
+
+        Parameters
+        ----------
+        name: (:obj:`str` or `:obj:`SchedulerType`)
+            The name of the scheduler to use.
+        optimizer: (:obj:`torch.optim.Optimizer`)
+            The optimizer that will be used during training.
+        num_warmup_steps: (:obj:`int`, `optional`)
+            The number of warmup steps to do. This is not required by all schedulers
+            (hence the argument being optional),
+            the function will raise an error if it's unset and the scheduler type requires it.
+        num_training_steps: (:obj:`int`, `optional`)
+            The number of training steps to do. This is not required by all schedulers
+            (hence the argument being optional),
+            the function will raise an error if it's unset and the scheduler type requires it.
+        num_cycles: (:obj:`int`, `optional`)
+            The number of waves in the cosine schedule /
+            hard restarts to use for cosine scheduler
         """
         name = SchedulerType(name)
         schedule_func = TYPE_TO_SCHEDULER_FUNCTION[name]
@@ -294,8 +311,8 @@ class Trainer(BaseTrainer):
         to log with the outputs of the model
         (e.g. prediction scores, prediction metadata, attention weights)
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         dataloader: DataLoader
             DataLoader object to use to iterate over evaluation data
         description: str
@@ -382,7 +399,7 @@ class Trainer(BaseTrainer):
             metrics_results_detailed = None
             if self.compute_metrics:
                 metrics_results_detailed = model.module.calculate_metrics(
-                    inputs, labels, mode=metric_key_prefix
+                    preds, labels, mode=metric_key_prefix, forward=False, call_body=False
                 )
 
             # Update containers on host
@@ -527,7 +544,7 @@ class Trainer(BaseTrainer):
         """
         Save the serialized model + trainer and random states.
 
-        Parameters:
+        Parameters
         ----------
         save_model_class: Optioanl[bool]
             Wether to save the Model class or not.
@@ -563,12 +580,12 @@ class Trainer(BaseTrainer):
         It does not loads the optimizer and LR scheduler states (for that call trainer.train()
         with resume_from_checkpoint argument for a complete load)
 
-        Parameters:
+        Parameters
         ----------
-            checkpoint_path: str
-                Path to the checkpoint directory.
-            model: Optional[Model]
-                Model class used by Trainer. by default None
+        checkpoint_path: str
+            Path to the checkpoint directory.
+        model: Optional[Model]
+            Model class used by Trainer. by default None
         """
         import os
 
@@ -617,23 +634,23 @@ class Trainer(BaseTrainer):
         """
         If --log_predictions is enabled, calls a callback function to
         log predicted item ids, scores, metadata and metrics.
-        Parameters:
+        Parameters
         ----------
-            labels: torch.Tensor
-                True labels.
-            pred_item_ids: torch.Tensor
-                The predicted items ids. if top_k is set:
-                we return to top-k items for each
-                next-item prediction.
-            pred_item_scores: torch.Tensor
-                The prediction scores, if top_k is set:
-                we return to top-k predictions for each
-                next-item prediction.
-            metrics: Dict[str, np.ndarray]
-                Dictionary of metrics computed by Model.
-            metric_key_prefix: str
-                Prefix to use when logging evaluation metrics.
-                by default `eval`
+        labels: torch.Tensor
+            True labels.
+        pred_item_ids: torch.Tensor
+            The predicted items ids. if top_k is set:
+            we return to top-k items for each
+            next-item prediction.
+        pred_item_scores: torch.Tensor
+            The prediction scores, if top_k is set:
+            we return to top-k predictions for each
+            next-item prediction.
+        metrics: Dict[str, np.ndarray]
+            Dictionary of metrics computed by Model.
+        metric_key_prefix: str
+            Prefix to use when logging evaluation metrics.
+            by default `eval`
         """
         # TODO Add pred_metadata: Dict[str, torch.Tensor],
 

@@ -41,7 +41,6 @@ MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class MaskSequence(OutputSizeMixin, torch.nn.Module):
     """Base class to prepare masked items inputs/labels for language modeling tasks.
-    Parameters
 
     Transformer architectures can be trained in different ways. Depending of the training method,
     there is a specific masking schema. The masking schema sets the items to be predicted (labels)
@@ -56,6 +55,7 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 
     This class can be extended to add different a masking scheme.
 
+    Parameters
     ----------
     hidden_size:
         The hidden dimension of input tensors, needed to initialize trainable vector of
@@ -220,7 +220,7 @@ class CausalLanguageModeling(MaskSequence):
     In Causal Language Modeling (clm) you predict the next item based on past positions of the
     sequence. Future positions are masked.
 
-    Parameters:
+    Parameters
     ----------
     {mask_sequence_parameters}
     train_on_last_item_seq_only: predict only last item during training
@@ -292,8 +292,8 @@ class MaskedLanguageModeling(MaskSequence):
     During inference, all past items are visible for the Transformer layer, which tries to predict
     the next item.
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
     {mask_sequence_parameters}
     mlm_probability: Optional[float], default = 0.15
         Probability of an item to be selected (masked) as a label of the given sequence.
@@ -322,8 +322,8 @@ class MaskedLanguageModeling(MaskSequence):
         Prepare sequence with mask schema for masked language modeling prediction
         the function is based on HuggingFace's transformers/data/data_collator.py
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         item_ids: torch.Tensor
             Sequence of input itemid (target) column
 
@@ -396,7 +396,7 @@ class PermutationLanguageModeling(MaskSequence):
     In Permutation Language Modeling (plm) you use a permutation factorization at the level of the
     self-attention layer to define the accessible bidirectional context.
 
-    Parameters:
+    Parameters
     ----------
     {mask_sequence_parameters}
     max_span_length: int
@@ -440,8 +440,8 @@ class PermutationLanguageModeling(MaskSequence):
         Prepare the attention masks needed for permutation language modeling
         The function is based on HuggingFace's transformers/data/data_collator.py
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         item_ids: torch.Tensor
             Sequence of input itemid (target) column.
 
@@ -619,7 +619,7 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
     to classify whether the item at each position belongs or not to the original sequence.
     The generator-discriminator architecture was jointly trained using Masked LM and RTD tasks.
 
-    Parameters:
+    Parameters
     ----------
     {mask_sequence_parameters}
     sample_from_batch: bool
