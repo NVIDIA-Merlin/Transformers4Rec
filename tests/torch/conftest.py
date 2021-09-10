@@ -192,7 +192,8 @@ def schema_like_generator(schema_file, lists_as_sequence_features):
                     list_length = (
                         session_length if lists_as_sequence_features else feature.value_count.max
                     )
-                    row = pytorch.randint(max_num, (list_length,))
+                    row = pytorch.randint(1, max_num, (list_length,))
+
                 else:
                     row = pytorch.randint(max_num, (1,))
             else:
