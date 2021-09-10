@@ -34,22 +34,22 @@ def save_time_based_splits(
     Note, this function requires Rapids dependencies to be installed:
     cudf, cupy and dask_cudf
 
-    Parameters:
+    Parameters
     -----
-        data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
-            Dataset to split into time-based splits.
-        output_dir: str
-            Output path the save the time-based splits.
-        partition_col: str
-            Time-column to partition the data on.
-        timestamp_col: str
-            Timestamp column to use to sort each split.
-        test_size: float
-            Size of the test split, needs to be a number between 0.0 & 1.0.
-        val_size: float
-            Size of the validation split, needs to be a number between 0.0 & 1.0.
-        overwrite: bool
-            Whether or not to overwrite the output_dir if it already exists.
+    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+        Dataset to split into time-based splits.
+    output_dir: str
+        Output path the save the time-based splits.
+    partition_col: str
+        Time-column to partition the data on.
+    timestamp_col: str
+        Timestamp column to use to sort each split.
+    test_size: float
+        Size of the test split, needs to be a number between 0.0 & 1.0.
+    val_size: float
+        Size of the validation split, needs to be a number between 0.0 & 1.0.
+    overwrite: bool
+        Whether or not to overwrite the output_dir if it already exists.
     """
 
     try:

@@ -258,7 +258,7 @@ class RegressionTask(PredictionTask):
 class NextItemPredictionTask(PredictionTask):
     """Next-item prediction task.
 
-    Parameters:
+    Parameters
     ----------
     loss: torch.nn.Module
         Loss function to use. Defaults to NLLLos.
@@ -469,8 +469,8 @@ class _NextItemPredictionTask(torch.nn.Module):
     - During training, the class supports the following Language modeling tasks:
         Causal LM, Masked LM, Permutation LM and Replacement Token Detection
 
-    Parameters:
-    -----------
+    Parameters
+    ----------
         input_size: int
             Input size of this module.
         target_dim: int

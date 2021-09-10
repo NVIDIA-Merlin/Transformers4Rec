@@ -97,10 +97,11 @@ if dependencies.is_pyarrow_available():
         def set_dataset(self, cols_to_read):
             """
             set the Parquet dataset
-            Args:
-            ------
-                cols_to_read: str
-                    The list of features names to load
+
+            Parameters
+            ----------
+            cols_to_read: str
+                The list of features names to load
             """
 
             if isinstance(self.paths_or_dataset, ParquetDataset):
@@ -132,17 +133,18 @@ if dependencies.is_pyarrow_available():
             **kwargs,
         ):
             """
-               Instantitates ``PyarrowDataLoader`` from a ``DatasetSchema``.
+            Instantiates ``PyarrowDataLoader`` from a ``DatasetSchema``.
+
             Parameters
             ----------
-                schema: DatasetSchema
-                    Dataset schema
-                paths_or_dataset: Union[str, Dataset]
-                    Path to paquet data of Dataset object.
-                batch_size: int
-                    batch size of Dataloader.
-                max_sequence_length: int
-                    The maximum length of list features.
+            schema: DatasetSchema
+                Dataset schema
+            paths_or_dataset: Union[str, Dataset]
+                Path to paquet data of Dataset object.
+            batch_size: int
+                batch size of Dataloader.
+            max_sequence_length: int
+                The maximum length of list features.
             """
 
             categorical_features = (
