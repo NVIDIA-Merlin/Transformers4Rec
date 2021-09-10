@@ -51,7 +51,7 @@ input_module = torch_rec.TabularSequenceFeatures.from_schema(
     tr.DatasetSchema.from_proto(SCHEMA_PATH),
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
-    aggregation="sequential-concat",
+    aggregation="concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks
@@ -77,7 +77,7 @@ input_module = tf_rec.TabularSequenceFeatures.from_schema(
     tr.DatasetSchema.from_proto(SCHEMA_PATH),
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
-    aggregation="sequential-concat",
+    aggregation="concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks

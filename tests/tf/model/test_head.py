@@ -31,14 +31,14 @@ def assert_loss_and_metrics_are_valid(head, inputs, targets):
 @pytest.mark.parametrize(
     "prediction_task", [tf4rec.BinaryClassificationTask, tf4rec.RegressionTask]
 )
-def test_simple_heads(tf_yoochoose_tabular_features, tf_yoochoose_like, prediction_task):
+def test_simple_heads(tf_tabular_features, tf_tabular_data, prediction_task):
     targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
 
-    body = tf4rec.SequentialBlock([tf_yoochoose_tabular_features, tf4rec.MLPBlock([64])])
+    body = tf4rec.SequentialBlock([tf_tabular_features, tf4rec.MLPBlock([64])])
     task = prediction_task("target")
-    head = task.to_head(body, tf_yoochoose_tabular_features)
+    head = task.to_head(body, tf_tabular_features)
 
-    assert_loss_and_metrics_are_valid(head, tf_yoochoose_like, targets)
+    assert_loss_and_metrics_are_valid(head, tf_tabular_data, targets)
 
 
 @pytest.mark.parametrize("task", [tf4rec.BinaryClassificationTask, tf4rec.RegressionTask])
@@ -71,13 +71,13 @@ def test_simple_heads_on_sequence(
         },
     ],
 )
-def test_head_with_multiple_tasks(tf_yoochoose_tabular_features, tf_yoochoose_like, task_blocks):
+def test_head_with_multiple_tasks(tf_tabular_features, tf_tabular_data, task_blocks):
     targets = {
         "classification": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32),
         "regression": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32),
     }
 
-    body = tf4rec.SequentialBlock([tf_yoochoose_tabular_features, tf4rec.MLPBlock([64])])
+    body = tf4rec.SequentialBlock([tf_tabular_features, tf4rec.MLPBlock([64])])
     tasks = [
         tf4rec.BinaryClassificationTask("classification"),
         tf4rec.RegressionTask("regression"),
@@ -86,7 +86,7 @@ def test_head_with_multiple_tasks(tf_yoochoose_tabular_features, tf_yoochoose_li
     model = tf4rec.Model(head)
     model.compile(optimizer="adam")
 
-    step = model.train_step((tf_yoochoose_like, targets))
+    step = model.train_step((tf_tabular_data, targets))
 
     # assert 0 <= step["loss"] <= 1 # test failing with loss greater than 1
     assert step["loss"] >= 0

@@ -44,7 +44,8 @@ def test_embedding_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
     assert list(embeddings.keys()) == schema.column_names
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
     assert emb_module.item_id == "item_id/list"
-    assert emb_module.item_embedding_table.shape[0] == 51997
+    max_value = schema.select_by_name("item_id/list").feature[0].int_domain.max
+    assert emb_module.item_embedding_table.shape[0] == max_value + 1
 
 
 def test_serialization_embedding_features(yoochoose_schema, tf_yoochoose_like):

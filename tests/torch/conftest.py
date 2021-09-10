@@ -167,7 +167,7 @@ def torch_yoochoose_next_item_prediction_model(torch_yoochoose_tabular_transform
     return model
 
 
-def schema_like_generator(schema_file, lists_as_session_features):
+def schema_like_generator(schema_file, lists_as_sequence_features):
     NUM_ROWS = 100
     DEFAULT_MAX_INT = 100
     MAX_LIST_LENGTH = 20
@@ -177,7 +177,7 @@ def schema_like_generator(schema_file, lists_as_session_features):
     data = {}
 
     for i in range(NUM_ROWS):
-        if lists_as_session_features:
+        if lists_as_sequence_features:
             session_length = random.randint(2, MAX_LIST_LENGTH)
 
         for feature in schema.feature:
@@ -190,7 +190,7 @@ def schema_like_generator(schema_file, lists_as_session_features):
                     max_num = feature.int_domain.max
                 if is_list_feature:
                     list_length = (
-                        session_length if lists_as_session_features else feature.value_count.max
+                        session_length if lists_as_sequence_features else feature.value_count.max
                     )
                     row = pytorch.randint(max_num, (list_length,))
                 else:
@@ -198,7 +198,7 @@ def schema_like_generator(schema_file, lists_as_session_features):
             else:
                 if is_list_feature:
                     list_length = (
-                        session_length if lists_as_session_features else feature.value_count.max
+                        session_length if lists_as_sequence_features else feature.value_count.max
                     )
                     row = pytorch.rand((list_length,))
                 else:
@@ -235,14 +235,14 @@ def schema_like_generator(schema_file, lists_as_session_features):
 
 
 @pytest.fixture
-def torch_yoochoose_like(yoochoose_schema_file):
-    return schema_like_generator(yoochoose_schema_file, lists_as_session_features=True)
+def torch_tabular_data(tabular_schema_file):
+    outputs = schema_like_generator(tabular_schema_file, lists_as_sequence_features=False)
+    return outputs
 
 
 @pytest.fixture
-def torch_tabular_data(tabular_schema_file):
-    outputs = schema_like_generator(tabular_schema_file, lists_as_session_features=False)
-    return outputs
+def torch_yoochoose_like(yoochoose_schema_file):
+    return schema_like_generator(yoochoose_schema_file, lists_as_sequence_features=True)
 
 
 def _pull_values_offsets(values_offset):

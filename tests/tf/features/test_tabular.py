@@ -22,44 +22,46 @@ from tests.tf import _utils as test_utils
 tf4rec = pytest.importorskip("transformers4rec.tf")
 
 
-def test_tabular_features(yoochoose_schema, tf_yoochoose_like):
-    tab_module = tf4rec.TabularFeatures.from_schema(yoochoose_schema)
+def test_tabular_features(tabular_schema, tf_tabular_data):
+    tab_module = tf4rec.TabularFeatures.from_schema(tabular_schema)
 
-    outputs = tab_module(tf_yoochoose_like)
+    outputs = tab_module(tf_tabular_data)
 
     assert set(outputs.keys()) == set(
-        yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_names
-        + yoochoose_schema.select_by_tag(Tag.CATEGORICAL).column_names
+        tabular_schema.select_by_tag(Tag.CONTINUOUS).column_names
+        + tabular_schema.select_by_tag(Tag.CATEGORICAL).column_names
     )
 
 
-def test_serialization_tabular_features(yoochoose_schema, tf_yoochoose_like):
-    inputs = tf4rec.TabularFeatures.from_schema(yoochoose_schema)
+def test_serialization_tabular_features(tabular_schema):
+    inputs = tf4rec.TabularFeatures.from_schema(tabular_schema)
 
     copy_layer = test_utils.assert_serialization(inputs)
 
     assert list(inputs.to_merge.keys()) == list(copy_layer.to_merge.keys())
 
 
-def test_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
-    tab_module = tf4rec.TabularFeatures.from_schema(yoochoose_schema, continuous_projection=64)
+def test_tabular_features_with_projection(tabular_schema, tf_tabular_data):
+    schema = tabular_schema
+    tab_module = tf4rec.TabularFeatures.from_schema(tabular_schema, continuous_projection=64)
 
-    outputs = tab_module(tf_yoochoose_like)
+    outputs = tab_module(tf_tabular_data)
+    continuous_feature_names = schema.select_by_tag(Tag.CONTINUOUS).column_names
 
-    assert len(outputs.keys()) == 3
-    assert all(len(tensor.shape) == 2 for tensor in outputs.values())
-    assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
+    assert len(set(continuous_feature_names).intersection(set(outputs.keys()))) == 0
+    assert "continuous_projection" in outputs
+    assert list(outputs["continuous_projection"].shape)[1] == 64
 
 
 @test_utils.mark_run_eagerly_modes
 @pytest.mark.parametrize("continuous_projection", [None, 128])
 def test_tabular_features_yoochoose_model(
-    yoochoose_schema, tf_yoochoose_like, run_eagerly, continuous_projection
+    tabular_schema, tf_tabular_data, run_eagerly, continuous_projection
 ):
     inputs = tf4rec.TabularFeatures.from_schema(
-        yoochoose_schema, continuous_projection=continuous_projection, aggregation="concat"
+        tabular_schema, continuous_projection=continuous_projection, aggregation="concat"
     )
 
     body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
 
-    test_utils.assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
+    test_utils.assert_body_works_in_model(tf_tabular_data, inputs, body, run_eagerly)
