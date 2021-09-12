@@ -28,10 +28,20 @@ def test_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
 
     outputs = emb_module(tf_yoochoose_like)
 
-    assert list(outputs.keys()) == schema.select_by_tag(Tag.CATEGORICAL).column_names
-    assert all(len(tensor.shape) == 3 for tensor in list(outputs.values()))
-    assert all(tensor.shape[1] == 20 for tensor in list(outputs.values()))
-    assert all(tensor.shape[2] == 64 for tensor in list(outputs.values()))
+    categ_schema = schema.select_by_tag(Tag.CATEGORICAL)
+    assert list(outputs.keys()) == categ_schema.column_names
+
+    sequential_categ_cols = categ_schema.select_by_tag(Tag.LIST).column_names
+
+    for k in categ_schema.column_names:
+        tensor = outputs[k]
+        if k in sequential_categ_cols:
+            assert len(tensor.shape) == 3
+            assert tensor.shape[1] == 20
+            assert tensor.shape[2] == 64
+        else:
+            assert len(tensor.shape) == 2
+            assert tensor.shape[1] == 64
 
 
 def test_serialization_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
@@ -99,7 +109,7 @@ def test_tabular_features_yoochoose_direct(
     tab_seq_features = tr.TabularSequenceFeatures(
         continuous_layer=continuous_layer,
         categorical_layer=categorical_layer,
-        aggregation="sequential-concat",
+        aggregation="concat",
     )
     outputs = tab_seq_features(tf_yoochoose_like)
 

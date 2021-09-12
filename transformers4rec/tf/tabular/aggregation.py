@@ -26,6 +26,7 @@ from .tabular import TabularAggregation, tabular_aggregation_registry
 # pylint: disable=no-value-for-parameter, unexpected-keyword-arg
 
 
+@tabular_aggregation_registry.register("concat")
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ConcatFeatures(TabularAggregation):
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
@@ -39,9 +40,9 @@ class ConcatFeatures(TabularAggregation):
 
         return tf.concat(tensors, axis=-1)
 
-    def compute_output_shape(self, input_size):
-        agg_dim = (sum([i[-1] for i in input_size.values()]),)
-        output_size = self._get_agg_output_size(input_size, agg_dim)
+    def compute_output_shape(self, input_shapes):
+        agg_dim = sum([i[-1] for i in input_shapes.values()])
+        output_size = self._get_agg_output_size(input_shapes, agg_dim)
         return output_size
 
 
@@ -51,7 +52,6 @@ class StackFeatures(TabularAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.axis = axis
-        self.flatten = tf.keras.layers.Flatten()
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         self._maybe_expand_non_sequential_features(inputs)
@@ -78,7 +78,7 @@ class StackFeatures(TabularAggregation):
 
 class ElementwiseFeatureAggregation(TabularAggregation):
     def _check_input_shapes_equal(self, inputs):
-        all_input_shapes_equal = len(set([x.shape for x in inputs.values()])) == 1
+        all_input_shapes_equal = len(set([tuple(x.shape) for x in inputs.values()])) == 1
         if not all_input_shapes_equal:
             raise ValueError(
                 "The shapes of all input features are not equal, which is required for element-wise"
