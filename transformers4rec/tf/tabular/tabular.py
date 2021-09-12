@@ -84,7 +84,7 @@ class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC)
 
     def _check_concat_shapes(self, inputs: TabularData):
         input_sizes = {k: v.shape for k, v in inputs.items()}
-        if len(set(list([v[:-1] for v in input_sizes.values()]))) > 1:
+        if len(set([tuple(v[:-1]) for v in input_sizes.values()])) > 1:
             raise Exception(
                 "All features dimensions except the last one must match: {}".format(input_sizes)
             )

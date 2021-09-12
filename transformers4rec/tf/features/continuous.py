@@ -63,7 +63,11 @@ class ContinuousFeatures(InputBlock):
         return cont_features
 
     def compute_call_output_shape(self, input_shapes):
-        return self.filter_features.compute_output_shape(input_shapes)
+        cont_features_sizes = self.filter_features.compute_output_shape(input_shapes)
+        cont_features_sizes = {
+            k: tf.TensorShape(list(v) + [1]) for k, v in cont_features_sizes.items()
+        }
+        return cont_features_sizes
 
     def get_config(self):
         config = super().get_config()

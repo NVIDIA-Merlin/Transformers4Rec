@@ -142,8 +142,8 @@ def schema_like_generator(schema_file, lists_as_sequence_features):
 
 
 @pytest.fixture
-def tf_tabular_data(tabular_schema):
-    return schema_like_generator(tabular_schema, lists_as_sequence_features=False)
+def tf_tabular_data(tabular_schema_file):
+    return schema_like_generator(tabular_schema_file, lists_as_sequence_features=False)
 
 
 @pytest.fixture
