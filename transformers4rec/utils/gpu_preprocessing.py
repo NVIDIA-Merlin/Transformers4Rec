@@ -82,17 +82,22 @@ def save_time_based_splits(
             split_name = d.replace(f"{partition_col[0]}=", "")
             out_dir = os.path.join(output_dir, split_name)
             os.makedirs(out_dir, exist_ok=True)
-            df.to_parquet(os.path.join(out_dir, "train.parquet"))
 
             cupy.random.seed(1)
             random_values = cupy.random.rand(len(df))
+            train_size = 1 - val_size - test_size
 
-            # Extracts 10% for valid and test set.
-            # Those sessions are also in the train set, but as evaluation
-            # happens only for the subsequent day of training,
-            # that is not an issue, and we can keep the train set larger.
-            valid_set = df[random_values <= val_size]
+            if train_size < 0:
+                raise ValueError("train_size cannot be negative.")
+
+            # Extracts 80% , 10%  and 10% for train, valid and test set, respectively.
+            train_set = df[random_values <= train_size]
+            train_set.to_parquet(os.path.join(out_dir, "train.parquet"))
+
+            valid_set = df[
+                (random_values > train_size) & (random_values <= (train_size + val_size))
+            ]
             valid_set.to_parquet(os.path.join(out_dir, "valid.parquet"))
 
-            test_set = df[random_values >= 1 - test_size]
+            test_set = df[random_values > (1 - test_size)]
             test_set.to_parquet(os.path.join(out_dir, "test.parquet"))
