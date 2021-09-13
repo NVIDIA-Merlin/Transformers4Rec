@@ -1,12 +1,31 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import pathlib
 import random
 
+import numpy as np
 import pytest
+from tensorflow_metadata.proto.v0 import schema_pb2
 
-from transformers4rec.utils.schema import DatasetSchema
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
 
 tf = pytest.importorskip("tensorflow")
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
 
 NUM_EXAMPLES = 1000
 MAX_CARDINALITY = 100
@@ -37,7 +56,7 @@ def tf_cat_features():
 
 @pytest.fixture
 def tf_yoochoose_tabular_features(yoochoose_schema):
-    return tf4rec.TabularFeatures.from_schema(
+    return tr.TabularFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
@@ -47,7 +66,7 @@ def tf_yoochoose_tabular_features(yoochoose_schema):
 
 @pytest.fixture
 def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
-    return tf4rec.TabularSequenceFeatures.from_schema(
+    return tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
@@ -65,15 +84,16 @@ def tf_yoochoose_like():
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
 
-    schema = DatasetSchema.read_schema(str(schema_file))
+    schema = proto_text_to_better_proto(Schema(), str(schema_file), schema_pb2.Schema())
+    schema = schema.remove_by_name(["session_id", "session_start", "day_idx"])
     data = {}
 
     for i in range(NUM_ROWS):
         session_length = random.randint(5, MAX_SESSION_LENGTH)
 
-        for feature in schema.feature[2:]:
-            is_session_feature = feature.HasField("value_count")
-            is_int_feature = feature.HasField("int_domain")
+        for feature in schema.feature:
+            is_session_feature = has_field(feature, "value_count")
+            is_int_feature = has_field(feature, "int_domain")
 
             if is_int_feature:
                 max_num = MAX_CARDINALITY
@@ -159,3 +179,27 @@ def _get_sparse_tensor(values, indices, num_rows, seq_limit):
     )
 
     return tf.sparse.to_dense(sparse_tensor)
+
+
+@pytest.fixture
+def tf_masking_inputs():
+    # fixed parameters for tests
+    NUM_EXAMPLES = 20
+    MAX_LEN = 10
+    PAD_TOKEN = 0
+    hidden_dim = 16
+    features = {}
+    # generate random tensors for test
+    features["input_tensor"] = tf.convert_to_tensor(
+        np.random.uniform(0, 1, (NUM_EXAMPLES, MAX_LEN, hidden_dim))
+    )
+    # create sequences
+    labels = np.random.randint(1, MAX_CARDINALITY, (NUM_EXAMPLES, MAX_LEN))
+    # replace last 2 items by zeros to mimic padding
+    labels[:, MAX_LEN - 2 :] = 0
+    labels = tf.convert_to_tensor(labels)
+    features["labels"] = labels
+    features["padding_idx"] = PAD_TOKEN
+    features["vocab_size"] = MAX_CARDINALITY
+
+    return features

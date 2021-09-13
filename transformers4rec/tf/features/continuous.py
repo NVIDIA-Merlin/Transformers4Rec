@@ -1,21 +1,56 @@
-from typing import List
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
-from ..tabular import FilterFeatures
-from .base import InputLayer
+from typing import List, Optional
+
+import tensorflow as tf
+
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..typing import TabularAggregationType, TabularTransformationType
+from .base import InputBlock
 
 
-class ContinuousFeatures(InputLayer):
+@docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING)
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
+class ContinuousFeatures(InputBlock):
+    """Input block for continuous features.
+
+    Parameters
+    ----------
+    features: List[str]
+        List of continuous features to include in this module.
+    {tabular_module_parameters}
+    """
+
     def __init__(
         self,
-        features,
-        aggregation=None,
-        trainable=True,
-        name=None,
-        dtype=None,
-        dynamic=False,
+        features: List[str],
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[Schema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
-        super().__init__(aggregation, trainable, name, dtype, dynamic, **kwargs)
+        super().__init__(
+            pre=pre, post=post, aggregation=aggregation, schema=schema, name=name, **kwargs
+        )
         self.filter_features = FilterFeatures(features)
 
     @classmethod
@@ -25,10 +60,15 @@ class ContinuousFeatures(InputLayer):
     def call(self, inputs, *args, **kwargs):
         return self.filter_features(inputs)
 
-    def compute_output_shape(self, input_shapes):
-        filtered = self.filter_features.compute_output_shape(input_shapes)
+    def compute_call_output_shape(self, input_shapes):
+        return self.filter_features.compute_output_shape(input_shapes)
 
-        return super(ContinuousFeatures, self).compute_output_shape(filtered)
+    def get_config(self):
+        config = super().get_config()
+
+        config["features"] = self.filter_features.to_include
+
+        return config
 
     def _get_name(self):
         return "ContinuousFeatures"

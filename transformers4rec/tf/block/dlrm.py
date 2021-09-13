@@ -1,12 +1,28 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from typing import List, Optional, Union
 
 import tensorflow as tf
 
-from ...types import DatasetSchema
-from ...utils.schema import Tag
-from .. import tabular
+from merlin_standard_lib import Schema, Tag
+
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
+from ..tabular.tabular import TabularBlock
 from .base import Block, BlockType
 
 
@@ -18,7 +34,7 @@ class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
 class DLRMBlock(Block):
     def __init__(
         self,
-        continuous_features: Union[List[str], DatasetSchema, tabular.TabularLayer],
+        continuous_features: Union[List[str], Schema, TabularBlock],
         embedding_layer: EmbeddingFeatures,
         bottom_mlp: BlockType,
         top_mlp: Optional[BlockType] = None,
@@ -31,7 +47,7 @@ class DLRMBlock(Block):
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
 
-        if isinstance(continuous_features, DatasetSchema):
+        if isinstance(continuous_features, Schema):
             continuous_features = ContinuousFeatures.from_schema(
                 continuous_features, aggregation="concat"
             )
@@ -59,11 +75,7 @@ class DLRMBlock(Block):
 
     @classmethod
     def from_schema(
-        cls,
-        schema: DatasetSchema,
-        bottom_mlp: BlockType,
-        top_mlp: Optional[BlockType] = None,
-        **kwargs
+        cls, schema: Schema, bottom_mlp: BlockType, top_mlp: Optional[BlockType] = None, **kwargs
     ):
         embedding_layer = EmbeddingFeatures.from_schema(
             schema.select_by_tag(Tag.CATEGORICAL),

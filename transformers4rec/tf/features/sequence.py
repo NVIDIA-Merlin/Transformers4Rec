@@ -1,87 +1,166 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from typing import Dict, Optional
 
 import tensorflow as tf
-from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig
 
-from ...types import DatasetSchema, Tag
+from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import masking_registry
-from ..tabular import AsTabular, TabularLayer
-from .embedding import EmbeddingFeatures
-from .tabular import TabularFeatures
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, TabularBlock
+from ..typing import Block, MaskSequence, TabularAggregationType, TabularTransformationType
+from ..utils import tf_utils
+from . import embedding
+from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
 
-class SequentialEmbeddingFeatures(EmbeddingFeatures):
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    embedding_features_parameters=embedding.EMBEDDING_FEATURES_PARAMS_DOCSTRING,
+)
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
+class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
+    """Input block for embedding-lookups for categorical features. This module produces 3-D tensors,
+    this is useful for sequential models like transformers.
+
+    Parameters
+    ----------
+    {embedding_features_parameters}
+    padding_idx: int
+        The symbol to use for padding.
+    {tabular_module_parameters}
+    """
+
     def __init__(
         self,
-        feature_config: Dict[str, FeatureConfig],
-        item_id=None,
-        mask_zero=True,
+        feature_config: Dict[str, embedding.FeatureConfig],
+        item_id: Optional[str] = None,
+        mask_zero: bool = True,
         padding_idx: int = 0,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[Schema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
-        super().__init__(feature_config, item_id, **kwargs)
+        super().__init__(
+            feature_config,
+            item_id=item_id,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            schema=schema,
+            name=name,
+            **kwargs,
+        )
         self.padding_idx = padding_idx
         self.mask_zero = mask_zero
 
     def lookup_feature(self, name, val, **kwargs):
-        return super(SequentialEmbeddingFeatures, self).lookup_feature(
+        return super(SequenceEmbeddingFeatures, self).lookup_feature(
             name, val, output_sequence=True
         )
 
-    def compute_output_shape(self, input_shapes):
-        input_shapes = self.filter_features.compute_output_shape(input_shapes)
-
+    def compute_call_output_shape(self, input_shapes):
         batch_size = self.calculate_batch_size_from_input_shapes(input_shapes)
-        sequence_length = input_shapes[list(self.embeddings.keys())[0]][1]
-        output_shapes = {}
+        sequence_length = input_shapes[list(self.feature_config.keys())[0]][1]
 
+        output_shapes = {}
         for name, val in input_shapes.items():
             output_shapes[name] = tf.TensorShape(
-                [batch_size, sequence_length, self.embeddings[name].table.dim]
+                [batch_size, sequence_length, self.feature_config[name].table.dim]
             )
 
-        return TabularLayer.compute_output_shape(self, output_shapes)
+        return output_shapes
 
     def compute_mask(self, inputs, mask=None):
         if not self.mask_zero:
             return None
-        filtered_inputs = self.filter_features(inputs)
-
         outputs = {}
-        for key, val in filtered_inputs.items():
+        for key, val in inputs.items():
             outputs[key] = tf.not_equal(val, self.padding_idx)
 
         return outputs
 
+    def get_config(self):
+        config = super().get_config()
+        config["mask_zero"] = self.mask_zero
+        config["padding_idx"] = self.padding_idx
 
+        return config
+
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
+)
 class TabularSequenceFeatures(TabularFeatures):
-    EMBEDDING_MODULE_CLASS = SequentialEmbeddingFeatures
+    """Input module that combines different types of features to a sequence: continuous,
+    categorical & text.
+
+    Parameters
+    ----------
+    {tabular_features_parameters}
+    projection_module: BlockOrModule, optional
+        Module that's used to project the output of this module, typically done by an MLPBlock.
+    masking: MaskSequence, optional
+         Masking to apply to the inputs.
+    {tabular_module_parameters}
+
+    """
+
+    EMBEDDING_MODULE_CLASS = SequenceEmbeddingFeatures
 
     def __init__(
         self,
-        continuous_layer=None,
-        categorical_layer=None,
-        text_embedding_layer=None,
-        projection_module=None,
-        masking=None,
-        aggregation=None,
+        continuous_layer: Optional[TabularBlock] = None,
+        categorical_layer: Optional[TabularBlock] = None,
+        text_embedding_layer: Optional[TabularBlock] = None,
+        projection_block: Optional[Block] = None,
+        masking: Optional[MaskSequence] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        name=None,
         **kwargs
     ):
         super().__init__(
-            continuous_layer, categorical_layer, text_embedding_layer, aggregation, **kwargs
+            continuous_layer=continuous_layer,
+            categorical_layer=categorical_layer,
+            text_embedding_layer=text_embedding_layer,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            name=name,
+            **kwargs,
         )
-        self.projection_module = projection_module
-        if masking:
-            self.masking = masking
+        self.projection_block = projection_block
+        self.set_masking(masking)
 
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
-        continuous_tags=Tag.CONTINUOUS,
-        categorical_tags=Tag.CATEGORICAL,
+        schema: Schema,
+        continuous_tags=(Tag.CONTINUOUS,),
+        categorical_tags=(Tag.CATEGORICAL,),
         aggregation=None,
         max_sequence_length=None,
         continuous_projection=None,
@@ -135,27 +214,26 @@ class TabularSequenceFeatures(TabularFeatures):
             aggregation=aggregation,
             max_sequence_length=max_sequence_length,
             continuous_projection=continuous_projection,
-            # continuous_soft_embeddings_shape=,
-            **kwargs
+            **kwargs,
         )
         if d_output and projection:
             raise ValueError("You cannot specify both d_output and projection at the same time")
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
-            output.set_aggregation("sequential_concat")
+            output.set_aggregation("sequential-concat")
         # hidden_size = output.output_size()
 
         if d_output and not projection:
             projection = MLPBlock([d_output])
 
         if projection:
-            output.projection_module = projection
+            output.projection_block = projection
 
         if isinstance(masking, str):
             masking = masking_registry.parse(masking)(**kwargs)
         if masking and not getattr(output, "item_id", None):
             raise ValueError("For masking a categorical_module is required including an item_id.")
-        output.masking = masking
+        output.set_masking(masking)
 
         return output
 
@@ -164,7 +242,7 @@ class TabularSequenceFeatures(TabularFeatures):
             dimensions = [dimensions]
 
         continuous = self.continuous_layer
-        continuous.set_aggregation("sequential_concat")
+        continuous.set_aggregation("sequential-concat")
 
         continuous = SequentialBlock(
             [continuous, MLPBlock(dimensions), AsTabular("continuous_projection")]
@@ -177,29 +255,32 @@ class TabularSequenceFeatures(TabularFeatures):
     def call(self, inputs, training=True):
         outputs = super(TabularSequenceFeatures, self).call(inputs)
 
-        if self.masking or self.projection_module:
+        if self.masking or self.projection_block:
             outputs = self.aggregation(outputs)
 
-        if self.projection_module:
-            outputs = self.projection_module(outputs)
+        if self.projection_block:
+            outputs = self.projection_block(outputs)
 
         if self.masking:
             outputs = self.masking(
-                outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
+                outputs, item_ids=self.to_merge["categorical_layer"].item_seq, training=training
             )
 
         return outputs
 
-    def compute_output_shape(self, input_shape):
+    def compute_call_output_shape(self, input_shape):
         output_shapes = {}
 
         for layer in self.merge_values:
             output_shapes.update(layer.compute_output_shape(input_shape))
 
-        output_shapes = TabularLayer.compute_output_shape(self, output_shapes)
+        return output_shapes
 
-        if self.projection_module:
-            output_shapes = self.projection_module.compute_output_shape(output_shapes)
+    def compute_output_shape(self, input_shapes):
+        output_shapes = super().compute_output_shape(input_shapes)
+
+        if self.projection_block:
+            output_shapes = self.projection_block.compute_output_shape(output_shapes)
 
         return output_shapes
 
@@ -207,8 +288,7 @@ class TabularSequenceFeatures(TabularFeatures):
     def masking(self):
         return self._masking
 
-    @masking.setter
-    def masking(self, value):
+    def set_masking(self, value):
         self._masking = value
 
     @property
@@ -224,3 +304,17 @@ class TabularSequenceFeatures(TabularFeatures):
             return getattr(self.to_merge["categorical_layer"], "item_embedding_table", None)
 
         return None
+
+    def get_config(self):
+        config = super().get_config()
+        config = tf_utils.maybe_serialize_keras_objects(
+            self, config, ["projection_block", "masking"]
+        )
+
+        return config
+
+    @classmethod
+    def from_config(cls, config, **kwargs):
+        config = tf_utils.maybe_deserialize_keras_objects(config, ["projection_block", "masking"])
+
+        return super().from_config(config)

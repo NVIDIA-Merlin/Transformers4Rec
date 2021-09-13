@@ -1,21 +1,36 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from functools import partial
 
 import numpy as np
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tag
 
 pytorch = pytest.importorskip("torch")
-torch4rec = pytest.importorskip("transformers4rec.torch")
+tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_embedding_features(torch_cat_features):
     dim = 15
     feature_config = {
-        f: torch4rec.FeatureConfig(torch4rec.TableConfig(100, dim, name=f))
-        for f in torch_cat_features.keys()
+        f: tr.FeatureConfig(tr.TableConfig(100, dim, name=f)) for f in torch_cat_features.keys()
     }
-    embeddings = torch4rec.EmbeddingFeatures(feature_config)(torch_cat_features)
+    embeddings = tr.EmbeddingFeatures(feature_config)(torch_cat_features)
 
     assert list(embeddings.keys()) == list(feature_config.keys())
     assert all([emb.shape[-1] == dim for emb in embeddings.values()])
@@ -24,12 +39,11 @@ def test_embedding_features(torch_cat_features):
 def test_embedding_features_layernorm(torch_cat_features):
     dim = 15
     feature_config = {
-        f: torch4rec.FeatureConfig(torch4rec.TableConfig(100, dim, name=f))
-        for f in torch_cat_features.keys()
+        f: tr.FeatureConfig(tr.TableConfig(100, dim, name=f)) for f in torch_cat_features.keys()
     }
 
-    layer_norm = torch4rec.TabularLayerNorm.from_feature_config(feature_config)
-    embeddings = torch4rec.EmbeddingFeatures(feature_config, post=layer_norm)(torch_cat_features)
+    layer_norm = tr.TabularLayerNorm.from_feature_config(feature_config)
+    embeddings = tr.EmbeddingFeatures(feature_config, post=layer_norm)(torch_cat_features)
     assert all(
         [emb.detach().numpy().mean() == pytest.approx(0.0, abs=0.1) for emb in embeddings.values()]
     )
@@ -41,12 +55,10 @@ def test_embedding_features_custom_init(torch_cat_features):
     STD = 0.05
     emb_initializer = partial(pytorch.nn.init.normal_, mean=MEAN, std=STD)
     feature_config = {
-        f: torch4rec.FeatureConfig(
-            torch4rec.TableConfig(100, dim=15, name=f, initializer=emb_initializer)
-        )
+        f: tr.FeatureConfig(tr.TableConfig(100, dim=15, name=f, initializer=emb_initializer))
         for f in torch_cat_features.keys()
     }
-    embeddings = torch4rec.EmbeddingFeatures(feature_config)(torch_cat_features)
+    embeddings = tr.EmbeddingFeatures(feature_config)(torch_cat_features)
 
     assert list(embeddings.keys()) == list(feature_config.keys())
     assert all(
@@ -59,26 +71,26 @@ def test_embedding_features_custom_init(torch_cat_features):
 
 def test_table_config_invalid_embedding_initializer():
     with pytest.raises(ValueError) as excinfo:
-        torch4rec.TableConfig(100, dim=15, initializer="INVALID INITIALIZER")
+        tr.TableConfig(100, dim=15, initializer="INVALID INITIALIZER")
     assert "initializer must be callable if specified" in str(excinfo.value)
 
 
 def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = torch4rec.EmbeddingFeatures.from_schema(schema)
+    emb_module = tr.EmbeddingFeatures.from_schema(schema)
     embeddings = emb_module(torch_yoochoose_like)
 
     assert list(embeddings.keys()) == schema.column_names
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
     assert emb_module.item_id == "item_id/list"
-    assert emb_module.item_embedding_table.num_embeddings == 51996
+    assert emb_module.item_embedding_table.num_embeddings == 51997
 
 
 def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = torch4rec.EmbeddingFeatures.from_schema(
+    emb_module = tr.EmbeddingFeatures.from_schema(
         schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
     )
 
@@ -94,7 +106,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, torch_yoocho
 def test_embedding_features_yoochoose_infer_embedding_sizes(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = torch4rec.EmbeddingFeatures.from_schema(
+    emb_module = tr.EmbeddingFeatures.from_schema(
         schema, infer_embedding_sizes=True, infer_embedding_sizes_multiplier=3.0
     )
 
@@ -115,7 +127,7 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
     CATEGORY_STD = 0.1
 
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-    emb_module = torch4rec.EmbeddingFeatures.from_schema(
+    emb_module = tr.EmbeddingFeatures.from_schema(
         schema,
         layer_norm=False,
         embeddings_initializers={
@@ -139,7 +151,7 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
 
 def test_soft_embedding_invalid_num_embeddings():
     with pytest.raises(AssertionError) as excinfo:
-        torch4rec.SoftEmbedding(num_embeddings=0, embeddings_dim=16)
+        tr.SoftEmbedding(num_embeddings=0, embeddings_dim=16)
     assert "number of embeddings for soft embeddings needs to be greater than 0" in str(
         excinfo.value
     )
@@ -147,7 +159,7 @@ def test_soft_embedding_invalid_num_embeddings():
 
 def test_soft_embedding_invalid_embeddings_dim():
     with pytest.raises(AssertionError) as excinfo:
-        torch4rec.SoftEmbedding(num_embeddings=10, embeddings_dim=0)
+        tr.SoftEmbedding(num_embeddings=10, embeddings_dim=0)
     assert "embeddings dim for soft embeddings needs to be greater than 0" in str(excinfo.value)
 
 
@@ -155,7 +167,7 @@ def test_soft_embedding():
     embeddings_dim = 16
     num_embeddings = 64
 
-    soft_embedding = torch4rec.SoftEmbedding(num_embeddings, embeddings_dim)
+    soft_embedding = tr.SoftEmbedding(num_embeddings, embeddings_dim)
     assert soft_embedding.embedding_table.weight.shape == pytorch.Size(
         [num_embeddings, embeddings_dim]
     ), "Internal soft embedding table does not have the expected shape"
@@ -181,7 +193,7 @@ def test_soft_embedding_with_custom_init():
     INIT_MEAN = 1.0
     INIT_STD = 0.05
     emb_initializer = partial(pytorch.nn.init.normal_, mean=INIT_MEAN, std=INIT_STD)
-    soft_embedding = torch4rec.SoftEmbedding(
+    soft_embedding = tr.SoftEmbedding(
         num_embeddings, embeddings_dim, emb_initializer=emb_initializer
     )
     assert soft_embedding.embedding_table.weight.shape == pytorch.Size(
@@ -208,13 +220,13 @@ def test_soft_continuous_features(torch_con_features):
     emb_initializer = partial(pytorch.nn.init.normal_, mean=1.0, std=0.05)
 
     feature_config = {
-        f: torch4rec.FeatureConfig(
-            torch4rec.TableConfig(num_embeddings, dim, initializer=emb_initializer, name=f)
+        f: tr.FeatureConfig(
+            tr.TableConfig(num_embeddings, dim, initializer=emb_initializer, name=f)
         )
         for f in torch_con_features.keys()
     }
 
-    soft_embeddings = torch4rec.SoftEmbeddingFeatures(feature_config)
+    soft_embeddings = tr.SoftEmbeddingFeatures(feature_config)
     output = soft_embeddings(torch_con_features)
 
     assert list(output.keys()) == list(feature_config.keys())
@@ -224,7 +236,7 @@ def test_soft_continuous_features(torch_con_features):
 
 
 def test_layer_norm_features():
-    ln = torch4rec.TabularLayerNorm(features_dim={"a": 100, "b": 200})
+    ln = tr.TabularLayerNorm(features_dim={"a": 100, "b": 200})
     inputs = {
         "a": pytorch.tensor(np.random.uniform(1.0, 4.0, (500, 100)), dtype=pytorch.float32),
         "b": pytorch.tensor(np.random.uniform(2.0, 10.0, (500, 200)), dtype=pytorch.float32),

@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import inspect
 from typing import Dict, List, Optional, Type, Union
 
@@ -6,10 +22,11 @@ import torch
 from tqdm import tqdm
 
 from ..typing import TensorOrTabularData
+from ..utils.torch_utils import LossMixin, MetricsMixin
 from .head import Head
 
 
-class Model(torch.nn.Module):
+class Model(torch.nn.Module, LossMixin, MetricsMixin):
     """Model class that can aggregate one of multiple heads.
 
     Parameters
@@ -34,6 +51,9 @@ class Model(torch.nn.Module):
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name=None
     ):
+        """
+        #TODO
+        """
         if head_weights:
             if not isinstance(head_weights, list):
                 raise ValueError("`head_weights` must be a list")
@@ -75,15 +95,19 @@ class Model(torch.nn.Module):
         return getattr(loss_tensor, self.head_reduction)()
 
     def calculate_metrics(
-        self, inputs, targets, mode="val"
+        self, inputs, targets, mode="val", call_body=True, forward=True, **kwargs
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         outputs = {}
         for head in self.heads:
-            outputs.update(head.calculate_metrics(inputs, targets, mode=mode, call_body=True))
+            outputs.update(
+                head.calculate_metrics(
+                    inputs, targets, mode=mode, call_body=call_body, forward=forward, **kwargs
+                )
+            )
 
         return outputs
 
-    def compute_metrics(self, mode=None):
+    def compute_metrics(self, mode=None) -> Dict[str, Union[float, torch.Tensor]]:
         metrics = {}
         for head in self.heads:
             metrics.update(head.compute_metrics(mode=mode))

@@ -13,27 +13,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from merlin_standard_lib import Schema, Tag
+
+from ..config.schema import requires_schema
+from ..config.trainer import T4RecTrainingArguments
+from ..config.transformer import (
+    AlbertConfig,
+    ElectraConfig,
+    GPT2Config,
+    LongformerConfig,
+    ReformerConfig,
+    T4RecConfig,
+    XLNetConfig,
+)
+from . import ranking_metric
 
 # Block related imports
 from .block.base import Block, BlockBase, SequentialBlock, build_blocks, right_shift_block
 from .block.mlp import MLPBlock
-from .block.tabular.aggregation import (
-    ConcatFeatures,
-    ElementwiseSum,
-    ElementwiseSumItemMulti,
-    StackFeatures,
-)
-from .block.tabular.tabular import (
-    AsTabular,
-    FilterFeatures,
-    MergeTabular,
-    SequentialTabularTransformations,
-    TabularAggregation,
-    TabularBlock,
-    TabularModule,
-    TabularTransformation,
-)
-from .block.tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .block.transformer import TransformerBlock
 
 # Features related imports
@@ -47,18 +44,50 @@ from .features.embedding import (
 )
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
+from .model.head import Head
+from .model.model import Model
 
 # Model related imports
-from .model.head import (
+from .model.prediction_task import (
     BinaryClassificationTask,
-    Head,
     NextItemPredictionTask,
     PredictionTask,
     RegressionTask,
 )
-from .model.model import Model
+
+# Tabular related imports
+from .tabular.aggregation import (
+    ConcatFeatures,
+    ElementwiseSum,
+    ElementwiseSumItemMulti,
+    StackFeatures,
+)
+from .tabular.tabular import (
+    AsTabular,
+    FilterFeatures,
+    MergeTabular,
+    SequentialTabularTransformations,
+    TabularAggregation,
+    TabularBlock,
+    TabularModule,
+    TabularTransformation,
+)
+from .tabular.transformations import StochasticSwapNoise, TabularLayerNorm
+from .trainer import Trainer
 
 __all__ = [
+    "Schema",
+    "Tag",
+    "ranking_metric",
+    "requires_schema",
+    "T4RecConfig",
+    "GPT2Config",
+    "XLNetConfig",
+    "LongformerConfig",
+    "AlbertConfig",
+    "ReformerConfig",
+    "ElectraConfig",
+    "T4RecTrainingArguments",
     "SequentialBlock",
     "right_shift_block",
     "build_blocks",
@@ -95,6 +124,7 @@ __all__ = [
     "NextItemPredictionTask",
     "TabularModule",
     "SoftEmbedding",
+    "Trainer",
 ]
 
 try:

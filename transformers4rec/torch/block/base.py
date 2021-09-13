@@ -1,3 +1,19 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import abc
 import inspect
 import logging
@@ -7,7 +23,8 @@ from typing import List, Optional, Union
 import torch
 from torch.nn import Module
 
-from ...utils.misc_utils import filter_kwargs
+from merlin_standard_lib.utils.misc_utils import filter_kwargs
+
 from ..typing import Head, PredictionTask
 from ..utils import torch_utils
 
@@ -16,8 +33,7 @@ LOG = logging.getLogger("transformers4rec")
 
 class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCMeta):
     def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
-        from transformers4rec.torch.model.head import Head, PredictionTask
-
+        from ..model.head import Head, PredictionTask
         from ..model.model import Model
 
         if isinstance(prediction_task_or_head, PredictionTask):
@@ -33,7 +49,7 @@ class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCM
         return Model(head, **kwargs)
 
     def as_tabular(self, name=None):
-        from .tabular.tabular import AsTabular
+        from ..tabular.tabular import AsTabular
 
         if not name:
             name = self.name
@@ -100,7 +116,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
             return first
 
     def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
-        from .tabular.tabular import FilterFeatures
+        from ..tabular.tabular import FilterFeatures
 
         if isinstance(module, list):
             module = FilterFeatures(module)
@@ -154,7 +170,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return SequentialBlock(self, AsTabular(name))
 
     def __add__(self, other):
-        from .tabular.tabular import merge_tabular
+        from ..tabular.tabular import merge_tabular
 
         return merge_tabular(self, other)
 
@@ -213,7 +229,7 @@ class BuildableBlock(abc.ABC):
 
 
 def right_shift_block(self, other):
-    from .tabular.tabular import FilterFeatures
+    from ..tabular.tabular import FilterFeatures
 
     if isinstance(other, list):
         left_side = [FilterFeatures(other)]

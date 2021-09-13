@@ -1,25 +1,74 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from typing import List, Optional, Union
 
-from ...types import DatasetSchema, DefaultTags, Tag
+import tensorflow as tf
+
+from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular import AsTabular, MergeTabular
-from .base import InputLayer
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
+from ..typing import TabularAggregationType, TabularBlock, TabularTransformationType
+from ..utils import tf_utils
+from .base import InputBlock
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures
 from .text import TextEmbeddingFeaturesWithTransformers
 
+TABULAR_FEATURES_PARAMS_DOCSTRING = """
+    continuous_layer: TabularBlock, optional
+        Block used to process continuous features.
+    categorical_layer: TabularBlock, optional
+        Block used to process categorical features.
+    text_embedding_layer: TabularBlock, optional
+        Block used to process text features.
+"""
 
-class TabularFeatures(InputLayer, MergeTabular):
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+    tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
+)
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
+class TabularFeatures(InputBlock, MergeTabular):
+    """Input block that combines different types of features: continuous, categorical & text.
+
+    Parameters
+    ----------
+    {tabular_features_parameters}
+    {tabular_module_parameters}
+    """
+
     CONTINUOUS_MODULE_CLASS = ContinuousFeatures
     EMBEDDING_MODULE_CLASS = EmbeddingFeatures
 
     def __init__(
         self,
-        continuous_layer=None,
-        categorical_layer=None,
-        text_embedding_layer=None,
-        aggregation=None,
+        continuous_layer: Optional[TabularBlock] = None,
+        categorical_layer: Optional[TabularBlock] = None,
+        text_embedding_layer: Optional[TabularBlock] = None,
+        continuous_projection: Optional[Union[List[int], int]] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[Schema] = None,
+        name: Optional[str] = None,
         **kwargs
     ):
         to_merge = {}
@@ -31,7 +80,18 @@ class TabularFeatures(InputLayer, MergeTabular):
             to_merge["text_embedding_layer"] = text_embedding_layer
 
         assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(to_merge, aggregation=aggregation, **kwargs)
+        super(TabularFeatures, self).__init__(
+            to_merge,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            schema=schema,
+            name=name,
+            **kwargs
+        )
+
+        if continuous_projection:
+            self.project_continuous_features(continuous_projection)
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]
@@ -65,9 +125,9 @@ class TabularFeatures(InputLayer, MergeTabular):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
-        continuous_tags: Optional[Union[DefaultTags, list, str]] = Tag.CONTINUOUS,
-        categorical_tags: Optional[Union[DefaultTags, list, str]] = Tag.CATEGORICAL,
+        schema: Schema,
+        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         continuous_projection: Optional[Union[List[int], int]] = None,
         text_model=None,
@@ -101,11 +161,10 @@ class TabularFeatures(InputLayer, MergeTabular):
             categorical_layer=maybe_categorical_layer,
             text_embedding_layer=text_model,
             aggregation=aggregation,
+            continuous_projection=continuous_projection,
+            schema=schema,
             **kwargs
         )
-
-        if continuous_projection:
-            output = output.project_continuous_features(continuous_projection)
 
         return output
 
@@ -122,3 +181,29 @@ class TabularFeatures(InputLayer, MergeTabular):
             return self.to_merge["categorical_layer"]
 
         return None
+
+    @property
+    def text_embedding_layer(self):
+        if "text_embedding_layer" in self.to_merge:
+            return self.to_merge["text_embedding_layer"]
+
+        return None
+
+    def get_config(self):
+        from transformers4rec.tf import TabularBlock as _TabularBlock
+
+        config = tf_utils.maybe_serialize_keras_objects(
+            self,
+            _TabularBlock.get_config(self),
+            ["continuous_layer", "categorical_layer", "text_embedding_layer"],
+        )
+
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        config = tf_utils.maybe_deserialize_keras_objects(
+            config, ["continuous_layer", "categorical_layer", "text_embedding_layer"]
+        )
+
+        return super().from_config(config)

@@ -1,12 +1,30 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from functools import partial
 from typing import Any, Callable, Dict, Optional, Text, Union
 
 import torch
 
-from ...types import DatasetSchema, DefaultTags
-from ...utils.misc_utils import docstring_parameter
+from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
+
 from .. import typing
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
 from .base import InputBlock
 
@@ -41,8 +59,9 @@ class EmbeddingFeatures(InputBlock):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[Schema] = None,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
         self.item_id = item_id
         self.feature_config = feature_config
         self.filter_features = FilterFeatures(list(feature_config.keys()))
@@ -79,14 +98,14 @@ class EmbeddingFeatures(InputBlock):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
+        schema: Schema,
         embedding_dims: Optional[Dict[str, int]] = None,
         embedding_dim_default: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
         infer_embedding_sizes_multiplier: Optional[float] = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         combiner: Optional[str] = "mean",
-        tags: Optional[Union[DefaultTags, list, str]] = None,
+        tags: Optional[Union[Tag, list, str]] = None,
         item_id: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -141,13 +160,15 @@ class EmbeddingFeatures(InputBlock):
             item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
         if infer_embedding_sizes:
-            embedding_dims = schema.embedding_sizes(infer_embedding_sizes_multiplier)
+            embedding_dims = get_embedding_sizes_from_schema(
+                schema, infer_embedding_sizes_multiplier
+            )
 
         embedding_dims = embedding_dims or {}
         embeddings_initializers = embeddings_initializers or {}
 
         emb_config = {}
-        cardinalities = schema.cardinalities()
+        cardinalities = schema.categorical_cardinalities()
         for key, cardinality in cardinalities.items():
             embedding_size = embedding_dims.get(key, embedding_dim_default)
             embedding_initializer = embeddings_initializers.get(key, None)
@@ -170,10 +191,10 @@ class EmbeddingFeatures(InputBlock):
 
         output = cls(feature_config, item_id=item_id, pre=pre, post=post, aggregation=aggregation)
 
-        if automatic_build and schema._schema:
+        if automatic_build and schema:
             output.build(
                 get_output_sizes_from_schema(
-                    schema._schema,
+                    schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
                 ),
@@ -258,7 +279,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
+        schema: Schema,
         soft_embedding_cardinalities: Optional[Dict[str, int]] = None,
         soft_embedding_cardinality_default: Optional[int] = 10,
         soft_embedding_dims: Optional[Dict[str, int]] = None,
@@ -266,7 +287,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         layer_norm: bool = True,
         combiner: Optional[str] = "mean",
-        tags: Optional[Union[DefaultTags, list, str]] = None,
+        tags: Optional[Union[Tag, list, str]] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
         **kwargs,
@@ -315,7 +336,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         embeddings_initializers = embeddings_initializers or {}
 
         sizes = {}
-        cardinalities = schema.cardinalities()
+        cardinalities = schema.categorical_cardinalities()
         for col_name in schema.column_names:
             # If this is NOT a categorical feature
             if col_name not in cardinalities:
@@ -343,10 +364,10 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
 
         output = cls(feature_config, layer_norm=layer_norm, **kwargs)
 
-        if automatic_build and schema._schema:
+        if automatic_build and schema:
             output.build(
                 get_output_sizes_from_schema(
-                    schema._schema,
+                    schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
                 )

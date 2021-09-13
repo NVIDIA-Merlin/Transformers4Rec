@@ -1,9 +1,28 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import pathlib
 import random
 
 import pytest
+from tensorflow_metadata.proto.v0 import schema_pb2
 
-from transformers4rec.utils.schema import DatasetSchema
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
+from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
@@ -54,7 +73,7 @@ def torch_masking_inputs():
     # replace last 2 items by zeros to mimic padding
     labels[:, MAX_LEN - 2 :] = 0
     features["labels"] = labels
-    features["pad_token"] = PAD_TOKEN
+    features["padding_idx"] = PAD_TOKEN
     features["vocab_size"] = MAX_CARDINALITY
 
     return features
@@ -132,6 +151,26 @@ def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
 
 
 @pytest.fixture
+def torch_yoochoose_next_item_prediction_model(
+    torch_yoochoose_tabular_transformer_features, yoochoose_schema
+):
+    # define Transformer-based model
+    inputs = torch_yoochoose_tabular_transformer_features
+    transformer_config = tconf.XLNetConfig.build(
+        d_model=64, n_head=4, n_layer=2, total_seq_length=20
+    )
+    body = torch4rec.SequentialBlock(
+        inputs,
+        torch4rec.MLPBlock([64]),
+        torch4rec.TransformerBlock(transformer_config, masking=inputs.masking),
+    )
+    model = torch4rec.NextItemPredictionTask(weight_tying=True, hf_format=True).to_model(
+        body, inputs
+    )
+    return model
+
+
+@pytest.fixture
 def torch_yoochoose_like():
     NUM_ROWS = 100
     MAX_CARDINALITY = 100
@@ -139,19 +178,21 @@ def torch_yoochoose_like():
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
 
-    schema = DatasetSchema.read_schema(str(schema_file))
+    # TODO: Change this to json
+    schema = proto_text_to_better_proto(Schema(), str(schema_file), schema_pb2.Schema())
+    schema = schema.remove_by_name(["session_id", "session_start", "day_idx"])
     data = {}
 
     for i in range(NUM_ROWS):
         session_length = random.randint(5, MAX_SESSION_LENGTH)
 
-        for feature in schema.feature[2:]:
-            is_session_feature = feature.HasField("value_count")
-            is_int_feature = feature.HasField("int_domain")
+        for feature in schema.feature:
+            is_session_feature = has_field(feature, "value_count")
+            is_int_feature = has_field(feature, "int_domain")
 
             if is_int_feature:
-                max_num = MAX_CARDINALITY
                 if is_session_feature:
+                    max_num = MAX_CARDINALITY
                     if not feature.int_domain.is_categorical:
                         max_num = feature.int_domain.max
                     row = pytorch.randint(max_num, (session_length,))

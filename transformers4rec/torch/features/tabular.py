@@ -1,11 +1,28 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 from typing import List, Optional, Union
 
-from ...types import DatasetSchema, DefaultTags, Tag
-from ...utils.misc_utils import docstring_parameter
+from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from .. import typing
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..block.tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
+from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
@@ -45,6 +62,7 @@ class TabularFeatures(MergeTabular):
         pre: Optional[typing.TabularTransformationType] = None,
         post: Optional[typing.TabularTransformationType] = None,
         aggregation: Optional[typing.TabularAggregationType] = None,
+        schema: Optional[Schema] = None,
     ):
         to_merge = {}
         if continuous_module:
@@ -54,8 +72,10 @@ class TabularFeatures(MergeTabular):
         if text_embedding_module:
             to_merge["text_embedding_module"] = text_embedding_module
 
-        assert to_merge != [], "Please provide at least one input layer"
-        super(TabularFeatures, self).__init__(to_merge, pre=pre, post=post, aggregation=aggregation)
+        assert to_merge != {}, "Please provide at least one input layer"
+        super(TabularFeatures, self).__init__(
+            to_merge, pre=pre, post=post, aggregation=aggregation, schema=schema
+        )
 
     def project_continuous_features(
         self, mlp_layers_dims: Union[List[int], int]
@@ -89,9 +109,9 @@ class TabularFeatures(MergeTabular):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
-        continuous_tags: Optional[Union[DefaultTags, list, str]] = Tag.CONTINUOUS,
-        categorical_tags: Optional[Union[DefaultTags, list, str]] = Tag.CATEGORICAL,
+        schema: Schema,
+        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -151,10 +171,10 @@ class TabularFeatures(MergeTabular):
             aggregation=aggregation,
         )
 
-        if automatic_build and schema._schema:
+        if automatic_build and schema:
             output.build(
                 get_output_sizes_from_schema(
-                    schema._schema,
+                    schema,
                     kwargs.get("batch_size", -1),
                     max_sequence_length=max_sequence_length,
                 ),

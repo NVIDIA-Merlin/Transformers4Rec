@@ -1,14 +1,32 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import abc
-from typing import Optional
+from typing import Dict, Union
 
 import torch
 
-from ...utils.schema import DatasetSchema
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.proto_utils import has_field
+
+from ...config.schema import SchemaMixin
+from ..typing import TabularData
 
 
-class OutputSizeMixin(abc.ABC):
-    REQUIRES_SCHEMA = False
-
+class OutputSizeMixin(SchemaMixin, abc.ABC):
     def build(self, input_size, schema=None, **kwargs):
         self.check_schema(schema=schema)
 
@@ -34,22 +52,78 @@ class OutputSizeMixin(abc.ABC):
 
         return right_shift_block(self, other)
 
-    @property
-    def schema(self) -> Optional[DatasetSchema]:
-        return getattr(self, "_schema", None)
 
-    @schema.setter
-    def schema(self, value):
-        self._schema = value
+class LossMixin:
+    """Mixin to use for `torch.Module`s that can calculate a loss."""
 
-    def check_schema(self, schema=None):
-        if self.REQUIRES_SCHEMA and not getattr(self, "schema", None) and not schema:
-            raise ValueError(f"{self.__class__.__name__} requires a schema.")
+    def compute_loss(
+        self,
+        inputs: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        compute_metrics: bool = True,
+        **kwargs,
+    ) -> torch.Tensor:
+        """Compute the loss on a batch of data.
 
-    def __call__(self, *args, **kwargs):
-        self.check_schema()
+        Parameters
+        ----------
+        inputs: Union[torch.Tensor, TabularData]
+            TODO
+        targets: Union[torch.Tensor, TabularData]
+            TODO
+        compute_metrics: bool, default=True
+            Boolean indicating whether or not to update the state of the metrics
+            (if they are defined).
+        """
+        raise NotImplementedError()
 
-        return super().__call__(*args, **kwargs)
+
+class MetricsMixin:
+    """Mixin to use for `torch.Module`s that can calculate metrics."""
+
+    def calculate_metrics(
+        self,
+        inputs: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
+        mode: str = "val",
+        forward=True,
+        **kwargs,
+    ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
+
+        The state of each metric can be retrieved by calling the `compute_metrics` method.
+
+        Parameters
+        ----------
+        inputs: Union[torch.Tensor, TabularData]
+            TODO
+        targets: Union[torch.Tensor, TabularData]
+            TODO
+        forward: bool, default True
+
+        mode: str, default="val"
+
+        """
+        raise NotImplementedError()
+
+    def compute_metrics(self, mode: str = None) -> Dict[str, Union[float, torch.Tensor]]:
+        """Returns the current state of each metric.
+
+        The state is typically updated each batch by calling the `calculate_metrics` method.
+
+        Parameters
+        ----------
+        mode: str, default="val"
+
+        Returns
+        -------
+        Dict[str, Union[float, torch.Tensor]]
+        """
+        raise NotImplementedError()
+
+    def reset_metrics(self):
+        """Reset all metrics."""
+        raise NotImplementedError()
 
 
 def requires_schema(module):
@@ -65,18 +139,18 @@ def check_gpu(module):
         return False
 
 
-def get_output_sizes_from_schema(schema, batch_size=-1, max_sequence_length=None):
+def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_length=None):
     sizes = {}
     for feature in schema.feature:
         name = feature.name
-        if feature.HasField("value_count"):
+        if has_field(feature, "value_count"):
             sizes[name] = torch.Size(
                 [
                     batch_size,
                     max_sequence_length if max_sequence_length else feature.value_count.max,
                 ]
             )
-        elif feature.HasField("shape"):
+        elif has_field(feature, "shape"):
             sizes[name] = torch.Size([batch_size] + [d.size for d in feature.shape.dim])
         else:
             sizes[name] = torch.Size([batch_size, 1])
@@ -124,3 +198,15 @@ def create_output_placeholder(scores, ks):
 
 def tranform_label_to_onehot(labels, vocab_size):
     return torch.nn.functional.one_hot(labels.reshape(-1), vocab_size).detach()
+
+
+class LambdaModule(torch.nn.Module):
+    def __init__(self, lambda_fn):
+        super().__init__()
+        import types
+
+        assert isinstance(lambda_fn, types.LambdaType)
+        self.lambda_fn = lambda_fn
+
+    def forward(self, x):
+        return self.lambda_fn(x)

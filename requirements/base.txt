@@ -1,4 +1,5 @@
-numpy
-tensorflow-metadata
-transformers
-tqdm
+numpy>=1.17.0
+transformers==4.9.*
+tqdm>=4.27
+betterproto<2.0.0
+pyarrow>=1.0

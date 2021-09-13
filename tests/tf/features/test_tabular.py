@@ -1,25 +1,48 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
 import pytest
 
-from tests.tf import _utils as test_utils
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tag
 
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
+test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 
 def test_tabular_features(yoochoose_schema, tf_yoochoose_like):
-    tab_module = tf4rec.TabularFeatures.from_schema(yoochoose_schema)
+    tab_module = tr.TabularFeatures.from_schema(yoochoose_schema)
 
     outputs = tab_module(tf_yoochoose_like)
 
-    assert (
-        list(outputs.keys())
-        == yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_names
+    assert set(outputs.keys()) == set(
+        yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_names
         + yoochoose_schema.select_by_tag(Tag.CATEGORICAL).column_names
     )
 
 
+def test_serialization_tabular_features(yoochoose_schema, tf_yoochoose_like):
+    inputs = tr.TabularFeatures.from_schema(yoochoose_schema)
+
+    copy_layer = test_utils.assert_serialization(inputs)
+
+    assert list(inputs.to_merge.keys()) == list(copy_layer.to_merge.keys())
+
+
 def test_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
-    tab_module = tf4rec.TabularFeatures.from_schema(yoochoose_schema, continuous_projection=64)
+    tab_module = tr.TabularFeatures.from_schema(yoochoose_schema, continuous_projection=64)
 
     outputs = tab_module(tf_yoochoose_like)
 
@@ -33,10 +56,10 @@ def test_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
 def test_tabular_features_yoochoose_model(
     yoochoose_schema, tf_yoochoose_like, run_eagerly, continuous_projection
 ):
-    inputs = tf4rec.TabularFeatures.from_schema(
+    inputs = tr.TabularFeatures.from_schema(
         yoochoose_schema, continuous_projection=continuous_projection, aggregation="concat"
     )
 
-    body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
+    body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
 
     test_utils.assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
