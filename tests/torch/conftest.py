@@ -20,7 +20,7 @@ import random
 import pytest
 
 from merlin_standard_lib import Schema
-from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
+from merlin_standard_lib.utils.proto_utils import has_field
 from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
