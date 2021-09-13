@@ -20,7 +20,8 @@ from abc import abstractmethod
 import torch
 import torchmetrics as tm
 
-from ..utils.registry import Registry
+from merlin_standard_lib import Registry
+
 from .utils import torch_utils
 
 ranking_metrics_registry = Registry.class_registry("torch.ranking_metrics")

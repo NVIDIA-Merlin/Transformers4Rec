@@ -16,7 +16,7 @@
 
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tag
 
 torch4rec = pytest.importorskip("transformers4rec.torch")
 
@@ -39,11 +39,10 @@ def test_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert (
-        list(outputs.keys())
-        == schema.select_by_tag(Tag.CONTINUOUS).column_names
-        + schema.select_by_tag(Tag.CATEGORICAL).column_names
-    )
+    tag_select = lambda tags: any(t in [Tag.CONTINUOUS, Tag.CATEGORICAL] for t in tags)  # noqa
+    cols = schema.select_by_tag(tag_select).column_names
+
+    assert list(outputs.keys()) == cols
 
 
 def test_sequential_tabular_features_with_feature_modules_kwargs(
@@ -58,9 +57,8 @@ def test_sequential_tabular_features_with_feature_modules_kwargs(
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert (
-        list(outputs.keys())
-        == schema.select_by_tag(Tag.CONTINUOUS).column_names
+    assert set(outputs.keys()) == set(
+        schema.select_by_tag(Tag.CONTINUOUS).column_names
         + schema.select_by_tag(Tag.CATEGORICAL).column_names
     )
 
@@ -118,7 +116,7 @@ def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_lik
 
 def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        yoochoose_schema = yoochoose_schema - ["item_id/list"]
+        yoochoose_schema = yoochoose_schema.remove_by_name("item_id/list")
 
         torch4rec.TabularSequenceFeatures.from_schema(
             yoochoose_schema,

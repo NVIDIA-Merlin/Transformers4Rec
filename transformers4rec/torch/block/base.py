@@ -23,7 +23,8 @@ from typing import List, Optional, Union
 import torch
 from torch.nn import Module
 
-from ...utils.misc_utils import filter_kwargs
+from merlin_standard_lib.utils.misc_utils import filter_kwargs
+
 from ..typing import Head, PredictionTask
 from ..utils import torch_utils
 
@@ -48,7 +49,7 @@ class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCM
         return Model(head, **kwargs)
 
     def as_tabular(self, name=None):
-        from .tabular.tabular import AsTabular
+        from ..tabular.tabular import AsTabular
 
         if not name:
             name = self.name

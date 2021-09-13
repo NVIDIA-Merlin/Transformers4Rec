@@ -18,7 +18,9 @@ import abc
 
 import torch
 
-from ...utils.schema import SchemaMixin
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.proto_utils import has_field
+from transformers4rec.config.schema import SchemaMixin
 
 
 class OutputSizeMixin(SchemaMixin, abc.ABC):
@@ -55,18 +57,18 @@ def check_gpu(module):
         return False
 
 
-def get_output_sizes_from_schema(schema, batch_size=-1, max_sequence_length=None):
+def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_length=None):
     sizes = {}
     for feature in schema.feature:
         name = feature.name
-        if feature.HasField("value_count"):
+        if has_field(feature, "value_count"):
             sizes[name] = torch.Size(
                 [
                     batch_size,
                     max_sequence_length if max_sequence_length else feature.value_count.max,
                 ]
             )
-        elif feature.HasField("shape"):
+        elif has_field(feature, "shape"):
             sizes[name] = torch.Size([batch_size] + [d.size for d in feature.shape.dim])
         else:
             sizes[name] = torch.Size([batch_size, 1])

@@ -39,8 +39,9 @@ from transformers.trainer_pt_utils import (
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalLoopOutput, SchedulerType
 from transformers.utils import logging
 
+from merlin_standard_lib import Schema
+
 from ..config.trainer import T4RecTrainingArguments
-from ..utils.schema import DatasetSchema
 from .model.model import Model
 from .utils.data_utils import T4RecDataLoader
 
@@ -83,7 +84,7 @@ class Trainer(BaseTrainer):
         self,
         model: Model,
         args: T4RecTrainingArguments,
-        schema: DatasetSchema = None,
+        schema: Schema = None,
         train_dataset_or_path=None,
         eval_dataset_or_path=None,
         train_dataloader: Optional[DataLoader] = None,

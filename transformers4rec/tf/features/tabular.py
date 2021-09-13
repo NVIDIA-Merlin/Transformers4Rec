@@ -18,8 +18,9 @@ from typing import List, Optional, Union
 
 import tensorflow as tf
 
-from ...types import DatasetSchema, DefaultTags, Tag
-from ...utils.misc_utils import docstring_parameter
+from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
@@ -66,7 +67,7 @@ class TabularFeatures(InputBlock, MergeTabular):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
         name: Optional[str] = None,
         **kwargs
     ):
@@ -124,9 +125,9 @@ class TabularFeatures(InputBlock, MergeTabular):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
-        continuous_tags: Optional[Union[DefaultTags, list, str]] = Tag.CONTINUOUS,
-        categorical_tags: Optional[Union[DefaultTags, list, str]] = Tag.CATEGORICAL,
+        schema: Schema,
+        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         continuous_projection: Optional[Union[List[int], int]] = None,
         text_model=None,

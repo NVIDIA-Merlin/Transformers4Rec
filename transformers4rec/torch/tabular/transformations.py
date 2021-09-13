@@ -38,7 +38,7 @@ class StochasticSwapNoise(TabularTransformation):
         self, inputs: TensorOrTabularData, mask: Optional[torch.Tensor] = None, **kwargs
     ) -> TensorOrTabularData:
         if self.schema:
-            mask = mask or self.schema.get_mask_from_inputs(inputs, self.pad_token)
+            mask = mask or self.get_mask_from_inputs(inputs, self.pad_token)
         if isinstance(inputs, dict):
             return {key: self.augment(val, mask) for key, val in inputs.items()}
 

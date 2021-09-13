@@ -18,8 +18,9 @@ from typing import Any, Dict, Tuple
 import torch
 from torch import nn
 
-from ..utils.misc_utils import docstring_parameter
-from ..utils.registry import Registry
+from merlin_standard_lib import Registry
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from .utils.torch_utils import OutputSizeMixin
 
 masking_registry = Registry("torch.masking")

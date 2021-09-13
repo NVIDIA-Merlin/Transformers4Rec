@@ -16,7 +16,7 @@
 
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tag
 
 torch4rec = pytest.importorskip("transformers4rec.torch")
 torch_utils = pytest.importorskip("transformers4rec.torch.utils.torch_utils")
@@ -28,9 +28,8 @@ def test_tabular_features(yoochoose_schema, torch_yoochoose_like):
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert (
-        list(outputs.keys())
-        == schema.select_by_tag(Tag.CONTINUOUS).column_names
+    assert set(outputs.keys()) == set(
+        schema.select_by_tag(Tag.CONTINUOUS).column_names
         + schema.select_by_tag(Tag.CATEGORICAL).column_names
     )
 

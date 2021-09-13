@@ -15,16 +15,15 @@
 #
 
 from abc import ABC
-from copy import deepcopy
 from functools import reduce
 from typing import Dict, List, Optional, Union
 
 import tensorflow as tf
 
-from ...types import DatasetSchema
-from ...utils.misc_utils import docstring_parameter
-from ...utils.registry import Registry, RegistryMixin
-from ...utils.schema import SchemaMixin
+from merlin_standard_lib import Registry, RegistryMixin, Schema
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+from transformers4rec.config.schema import SchemaMixin
+
 from ..block.base import Block, SequentialBlock
 from ..typing import TabularData, TensorOrTabularData
 from ..utils.tf_utils import calculate_batch_size_from_input_shapes
@@ -130,7 +129,7 @@ class TabularBlock(Block):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
         name: Optional[str] = None,
         **kwargs
     ):
@@ -144,7 +143,7 @@ class TabularBlock(Block):
             self.set_schema(schema)
 
     @classmethod
-    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularBlock"]:
+    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularBlock"]:
         """Instantiate a TabularLayer instance from a DatasetSchema.
 
         Parameters
@@ -157,14 +156,14 @@ class TabularBlock(Block):
         -------
         Optional[TabularModule]
         """
-        _schema = deepcopy(schema)
+        schema_copy = schema.copy()
         if tags:
-            _schema = _schema.select_by_tag(tags)
+            schema_copy = schema_copy.select_by_tag(tags)
 
-        if not _schema.columns:
+        if not schema_copy.column_names:
             return None
 
-        return cls.from_features(_schema.column_names, schema=_schema, **kwargs)
+        return cls.from_features(schema_copy.column_names, schema=schema_copy, **kwargs)
 
     @classmethod
     @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING, extra_padding=4)
@@ -348,14 +347,14 @@ class TabularBlock(Block):
         if self.aggregation:
             config["aggregation"] = tf.keras.utils.serialize_keras_object(self.aggregation)
         if self.schema:
-            config["schema"] = self.schema.to_proto_str()
+            config["schema"] = self.schema.to_json()
 
         return config
 
     @classmethod
     def from_config(cls, config):
         if "schema" in config:
-            config["schema"] = DatasetSchema.from_proto(config["schema"])
+            config["schema"] = Schema().from_json(config["schema"])
         if "pre" in config:
             config["pre"] = tf.keras.utils.deserialize_keras_object(config["pre"])
         if "post" in config:
@@ -535,7 +534,7 @@ class MergeTabular(TabularBlock):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
         name: Optional[str] = None,
         **kwargs
     ):

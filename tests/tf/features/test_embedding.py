@@ -17,8 +17,8 @@
 import pytest
 from tensorflow.python.ops import init_ops_v2
 
+from merlin_standard_lib import Tag
 from tests.tf import _utils as test_utils
-from transformers4rec.utils.tags import Tag
 
 tf4rec = pytest.importorskip("transformers4rec.tf")
 
@@ -44,7 +44,7 @@ def test_embedding_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
     assert list(embeddings.keys()) == schema.column_names
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
     assert emb_module.item_id == "item_id/list"
-    assert emb_module.item_embedding_table.shape[0] == 51996
+    assert emb_module.item_embedding_table.shape[0] == 51997
 
 
 def test_serialization_embedding_features(yoochoose_schema, tf_yoochoose_like):
