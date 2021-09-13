@@ -69,7 +69,7 @@ def tabular_schema_file():
 
 @pytest.fixture
 def tabular_schema():
-    schema = Schema().from_proto_text(str(YOOCHOOSE_SCHEMA))
+    schema = Schema().from_proto_text(str(TABULAR_DATA_SCHEMA))
 
     return schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
