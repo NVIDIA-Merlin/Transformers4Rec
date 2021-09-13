@@ -72,7 +72,7 @@ def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, ta
         "regression": pytorch.randint(2, (100,)).float(),
     }
 
-    body = tr.SequentialBlock(torch_tabular_features, torch4rec.MLPBlock([64]))
+    body = tr.SequentialBlock(torch_tabular_features, tr.MLPBlock([64]))
     tasks = [
         tr.BinaryClassificationTask("classification", task_name="classification"),
         tr.RegressionTask("regression", task_name="regression"),

@@ -19,15 +19,9 @@ import pytest
 tr = pytest.importorskip("transformers4rec.torch")
 
 
-<<<<<<< HEAD
-def test_mlp_block(yoochoose_schema, torch_yoochoose_like):
-    tab_module = tr.TabularFeatures.from_schema(
-        yoochoose_schema, max_sequence_length=20, aggregation="concat"
-=======
 def test_mlp_block(tabular_schema, torch_tabular_data):
-    tab_module = torch4rec.TabularFeatures.from_schema(
+    tab_module = tr.TabularFeatures.from_schema(
         tabular_schema, max_sequence_length=20, aggregation="concat"
->>>>>>> Removed SequentialConcatFeatures. Now all aggregations (including ConcatFeatures) supports aggregating sequential and non-sequential feature. Fixed PyTorch tests
     )
 
     block = tab_module >> tr.MLPBlock([64, 32])

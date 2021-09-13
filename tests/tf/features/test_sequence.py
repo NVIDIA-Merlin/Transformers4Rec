@@ -183,7 +183,7 @@ def test_sequence_tabular_features_with_projection_and_d_output(yoochoose_schema
 
 def test_sequential_and_non_sequential_tabular_features(yoochoose_schema, tf_yoochoose_like):
     schema = yoochoose_schema
-    tab_module = tf4rec.TabularSequenceFeatures.from_schema(schema, aggregation="concat")
+    tab_module = tr.TabularSequenceFeatures.from_schema(schema, aggregation="concat")
 
     outputs = tab_module(tf_yoochoose_like)
 
