@@ -20,10 +20,10 @@ import pandas as pd
 import torch
 from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
-from transformers4rec.utils.misc_utils import _validate_dataset
+from merlin_standard_lib import Tag
+from merlin_standard_lib.utils.misc_utils import validate_dataset
+from transformers4rec.config.schema import DatasetSchema
 
-from ..utils.schema import DatasetSchema
-from ..utils.tags import Tag
 from .utils.torch_utils import get_output_sizes_from_schema
 
 # from nvtabular.loader.backend import DataLoader as BaseDataLoader
@@ -98,9 +98,7 @@ class DataLoader(NVTDataLoader):
         sparse_as_dense=False,
         schema=None,
     ):
-        dataset = _validate_dataset(
-            paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs
-        )
+        dataset = validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs)
 
         NVTDataLoader.__init__(
             self,

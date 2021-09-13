@@ -15,7 +15,7 @@
 #
 
 
-def is_nvtabular_available():
+def is_nvtabular_available() -> bool:
     try:
         import nvtabular
     except ImportError:
@@ -23,7 +23,7 @@ def is_nvtabular_available():
     return nvtabular is not None
 
 
-def is_gpu_dataloader_available():
+def is_gpu_dataloader_available() -> bool:
     try:
         import cudf
         import cupy
@@ -33,7 +33,7 @@ def is_gpu_dataloader_available():
     return cudf is not None and cupy is not None
 
 
-def is_pyarrow_available():
+def is_pyarrow_available() -> bool:
     try:
         import pyarrow
     except ImportError:

@@ -16,7 +16,7 @@
 
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tag
 
 tf = pytest.importorskip("tensorflow")
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -78,7 +78,7 @@ def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
         categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
         # Remove the item id from col_group
-        categ_schema = categ_schema - ["item_id/list"]
+        categ_schema = categ_schema.remove_by_name("item_id/list")
         element_wise_op = tf4rec.ElementwiseSumItemMulti(categ_schema)
         element_wise_op(None)
     assert "no column tagged as item id" in str(excinfo.value)

@@ -15,15 +15,14 @@
 #
 
 from abc import ABC
-from copy import deepcopy
 from functools import reduce
 from typing import Dict, List, Optional, Union
 
 import torch
 
-from ...types import DatasetSchema
-from ...utils.misc_utils import docstring_parameter
-from ...utils.registry import Registry
+from merlin_standard_lib import Registry, Schema
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from ..block.base import BlockBase, SequentialBlock, right_shift_block
 from ..typing import TabularData, TensorOrTabularData
 from ..utils.torch_utils import OutputSizeMixin
@@ -102,7 +101,7 @@ class TabularModule(torch.nn.Module):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
     ):
         super().__init__()
         self.input_size = None
@@ -112,7 +111,7 @@ class TabularModule(torch.nn.Module):
         self.schema = schema
 
     @classmethod
-    def from_schema(cls, schema: DatasetSchema, tags=None, **kwargs) -> Optional["TabularModule"]:
+    def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularModule"]:
         """Instantiate a TabularModule instance from a DatasetSchema.
 
         Parameters
@@ -125,14 +124,14 @@ class TabularModule(torch.nn.Module):
         -------
         Optional[TabularModule]
         """
-        _schema = deepcopy(schema)
+        schema_copy = schema.copy()
         if tags:
-            _schema = _schema.select_by_tag(tags)
+            schema_copy = schema_copy.select_by_tag(tags)
 
-        if not _schema.columns:
+        if not schema_copy.column_schemas:
             return None
 
-        return cls.from_features(_schema.column_names, schema=_schema, **kwargs)
+        return cls.from_features(schema_copy.column_names, schema=schema_copy, **kwargs)
 
     @classmethod
     @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING, extra_padding=4)
@@ -421,7 +420,7 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
     ):
         super().__init__(pre=pre, post=post, aggregation=aggregation)
         self.schema = schema
@@ -494,7 +493,7 @@ class MergeTabular(TabularBlock):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
     ):
         super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
         if all(isinstance(x, dict) for x in modules_to_merge):

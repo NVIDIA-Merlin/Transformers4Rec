@@ -18,9 +18,11 @@ import pathlib
 import random
 
 import pytest
+from tensorflow_metadata.proto.v0 import schema_pb2
 
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
 from transformers4rec.config import transformer as tconf
-from transformers4rec.utils.schema import DatasetSchema
 
 pytorch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
@@ -176,15 +178,17 @@ def torch_yoochoose_like():
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
 
-    schema = DatasetSchema.read_proto_txt(str(schema_file))
+    # TODO: Change this to json
+    schema = proto_text_to_better_proto(Schema(), str(schema_file), schema_pb2.Schema())
+    schema = schema.remove_by_name(["session_id", "session_start", "day_idx"])
     data = {}
 
     for i in range(NUM_ROWS):
         session_length = random.randint(5, MAX_SESSION_LENGTH)
 
-        for feature in schema.feature[2:]:
-            is_session_feature = feature.HasField("value_count")
-            is_int_feature = feature.HasField("int_domain")
+        for feature in schema.feature:
+            is_session_feature = has_field(feature, "value_count")
+            is_int_feature = has_field(feature, "int_domain")
 
             if is_int_feature:
                 if is_session_feature:

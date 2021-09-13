@@ -19,8 +19,8 @@ import tensorflow as tf
 from tensorflow.keras import backend
 from tensorflow.python.ops import array_ops
 
-from ..utils.misc_utils import docstring_parameter
-from ..utils.registry import Registry
+from merlin_standard_lib import Registry
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 masking_registry = Registry("tf.masking")
 

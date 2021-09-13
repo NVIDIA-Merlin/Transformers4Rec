@@ -18,8 +18,9 @@ from typing import List, Optional
 
 import tensorflow as tf
 
-from ...types import DatasetSchema
-from ...utils.misc_utils import docstring_parameter
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.doc_utils import docstring_parameter
+
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
 from ..typing import TabularAggregationType, TabularTransformationType
 from .base import InputBlock
@@ -43,7 +44,7 @@ class ContinuousFeatures(InputBlock):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[DatasetSchema] = None,
+        schema: Optional[Schema] = None,
         name: Optional[str] = None,
         **kwargs
     ):

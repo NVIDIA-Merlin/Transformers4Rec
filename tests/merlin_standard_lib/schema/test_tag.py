@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2021, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,25 +13,14 @@
 # limitations under the License.
 #
 
-import pytest
-
 from merlin_standard_lib import Tag
 
-torch4rec = pytest.importorskip("transformers4rec.torch")
+
+def test_tag_equality():
+    assert Tag.CATEGORICAL == "categorical"
+    assert Tag.CONTINUOUS == "continuous"
+    assert Tag.ITEM_ID == "item_id"
 
 
-def test_continuous_features(torch_con_features):
-    features = ["con_a", "con_b"]
-    con = torch4rec.ContinuousFeatures(features)(torch_con_features)
-
-    assert list(con.keys()) == features
-
-
-def test_continuous_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
-    cont_cols = schema.select_by_tag(Tag.CONTINUOUS)
-
-    con = torch4rec.ContinuousFeatures.from_schema(cont_cols)
-    outputs = con(torch_yoochoose_like)
-
-    assert set(outputs.keys()) == set(cont_cols.column_names)
+def test_tag_to_str():
+    assert str(Tag.CATEGORICAL) == "categorical"

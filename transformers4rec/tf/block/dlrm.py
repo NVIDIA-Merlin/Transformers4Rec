@@ -18,8 +18,8 @@ from typing import List, Optional, Union
 
 import tensorflow as tf
 
-from ...types import DatasetSchema
-from ...utils.schema import Tag
+from merlin_standard_lib import Schema, Tag
+
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
 from ..tabular.tabular import TabularBlock
@@ -34,7 +34,7 @@ class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
 class DLRMBlock(Block):
     def __init__(
         self,
-        continuous_features: Union[List[str], DatasetSchema, TabularBlock],
+        continuous_features: Union[List[str], Schema, TabularBlock],
         embedding_layer: EmbeddingFeatures,
         bottom_mlp: BlockType,
         top_mlp: Optional[BlockType] = None,
@@ -47,7 +47,7 @@ class DLRMBlock(Block):
     ):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
 
-        if isinstance(continuous_features, DatasetSchema):
+        if isinstance(continuous_features, Schema):
             continuous_features = ContinuousFeatures.from_schema(
                 continuous_features, aggregation="concat"
             )
@@ -75,11 +75,7 @@ class DLRMBlock(Block):
 
     @classmethod
     def from_schema(
-        cls,
-        schema: DatasetSchema,
-        bottom_mlp: BlockType,
-        top_mlp: Optional[BlockType] = None,
-        **kwargs
+        cls, schema: Schema, bottom_mlp: BlockType, top_mlp: Optional[BlockType] = None, **kwargs
     ):
         embedding_layer = EmbeddingFeatures.from_schema(
             schema.select_by_tag(Tag.CATEGORICAL),

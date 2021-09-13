@@ -16,8 +16,8 @@
 
 import pytest
 
+from merlin_standard_lib import Tag
 from tests.tf import _utils as test_utils
-from transformers4rec.utils.tags import Tag
 
 tf4rec = pytest.importorskip("transformers4rec.tf")
 

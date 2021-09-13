@@ -19,8 +19,10 @@ import random
 
 import numpy as np
 import pytest
+from tensorflow_metadata.proto.v0 import schema_pb2
 
-from transformers4rec.utils.schema import DatasetSchema
+from merlin_standard_lib import Schema
+from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
 
 tf = pytest.importorskip("tensorflow")
 tf4rec = pytest.importorskip("transformers4rec.tf")
@@ -82,15 +84,16 @@ def tf_yoochoose_like():
 
     schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
 
-    schema = DatasetSchema.read_proto_txt(str(schema_file))
+    schema = proto_text_to_better_proto(Schema(), str(schema_file), schema_pb2.Schema())
+    schema = schema.remove_by_name(["session_id", "session_start", "day_idx"])
     data = {}
 
     for i in range(NUM_ROWS):
         session_length = random.randint(5, MAX_SESSION_LENGTH)
 
-        for feature in schema.feature[2:]:
-            is_session_feature = feature.HasField("value_count")
-            is_int_feature = feature.HasField("int_domain")
+        for feature in schema.feature:
+            is_session_feature = has_field(feature, "value_count")
+            is_int_feature = has_field(feature, "int_domain")
 
             if is_int_feature:
                 max_num = MAX_CARDINALITY

@@ -22,8 +22,7 @@ import tensorflow as tf
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
-from transformers4rec.types import DatasetSchema
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Schema, Tag
 
 
 def name_fn(name, inp):
@@ -261,7 +260,7 @@ class Head(tf.keras.layers.Layer):
         self._set_task_blocks(task_blocks)
 
     @classmethod
-    def from_schema(cls, schema: DatasetSchema, body, task_weights=None):
+    def from_schema(cls, schema: Schema, body, task_weights=None):
         if task_weights is None:
             task_weights = {}
         to_return = cls(body)

@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2021, NVIDIA CORPORATION.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +14,17 @@
 #
 
 
-class MaskSequence:
-    """
-    Module to prepare masked data for LM tasks
+def docstring_parameter(*args, extra_padding=None, **kwargs):
+    def dec(obj):
+        if extra_padding:
 
-    Parameters
-    ----------
-    pad_token:
-        index of padding.
-    hidden_size:
-        dimension of the interaction embeddings
-    """
+            def pad(value):
+                return ("\n" + " " * extra_padding).join(value.split("\n"))
 
-    def __init__(self, hidden_size: int, device: str, pad_token: int = 0):
-        self.pad_token = pad_token
-        self.hidden_size = hidden_size
-        self.device = device
+            nonlocal args, kwargs
+            kwargs = {key: pad(value) for key, value in kwargs.items()}
+            args = [pad(value) for value in args]
+        obj.__doc__ = obj.__doc__.format(*args, **kwargs)
+        return obj
+
+    return dec

@@ -16,7 +16,7 @@
 
 import pytest
 
-from transformers4rec.utils.tags import Tag
+from merlin_standard_lib import Tag
 
 pytorch = pytest.importorskip("torch")
 torch4rec = pytest.importorskip("transformers4rec.torch")
