@@ -250,7 +250,7 @@ class Schema(_Schema):
             return self
 
     def select_by_type(self, to_select) -> "Schema":
-        if not isinstance(to_select, (list, tuple)) or not callable(to_select):
+        if not isinstance(to_select, (list, tuple)) and not callable(to_select):
             to_select = [to_select]
 
         def collection_filter_fn(type):
@@ -259,7 +259,7 @@ class Schema(_Schema):
         return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.type)
 
     def remove_by_type(self, to_remove) -> "Schema":
-        if not isinstance(to_remove, (list, tuple)) or not callable(to_remove):
+        if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
             to_remove = [to_remove]
 
         def collection_filter_fn(type):
@@ -270,7 +270,7 @@ class Schema(_Schema):
         )
 
     def select_by_tag(self, to_select) -> "Schema":
-        if not isinstance(to_select, (list, tuple)) or not callable(to_select):
+        if not isinstance(to_select, (list, tuple)) and not callable(to_select):
             to_select = [to_select]
 
         def collection_filter_fn(column_tags):
@@ -279,7 +279,7 @@ class Schema(_Schema):
         return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
 
     def remove_by_tag(self, to_remove) -> "Schema":
-        if not isinstance(to_remove, (list, tuple)) or not callable(to_remove):
+        if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
             to_remove = [to_remove]
 
         def collection_filter_fn(column_tags):
@@ -290,7 +290,7 @@ class Schema(_Schema):
         )
 
     def select_by_name(self, to_select) -> "Schema":
-        if not isinstance(to_select, (list, tuple)) or not callable(to_select):
+        if not isinstance(to_select, (list, tuple)) and not callable(to_select):
             to_select = [to_select]
 
         def collection_filter_fn(column_name):
@@ -299,7 +299,7 @@ class Schema(_Schema):
         return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.name)
 
     def remove_by_name(self, to_remove) -> "Schema":
-        if not isinstance(to_remove, (list, tuple)) or not callable(to_remove):
+        if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
             to_remove = [to_remove]
 
         def collection_filter_fn(column_name):
