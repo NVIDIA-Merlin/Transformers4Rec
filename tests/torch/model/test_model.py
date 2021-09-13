@@ -19,7 +19,7 @@ import pytest
 from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
-torch4rec = pytest.importorskip("transformers4rec.torch")
+tr = pytest.importorskip("transformers4rec.torch")
 
 if pytorch.cuda.is_available():
     devices = ["cpu", "cuda"]
@@ -31,8 +31,8 @@ def test_simple_model(torch_yoochoose_tabular_features, torch_yoochoose_like):
     targets = {"target": pytorch.randint(2, (100,)).float()}
 
     inputs = torch_yoochoose_tabular_features
-    body = torch4rec.SequentialBlock(inputs, torch4rec.MLPBlock([64]))
-    model = torch4rec.BinaryClassificationTask("target").to_model(body, inputs)
+    body = tr.SequentialBlock(inputs, tr.MLPBlock([64]))
+    model = tr.BinaryClassificationTask("target").to_model(body, inputs)
 
     dataset = [(torch_yoochoose_like, targets)]
     losses = model.fit(dataset, num_epochs=5)
@@ -43,7 +43,7 @@ def test_simple_model(torch_yoochoose_tabular_features, torch_yoochoose_like):
     assert all(loss.min() >= 0 and loss.max() <= 1 for loss in losses)
 
 
-@pytest.mark.parametrize("task", [torch4rec.BinaryClassificationTask, torch4rec.RegressionTask])
+@pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
 def test_sequential_prediction_model(
     torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, task
 ):
@@ -52,18 +52,16 @@ def test_sequential_prediction_model(
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
-    body = torch4rec.SequentialBlock(
-        inputs, torch4rec.MLPBlock([64]), torch4rec.TransformerBlock(transformer_config)
-    )
+    body = tr.SequentialBlock(inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config))
 
-    head_1 = torch4rec.Head(
+    head_1 = tr.Head(
         body,
-        torch4rec.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
         inputs=inputs,
     )
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
 
-    model = torch4rec.Model(head_1, head_2)
+    model = tr.Model(head_1, head_2)
     output = model(torch_yoochoose_like)
 
     assert isinstance(output, dict)
@@ -80,12 +78,12 @@ def test_model_with_multiple_heads_and_tasks(
         "classification": pytorch.randint(2, (100,)).float(),
         "regression": pytorch.randint(2, (100,)).float(),
     }
-    body = torch4rec.SequentialBlock(torch_yoochoose_tabular_features, torch4rec.MLPBlock([64]))
+    body = tr.SequentialBlock(torch_yoochoose_tabular_features, tr.MLPBlock([64]))
     tasks = [
-        torch4rec.BinaryClassificationTask("classification"),
-        torch4rec.RegressionTask("regression"),
+        tr.BinaryClassificationTask("classification"),
+        tr.RegressionTask("regression"),
     ]
-    head_1 = torch4rec.Head(body, tasks)
+    head_1 = tr.Head(body, tasks)
 
     # Session-based classification and regression tasks
     targets_2 = {
@@ -95,19 +93,19 @@ def test_model_with_multiple_heads_and_tasks(
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
-    body_2 = torch4rec.SequentialBlock(
+    body_2 = tr.SequentialBlock(
         torch_yoochoose_tabular_transformer_features,
-        torch4rec.MLPBlock([64]),
-        torch4rec.TransformerBlock(transformer_config),
+        tr.MLPBlock([64]),
+        tr.TransformerBlock(transformer_config),
     )
     tasks_2 = [
-        torch4rec.BinaryClassificationTask("classification_session", summary_type="last"),
-        torch4rec.RegressionTask("regression_session", summary_type="mean"),
+        tr.BinaryClassificationTask("classification_session", summary_type="last"),
+        tr.RegressionTask("regression_session", summary_type="mean"),
     ]
-    head_2 = torch4rec.Head(body_2, tasks_2)
+    head_2 = tr.Head(body_2, tasks_2)
 
     # Final model with two heads
-    model = torch4rec.Model(head_1, head_2)
+    model = tr.Model(head_1, head_2)
 
     # launch training
     targets.update(targets_2)
@@ -128,12 +126,12 @@ def test_model_with_multiple_heads_and_tasks(
 def test_multi_head_model_wrong_weights(torch_yoochoose_tabular_features, torch_yoochoose_like):
     with pytest.raises(ValueError) as excinfo:
         inputs = torch_yoochoose_tabular_features
-        body = torch4rec.SequentialBlock(inputs, torch4rec.MLPBlock([64]))
+        body = tr.SequentialBlock(inputs, tr.MLPBlock([64]))
 
-        head_1 = torch4rec.BinaryClassificationTask("classification").to_head(body, inputs)
-        head_2 = torch4rec.RegressionTask("regression", summary_type="mean").to_head(body, inputs)
+        head_1 = tr.BinaryClassificationTask("classification").to_head(body, inputs)
+        head_2 = tr.RegressionTask("regression", summary_type="mean").to_head(body, inputs)
 
-        torch4rec.Model(head_1, head_2, head_weights=[0.4])
+        tr.Model(head_1, head_2, head_weights=[0.4])
 
     assert "`head_weights` needs to have the same length " "as the number of heads" in str(
         excinfo.value
@@ -153,14 +151,14 @@ config_classes = [
 def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_like, config_cls):
     transformer_config = config_cls.build(128, 4, 2, 20)
 
-    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+    input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=128,
         masking="causal",
     )
-    task = torch4rec.BinaryClassificationTask("classification")
+    task = tr.BinaryClassificationTask("classification")
     model = transformer_config.to_torch_model(input_module, task)
 
     out = model(torch_yoochoose_like)
@@ -175,7 +173,7 @@ def test_item_prediction_transformer_torch_model_from_config(
 ):
     transformer_config = config_cls.build(128, 4, 2, 20)
 
-    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+    input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
@@ -183,7 +181,7 @@ def test_item_prediction_transformer_torch_model_from_config(
         masking="causal",
     )
 
-    task = torch4rec.NextItemPredictionTask()
+    task = tr.NextItemPredictionTask()
     model = transformer_config.to_torch_model(input_module, task)
 
     out = model(torch_yoochoose_like)
@@ -209,14 +207,14 @@ def test_set_model_to_device(
 @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
 def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, masking):
     transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
-    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+    input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=64,
         masking=masking,
     )
-    task = torch4rec.NextItemPredictionTask(hf_format=True)
+    task = tr.NextItemPredictionTask(hf_format=True)
     model = transformer_config.to_torch_model(input_module, task)
     out = model(torch_yoochoose_like)
     result = model.calculate_metrics(
@@ -228,13 +226,13 @@ def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, maski
 @pytest.mark.parametrize("d_model", [32, 64, 128])
 def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_schema, d_model):
     transformer_config = tconf.XLNetConfig.build(d_model, 4, 2, 20)
-    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+    input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=d_model,
         masking="mlm",
     )
-    task = torch4rec.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
     model = transformer_config.to_torch_model(input_module, task)
     assert model(torch_yoochoose_like)

@@ -18,7 +18,7 @@ import pytest
 
 from transformers4rec.config import transformer as tconf
 
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
 
 config_classes = [
     tconf.XLNetConfig,
@@ -27,7 +27,7 @@ config_classes = [
 ]
 
 # fixed parameters for tests
-lm_tasks = list(tf4rec.masking.masking_registry.keys())
+lm_tasks = list(tr.masking.masking_registry.keys())
 # lm_tasks.remove("permutation")
 
 
@@ -36,7 +36,7 @@ lm_tasks = list(tf4rec.masking.masking_registry.keys())
 def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
 
     col_group = yoochoose_schema
-    tab_module = tf4rec.TabularSequenceFeatures.from_schema(
+    tab_module = tr.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
         aggregation="sequential-concat",
@@ -47,11 +47,11 @@ def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
         d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
 
-    block = tf4rec.SequentialBlock(
+    block = tr.SequentialBlock(
         [
             tab_module,
-            tf4rec.MLPBlock([64]),
-            tf4rec.TransformerBlock(transformer_config, masking=tab_module.masking),
+            tr.MLPBlock([64]),
+            tr.TransformerBlock(transformer_config, masking=tab_module.masking),
         ]
     )
 

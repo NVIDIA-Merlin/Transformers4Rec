@@ -17,14 +17,14 @@
 import pytest
 
 from merlin_standard_lib import Tag
-from tests.tf import _utils as test_utils
 
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
+test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 
 def test_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-    emb_module = tf4rec.SequenceEmbeddingFeatures.from_schema(schema)
+    emb_module = tr.SequenceEmbeddingFeatures.from_schema(schema)
 
     outputs = emb_module(tf_yoochoose_like)
 
@@ -35,7 +35,7 @@ def test_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
 
 
 def test_serialization_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
-    inputs = tf4rec.SequenceEmbeddingFeatures.from_schema(yoochoose_schema)
+    inputs = tr.SequenceEmbeddingFeatures.from_schema(yoochoose_schema)
 
     copy_layer = test_utils.assert_serialization(inputs)
 
@@ -53,17 +53,17 @@ def test_serialization_sequence_embedding_features(yoochoose_schema, tf_yoochoos
 def test_sequence_embedding_features_yoochoose_model(
     yoochoose_schema, tf_yoochoose_like, run_eagerly
 ):
-    inputs = tf4rec.TabularSequenceFeatures.from_schema(
+    inputs = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema, max_sequence_length=20, aggregation="sequential-concat"
     )
 
-    body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
+    body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
 
     test_utils.assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
 
 
 def test_sequence_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
-    tab_module = tf4rec.TabularSequenceFeatures.from_schema(
+    tab_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema, max_sequence_length=20, continuous_projection=64
     )
 
@@ -75,7 +75,7 @@ def test_sequence_tabular_features_with_projection(yoochoose_schema, tf_yoochoos
 
 
 def test_serialization_sequence_tabular_features(yoochoose_schema, tf_yoochoose_like):
-    inputs = tf4rec.TabularSequenceFeatures.from_schema(yoochoose_schema)
+    inputs = tr.TabularSequenceFeatures.from_schema(yoochoose_schema)
 
     copy_layer = test_utils.assert_serialization(inputs)
 
@@ -88,12 +88,12 @@ def test_tabular_features_yoochoose_direct(
     tf_yoochoose_like,
     run_eagerly,
 ):
-    continuous_layer = tf4rec.ContinuousFeatures.from_schema(yoochoose_schema, tags=["continuous"])
-    categorical_layer = tf4rec.SequenceEmbeddingFeatures.from_schema(
+    continuous_layer = tr.ContinuousFeatures.from_schema(yoochoose_schema, tags=["continuous"])
+    categorical_layer = tr.SequenceEmbeddingFeatures.from_schema(
         yoochoose_schema, tags=["categorical"]
     )
 
-    inputs = tf4rec.TabularSequenceFeatures(
+    inputs = tr.TabularSequenceFeatures(
         continuous_layer=continuous_layer,
         categorical_layer=categorical_layer,
         aggregation="sequential-concat",
@@ -141,12 +141,12 @@ def test_tabular_features_yoochoose_direct(
 
 def test_sequence_tabular_features_with_projection_and_d_output(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        tf4rec.TabularSequenceFeatures.from_schema(
+        tr.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
             d_output=100,
-            projection=tf4rec.MLPBlock([64]),
+            projection=tr.MLPBlock([64]),
             masking="causal",
         )
 

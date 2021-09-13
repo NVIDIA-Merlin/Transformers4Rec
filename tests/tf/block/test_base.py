@@ -16,13 +16,13 @@
 
 import pytest
 
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
 
 
 def test_sequential_block_yoochoose(yoochoose_schema, tf_yoochoose_like):
-    inputs = tf4rec.TabularFeatures.from_schema(yoochoose_schema, aggregation="concat")
+    inputs = tr.TabularFeatures.from_schema(yoochoose_schema, aggregation="concat")
 
-    body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
+    body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
 
     outputs = body(tf_yoochoose_like)
 
@@ -30,10 +30,10 @@ def test_sequential_block_yoochoose(yoochoose_schema, tf_yoochoose_like):
 
 
 def test_sequential_block_yoochoose_without_aggregation(yoochoose_schema, tf_yoochoose_like):
-    inputs = tf4rec.TabularFeatures.from_schema(yoochoose_schema)
+    inputs = tr.TabularFeatures.from_schema(yoochoose_schema)
 
     with pytest.raises(TypeError) as excinfo:
-        body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
+        body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
 
         body(tf_yoochoose_like)
 

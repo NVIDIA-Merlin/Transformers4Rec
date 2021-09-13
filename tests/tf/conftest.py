@@ -25,7 +25,7 @@ from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
 
 tf = pytest.importorskip("tensorflow")
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
 
 NUM_EXAMPLES = 1000
 MAX_CARDINALITY = 100
@@ -56,7 +56,7 @@ def tf_cat_features():
 
 @pytest.fixture
 def tf_yoochoose_tabular_features(yoochoose_schema):
-    return tf4rec.TabularFeatures.from_schema(
+    return tr.TabularFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
@@ -66,7 +66,7 @@ def tf_yoochoose_tabular_features(yoochoose_schema):
 
 @pytest.fixture
 def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
-    return tf4rec.TabularSequenceFeatures.from_schema(
+    return tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
