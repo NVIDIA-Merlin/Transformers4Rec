@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from merlin_standard_lib import Schema, Tag
 
 from ..config.schema import requires_schema
 from ..config.trainer import T4RecTrainingArguments
@@ -73,6 +74,8 @@ from .tabular.transformations import StochasticSwapNoise, TabularLayerNorm
 from .trainer import Trainer
 
 __all__ = [
+    "Schema",
+    "Tag",
     "ranking_metric",
     "requires_schema",
     "T4RecConfig",
