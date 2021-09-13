@@ -3,8 +3,8 @@ from typing import Dict, List, Optional, Union
 
 import torch
 
-from ...types import DatasetSchema
-from ...utils.tags import Tag
+from merlin_standard_lib import Schema, Tag
+
 from ..typing import BlockOrModule, BlockType, Model, TabularData, TabularFeaturesType
 from ..utils.torch_utils import LossMixin, MetricsMixin
 from .prediction_task import BinaryClassificationTask, PredictionTask, RegressionTask
@@ -86,7 +86,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
+        schema: Schema,
         body: BlockType,
         task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
         task_weight_dict: Optional[Dict[str, float]] = None,
@@ -196,11 +196,11 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         body_outputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
-        call_body: bool = False,
+        forward=True,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
 
-        if call_body:
+        if forward:
             body_outputs = self.body(body_outputs)
 
         for name, task in self.prediction_tasks.items():

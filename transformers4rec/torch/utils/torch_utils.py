@@ -22,8 +22,9 @@ import torch
 from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.proto_utils import has_field
 
-from ..typing import TabularData
 from ...config.schema import SchemaMixin
+from ..typing import TabularData
+
 
 class OutputSizeMixin(SchemaMixin, abc.ABC):
     def build(self, input_size, schema=None, **kwargs):
@@ -85,7 +86,7 @@ class MetricsMixin:
         inputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
-        **kwargs,
+        forward=True,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
 
@@ -97,6 +98,8 @@ class MetricsMixin:
             TODO
         targets: Union[torch.Tensor, TabularData]
             TODO
+        forward: bool, default True
+
         mode: str, default="val"
 
         """

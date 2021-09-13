@@ -7,7 +7,8 @@ import torchmetrics as tm
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_utils import SequenceSummary
 
-from ...utils.registry import camelcase_to_snakecase
+from merlin_standard_lib.registry import camelcase_to_snakecase
+
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockType, Head, InputBlock, Model, TabularData
