@@ -53,7 +53,7 @@ class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC)
     def registry(cls) -> Registry:
         return tabular_aggregation_registry
 
-    def _maybe_expand_non_sequential_features(self, inputs: TabularData) -> TabularData:
+    def _expand_non_sequential_features(self, inputs: TabularData) -> TabularData:
         inputs_sizes = {k: v.shape for k, v in inputs.items()}
         seq_features_shapes, sequence_length = self._get_seq_features_shapes(inputs_sizes)
 
@@ -63,7 +63,9 @@ class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC)
                 # Including the 2nd dim and repeating for the sequence length
                 inputs[fname] = tf.tile(tf.expand_dims(inputs[fname], 1), (1, sequence_length, 1))
 
-    def _get_seq_features_shapes(self, inputs_sizes):
+        return inputs
+
+    def _get_seq_features_shapes(self, inputs_sizes: Dict[str, tf.TensorShape]):
         seq_features_shapes = dict()
         for fname, fshape in inputs_sizes.items():
             # Saves the shapes of sequential features

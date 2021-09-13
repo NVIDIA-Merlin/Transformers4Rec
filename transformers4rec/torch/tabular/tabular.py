@@ -48,7 +48,7 @@ class TabularAggregation(OutputSizeMixin, torch.nn.Module, ABC):
     def forward(self, inputs: TabularData) -> torch.Tensor:
         raise NotImplementedError()
 
-    def _maybe_expand_non_sequential_features(self, inputs: TabularData) -> TabularData:
+    def _expand_non_sequential_features(self, inputs: TabularData) -> TabularData:
         inputs_sizes = {k: v.shape for k, v in inputs.items()}
         seq_features_shapes, sequence_length = self._get_seq_features_shapes(inputs_sizes)
 
@@ -60,7 +60,7 @@ class TabularAggregation(OutputSizeMixin, torch.nn.Module, ABC):
 
         return inputs
 
-    def _get_seq_features_shapes(self, inputs_sizes):
+    def _get_seq_features_shapes(self, inputs_sizes: Dict[str, torch.Size]):
         seq_features_shapes = dict()
         for fname, fshape in inputs_sizes.items():
             # Saves the shapes of sequential features

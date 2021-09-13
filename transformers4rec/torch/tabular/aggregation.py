@@ -36,7 +36,7 @@ class ConcatFeatures(TabularAggregation):
         self,
         inputs: TabularData,
     ) -> torch.Tensor:
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_concat_shapes(inputs)
 
         tensors = []
@@ -67,7 +67,7 @@ class StackFeatures(TabularAggregation):
         self.axis = axis
 
     def forward(self, inputs: TabularData) -> torch.Tensor:
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_concat_shapes(inputs)
 
         tensors = []
@@ -103,7 +103,7 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
         self.stack = StackFeatures(axis=0)
 
     def forward(self, inputs: TabularData) -> torch.Tensor:
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)
         return self.stack(inputs).sum(dim=0)
 
@@ -134,7 +134,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
     def forward(self, inputs: TabularData) -> torch.Tensor:
         item_id_inputs = self.get_item_ids_from_inputs(inputs)
 
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)
 
         other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}

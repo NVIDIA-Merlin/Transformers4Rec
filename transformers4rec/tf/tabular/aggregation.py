@@ -30,7 +30,7 @@ from .tabular import TabularAggregation, tabular_aggregation_registry
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ConcatFeatures(TabularAggregation):
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_concat_shapes(inputs)
 
         tensors = []
@@ -54,7 +54,7 @@ class StackFeatures(TabularAggregation):
         self.axis = axis
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_concat_shapes(inputs)
 
         tensors = []
@@ -94,7 +94,7 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
         self.stack = StackFeatures(axis=0)
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)
 
         return tf.reduce_sum(self.stack(inputs), axis=0)
@@ -119,7 +119,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         item_id_inputs = self.get_item_ids_from_inputs(inputs)
-        self._maybe_expand_non_sequential_features(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)
 
         other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}
