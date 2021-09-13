@@ -17,7 +17,7 @@
 import pytest
 
 tf = pytest.importorskip("tensorflow")
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
 
 
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
@@ -35,7 +35,7 @@ def test_stochastic_swap_noise(replacement_prob):
         "cont_feat": tf.experimental.numpy.tril(tf.random.uniform((NUM_SEQS, SEQ_LENGTH)), 1),
     }
 
-    ssn = tf4rec.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
+    ssn = tr.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
     out_features_ssn = ssn(seq_inputs)
 
     for fname in seq_inputs:
@@ -52,12 +52,12 @@ def test_stochastic_swap_noise_with_tabular_features(
     yoochoose_schema, tf_yoochoose_like, replacement_prob
 ):
     inputs = tf_yoochoose_like
-    tab_module = tf4rec.TabularSequenceFeatures.from_schema(yoochoose_schema)
+    tab_module = tr.TabularSequenceFeatures.from_schema(yoochoose_schema)
 
     out_features = tab_module(inputs)
 
     PAD_TOKEN = 0
-    ssn = tf4rec.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
+    ssn = tr.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
     out_ssn = ssn(out_features, training=True)
 
     for fname in out_features:

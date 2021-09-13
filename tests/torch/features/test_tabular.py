@@ -18,13 +18,13 @@ import pytest
 
 from merlin_standard_lib import Tag
 
-torch4rec = pytest.importorskip("transformers4rec.torch")
+tr = pytest.importorskip("transformers4rec.torch")
 torch_utils = pytest.importorskip("transformers4rec.torch.utils.torch_utils")
 
 
 def test_tabular_features(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
-    tab_module = torch4rec.TabularFeatures.from_schema(schema)
+    tab_module = tr.TabularFeatures.from_schema(schema)
 
     outputs = tab_module(torch_yoochoose_like)
 
@@ -38,7 +38,7 @@ def test_tabular_features_embeddings_options(yoochoose_schema, torch_yoochoose_l
     schema = yoochoose_schema
 
     EMB_DIM = 100
-    tab_module = torch4rec.TabularFeatures.from_schema(schema, embedding_dim_default=EMB_DIM)
+    tab_module = tr.TabularFeatures.from_schema(schema, embedding_dim_default=EMB_DIM)
 
     outputs = tab_module(torch_yoochoose_like)
 
@@ -48,7 +48,7 @@ def test_tabular_features_embeddings_options(yoochoose_schema, torch_yoochoose_l
 
 def test_tabular_features_with_projection(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
-    tab_module = torch4rec.TabularFeatures.from_schema(
+    tab_module = tr.TabularFeatures.from_schema(
         schema, max_sequence_length=20, continuous_projection=64
     )
 
@@ -63,7 +63,7 @@ def test_tabular_features_soft_encoding(yoochoose_schema, torch_yoochoose_like):
 
     emb_cardinality = 10
     emb_dim = 8
-    tab_module = torch4rec.TabularFeatures.from_schema(
+    tab_module = tr.TabularFeatures.from_schema(
         schema,
         continuous_soft_embeddings=True,
         soft_embedding_cardinality_default=emb_cardinality,

@@ -16,14 +16,28 @@
 
 import pytest
 
-tr = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.torch")
+
+transformer_config_names = [
+    "AlbertConfig",
+    "ElectraConfig",
+    "GPT2Config",
+    "LongformerConfig",
+    "ReformerConfig",
+    "XLNetConfig",
+]
 
 
-def test_dlrm_block_yoochoose(yoochoose_schema, tf_yoochoose_like):
-    dlrm = tr.DLRMBlock.from_schema(yoochoose_schema, bottom_mlp=tr.MLPBlock([64]))
+@pytest.mark.parametrize("config", transformer_config_names)
+def test_transformer_config_imports(config):
+    config_cls = getattr(tr, config)
 
-    body = tr.SequentialBlock([dlrm, tr.MLPBlock([64])])
+    assert issubclass(config_cls, tr.T4RecConfig)
 
-    outputs = body(tf_yoochoose_like)
 
-    assert list(outputs.shape) == [100, 64]
+def test_torch_import():
+    pytest.importorskip("torch")
+
+    assert tr is not None
+    assert tr.Head is not None
+    assert tr.Model is not None

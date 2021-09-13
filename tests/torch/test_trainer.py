@@ -22,14 +22,13 @@ import pytest
 from transformers4rec.config import trainer
 
 pytorch = pytest.importorskip("torch")
-torch4rec = pytest.importorskip("transformers4rec.torch")
+tr = pytest.importorskip("transformers4rec.torch")
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
 def test_set_train_eval_loaders_attributes(
     torch_yoochoose_like, torch_yoochoose_next_item_prediction_model, batch_size
 ):
-
     train_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size)
     train_loader._batch_size = batch_size
     eval_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
@@ -41,7 +40,7 @@ def test_set_train_eval_loaders_attributes(
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
     )
-    recsys_trainer = torch4rec.Trainer(
+    recsys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
         train_dataloader=train_loader,
@@ -67,7 +66,7 @@ def test_set_train_eval_loaders_pyarrow(
         fp16=False,
         no_cuda=True,
     )
-    resys_trainer = torch4rec.Trainer(
+    resys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
         schema=yoochoose_schema,
@@ -95,7 +94,7 @@ def test_set_train_eval_loaders_pyarrow_no_schema(
             fp16=False,
             no_cuda=True,
         )
-        recsys_trainer = torch4rec.Trainer(
+        recsys_trainer = tr.Trainer(
             model=torch_yoochoose_next_item_prediction_model,
             args=args,
             train_dataset_or_path=yoochoose_path_file,
@@ -134,7 +133,7 @@ def test_create_scheduler(
         debug=["r"],
     )
 
-    recsys_trainer = torch4rec.Trainer(
+    recsys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
         schema=yoochoose_schema,
@@ -168,7 +167,7 @@ def test_trainer_eval_loop(
         debug=["r"],
     )
 
-    recsys_trainer = torch4rec.Trainer(
+    recsys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
         schema=yoochoose_schema,
@@ -208,7 +207,7 @@ def test_saves_checkpoints(
             report_to=[],
             debug=["r"],
         )
-        recsys_trainer = torch4rec.Trainer(
+        recsys_trainer = tr.Trainer(
             model=torch_yoochoose_next_item_prediction_model,
             args=args,
             schema=yoochoose_schema,

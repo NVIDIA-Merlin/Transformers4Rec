@@ -19,7 +19,7 @@ import pytest
 from merlin_standard_lib import Tag
 
 pytorch = pytest.importorskip("torch")
-torch4rec = pytest.importorskip("transformers4rec.torch")
+tr = pytest.importorskip("transformers4rec.torch")
 
 
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
@@ -37,7 +37,7 @@ def test_stochastic_swap_noise(replacement_prob):
         "cont_feat": pytorch.tril(pytorch.rand((NUM_SEQS, SEQ_LENGTH)), 1),
     }
 
-    ssn = torch4rec.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
+    ssn = tr.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
     out_features_ssn = ssn(seq_inputs, mask=seq_inputs["categ_feat"] != PAD_TOKEN)
 
     for fname in seq_inputs:
@@ -56,10 +56,10 @@ def test_stochastic_swap_noise_with_tabular_features(
     PAD_TOKEN = 0
 
     inputs = torch_yoochoose_like
-    tab_module = torch4rec.TabularSequenceFeatures.from_schema(yoochoose_schema)
+    tab_module = tr.TabularSequenceFeatures.from_schema(yoochoose_schema)
     out_features = tab_module(inputs)
 
-    ssn = torch4rec.StochasticSwapNoise(
+    ssn = tr.StochasticSwapNoise(
         pad_token=PAD_TOKEN, replacement_prob=replacement_prob, schema=yoochoose_schema
     )
     out_features_ssn = tab_module(inputs, pre=ssn)
@@ -77,11 +77,11 @@ def test_stochastic_swap_noise_with_tabular_features(
         assert replacement_rate == pytest.approx(replacement_prob, abs=0.1)
 
 
-@pytest.mark.parametrize("layer_norm", ["layer-norm", torch4rec.TabularLayerNorm()])
+@pytest.mark.parametrize("layer_norm", ["layer-norm", tr.TabularLayerNorm()])
 def test_layer_norm(yoochoose_schema, torch_yoochoose_like, layer_norm):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = torch4rec.EmbeddingFeatures.from_schema(
+    emb_module = tr.EmbeddingFeatures.from_schema(
         schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64, post=layer_norm
     )
 
