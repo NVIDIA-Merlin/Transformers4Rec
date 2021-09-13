@@ -101,7 +101,7 @@ def schema_like_generator(schema_file, lists_as_sequence_features):
                     )
                     row = tf.random.uniform((list_length,), minval=1, maxval=max_num)
                 else:
-                    row = tf.random.uniform((1,), maxval=max_num)
+                    row = tf.random.uniform((1,), minval=1, maxval=max_num)
             else:
                 if is_list_feature:
                     list_length = (
