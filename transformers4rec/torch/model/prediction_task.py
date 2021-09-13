@@ -1,4 +1,5 @@
 import copy
+import logging
 from types import SimpleNamespace
 from typing import Callable, Dict, Iterable, Optional, Union
 
@@ -10,9 +11,12 @@ from transformers.modeling_utils import SequenceSummary
 from merlin_standard_lib.registry import camelcase_to_snakecase
 
 from ..block.base import Block, BuildableBlock, SequentialBlock
+from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..typing import BlockType, Head, InputBlock, Model, TabularData
 from ..utils.torch_utils import LambdaModule, LossMixin, MetricsMixin
+
+LOG = logging.getLogger("transformers4rec")
 
 
 def name_fn(name, inp):
@@ -366,6 +370,15 @@ class NextItemPredictionTask(PredictionTask):
             self.target_dim = self.embeddings.item_embedding_table.num_embeddings
         if self.weight_tying:
             self.item_embedding_table = self.embeddings.item_embedding_table
+            item_dim = self.item_embedding_table.weight.shape[1]
+            if input_size[-1] != item_dim and not task_block:
+                LOG.warning(
+                    f"Projecting interaction embeddings to '{item_dim}' "
+                    f"As weight tying requires the hidden dimension '{input_size[-1]}' "
+                    f"to be equal to the item-id embedding dimenstion '{item_dim}'"
+                )
+                # project input tensors to same dimension as item-id embeddings
+                task_block = MLPBlock([item_dim])
 
         # Retrieve the masking if used in the model block
         self.masking = inputs.masking
