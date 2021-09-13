@@ -40,22 +40,21 @@ Then all that's left is to construct a transformer-body and convert this to a mo
 
 Here is the PyTorch version:
 ```python
-import transformers4rec as tr
-from transformers4rec import torch as torch_rec
+from transformers4rec import torch as tr
 
 SCHEMA_PATH = "..."
 max_sequence_length, d_model = 20, 64
 
 # Define input module to process tabular input-features
-input_module = torch_rec.TabularSequenceFeatures.from_schema(
-    tr.DatasetSchema.from_proto(SCHEMA_PATH),
+input_module = tr.TabularSequenceFeatures.from_schema(
+    tr.Schema().from_proto_text(SCHEMA_PATH),
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
     aggregation="sequential-concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks
-prediction_tasks = [torch_rec.NextItemPredictionTask()]
+prediction_tasks = [tr.NextItemPredictionTask()]
 
 # Define the config of the XLNet Transformer architecture
 transformer_config = tr.XLNetConfig.build(
@@ -66,22 +65,21 @@ model = transformer_config.to_torch_model(input_module, *prediction_tasks)
 
 And here is the equivalent code for TensorFlow:
 ```python
-import transformers4rec as tr
-from transformers4rec import tf as tf_rec
+from transformers4rec import tf as tr
 
 SCHEMA_PATH = "..."
 max_sequence_length, d_model = 20, 64
 
 # Define input module to process tabular input-features
-input_module = tf_rec.TabularSequenceFeatures.from_schema(
-    tr.DatasetSchema.from_proto(SCHEMA_PATH),
+input_module = tr.TabularSequenceFeatures.from_schema(
+    tr.Schema().from_proto_text(SCHEMA_PATH),
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
     aggregation="sequential-concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks
-prediction_tasks = [tf_rec.NextItemPredictionTask()]
+prediction_tasks = [tr.NextItemPredictionTask()]
 
 # Define the config of the XLNet Transformer architecture
 transformer_config = tr.XLNetConfig.build(

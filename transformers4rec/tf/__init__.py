@@ -19,6 +19,8 @@ from tensorflow.python.keras.metrics import Metric
 from tensorflow.python.keras.optimizer_v2.optimizer_v2 import OptimizerV2
 from tensorflow.python.training.tracking.data_structures import ListWrapper, _DictWrapper
 
+from merlin_standard_lib import Schema, Tag
+
 from ..config.schema import requires_schema
 from ..config.trainer import T4RecTrainingArgumentsTF
 from ..config.transformer import (
@@ -62,6 +64,8 @@ Metric.__repr__ = repr_utils.layer_repr_no_children
 OptimizerV2.__repr__ = repr_utils.layer_repr_no_children
 
 __all__ = [
+    "Schema",
+    "Tag",
     "requires_schema",
     "T4RecTrainingArgumentsTF",
     "T4RecConfig",
