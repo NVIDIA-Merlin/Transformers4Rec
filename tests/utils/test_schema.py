@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import pytest
 
 from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
@@ -34,12 +35,12 @@ def test_schema_from_yoochoose_schema(yoochoose_schema_file):
 
 @pytest.mark.skip(reason="broken")
 def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
-     pytest.importorskip("nvtabular")
-     schema = Schema().from_proto_text(str(yoochoose_schema_file))
+    pytest.importorskip("nvtabular")
+    schema = Schema().from_proto_text(str(yoochoose_schema_file))
 
-     assert schema.categorical_cardinalities() == {"item_id/list": 51996, "category/list": 332}
-     embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
-     assert embedding_sizes == {"item_id/list": 512, "category/list": 41}
+    assert schema.categorical_cardinalities() == {"item_id/list": 51996, "category/list": 332}
+    embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
+    assert embedding_sizes == {"item_id/list": 512, "category/list": 41}
 
 
 def test_schema_embedding_sizes(yoochoose_schema_file):
