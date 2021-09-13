@@ -197,14 +197,18 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
         forward=True,
+        call_body=False,
+        **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
 
-        if forward:
+        if call_body:
             body_outputs = self.body(body_outputs)
 
         for name, task in self.prediction_tasks.items():
-            metrics.update(task.calculate_metrics(body_outputs, targets, mode=mode))
+            metrics.update(
+                task.calculate_metrics(body_outputs, targets, mode=mode, forward=forward, **kwargs)
+            )
 
         return _output_metrics(metrics)
 

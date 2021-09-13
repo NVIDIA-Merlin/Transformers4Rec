@@ -85,7 +85,7 @@ def test_head_with_multiple_tasks(
     with pytorch.set_grad_enabled(mode=True):
         body_out = body(torch_yoochoose_like)
         loss = head.compute_loss(body_out, targets)
-        metrics = head.calculate_metrics(body_out, targets)
+        metrics = head.calculate_metrics(body_out, targets, call_body=False)
 
         optimizer.zero_grad()
         loss.backward()

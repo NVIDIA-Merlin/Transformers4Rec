@@ -95,11 +95,15 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         return getattr(loss_tensor, self.head_reduction)()
 
     def calculate_metrics(
-        self, inputs, targets, mode="val", forward=True, **kwargs
+        self, inputs, targets, mode="val", call_body=True, forward=True, **kwargs
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         outputs = {}
         for head in self.heads:
-            outputs.update(head.calculate_metrics(inputs, targets, mode=mode, forward=forward))
+            outputs.update(
+                head.calculate_metrics(
+                    inputs, targets, mode=mode, call_body=call_body, forward=forward, **kwargs
+                )
+            )
 
         return outputs
 

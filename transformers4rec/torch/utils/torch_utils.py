@@ -87,6 +87,7 @@ class MetricsMixin:
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
         forward=True,
+        **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
 

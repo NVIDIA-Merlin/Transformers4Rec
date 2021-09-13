@@ -387,6 +387,9 @@ class NextItemPredictionTask(PredictionTask):
             inputs = inputs[0]
         x = inputs.float()
 
+        if self.task_block:
+            x = self.task_block(x)
+
         # Retrieve labels either from masking or input module
         if self.masking:
             labels = self.masking.masked_targets
@@ -426,7 +429,7 @@ class NextItemPredictionTask(PredictionTask):
         return out_tensor
 
     def calculate_metrics(
-        self, predictions, targets, mode="val", forward=True
+        self, predictions, targets, mode="val", forward=True, **kwargs
     ) -> Dict[str, torch.Tensor]:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
@@ -434,9 +437,10 @@ class NextItemPredictionTask(PredictionTask):
         outputs = {}
         if forward:
             predictions = self(predictions)
+            if self.hf_format:
+                targets = predictions["labels"]
+                predictions = predictions["predictions"]
         predictions = self.forward_to_prediction_fn(predictions)
-        if self.hf_format:
-            predictions = predictions["predictions"]
 
         for metric in self.metrics:
             outputs[self.metric_name(metric)] = metric(predictions, targets)
