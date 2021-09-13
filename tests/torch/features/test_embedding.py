@@ -89,7 +89,7 @@ def test_embedding_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
     assert all(emb.shape[-1] == 64 for emb in embeddings.values())
     assert emb_module.item_id == "item_id/list"
 
-    max_value = schema.select_by_name("item_id/list")._schema.feature[0].int_domain.max
+    max_value = schema.select_by_name("item_id/list").feature[0].int_domain.max
     assert emb_module.item_embedding_table.num_embeddings == max_value + 1
 
 
