@@ -149,7 +149,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
                 filtered_kwargs = filter_kwargs(kwargs, module, filter_positional_or_keyword=False)
                 input = module(input, **filtered_kwargs)
 
-            if "training" in inspect.signature(module.forward).parameters:
+            elif "training" in inspect.signature(module.forward).parameters:
                 input = module(input, training=training)
             else:
                 input = module(input)

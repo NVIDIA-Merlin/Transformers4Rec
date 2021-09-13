@@ -225,7 +225,7 @@ def test_sample_from_softmax_output(torch_masking_inputs):
 @pytest.mark.parametrize("mode", [True, False])
 def test_masked_positions(torch_masking_inputs, mode):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.ReplacementLanguageModeling(
+    lm = tr.masking.ReplacementLanguageModeling(
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"], sample_from_batch=True
     )
     mask_labels, masked_targets = lm.compute_masked_targets(

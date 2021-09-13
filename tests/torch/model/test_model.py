@@ -251,13 +251,13 @@ def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_sc
 
 @pytest.mark.parametrize("masking", ["causal", "mlm", "rtd", "plm"])
 def test_output_shape_mode_eval(torch_yoochoose_like, yoochoose_schema, masking):
-    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+    input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         d_output=64,
         masking=masking,
     )
-    prediction_task = torch4rec.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    prediction_task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=8, n_layer=2, total_seq_length=20
     )

@@ -265,7 +265,7 @@ def test_evaluate_results(
         debug=["r"],
     )
 
-    recsys_trainer = torch4rec.Trainer(
+    recsys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
         schema=yoochoose_schema,
@@ -274,11 +274,11 @@ def test_evaluate_results(
         compute_metrics=True,
     )
     default_metric = [
-        "eval_ndcgat_10",
-        "eval_ndcgat_20",
-        "eval_recallat_10",
-        "eval_recallat_20",
-        "eval_loss",
+        "eval/next-item/ndcg_at_10",
+        "eval/next-item/ndcg_at_20",
+        "eval/next-item/recall_at_10",
+        "eval/next-item/recall_at_20",
+        "eval/loss",
     ]
 
     result_1 = recsys_trainer.evaluate(eval_dataset=yoochoose_path_file, metric_key_prefix="eval")
