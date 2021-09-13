@@ -25,22 +25,6 @@ from typing import Any, Dict
 logger = logging.getLogger(__name__)
 
 
-def docstring_parameter(*args, extra_padding=None, **kwargs):
-    def dec(obj):
-        if extra_padding:
-
-            def pad(value):
-                return ("\n" + " " * extra_padding).join(value.split("\n"))
-
-            nonlocal args, kwargs
-            kwargs = {key: pad(value) for key, value in kwargs.items()}
-            args = [pad(value) for value in args]
-        obj.__doc__ = obj.__doc__.format(*args, **kwargs)
-        return obj
-
-    return dec
-
-
 def filter_kwargs(kwargs, thing_with_kwargs, filter_positional_or_keyword=True):
     sig = inspect.signature(thing_with_kwargs)
     if filter_positional_or_keyword:

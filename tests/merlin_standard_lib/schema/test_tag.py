@@ -13,18 +13,14 @@
 # limitations under the License.
 #
 
+from merlin_standard_lib import Tag
 
-def docstring_parameter(*args, extra_padding=None, **kwargs):
-    def dec(obj):
-        if extra_padding:
 
-            def pad(value):
-                return ("\n" + " " * extra_padding).join(value.split("\n"))
+def test_tag_equality():
+    assert Tag.CATEGORICAL == "categorical"
+    assert Tag.CONTINUOUS == "continuous"
+    assert Tag.ITEM_ID == "item_id"
 
-            nonlocal args, kwargs
-            kwargs = {key: pad(value) for key, value in kwargs.items()}
-            args = [pad(value) for value in args]
-        obj.__doc__ = obj.__doc__.format(*args, **kwargs)
-        return obj
 
-    return dec
+def test_tag_to_str():
+    assert str(Tag.CATEGORICAL) == "categorical"
