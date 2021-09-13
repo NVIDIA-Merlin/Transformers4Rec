@@ -32,13 +32,14 @@ def test_schema_from_yoochoose_schema(yoochoose_schema_file):
     assert len(schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 2
 
 
-# def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
-#     pytest.importorskip("nvtabular")
-#     schema = Schema().from_proto_text(str(yoochoose_schema_file))
-#
-#     assert schema.categorical_cardinalities() == {"item_id/list": 51996, "category/list": 332}
-#     embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
-#     assert embedding_sizes == {"item_id/list": 512, "category/list": 41}
+@pytest.mark.skip(reason="broken")
+def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
+     pytest.importorskip("nvtabular")
+     schema = Schema().from_proto_text(str(yoochoose_schema_file))
+
+     assert schema.categorical_cardinalities() == {"item_id/list": 51996, "category/list": 332}
+     embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
+     assert embedding_sizes == {"item_id/list": 512, "category/list": 41}
 
 
 def test_schema_embedding_sizes(yoochoose_schema_file):
