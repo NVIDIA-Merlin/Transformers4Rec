@@ -28,11 +28,10 @@ TransformerBody = Union[PreTrainedModel, T4RecConfig]
 
 
 class TransformerPrepare(torch.nn.Module):
-    def __init__(self, transformer, masking, device="cpu"):
+    def __init__(self, transformer, masking):
         super().__init__()
         self.transformer = transformer
         self.masking = masking
-        self.device = device
 
     def forward(self, inputs_embeds) -> Dict[str, Any]:
         raise NotImplementedError()
@@ -43,7 +42,9 @@ class GPT2Prepare(TransformerPrepare):
         seq_len = inputs_embeds.shape[1]
         # head_mask has shape n_layer x batch x n_heads x N x N
         head_mask = (
-            torch.tril(torch.ones((seq_len, seq_len), dtype=torch.uint8, device=self.device))
+            torch.tril(
+                torch.ones((seq_len, seq_len), dtype=torch.uint8, device=inputs_embeds.device)
+            )
             .view(1, 1, 1, seq_len, seq_len)
             .repeat(self.transformer.config.num_hidden_layers, 1, 1, 1, 1)
         )
@@ -73,7 +74,6 @@ class TransformerBlock(BlockBase):
         masking: Optional[MaskSequence] = None,
         prepare_module: Optional[Type[TransformerPrepare]] = None,
         output_fn=lambda model_outputs: model_outputs[0],
-        device: str = "cpu",
     ):
         super().__init__()
 
@@ -100,8 +100,7 @@ class TransformerBlock(BlockBase):
         if not prepare_module and self.transformer in self.TRANSFORMER_TO_PREPARE:
             prepare_module = self.TRANSFORMER_TO_PREPARE[self.transformer]
         if prepare_module:
-            self.prepare_module = prepare_module(transformer, masking, device)
-        self.device = device
+            self.prepare_module = prepare_module(transformer, masking)
         self.output_fn = output_fn
 
     @classmethod
@@ -156,7 +155,6 @@ class TransformerBlock(BlockBase):
         for param in inspect.signature(self.transformer.forward).parameters:
             if param in transformer_kwargs:
                 filtered_transformer_kwargs[param] = transformer_kwargs[param]
-
         model_outputs = self.transformer(**filtered_transformer_kwargs)
         outputs = self.output_fn(model_outputs)
 

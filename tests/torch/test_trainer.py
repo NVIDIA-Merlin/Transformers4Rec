@@ -36,7 +36,8 @@ def test_set_train_eval_loaders_attributes(
 
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
-        avg_session_length=20,
+        max_steps=5,
+        max_sequence_length=20,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
     )
@@ -58,7 +59,7 @@ def test_set_train_eval_loaders_pyarrow(
 
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
-        avg_session_length=20,
+        max_steps=5,
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
@@ -86,7 +87,7 @@ def test_set_train_eval_loaders_pyarrow_no_schema(
         batch_size = 16
         args = trainer.T4RecTrainingArguments(
             output_dir=".",
-            avg_session_length=20,
+            max_steps=5,
             num_train_epochs=1,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size // 2,
@@ -119,6 +120,7 @@ def test_create_scheduler(
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
+        max_steps=5,
         avg_session_length=20,
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
@@ -155,7 +157,7 @@ def test_trainer_eval_loop(
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
-        avg_session_length=20,
+        max_steps=5,
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
@@ -203,8 +205,8 @@ def test_saves_checkpoints(
         batch_size = 16
         args = trainer.T4RecTrainingArguments(
             output_dir=tmpdir,
+            max_steps=5,
             num_train_epochs=1,
-            avg_session_length=20,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size // 2,
             data_loader_engine="pyarrow",
@@ -240,3 +242,49 @@ def test_saves_checkpoints(
         assert os.path.isdir(checkpoint)
         for filename in file_list:
             assert os.path.isfile(os.path.join(checkpoint, filename))
+
+
+def test_evaluate_results(
+    yoochoose_schema,
+    yoochoose_path_file,
+    torch_yoochoose_next_item_prediction_model,
+):
+    pytest.importorskip("pyarrow")
+    batch_size = 16
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        data_loader_engine="pyarrow",
+        max_sequence_length=20,
+        fp16=False,
+        no_cuda=True,
+        report_to=[],
+        debug=["r"],
+    )
+
+    recsys_trainer = tr.Trainer(
+        model=torch_yoochoose_next_item_prediction_model,
+        args=args,
+        schema=yoochoose_schema,
+        train_dataset_or_path=yoochoose_path_file,
+        eval_dataset_or_path=yoochoose_path_file,
+        compute_metrics=True,
+    )
+    default_metric = [
+        "eval/next-item/ndcg_at_10",
+        "eval/next-item/ndcg_at_20",
+        "eval/next-item/recall_at_10",
+        "eval/next-item/recall_at_20",
+        "eval/loss",
+    ]
+
+    result_1 = recsys_trainer.evaluate(eval_dataset=yoochoose_path_file, metric_key_prefix="eval")
+    result_1 = {k: result_1[k] for k in default_metric}
+
+    result_2 = recsys_trainer.evaluate(eval_dataset=yoochoose_path_file, metric_key_prefix="eval")
+    result_2 = {k: result_2[k] for k in default_metric}
+
+    assert result_1 == result_2

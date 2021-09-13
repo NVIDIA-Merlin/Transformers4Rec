@@ -70,11 +70,11 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_reduction = head_reduction
         self.optimizer = optimizer
 
-    def forward(self, inputs: TensorOrTabularData, **kwargs):
+    def forward(self, inputs: TensorOrTabularData, training=True, **kwargs):
         # TODO: Optimize this
         outputs = {}
         for head in self.heads:
-            outputs.update(head(inputs, call_body=True, always_output_dict=True))
+            outputs.update(head(inputs, call_body=True, training=training, always_output_dict=True))
 
         if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]

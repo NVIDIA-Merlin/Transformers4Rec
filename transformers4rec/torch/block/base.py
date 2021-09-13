@@ -141,11 +141,16 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         # pylint: disable=arguments-out-of-order
         return right_shift_block(other, self)
 
-    def forward(self, input, **kwargs):
+    def forward(self, input, training=True, **kwargs):
+        # from transformers4rec.torch import TabularSequenceFeatures
+
         for i, module in enumerate(self):
             if i == len(self) - 1:
                 filtered_kwargs = filter_kwargs(kwargs, module, filter_positional_or_keyword=False)
                 input = module(input, **filtered_kwargs)
+
+            elif "training" in inspect.signature(module.forward).parameters:
+                input = module(input, training=training)
             else:
                 input = module(input)
 

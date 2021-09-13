@@ -388,9 +388,9 @@ class NextItemPredictionTask(PredictionTask):
             item_dim = self.item_embedding_table.weight.shape[1]
             if input_size[-1] != item_dim and not task_block:
                 LOG.warning(
-                    f"Projecting interaction embeddings to '{item_dim}' "
-                    f"As weight tying requires the hidden dimension '{input_size[-1]}' "
-                    f"to be equal to the item-id embedding dimenstion '{item_dim}'"
+                    f"Projecting inputs of NextItemPredictionTask to'{item_dim}' "
+                    f"As weight tying requires the input dimension '{input_size[-1]}' "
+                    f"to be equal to the item-id embedding dimension '{item_dim}'"
                 )
                 # project input tensors to same dimension as item-id embeddings
                 task_block = MLPBlock([item_dim])
@@ -507,7 +507,6 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
         self.softmax_temperature = softmax_temperature
 
     def build(self, input_size) -> Block:
-        # TODO: What's the output-size of this?
         return Block(
             _NextItemPredictionTask(
                 input_size,

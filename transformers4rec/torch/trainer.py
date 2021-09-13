@@ -255,7 +255,7 @@ class Trainer(BaseTrainer):
 
     def prediction_step(
         self,
-        model: List[torch.nn.Module],
+        model: torch.nn.Module,
         inputs: Dict[str, torch.Tensor],
         prediction_loss_only: bool,
         ignore_keys: Optional[List[str]] = None,
@@ -274,9 +274,9 @@ class Trainer(BaseTrainer):
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
-                    outputs = model(**inputs)
+                    outputs = model(inputs, training=False)
             else:
-                outputs = model(**inputs)
+                outputs = model(inputs, training=False)
 
             loss = outputs["loss"].mean().detach()
 
@@ -337,10 +337,10 @@ class Trainer(BaseTrainer):
         )
 
         # set the model
-        model = self.model
+        model = self.model.module
         # reset metrics for the dataset (Train, Valid or Test)
         if self.compute_metrics:
-            model.module.reset_metrics()
+            model.reset_metrics()
 
         if not isinstance(dataloader.dataset, collections.abc.Sized):
             raise ValueError("dataset must implement __len__")
@@ -399,7 +399,7 @@ class Trainer(BaseTrainer):
             # TODO: compute metrics each N eval_steps to speedup evaluation
             metrics_results_detailed = None
             if self.compute_metrics:
-                metrics_results_detailed = model.module.calculate_metrics(
+                metrics_results_detailed = model.calculate_metrics(
                     preds, labels, mode=metric_key_prefix, forward=False, call_body=False
                 )
 
@@ -525,7 +525,7 @@ class Trainer(BaseTrainer):
         metrics = {}
         # Computing the metrics results as the average of all steps
         if self.compute_metrics:
-            streaming_metrics_results = model.module.compute_metrics(mode=metric_key_prefix)
+            streaming_metrics_results = model.compute_metrics(mode=metric_key_prefix)
             metrics = {**metrics, **streaming_metrics_results}
         metrics[f"{metric_key_prefix}/loss"] = all_losses.mean().item()
 
