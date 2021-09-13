@@ -527,12 +527,12 @@ class Trainer(BaseTrainer):
         if self.compute_metrics:
             streaming_metrics_results = model.module.compute_metrics(mode=metric_key_prefix)
             metrics = {**metrics, **streaming_metrics_results}
-        metrics[f"{metric_key_prefix}_loss"] = all_losses.mean().item()
+        metrics[f"{metric_key_prefix}/loss"] = all_losses.mean().item()
 
-        # Prefix all keys with metric_key_prefix + '_'
+        # Prefix all keys with metric_key_prefix + '/'
         for key in list(metrics.keys()):
-            if not key.startswith(f"{metric_key_prefix}_"):
-                metrics[f"{metric_key_prefix}_{key}"] = metrics.pop(key).cpu().numpy().item()
+            if not key.startswith(f"{metric_key_prefix}/"):
+                metrics[f"{metric_key_prefix}/{key}"] = metrics.pop(key).cpu().numpy().item()
 
         return EvalLoopOutput(
             predictions=all_preds_item_ids_scores,

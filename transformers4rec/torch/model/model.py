@@ -22,10 +22,11 @@ import torch
 from tqdm import tqdm
 
 from ..typing import TensorOrTabularData
+from ..utils.torch_utils import LossMixin, MetricsMixin
 from .head import Head
 
 
-class Model(torch.nn.Module):
+class Model(torch.nn.Module, LossMixin, MetricsMixin):
     """Model class that can aggregate one of multiple heads.
 
     Parameters
@@ -94,24 +95,19 @@ class Model(torch.nn.Module):
         return getattr(loss_tensor, self.head_reduction)()
 
     def calculate_metrics(
-        self,
-        inputs,
-        targets,
-        mode="val",
-        call_body=True,
-        forward=True,
+        self, inputs, targets, mode="val", call_body=True, forward=True, **kwargs
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         outputs = {}
         for head in self.heads:
             outputs.update(
                 head.calculate_metrics(
-                    inputs, targets, mode=mode, call_body=call_body, forward=forward
+                    inputs, targets, mode=mode, call_body=call_body, forward=forward, **kwargs
                 )
             )
 
         return outputs
 
-    def compute_metrics(self, mode=None):
+    def compute_metrics(self, mode=None) -> Dict[str, Union[float, torch.Tensor]]:
         metrics = {}
         for head in self.heads:
             metrics.update(head.compute_metrics(mode=mode))
