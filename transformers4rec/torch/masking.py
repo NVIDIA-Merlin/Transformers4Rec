@@ -566,18 +566,27 @@ class PermutationLanguageModeling(MaskSequence):
         # During evaluation always mask the last item of the session
         else:
             if self.eval_on_last_item_seq_only:
-                # get labels and their mask
                 last_item_sessions = non_padded_mask.sum(axis=1) - 1
                 labels[rows_ids, last_item_sessions] = item_ids[rows_ids, last_item_sessions]
                 mask_labels = labels != self.padding_idx
-                # Perm mask: Previous tokens don't see last non-padded token
-                # Add causal mask to avoid attending to future when evaluating
-                causal_mask = torch.ones([labels.size(1), labels.size(1)])
-                perm_mask = torch.triu(causal_mask, diagonal=1)
-                # targets: Predict only last item of each sequence
-                target_mapping = torch.zeros((labels.size(1), labels.size(1)))
-                target_mapping[last_item_sessions, last_item_sessions] = 1
-                target_mapping.expand((labels.size(0), labels.size(1), labels.size(1)))
+                perm_mask = torch.zeros(
+                    (labels.size(0), labels.size(1), labels.size(1)),
+                    dtype=torch.float32,
+                    device=item_ids.device,
+                )
+                # Previous tokens don't see last non-padded token
+                perm_mask[rows_ids, :, last_item_sessions] = 1
+                # add causal mask to avoid attending to future when evaluating
+                causal_mask = torch.ones([labels.size(1), labels.size(1)], device=item_ids.device)
+                mask_up = torch.triu(causal_mask, diagonal=1)
+                temp_perm = (
+                    mask_up.expand((labels.size(0), labels.size(1), labels.size(1))) + perm_mask
+                )
+                perm_mask = (temp_perm > 0).long()
+                # the i-th predict corresponds to the i-th token.
+                target_mapping = torch.diag(
+                    torch.ones(labels.size(1), dtype=torch.float32, device=item_ids.device)
+                ).expand((labels.size(0), labels.size(1), labels.size(1)))
 
             else:
                 # predict all next items
@@ -590,8 +599,19 @@ class PermutationLanguageModeling(MaskSequence):
                     (labels.size(0), labels.size(1), labels.size(1))
                 )
                 # perm_mask: causal mask
-                causal_mask = torch.ones([labels.size(1), labels.size(1)])
-                perm_mask = torch.triu(causal_mask, diagonal=1)
+                # Perm mask:
+                perm_mask = torch.zeros(
+                    (labels.size(0), labels.size(1), labels.size(1)),
+                    dtype=torch.float32,
+                    device=item_ids.device,
+                )
+                # add causal mask to avoid attending to future when evaluating
+                causal_mask = torch.ones([labels.size(1), labels.size(1)], device=item_ids.device)
+                mask_up = torch.triu(causal_mask, diagonal=1)
+                temp_perm = (
+                    mask_up.expand((labels.size(0), labels.size(1), labels.size(1))) + perm_mask
+                )
+                perm_mask = (temp_perm > 0).long()
         return mask_labels, labels, target_mapping, perm_mask
 
     def compute_masked_targets(
