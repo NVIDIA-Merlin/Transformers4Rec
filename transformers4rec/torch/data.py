@@ -20,9 +20,8 @@ import pandas as pd
 import torch
 from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
-from merlin_standard_lib import Tag
+from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.misc_utils import validate_dataset
-from transformers4rec.config.schema import DatasetSchema
 
 from .utils.torch_utils import get_output_sizes_from_schema
 
@@ -123,7 +122,7 @@ class DataLoader(NVTDataLoader):
     @classmethod
     def from_schema(
         cls,
-        schema: DatasetSchema,
+        schema: Schema,
         paths_or_dataset,
         batch_size,
         shuffle=True,
@@ -140,7 +139,7 @@ class DataLoader(NVTDataLoader):
 
         Parameters
         ----------
-        schema: DatasetSchema
+        schema: Schema
             Dataset schema
         paths_or_dataset: Union[str, Dataset]
             Path to paquet data of Dataset object.
@@ -189,7 +188,7 @@ class DataLoader(NVTDataLoader):
         if not os.path.exists(schema_path):
             raise ValueError("Can't load from directory without a schema.")
 
-        schema = DatasetSchema.from_schema(schema_path)
+        schema = Schema().from_proto_text(str(schema_path))
 
         categorical_features = (
             categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
