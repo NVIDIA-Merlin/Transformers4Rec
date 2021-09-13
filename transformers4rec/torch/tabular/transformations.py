@@ -25,7 +25,8 @@ from .tabular import TabularTransformation, tabular_transformation_registry
 @tabular_transformation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")
 class StochasticSwapNoise(TabularTransformation):
     """
-    Applies Stochastic replacement of sequence features
+    Applies Stochastic replacement of sequence features.
+    It can be applied as a `pre` transform like `TransformerBlock(pre="stochastic-swap-noise")`
     """
 
     def __init__(self, schema=None, pad_token=0, replacement_prob=0.1):
@@ -35,14 +36,14 @@ class StochasticSwapNoise(TabularTransformation):
         self.replacement_prob = replacement_prob
 
     def forward(
-        self, inputs: TensorOrTabularData, mask: Optional[torch.Tensor] = None, **kwargs
+        self, inputs: TensorOrTabularData, input_mask: Optional[torch.Tensor] = None, **kwargs
     ) -> TensorOrTabularData:
         if self.schema:
-            mask = mask or self.get_mask_from_inputs(inputs, self.pad_token)
+            input_mask = input_mask or self.get_padding_mask_from_item_id(inputs, self.pad_token)
         if isinstance(inputs, dict):
-            return {key: self.augment(val, mask) for key, val in inputs.items()}
+            return {key: self.augment(val, input_mask) for key, val in inputs.items()}
 
-        return self.augment(inputs, mask)
+        return self.augment(inputs, input_mask)
 
     def forward_output_size(self, input_size):
         return input_size
@@ -54,8 +55,6 @@ class StochasticSwapNoise(TabularTransformation):
             if mask is not None:
                 if input_tensor.ndim == mask.ndim - 1:
                     mask = mask[:, 0]
-                elif input_tensor.ndim == mask.ndim - 2:
-                    mask = mask[:, 0, 0]
 
             sse_prob_replacement_matrix = torch.full(
                 input_tensor.shape,

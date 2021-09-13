@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+from typing import Optional
+
 import tensorflow as tf
 from tensorflow.keras import backend
 from tensorflow.python.keras.utils import control_flow_util
@@ -68,30 +70,45 @@ class StochasticSwapNoise(TabularTransformation):
     Applies Stochastic replacement of sequence features
     """
 
-    def __init__(self, pad_token=0, replacement_prob=0.1, **kwargs):
+    def __init__(self, schema=None, pad_token=0, replacement_prob=0.1, **kwargs):
         super().__init__(**kwargs)
+        self.schema = schema
         self.pad_token = pad_token
         self.replacement_prob = replacement_prob
 
-    def call(self, inputs: TensorOrTabularData, training=True, **kwargs) -> TensorOrTabularData:
-        def augment():
+    def call(
+        self,
+        inputs: TensorOrTabularData,
+        input_mask: Optional[tf.Tensor] = None,
+        training=True,
+        **kwargs
+    ) -> TensorOrTabularData:
+        def augment(input_mask):
+            if self.schema:
+                input_mask = input_mask or self.get_padding_mask_from_item_id(
+                    inputs, self.pad_token
+                )
+
             if isinstance(inputs, dict):
-                return {key: self.augment(val) for key, val in inputs.items()}
+                return {key: self.augment(val, input_mask) for key, val in inputs.items()}
 
-            return self.augment(inputs)
+            return self.augment(inputs, input_mask)
 
-        output = control_flow_util.smart_cond(training, augment, lambda: inputs)
+        output = control_flow_util.smart_cond(training, lambda: augment(input_mask), lambda: inputs)
 
         return output
 
-    def augment(self, input_tensor: tf.Tensor, **kwargs) -> tf.Tensor:
-        mask = tf.cast(input_tensor != self.pad_token, tf.int32)
+    def augment(self, input_tensor: tf.Tensor, mask: Optional[tf.Tensor], **kwargs) -> tf.Tensor:
+        if mask is not None:
+            if len(input_tensor.shape) == len(mask.shape) - 1:
+                mask = mask[:, 0]
+
         replacement_mask_matrix = (
             tf.cast(
                 backend.random_binomial(array_ops.shape(input_tensor), p=self.replacement_prob),
                 tf.int32,
             )
-            * mask
+            * tf.cast(mask, tf.int32)
         )
 
         n_values_to_replace = tf.reduce_sum(replacement_mask_matrix)
