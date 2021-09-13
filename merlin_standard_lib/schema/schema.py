@@ -113,7 +113,7 @@ class ColumnSchema(Feature):
     def with_tags_based_on_properties(
         self, using_value_count=True, using_domain=True
     ) -> "ColumnSchema":
-        from .. import Tag
+        from .tag import Tag
 
         extra_tags = []
 
