@@ -33,6 +33,7 @@ from ..proto.schema_bp import *  # noqa
 from ..proto.schema_bp import (
     Annotation,
     Feature,
+    FeatureType,
     FixedShape,
     FixedShapeDim,
     FloatDomain,
@@ -74,6 +75,7 @@ class ColumnSchema(Feature):
         extra = _parse_shape_and_value_count(shape, value_count)
         int_domain = IntDomain(name=name, min=min_index, max=num_items, is_categorical=True)
         tags = list(set(tags or [] + ["categorical"]))
+        extra["type"] = FeatureType.INT
 
         return cls(name=name, int_domain=int_domain, **extra, **kwargs).with_tags(tags)
 
@@ -107,6 +109,7 @@ class ColumnSchema(Feature):
                 extra["int_domain"] = IntDomain(
                     name=name, min=int(min_value), max=int(max_value), is_categorical=False
                 )
+        extra["type"] = FeatureType.FLOAT if is_float else FeatureType.INT
         tags = list(set(tags or [] + ["continuous"]))
 
         return cls(name=name, **extra, **kwargs).with_tags(tags)
@@ -247,12 +250,18 @@ class Schema(_Schema):
             return self
 
     def select_by_type(self, to_select) -> "Schema":
+        if not isinstance(to_select, (list, tuple)) or not callable(to_select):
+            to_select = [to_select]
+
         def collection_filter_fn(type):
             return type in to_select
 
         return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.type)
 
     def remove_by_type(self, to_remove) -> "Schema":
+        if not isinstance(to_remove, (list, tuple)) or not callable(to_remove):
+            to_remove = [to_remove]
+
         def collection_filter_fn(type):
             return type in to_remove
 
@@ -261,12 +270,18 @@ class Schema(_Schema):
         )
 
     def select_by_tag(self, to_select) -> "Schema":
+        if not isinstance(to_select, (list, tuple)) or not callable(to_select):
+            to_select = [to_select]
+
         def collection_filter_fn(column_tags):
             return all(x in column_tags for x in to_select)
 
         return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
 
     def remove_by_tag(self, to_remove) -> "Schema":
+        if not isinstance(to_remove, (list, tuple)) or not callable(to_remove):
+            to_remove = [to_remove]
+
         def collection_filter_fn(column_tags):
             return all(x in column_tags for x in to_remove)
 
@@ -275,12 +290,18 @@ class Schema(_Schema):
         )
 
     def select_by_name(self, to_select) -> "Schema":
+        if not isinstance(to_select, (list, tuple)) or not callable(to_select):
+            to_select = [to_select]
+
         def collection_filter_fn(column_name):
             return column_name in to_select
 
         return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.name)
 
     def remove_by_name(self, to_remove) -> "Schema":
+        if not isinstance(to_remove, (list, tuple)) or not callable(to_remove):
+            to_remove = [to_remove]
+
         def collection_filter_fn(column_name):
             return column_name in to_remove
 
@@ -372,19 +393,17 @@ class Schema(_Schema):
 
     def _filter_column_schemas(
         self,
-        input: Union[list, tuple, Callable[[FilterT], bool]],
+        to_filter: Union[list, tuple, Callable[[FilterT], bool]],
         collection_filter_fn: Callable[[FilterT], bool],
         column_select_fn: Callable[[ColumnSchema], FilterT],
         negate=False,
     ) -> "Schema":
-        if not isinstance(input, (list, tuple)) or not callable(input):
-            input = [input]
-        if isinstance(input, (list, tuple)):
+        if isinstance(to_filter, (list, tuple)):
             check_fn = collection_filter_fn
-        elif callable(input):
-            check_fn = input
+        elif callable(to_filter):
+            check_fn = to_filter
         else:
-            raise ValueError(f"Expected either a collection or function, got: {input}.")
+            raise ValueError(f"Expected either a collection or function, got: {to_filter}.")
 
         selected_schemas = []
         for column_schema in self.column_schemas:

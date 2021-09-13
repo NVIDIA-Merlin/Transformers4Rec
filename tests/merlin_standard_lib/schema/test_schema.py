@@ -35,6 +35,26 @@ def test_column_schema():
     assert col.with_properties(dict(a=5)).properties == dict(a=5)
 
 
+def test_schema():
+    s = schema.Schema(
+        [
+            schema.ColumnSchema.create_continuous("con_1"),
+            schema.ColumnSchema.create_continuous("con_2_int", is_float=False),
+            schema.ColumnSchema.create_categorical("cat_1", 1000),
+            schema.ColumnSchema.create_categorical(
+                "cat_2", 100, value_count=schema.ValueCount(1, 20)
+            ),
+        ]
+    )
+
+    assert len(s.select_by_type(schema.FeatureType.INT).column_names) == 3
+    assert len(s.select_by_name(lambda x: x.startswith("con")).column_names) == 2
+    assert len(s.remove_by_name(lambda x: x.startswith("cat_1")).column_names) == 3
+
+    new_tag = s.map_column_schemas(lambda col: col.with_tags(["new-tag"]))
+    assert all("new-tag" in col.tags for col in new_tag.column_schemas)
+
+
 def test_column_schema_categorical_with_shape():
     col = schema.ColumnSchema.create_categorical("cat_1", 1000, shape=(1,))
 
