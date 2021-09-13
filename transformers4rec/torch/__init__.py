@@ -44,16 +44,18 @@ from .features.embedding import (
 )
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
+from .model.head import Head
+from .model.model import Model
 
 # Model related imports
-from .model.head import (
+from .model.prediction_task import (
     BinaryClassificationTask,
-    Head,
     NextItemPredictionTask,
     PredictionTask,
     RegressionTask,
 )
-from .model.model import Model
+
+# Tabular related imports
 from .tabular.aggregation import (
     ConcatFeatures,
     ElementwiseSum,

@@ -76,8 +76,8 @@ def test_head_with_multiple_tasks(
 
     body = tr.SequentialBlock(torch_yoochoose_tabular_features, tr.MLPBlock([64]))
     tasks = [
-        tr.BinaryClassificationTask("classification"),
-        tr.RegressionTask("regression"),
+        tr.BinaryClassificationTask("classification", task_name="classification"),
+        tr.RegressionTask("regression", task_name="regression"),
     ]
     head = tr.Head(body, tasks, task_blocks=task_blocks)
     optimizer = pytorch.optim.Adam(head.parameters())
@@ -85,16 +85,14 @@ def test_head_with_multiple_tasks(
     with pytorch.set_grad_enabled(mode=True):
         body_out = body(torch_yoochoose_like)
         loss = head.compute_loss(body_out, targets)
-        metrics = head.calculate_metrics(body_out, targets)
+        metrics = head.calculate_metrics(body_out, targets, call_body=False)
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
     assert loss.min() >= 0 and loss.max() <= 1
-    assert list(metrics.keys()) == ["classification", "regression"]
-    assert list(metrics["classification"].keys()) == ["val_precision", "val_recall", "val_accuracy"]
-    assert list(metrics["regression"].keys()) == ["val_meansquarederror"]
+    assert len(metrics.keys()) == 4
     if task_blocks:
         assert head.task_blocks["classification"][0] != head.task_blocks["regression"][0]
 
@@ -141,12 +139,12 @@ def test_item_prediction_loss_and_metrics(
     non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
 
-    loss = head.prediction_tasks["0"].compute_loss(
+    loss = head.prediction_tasks["next-item"].compute_loss(
         inputs=body_outputs,
         targets=labels_all,
     )
 
-    metrics = head.prediction_tasks["0"].calculate_metrics(
+    metrics = head.prediction_tasks["next-item"].calculate_metrics(
         predictions=body_outputs, targets=labels_all
     )
     assert all(len(m) == 2 for m in metrics.values())
@@ -206,12 +204,12 @@ def test_item_prediction_head_with_input_size(
         input_module,
         tr.MLPBlock([64]),
         pytorch.nn.GRU(input_size=64, hidden_size=64, num_layers=2),
+        output_size=[None, 20, 64],
     )
     head = tr.Head(
         body,
         tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
         inputs=input_module,
-        body_output_size=[None, 20, 64],
     )
 
     outputs = head(body(torch_yoochoose_like))
