@@ -50,7 +50,7 @@ tabular_inputs = TabularSequenceFeatures.from_schema(
         schema,
         max_sequence_length=20,
         d_output=100,
-        aggregation="sequential-concat",
+        aggregation="concat",
         masking="clm"
     )
 ```
@@ -280,7 +280,7 @@ partition_col = ['day']
 nvt.Dataset(dataset).to_parquet(nvt_output_path, partition_on=[partition_col])
 ```
 
-NVTabular also outputs a schema of the parquet columns in Profobuf Text format, e.g. including the cardinality of categorical features, the max squence length for sequential features and tags that can be associated to features (e.g. to indicate what is the item id, what are item and user features, what are categorical or continuous features). You can see [here](../../tests/assets/yoochoose/schema.pbtxt) an example of such schema in Protobuf Text format.
+NVTabular also outputs a schema of the parquet columns in Profobuf Text format, e.g. including the cardinality of categorical features, the max squence length for sequential features and tags that can be associated to features (e.g. to indicate what is the item id, what are item and user features, what are categorical or continuous features). You can see [here](../../tests/assets/data_schema/schema.pbtxt) an example of such schema in Protobuf Text format.
 P.s. If you don't use NVTabular to preprocess your data, you can generate the Schema via code.  
 
 **TODO: Include code snippet of how to define the Schema manualy using code**

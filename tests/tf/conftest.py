@@ -19,10 +19,9 @@ import random
 
 import numpy as np
 import pytest
-from tensorflow_metadata.proto.v0 import schema_pb2
 
 from merlin_standard_lib import Schema
-from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
+from merlin_standard_lib.utils.proto_utils import has_field
 
 tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
@@ -55,9 +54,9 @@ def tf_cat_features():
 
 
 @pytest.fixture
-def tf_yoochoose_tabular_features(yoochoose_schema):
+def tf_tabular_features(tabular_schema):
     return tr.TabularFeatures.from_schema(
-        yoochoose_schema,
+        tabular_schema,
         max_sequence_length=20,
         continuous_projection=64,
         aggregation="concat",
@@ -76,15 +75,12 @@ def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
     )
 
 
-@pytest.fixture
-def tf_yoochoose_like():
+def schema_like_generator(schema_file, lists_as_sequence_features):
     NUM_ROWS = 100
-    MAX_CARDINALITY = 100
+    DEFAULT_MAX_INT = 100
     MAX_SESSION_LENGTH = 20
 
-    schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
-
-    schema = proto_text_to_better_proto(Schema(), str(schema_file), schema_pb2.Schema())
+    schema = Schema().from_proto_text(str(schema_file))
     schema = schema.remove_by_name(["session_id", "session_start", "day_idx"])
     data = {}
 
@@ -92,28 +88,34 @@ def tf_yoochoose_like():
         session_length = random.randint(5, MAX_SESSION_LENGTH)
 
         for feature in schema.feature:
-            is_session_feature = has_field(feature, "value_count")
+            is_list_feature = has_field(feature, "value_count")
             is_int_feature = has_field(feature, "int_domain")
 
             if is_int_feature:
-                max_num = MAX_CARDINALITY
-                if is_session_feature:
-                    if not feature.int_domain.is_categorical:
-                        max_num = feature.int_domain.max
-                    row = tf.random.uniform((session_length,), maxval=max_num)
+                max_num = DEFAULT_MAX_INT
+                if feature.int_domain.is_categorical:
+                    max_num = feature.int_domain.max
+                if is_list_feature:
+                    list_length = (
+                        session_length if lists_as_sequence_features else feature.value_count.max
+                    )
+                    row = tf.random.uniform((list_length,), maxval=max_num)
                 else:
                     row = tf.random.uniform((1,), maxval=max_num)
             else:
-                if is_session_feature:
+                if is_list_feature:
+                    list_length = (
+                        session_length if lists_as_sequence_features else feature.value_count.max
+                    )
                     row = tf.random.uniform((session_length,))
                 else:
                     row = tf.random.uniform((1,))
 
-            if is_session_feature:
+            if is_list_feature:
                 row = (row, [len(row)])
 
             if feature.name in data:
-                if is_session_feature:
+                if is_list_feature:
                     data[feature.name] = (
                         tf.concat((data[feature.name][0], row[0]), axis=0),
                         data[feature.name][1] + row[1],
@@ -137,6 +139,16 @@ def tf_yoochoose_like():
             outputs[key] = data[key]
 
     return outputs
+
+
+@pytest.fixture
+def tf_tabular_data(tabular_schema_file):
+    return schema_like_generator(tabular_schema_file, lists_as_sequence_features=False)
+
+
+@pytest.fixture
+def tf_yoochoose_like(yoochoose_schema_file):
+    return schema_like_generator(yoochoose_schema_file, lists_as_sequence_features=True)
 
 
 def _pull_values_offsets(values_offset):

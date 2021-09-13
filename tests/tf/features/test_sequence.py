@@ -28,10 +28,20 @@ def test_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
 
     outputs = emb_module(tf_yoochoose_like)
 
-    assert list(outputs.keys()) == schema.select_by_tag(Tag.CATEGORICAL).column_names
-    assert all(len(tensor.shape) == 3 for tensor in list(outputs.values()))
-    assert all(tensor.shape[1] == 20 for tensor in list(outputs.values()))
-    assert all(tensor.shape[2] == 64 for tensor in list(outputs.values()))
+    categ_schema = schema.select_by_tag(Tag.CATEGORICAL)
+    assert list(outputs.keys()) == categ_schema.column_names
+
+    sequential_categ_cols = categ_schema.select_by_tag(Tag.LIST).column_names
+
+    for k in categ_schema.column_names:
+        tensor = outputs[k]
+        if k in sequential_categ_cols:
+            assert len(tensor.shape) == 3
+            assert tensor.shape[1] == 20
+            assert tensor.shape[2] == 64
+        else:
+            assert len(tensor.shape) == 2
+            assert tensor.shape[1] == 64
 
 
 def test_serialization_sequence_embedding_features(yoochoose_schema, tf_yoochoose_like):
@@ -54,7 +64,7 @@ def test_sequence_embedding_features_yoochoose_model(
     yoochoose_schema, tf_yoochoose_like, run_eagerly
 ):
     inputs = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema, max_sequence_length=20, aggregation="sequential-concat"
+        yoochoose_schema, max_sequence_length=20, aggregation="concat"
     )
 
     body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
@@ -63,15 +73,18 @@ def test_sequence_embedding_features_yoochoose_model(
 
 
 def test_sequence_tabular_features_with_projection(yoochoose_schema, tf_yoochoose_like):
+    schema = yoochoose_schema
     tab_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema, max_sequence_length=20, continuous_projection=64
     )
 
+    continuous_feature_names = schema.select_by_tag(Tag.CONTINUOUS).column_names
+
     outputs = tab_module(tf_yoochoose_like)
 
-    assert len(outputs.keys()) == 3
-    assert all(tensor.shape[-1] == 64 for tensor in outputs.values())
-    assert all(tensor.shape[1] == 20 for tensor in outputs.values())
+    assert len(set(continuous_feature_names).intersection(set(outputs.keys()))) == 0
+    assert "continuous_projection" in outputs
+    assert list(outputs["continuous_projection"].shape)[1:] == [20, 64]
 
 
 def test_serialization_sequence_tabular_features(yoochoose_schema, tf_yoochoose_like):
@@ -93,14 +106,29 @@ def test_tabular_features_yoochoose_direct(
         yoochoose_schema, tags=["categorical"]
     )
 
-    inputs = tr.TabularSequenceFeatures(
+    tab_seq_features = tr.TabularSequenceFeatures(
         continuous_layer=continuous_layer,
         categorical_layer=categorical_layer,
-        aggregation="sequential-concat",
+        aggregation="concat",
     )
-    outputs = inputs(tf_yoochoose_like)
+    outputs = tab_seq_features(tf_yoochoose_like)
 
-    assert inputs.schema == categorical_layer.schema + continuous_layer.schema
+    assert (
+        len(
+            set(categorical_layer.schema.column_names).difference(
+                set(tab_seq_features.schema.column_names)
+            )
+        )
+        == 0
+    )
+    assert (
+        len(
+            set(continuous_layer.schema.column_names).difference(
+                set(tab_seq_features.schema.column_names)
+            )
+        )
+        == 0
+    )
     assert len(outputs.shape) == 3
 
 
@@ -151,3 +179,12 @@ def test_sequence_tabular_features_with_projection_and_d_output(yoochoose_schema
         )
 
     assert "You cannot specify both d_output and projection at the same time" in str(excinfo.value)
+
+
+def test_sequential_and_non_sequential_tabular_features(yoochoose_schema, tf_yoochoose_like):
+    schema = yoochoose_schema
+    tab_module = tr.TabularSequenceFeatures.from_schema(schema, aggregation="concat")
+
+    outputs = tab_module(tf_yoochoose_like)
+
+    assert list(outputs.shape) == [100, 20, 199]

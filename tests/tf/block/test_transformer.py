@@ -39,7 +39,7 @@ def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
     tab_module = tr.TabularSequenceFeatures.from_schema(
         col_group,
         max_sequence_length=20,
-        aggregation="sequential-concat",
+        aggregation="concat",
         masking=task,
     )
 
@@ -68,7 +68,7 @@ def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
 #     tab_module = tf4rec.TabularSequenceFeatures.from_schema(
 #         col_group,
 #         max_sequence_length=20,
-#         aggregation="sequential-concat",
+#         aggregation="concat",
 #         d_output=64,
 #         masking="permutation",
 #     )
@@ -96,7 +96,7 @@ def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
 #         tab_module = tf4rec.TabularSequenceFeatures.from_schema(
 #             col_group,
 #             max_sequence_length=20,
-#             aggregation="sequential-concat",
+#             aggregation="concat",
 #             d_output=64,
 #             masking="permutation",
 #         )
@@ -125,7 +125,7 @@ def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
 #     tab_module = tf4rec.TabularSequenceFeatures.from_schema(
 #         col_group,
 #         max_sequence_length=20,
-#         aggregation="sequential-concat",
+#         aggregation="concat",
 #         d_output=64,
 #         masking="causal",
 #     )
@@ -147,7 +147,7 @@ def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
 #     tab_module = tf4rec.TabularSequenceFeatures.from_schema(
 #         col_group,
 #         max_sequence_length=20,
-#         aggregation="sequential-concat",
+#         aggregation="concat",
 #         d_output=64,
 #         masking="causal",
 #     )

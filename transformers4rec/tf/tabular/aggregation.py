@@ -14,13 +14,9 @@
 # limitations under the License.
 #
 
-from functools import reduce
-from typing import List
-
 import tensorflow as tf
 
-from transformers4rec.config.schema import requires_schema
-
+from ...config.schema import requires_schema
 from ..typing import TabularData
 from ..utils.tf_utils import calculate_batch_size_from_input_shapes
 from .tabular import TabularAggregation, tabular_aggregation_registry
@@ -33,58 +29,21 @@ from .tabular import TabularAggregation, tabular_aggregation_registry
 @tabular_aggregation_registry.register("concat")
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ConcatFeatures(TabularAggregation):
-    def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
-        super().__init__(trainable, name, dtype, dynamic, **kwargs)
-        self.axis = axis
-        self.flatten = tf.keras.layers.Flatten()
-
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        return tf.concat(
-            tf.nest.flatten(tf.nest.map_structure(self.flatten, inputs)), axis=self.axis
-        )
+        self._expand_non_sequential_features(inputs)
+        self._check_concat_shapes(inputs)
 
-    def compute_output_shape(self, input_shapes):
-        batch_size = calculate_batch_size_from_input_shapes(input_shapes)
-
-        return batch_size, sum([i[1] for i in input_shapes.values()])
-
-    def repr_ignore(self) -> List[str]:
-        return ["flatten"]
-
-    def get_config(self):
-        config = super().get_config()
-        config["axis"] = self.axis
-
-        return config
-
-
-@tabular_aggregation_registry.register("sequential-concat")
-@tf.keras.utils.register_keras_serializable(package="transformers4rec")
-class SequentialConcatFeatures(TabularAggregation):
-    def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         tensors = []
         for name in sorted(inputs.keys()):
             val = inputs[name]
-            if len(val.shape) == 2:
-                val = tf.expand_dims(val, axis=-1)
             tensors.append(val)
 
         return tf.concat(tensors, axis=-1)
 
-    def compute_output_shape(self, input_size):
-        batch_size = calculate_batch_size_from_input_shapes(input_size)
-        converted_input_size = {}
-        for key, val in input_size.items():
-            if len(val) == 2:
-                converted_input_size[key] = val + (1,)
-            else:
-                converted_input_size[key] = val
-
-        return (
-            batch_size,
-            list(input_size.values())[0][1],
-            sum([i[-1] for i in converted_input_size.values()]),
-        )
+    def compute_output_shape(self, input_shapes):
+        agg_dim = sum([i[-1] for i in input_shapes.values()])
+        output_size = self._get_agg_output_size(input_shapes, agg_dim)
+        return output_size
 
 
 @tabular_aggregation_registry.register("stack")
@@ -93,21 +52,22 @@ class StackFeatures(TabularAggregation):
     def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
         super().__init__(trainable, name, dtype, dynamic, **kwargs)
         self.axis = axis
-        self.flatten = tf.keras.layers.Flatten()
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        return tf.stack(
-            tf.nest.flatten(tf.nest.map_structure(self.flatten, inputs)), axis=self.axis
-        )
+        self._expand_non_sequential_features(inputs)
+        self._check_concat_shapes(inputs)
+
+        tensors = []
+        for name in sorted(inputs.keys()):
+            val = inputs[name]
+            tensors.append(val)
+
+        return tf.stack(tensors, axis=self.axis)
 
     def compute_output_shape(self, input_shapes):
-        batch_size = calculate_batch_size_from_input_shapes(input_shapes)
-        last_dim = list(input_shapes.values())[0][-1]
-
-        return batch_size, len(input_shapes), last_dim
-
-    def repr_ignore(self) -> List[str]:
-        return ["flatten"]
+        agg_dim = list(input_shapes.values())[0][-1]
+        output_size = self._get_agg_output_size(input_shapes, agg_dim)
+        return output_size
 
     def get_config(self):
         config = super().get_config()
@@ -118,7 +78,7 @@ class StackFeatures(TabularAggregation):
 
 class ElementwiseFeatureAggregation(TabularAggregation):
     def _check_input_shapes_equal(self, inputs):
-        all_input_shapes_equal = reduce((lambda a, b: a.shape == b.shape), inputs.values())
+        all_input_shapes_equal = len(set([tuple(x.shape) for x in inputs.values()])) == 1
         if not all_input_shapes_equal:
             raise ValueError(
                 "The shapes of all input features are not equal, which is required for element-wise"
@@ -134,7 +94,9 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
         self.stack = StackFeatures(axis=0)
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
+        self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)
+
         return tf.reduce_sum(self.stack(inputs), axis=0)
 
     def compute_output_shape(self, input_shape):
@@ -157,6 +119,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         item_id_inputs = self.get_item_ids_from_inputs(inputs)
+        self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)
 
         other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}

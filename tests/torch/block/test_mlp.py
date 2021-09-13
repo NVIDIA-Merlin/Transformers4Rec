@@ -19,14 +19,14 @@ import pytest
 tr = pytest.importorskip("transformers4rec.torch")
 
 
-def test_mlp_block(yoochoose_schema, torch_yoochoose_like):
+def test_mlp_block(tabular_schema, torch_tabular_data):
     tab_module = tr.TabularFeatures.from_schema(
-        yoochoose_schema, max_sequence_length=20, aggregation="concat"
+        tabular_schema, max_sequence_length=20, aggregation="concat"
     )
 
     block = tab_module >> tr.MLPBlock([64, 32])
 
-    outputs = block(torch_yoochoose_like)
+    outputs = block(torch_tabular_data)
 
     assert outputs.ndim == 2
     assert outputs.shape[-1] == 32

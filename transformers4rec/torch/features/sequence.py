@@ -26,7 +26,6 @@ from ..block.base import BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import MaskSequence, masking_registry
 from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
-from ..utils.torch_utils import calculate_batch_size_from_input_size
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
@@ -77,10 +76,10 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
 
     def forward_output_size(self, input_sizes):
         sizes = {}
-        batch_size = calculate_batch_size_from_input_size(input_sizes)
-        sequence_length = input_sizes[list(self.feature_config.keys())[0]][1]
-        for name, feature in self.feature_config.items():
-            sizes[name] = torch.Size([batch_size, sequence_length, feature.table.dim])
+
+        for fname, fconfig in self.feature_config.items():
+            fshape = input_sizes[fname]
+            sizes[fname] = torch.Size(list(fshape) + [fconfig.table.dim])
 
         return sizes
 
@@ -198,7 +197,7 @@ class TabularSequenceFeatures(TabularFeatures):
             raise ValueError("You cannot specify both d_output and projection at the same time")
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
-            output.aggregation = "sequential-concat"
+            output.aggregation = "concat"
         hidden_size = output.output_size()
 
         if d_output and not projection:
@@ -261,7 +260,7 @@ class TabularSequenceFeatures(TabularFeatures):
             dimensions = [dimensions]
 
         continuous = self.to_merge["continuous_module"]
-        continuous.aggregation = "sequential-concat"
+        continuous.aggregation = "concat"
 
         continuous = SequentialBlock(
             continuous, MLPBlock(dimensions), AsTabular("continuous_projection")

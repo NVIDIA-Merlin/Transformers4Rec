@@ -200,7 +200,12 @@ class EmbeddingFeatures(InputBlock):
             if output_sequence:
                 out = tf.gather(table_var, tf.cast(val, tf.int32))
             else:
-                out = tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
+                if len(val.shape) > 1:
+                    # TODO: Check if it is correct to retrieve only the 1st element
+                    # of second dim for non-sequential multi-hot categ features
+                    out = tf.gather(table_var, tf.cast(val, tf.int32)[:, 0])
+                else:
+                    out = tf.gather(table_var, tf.cast(val, tf.int32))
 
         if self._dtype_policy.compute_dtype != self._dtype_policy.variable_dtype:
             # Instead of casting the variable as in most layers, cast the output, as

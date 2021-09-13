@@ -53,6 +53,58 @@ class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC)
     def registry(cls) -> Registry:
         return tabular_aggregation_registry
 
+    def _expand_non_sequential_features(self, inputs: TabularData) -> TabularData:
+        inputs_sizes = {k: v.shape for k, v in inputs.items()}
+        seq_features_shapes, sequence_length = self._get_seq_features_shapes(inputs_sizes)
+
+        if len(seq_features_shapes) > 0:
+            non_seq_features = set(inputs.keys()).difference(set(seq_features_shapes.keys()))
+            for fname in non_seq_features:
+                # Including the 2nd dim and repeating for the sequence length
+                inputs[fname] = tf.tile(tf.expand_dims(inputs[fname], 1), (1, sequence_length, 1))
+
+        return inputs
+
+    def _get_seq_features_shapes(self, inputs_sizes: Dict[str, tf.TensorShape]):
+        seq_features_shapes = dict()
+        for fname, fshape in inputs_sizes.items():
+            # Saves the shapes of sequential features
+            if len(fshape) >= 3:
+                seq_features_shapes[fname] = tuple(fshape[:2])
+
+        sequence_length = 0
+        if len(seq_features_shapes) > 0:
+            if len(set(seq_features_shapes.values())) > 1:
+                raise ValueError(
+                    "All sequential features must share the same shape in the first two dims "
+                    "(batch_size, seq_length): {}".format(seq_features_shapes)
+                )
+
+            sequence_length = list(seq_features_shapes.values())[0][1]
+
+        return seq_features_shapes, sequence_length
+
+    def _check_concat_shapes(self, inputs: TabularData):
+        input_sizes = {k: v.shape for k, v in inputs.items()}
+        if len(set([tuple(v[:-1]) for v in input_sizes.values()])) > 1:
+            raise Exception(
+                "All features dimensions except the last one must match: {}".format(input_sizes)
+            )
+
+    def _get_agg_output_size(self, input_size, agg_dim):
+        batch_size = calculate_batch_size_from_input_shapes(input_size)
+        seq_features_shapes, sequence_length = self._get_seq_features_shapes(input_size)
+
+        if len(seq_features_shapes) > 0:
+            return (
+                batch_size,
+                sequence_length,
+                agg_dim,
+            )
+
+        else:
+            return (batch_size, agg_dim)
+
 
 TabularTransformationType = Union[
     str, TabularTransformation, List[str], List[TabularTransformation]
@@ -100,7 +152,7 @@ TABULAR_MODULE_PARAMS_DOCSTRING = """
 
         Next to providing a class that extends TabularAggregation, it's also possible to provide
         the name that the class is registered in the `tabular_aggregation_registry`. Out of the box
-        this contains: "concat", "stack", "sequential-concat", "element-wise-sum" &
+        this contains: "concat", "stack", "element-wise-sum" &
         "element-wise-sum-item-multi".
     schema: Optional[DatasetSchema]
         DatasetSchema containing the columns used in this block.
@@ -257,6 +309,8 @@ class TabularBlock(Block):
         )
 
         if aggregation:
+            schema = getattr(self, "schema", None)
+            aggregation.set_schema(schema)
             return aggregation(outputs)
 
         return outputs
@@ -371,6 +425,8 @@ class TabularBlock(Block):
             if self.post:
                 output_shapes = self.post.compute_output_shape(output_shapes)
             if self.aggregation:
+                schema = getattr(self, "schema", None)
+                self.aggregation.set_schema(schema)
                 output_shapes = self.aggregation.compute_output_shape(output_shapes)
 
         return output_shapes

@@ -1,0 +1,138 @@
+feature {
+  name: "user_id"
+  type: INT
+  int_domain {
+    name: "user_id"
+    min: 1
+    max: 1797
+    is_categorical: true
+  }
+  annotation {
+    tag: "categorical"
+  }
+}
+feature {
+  name: "event_timestamp"
+  type: INT
+  annotation {
+  }
+}
+feature {
+  name: "item_age_days_norm"
+  type: FLOAT
+  float_domain {
+    name: "item_age_days_norm"
+    min: -2.917729	  
+    max: -1.257164
+  }
+  annotation {
+    tag: "continuous"
+  }
+}
+feature {
+  name: "event_hour_sin"
+  type: FLOAT
+  float_domain {
+    name: "event_hour_sin"
+    min: 0.0
+    max: 1.0
+  }
+  annotation {
+    tag: "continuous"
+  }
+}
+feature {
+  name: "event_hour_cos"
+  type: FLOAT
+  float_domain {
+    name: "event_hour_cos"
+    min: 0.0
+    max: 1.0
+  }
+  annotation {
+    tag: "continuous"
+  }
+}
+feature {
+  name: "event_weekday_sin"
+  type: FLOAT
+  float_domain {
+    name: "event_weekday_sin"
+    min: 0.0
+    max: 1.0
+  }
+  annotation {
+    tag: "continuous"
+  }
+}
+feature {
+  name: "event_weekday_cos"
+  type: FLOAT
+  float_domain {
+    name: "event_weekday_cos"
+    min: 0.0
+    max: 1.0
+  }
+  annotation {
+    tag: "continuous"
+  }
+}
+feature {
+  name: "item_id"
+  type: INT
+  int_domain {
+    name: "item_id"
+    min: 1
+    max: 51996
+    is_categorical: true
+  }
+  annotation {
+    tag: "item_id"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+feature {
+  name: "categories"
+  value_count {
+    min: 1
+    max: 4
+  }
+  type: INT
+  int_domain {
+    name: "categories"
+    min: 1
+    max: 331
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+feature {
+  name: "user_country"
+  type: INT
+  int_domain {
+    name: "user_country"
+    min: 1
+    max: 62
+    is_categorical: true
+  }
+  annotation {
+    tag: "categorical"
+  }
+}
+feature {
+  name: "user_age"
+  type: FLOAT
+  float_domain {
+    name: "user_age"
+    min: 0.0
+    max: 0.407965	
+  }
+  annotation {
+    tag: "continuous"
+  }
+}
