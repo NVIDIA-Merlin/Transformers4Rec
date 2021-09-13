@@ -16,17 +16,16 @@
 
 import pytest
 
-torch4rec = pytest.importorskip("transformers4rec.torch")
-torch_metric = pytest.importorskip("transformers4rec.torch.ranking_metric")
+tr = pytest.importorskip("transformers4rec.torch")
 
 # fixed parameters for tests
-list_metrics = list(torch_metric.ranking_metrics_registry.keys())
+list_metrics = list(tr.ranking_metric.ranking_metrics_registry.keys())
 
 
 # Test length of output equal to number of cutoffs
 @pytest.mark.parametrize("metric", list_metrics)
 def test_avg_precision_at(torch_ranking_metrics_inputs, metric):
-    metric = torch_metric.ranking_metrics_registry[metric]
+    metric = tr.ranking_metric.ranking_metrics_registry[metric]
     metric.top_ks = torch_ranking_metrics_inputs["ks"]
     result = metric(
         torch_ranking_metrics_inputs["scores"], torch_ranking_metrics_inputs["labels_one_hot"]
@@ -37,7 +36,7 @@ def test_avg_precision_at(torch_ranking_metrics_inputs, metric):
 # Test label one hot encoding
 @pytest.mark.parametrize("metric", list_metrics)
 def test_score_with_transform_onehot(torch_ranking_metrics_inputs, metric):
-    metric = torch_metric.ranking_metrics_registry[metric]
+    metric = tr.ranking_metric.ranking_metrics_registry[metric]
     metric.top_ks = torch_ranking_metrics_inputs["ks"]
     metric.labels_onehot = True
     result = metric(torch_ranking_metrics_inputs["scores"], torch_ranking_metrics_inputs["labels"])

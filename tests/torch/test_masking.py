@@ -18,18 +18,17 @@ import numpy as np
 import pytest
 
 pytorch = pytest.importorskip("torch")
-torch4rec = pytest.importorskip("transformers4rec.torch")
-torch_masking = pytest.importorskip("transformers4rec.torch.masking")
+tr = pytest.importorskip("transformers4rec.torch")
 
 # fixed parameters for tests
-lm_tasks = list(torch_masking.masking_registry.keys())
+lm_tasks = list(tr.masking.masking_registry.keys())
 
 
 # Test output shapes
 @pytest.mark.parametrize("task", lm_tasks)
 def test_task_output_shape(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
     out = lm(torch_masking_inputs["input_tensor"], torch_masking_inputs["labels"], training=True)
@@ -42,7 +41,7 @@ def test_task_output_shape(torch_masking_inputs, task):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_mask_only_last_item_for_eval(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
     lm.compute_masked_targets(torch_masking_inputs["labels"], training=False)
@@ -67,7 +66,7 @@ def test_mask_only_last_item_for_eval(torch_masking_inputs, task):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_mask_all_next_item_for_eval(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         hidden_dim,
         padding_idx=torch_masking_inputs["padding_idx"],
         eval_on_last_item_seq_only=False,
@@ -93,7 +92,7 @@ def test_mask_all_next_item_for_eval(torch_masking_inputs, task):
 # Test only last item is masked when training clm on last item
 def test_clm_training_on_last_item(torch_masking_inputs):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry["causal"](
+    lm = tr.masking.masking_registry["causal"](
         hidden_dim,
         padding_idx=torch_masking_inputs["padding_idx"],
         train_on_last_item_seq_only=True,
@@ -119,7 +118,7 @@ def test_clm_training_on_last_item(torch_masking_inputs):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_at_least_one_masked_item_mlm(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
     _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
@@ -131,7 +130,7 @@ def test_at_least_one_masked_item_mlm(torch_masking_inputs, task):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_not_all_masked_lm(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
     lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
@@ -144,7 +143,7 @@ def test_not_all_masked_lm(torch_masking_inputs, task):
 @pytest.mark.parametrize("task", lm_tasks)
 def test_task_masked_cardinality(torch_masking_inputs, task):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
     lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
@@ -155,7 +154,7 @@ def test_task_masked_cardinality(torch_masking_inputs, task):
 # Check target mapping are not None when PLM
 def test_plm_output_shape(torch_masking_inputs):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry["permutation"](
+    lm = tr.masking.masking_registry["permutation"](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
     lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
@@ -166,7 +165,7 @@ def test_plm_output_shape(torch_masking_inputs):
 # Check that only masked items are replaced
 def test_replaced_fake_tokens(torch_masking_inputs):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.masking_registry["replacement"](
+    lm = tr.masking.masking_registry["replacement"](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
     _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
@@ -188,7 +187,7 @@ def test_replaced_fake_tokens(torch_masking_inputs):
 # check fake replacements are items from the same batch when sample_from_batch is True
 def test_replacement_from_batch(torch_masking_inputs):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.ReplacementLanguageModeling(
+    lm = tr.masking.ReplacementLanguageModeling(
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"], sample_from_batch=True
     )
     _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
@@ -209,7 +208,7 @@ def test_replacement_from_batch(torch_masking_inputs):
 # check output shape of sample_from_softmax
 def test_sample_from_softmax_output(torch_masking_inputs):
     hidden_dim = torch_masking_inputs["input_tensor"].size(2)
-    lm = torch_masking.ReplacementLanguageModeling(
+    lm = tr.masking.ReplacementLanguageModeling(
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"], sample_from_batch=True
     )
     _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)

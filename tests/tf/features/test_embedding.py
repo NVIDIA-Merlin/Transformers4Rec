@@ -18,18 +18,18 @@ import pytest
 from tensorflow.python.ops import init_ops_v2
 
 from merlin_standard_lib import Tag
-from tests.tf import _utils as test_utils
 
-tf4rec = pytest.importorskip("transformers4rec.tf")
+tr = pytest.importorskip("transformers4rec.tf")
+test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 
 def test_embedding_features(tf_cat_features):
     dim = 15
     feature_config = {
-        f: tf4rec.FeatureConfig(tf4rec.TableConfig(100, dim, name=f, initializer=None))
+        f: tr.FeatureConfig(tr.TableConfig(100, dim, name=f, initializer=None))
         for f in tf_cat_features.keys()
     }
-    embeddings = tf4rec.EmbeddingFeatures(feature_config)(tf_cat_features)
+    embeddings = tr.EmbeddingFeatures(feature_config)(tf_cat_features)
 
     assert list(embeddings.keys()) == list(feature_config.keys())
     assert all([emb.shape[-1] == dim for emb in embeddings.values()])
@@ -38,7 +38,7 @@ def test_embedding_features(tf_cat_features):
 def test_embedding_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = tf4rec.EmbeddingFeatures.from_schema(schema)
+    emb_module = tr.EmbeddingFeatures.from_schema(schema)
     embeddings = emb_module(tf_yoochoose_like)
 
     assert list(embeddings.keys()) == schema.column_names
@@ -48,7 +48,7 @@ def test_embedding_features_yoochoose(yoochoose_schema, tf_yoochoose_like):
 
 
 def test_serialization_embedding_features(yoochoose_schema, tf_yoochoose_like):
-    inputs = tf4rec.EmbeddingFeatures.from_schema(yoochoose_schema)
+    inputs = tr.EmbeddingFeatures.from_schema(yoochoose_schema)
 
     copy_layer = test_utils.assert_serialization(inputs)
 
@@ -66,8 +66,8 @@ def test_serialization_embedding_features(yoochoose_schema, tf_yoochoose_like):
 def test_embedding_features_yoochoose_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    inputs = tf4rec.EmbeddingFeatures.from_schema(schema, aggregation="concat")
-    body = tf4rec.SequentialBlock([inputs, tf4rec.MLPBlock([64])])
+    inputs = tr.EmbeddingFeatures.from_schema(schema, aggregation="concat")
+    body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
 
     test_utils.assert_body_works_in_model(tf_yoochoose_like, inputs, body, run_eagerly)
 
@@ -75,7 +75,7 @@ def test_embedding_features_yoochoose_model(yoochoose_schema, tf_yoochoose_like,
 def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, tf_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = tf4rec.EmbeddingFeatures.from_schema(
+    emb_module = tr.EmbeddingFeatures.from_schema(
         schema, embedding_dims={"item_id/list": 100}, embedding_dim_default=64
     )
 
@@ -91,7 +91,7 @@ def test_embedding_features_yoochoose_custom_dims(yoochoose_schema, tf_yoochoose
 def test_embedding_features_yoochoose_infer_embedding_sizes(yoochoose_schema, tf_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
 
-    emb_module = tf4rec.EmbeddingFeatures.from_schema(
+    emb_module = tr.EmbeddingFeatures.from_schema(
         schema, infer_embedding_sizes=True, infer_embedding_sizes_multiplier=3.0
     )
 
@@ -112,7 +112,7 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, tf_y
     CATEGORY_STD = 0.1
 
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-    emb_module = tf4rec.EmbeddingFeatures.from_schema(
+    emb_module = tr.EmbeddingFeatures.from_schema(
         schema,
         embeddings_initializers={
             "item_id/list": init_ops_v2.TruncatedNormal(mean=ITEM_MEAN, stddev=ITEM_STD),

@@ -18,12 +18,12 @@ import pytest
 
 from merlin_standard_lib import Tag
 
-torch4rec = pytest.importorskip("transformers4rec.torch")
+tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_sequential_embedding_features(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
-    emb_module = torch4rec.SequenceEmbeddingFeatures.from_schema(schema)
+    emb_module = tr.SequenceEmbeddingFeatures.from_schema(schema)
 
     outputs = emb_module(torch_yoochoose_like)
 
@@ -35,7 +35,7 @@ def test_sequential_embedding_features(yoochoose_schema, torch_yoochoose_like):
 
 def test_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
-    tab_module = torch4rec.TabularSequenceFeatures.from_schema(schema)
+    tab_module = tr.TabularSequenceFeatures.from_schema(schema)
 
     outputs = tab_module(torch_yoochoose_like)
 
@@ -50,7 +50,7 @@ def test_sequential_tabular_features_with_feature_modules_kwargs(
 ):
     schema = yoochoose_schema
     EMB_DIM = 200
-    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
+    tab_module = tr.TabularSequenceFeatures.from_schema(
         schema,
         embedding_dim_default=EMB_DIM,
     )
@@ -68,7 +68,7 @@ def test_sequential_tabular_features_with_feature_modules_kwargs(
 
 def test_sequential_tabular_features_with_projection(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
-    tab_module = torch4rec.TabularSequenceFeatures.from_schema(
+    tab_module = tr.TabularSequenceFeatures.from_schema(
         schema, max_sequence_length=20, continuous_projection=64
     )
 
@@ -80,7 +80,7 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, torch_yoo
 
 
 def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoochoose_like):
-    input_module = torch4rec.TabularSequenceFeatures.from_schema(
+    input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
@@ -96,14 +96,12 @@ def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoocho
 
 
 def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_like):
-    continuous_module = torch4rec.ContinuousFeatures.from_schema(
-        yoochoose_schema, tags=["continuous"]
-    )
-    categorical_module = torch4rec.SequenceEmbeddingFeatures.from_schema(
+    continuous_module = tr.ContinuousFeatures.from_schema(yoochoose_schema, tags=["continuous"])
+    categorical_module = tr.SequenceEmbeddingFeatures.from_schema(
         yoochoose_schema, tags=["categorical"]
     )
 
-    inputs = torch4rec.TabularSequenceFeatures(
+    inputs = tr.TabularSequenceFeatures(
         continuous_module=continuous_module,
         categorical_module=categorical_module,
         aggregation="sequential-concat",
@@ -118,7 +116,7 @@ def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
         yoochoose_schema = yoochoose_schema.remove_by_name("item_id/list")
 
-        torch4rec.TabularSequenceFeatures.from_schema(
+        tr.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
@@ -131,12 +129,12 @@ def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
 
 def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        torch4rec.TabularSequenceFeatures.from_schema(
+        tr.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
             d_output=100,
-            projection=torch4rec.MLPBlock([64]),
+            projection=tr.MLPBlock([64]),
             masking="causal",
         )
 

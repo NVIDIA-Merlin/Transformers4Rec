@@ -18,12 +18,12 @@ import pytest
 
 from merlin_standard_lib import Tag
 
-torch4rec = pytest.importorskip("transformers4rec.torch")
+tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_continuous_features(torch_con_features):
     features = ["con_a", "con_b"]
-    con = torch4rec.ContinuousFeatures(features)(torch_con_features)
+    con = tr.ContinuousFeatures(features)(torch_con_features)
 
     assert list(con.keys()) == features
 
@@ -32,7 +32,7 @@ def test_continuous_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
     cont_cols = schema.select_by_tag(Tag.CONTINUOUS)
 
-    con = torch4rec.ContinuousFeatures.from_schema(cont_cols)
+    con = tr.ContinuousFeatures.from_schema(cont_cols)
     outputs = con(torch_yoochoose_like)
 
     assert set(outputs.keys()) == set(cont_cols.column_names)

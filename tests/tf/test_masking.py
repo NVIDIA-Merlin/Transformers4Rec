@@ -17,17 +17,16 @@
 import pytest
 
 tf = pytest.importorskip("tensorflow")
-tf4rec = pytest.importorskip("transformers4rec.tf")
-tf_masking = pytest.importorskip("transformers4rec.tf.masking")
+tr = pytest.importorskip("transformers4rec.tf")
 
-# fixed parameters for tests
-lm_tasks = list(tf_masking.masking_registry.keys())
+
+lm_tasks = list(tr.masking.masking_registry.keys())
 
 
 # Test output shapes
 @pytest.mark.parametrize("task", ["causal", "masked"])
 def test_task_output_shape(tf_masking_inputs, task):
-    lm = tf_masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
+    lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
     out = lm(tf_masking_inputs["input_tensor"], tf_masking_inputs["labels"], training=True)
     assert lm.masked_targets.shape[0] == tf_masking_inputs["input_tensor"].shape[0]
     assert lm.masked_targets.shape[1] == tf_masking_inputs["input_tensor"].shape[1]
@@ -37,7 +36,7 @@ def test_task_output_shape(tf_masking_inputs, task):
 # Test only last item is masked when eval_on_last_item_seq_only
 @pytest.mark.parametrize("task", ["causal", "masked"])
 def test_mask_only_last_item_for_eval(tf_masking_inputs, task):
-    lm = tf_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         padding_idx=tf_masking_inputs["padding_idx"], eval_on_last_item_seq_only=True
     )
     lm.compute_masked_targets(tf_masking_inputs["labels"], training=False)
@@ -65,7 +64,7 @@ def test_mask_only_last_item_for_eval(tf_masking_inputs, task):
 
 @pytest.mark.parametrize("task", ["causal", "masked"])
 def test_mask_all_next_item_for_eval(tf_masking_inputs, task):
-    lm = tf_masking.masking_registry[task](
+    lm = tr.masking.masking_registry[task](
         padding_idx=tf_masking_inputs["padding_idx"],
         eval_on_last_item_seq_only=False,
     )
@@ -90,7 +89,7 @@ def test_mask_all_next_item_for_eval(tf_masking_inputs, task):
 # Test at least one item is masked when training
 @pytest.mark.parametrize("task", ["causal", "masked"])
 def test_at_least_one_masked_item_mlm(tf_masking_inputs, task):
-    lm = tf_masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
+    lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
     _, masked_targets = lm.compute_masked_targets(tf_masking_inputs["labels"], training=True)
     trgt_mask = tf.cast(masked_targets != tf_masking_inputs["padding_idx"], tf.int32)
     assert all(tf.reduce_sum(trgt_mask, axis=1).numpy() > 0)
@@ -99,7 +98,7 @@ def test_at_least_one_masked_item_mlm(tf_masking_inputs, task):
 # Check that not all items are masked when training
 @pytest.mark.parametrize("task", ["causal", "masked"])
 def test_not_all_masked_lm(tf_masking_inputs, task):
-    lm = tf_masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
+    lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
     lm.compute_masked_targets(tf_masking_inputs["labels"], training=True)
     trgt_mask = lm.masked_targets != tf_masking_inputs["padding_idx"]
     non_padded_mask = tf_masking_inputs["labels"] != tf_masking_inputs["padding_idx"]
@@ -109,7 +108,7 @@ def test_not_all_masked_lm(tf_masking_inputs, task):
 # Check number of masked positions equal to number of targets
 @pytest.mark.parametrize("task", ["causal", "masked"])
 def test_task_masked_cardinality(tf_masking_inputs, task):
-    lm = tf_masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
+    lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
     lm.compute_masked_targets(tf_masking_inputs["labels"], training=True)
     trgt_pad = lm.masked_targets != tf_masking_inputs["padding_idx"]
     assert lm.mask_schema.numpy().sum() == trgt_pad.numpy().sum()
@@ -117,7 +116,7 @@ def test_task_masked_cardinality(tf_masking_inputs, task):
 
 # Test only last item is masked when training clm on last item
 def test_clm_training_on_last_item(tf_masking_inputs):
-    lm = tf_masking.masking_registry["causal"](
+    lm = tr.masking.masking_registry["causal"](
         padding_idx=tf_masking_inputs["padding_idx"],
         train_on_last_item_seq_only=True,
     )

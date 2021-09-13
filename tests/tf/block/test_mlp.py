@@ -16,8 +16,8 @@
 
 import pytest
 
-tf4rec = pytest.importorskip("transformers4rec.tf")
 tf = pytest.importorskip("tensorflow")
+tr = pytest.importorskip("transformers4rec.tf")
 
 
 @pytest.mark.parametrize("dim", [32, 64])
@@ -29,12 +29,10 @@ tf = pytest.importorskip("tensorflow")
 def test_mlp_block_yoochoose(
     yoochoose_schema, tf_yoochoose_like, dim, activation, dropout, normalization
 ):
-    inputs = tf4rec.TabularFeatures.from_schema(yoochoose_schema, aggregation="concat")
+    inputs = tr.TabularFeatures.from_schema(yoochoose_schema, aggregation="concat")
 
-    mlp = tf4rec.MLPBlock(
-        [dim], activation=activation, dropout=dropout, normalization=normalization
-    )
-    body = tf4rec.SequentialBlock([inputs, mlp])
+    mlp = tr.MLPBlock([dim], activation=activation, dropout=dropout, normalization=normalization)
+    body = tr.SequentialBlock([inputs, mlp])
 
     outputs = body(tf_yoochoose_like)
 

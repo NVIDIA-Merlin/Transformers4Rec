@@ -16,7 +16,7 @@
 
 import pytest
 
-import transformers4rec as tr
+tr = pytest.importorskip("transformers4rec.tf")
 
 transformer_config_names = [
     "AlbertConfig",
@@ -38,14 +38,6 @@ def test_transformer_config_imports(config):
 def test_tf_import():
     pytest.importorskip("tensorflow")
 
-    assert tr.tf is not None
-    assert tr.tf.Head is not None
-    assert tr.tf.Model is not None
-
-
-def test_torch_import():
-    pytest.importorskip("torch")
-
-    assert tr.torch is not None
-    assert tr.torch.Head is not None
-    assert tr.torch.Model is not None
+    assert tr is not None
+    assert tr.Head is not None
+    assert tr.Model is not None
