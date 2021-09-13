@@ -15,7 +15,7 @@
 
 
 import collections
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 
 from ..utils import proto_utils
 
@@ -147,12 +147,6 @@ class ColumnSchema(Feature):
 
         return self.with_tags(extra_tags) if extra_tags else self.copy()
 
-    def _set_tags(self, tags: List[str]):
-        if self.annotation:
-            self.annotation.tag = list(set(list(self.annotation.tag) + tags))
-        else:
-            self.annotation = Annotation(tag=tags)
-
     def with_properties(self, properties: Dict[str, Union[str, int, float]]) -> "ColumnSchema":
         output = self.copy()
         if output.annotation:
@@ -165,6 +159,11 @@ class ColumnSchema(Feature):
 
         return output
 
+    def to_proto_text(self) -> str:
+        from tensorflow_metadata.proto.v0 import schema_pb2
+
+        return proto_utils.better_proto_to_proto_text(self, schema_pb2.Feature())
+
     @property
     def tags(self):
         return self.annotation.tag
@@ -176,19 +175,22 @@ class ColumnSchema(Feature):
 
         return {}
 
+    def _set_tags(self, tags: List[str]):
+        if self.annotation:
+            self.annotation.tag = list(set(list(self.annotation.tag) + tags))
+        else:
+            self.annotation = Annotation(tag=tags)
+
     def __str__(self) -> str:
         return self.name
 
     def __eq__(self, other: "ColumnSchema") -> bool:
         return self.to_dict() == other.to_dict()
 
-    def to_proto_text(self):
-        from tensorflow_metadata.proto.v0 import schema_pb2
-
-        return proto_utils.better_proto_to_proto_text(self, schema_pb2.Feature())
-
 
 ColumnSchemaOrStr = Union[ColumnSchema, str]
+
+FilterT = TypeVar("FilterT")
 
 
 class Schema(_Schema):
@@ -221,13 +223,16 @@ class Schema(_Schema):
 
         return cls(features, **kwargs)
 
-    @property
-    def column_names(self) -> List[str]:
-        return [f.name for f in self.feature]
+    def with_tags_based_on_properties(self, using_value_count=True, using_domain=True) -> "Schema":
+        column_schemas = []
+        for column in self.column_schemas:
+            column_schemas.append(
+                column.with_tags_based_on_properties(
+                    using_value_count=using_value_count, using_domain=using_domain
+                )
+            )
 
-    @property
-    def column_schemas(self) -> List[ColumnSchema]:
-        return self.feature
+        return Schema(column_schemas)
 
     def apply(self, selector) -> "Schema":
         if selector and selector.names:
@@ -241,65 +246,61 @@ class Schema(_Schema):
         else:
             return self
 
-    def select_by_tag(self, tags) -> "Schema":
-        from .. import Tag
+    def select_by_type(self, to_select) -> "Schema":
+        def collection_filter_fn(type):
+            return type in to_select
 
-        if isinstance(tags, (str, Tag)):
-            tags = [tags]
+        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.type)
 
-        if isinstance(tags, (list, tuple)):
+    def remove_by_type(self, to_remove) -> "Schema":
+        def collection_filter_fn(type):
+            return type in to_remove
 
-            def check_fn(column_tags):
-                return all(x in column_tags for x in tags)
+        return self._filter_column_schemas(
+            to_remove, collection_filter_fn, lambda x: x.type, negate=True
+        )
 
-        elif callable(tags):
-            check_fn = tags
-        else:
-            raise ValueError("Wrong type for tags.")
+    def select_by_tag(self, to_select) -> "Schema":
+        def collection_filter_fn(column_tags):
+            return all(x in column_tags for x in to_select)
 
-        return self._filter_by_tag_fn(check_fn)
+        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
 
-    def remove_by_tag(self, tags) -> "Schema":
-        from .. import Tag
+    def remove_by_tag(self, to_remove) -> "Schema":
+        def collection_filter_fn(column_tags):
+            return all(x in column_tags for x in to_remove)
 
-        if isinstance(tags, (str, Tag)):
-            tags = [tags]
+        return self._filter_column_schemas(
+            to_remove, collection_filter_fn, lambda x: x.tags, negate=True
+        )
 
-        if isinstance(tags, (list, tuple)):
+    def select_by_name(self, to_select) -> "Schema":
+        def collection_filter_fn(column_name):
+            return column_name in to_select
 
-            def check_fn(column_tags):
-                return not all(x in column_tags for x in tags)
+        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.name)
 
-        elif callable(tags):
-            check_fn = tags
-        else:
-            raise ValueError("Wrong type for tags.")
+    def remove_by_name(self, to_remove) -> "Schema":
+        def collection_filter_fn(column_name):
+            return column_name in to_remove
 
-        return self._filter_by_tag_fn(check_fn)
+        return self._filter_column_schemas(
+            to_remove, collection_filter_fn, lambda x: x.name, negate=True
+        )
 
-    def _filter_by_tag_fn(self, check_tag_fn: Callable[[List[str]], bool]):
+    def map_column_schemas(self, map_fn: Callable[[ColumnSchema], ColumnSchema]) -> "Schema":
+        output_schemas = []
+        for column_schema in self.column_schemas:
+            output_schemas.append(map_fn(column_schema))
+
+        return Schema(output_schemas)
+
+    def filter_column_schemas(
+        self, filter_fn: Callable[[ColumnSchema], bool], negate=False
+    ) -> "Schema":
         selected_schemas = []
         for column_schema in self.column_schemas:
-            if check_tag_fn(column_schema.tags):
-                selected_schemas.append(column_schema)
-
-        return Schema(selected_schemas)
-
-    def select_by_name(self, names) -> "Schema":
-        if isinstance(names, str):
-            names = [names]
-
-        selected_schemas = [self.column_schemas[key] for key in names]
-        return Schema(selected_schemas)
-
-    def remove_by_name(self, names) -> "Schema":
-        if isinstance(names, str):
-            names = [names]
-
-        selected_schemas = []
-
-        for column_schema in self.column_schemas:
-            if column_schema.name not in names:
+            if self._check_column_schema(column_schema, filter_fn, negate=negate):
                 selected_schemas.append(column_schema)
 
         return Schema(selected_schemas)
@@ -312,27 +313,31 @@ class Schema(_Schema):
 
         return outputs
 
-    def __iter__(self):
-        return iter(self.column_schemas)
+    @property
+    def column_names(self) -> List[str]:
+        return [f.name for f in self.feature]
 
-    def __len__(self):
-        return len(self.column_schemas)
+    @property
+    def column_schemas(self) -> List[ColumnSchema]:
+        return self.feature
 
-    def __repr__(self):
-        return str(
-            [
-                col_schema.to_dict(casing=betterproto.Casing.SNAKE)
-                for col_schema in self.column_schemas
-            ]
-        )
+    @cached_property
+    def item_id_column_name(self):
+        item_id_col = self.select_by_tag("item_id")
+        if len(item_id_col.column_names) == 0:
+            raise ValueError("There is no column tagged as item id.")
 
-    def __eq__(self, other):
-        if not isinstance(other, Schema) or len(self.column_schemas) != len(other.column_schemas):
-            return False
+        return item_id_col.column_names[0]
 
-        return sorted(self.column_schemas, key=lambda x: x.name) == sorted(
-            other.column_schemas, key=lambda x: x.name
-        )
+    def to_proto_text(self) -> str:
+        from tensorflow_metadata.proto.v0 import schema_pb2
+
+        return proto_utils.better_proto_to_proto_text(self, schema_pb2.Schema())
+
+    def from_proto_text(self, path_or_proto_text: str) -> "Schema":
+        from tensorflow_metadata.proto.v0 import schema_pb2
+
+        return proto_utils.proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
 
     def copy(self, **kwargs) -> "Schema":
         return proto_utils.copy_better_proto_message(self, **kwargs)
@@ -365,6 +370,62 @@ class Schema(_Schema):
 
         return Schema(new_columns)
 
+    def _filter_column_schemas(
+        self,
+        input: Union[list, tuple, Callable[[FilterT], bool]],
+        collection_filter_fn: Callable[[FilterT], bool],
+        column_select_fn: Callable[[ColumnSchema], FilterT],
+        negate=False,
+    ) -> "Schema":
+        if not isinstance(input, (list, tuple)) or not callable(input):
+            input = [input]
+        if isinstance(input, (list, tuple)):
+            check_fn = collection_filter_fn
+        elif callable(input):
+            check_fn = input
+        else:
+            raise ValueError(f"Expected either a collection or function, got: {input}.")
+
+        selected_schemas = []
+        for column_schema in self.column_schemas:
+            if self._check_column_schema(column_select_fn(column_schema), check_fn, negate=negate):
+                selected_schemas.append(column_schema)
+
+        return Schema(selected_schemas)
+
+    def _check_column_schema(
+        self, column_schema: ColumnSchema, filter_fn: Callable[[ColumnSchema], bool], negate=False
+    ) -> bool:
+        check = filter_fn(column_schema)
+        if check and not negate:
+            return True
+        elif not check and negate:
+            return True
+
+        return False
+
+    def __iter__(self):
+        return iter(self.column_schemas)
+
+    def __len__(self):
+        return len(self.column_schemas)
+
+    def __repr__(self):
+        return str(
+            [
+                col_schema.to_dict(casing=betterproto.Casing.SNAKE)
+                for col_schema in self.column_schemas
+            ]
+        )
+
+    def __eq__(self, other):
+        if not isinstance(other, Schema) or len(self.column_schemas) != len(other.column_schemas):
+            return False
+
+        return sorted(self.column_schemas, key=lambda x: x.name) == sorted(
+            other.column_schemas, key=lambda x: x.name
+        )
+
     def __add__(self, other):
         return self.add(other, allow_overlap=True)
 
@@ -385,21 +446,3 @@ class Schema(_Schema):
                 result.column_schemas.pop(key, None)
 
         return result
-
-    @cached_property
-    def item_id_column_name(self):
-        item_id_col = self.select_by_tag("item_id")
-        if len(item_id_col.column_names) == 0:
-            raise ValueError("There is no column tagged as item id.")
-
-        return item_id_col.column_names[0]
-
-    def to_proto_text(self):
-        from tensorflow_metadata.proto.v0 import schema_pb2
-
-        return proto_utils.better_proto_to_proto_text(self, schema_pb2.Schema())
-
-    def from_proto_text(self, path_or_proto_text):
-        from tensorflow_metadata.proto.v0 import schema_pb2
-
-        return proto_utils.proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
