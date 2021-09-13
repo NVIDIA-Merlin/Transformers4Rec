@@ -20,8 +20,7 @@ import torch
 
 from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.proto_utils import has_field
-
-from ...utils.schema import SchemaMixin
+from transformers4rec.config.schema import SchemaMixin
 
 
 class OutputSizeMixin(SchemaMixin, abc.ABC):

@@ -19,8 +19,8 @@ from functools import reduce
 import torch
 
 from merlin_standard_lib import Schema
+from transformers4rec.config.schema import requires_schema
 
-from ...utils.schema import requires_schema
 from ..typing import TabularData
 from ..utils.torch_utils import calculate_batch_size_from_input_size
 from .tabular import TabularAggregation, tabular_aggregation_registry

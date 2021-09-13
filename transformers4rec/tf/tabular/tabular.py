@@ -22,8 +22,8 @@ import tensorflow as tf
 
 from merlin_standard_lib import Registry, RegistryMixin, Schema
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
+from transformers4rec.config.schema import SchemaMixin
 
-from ...utils.schema import SchemaMixin
 from ..block.base import Block, SequentialBlock
 from ..typing import TabularData, TensorOrTabularData
 from ..utils.tf_utils import calculate_batch_size_from_input_shapes

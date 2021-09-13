@@ -22,8 +22,8 @@ import six
 import tensorflow as tf
 
 from merlin_standard_lib.utils.misc_utils import filter_kwargs
+from transformers4rec.config.schema import SchemaMixin
 
-from ...utils.schema import SchemaMixin
 from ..typing import Head, PredictionTask
 
 

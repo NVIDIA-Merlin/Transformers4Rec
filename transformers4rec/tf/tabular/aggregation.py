@@ -19,7 +19,8 @@ from typing import List
 
 import tensorflow as tf
 
-from ...utils.schema import requires_schema
+from transformers4rec.config.schema import requires_schema
+
 from ..typing import TabularData
 from ..utils.tf_utils import calculate_batch_size_from_input_shapes
 from .tabular import TabularAggregation, tabular_aggregation_registry

@@ -22,8 +22,8 @@ from nvtabular.loader.torch import TorchAsyncItr as NVTDataLoader
 
 from merlin_standard_lib import Tag
 from merlin_standard_lib.utils.misc_utils import validate_dataset
+from transformers4rec.config.schema import DatasetSchema
 
-from ..utils.schema import DatasetSchema
 from .utils.torch_utils import get_output_sizes_from_schema
 
 # from nvtabular.loader.backend import DataLoader as BaseDataLoader
