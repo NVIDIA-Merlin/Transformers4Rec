@@ -58,6 +58,8 @@ class TabularAggregation(OutputSizeMixin, torch.nn.Module, ABC):
                 # Including the 2nd dim and repeating for the sequence length
                 inputs[fname] = inputs[fname].unsqueeze(dim=1).repeat(1, sequence_length, 1)
 
+        return inputs
+
     def _get_seq_features_shapes(self, inputs_sizes):
         seq_features_shapes = dict()
         for fname, fshape in inputs_sizes.items():

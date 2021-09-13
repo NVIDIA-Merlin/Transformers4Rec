@@ -16,7 +16,7 @@
 
 import torch
 
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Schema
 
 from ...config.schema import requires_schema
 from ..typing import TabularData

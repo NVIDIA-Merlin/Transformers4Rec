@@ -21,7 +21,7 @@ import numpy as np
 import pytest
 
 from merlin_standard_lib import Schema
-from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
+from merlin_standard_lib.utils.proto_utils import has_field
 
 tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
