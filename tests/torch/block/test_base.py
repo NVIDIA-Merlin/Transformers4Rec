@@ -20,17 +20,17 @@ pytorch = pytest.importorskip("torch")
 tr = pytest.importorskip("transformers4rec.torch")
 
 
-def test_base_block(torch_yoochoose_tabular_features):
-    block = torch_yoochoose_tabular_features >> tr.MLPBlock([64, 32])
+def test_base_block(torch_tabular_features):
+    block = torch_tabular_features >> tr.MLPBlock([64, 32])
 
     embedding_block = block.get_children_by_class_name(list(block), "EmbeddingFeatures")[0]
 
     assert isinstance(embedding_block, tr.EmbeddingFeatures)
 
 
-def test_sequential_block(torch_yoochoose_tabular_features):
+def test_sequential_block(torch_tabular_features):
     block = tr.SequentialBlock(
-        torch_yoochoose_tabular_features,
+        torch_tabular_features,
         tr.MLPBlock([64, 32]),
         tr.Block(pytorch.nn.Dropout(0.5), [None, 32]),
     )
@@ -42,9 +42,9 @@ def test_sequential_block(torch_yoochoose_tabular_features):
     assert isinstance(embedding_block, tr.EmbeddingFeatures)
 
 
-def test_sequential_block_with_output_size(torch_yoochoose_tabular_features):
+def test_sequential_block_with_output_size(torch_tabular_features):
     block = tr.SequentialBlock(
-        torch_yoochoose_tabular_features,
+        torch_tabular_features,
         tr.MLPBlock([64, 32]),
         pytorch.nn.Dropout(0.5),
         output_size=[None, 32],
@@ -54,8 +54,8 @@ def test_sequential_block_with_output_size(torch_yoochoose_tabular_features):
     assert list(output_size) == [None, 32]
 
 
-def test_sequential(torch_yoochoose_tabular_features):
-    inputs = torch_yoochoose_tabular_features
+def test_sequential(torch_tabular_features):
+    inputs = torch_tabular_features
     block = pytorch.nn.Sequential(*tr.build_blocks(inputs, tr.MLPBlock([64, 32])))
     block2 = pytorch.nn.Sequential(inputs, tr.MLPBlock([64, 32]).to_module(inputs))
 

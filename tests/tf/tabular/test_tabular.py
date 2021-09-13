@@ -58,14 +58,19 @@ def test_tabular_module(tf_con_features):
 @pytest.mark.parametrize("aggregation", [None, "concat"])
 @pytest.mark.parametrize("include_schema", [True, False])
 def test_serialization_continuous_features(
-    yoochoose_schema, tf_yoochoose_like, pre, post, aggregation, include_schema
+    tabular_schema, tf_tabular_data, pre, post, aggregation, include_schema
 ):
-    schema = yoochoose_schema if include_schema else None
+    schema = tabular_schema if include_schema else None
     inputs = tr.TabularBlock(pre=pre, post=post, aggregation=aggregation, schema=schema)
 
     copy_layer = assert_serialization(inputs)
 
-    assert copy_layer(tf_yoochoose_like) is not None
+    keep_cols = ["user_id", "item_id", "event_hour_sin", "event_hour_cos"]
+    for k in list(tf_tabular_data.keys()):
+        if k not in keep_cols:
+            del tf_tabular_data[k]
+
+    assert copy_layer(tf_tabular_data) is not None
     assert inputs.pre.__class__.__name__ == copy_layer.pre.__class__.__name__
     assert inputs.post.__class__.__name__ == copy_layer.post.__class__.__name__
     assert inputs.aggregation.__class__.__name__ == copy_layer.aggregation.__class__.__name__

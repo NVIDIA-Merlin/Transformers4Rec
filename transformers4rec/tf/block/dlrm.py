@@ -28,7 +28,7 @@ from .base import Block, BlockType
 
 class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
     def __init__(self, **kwargs):
-        super().__init__(lambda x: dict(continuous=tf.expand_dims(x, 1)), **kwargs)
+        super().__init__(lambda x: dict(continuous=x), **kwargs)
 
 
 class DLRMBlock(Block):

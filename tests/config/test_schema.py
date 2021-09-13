@@ -28,9 +28,19 @@ def test_schema_from_schema(schema_file):
 def test_schema_from_yoochoose_schema(yoochoose_schema_file):
     schema = Schema().from_proto_text(str(yoochoose_schema_file))
 
-    assert len(schema.column_names) == 20
-    assert len(schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 6
-    assert len(schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 2
+    assert len(schema.column_names) == 22
+    assert len(schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 7
+    assert len(schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 3
+
+
+def test_schema_cardinalities(yoochoose_schema_file):
+    schema = Schema().from_proto_text(str(yoochoose_schema_file))
+
+    assert schema.categorical_cardinalities() == {
+        "item_id/list": schema.select_by_name("item_id/list").feature[0].int_domain.max + 1,
+        "category/list": schema.select_by_name("category/list").feature[0].int_domain.max + 1,
+        "user_country": schema.select_by_name("user_country").feature[0].int_domain.max + 1,
+    }
 
 
 @pytest.mark.skip(reason="broken")
@@ -40,12 +50,16 @@ def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
 
     assert schema.categorical_cardinalities() == {"item_id/list": 51996, "category/list": 332}
     embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
-    assert embedding_sizes == {"item_id/list": 512, "category/list": 41}
+    assert embedding_sizes == {"item_id/list": 512, "category/list": 41, "user_country": 16}
 
 
 def test_schema_embedding_sizes(yoochoose_schema_file):
     schema = Schema().from_proto_text(str(yoochoose_schema_file)).remove_by_name("session_id")
 
-    assert schema.categorical_cardinalities() == {"item_id/list": 51997, "category/list": 333}
+    assert schema.categorical_cardinalities() == {
+        "category/list": 333,
+        "item_id/list": 51997,
+        "user_country": 63,
+    }
     embedding_sizes = get_embedding_sizes_from_schema(schema, multiplier=3.0)
-    assert embedding_sizes == {"item_id/list": 46, "category/list": 13}
+    assert embedding_sizes == {"item_id/list": 46, "category/list": 13, "user_country": 9}

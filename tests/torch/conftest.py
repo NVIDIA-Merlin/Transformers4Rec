@@ -18,10 +18,9 @@ import pathlib
 import random
 
 import pytest
-from tensorflow_metadata.proto.v0 import schema_pb2
 
 from merlin_standard_lib import Schema
-from merlin_standard_lib.utils.proto_utils import has_field, proto_text_to_better_proto
+from merlin_standard_lib.utils.proto_utils import has_field
 from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
@@ -130,9 +129,9 @@ def torch_seq_prediction_head_link_to_block():
 
 
 @pytest.fixture
-def torch_yoochoose_tabular_features(yoochoose_schema):
+def torch_tabular_features(tabular_schema):
     return torch4rec.TabularFeatures.from_schema(
-        yoochoose_schema,
+        tabular_schema,
         max_sequence_length=20,
         continuous_projection=64,
         aggregation="concat",
@@ -151,9 +150,7 @@ def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
 
 
 @pytest.fixture
-def torch_yoochoose_next_item_prediction_model(
-    torch_yoochoose_tabular_transformer_features, yoochoose_schema
-):
+def torch_yoochoose_next_item_prediction_model(torch_yoochoose_tabular_transformer_features):
     # define Transformer-based model
     inputs = torch_yoochoose_tabular_transformer_features
     transformer_config = tconf.XLNetConfig.build(
@@ -170,45 +167,48 @@ def torch_yoochoose_next_item_prediction_model(
     return model
 
 
-@pytest.fixture
-def torch_yoochoose_like():
+def schema_like_generator(schema_file, lists_as_sequence_features):
     NUM_ROWS = 100
-    MAX_CARDINALITY = 100
-    MAX_SESSION_LENGTH = 20
+    DEFAULT_MAX_INT = 100
+    MAX_LIST_LENGTH = 20
 
-    schema_file = ASSETS_DIR / "yoochoose" / "schema.pbtxt"
-
-    # TODO: Change this to json
-    schema = proto_text_to_better_proto(Schema(), str(schema_file), schema_pb2.Schema())
+    schema = Schema().from_proto_text(str(schema_file))
     schema = schema.remove_by_name(["session_id", "session_start", "day_idx"])
     data = {}
 
     for i in range(NUM_ROWS):
-        session_length = random.randint(5, MAX_SESSION_LENGTH)
+        if lists_as_sequence_features:
+            session_length = random.randint(2, MAX_LIST_LENGTH)
 
         for feature in schema.feature:
-            is_session_feature = has_field(feature, "value_count")
+            is_list_feature = has_field(feature, "value_count")
             is_int_feature = has_field(feature, "int_domain")
 
             if is_int_feature:
-                if is_session_feature:
-                    max_num = MAX_CARDINALITY
-                    if not feature.int_domain.is_categorical:
-                        max_num = feature.int_domain.max
-                    row = pytorch.randint(max_num, (session_length,))
+                max_num = DEFAULT_MAX_INT
+                if feature.int_domain.is_categorical:
+                    max_num = feature.int_domain.max
+                if is_list_feature:
+                    list_length = (
+                        session_length if lists_as_sequence_features else feature.value_count.max
+                    )
+                    row = pytorch.randint(max_num, (list_length,))
                 else:
                     row = pytorch.randint(max_num, (1,))
             else:
-                if is_session_feature:
-                    row = pytorch.rand((session_length,))
+                if is_list_feature:
+                    list_length = (
+                        session_length if lists_as_sequence_features else feature.value_count.max
+                    )
+                    row = pytorch.rand((list_length,))
                 else:
                     row = pytorch.rand((1,))
 
-            if is_session_feature:
+            if is_list_feature:
                 row = (row, [len(row)])
 
             if feature.name in data:
-                if is_session_feature:
+                if is_list_feature:
                     data[feature.name] = (
                         pytorch.cat((data[feature.name][0], row[0])),
                         data[feature.name][1] + row[1],
@@ -227,11 +227,22 @@ def torch_yoochoose_like():
             vals = (val[0], pytorch.tensor(offsets).unsqueeze(dim=1))
             values, offsets, diff_offsets, num_rows = _pull_values_offsets(vals)
             indices = _get_indices(offsets, diff_offsets)
-            outputs[key] = _get_sparse_tensor(values, indices, num_rows, MAX_SESSION_LENGTH)
+            outputs[key] = _get_sparse_tensor(values, indices, num_rows, MAX_LIST_LENGTH)
         else:
             outputs[key] = data[key]
 
     return outputs
+
+
+@pytest.fixture
+def torch_tabular_data(tabular_schema_file):
+    outputs = schema_like_generator(tabular_schema_file, lists_as_sequence_features=False)
+    return outputs
+
+
+@pytest.fixture
+def torch_yoochoose_like(yoochoose_schema_file):
+    return schema_like_generator(yoochoose_schema_file, lists_as_sequence_features=True)
 
 
 def _pull_values_offsets(values_offset):

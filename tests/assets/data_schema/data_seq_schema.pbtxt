@@ -312,3 +312,28 @@ feature {
   annotation {
   }
 }
+feature {
+  name: "user_country"
+  type: INT
+  int_domain {
+    name: "session_id"
+    min: 1
+    max: 62
+    is_categorical: true
+  }
+  annotation {
+    tag: "categorical"
+  }
+}
+feature {
+  name: "user_age"
+  type: FLOAT
+  float_domain {
+    name: "timestamp/weekday/sin/list"
+    min: 0.0
+    max: 0.407965	
+  }
+  annotation {
+    tag: "continuous"
+  }
+}

@@ -143,6 +143,7 @@ def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_len
     sizes = {}
     for feature in schema.feature:
         name = feature.name
+        # Sequential or multi-hot feature
         if has_field(feature, "value_count"):
             sizes[name] = torch.Size(
                 [
@@ -153,7 +154,7 @@ def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_len
         elif has_field(feature, "shape"):
             sizes[name] = torch.Size([batch_size] + [d.size for d in feature.shape.dim])
         else:
-            sizes[name] = torch.Size([batch_size, 1])
+            sizes[name] = torch.Size([batch_size])
 
     return sizes
 

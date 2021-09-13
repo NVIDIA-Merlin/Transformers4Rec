@@ -19,11 +19,13 @@ import pytest
 tr = pytest.importorskip("transformers4rec.tf")
 
 
-def test_dlrm_block_yoochoose(yoochoose_schema, tf_yoochoose_like):
-    dlrm = tr.DLRMBlock.from_schema(yoochoose_schema, bottom_mlp=tr.MLPBlock([64]))
+def test_dlrm_block_yoochoose(tabular_schema, tf_tabular_data):
+    all_features_schema = tabular_schema
+
+    dlrm = tr.DLRMBlock.from_schema(all_features_schema, bottom_mlp=tr.MLPBlock([64]))
 
     body = tr.SequentialBlock([dlrm, tr.MLPBlock([64])])
 
-    outputs = body(tf_yoochoose_like)
+    outputs = body(tf_tabular_data)
 
     assert list(outputs.shape) == [100, 64]
