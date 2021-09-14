@@ -13,8 +13,84 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import abc
+from typing import Dict, Union
 
 import tensorflow as tf
+
+from ..typing import TabularData
+
+
+class LossMixin(abc.ABC):
+    """Mixin to use for `torch.Module`s that can calculate a loss."""
+
+    def compute_loss(
+        self,
+        inputs: Union[tf.Tensor, TabularData],
+        targets: Union[tf.Tensor, TabularData],
+        compute_metrics=True,
+        training: bool = False,
+        **kwargs,
+    ) -> tf.Tensor:
+        """Compute the loss on a batch of data.
+
+        Parameters
+        ----------
+        inputs: Union[torch.Tensor, TabularData]
+            TODO
+        targets: Union[torch.Tensor, TabularData]
+            TODO
+        training: bool, default=False
+        """
+        raise NotImplementedError()
+
+
+class MetricsMixin(abc.ABC):
+    """Mixin to use for `torch.Module`s that can calculate metrics."""
+
+    def calculate_metrics(
+        self,
+        inputs: Union[tf.Tensor, TabularData],
+        targets: Union[tf.Tensor, TabularData],
+        mode: str = "val",
+        forward=True,
+        **kwargs,
+    ) -> Dict[str, Union[Dict[str, tf.Tensor], tf.Tensor]]:
+        """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
+
+        The state of each metric can be retrieved by calling the `compute_metrics` method.
+
+        Parameters
+        ----------
+        inputs: Union[torch.Tensor, TabularData]
+            TODO
+        targets: Union[torch.Tensor, TabularData]
+            TODO
+        forward: bool, default True
+
+        mode: str, default="val"
+
+        """
+        raise NotImplementedError()
+
+    def metric_results(self, mode: str = None) -> Dict[str, Union[float, tf.Tensor]]:
+        """Returns the current state of each metric.
+
+        The state is typically updated each batch by calling the `calculate_metrics` method.
+
+        Parameters
+        ----------
+        mode: str, default="val"
+
+        Returns
+        -------
+        Dict[str, Union[float, torch.Tensor]]
+        """
+        raise NotImplementedError()
+
+    def reset_metrics(self):
+        """Reset all metrics."""
+        raise NotImplementedError()
 
 
 def get_output_sizes_from_schema(schema, batch_size=0, max_sequence_length=None):

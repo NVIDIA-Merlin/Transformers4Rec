@@ -14,19 +14,17 @@
 # limitations under the License.
 #
 
-from abc import ABC
+import abc
 from typing import List, Optional
 
 import tensorflow as tf
 from tensorflow.python.framework import ops
 
+from ..utils.tf_utils import LossMixin
 from .head import Head
 
 
-class ModelWithLoss(tf.keras.Model, ABC):
-    def compute_loss(self, inputs, targets, training: bool = False, **kwargs) -> tf.Tensor:
-        raise NotImplementedError("Sub-classes must implement the `compute_loss` method.")
-
+class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
     def train_step(self, inputs):
         """Custom train step using the `compute_loss` method."""
 
@@ -67,7 +65,7 @@ class ModelWithLoss(tf.keras.Model, ABC):
         return metrics
 
 
-class Model(ModelWithLoss):
+class Model(BaseModel):
     def __init__(
         self, *head: Head, head_weights: Optional[List[float]] = None, name=None, **kwargs
     ):
