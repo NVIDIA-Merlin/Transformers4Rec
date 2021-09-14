@@ -22,7 +22,7 @@ from ..typing import TabularData
 
 
 class LossMixin(abc.ABC):
-    """Mixin to use for `torch.Module`s that can calculate a loss."""
+    """Mixin to use for Keras Layers that can calculate a loss."""
 
     def compute_loss(
         self,
@@ -46,7 +46,7 @@ class LossMixin(abc.ABC):
 
 
 class MetricsMixin(abc.ABC):
-    """Mixin to use for `torch.Module`s that can calculate metrics."""
+    """Mixin to use for Keras Layers that can calculate metrics."""
 
     def calculate_metrics(
         self,
@@ -58,13 +58,13 @@ class MetricsMixin(abc.ABC):
     ) -> Dict[str, Union[Dict[str, tf.Tensor], tf.Tensor]]:
         """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
 
-        The state of each metric can be retrieved by calling the `compute_metrics` method.
+        The state of each metric can be retrieved by calling the `metric_results` method.
 
         Parameters
         ----------
-        inputs: Union[torch.Tensor, TabularData]
+        inputs: Union[tf.Tensor, TabularData]
             TODO
-        targets: Union[torch.Tensor, TabularData]
+        targets: Union[tf.Tensor, TabularData]
             TODO
         forward: bool, default True
 
@@ -84,7 +84,7 @@ class MetricsMixin(abc.ABC):
 
         Returns
         -------
-        Dict[str, Union[float, torch.Tensor]]
+        Dict[str, Union[float, tf.Tensor]]
         """
         raise NotImplementedError()
 
