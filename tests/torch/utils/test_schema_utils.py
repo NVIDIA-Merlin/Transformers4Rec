@@ -47,10 +47,10 @@ def test_random_data_from_simple_schema():
 
     assert random_data["context_cat"].shape == (100,)
     assert random_data["session_con"].dtype == pytorch.float32
-    for val in s.select_by_tag(Tag.LIST).apply_on_dict(random_data).values():
+    for val in s.select_by_tag(Tag.LIST).filter_columns_from_dict(random_data).values():
         assert val.shape == (100, 50)
 
-    for val in s.select_by_tag(Tag.CATEGORICAL).apply_on_dict(random_data).values():
+    for val in s.select_by_tag(Tag.CATEGORICAL).filter_columns_from_dict(random_data).values():
         assert val.dtype == pytorch.int64
         assert val.max() < 1000
 

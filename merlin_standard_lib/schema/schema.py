@@ -256,7 +256,7 @@ class Schema(_Schema):
         else:
             return self
 
-    def apply_on_dict(self, input_dict):
+    def filter_columns_from_dict(self, input_dict):
         filtered_dict = {}
         for key, val in input_dict.items():
             if key in self.column_names:
