@@ -53,14 +53,17 @@ def test_tabular_module(tf_con_features):
     assert tab_a(tf_con_features, merge_with=tab_b, aggregation="stack").shape[1] == 1
 
 
-@pytest.mark.parametrize("pre", [None, "stochastic-swap-noise"])
-@pytest.mark.parametrize("post", [None, "stochastic-swap-noise"])
-@pytest.mark.parametrize("aggregation", ["concat", None])
+@pytest.mark.parametrize("pre", [None])
+@pytest.mark.parametrize("post", [None])
+@pytest.mark.parametrize("aggregation", [None, "concat"])
 @pytest.mark.parametrize("include_schema", [True, False])
 def test_serialization_continuous_features(
     tabular_schema, tf_tabular_data, pre, post, aggregation, include_schema
 ):
-    schema = tabular_schema if include_schema else None
+    schema = None
+    if include_schema:
+        schema = tabular_schema
+
     inputs = tr.TabularBlock(pre=pre, post=post, aggregation=aggregation, schema=schema)
 
     copy_layer = assert_serialization(inputs)
@@ -71,6 +74,33 @@ def test_serialization_continuous_features(
             del tf_tabular_data[k]
 
     assert copy_layer(tf_tabular_data) is not None
+    assert inputs.pre.__class__.__name__ == copy_layer.pre.__class__.__name__
+    assert inputs.post.__class__.__name__ == copy_layer.post.__class__.__name__
+    assert inputs.aggregation.__class__.__name__ == copy_layer.aggregation.__class__.__name__
+    assert inputs.schema == schema
+
+
+@pytest.mark.parametrize("pre", [None, "stochastic-swap-noise"])
+@pytest.mark.parametrize("post", [None])
+def test_serialization_continuous_features_sequential(
+    yoochoose_schema, tf_yoochoose_like, pre, post
+):
+    schema = yoochoose_schema
+
+    inputs = tr.TabularBlock(pre=pre, post=post, aggregation="concat", schema=schema)
+
+    copy_layer = assert_serialization(inputs)
+
+    keep_cols = [
+        "item_id/list",
+        "category/list",
+        "timestamp/weekday/cos/list",
+    ]
+    for k in list(tf_yoochoose_like.keys()):
+        if k not in keep_cols:
+            del tf_yoochoose_like[k]
+
+    assert copy_layer(tf_yoochoose_like) is not None
     assert inputs.pre.__class__.__name__ == copy_layer.pre.__class__.__name__
     assert inputs.post.__class__.__name__ == copy_layer.post.__class__.__name__
     assert inputs.aggregation.__class__.__name__ == copy_layer.aggregation.__class__.__name__

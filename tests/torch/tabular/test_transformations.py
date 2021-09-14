@@ -16,7 +16,7 @@
 
 import pytest
 
-from merlin_standard_lib import Tag
+from merlin_standard_lib import Tag, schema
 
 pytorch = pytest.importorskip("torch")
 tr = pytest.importorskip("transformers4rec.torch")
@@ -31,14 +31,15 @@ def test_stochastic_swap_noise(replacement_prob):
     # Creating some input sequences with padding in the end
     # (to emulate sessions with different lengths)
     seq_inputs = {
-        "categ_feat": pytorch.tril(
+        "categ_seq_feat": pytorch.tril(
             pytorch.randint(low=1, high=100, size=(NUM_SEQS, SEQ_LENGTH)), 1
         ),
-        "cont_feat": pytorch.tril(pytorch.rand((NUM_SEQS, SEQ_LENGTH)), 1),
+        "cont_seq_feat": pytorch.tril(pytorch.rand((NUM_SEQS, SEQ_LENGTH)), 1),
+        "categ_non_seq_feat": pytorch.randint(low=1, high=100, size=(NUM_SEQS,)),
     }
 
     ssn = tr.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
-    out_features_ssn = ssn(seq_inputs, mask=seq_inputs["categ_feat"] != PAD_TOKEN)
+    out_features_ssn = ssn(seq_inputs, input_mask=seq_inputs["categ_seq_feat"] != PAD_TOKEN)
 
     for fname in seq_inputs:
         replaced_mask = out_features_ssn[fname] != seq_inputs[fname]
@@ -89,3 +90,32 @@ def test_layer_norm(yoochoose_schema, torch_yoochoose_like, layer_norm):
 
     assert list(out["item_id/list"].shape) == [100, 100]
     assert list(out["category/list"].shape) == [100, 64]
+
+
+def test_stochastic_swap_noise_raise_exception_not_2d_item_id():
+
+    s = schema.Schema(
+        [
+            schema.ColumnSchema.create_categorical(
+                "item_id_feat", num_items=1000, tags=[Tag.ITEM_ID.value]
+            ),
+        ]
+    )
+
+    NUM_SEQS = 100
+    SEQ_LENGTH = 80
+    PAD_TOKEN = 0
+
+    seq_inputs = {
+        "item_id_feat": pytorch.tril(
+            pytorch.randint(low=1, high=100, size=(NUM_SEQS, SEQ_LENGTH, 64)), 1
+        ),
+    }
+
+    ssn = tr.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=0.3, schema=s)
+
+    with pytest.raises(ValueError) as excinfo:
+        ssn(seq_inputs)
+    assert "To extract the padding mask from item id tensor it is expected to have 2 dims" in str(
+        excinfo.value
+    )
