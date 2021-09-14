@@ -20,7 +20,6 @@ from typing import Callable, Dict, Iterable, Optional, Union
 
 import torch
 import torchmetrics as tm
-from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_utils import SequenceSummary
 
 from merlin_standard_lib.registry import camelcase_to_snakecase
@@ -155,7 +154,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         if self._task_name:
             return self._task_name
 
-        base_name = generic_utils.to_snake_case(self.__class__.__name__)
+        base_name = camelcase_to_snakecase(self.__class__.__name__)
 
         return name_fn(self.target_name, base_name) if self.target_name else base_name
 
