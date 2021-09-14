@@ -55,7 +55,7 @@ def test_tabular_module(tf_con_features):
 
 @pytest.mark.parametrize("pre", [None, "stochastic-swap-noise"])
 @pytest.mark.parametrize("post", [None, "stochastic-swap-noise"])
-@pytest.mark.parametrize("aggregation", [None, "concat"])
+@pytest.mark.parametrize("aggregation", ["concat", None])
 @pytest.mark.parametrize("include_schema", [True, False])
 def test_serialization_continuous_features(
     tabular_schema, tf_tabular_data, pre, post, aggregation, include_schema
