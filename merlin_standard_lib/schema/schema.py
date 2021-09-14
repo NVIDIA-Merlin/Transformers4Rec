@@ -17,8 +17,8 @@
 import collections
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 
-from .. import Tag
 from ..utils import proto_utils
+from .tag import Tag
 
 try:
     from functools import cached_property
