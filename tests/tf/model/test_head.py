@@ -18,6 +18,7 @@ import pytest
 
 tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
+test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 
 def assert_loss_and_metrics_are_valid(head, inputs, targets):
@@ -37,6 +38,19 @@ def test_simple_heads(tf_tabular_features, tf_tabular_data, prediction_task):
     head = task.to_head(body, tf_tabular_features)
 
     assert_loss_and_metrics_are_valid(head, tf_tabular_data, targets)
+
+
+@pytest.mark.parametrize("prediction_task", [tr.BinaryClassificationTask])
+def test_serialization_simple_heads(tf_tabular_features, tf_tabular_data, prediction_task):
+    targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
+
+    body = tr.SequentialBlock([tf_tabular_features, tr.MLPBlock([64])])
+    task = prediction_task("target")
+    head = task.to_head(body, tf_tabular_features)
+
+    copy_head = test_utils.assert_serialization(head)
+
+    a = 5
 
 
 @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])

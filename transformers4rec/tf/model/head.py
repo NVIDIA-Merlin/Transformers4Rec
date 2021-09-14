@@ -22,6 +22,7 @@ from tensorflow.keras.layers import Layer
 from merlin_standard_lib import Schema, Tag
 
 from ..typing import TabularFeaturesType
+from ..utils.tf_utils import maybe_serialize_keras_objects
 from .prediction_task import BinaryClassificationTask, PredictionTask, RegressionTask
 
 
@@ -34,21 +35,26 @@ class Head(tf.keras.layers.Layer):
         task_weights: Optional[List[float]] = None,
         loss_reduction=tf.reduce_mean,
         inputs: Optional[TabularFeaturesType] = None,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.body = body
         self.loss_reduction = loss_reduction
-        self.prediction_tasks = {}
+
+        self.prediction_tasks = prediction_tasks
+        self.task_weights = task_weights
+
+        self.prediction_task_dict = {}
         if prediction_tasks:
             if not isinstance(prediction_tasks, list):
                 prediction_tasks = [prediction_tasks]
             for task in prediction_tasks:
-                self.prediction_tasks[task.task_name] = task
+                self.prediction_task_dict[task.task_name] = task
 
-        self._task_weights = defaultdict(lambda: 1)
+        self._task_weight_dict = defaultdict(lambda: 1.0)
         if task_weights:
-            for key, val in task_weights.items():
-                self._task_weights[key] = val
+            for task, val in zip(prediction_tasks, task_weights):
+                self._task_weight_dict[task.task_name] = val
 
         self._set_task_blocks(task_blocks)
 
@@ -61,6 +67,7 @@ class Head(tf.keras.layers.Layer):
         task_weight_dict: Optional[Dict[str, float]] = None,
         loss_reduction=tf.reduce_mean,
         inputs: Optional[TabularFeaturesType] = None,
+        **kwargs,
     ) -> "Head":
         tasks, task_weights = [], []
 
@@ -81,6 +88,7 @@ class Head(tf.keras.layers.Layer):
             task_weights=task_weights,
             loss_reduction=loss_reduction,
             inputs=inputs,
+            **kwargs,
         )
 
     def _set_task_blocks(self, task_blocks):
@@ -93,7 +101,7 @@ class Head(tf.keras.layers.Layer):
                 if key in tasks_multi_names:
                     tasks = tasks_multi_names[key]
                     if len(tasks) == 1:
-                        self.prediction_tasks[tasks[0].task_name].task_block = task_block
+                        self.prediction_task_dict[tasks[0].task_name].task_block = task_block
                     else:
                         raise ValueError(
                             f"Ambiguous name: {key}, can't resolve it to a task "
@@ -103,18 +111,20 @@ class Head(tf.keras.layers.Layer):
                 else:
                     raise ValueError(
                         f"Couldn't find {key} in prediction_tasks, "
-                        f"only found: {', '.join(list(self.prediction_tasks.keys()))}"
+                        f"only found: {', '.join(list(self.prediction_task_dict.keys()))}"
                     )
         elif isinstance(task_blocks, Layer):
-            for key, val in self.prediction_tasks.items():
+            for key, val in self.prediction_task_dict.items():
                 task_block = task_blocks.from_config(task_blocks.get_config())
                 val.task_block = task_block
         else:
             raise ValueError("`task_blocks` must be a Layer or a Dict[str, Layer]")
 
     def _prediction_tasks_multi_names(self) -> Dict[str, List[PredictionTask]]:
-        prediction_tasks_multi_names = {name: [val] for name, val in self.prediction_tasks.items()}
-        for name, value in self.prediction_tasks.items():
+        prediction_tasks_multi_names = {
+            name: [val] for name, val in self.prediction_task_dict.items()
+        }
+        for name, value in self.prediction_task_dict.items():
             name_parts = name.split("/")
             for name_part in name_parts:
                 if name_part in prediction_tasks_multi_names:
@@ -126,15 +136,15 @@ class Head(tf.keras.layers.Layer):
 
     def add_task(self, task: PredictionTask, task_weight=1):
         key = task.target_name
-        self.prediction_tasks[key] = task
+        self.prediction_task_dict[key] = task
         if task_weight:
-            self._task_weights[key] = task_weight
+            self._task_weight_dict[key] = task_weight
 
         return self
 
     def pop_labels(self, inputs: Dict[Text, tf.Tensor]):
         outputs = {}
-        for name in self.prediction_tasks.keys():
+        for name in self.prediction_task_dict.keys():
             outputs[name] = inputs.pop(name)
 
         return outputs
@@ -148,7 +158,7 @@ class Head(tf.keras.layers.Layer):
         if call_body:
             body_outputs = self.body(body_outputs)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             outputs[name] = task(body_outputs, **kwargs)
 
         if len(outputs) == 1 and not always_output_dict:
@@ -164,9 +174,9 @@ class Head(tf.keras.layers.Layer):
         if call_body:
             body_outputs = self.body(body_outputs)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             loss = task.compute_loss(body_outputs, targets, training=training, **kwargs)
-            losses.append(loss * self._task_weights[name])
+            losses.append(loss * self._task_weight_dict[name])
 
         return self.loss_reduction(losses)
 
@@ -175,26 +185,38 @@ class Head(tf.keras.layers.Layer):
             return "_".join([mode, x]) if mode else x
 
         metrics = {
-            name_fn(name): task.metric_results() for name, task in self.prediction_tasks.items()
+            name_fn(name): task.metric_results() for name, task in self.prediction_task_dict.items()
         }
 
         return _output_metrics(metrics)
 
     def reset_metrics(self):
-        for task in self.prediction_tasks.values():
+        for task in self.prediction_task_dict.values():
             task.reset_metrics()
 
     @property
     def task_blocks(self) -> Dict[str, Optional[Layer]]:
-        return {name: task.task_block for name, task in self.prediction_tasks.items()}
+        return {name: task.task_block for name, task in self.prediction_task_dict.items()}
 
     @property
     def metrics(self) -> Dict[str, tf.keras.metrics.Metric]:
         outputs = {}
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             outputs.update({metric.name: metric for metric in task.metrics})
 
         return outputs
+
+    @classmethod
+    def from_config(cls, config):
+        return super().from_config(config)
+
+    def get_config(self):
+        config = super().get_config()
+        config = maybe_serialize_keras_objects(
+            self, config, ["body", "loss_reduction", "prediction_tasks", "task_weights"]
+        )
+
+        return config
 
 
 def _output_metrics(metrics):

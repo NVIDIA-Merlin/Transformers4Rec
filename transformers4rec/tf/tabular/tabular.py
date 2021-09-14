@@ -655,9 +655,10 @@ class AsTabular(tf.keras.layers.Layer):
         return {self.output_name: inputs}
 
     def get_config(self):
-        return {
-            "axis": self.axis,
-        }
+        config = super(AsTabular, self).get_config()
+        config["output_name"] = self.output_name
+
+        return config
 
 
 def merge_tabular(self, other, aggregation=None, **kwargs):

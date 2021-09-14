@@ -137,12 +137,12 @@ def test_item_prediction_loss_and_metrics(
     non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
 
-    loss = head.prediction_tasks["next-item"].compute_loss(
+    loss = head.prediction_task_dict["next-item"].compute_loss(
         inputs=body_outputs,
         targets=labels_all,
     )
 
-    metrics = head.prediction_tasks["next-item"].calculate_metrics(
+    metrics = head.prediction_task_dict["next-item"].calculate_metrics(
         predictions=body_outputs, targets=labels_all
     )
     assert all(len(m) == 2 for m in metrics.values())

@@ -63,10 +63,10 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             for i, task in enumerate(prediction_tasks):
                 self.prediction_tasks[task.task_name] = task
 
-        self._task_weights = defaultdict(lambda: 1)
+        self._task_weights = defaultdict(lambda: 1.0)
         if task_weights:
-            for key, val in task_weights.items():
-                self._task_weights[key] = val
+            for task, val in zip(prediction_tasks, task_weights):
+                self._task_weights[task.task_name] = val
 
         self.build(inputs=inputs, task_blocks=task_blocks)
 

@@ -7,7 +7,7 @@ from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
 from ..typing import Head, Model
-from ..utils.tf_utils import LossMixin, MetricsMixin
+from ..utils.tf_utils import LossMixin, MetricsMixin, maybe_serialize_keras_objects
 
 
 def name_fn(name, inp):
@@ -173,6 +173,27 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
         from .model import Model as _Model
 
         return _Model(_Head(body, self, inputs=inputs, **kwargs), **kwargs)
+
+    @classmethod
+    def from_config(cls, config):
+        return super().from_config(config)
+
+    def get_config(self):
+        config = super().get_config()
+        config = maybe_serialize_keras_objects(self, config, ["loss", "pre"])
+        config = maybe_serialize_keras_objects(
+            self,
+            config,
+            ["metrics", "prediction_metrics", "label_metrics", "loss_metrics"],
+        )
+
+        config["summary_type"] = self.sequence_summary.summary_type
+        if self.target_name:
+            config["target_name"] = self.target_name
+        if self._task_name:
+            config["task_name"] = self._task_name
+
+        return config
 
 
 class BinaryClassificationTask(PredictionTask):
