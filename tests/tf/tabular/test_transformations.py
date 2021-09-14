@@ -48,7 +48,7 @@ def test_stochastic_swap_noise(replacement_prob):
         replacement_rate = tf.reduce_mean(
             tf.cast(replaced_mask_non_padded, dtype=tf.float32)
         ).numpy()
-        assert replacement_rate == pytest.approx(replacement_prob, abs=0.1)
+        assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
 
 
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
