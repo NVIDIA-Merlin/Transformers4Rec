@@ -56,8 +56,14 @@ class SchemaMixin:
     def get_item_ids_from_inputs(self, inputs):
         return inputs[self.schema.item_id_column_name]
 
-    def get_mask_from_inputs(self, inputs, mask_token=0):
-        return self.get_item_ids_from_inputs(inputs) != mask_token
+    def get_padding_mask_from_item_id(self, inputs, pad_token=0):
+        item_id_inputs = self.get_item_ids_from_inputs(inputs)
+        if len(item_id_inputs.shape) != 2:
+            raise ValueError(
+                "To extract the padding mask from item id tensor "
+                "it is expected to have 2 dims, but it has {} dims.".format(item_id_inputs.shape)
+            )
+        return self.get_item_ids_from_inputs(inputs) != pad_token
 
 
 def requires_schema(module):
