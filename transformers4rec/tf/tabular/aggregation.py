@@ -29,14 +29,18 @@ from .tabular import TabularAggregation, tabular_aggregation_registry
 @tabular_aggregation_registry.register("concat")
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ConcatFeatures(TabularAggregation):
+    def __init__(self, axis=-1, output_dtype=tf.float32, **kwargs):
+        super().__init__(**kwargs)
+        self.axis = axis
+        self.output_dtype = output_dtype
+
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         self._expand_non_sequential_features(inputs)
         self._check_concat_shapes(inputs)
 
         tensors = []
         for name in sorted(inputs.keys()):
-            val = inputs[name]
-            tensors.append(val)
+            tensors.append(tf.cast(inputs[name], self.output_dtype))
 
         return tf.concat(tensors, axis=-1)
 
@@ -45,13 +49,21 @@ class ConcatFeatures(TabularAggregation):
         output_size = self._get_agg_output_size(input_shapes, agg_dim)
         return output_size
 
+    def get_config(self):
+        config = super().get_config()
+        config["axis"] = self.axis
+        config["output_dtype"] = self.output_dtype
+
+        return config
+
 
 @tabular_aggregation_registry.register("stack")
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class StackFeatures(TabularAggregation):
-    def __init__(self, axis=-1, trainable=False, name=None, dtype=None, dynamic=False, **kwargs):
-        super().__init__(trainable, name, dtype, dynamic, **kwargs)
+    def __init__(self, axis=-1, output_dtype=tf.float32, **kwargs):
+        super().__init__(**kwargs)
         self.axis = axis
+        self.output_dtype = output_dtype
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
         self._expand_non_sequential_features(inputs)
@@ -59,8 +71,7 @@ class StackFeatures(TabularAggregation):
 
         tensors = []
         for name in sorted(inputs.keys()):
-            val = inputs[name]
-            tensors.append(val)
+            tensors.append(tf.cast(inputs[name], self.output_dtype))
 
         return tf.stack(tensors, axis=self.axis)
 
@@ -72,6 +83,7 @@ class StackFeatures(TabularAggregation):
     def get_config(self):
         config = super().get_config()
         config["axis"] = self.axis
+        config["output_dtype"] = self.output_dtype
 
         return config
 

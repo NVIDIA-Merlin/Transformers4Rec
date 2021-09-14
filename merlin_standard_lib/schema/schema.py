@@ -18,6 +18,7 @@ import collections
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 
 from ..utils import proto_utils
+from .tag import Tag
 
 try:
     from functools import cached_property
@@ -69,9 +70,12 @@ class ColumnSchema(Feature):
         shape: Optional[Union[Tuple[int, ...], List[int]]] = None,
         value_count: Optional[Union[ValueCount, ValueCountList]] = None,
         min_index: int = 0,
-        tags: Optional[List[str]] = None,
+        tags: Optional[List[Union[Tag, str]]] = None,
         **kwargs,
     ) -> "ColumnSchema":
+        if tags:
+            tags = [str(t) for t in tags]
+
         extra = _parse_shape_and_value_count(shape, value_count)
         int_domain = IntDomain(name=name, min=min_index, max=num_items, is_categorical=True)
         tags = list(set(tags or [] + ["categorical"]))
@@ -91,9 +95,12 @@ class ColumnSchema(Feature):
         is_embedding: bool = False,
         shape: Optional[Union[Tuple[int, ...], List[int]]] = None,
         value_count: Optional[Union[ValueCount, ValueCountList]] = None,
-        tags: Optional[List[str]] = None,
+        tags: Optional[List[Union[Tag, str]]] = None,
         **kwargs,
     ) -> "ColumnSchema":
+        if tags:
+            tags = [str(t) for t in tags]
+
         extra = _parse_shape_and_value_count(shape, value_count)
         if min_value is not None and max_value is not None:
             if is_float:
@@ -248,6 +255,14 @@ class Schema(_Schema):
             return self - self.select_by_name(selector.names)
         else:
             return self
+
+    def filter_columns_from_dict(self, input_dict):
+        filtered_dict = {}
+        for key, val in input_dict.items():
+            if key in self.column_names:
+                filtered_dict[key] = val
+
+        return filtered_dict
 
     def select_by_type(self, to_select) -> "Schema":
         if not isinstance(to_select, (list, tuple)) and not callable(to_select):
