@@ -41,20 +41,24 @@ def random_data_from_schema(
         for feature in schema.column_schemas:
             is_list_feature = has_field(feature, "value_count")
             is_int_feature = has_field(feature, "int_domain")
+            is_embedding = feature.shape.dim[0].size > 1 if has_field(feature, "shape") else False
+
+            shape = [d.size for d in feature.shape.dim] if has_field(feature, "shape") else (1,)
 
             if is_int_feature:
                 max_num = feature.int_domain.max
+                dtype = tf.int32
                 if is_list_feature:
                     list_length = session_length or feature.value_count.max
-                    row = tf.random.uniform((list_length,), minval=1, maxval=max_num)
+                    row = tf.random.uniform((list_length,), minval=1, maxval=max_num, dtype=dtype)
                 else:
-                    row = tf.random.uniform((1,), minval=1, maxval=max_num)
+                    row = tf.random.uniform(tuple(shape), minval=1, maxval=max_num, dtype=dtype)
             else:
                 if is_list_feature:
                     list_length = session_length or feature.value_count.max
                     row = tf.random.uniform((list_length,))
                 else:
-                    row = tf.random.uniform((1,))
+                    row = tf.random.uniform(tuple(shape))
 
             if is_list_feature:
                 row = (row, [len(row)])
@@ -65,6 +69,14 @@ def random_data_from_schema(
                         tf.concat((data[feature.name][0], row[0]), axis=0),
                         data[feature.name][1] + row[1],
                     )
+                elif is_embedding:
+                    f = data[feature.name]
+                    if isinstance(f, list):
+                        f.append(row)
+                    else:
+                        data[feature.name] = [f, row]
+                    if i == num_rows - 1:
+                        data[feature.name] = tf.stack(data[feature.name], axis=0)
                 else:
                     data[feature.name] = tf.concat((data[feature.name], row), axis=0)
             else:
