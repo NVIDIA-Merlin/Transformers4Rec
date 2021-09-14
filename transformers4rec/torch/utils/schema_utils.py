@@ -25,6 +25,9 @@ def random_data_from_schema(
         for feature in schema.feature:
             is_list_feature = has_field(feature, "value_count")
             is_int_feature = has_field(feature, "int_domain")
+            is_embedding = feature.shape.dim[0].size > 1 if has_field(feature, "shape") else False
+
+            shape = [d.size for d in feature.shape.dim] if has_field(feature, "shape") else (1,)
 
             if is_int_feature:
                 max_num = feature.int_domain.max
@@ -33,13 +36,13 @@ def random_data_from_schema(
                     row = torch.randint(1, max_num, (list_length,))
 
                 else:
-                    row = torch.randint(1, max_num, (1,))
+                    row = torch.randint(1, max_num, tuple(shape))
             else:
                 if is_list_feature:
                     list_length = session_length or feature.value_count.max
                     row = torch.rand((list_length,))
                 else:
-                    row = torch.rand((1,))
+                    row = torch.rand(tuple(shape))
 
             if is_list_feature:
                 row = (row, [len(row)])
@@ -50,6 +53,14 @@ def random_data_from_schema(
                         torch.cat((data[feature.name][0], row[0])),
                         data[feature.name][1] + row[1],
                     )
+                elif is_embedding:
+                    f = data[feature.name]
+                    if isinstance(f, list):
+                        f.append(row)
+                    else:
+                        data[feature.name] = [f, row]
+                    if i == num_rows - 1:
+                        data[feature.name] = torch.stack(data[feature.name], dim=0)
                 else:
                     data[feature.name] = torch.cat((data[feature.name], row))
             else:
