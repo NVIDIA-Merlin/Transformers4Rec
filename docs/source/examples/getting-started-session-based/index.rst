@@ -10,5 +10,5 @@ This example notebook is focusing primarily on the basic concepts of Transformer
 .. toctree::
    :maxdepth: 1
 
-   ETL with NVTabular <01-ETL_with_NVTabular>
+   ETL with NVTabular <01-ETL-with-NVTabular>
    Session based XLNet with PyTorch <02-session-based-XLNet-with-PyT>
