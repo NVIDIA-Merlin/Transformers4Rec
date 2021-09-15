@@ -4,7 +4,7 @@ feature {
   int_domain {
     name: "session_id"
     min: 1
-    max: 11562158
+    max: 100001
     is_categorical: false
   }
   annotation {
