@@ -4,6 +4,14 @@ transformers4rec.config package
 Submodules
 ----------
 
+transformers4rec.config.schema module
+-------------------------------------
+
+.. automodule:: transformers4rec.config.schema
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 transformers4rec.config.trainer module
 --------------------------------------
 

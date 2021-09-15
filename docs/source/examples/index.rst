@@ -6,4 +6,5 @@ Here you can find notebooks with examples on how to use the Transformers4Rec API
 .. toctree::
    :maxdepth: 1
 
-   Yoochose XLNET Example <tf4rec_XLNET_CLM>
+   Getting started session-based with Synthetic Data <getting-started-session-based/index>
+   End-to-end session-based with Yoochoose dataset <end-to-end-session-based/index>
