@@ -47,7 +47,7 @@ def test_stochastic_swap_noise(replacement_prob):
             replaced_mask, seq_inputs[fname] != PAD_TOKEN
         )
         replacement_rate = replaced_mask_non_padded.float().mean()
-        assert replacement_rate == pytest.approx(replacement_prob, abs=0.1)
+        assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
 
 
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
