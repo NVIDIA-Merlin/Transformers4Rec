@@ -20,6 +20,14 @@ transformers4rec.torch.model.model module
    :undoc-members:
    :show-inheritance:
 
+transformers4rec.torch.model.prediction\_task module
+----------------------------------------------------
+
+.. automodule:: transformers4rec.torch.model.prediction_task
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
