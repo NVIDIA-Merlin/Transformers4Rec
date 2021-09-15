@@ -1,6 +1,6 @@
 # Transformers4Rec Example Notebooks
 
-We have created a collection of example Jupyter notebooks using on different datasets to demonstrate how to use Transformers4Rec with PyTorch and TensorFlow APIs. Each example notebook provides incremental information about Transformers4Rec features and modues.
+We have created a collection of example Jupyter notebooks using different datasets to demonstrate how to use Transformers4Rec with PyTorch and TensorFlow APIs. Each example notebook provides incremental information about Transformers4Rec features and modules.
 
 ## Available Examples
 
@@ -12,7 +12,7 @@ This example notebook is focusing primarily on the basic concepts of Transformer
 - Using the NVTabular dataloader with Pytorch
 - Training a session-based recommendation model with a Transformer architecture (XLNET)
 
-### 2. [End-to-end session-based recomendation](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/end-to-end-session-based/)
+### 2. [End-to-end session-based recommendation](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/end-to-end-session-based/)
 
 This end-to-end example notebook is focuses on:
 - Preprocessing the Yoochoose e-commerce dataset
