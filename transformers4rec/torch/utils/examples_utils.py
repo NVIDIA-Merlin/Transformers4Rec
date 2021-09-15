@@ -1,19 +1,4 @@
-#
-# Copyright (c) 2021, NVIDIA CORPORATION.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
+import glob
 import os
 
 import numpy as np
@@ -21,7 +6,7 @@ import numpy as np
 
 def list_files(startpath):
     """
-    Util function to print the nested structre of a directory
+    Util function to print the nested structure of a directory
     """
     for root, dirs, files in os.walk(startpath):
         level = root.replace(startpath, "").count(os.sep)
@@ -55,9 +40,7 @@ def visualize_response(batch, response, top_k):
         )
 
 
-def fit_and_evaluate(
-    trainer, start_time_index, end_time_index, input_dir="./preproc_sessions_by_day_ts"
-):
+def fit_and_evaluate(trainer, start_time_index, end_time_index, input_dir):
     """
     Util function for time-window based fine-tuning using the T4rec Trainer class.
     Iteratively train using data of a given index and evaluate on the validation data
@@ -66,9 +49,9 @@ def fit_and_evaluate(
     Parameters
     ----------
     start_time_index: int
-        the start index for training, it should match the partitions of the data directory
+        The start index for training, it should match the partitions of the data directory
     end_time_index: int
-        the end index for training, it should match the partitions of the  data directory
+        The end index for training, it should match the partitions of the  data directory
     input_dir: str
         The input directory where the parquet files were saved based on partition column
 
@@ -77,9 +60,6 @@ def fit_and_evaluate(
     aot_metrics: dict
         The average over time of ranking metrics.
     """
-    import glob
-    import os
-
     aot_metrics = {}
     for time_index in range(start_time_index, end_time_index + 1):
         # 1. Set data
@@ -88,24 +68,19 @@ def fit_and_evaluate(
         train_paths = glob.glob(os.path.join(input_dir, f"{time_index_train}/train.parquet"))
         eval_paths = glob.glob(os.path.join(input_dir, f"{time_index_eval}/valid.parquet"))
 
-        # 2. Train on day related to time_index
-        print("\n" + "*" * 27)
-        print("Launch training for day %s:" % time_index)
-        print("*" * 27 + "\n")
+        # 2. Train on train data of time_index
+        print("\n***** Launch training for day %s: *****" % time_index)
         trainer.train_dataset_or_path = train_paths
         trainer.reset_lr_scheduler()
         trainer.train()
-        trainer.state.global_step += 1
 
-        # 3. Evaluate on the following day
+        # 3. Evaluate on valid data of time_index+1
         trainer.eval_dataset_or_path = eval_paths
         eval_metrics = trainer.evaluate(metric_key_prefix="eval")
-        print("\t\t" * 3 + "*" * 30)
-        print("\t\t" * 3 + "Evaluation results for day %s:" % time_index_eval)
-        print("\t\t" * 3 + "*" * 30)
+        print("\n***** Evaluation results for day %s:*****\n" % time_index_eval)
         for key in sorted(eval_metrics.keys()):
             if "at_" in key:
-                print("\t\t" * 3 + " %s = %s" % (key.replace("at_", "@"), str(eval_metrics[key])))
+                print(" %s = %s" % (key.replace("at_", "@"), str(eval_metrics[key])))
                 if "AOT_" + key.replace("at_", "@") in aot_metrics:
                     aot_metrics["AOT_" + key.replace("_at_", "@")] += [eval_metrics[key]]
                 else:
