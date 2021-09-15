@@ -1,0 +1,339 @@
+feature {
+  name: "session_id"
+  type: INT
+  int_domain {
+    name: "session_id"
+    min: 1
+    max: 11562158
+    is_categorical: false
+  }
+  annotation {
+    tag: "groupby_col"
+  }
+}
+feature {
+  name: "session_start"
+  annotation {
+    tag: "first"
+  }
+}
+feature {
+  name: "timestamp/age_days/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: INT
+  int_domain {
+    name: "timestamp/age_days/list"
+    min: 0
+    max: 181
+    is_categorical: false
+  }
+  annotation {
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/age_days/LogOp/Normalize/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/age_days/LogOp/Normalize/list"
+    min: -2.9177291
+    max: 1.5231701
+  }
+  annotation {
+    tag: "continuous"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/hour/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/hour/list"
+    min: 5.7866055e-06
+    max: 1.6051354
+  }
+  annotation {
+    tag: "continuous"
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/weekday/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/weekday/list"
+    min: 0.0001334543
+    max: 1.5682901
+  }
+  annotation {
+    tag: "continuous"
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/day/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/day/list"
+    min: 0.05588177
+    max: 1.7342303
+  }
+  annotation {
+    tag: "continuous"
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/month/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/month/list"
+    min: 0.59303725
+    max: 1.3344756
+  }
+  annotation {
+    tag: "continuous"
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/year/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/year/list"
+    min: 0.9999997
+    max: 0.9999997
+  }
+  annotation {
+    tag: "continuous"
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/hour/sin/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/hour/sin/list"
+    min: 1.7767293e-06
+    max: 0.4079647
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/hour/cos/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/hour/cos/list"
+    min: 0.9129977
+    max: 1.0
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/weekday/sin/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/weekday/sin/list"
+    min: 0.7421683
+    max: 0.9995285
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "timestamp/weekday/cos/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp/weekday/cos/list"
+    min: -0.6702136
+    max: 0.6233955
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "ts/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: INT
+  int_domain {
+    name: "ts/list"
+    min: 1396321200
+    max: 1412045999
+    is_categorical: false
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}
+feature {
+  name: "ts/last"
+  type: INT
+  int_domain {
+    name: "ts/last"
+    min: 1396321232
+    max: 1412045999
+    is_categorical: false
+  }
+  annotation {
+    tag: "time"
+    tag: "last"
+  }
+}
+feature {
+  name: "ts/first"
+  type: INT
+  int_domain {
+    name: "ts/first"
+    min: 1396321200
+    max: 1412045793
+    is_categorical: false
+  }
+  annotation {
+    tag: "time"
+    tag: "first"
+  }
+}
+feature {
+  name: "item_id/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: INT
+  int_domain {
+    name: "item_id/list"
+    min: 1
+    max: 51996
+    is_categorical: true
+  }
+  annotation {
+    tag: "item_id"
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+feature {
+  name: "session_size"
+  type: INT
+  int_domain {
+    name: "session_size"
+    min: 2
+    max: 185
+    is_categorical: false
+  }
+  annotation {
+    tag: "count"
+  }
+}
+feature {
+  name: "category/list"
+  value_count {
+    min: 2
+    max: 185
+  }
+  type: INT
+  int_domain {
+    name: "category/list"
+    min: 1
+    max: 332
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+feature {
+  name: "day_idx"
+  annotation {
+  }
+}
+feature {
+  name: "user_country"
+  type: INT
+  int_domain {
+    name: "session_id"
+    min: 1
+    max: 62
+    is_categorical: true
+  }
+  annotation {
+    tag: "categorical"
+  }
+}
+feature {
+  name: "user_age"
+  type: FLOAT
+  float_domain {
+    name: "timestamp/weekday/sin/list"
+    min: 0.0
+    max: 0.407965	
+  }
+  annotation {
+    tag: "continuous"
+  }
+}

@@ -21,6 +21,7 @@ from tensorflow.python.training.tracking.data_structures import ListWrapper, _Di
 
 from merlin_standard_lib import Schema, Tag
 
+from .. import data
 from ..config.schema import requires_schema
 from ..config.trainer import T4RecTrainingArgumentsTF
 from ..config.transformer import (
@@ -105,11 +106,5 @@ __all__ = [
     "RegressionTask",
     "Model",
     "StochasticSwapNoise",
+    "data",
 ]
-
-try:
-    from .data import DataLoader, DataLoaderValidator  # noqa: F401
-
-    __all__.extend(["DataLoader", "DataLoaderValidator"])
-except ImportError:
-    pass

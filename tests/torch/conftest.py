@@ -14,18 +14,12 @@
 # limitations under the License.
 #
 
-import pathlib
-
 import pytest
-
-from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
 np = pytest.importorskip("numpy")
 tr = pytest.importorskip("transformers4rec.torch")
 schema_utils = pytest.importorskip("transformers4rec.torch.utils.schema_utils")
-
-ASSETS_DIR = pathlib.Path(__file__).parent.parent / "assets"
 
 NUM_EXAMPLES = 1000
 MAX_CARDINALITY = 100
@@ -127,9 +121,9 @@ def torch_seq_prediction_head_link_to_block():
 
 
 @pytest.fixture
-def torch_tabular_features(tabular_schema):
+def torch_tabular_features():
     return tr.TabularFeatures.from_schema(
-        tabular_schema,
+        tr.data.tabular_testing_data.schema,
         max_sequence_length=20,
         continuous_projection=64,
         aggregation="concat",
@@ -137,9 +131,9 @@ def torch_tabular_features(tabular_schema):
 
 
 @pytest.fixture
-def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
+def torch_yoochoose_tabular_transformer_features():
     return tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
+        tr.data.tabular_sequence_testing_data.schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=100,
@@ -151,9 +145,7 @@ def torch_yoochoose_tabular_transformer_features(yoochoose_schema):
 def torch_yoochoose_next_item_prediction_model(torch_yoochoose_tabular_transformer_features):
     # define Transformer-based model
     inputs = torch_yoochoose_tabular_transformer_features
-    transformer_config = tconf.XLNetConfig.build(
-        d_model=64, n_head=4, n_layer=2, total_seq_length=20
-    )
+    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=4, n_layer=2, total_seq_length=20)
     body = tr.SequentialBlock(
         inputs,
         tr.MLPBlock([64]),
@@ -164,15 +156,12 @@ def torch_yoochoose_next_item_prediction_model(torch_yoochoose_tabular_transform
 
 
 @pytest.fixture
-def torch_tabular_data(tabular_schema):
-    return schema_utils.random_data_from_schema(
-        tabular_schema,
-        num_rows=100,
-    )
+def torch_tabular_data():
+    return tr.data.tabular_testing_data.torch_synthetic_data(num_rows=100)
 
 
 @pytest.fixture
-def torch_yoochoose_like(yoochoose_schema):
-    return schema_utils.random_data_from_schema(
-        yoochoose_schema, num_rows=100, min_session_length=5, max_session_length=20
+def torch_yoochoose_like():
+    return tr.data.tabular_sequence_testing_data.torch_synthetic_data(
+        num_rows=100, min_session_length=5, max_session_length=20
     )

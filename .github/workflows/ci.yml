@@ -34,6 +34,9 @@ jobs:
     - name: Lint with black
       run: |
         black --check .
+    - name: Lint with check-manifest
+      run: |
+        check-manifest
     - name: Lint with isort
       run: |
         isort -c .
