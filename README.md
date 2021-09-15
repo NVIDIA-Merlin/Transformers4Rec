@@ -61,7 +61,7 @@ prediction_tasks = tr.NextItemPredictionTask()
 transformer_config = tr.XLNetConfig.build(
     d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
 )
-model = transformer_config.to_torch_model(input_module, prediction_tasks)
+model: tr.Model = transformer_config.to_torch_model(input_module, prediction_tasks)
 ```
 
 And here is the equivalent code for TensorFlow:
@@ -87,7 +87,7 @@ prediction_tasks = tr.NextItemPredictionTask()
 transformer_config = tr.XLNetConfig.build(
     d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
 )
-model = transformer_config.to_tf_model(input_module, prediction_tasks)
+model: tr.Model = transformer_config.to_tf_model(input_module, prediction_tasks)
 ```
 
 ## When to use it?

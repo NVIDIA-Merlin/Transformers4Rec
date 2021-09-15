@@ -23,6 +23,6 @@ def test_readme_quick_start_example_pytorch():
     transformer_config = tr.XLNetConfig.build(
         d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
     )
-    model = transformer_config.to_torch_model(input_module, prediction_tasks)
+    model: tr.Model = transformer_config.to_torch_model(input_module, prediction_tasks)
 
     assert isinstance(model, tr.Model)
