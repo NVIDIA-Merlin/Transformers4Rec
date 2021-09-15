@@ -42,50 +42,52 @@ Here is the PyTorch version:
 ```python
 from transformers4rec import torch as tr
 
-SCHEMA_PATH = "..."
+schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
+# Or read schema from disk: tr.Schema().from_proto_text(SCHEMA_PATH)
 max_sequence_length, d_model = 20, 64
 
 # Define input module to process tabular input-features
 input_module = tr.TabularSequenceFeatures.from_schema(
-    tr.Schema().from_proto_text(SCHEMA_PATH),
+    schema,
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
     aggregation="concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks
-prediction_tasks = [tr.NextItemPredictionTask()]
+prediction_tasks = tr.NextItemPredictionTask()
 
-# Define the config of the XLNet Transformer architecture
+# Define a transformer-config, like the XLNet architecture
 transformer_config = tr.XLNetConfig.build(
-    d_model=64, n_head=4, n_layer=2, total_seq_length=max_sequence_length
+    d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
 )
-model = transformer_config.to_torch_model(input_module, *prediction_tasks)
+model = transformer_config.to_torch_model(input_module, prediction_tasks)
 ```
 
 And here is the equivalent code for TensorFlow:
 ```python
 from transformers4rec import tf as tr
 
-SCHEMA_PATH = "..."
+schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
+# Or read schema from disk: tr.Schema().from_proto_text(SCHEMA_PATH)
 max_sequence_length, d_model = 20, 64
 
 # Define input module to process tabular input-features
 input_module = tr.TabularSequenceFeatures.from_schema(
-    tr.Schema().from_proto_text(SCHEMA_PATH),
+    schema,
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
     aggregation="concat",
     masking="causal",
 )
 # Define one or multiple prediction-tasks
-prediction_tasks = [tr.NextItemPredictionTask()]
+prediction_tasks = tr.NextItemPredictionTask()
 
-# Define the config of the XLNet Transformer architecture
+# Define a transformer-config, like the XLNet architecture
 transformer_config = tr.XLNetConfig.build(
-    d_model=64, n_head=4, n_layer=2, total_seq_length=max_sequence_length
+    d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
 )
-model = transformer_config.to_tf_model(input_module, *prediction_tasks)
+model = transformer_config.to_tf_model(input_module, prediction_tasks)
 ```
 
 ## When to use it?
