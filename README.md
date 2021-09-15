@@ -43,7 +43,7 @@ Here is the PyTorch version:
 from transformers4rec import torch as tr
 
 schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
-# Or read schema from disk: tr.Schema().from_proto_text(SCHEMA_PATH)
+# Or read schema from disk: tr.Schema().from_json(SCHEMA_PATH)
 max_sequence_length, d_model = 20, 64
 
 # Define input module to process tabular input-features
@@ -69,7 +69,7 @@ And here is the equivalent code for TensorFlow:
 from transformers4rec import tf as tr
 
 schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
-# Or read schema from disk: tr.Schema().from_proto_text(SCHEMA_PATH)
+# Or read schema from disk: tr.Schema().from_json(SCHEMA_PATH)
 max_sequence_length, d_model = 20, 64
 
 # Define input module to process tabular input-features

@@ -2,8 +2,8 @@ include *.md
 include *.yaml
 
 recursive-include _images *.png
-recursive-include docs *
-recursive-include docs *.ipynb
+recursive-exclude docs *
+recursive-exclude docs *.ipynb
 exclude docs/source/_images
 
 recursive-include requirements *.txt
@@ -12,7 +12,7 @@ recursive-exclude tests *.coveragerc
 recursive-include tests *.parquet
 recursive-include tests *.pbtxt
 
-recursive-include transformers4rec *.parquet *.pbtxt *.py
+recursive-include transformers4rec *.parquet *.json *.py
 
 
 # Ignore notebooks & examples

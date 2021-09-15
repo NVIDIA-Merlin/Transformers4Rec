@@ -42,7 +42,7 @@ class ParquetDataset(Dataset):
         self,
         dir,
         parquet_file_name="data.parquet",
-        schema_file_name="schema.pbtxt",
+        schema_file_name="schema.json",
         schema_path: Optional[str] = None,
     ):
         super(ParquetDataset, self).__init__(schema_path or os.path.join(dir, schema_file_name))
