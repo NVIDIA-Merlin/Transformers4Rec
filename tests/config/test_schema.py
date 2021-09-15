@@ -15,21 +15,18 @@
 #
 import pytest
 
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Tag
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 
-def test_schema_from_yoochoose_schema(yoochoose_schema_file):
-    schema = Schema().from_proto_text(str(yoochoose_schema_file))
-
-    assert len(schema.column_names) == 22
-    assert len(schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 7
-    assert len(schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 3
+def test_schema_from_yoochoose_schema(yoochoose_schema):
+    assert len(yoochoose_schema.column_names) == 22
+    assert len(yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 7
+    assert len(yoochoose_schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 3
 
 
-def test_schema_cardinalities(yoochoose_schema_file):
-    schema = Schema().from_proto_text(str(yoochoose_schema_file))
-
+def test_schema_cardinalities(yoochoose_schema):
+    schema = yoochoose_schema
     assert schema.categorical_cardinalities() == {
         "item_id/list": schema.select_by_name("item_id/list").feature[0].int_domain.max + 1,
         "category/list": schema.select_by_name("category/list").feature[0].int_domain.max + 1,
@@ -38,17 +35,16 @@ def test_schema_cardinalities(yoochoose_schema_file):
 
 
 @pytest.mark.skip(reason="broken")
-def test_schema_embedding_sizes_nvt(yoochoose_schema_file):
+def test_schema_embedding_sizes_nvt(yoochoose_schema):
     pytest.importorskip("nvtabular")
-    schema = Schema().from_proto_text(str(yoochoose_schema_file))
-
+    schema = yoochoose_schema
     assert schema.categorical_cardinalities() == {"item_id/list": 51996, "category/list": 332}
     embedding_sizes = schema.embedding_sizes_nvt(minimum_size=16, maximum_size=512)
     assert embedding_sizes == {"item_id/list": 512, "category/list": 41, "user_country": 16}
 
 
-def test_schema_embedding_sizes(yoochoose_schema_file):
-    schema = Schema().from_proto_text(str(yoochoose_schema_file)).remove_by_name("session_id")
+def test_schema_embedding_sizes(yoochoose_schema):
+    schema = yoochoose_schema.remove_by_name("session_id")
 
     assert schema.categorical_cardinalities() == {
         "category/list": 333,

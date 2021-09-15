@@ -5,7 +5,7 @@ tr = pytest.importorskip("transformers4rec.torch")
 
 def test_readme_quick_start_example_pytorch():
     schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
-    # Or read schema from disk: tr.Schema().from_proto_text(SCHEMA_PATH)
+    # Or read schema from disk: tr.Schema().from_json(SCHEMA_PATH)
     max_sequence_length, d_model = 20, 64
 
     # Define input module to process tabular input-features
