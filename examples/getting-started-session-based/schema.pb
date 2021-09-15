@@ -21,7 +21,7 @@ feature {
   int_domain {
     name: "category-list_trim"
     min: 1
-    max: 335
+    max: 400
     is_categorical: true
   }
   annotation {
@@ -40,7 +40,7 @@ feature {
   int_domain {
     name: "item_id/list"
     min: 1
-    max: 50000
+    max: 50005
     is_categorical: true
   }
   annotation {
