@@ -36,7 +36,7 @@ jobs:
         black --check .
     - name: Lint with check-manifest
       run: |
-        check-manifest
+        check-manifest . --ignore "*.png"
     - name: Lint with isort
       run: |
         isort -c .
