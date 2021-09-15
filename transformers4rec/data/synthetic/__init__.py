@@ -13,9 +13,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-from .testing.dataset import tabular_sequence_testing_data
-from .testing.tabular_data.dataset import tabular_testing_data
-
-__all__ = ["tabular_sequence_testing_data", "tabular_testing_data"]

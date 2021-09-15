@@ -15,7 +15,8 @@
 #
 
 
-from .testing.dataset import tabular_sequence_testing_data
-from .testing.tabular_data.dataset import tabular_testing_data
+import pathlib
 
-__all__ = ["tabular_sequence_testing_data", "tabular_testing_data"]
+from transformers4rec.data.dataset import ParquetDataset
+
+tabular_sequence_testing_data: ParquetDataset = ParquetDataset(pathlib.Path(__file__).parent)

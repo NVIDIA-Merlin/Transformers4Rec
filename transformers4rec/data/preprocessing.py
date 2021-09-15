@@ -1,0 +1,275 @@
+#
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+import logging
+import os
+import shutil
+import tempfile
+
+from tqdm import tqdm
+
+LOG = logging.getLogger("transformers4rec")
+FIRST_SEEN_ITEM_COL_NAME = "item_ts_first"
+
+
+def remove_consecutive_interactions(
+    df, session_id_col="session_id", item_id_col="item_id", timestamp_col="timestamp"
+):
+    LOG.info("Count with in-session repeated interactions: {}".format(len(df)))
+    # Sorts the dataframe by session and timestamp, to remove consective repetitions
+    df = df.sort_values([session_id_col, timestamp_col])
+
+    # Keeping only no consectutive repeated in session interactions
+    session_is_last_session = df[session_id_col] == df[session_id_col].shift(1)
+    item_is_last_item = df[item_id_col] == df[item_id_col].shift(1)
+    df = df[~(session_is_last_session & item_is_last_item)]
+    LOG.info("Count after removed in-session repeated interactions: {}".format(len(df)))
+
+    return df
+
+
+def add_item_first_seen_col_to_df(
+    df,
+    item_id_column="item_id",
+    timestamp_column="timestamp",
+    first_seen_column_name=FIRST_SEEN_ITEM_COL_NAME,
+):
+    items_first_ts_df = (
+        df.groupby(item_id_column)
+        .agg({timestamp_column: "min"})
+        .reset_index()
+        .rename(columns={timestamp_column: first_seen_column_name})
+    )
+    merged_df = df.merge(items_first_ts_df, on=[item_id_column], how="left")
+
+    return merged_df
+
+
+def save_time_based_splits(
+    data,
+    output_dir: str,
+    partition_col: str = "day_idx",
+    timestamp_col: str = "ts/first",
+    test_size: float = 0.1,
+    val_size: float = 0.1,
+    overwrite: bool = True,
+    cpu=False,
+):
+    """Split a dataset into time-based splits.
+    Note, this function requires Rapids dependencies to be installed:
+    cudf, cupy and dask_cudf
+
+    Parameters
+    -----
+    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+        Dataset to split into time-based splits.
+    output_dir: str
+        Output path the save the time-based splits.
+    partition_col: str
+        Time-column to partition the data on.
+    timestamp_col: str
+        Timestamp column to use to sort each split.
+    test_size: float
+        Size of the test split, needs to be a number between 0.0 & 1.0.
+    val_size: float
+        Size of the validation split, needs to be a number between 0.0 & 1.0.
+    overwrite: bool
+        Whether or not to overwrite the output_dir if it already exists.
+    cpu: bool, default False
+        Whether or not to run the computation on the CPU.
+    """
+
+    if cpu:
+        _save_time_based_splits_cpu(
+            data,
+            output_dir=output_dir,
+            partition_col=partition_col,
+            timestamp_col=timestamp_col,
+            test_size=test_size,
+            val_size=val_size,
+            overwrite=overwrite,
+        )
+
+    return _save_time_based_splits_gpu(
+        data,
+        output_dir=output_dir,
+        partition_col=partition_col,
+        timestamp_col=timestamp_col,
+        test_size=test_size,
+        val_size=val_size,
+        overwrite=overwrite,
+    )
+
+
+def _save_time_based_splits_gpu(
+    data,
+    output_dir: str,
+    partition_col: str = "day_idx",
+    timestamp_col: str = "ts/first",
+    test_size: float = 0.1,
+    val_size: float = 0.1,
+    overwrite: bool = True,
+):
+    """Split a dataset into time-based splits.
+    Note, this function requires Rapids dependencies to be installed:
+    cudf, cupy and dask_cudf
+    Parameters
+    -----
+    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+        Dataset to split into time-based splits.
+    output_dir: str
+        Output path the save the time-based splits.
+    partition_col: str
+        Time-column to partition the data on.
+    timestamp_col: str
+        Timestamp column to use to sort each split.
+    test_size: float
+        Size of the test split, needs to be a number between 0.0 & 1.0.
+    val_size: float
+        Size of the validation split, needs to be a number between 0.0 & 1.0.
+    overwrite: bool
+        Whether or not to overwrite the output_dir if it already exists.
+    """
+
+    try:
+        import cudf
+        import cupy
+        import dask_cudf
+        import nvtabular as nvt
+    except ImportError:
+        raise ValueError(
+            "Rapids is necessary for this function, please install: "
+            "cudf, cupy, dask_cudf & nvtabular."
+        )
+
+    if isinstance(data, dask_cudf.DataFrame):
+        data = nvt.Dataset(data)
+    if not isinstance(partition_col, list):
+        partition_col = [partition_col]
+
+    if overwrite and os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        data.to_parquet(tmpdirname, partition_on=partition_col)
+        time_dirs = [f for f in sorted(os.listdir(tmpdirname)) if f.startswith(partition_col[0])]
+        for d in tqdm(time_dirs, desc="Creating time-based splits"):
+            path = os.path.join(tmpdirname, d)
+            df = cudf.read_parquet(path)
+            df = df.sort_values(timestamp_col)
+
+            split_name = d.replace(f"{partition_col[0]}=", "")
+            out_dir = os.path.join(output_dir, split_name)
+            os.makedirs(out_dir, exist_ok=True)
+
+            cupy.random.seed(1)
+            random_values = cupy.random.rand(len(df))
+            train_size = 1 - val_size - test_size
+
+            if train_size < 0:
+                raise ValueError("train_size cannot be negative.")
+
+            # Extracts 80% , 10%  and 10% for train, valid and test set, respectively.
+            train_set = df[random_values <= train_size]
+            train_set.to_parquet(os.path.join(out_dir, "train.parquet"))
+
+            valid_set = df[
+                (random_values > train_size) & (random_values <= (train_size + val_size))
+            ]
+            valid_set.to_parquet(os.path.join(out_dir, "valid.parquet"))
+
+            test_set = df[random_values > (1 - test_size)]
+            test_set.to_parquet(os.path.join(out_dir, "test.parquet"))
+
+
+def _save_time_based_splits_cpu(
+    data,
+    output_dir: str,
+    partition_col: str = "day_idx",
+    timestamp_col: str = "ts/first",
+    test_size: float = 0.1,
+    val_size: float = 0.1,
+    overwrite: bool = True,
+):
+    """Split a dataset into time-based splits.
+    Note, this function requires Rapids dependencies to be installed:
+    cudf, cupy and dask_cudf
+    Parameters
+    -----
+    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+        Dataset to split into time-based splits.
+    output_dir: str
+        Output path the save the time-based splits.
+    partition_col: str
+        Time-column to partition the data on.
+    timestamp_col: str
+        Timestamp column to use to sort each split.
+    test_size: float
+        Size of the test split, needs to be a number between 0.0 & 1.0.
+    val_size: float
+        Size of the validation split, needs to be a number between 0.0 & 1.0.
+    overwrite: bool
+        Whether or not to overwrite the output_dir if it already exists.
+    """
+
+    try:
+        import dask
+        import numpy as np
+        import nvtabular as nvt
+        import pandas as pd
+    except ImportError:
+        raise ValueError(
+            "Rapids is necessary for this function, please install: "
+            "cudf, cupy, dask_cudf & nvtabular."
+        )
+
+    if isinstance(data, dask.DataFrame):
+        data = nvt.Dataset(data)
+    if not isinstance(partition_col, list):
+        partition_col = [partition_col]
+
+    if overwrite and os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        data.to_parquet(tmpdirname, partition_on=partition_col)
+        time_dirs = [f for f in sorted(os.listdir(tmpdirname)) if f.startswith(partition_col[0])]
+        for d in tqdm(time_dirs, desc="Creating time-based splits"):
+            path = os.path.join(tmpdirname, d)
+            df = pd.read_parquet(path)
+            df = df.sort_values(timestamp_col)
+
+            split_name = d.replace(f"{partition_col[0]}=", "")
+            out_dir = os.path.join(output_dir, split_name)
+            os.makedirs(out_dir, exist_ok=True)
+
+            np.random.seed(1)
+            random_values = np.random.rand(len(df))
+            train_size = 1 - val_size - test_size
+
+            if train_size < 0:
+                raise ValueError("train_size cannot be negative.")
+
+            # Extracts 80% , 10%  and 10% for train, valid and test set, respectively.
+            train_set = df[random_values <= train_size]
+            train_set.to_parquet(os.path.join(out_dir, "train.parquet"))
+
+            valid_set = df[
+                (random_values > train_size) & (random_values <= (train_size + val_size))
+            ]
+            valid_set.to_parquet(os.path.join(out_dir, "valid.parquet"))
+
+            test_set = df[random_values > (1 - test_size)]
+            test_set.to_parquet(os.path.join(out_dir, "test.parquet"))
