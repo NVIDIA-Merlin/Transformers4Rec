@@ -38,6 +38,7 @@ def test_stochastic_swap_noise(replacement_prob):
         "categ_feat": tf.random.uniform((NUM_SEQS,), minval=1, maxval=100, dtype=tf.int32),
     }
 
+    tf.random.set_seed(0)
     ssn = tr.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
     mask = seq_inputs["categ_seq_feat"] != PAD_TOKEN
     out_features_ssn = ssn(seq_inputs, input_mask=mask)
@@ -60,6 +61,7 @@ def test_stochastic_swap_noise_with_tabular_features(
     out_features = tab_module(inputs)
 
     PAD_TOKEN = 0
+    tf.random.set_seed(0)
     ssn = tr.StochasticSwapNoise(
         pad_token=PAD_TOKEN, replacement_prob=replacement_prob, schema=yoochoose_schema
     )
