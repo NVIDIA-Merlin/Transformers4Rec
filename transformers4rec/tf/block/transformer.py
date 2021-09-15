@@ -18,6 +18,7 @@ import inspect
 from typing import Any, Dict, Optional, Type, Union
 
 import tensorflow as tf
+from keras.utils.generic_utils import register_keras_serializable
 from transformers import PretrainedConfig, TFPreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
@@ -37,6 +38,7 @@ class TransformerPrepare(tf.keras.layers.Layer):
         raise NotImplementedError()
 
 
+@register_keras_serializable(package="transformers4rec")
 class TransformerBlock(Block):
     """
     Class to support HF Transformers for session-based and sequential-based recommendation models.

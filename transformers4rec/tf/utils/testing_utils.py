@@ -48,6 +48,14 @@ def assert_body_works_in_model(data, inputs, body, run_eagerly):
     assert len(losses.history["loss"]) == 5
 
 
+def assert_loss_and_metrics_are_valid(input, inputs, targets, call_body=True):
+    loss = input.compute_loss(inputs, targets, call_body=call_body)
+    metrics = input.metric_results()
+
+    assert loss is not None
+    assert len(metrics) == len(input.metrics)
+
+
 def assert_serialization(layer):
     copy_layer = layer.from_config(layer.get_config())
 

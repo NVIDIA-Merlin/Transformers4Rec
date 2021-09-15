@@ -13,273 +13,84 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 from collections import defaultdict
-from types import SimpleNamespace
-from typing import Dict, List, Optional, Text, Type, Union
+from typing import Dict, List, Optional, Text, Union
 
 import tensorflow as tf
-from tensorflow.python.keras.utils import generic_utils
-from transformers.modeling_tf_utils import TFSequenceSummary
+from tensorflow.keras.layers import Layer
 
 from merlin_standard_lib import Schema, Tag
 
-
-def name_fn(name, inp):
-    return "/".join([name, inp]) if name else None
-
-
-class TaskMixin:
-    pass
+from ..typing import TabularFeaturesType
+from ..utils.tf_utils import maybe_deserialize_keras_objects, maybe_serialize_keras_objects
+from .prediction_task import BinaryClassificationTask, PredictionTask, RegressionTask
 
 
-Layer = tf.keras.layers.Layer
-MetricOrMetricClass = Union[tf.keras.metrics.Metric, Type[tf.keras.metrics.Metric]]
-
-
-class PredictionTask(TaskMixin, Layer):
-    def __init__(
-        self,
-        loss: Optional[tf.keras.losses.Loss],
-        target_name=None,
-        metrics: Optional[List[MetricOrMetricClass]] = None,
-        pre: Optional[Layer] = None,
-        task_block: Optional[Layer] = None,
-        prediction_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
-        label_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
-        loss_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
-        name: Optional[Text] = None,
-        summary_type="last",
-    ) -> None:
-        """Initializes the task.
-
-        Parameters
-        ----------
-        loss:
-            Loss function. Defaults to BinaryCrossentropy.
-        metrics:
-            List of Keras metrics to be evaluated.
-        prediction_metrics:
-            List of Keras metrics used to summarize the predictions.
-        label_metrics:
-            List of Keras metrics used to summarize the labels.
-        loss_metrics:
-            List of Keras metrics used to summarize the loss.
-        name:
-            Optional task name.
-        """
-
-        super().__init__(name=name)
-        self.target_name = target_name
-        self.sequence_summary = TFSequenceSummary(
-            SimpleNamespace(summary_type=summary_type)
-        )  # noqa
-        self.pre = pre
-        self.task_block = task_block
-        self.loss = loss
-
-        create_metrics = self._create_metrics
-        self.eval_metrics = create_metrics(metrics) if metrics else []
-        self.prediction_metrics = create_metrics(prediction_metrics) if prediction_metrics else []
-        self.label_metrics = create_metrics(label_metrics) if label_metrics else []
-        self.loss_metrics = create_metrics(loss_metrics) if loss_metrics else []
-
-    def call(self, inputs, training=False, **kwargs):
-        x = inputs
-
-        if len(x.shape) == 3:
-            x = self.sequence_summary(x)
-
-        if self.task_block:
-            x = self.task_block(x)
-
-        if self.pre:
-            x = self.pre(x)
-
-        return x
-
-    def _create_metrics(self, metrics: List[MetricOrMetricClass]) -> List[tf.keras.metrics.Metric]:
-        outputs = []
-        for metric in metrics:
-            if not isinstance(metric, tf.keras.metrics.Metric):
-                metric = metric(name=self.child_name(generic_utils.to_snake_case(metric.__name__)))
-            outputs.append(metric)
-
-        return outputs
-
-    @property
-    def task_name(self):
-        base_name = generic_utils.to_snake_case(self.__class__.__name__)
-
-        return name_fn(self.target_name, base_name) if self.target_name else base_name
-
-    def child_name(self, name):
-        return name_fn(self.task_name, name)
-
-    def compute_loss(
-        self,
-        inputs,
-        targets,
-        training: bool = False,
-        compute_metrics=True,
-        sample_weight: Optional[tf.Tensor] = None,
-        **kwargs,
-    ) -> tf.Tensor:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        predictions = self(inputs, training=training, **kwargs)
-        loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
-
-        if compute_metrics:
-            update_ops = self.calculate_metrics(predictions, targets, forward=False, loss=loss)
-
-            update_ops = [x for x in update_ops if x is not None]
-
-            with tf.control_dependencies(update_ops):
-                return tf.identity(loss)
-
-        return loss
-
-    def repr_add(self):
-        return [("loss", self.loss)]
-
-    def calculate_metrics(self, predictions, targets, sample_weight=None, forward=True, loss=None):
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        if forward:
-            predictions = self(predictions)
-
-        update_ops = []
-
-        for metric in self.eval_metrics:
-            update_ops.append(
-                metric.update_state(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
-            )
-
-        for metric in self.prediction_metrics:
-            update_ops.append(metric.update_state(predictions, sample_weight=sample_weight))
-
-        for metric in self.label_metrics:
-            update_ops.append(metric.update_state(targets, sample_weight=sample_weight))
-
-        for metric in self.loss_metrics:
-            if not loss:
-                loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
-            update_ops.append(metric.update_state(loss, sample_weight=sample_weight))
-
-        return update_ops
-
-    def metric_results(self):
-        return {metric.name: metric.result() for metric in self.metrics}
-
-    def to_head(self, body, inputs=None, **kwargs) -> "Head":
-        return Head(body, self, inputs=inputs, **kwargs)
-
-    def to_model(self, body, inputs=None, **kwargs):
-        from .model import Model
-
-        return Model(Head(body, self, inputs=inputs, **kwargs), **kwargs)
-
-
-class BinaryClassificationTask(PredictionTask):
-    DEFAULT_LOSS = tf.keras.losses.BinaryCrossentropy()
-    DEFAULT_METRICS = (
-        tf.keras.metrics.Precision,
-        tf.keras.metrics.Recall,
-        tf.keras.metrics.BinaryAccuracy,
-        tf.keras.metrics.AUC,
-    )
-
-    def __init__(
-        self,
-        target_name=None,
-        task_block: Optional[Layer] = None,
-        loss=DEFAULT_LOSS,
-        metrics: List[MetricOrMetricClass] = DEFAULT_METRICS,
-        summary_type="first",
-    ):
-        super().__init__(
-            loss=loss,
-            metrics=metrics,
-            target_name=target_name,
-            summary_type=summary_type,
-            task_block=task_block,
-        )
-        self.pre = tf.keras.layers.Dense(1, activation="sigmoid", name=self.child_name("logit"))
-
-
-class RegressionTask(PredictionTask):
-    DEFAULT_LOSS = tf.keras.losses.MeanSquaredError()
-    DEFAULT_METRICS = (tf.keras.metrics.RootMeanSquaredError,)
-
-    def __init__(
-        self,
-        target_name=None,
-        task_block: Optional[Layer] = None,
-        loss=DEFAULT_LOSS,
-        metrics=DEFAULT_METRICS,
-        summary_type="first",
-    ):
-        super().__init__(
-            loss=loss,
-            metrics=metrics,
-            target_name=target_name,
-            summary_type=summary_type,
-            task_block=task_block,
-        )
-        self.pre = tf.keras.layers.Dense(1, name=self.child_name("logit"))
-
-
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class Head(tf.keras.layers.Layer):
     def __init__(
         self,
         body: tf.keras.layers.Layer,
-        prediction_tasks: Optional[Union[List[PredictionTask], PredictionTask]] = None,
+        prediction_tasks: Union[List[PredictionTask], PredictionTask],
         task_blocks: Optional[Union[Layer, Dict[str, Layer]]] = None,
-        task_weights=None,
+        task_weights: Optional[List[float]] = None,
         loss_reduction=tf.reduce_mean,
-        inputs=None,
+        inputs: Optional[TabularFeaturesType] = None,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.body = body
         self.loss_reduction = loss_reduction
-        self.prediction_tasks = {}
+
+        self.prediction_tasks = prediction_tasks
+        self.task_weights = task_weights
+
+        self.prediction_task_dict = {}
         if prediction_tasks:
             if not isinstance(prediction_tasks, list):
                 prediction_tasks = [prediction_tasks]
             for task in prediction_tasks:
-                self.prediction_tasks[task.task_name] = task
+                self.prediction_task_dict[task.task_name] = task
 
-        self._task_weights = defaultdict(lambda: 1)
+        self._task_weight_dict = defaultdict(lambda: 1.0)
         if task_weights:
-            for key, val in task_weights.items():
-                self._task_weights[key] = val
+            for task, val in zip(prediction_tasks, task_weights):
+                self._task_weight_dict[task.task_name] = val
 
         self._set_task_blocks(task_blocks)
 
     @classmethod
-    def from_schema(cls, schema: Schema, body, task_weights=None):
-        if task_weights is None:
-            task_weights = {}
-        to_return = cls(body)
+    def from_schema(
+        cls,
+        schema: Schema,
+        body: Layer,
+        task_blocks: Optional[Union[Layer, Dict[str, Layer]]] = None,
+        task_weight_dict: Optional[Dict[str, float]] = None,
+        loss_reduction=tf.reduce_mean,
+        inputs: Optional[TabularFeaturesType] = None,
+        **kwargs,
+    ) -> "Head":
+        tasks, task_weights = [], []
 
         for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
-            to_return = to_return.add_task(
-                BinaryClassificationTask(binary_target),
-                task_weight=task_weights.get(binary_target, 1),
-            )
+            tasks.append(BinaryClassificationTask(binary_target))
+            task_weights.append(task_weight_dict.get(binary_target, 1.0))
 
         for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
-            to_return = to_return.add_task(
-                RegressionTask(regression_target),
-                task_weight=task_weights.get(regression_target, 1),
-            )
+            tasks.append(RegressionTask(regression_target))
+            task_weights.append(task_weight_dict.get(regression_target, 1.0))
 
         # TODO: Add multi-class classification here. Figure out how to get number of classes
 
-        return to_return
+        return cls(
+            body,
+            tasks,
+            task_blocks=task_blocks,
+            task_weights=task_weights,
+            loss_reduction=loss_reduction,
+            inputs=inputs,
+            **kwargs,
+        )
 
     def _set_task_blocks(self, task_blocks):
         if not task_blocks:
@@ -291,7 +102,7 @@ class Head(tf.keras.layers.Layer):
                 if key in tasks_multi_names:
                     tasks = tasks_multi_names[key]
                     if len(tasks) == 1:
-                        self.prediction_tasks[tasks[0].task_name].task_block = task_block
+                        self.prediction_task_dict[tasks[0].task_name].task_block = task_block
                     else:
                         raise ValueError(
                             f"Ambiguous name: {key}, can't resolve it to a task "
@@ -301,18 +112,20 @@ class Head(tf.keras.layers.Layer):
                 else:
                     raise ValueError(
                         f"Couldn't find {key} in prediction_tasks, "
-                        f"only found: {', '.join(list(self.prediction_tasks.keys()))}"
+                        f"only found: {', '.join(list(self.prediction_task_dict.keys()))}"
                     )
         elif isinstance(task_blocks, Layer):
-            for key, val in self.prediction_tasks.items():
+            for key, val in self.prediction_task_dict.items():
                 task_block = task_blocks.from_config(task_blocks.get_config())
                 val.task_block = task_block
         else:
             raise ValueError("`task_blocks` must be a Layer or a Dict[str, Layer]")
 
     def _prediction_tasks_multi_names(self) -> Dict[str, List[PredictionTask]]:
-        prediction_tasks_multi_names = {name: [val] for name, val in self.prediction_tasks.items()}
-        for name, value in self.prediction_tasks.items():
+        prediction_tasks_multi_names = {
+            name: [val] for name, val in self.prediction_task_dict.items()
+        }
+        for name, value in self.prediction_task_dict.items():
             name_parts = name.split("/")
             for name_part in name_parts:
                 if name_part in prediction_tasks_multi_names:
@@ -324,15 +137,15 @@ class Head(tf.keras.layers.Layer):
 
     def add_task(self, task: PredictionTask, task_weight=1):
         key = task.target_name
-        self.prediction_tasks[key] = task
+        self.prediction_task_dict[key] = task
         if task_weight:
-            self._task_weights[key] = task_weight
+            self._task_weight_dict[key] = task_weight
 
         return self
 
     def pop_labels(self, inputs: Dict[Text, tf.Tensor]):
         outputs = {}
-        for name in self.prediction_tasks.keys():
+        for name in self.prediction_task_dict.keys():
             outputs[name] = inputs.pop(name)
 
         return outputs
@@ -346,7 +159,7 @@ class Head(tf.keras.layers.Layer):
         if call_body:
             body_outputs = self.body(body_outputs)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             outputs[name] = task(body_outputs, **kwargs)
 
         if len(outputs) == 1 and not always_output_dict:
@@ -362,9 +175,9 @@ class Head(tf.keras.layers.Layer):
         if call_body:
             body_outputs = self.body(body_outputs)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             loss = task.compute_loss(body_outputs, targets, training=training, **kwargs)
-            losses.append(loss * self._task_weights[name])
+            losses.append(loss * self._task_weight_dict[name])
 
         return self.loss_reduction(losses)
 
@@ -373,26 +186,44 @@ class Head(tf.keras.layers.Layer):
             return "_".join([mode, x]) if mode else x
 
         metrics = {
-            name_fn(name): task.metric_results() for name, task in self.prediction_tasks.items()
+            name_fn(name): task.metric_results() for name, task in self.prediction_task_dict.items()
         }
 
         return _output_metrics(metrics)
 
     def reset_metrics(self):
-        for task in self.prediction_tasks.values():
+        for task in self.prediction_task_dict.values():
             task.reset_metrics()
 
     @property
     def task_blocks(self) -> Dict[str, Optional[Layer]]:
-        return {name: task.task_block for name, task in self.prediction_tasks.items()}
+        return {name: task.task_block for name, task in self.prediction_task_dict.items()}
 
     @property
     def metrics(self) -> Dict[str, tf.keras.metrics.Metric]:
         outputs = {}
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             outputs.update({metric.name: metric for metric in task.metrics})
 
         return outputs
+
+    @classmethod
+    def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(
+            config, ["body", "prediction_tasks", "task_weights"]
+        )
+
+        config["loss_reduction"] = getattr(tf, config["loss_reduction"])
+
+        return super().from_config(config)
+
+    def get_config(self):
+        config = super().get_config()
+        config = maybe_serialize_keras_objects(
+            self, config, ["body", "loss_reduction", "prediction_tasks", "task_weights"]
+        )
+
+        return config
 
 
 def _output_metrics(metrics):
