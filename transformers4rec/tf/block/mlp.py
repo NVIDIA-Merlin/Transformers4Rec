@@ -21,6 +21,7 @@ import tensorflow as tf
 from .base import SequentialBlock
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class MLPBlock(SequentialBlock):
     def __init__(
         self,

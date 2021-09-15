@@ -1,4 +1,20 @@
 #
+# Copyright (c) 2021, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -56,17 +72,17 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         super().__init__()
         self.body = body
         self.loss_reduction = loss_reduction
-        self.prediction_tasks = torch.nn.ModuleDict()
+        self.prediction_task_dict = torch.nn.ModuleDict()
         if prediction_tasks:
             if not isinstance(prediction_tasks, list):
                 prediction_tasks = [prediction_tasks]
             for i, task in enumerate(prediction_tasks):
-                self.prediction_tasks[task.task_name] = task
+                self.prediction_task_dict[task.task_name] = task
 
-        self._task_weights = defaultdict(lambda: 1)
+        self._task_weights = defaultdict(lambda: 1.0)
         if task_weights:
-            for key, val in task_weights.items():
-                self._task_weights[key] = val
+            for task, val in zip(prediction_tasks, task_weights):
+                self._task_weights[task.task_name] = val
 
         self.build(inputs=inputs, task_blocks=task_blocks)
 
@@ -91,7 +107,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         if device:
             self.to(device)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             task_block = task_blocks
             if task_blocks and isinstance(task_blocks, dict) and name in task_blocks:
                 task_block = task_blocks[name]
@@ -158,7 +174,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         TabularData
         """
         outputs = {}
-        for name in self.prediction_tasks.keys():
+        for name in self.prediction_task_dict.keys():
             outputs[name] = inputs.pop(name)
 
         return outputs
@@ -176,7 +192,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         if call_body:
             body_outputs = self.body(body_outputs, training=training)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             outputs[name] = task(body_outputs, **kwargs)
 
         if len(outputs) == 1 and not always_output_dict:
@@ -198,7 +214,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         if call_body:
             body_outputs = self.body(body_outputs, training=training)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             loss = task.compute_loss(
                 body_outputs, targets, compute_metrics=compute_metrics, **kwargs
             )
@@ -222,7 +238,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         if call_body:
             body_outputs = self.body(body_outputs, training=False)
 
-        for name, task in self.prediction_tasks.items():
+        for name, task in self.prediction_task_dict.items():
             metrics.update(
                 task.calculate_metrics(body_outputs, targets, mode=mode, forward=forward, **kwargs)
             )
@@ -234,19 +250,20 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             return "_".join([mode, x]) if mode else x
 
         metrics = {
-            name_fn(name): task.compute_metrics() for name, task in self.prediction_tasks.items()
+            name_fn(name): task.compute_metrics()
+            for name, task in self.prediction_task_dict.items()
         }
 
         return _output_metrics(metrics)
 
     def reset_metrics(self):
         """"""
-        for task in self.prediction_tasks.values():
+        for task in self.prediction_task_dict.values():
             task.reset_metrics()
 
     @property
     def task_blocks(self) -> Dict[str, Optional[BlockOrModule]]:
-        return {name: task.task_block for name, task in self.prediction_tasks.items()}
+        return {name: task.task_block for name, task in self.prediction_task_dict.items()}
 
     def to_model(self, **kwargs) -> Model:
         """Convert the head to a Model.

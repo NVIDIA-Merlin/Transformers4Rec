@@ -28,6 +28,14 @@ transformers4rec.tf.block.mlp module
    :undoc-members:
    :show-inheritance:
 
+transformers4rec.tf.block.transformer module
+--------------------------------------------
+
+.. automodule:: transformers4rec.tf.block.transformer
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

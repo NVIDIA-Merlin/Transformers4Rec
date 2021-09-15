@@ -12,6 +12,22 @@ transformers4rec.tf.utils.repr\_utils module
    :undoc-members:
    :show-inheritance:
 
+transformers4rec.tf.utils.schema\_utils module
+----------------------------------------------
+
+.. automodule:: transformers4rec.tf.utils.schema_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+transformers4rec.tf.utils.testing\_utils module
+-----------------------------------------------
+
+.. automodule:: transformers4rec.tf.utils.testing_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 transformers4rec.tf.utils.tf\_utils module
 ------------------------------------------
 
