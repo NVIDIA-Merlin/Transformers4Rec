@@ -19,12 +19,6 @@ from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 
-def test_schema_from_schema(schema_file):
-    schema = Schema().from_proto_text(str(schema_file))
-
-    assert len(schema.column_names) == 18
-
-
 def test_schema_from_yoochoose_schema(yoochoose_schema_file):
     schema = Schema().from_proto_text(str(yoochoose_schema_file))
 
