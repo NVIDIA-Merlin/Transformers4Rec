@@ -124,12 +124,12 @@ def maybe_serialize_keras_objects(
     for key in maybe_serialize_keys:
         maybe_value = getattr(self, key, None)
         if maybe_value:
-            if isinstance(maybe_value, list):
-                config[key] = [tf.keras.utils.serialize_keras_object(v) for v in maybe_value]
-            elif isinstance(maybe_value, dict):
+            if isinstance(maybe_value, dict):
                 config[key] = {
                     k: tf.keras.utils.serialize_keras_object(v) for k, v in maybe_value.items()
                 }
+            elif isinstance(maybe_value, list):
+                config[key] = [tf.keras.utils.serialize_keras_object(v) for v in maybe_value]
             else:
                 config[key] = tf.keras.utils.serialize_keras_object(maybe_value)
 
@@ -137,10 +137,19 @@ def maybe_serialize_keras_objects(
 
 
 def maybe_deserialize_keras_objects(
-    config, maybe_deserialize_keys, deserialize_fn=tf.keras.utils.deserialize_keras_object
+    config, to_deserialize, deserialize_fn=tf.keras.utils.deserialize_keras_object
 ):
-    for key in maybe_deserialize_keys:
-        if key in config:
-            config[key] = deserialize_fn(config[key])
+    if isinstance(to_deserialize, list):
+        to_deserialize = {k: deserialize_fn for k in to_deserialize}
+
+    custom_objects = {}
+
+    for key, fn in to_deserialize.items():
+        maybe_val = config.get(key, None)
+        if maybe_val:
+            if isinstance(maybe_val, list):
+                config[key] = [fn(v, custom_objects=custom_objects) for v in maybe_val]
+            else:
+                config[key] = fn(maybe_val, custom_objects=custom_objects)
 
     return config

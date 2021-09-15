@@ -26,7 +26,11 @@ from transformers4rec.config.schema import SchemaMixin
 
 from ..block.base import Block, SequentialBlock
 from ..typing import TabularData, TensorOrTabularData
-from ..utils.tf_utils import calculate_batch_size_from_input_shapes
+from ..utils.tf_utils import (
+    calculate_batch_size_from_input_shapes,
+    maybe_deserialize_keras_objects,
+    maybe_serialize_keras_objects,
+)
 
 tabular_transformation_registry: Registry = Registry.class_registry("tf.tabular_transformations")
 tabular_aggregation_registry: Registry = Registry.class_registry("tf.tabular_aggregations")
@@ -135,7 +139,7 @@ class SequentialTabularTransformations(SequentialBlock):
     @classmethod
     def from_config(cls, config, custom_objects=None):
         layers = [
-            tf.keras.layers.deserialize(conf, custom_objects=custom_objects)
+            tf.keras.utils.deserialize_keras_object(conf, custom_objects=custom_objects)
             for conf in config.values()
         ]
 
@@ -393,13 +397,8 @@ class TabularBlock(Block):
 
     def get_config(self):
         config = super(TabularBlock, self).get_config()
+        config = maybe_serialize_keras_objects(self, config, ["pre", "post", "aggregation"])
 
-        if self.pre:
-            config["pre"] = tf.keras.utils.serialize_keras_object(self.pre)
-        if self.post:
-            config["post"] = tf.keras.utils.serialize_keras_object(self.post)
-        if self.aggregation:
-            config["aggregation"] = tf.keras.utils.serialize_keras_object(self.aggregation)
         if self.schema:
             config["schema"] = self.schema.to_json()
 
@@ -407,14 +406,9 @@ class TabularBlock(Block):
 
     @classmethod
     def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(config, ["pre", "post", "aggregation"])
         if "schema" in config:
             config["schema"] = Schema().from_json(config["schema"])
-        if "pre" in config:
-            config["pre"] = tf.keras.utils.deserialize_keras_object(config["pre"])
-        if "post" in config:
-            config["post"] = tf.keras.utils.deserialize_keras_object(config["post"])
-        if "aggregation" in config:
-            config["aggregation"] = tf.keras.utils.deserialize_keras_object(config["aggregation"])
 
         return super().from_config(config)
 
@@ -632,7 +626,9 @@ class MergeTabular(TabularBlock):
         return output_shapes
 
     def get_config(self):
-        return {"merge_layers": tf.keras.utils.serialize_keras_object(self.merge_layers)}
+        return maybe_serialize_keras_objects(
+            self, super(MergeTabular, self).get_config(), ["merge_layers"]
+        )
 
 
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")

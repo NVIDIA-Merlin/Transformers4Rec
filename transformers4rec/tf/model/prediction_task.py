@@ -7,7 +7,12 @@ from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
 from ..typing import Head, Model
-from ..utils.tf_utils import LossMixin, MetricsMixin, maybe_serialize_keras_objects
+from ..utils.tf_utils import (
+    LossMixin,
+    MetricsMixin,
+    maybe_deserialize_keras_objects,
+    maybe_serialize_keras_objects,
+)
 
 
 def name_fn(name, inp):
@@ -31,6 +36,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
         loss_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
         name: Optional[Text] = None,
         summary_type="last",
+        **kwargs,
     ) -> None:
         """Initializes the task.
 
@@ -50,7 +56,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
             Optional task name.
         """
 
-        super().__init__(name=name)
+        super().__init__(name=name, **kwargs)
         self.target_name = target_name
         self.sequence_summary = TFSequenceSummary(
             SimpleNamespace(summary_type=summary_type)
@@ -176,15 +182,26 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
 
     @classmethod
     def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(
+            config,
+            {
+                "pre": tf.keras.layers.deserialize,
+                "loss": tf.keras.losses.deserialize,
+                "metrics": tf.keras.metrics.deserialize,
+                "prediction_metrics": tf.keras.metrics.deserialize,
+                "label_metrics": tf.keras.metrics.deserialize,
+                "loss_metrics": tf.keras.metrics.deserialize,
+            },
+        )
+
         return super().from_config(config)
 
     def get_config(self):
         config = super().get_config()
-        config = maybe_serialize_keras_objects(self, config, ["loss", "pre"])
         config = maybe_serialize_keras_objects(
             self,
             config,
-            ["metrics", "prediction_metrics", "label_metrics", "loss_metrics"],
+            ["metrics", "prediction_metrics", "label_metrics", "loss_metrics", "loss", "pre"],
         )
 
         config["summary_type"] = self.sequence_summary.summary_type
@@ -196,6 +213,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
         return config
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class BinaryClassificationTask(PredictionTask):
     DEFAULT_LOSS = tf.keras.losses.BinaryCrossentropy()
     DEFAULT_METRICS = (
@@ -213,6 +231,7 @@ class BinaryClassificationTask(PredictionTask):
         loss=DEFAULT_LOSS,
         metrics: List[MetricOrMetricClass] = DEFAULT_METRICS,
         summary_type="first",
+        **kwargs,
     ):
         super().__init__(
             loss=loss,
@@ -221,10 +240,12 @@ class BinaryClassificationTask(PredictionTask):
             task_name=task_name,
             summary_type=summary_type,
             task_block=task_block,
+            **kwargs,
         )
         self.pre = tf.keras.layers.Dense(1, activation="sigmoid", name=self.child_name("logit"))
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class RegressionTask(PredictionTask):
     DEFAULT_LOSS = tf.keras.losses.MeanSquaredError()
     DEFAULT_METRICS = (tf.keras.metrics.RootMeanSquaredError,)
@@ -237,6 +258,7 @@ class RegressionTask(PredictionTask):
         loss=DEFAULT_LOSS,
         metrics=DEFAULT_METRICS,
         summary_type="first",
+        **kwargs,
     ):
         super().__init__(
             loss=loss,
@@ -245,5 +267,6 @@ class RegressionTask(PredictionTask):
             task_name=task_name,
             summary_type=summary_type,
             task_block=task_block,
+            **kwargs,
         )
         self.pre = tf.keras.layers.Dense(1, name=self.child_name("logit"))

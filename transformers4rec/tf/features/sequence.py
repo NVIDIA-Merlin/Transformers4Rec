@@ -112,6 +112,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
     tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
     tabular_features_parameters=TABULAR_FEATURES_PARAMS_DOCSTRING,
 )
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class TabularSequenceFeatures(TabularFeatures):
     """Input module that combines different types of features to a sequence: continuous,
     categorical & text.

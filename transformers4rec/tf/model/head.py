@@ -22,10 +22,11 @@ from tensorflow.keras.layers import Layer
 from merlin_standard_lib import Schema, Tag
 
 from ..typing import TabularFeaturesType
-from ..utils.tf_utils import maybe_serialize_keras_objects
+from ..utils.tf_utils import maybe_deserialize_keras_objects, maybe_serialize_keras_objects
 from .prediction_task import BinaryClassificationTask, PredictionTask, RegressionTask
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class Head(tf.keras.layers.Layer):
     def __init__(
         self,
@@ -208,6 +209,12 @@ class Head(tf.keras.layers.Layer):
 
     @classmethod
     def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(
+            config, ["body", "prediction_tasks", "task_weights"]
+        )
+
+        config["loss_reduction"] = getattr(tf, config["loss_reduction"])
+
         return super().from_config(config)
 
     def get_config(self):

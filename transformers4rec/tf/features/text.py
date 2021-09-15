@@ -19,6 +19,7 @@ import tensorflow as tf
 from .base import InputBlock
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class ParseTokenizedText(InputBlock):
     def __init__(self, max_text_length=None, aggregation=None, **kwargs):
         super().__init__(aggregation, **kwargs)
@@ -63,6 +64,7 @@ class ParseTokenizedText(InputBlock):
         return output_shapes
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class TextEmbeddingFeaturesWithTransformers(InputBlock):
     def __init__(
         self,
