@@ -21,14 +21,6 @@ tr = pytest.importorskip("transformers4rec.tf")
 test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 
-def assert_loss_and_metrics_are_valid(head, inputs, targets):
-    loss = head.compute_loss(inputs, targets, call_body=True)
-    metrics = head.metric_results()
-
-    assert loss is not None
-    assert len(metrics) == len(head.metrics)
-
-
 @pytest.mark.parametrize("prediction_task", [tr.BinaryClassificationTask, tr.RegressionTask])
 def test_simple_heads(tf_tabular_features, tf_tabular_data, prediction_task):
     targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
@@ -37,7 +29,7 @@ def test_simple_heads(tf_tabular_features, tf_tabular_data, prediction_task):
     task = prediction_task("target")
     head = task.to_head(body, tf_tabular_features)
 
-    assert_loss_and_metrics_are_valid(head, tf_tabular_data, targets)
+    test_utils.assert_loss_and_metrics_are_valid(head, tf_tabular_data, targets)
 
 
 @pytest.mark.parametrize("prediction_task", [tr.BinaryClassificationTask, tr.RegressionTask])
@@ -49,7 +41,7 @@ def test_serialization_simple_heads(tf_tabular_features, tf_tabular_data, predic
     head = task.to_head(body, tf_tabular_features)
 
     copy_head = test_utils.assert_serialization(head)
-    assert_loss_and_metrics_are_valid(copy_head, tf_tabular_data, targets)
+    test_utils.assert_loss_and_metrics_are_valid(copy_head, tf_tabular_data, targets)
 
 
 @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
@@ -64,7 +56,7 @@ def test_simple_heads_on_sequence(
     body = tr.SequentialBlock([inputs, tr.MLPBlock([64])])
     head = task("target", task_block=task_block, summary_type=summary).to_head(body, inputs)
 
-    assert_loss_and_metrics_are_valid(head, tf_yoochoose_like, targets)
+    test_utils.assert_loss_and_metrics_are_valid(head, tf_yoochoose_like, targets)
 
 
 @pytest.mark.parametrize(

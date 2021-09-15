@@ -70,8 +70,8 @@ class Model(BaseModel):
         self, *head: Head, head_weights: Optional[List[float]] = None, name=None, **kwargs
     ):
         if head_weights:
-            if not isinstance(head_weights, list):
-                raise ValueError("`head_weights` must be a list")
+            if not isinstance(head_weights, (list, tuple)):
+                raise ValueError("`head_weights` must be a list or tuple")
             if not len(head_weights) == len(head):
                 raise ValueError(
                     "`head_weights` needs to have the same length " "as the number of heads"
@@ -99,7 +99,11 @@ class Model(BaseModel):
         losses = tuple(
             [
                 head.compute_loss(
-                    inputs, targets, call_body=True, compute_metrics=compute_metrics, **kwargs
+                    inputs,
+                    targets,
+                    call_body=kwargs.pop("call_body", True),
+                    compute_metrics=compute_metrics,
+                    **kwargs
                 )
                 for head in self.heads
             ]
@@ -111,5 +115,25 @@ class Model(BaseModel):
 
             return tf.add_n(weighted_losses)
 
+    def metric_results(self, mode=None):
+        outputs = []
+
+        for head in self.heads:
+            outputs.append(head.metric_results(mode=mode))
+
+        if len(outputs) == 1:
+            outputs = outputs[0]
+
+        return outputs
+
+    @classmethod
+    def from_config(cls, config, custom_objects=None):
+        heads = [tf.keras.utils.deserialize_keras_object(h) for h in config.pop("heads")]
+
+        return cls(*heads, **config)
+
     def get_config(self):
-        pass
+        return {
+            "head_weights": self.head_weights,
+            "heads": [tf.keras.utils.serialize_keras_object(h) for h in self.heads],
+        }
