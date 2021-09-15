@@ -7,10 +7,10 @@ from merlin_standard_lib import Schema
 class Dataset:
     def __init__(self, schema_path: str):
         self.schema_path = schema_path
-        if self.schema_path.endswith(".json"):
-            self._schema = Schema().from_json(self.schema_path)
-        else:
+        if self.schema_path.endswith(".pb") or self.schema_path.endswith(".pbtxt"):
             self._schema = Schema().from_proto_text(self.schema_path)
+        else:
+            self._schema = Schema().from_json(self.schema_path)
 
     @property
     def schema(self) -> Schema:
