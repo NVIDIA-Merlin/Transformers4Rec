@@ -53,6 +53,7 @@ class Block(SchemaMixin, tf.keras.layers.Layer):
         return SequentialBlock([self, AsTabular(name)])
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class SequentialBlock(Block):
     """The SequentialLayer represents a sequence of Keras layers.
     It is a Keras Layer that can be used instead of tf.keras.layers.Sequential,
@@ -194,7 +195,7 @@ class SequentialBlock(Block):
     def get_config(self):
         config = {}
         for i, layer in enumerate(self.layers):
-            config[i] = tf.keras.layers.serialize(layer)
+            config[i] = tf.keras.utils.serialize_keras_object(layer)
 
         return config
 

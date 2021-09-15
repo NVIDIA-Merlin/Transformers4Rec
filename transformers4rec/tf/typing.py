@@ -37,6 +37,12 @@ TabularTransformationType = ForwardRef(f"{_tabular_module}.TabularTransformation
 TabularAggregationType = ForwardRef(f"{_tabular_module}.TabularAggregationType")
 TabularBlock = ForwardRef(f"{_tabular_module}.TabularBlock")
 
+_features_module = "transformers4rec.tf.features"
+TabularFeatures = ForwardRef(f"{_features_module}.tabular.TabularFeatures")
+TabularSequenceFeatures = ForwardRef(f"{_features_module}.sequence.TabularSequenceFeatures")
+TabularFeaturesType = typing.Union[TabularSequenceFeatures, TabularFeatures]
+InputBlock = ForwardRef(f"{_features_module}.base.InputBlock")
+
 FeatureAggregator = ForwardRef("transformers4rec.tf.aggregator.FeatureAggregation")
 MaskSequence = ForwardRef("transformers4rec.tf.masking.MaskSequence")
 
@@ -45,8 +51,9 @@ SequentialBlock = ForwardRef("transformers4rec.tf.block.base.SequentialBlock")
 BuildableBlock = ForwardRef("transformers4rec.tf.block.base.BuildableBlock")
 BlockWithHead = ForwardRef("transformers4rec.tf.block.with_head.BlockWithHead")
 
-Head = ForwardRef("transformers4rec.tf.head.Head")
-PredictionTask = ForwardRef("transformers4rec.tf.head.PredictionTask")
+PredictionTask = ForwardRef("transformers4rec.tf.model.prediction_task.PredictionTask")
+Head = ForwardRef("transformers4rec.tf.model.head.Head")
+Model = ForwardRef("transformers4rec.tf.model.model.Model")
 
 LossReduction = typing.Callable[[typing.List[tf.Tensor]], tf.Tensor]
 
@@ -59,6 +66,10 @@ __all__ = [
     "TabularTransformationType",
     "TabularAggregationType",
     "TabularBlock",
+    "TabularFeatures",
+    "TabularSequenceFeatures",
+    "TabularFeaturesType",
+    "InputBlock",
     "LossReduction",
     "FeatureAggregator",
     "MaskSequence",
@@ -68,4 +79,5 @@ __all__ = [
     "BlockWithHead",
     "Head",
     "PredictionTask",
+    "Model",
 ]
