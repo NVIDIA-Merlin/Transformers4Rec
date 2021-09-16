@@ -17,7 +17,7 @@ def list_files(startpath):
             print("{}{}".format(subindent, f))
 
 
-def visualize_response(batch, response, top_k):
+def visualize_response(batch, response, top_k, session_col="session_id"):
     """
     Util function to extract top-k encoded item-ids from logits
 
@@ -30,7 +30,7 @@ def visualize_response(batch, response, top_k):
     top_k: int
         the `top_k` top items to retrieve from predictions.
     """
-    sessions = batch["session_id"].drop_duplicates().values
+    sessions = batch[session_col].drop_duplicates().values
     predictions = response.as_numpy("output")
     top_preds = np.argpartition(predictions, -top_k, axis=1)[:, -top_k:]
     for session, next_items in zip(sessions, top_preds):
