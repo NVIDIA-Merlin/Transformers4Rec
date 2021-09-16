@@ -1,3 +1,4 @@
+check-manifest
 pytest>=5
 pytest-cov>=2
 black==20.8b1

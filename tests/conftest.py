@@ -14,64 +14,40 @@
 # limitations under the License.
 #
 
-import pathlib
-
 import pytest
 
 from merlin_standard_lib import Schema
-
-ASSETS_DIR = pathlib.Path(__file__).parent / "assets"
-
-
-@pytest.fixture
-def assets():
-    return ASSETS_DIR
+from transformers4rec.data import tabular_sequence_testing_data, tabular_testing_data
 
 
 @pytest.fixture
-def schema_file():
-    return ASSETS_DIR / "schema.pbtxt"
-
-
-YOOCHOOSE_SCHEMA = ASSETS_DIR / "data_schema" / "data_seq_schema.pbtxt"
-YOOCHOOSE_PATH = ASSETS_DIR / "data_schema" / "data_seq.parquet"
+def yoochoose_path_file() -> str:
+    return tabular_sequence_testing_data.path
 
 
 @pytest.fixture
-def yoochoose_path_file():
-    return YOOCHOOSE_PATH
+def yoochoose_schema_file() -> str:
+    return tabular_sequence_testing_data.schema_path
 
 
 @pytest.fixture
-def yoochoose_schema_file():
-    return YOOCHOOSE_SCHEMA
+def yoochoose_schema() -> Schema:
+    return tabular_sequence_testing_data.schema
 
 
 @pytest.fixture
-def yoochoose_schema():
-    schema = Schema().from_proto_text(str(YOOCHOOSE_SCHEMA))
-    return schema
-
-
-TABULAR_DATA_SCHEMA = ASSETS_DIR / "data_schema" / "data_schema.pbtxt"
-TABULAR_DATA_PATH = ASSETS_DIR / "data_schema" / "data.parquet"
+def tabular_data_file() -> str:
+    return tabular_testing_data.path
 
 
 @pytest.fixture
-def tabular_data_file():
-    return TABULAR_DATA_PATH
+def tabular_schema_file() -> str:
+    return tabular_testing_data.schema_path
 
 
 @pytest.fixture
-def tabular_schema_file():
-    return TABULAR_DATA_SCHEMA
-
-
-@pytest.fixture
-def tabular_schema():
-    schema = Schema().from_proto_text(str(TABULAR_DATA_SCHEMA))
-
-    return schema.remove_by_name(["session_id", "session_start", "day_idx"])
+def tabular_schema() -> Schema:
+    return tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
 
 from tests.tf.conftest import *  # noqa

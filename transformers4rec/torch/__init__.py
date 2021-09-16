@@ -15,6 +15,7 @@
 #
 from merlin_standard_lib import Schema, Tag
 
+from .. import data
 from ..config.schema import requires_schema
 from ..config.trainer import T4RecTrainingArguments
 from ..config.transformer import (
@@ -125,11 +126,5 @@ __all__ = [
     "TabularModule",
     "SoftEmbedding",
     "Trainer",
+    "data",
 ]
-
-try:
-    from .data import DataLoader, DataLoaderValidator  # noqa: F401
-
-    __all__.append("DataLoader")
-except ImportError:
-    pass
