@@ -12,10 +12,10 @@ repos:
         rev: 3.8.4
         hooks:
         - id: flake8
-      - repo: https://github.com/mgedmin/check-manifest
-        rev: "0.46"
-        hooks:
-          - id: check-manifest
+#      - repo: https://github.com/mgedmin/check-manifest
+#        rev: "0.46"
+#        hooks:
+#          - id: check-manifest
 #            args: [--ignore, "*source*"]
 #      - repo: https://github.com/pycqa/pylint
 #        rev: pylint-2.7.4
