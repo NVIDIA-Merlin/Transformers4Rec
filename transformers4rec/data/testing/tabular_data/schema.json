@@ -1,0 +1,156 @@
+{
+  "feature": [
+    {
+      "name": "user_id",
+      "type": "INT",
+      "intDomain": {
+        "name": "user_id",
+        "min": "1",
+        "max": "1797",
+        "isCategorical": true
+      },
+      "annotation": {
+        "tag": [
+          "categorical"
+        ]
+      }
+    },
+    {
+      "name": "event_timestamp",
+      "type": "INT",
+      "annotation": {}
+    },
+    {
+      "name": "item_age_days_norm",
+      "type": "FLOAT",
+      "floatDomain": {
+        "name": "item_age_days_norm",
+        "min": -2.917728900909424,
+        "max": -1.2571640014648438
+      },
+      "annotation": {
+        "tag": [
+          "continuous"
+        ]
+      }
+    },
+    {
+      "name": "event_hour_sin",
+      "type": "FLOAT",
+      "floatDomain": {
+        "name": "event_hour_sin",
+        "max": 1.0
+      },
+      "annotation": {
+        "tag": [
+          "continuous"
+        ]
+      }
+    },
+    {
+      "name": "event_hour_cos",
+      "type": "FLOAT",
+      "floatDomain": {
+        "name": "event_hour_cos",
+        "max": 1.0
+      },
+      "annotation": {
+        "tag": [
+          "continuous"
+        ]
+      }
+    },
+    {
+      "name": "event_weekday_sin",
+      "type": "FLOAT",
+      "floatDomain": {
+        "name": "event_weekday_sin",
+        "max": 1.0
+      },
+      "annotation": {
+        "tag": [
+          "continuous"
+        ]
+      }
+    },
+    {
+      "name": "event_weekday_cos",
+      "type": "FLOAT",
+      "floatDomain": {
+        "name": "event_weekday_cos",
+        "max": 1.0
+      },
+      "annotation": {
+        "tag": [
+          "continuous"
+        ]
+      }
+    },
+    {
+      "name": "item_id",
+      "type": "INT",
+      "intDomain": {
+        "name": "item_id",
+        "min": "1",
+        "max": "51996",
+        "isCategorical": true
+      },
+      "annotation": {
+        "tag": [
+          "item_id",
+          "categorical",
+          "item"
+        ]
+      }
+    },
+    {
+      "name": "categories",
+      "valueCount": {
+        "min": "1",
+        "max": "4"
+      },
+      "type": "INT",
+      "intDomain": {
+        "name": "categories",
+        "min": "1",
+        "max": "331",
+        "isCategorical": true
+      },
+      "annotation": {
+        "tag": [
+          "list",
+          "categorical",
+          "item"
+        ]
+      }
+    },
+    {
+      "name": "user_country",
+      "type": "INT",
+      "intDomain": {
+        "name": "user_country",
+        "min": "1",
+        "max": "62",
+        "isCategorical": true
+      },
+      "annotation": {
+        "tag": [
+          "categorical"
+        ]
+      }
+    },
+    {
+      "name": "user_age",
+      "type": "FLOAT",
+      "floatDomain": {
+        "name": "user_age",
+        "max": 0.4079650044441223
+      },
+      "annotation": {
+        "tag": [
+          "continuous"
+        ]
+      }
+    }
+  ]
+}

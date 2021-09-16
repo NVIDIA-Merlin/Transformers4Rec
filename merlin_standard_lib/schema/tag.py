@@ -28,8 +28,11 @@ class Tag(Enum):
 
     # Feature context
     USER = "user"
+    USER_ID = "user_id"
     ITEM = "item"
     ITEM_ID = "item_id"
+    SESSION = "session"
+    SESSION_ID = "session_id"
     CONTEXT = "context"
 
     # Target related
