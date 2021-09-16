@@ -140,13 +140,14 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         -------
         Head
         """
-        tasks, task_weights = [], []
+        tasks: List[PredictionTask] = []
+        task_weights = []
 
-        for binary_target in schema.select_by_tag(Tag.TARGETS_BINARY).column_names:
+        for binary_target in schema.select_by_tag(Tag.BINARY_CLASSIFICATION).column_names:
             tasks.append(BinaryClassificationTask(binary_target))
             task_weights.append(task_weight_dict.get(binary_target, 1.0))
 
-        for regression_target in schema.select_by_tag(Tag.TARGETS_REGRESSION).column_names:
+        for regression_target in schema.select_by_tag(Tag.REGRESSION).column_names:
             tasks.append(RegressionTask(regression_target))
             task_weights.append(task_weight_dict.get(regression_target, 1.0))
 

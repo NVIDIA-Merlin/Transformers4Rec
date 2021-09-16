@@ -181,7 +181,9 @@ class ColumnSchema(Feature):
     @property
     def properties(self) -> Dict[str, Union[str, float, int]]:
         if self.annotation.extra_metadata:
-            return self.annotation.extra_metadata[0]
+            properties: Dict[str, Union[str, float, int]] = self.annotation.extra_metadata[0]
+
+            return properties
 
         return {}
 
@@ -194,7 +196,10 @@ class ColumnSchema(Feature):
     def __str__(self) -> str:
         return self.name
 
-    def __eq__(self, other: "ColumnSchema") -> bool:
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, ColumnSchema):
+            return NotImplemented
+
         return self.to_dict() == other.to_dict()
 
 
@@ -252,7 +257,9 @@ class Schema(_Schema):
 
     def apply_inverse(self, selector) -> "Schema":
         if selector:
-            return self - self.select_by_name(selector.names)
+            output_schema: Schema = self - self.select_by_name(selector.names)
+
+            return output_schema
         else:
             return self
 
@@ -271,7 +278,11 @@ class Schema(_Schema):
         def collection_filter_fn(type):
             return type in to_select
 
-        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.type)
+        output: Schema = self._filter_column_schemas(
+            to_select, collection_filter_fn, lambda x: x.type
+        )
+
+        return output
 
     def remove_by_type(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -280,9 +291,11 @@ class Schema(_Schema):
         def collection_filter_fn(type):
             return type in to_remove
 
-        return self._filter_column_schemas(
+        output: Schema = self._filter_column_schemas(
             to_remove, collection_filter_fn, lambda x: x.type, negate=True
         )
+
+        return output
 
     def select_by_tag(self, to_select) -> "Schema":
         if not isinstance(to_select, (list, tuple)) and not callable(to_select):
@@ -291,7 +304,11 @@ class Schema(_Schema):
         def collection_filter_fn(column_tags):
             return all(x in column_tags for x in to_select)
 
-        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
+        output: Schema = self._filter_column_schemas(
+            to_select, collection_filter_fn, lambda x: x.tags
+        )
+
+        return output
 
     def remove_by_tag(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -311,7 +328,11 @@ class Schema(_Schema):
         def collection_filter_fn(column_name):
             return column_name in to_select
 
-        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.name)
+        output: Schema = self._filter_column_schemas(
+            to_select, collection_filter_fn, lambda x: x.name
+        )
+
+        return output
 
     def remove_by_name(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -435,9 +456,9 @@ class Schema(_Schema):
         return Schema(selected_schemas)
 
     def _check_column_schema(
-        self, column_schema: ColumnSchema, filter_fn: Callable[[ColumnSchema], bool], negate=False
+        self, inputs: FilterT, filter_fn: Callable[[FilterT], bool], negate=False
     ) -> bool:
-        check = filter_fn(column_schema)
+        check = filter_fn(inputs)
         if check and not negate:
             return True
         elif not check and negate:

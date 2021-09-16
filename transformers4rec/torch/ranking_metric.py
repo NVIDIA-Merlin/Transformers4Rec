@@ -46,12 +46,12 @@ class RankingMetric(tm.Metric):
         # Store the mean of the batch metrics (for each cut-off at topk)
         self.add_state("metric_mean", default=[], dist_reduce_fx="cat")
 
-    def update(self, preds: torch.Tensor, target: torch.Tensor, **kwargs):
+    def update(self, preds: torch.Tensor, target: torch.Tensor, **kwargs):  # type: ignore
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
             target = torch_utils.tranform_label_to_onehot(target, preds.size(-1))
         metric = self._metric(torch.LongTensor(self.top_ks), preds.view(-1, preds.size(-1)), target)
-        self.metric_mean.append(metric)
+        self.metric_mean.append(metric)  # type: ignore
 
     def compute(self):
         # Computing the mean of the batch metrics (for each cut-off at topk)
@@ -193,7 +193,6 @@ class DCGAt(RankingMetric):
     def _metric(
         self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
     ) -> torch.Tensor:
-
         """Compute discounted cumulative gain at K for provided cutoffs (ignoring ties)
 
         Parameters
@@ -245,7 +244,6 @@ class NDCGAt(RankingMetric):
     def _metric(
         self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
     ) -> torch.Tensor:
-
         """Compute normalized discounted cumulative gain at K for provided cutoffs (ignoring ties)
 
         Parameters

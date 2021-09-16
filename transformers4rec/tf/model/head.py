@@ -76,7 +76,8 @@ class Head(tf.keras.layers.Layer):
         inputs: Optional[TabularFeaturesType] = None,
         **kwargs,
     ) -> "Head":
-        tasks, task_weights = [], []
+        tasks: List[PredictionTask] = []
+        task_weights = []
 
         for binary_target in schema.select_by_tag(Tag.BINARY_CLASSIFICATION).column_names:
             tasks.append(BinaryClassificationTask(binary_target))

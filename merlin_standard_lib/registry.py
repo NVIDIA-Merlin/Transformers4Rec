@@ -273,7 +273,9 @@ RegistryClassT = TypeVar("RegistryClassT")
 class RegistryMixin(Generic[RegistryClassT], abc.ABC):
     @classmethod
     def parse(cls, class_or_str) -> RegistryClassT:
-        return cls.registry().parse(class_or_str)
+        output: RegistryClassT = cls.registry().parse(class_or_str)
+
+        return output
 
     @classmethod
     def registry(cls) -> Registry:

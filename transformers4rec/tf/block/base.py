@@ -29,10 +29,9 @@ from ..typing import Head, PredictionTask
 
 class Block(SchemaMixin, tf.keras.layers.Layer):
     def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
-        from ..model.head import Head, PredictionTask
-        from ..model.model import Model
+        from ..model import head, model
 
-        if isinstance(prediction_task_or_head, PredictionTask):
+        if isinstance(prediction_task_or_head, head.PredictionTask):
             head = prediction_task_or_head.to_head(self, inputs=inputs, **kwargs)
         elif isinstance(prediction_task_or_head, Head):
             head = prediction_task_or_head
@@ -42,7 +41,7 @@ class Block(SchemaMixin, tf.keras.layers.Layer):
                 f"found: {type(prediction_task_or_head)}"
             )
 
-        return Model(head, **kwargs)
+        return model.Model(head, **kwargs)
 
     def as_tabular(self, name=None):
         from ..tabular.tabular import AsTabular

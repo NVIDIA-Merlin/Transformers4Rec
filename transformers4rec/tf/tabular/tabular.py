@@ -300,9 +300,10 @@ class TabularBlock(Block):
         -------
         TensorOrTabularData (Tensor when aggregation is set, else TabularData)
         """
+        _aggregation: Optional[TabularAggregation] = None
         if aggregation:
-            aggregation = TabularAggregation.parse(aggregation)
-        aggregation = aggregation or getattr(self, "aggregation", None)
+            _aggregation = TabularAggregation.parse(aggregation)
+        _aggregation = _aggregation or getattr(self, "aggregation", None)
 
         outputs = inputs
         if merge_with:
@@ -316,14 +317,14 @@ class TabularBlock(Block):
             outputs, transformations=transformations or self.post
         )
 
-        if aggregation:
+        if _aggregation:
             schema = getattr(self, "schema", None)
-            aggregation.set_schema(schema)
-            return aggregation(outputs)
+            _aggregation.set_schema(schema)
+            return _aggregation(outputs)
 
         return outputs
 
-    def __call__(
+    def __call__(  # type: ignore
         self,
         inputs: TabularData,
         *args,

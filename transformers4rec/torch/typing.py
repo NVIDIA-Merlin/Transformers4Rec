@@ -46,7 +46,6 @@ InputBlock = ForwardRef(f"{_features_module}.base.InputBlock")
 
 MaskSequence = ForwardRef("transformers4rec.torch.masking.MaskSequence")
 
-
 Block = ForwardRef("transformers4rec.torch.block.base.Block")
 SequentialBlock = ForwardRef("transformers4rec.torch.block.base.SequentialBlock")
 BuildableBlock = ForwardRef("transformers4rec.torch.block.base.BuildableBlock")
