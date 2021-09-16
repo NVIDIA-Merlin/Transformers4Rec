@@ -17,9 +17,8 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import TypeVar, Union
+from typing import TypeVar
 
-import nvtabular as nvt
 from tqdm import tqdm
 
 from merlin_standard_lib import Schema
@@ -92,6 +91,8 @@ def session_aggregator(
     session_data: Union[pandas.DataFrame, cudf.DataFrame]
         session-level dataset with list features.
     """
+    import nvtabular as nvt
+
     if device == "cpu":
         import dask.dataframe as dd
         import pandas as pd
@@ -155,7 +156,7 @@ def session_aggregator(
 
 
 def save_time_based_splits(
-    data: Union[DataFrameType, nvt.Dataset],
+    data,
     output_dir: str,
     partition_col: str = "day_idx",
     timestamp_col: str = "ts/first",
@@ -211,7 +212,7 @@ def save_time_based_splits(
 
 
 def _save_time_based_splits_gpu(
-    data: Union[DataFrameType, nvt.Dataset],
+    data,
     output_dir: str,
     partition_col: str = "day_idx",
     timestamp_col: str = "ts/first",
@@ -292,7 +293,7 @@ def _save_time_based_splits_gpu(
 
 
 def _save_time_based_splits_cpu(
-    data: Union[DataFrameType, nvt.Dataset],
+    data,
     output_dir: str,
     partition_col: str = "day_idx",
     timestamp_col: str = "ts/first",
