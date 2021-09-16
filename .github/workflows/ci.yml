@@ -34,13 +34,13 @@ jobs:
     - name: Lint with black
       run: |
         black --check .
-    - name: Lint with check-manifest
-      run: |
-        check-manifest .
     - name: Lint with isort
       run: |
         isort -c .
-    - name: Lint with mypy
+    - name: Checking Manifest
+      run: |
+        check-manifest .
+    - name: Type-checks using mypy
       run: |
         mypy transformers4rec
     - name: Build
