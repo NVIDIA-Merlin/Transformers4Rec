@@ -52,7 +52,7 @@ def generate_session_interactions(
             ),
             msl.ColumnSchema.create_continuous(
                 "item_recency", min_value=0, max_value=1,
-                tags=[Tag.LIST, Tag.ITEM], f=msl.schema.ValueCount(1, 20)
+                tags=[Tag.LIST, Tag.ITEM], value_count=msl.schema.ValueCount(1, 20)
             ),
             msl.ColumnSchema.create_categorical("day", num_items=11, tags=['session']),
             msl.ColumnSchema.create_categorical(

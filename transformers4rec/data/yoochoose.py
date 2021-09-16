@@ -17,19 +17,18 @@
 
 import logging
 
-from . import preprocessing
-
 LOG = logging.getLogger("transformers4rec")
 
 
 def download(output_path):
-    """
+    """Download YooChoose dataset.
 
     Parameters
     ----------
-    output_path
+    output_path: str
+        Path to download the data to
 
-    Returns
+    Returns output_path: str
     -------
 
     """
@@ -45,19 +44,23 @@ def download(output_path):
     return output_path
 
 
-def process_clicks(data_path, gpu=True):
-    """
+def process_clicks(data_path: str, device="gpu"):
+    """Process YooChoose dataset.
 
     Parameters
     ----------
-    data_path
-    gpu
+    data_path: str
+        Path to use to read the data from.
+    device: str, default: "gpu"
+        Device to use for processing clicks.
 
     Returns
     -------
-
+    Union[cudf.DataFrame, pandas.DataFrame]
     """
-    if gpu:
+    from .preprocessing import add_item_first_seen_col_to_df, remove_consecutive_interactions
+
+    if device == "gpu":
         import cudf
 
         df = cudf.read_csv(
@@ -76,7 +79,7 @@ def process_clicks(data_path, gpu=True):
             parse_dates=["timestamp"],
         )
 
-        df = preprocessing.remove_consecutive_interactions(df)
-        df = preprocessing.add_item_first_seen_col_to_df(df)
+        df = remove_consecutive_interactions(df)
+        df = add_item_first_seen_col_to_df(df)
 
         return df

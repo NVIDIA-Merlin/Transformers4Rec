@@ -17,10 +17,9 @@ import logging
 import os
 import shutil
 import tempfile
-from typing import Union
+from typing import TypeVar, Union
 
 import nvtabular as nvt
-from nvtabular.dispatch import DataFrameType
 from tqdm import tqdm
 
 from merlin_standard_lib import Schema
@@ -28,15 +27,17 @@ from merlin_standard_lib import Schema
 LOG = logging.getLogger("transformers4rec")
 FIRST_SEEN_ITEM_COL_NAME = "item_ts_first"
 
+DataFrameType = TypeVar("DataFrameType")
+
 
 def remove_consecutive_interactions(
     df: DataFrameType, session_id_col="session_id", item_id_col="item_id", timestamp_col="timestamp"
-):
+) -> DataFrameType:
     LOG.info("Count with in-session repeated interactions: {}".format(len(df)))
-    # Sorts the dataframe by session and timestamp, to remove consective repetitions
+    # Sorts the dataframe by session and timestamp, to remove consecutive repetitions
     df = df.sort_values([session_id_col, timestamp_col])
 
-    # Keeping only no consectutive repeated in session interactions
+    # Keeping only no consecutive repeated in session interactions
     session_is_last_session = df[session_id_col] == df[session_id_col].shift(1)
     item_is_last_item = df[item_id_col] == df[item_id_col].shift(1)
     df = df[~(session_is_last_session & item_is_last_item)]
@@ -50,7 +51,7 @@ def add_item_first_seen_col_to_df(
     item_id_column="item_id",
     timestamp_column="timestamp",
     first_seen_column_name=FIRST_SEEN_ITEM_COL_NAME,
-):
+) -> DataFrameType:
     items_first_ts_df = (
         df.groupby(item_id_column)
         .agg({timestamp_column: "min"})
@@ -148,7 +149,7 @@ def session_aggregator(
     if device == "cpu":
         session_data = session_data[session_data[list_variable].str.len() >= minimum_length]
     else:
-        session_data[session_data[list_variable].list.len() >= minimum_length]
+        session_data = session_data[session_data[list_variable].list.len() >= minimum_length]
 
     return session_data
 
