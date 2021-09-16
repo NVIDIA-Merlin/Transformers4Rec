@@ -78,9 +78,11 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
     """
     Util function to generate synthetic data for session-based item-interactions
     from a schema object. It supports the generation of session and item features.
-    The schema should include the two tags:
-    - `session` for features related to sessions
-    - `item` for features related to item interactions.
+    The schema should include the a few tags:
+
+    - `Tag.SESSION` for features related to sessions
+    - `Tag.SESSION_ID` to tag the session-id feature
+    - `Tag.ITEM` for features related to item interactions.
 
     Parameters:
     ----------
@@ -94,13 +96,13 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
     data: pd.DataFrame
         Pandas dataframe with synthetic generated data.
     """
-    session_col = schema.select_by_tag(["session_id"]).feature[0]
+    session_col = schema.select_by_tag(Tag.SESSION_ID).feature[0]
     data = pd.DataFrame(
         np.random.randint(1, session_col.int_domain.max, num_interactions),
         columns=[session_col.name],
     ).astype(np.int64)
 
-    item_id_col = schema.select_by_tag(["item_id"]).feature[0]
+    item_id_col = schema.select_by_tag(Tag.ITEM_ID).feature[0]
     data[item_id_col.name] = np.clip(
         np.random.lognormal(3.0, 1.0, num_interactions).astype(np.int32),
         1,
@@ -108,7 +110,7 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
     ).astype(np.int64)
 
     # get session cols
-    session_features = schema.select_by_tag(["session"]).feature
+    session_features = schema.select_by_tag(Tag.SESSION).feature
     for feature in session_features:
         is_int_feature = has_field(feature, "int_domain")
         if is_int_feature:
@@ -145,7 +147,7 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
             data[feature.name] = data[session_col.name].map(mapping_feature)
 
     # get item-id cols
-    items_features = schema.select_by_tag(["item"]).feature
+    items_features = schema.select_by_tag(Tag.ITEM).feature
     for feature in items_features:
         is_int_feature = has_field(feature, "int_domain")
         if is_int_feature:
