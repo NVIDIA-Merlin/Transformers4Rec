@@ -133,3 +133,11 @@ Transformers4Rec library is pre-installed in the NVIDIA Merlin Docker containers
 | merlin-inference           | [https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-inference](https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-inference)           | Transformers4Rec, NVTabular, PyTorch, and Triton Inference |  |
 
 To use these Docker containers, you'll first need to install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to provide GPU support for Docker. You can use the NGC links referenced in the table above to obtain more information about how to launch and run these containers. 
+
+
+### Feedback and Support
+
+If you'd like to contribute to the library directly, see the [CONTRIBUTING.md](CONTRIBUTING.md). We're particularly interested in contributions or feature requests for our feature engineering and preprocessing operations. To further advance our Merlin Roadmap, we encourage you to share all the details regarding your recommender system pipeline in this [survey](https://developer.nvidia.com/merlin-devzone-survey).
+
+If you're interested in learning more about how NVTabular works, see
+[Transformers4Rec documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/Introduction.html). We also have the [API documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/api/index.html) that outlines  specifics of the available modules and classes within the Transformers4Rec library.
