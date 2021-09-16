@@ -73,17 +73,14 @@ def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
 
 
 @pytest.fixture
-def tf_tabular_data(tabular_schema):
-    return schema_utils.random_data_from_schema(
-        tabular_schema,
-        num_rows=100,
-    )
+def tf_tabular_data():
+    return tr.data.tabular_testing_data.tf_synthetic_data(num_rows=100)
 
 
 @pytest.fixture
-def tf_yoochoose_like(yoochoose_schema):
-    return schema_utils.random_data_from_schema(
-        yoochoose_schema, num_rows=100, min_session_length=5, max_session_length=20
+def tf_yoochoose_like():
+    return tr.data.tabular_sequence_testing_data.tf_synthetic_data(
+        num_rows=100, min_session_length=5, max_session_length=20
     )
 
 
