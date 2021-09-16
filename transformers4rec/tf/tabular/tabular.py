@@ -36,7 +36,9 @@ tabular_transformation_registry: Registry = Registry.class_registry("tf.tabular_
 tabular_aggregation_registry: Registry = Registry.class_registry("tf.tabular_aggregations")
 
 
-class TabularTransformation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC):
+class TabularTransformation(
+    SchemaMixin, tf.keras.layers.Layer, RegistryMixin["TabularTransformation"], ABC
+):
     """Transformation that takes in `TabularData` and outputs `TabularData`."""
 
     def call(self, inputs: TabularData, **kwargs) -> TabularData:
@@ -47,7 +49,9 @@ class TabularTransformation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, A
         return tabular_transformation_registry
 
 
-class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC):
+class TabularAggregation(
+    SchemaMixin, tf.keras.layers.Layer, RegistryMixin["TabularAggregation"], ABC
+):
     """Aggregation of `TabularData` that outputs a single `Tensor`"""
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:

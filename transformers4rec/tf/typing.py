@@ -21,7 +21,7 @@ from typing import Dict
 import tensorflow as tf
 
 if sys.version_info < (3, 7):
-    ForwardRef = typing._ForwardRef  # pylint: disable=protected-access
+    ForwardRef = typing._ForwardRef  # type: ignore
 else:
     ForwardRef = typing.ForwardRef
 

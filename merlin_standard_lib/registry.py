@@ -18,6 +18,8 @@ import abc
 import re
 
 # Camel case to snake case utils
+from typing import Generic, TypeVar
+
 _first_cap_re = re.compile("(.)([A-Z][a-z0-9]+)")
 _all_cap_re = re.compile("([a-z0-9])([A-Z])")
 
@@ -265,9 +267,12 @@ class Registry:
         return class_or_str
 
 
-class RegistryMixin(abc.ABC):
+RegistryClassT = TypeVar("RegistryClassT")
+
+
+class RegistryMixin(Generic[RegistryClassT], abc.ABC):
     @classmethod
-    def parse(cls, class_or_str):
+    def parse(cls, class_or_str) -> RegistryClassT:
         return cls.registry().parse(class_or_str)
 
     @classmethod

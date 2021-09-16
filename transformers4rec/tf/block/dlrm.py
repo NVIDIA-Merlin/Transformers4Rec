@@ -17,7 +17,6 @@
 from typing import List, Optional, Union
 
 import tensorflow as tf
-from keras.utils.generic_utils import register_keras_serializable
 
 from merlin_standard_lib import Schema, Tag
 
@@ -32,7 +31,7 @@ class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
         super().__init__(lambda x: dict(continuous=x), **kwargs)
 
 
-@register_keras_serializable(package="transformers4rec")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class DLRMBlock(Block):
     def __init__(
         self,

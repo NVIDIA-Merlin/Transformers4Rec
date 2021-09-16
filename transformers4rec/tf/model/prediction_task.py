@@ -31,7 +31,7 @@ LOG = logging.getLogger("transformers4rec")
 class PredictionTask(Layer, LossMixin, MetricsMixin):
     def __init__(
         self,
-        loss: Optional[tf.keras.losses.Loss],
+        loss: tf.keras.losses.Loss,
         target_name: Optional[str] = None,
         task_name: Optional[str] = None,
         metrics: Optional[List[MetricOrMetricClass]] = None,
