@@ -79,7 +79,7 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
     """
     Util function to generate synthetic data for session-based item-interactions
     from a schema object. It supports the generation of session and item features.
-    The schema should include the a few tags:
+    The schema should include a few tags:
 
     - `Tag.SESSION` for features related to sessions
     - `Tag.SESSION_ID` to tag the session-id feature
