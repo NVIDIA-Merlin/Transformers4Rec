@@ -73,4 +73,4 @@ To run the example notebooks using Docker containers, do the following:
 
 5. Open a browser from the host OS to access the jupyter-lab server using `http://<MachineIP>:8888`.
 
-5. Once in the server, navigate and try out the examples in `/transformers4rec/examples`.
+6. Once in the server, navigate and try out the examples in `/transformers4rec/examples`.

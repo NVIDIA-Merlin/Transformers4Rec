@@ -1,6 +1,5 @@
-# Core Features
+# Model Architectures
 
-## Flexibility in Model Architecture
 Transformers4Rec provides modularized building blocks that can be combined with plain PyTorch modules and Keras layers. This provides a great flexibility in the model definition, as you can use the blocks to build custom architectures, e.g., with multiple towers, multiple heads and losses (multi-task).
 
 In Fig. 2, we provide a reference architecture for next-item prediction with Transformers, that can be used for both sequential and session-based recommendation. We can divide that reference architecture in four conceptual layers, described next.
@@ -8,7 +7,7 @@ In Fig. 2, we provide a reference architecture for next-item prediction with Tra
 <div style="text-align: center; margin: 20pt"><img src="_images/transformers4rec_metaarchitecture.png" alt="Transformers4Rec meta-architecture" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig. 2 - Transformers4Rec meta-architecture</figcaption></div>
 
 
-### Feature Aggregation (Input Block)
+## Feature Aggregation (Input Block)
 In order to be fed into a transformer block the sequences of input features (user_ids, user metadata, item_ids, item metadata) must be aggregated into a single vector representation per element in the sequence which we call the *interaction embedding*. 
 
 Current feature aggregation options are:
@@ -32,8 +31,8 @@ tabular_inputs = TabularSequenceFeatures.from_schema(
 ```
 
 
-### Sequence Masking
-Transformer architectures can be trained in different ways. Depending of the training method, there is a specific masking schema. The masking schema sets the items to be predicted (labels) and masks some positions of the sequence that cannot be used by the Transformer layers for prediction. Transformers4Rec currently supports the following training approaches, inspired by NLP:
+## Sequence Masking
+Transformer architectures can be trained in different ways. Depending on the training method, there is a specific masking schema. The masking schema sets the items to be predicted (labels) and masks some positions of the sequence that cannot be used by the Transformer layers for prediction. Transformers4Rec currently supports the following training approaches, inspired by NLP:
 
 - **Causal LM (`masking="clm"`)** - Predicts the next item based on past positions of the sequence. Future positions are masked.
 - **Masked LM (`masking="mlm"`)** - Randomly select some positions of the sequence to be predicted, which are masked. The Transformer layer is allowed to use positions on the right (future information) during training. During inference, all past items are visible for the Transformer layer, which tries to predict the next item.
@@ -42,10 +41,10 @@ Transformer architectures can be trained in different ways. Depending of the tra
 
 Note that not all transformer architectures support all of these training approaches.  Transformers4Rec will raise an exception when you attempt to use an invalid combination and will provide suggestions as to the appropriate masking techniques for that architecture.
 
-### Sequence Processing (Transformer/RNN Block)
+## Sequence Processing (Transformer/RNN Block)
 The Transformer block processes the input sequences of *interaction embeddings* created by the input block using Transformer architectures like XLNet, GPT-2, etc, or RNN architectures like LSTM or GRU.  The created block is a standard keras layer or torch block depending on the underlying framework and is compatible with and substitutable by other blocks of the same type which support the input of a sequence.
 
-In the following example, a `SequentialBlock` module is defined by connecting the output of the `TabularSequenceFeatures` (inputs), with a MLP projection to 64 dim (to match the Transformer `d_model`) with an XLNet transformer block with 2 layers (4 heads each).
+In the following example, a `SequentialBlock` module is used to build the model body: a `TabularSequenceFeatures` object (`tabular_inputs` defined in the previous code snippet), followed by an MLP projection layer to 64 dim (to match the Transformer `d_model`), followed by an XLNet transformer block with 2 layers (4 heads each).
 
 
 ```python
@@ -61,12 +60,12 @@ transformer_config = transformer.XLNetConfig.build(
 model_body = SequentialBlock(
     tabular_inputs, 
     torch4rec.MLPBlock([64]), 
-    torch4rec.TransformerBlock(transformer_config, masking=inputs.masking)
+    torch4rec.TransformerBlock(transformer_config, masking=tabular_inputs.masking)
 )
 ```
 
 
-### Prediction head (Output Block)
+## Prediction head (Output Block)
 Following the input and transformer blocks the model outputs its predictions.  The library supports the following prediction heads which can have multiple losses and can be combined for multi-task learning and multiple metrics.
 
 - **Next Item Prediction** - Predicts next items for a given sequence of interactions. During training it can be the next item or randomly selected items, depending on the masking scheme. For inference it is meant to always predict the next interacted item. Currently cross-entropy and pairwise losses are supported. 
@@ -91,11 +90,11 @@ head = Head(
 model = Model(head)
 ```
 
-#### Tying embeddings
+### Tying embeddings
 For `NextItemPredictionTask` we have added a best practice, **Tying Embeddings**, proposed originally by the NLP community to tie the weights of the input (item id) embedding matrix with the output projection layer. Not only do tied embeddings reduce the memory requirements significantly, but our own experimentation during [recent competitions](https://resources.nvidia.com/en-us-merlin/recommendation-syste?lx=97GH0Q) and empirical analysis detailed in our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) and [online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md) show how effective this method is.  It is enabled by default, but can be disabled by setting weight_tying=False).
 
 
-### Regularization
+## Regularization
 
 The library supports a number of regularization techniques like Dropout, Weight Decay, Softmax Temperature Scaling, Stochastic Shared Embeddings, and Label Smoothing. In our extensive experimentation hypertuning all regularization techniques for different dataset we found that the Label Smoothing was particularly useful at improving both train and validation accuracy and better calibrating the predictions. 
 
