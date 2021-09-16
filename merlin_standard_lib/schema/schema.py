@@ -15,6 +15,7 @@
 
 
 import collections
+import os
 from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 
 from ..utils import proto_utils
@@ -364,6 +365,13 @@ class Schema(_Schema):
             raise ValueError("There is no column tagged as item id.")
 
         return item_id_col.column_names[0]
+
+    def from_json(self, value: Union[str, bytes]) -> "Schema":
+        if os.path.isfile(value):
+            with open(value, "rb") as f:
+                value = f.read()
+
+        return super().from_json(value)
 
     def to_proto_text(self) -> str:
         from tensorflow_metadata.proto.v0 import schema_pb2
