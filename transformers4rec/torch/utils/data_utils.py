@@ -170,9 +170,9 @@ if dependencies.is_pyarrow_available():
 
 if dependencies.is_gpu_dataloader_available():
     from nvtabular.loader.torch import DLDataLoader
+    from nvtabular.loader.torch import TorchAsyncItr as DataLoader
 
     from merlin_standard_lib.utils.misc_utils import validate_dataset
-    from transformers4rec.torch.data import DataLoader
 
     class DLDataLoaderWrapper(DLDataLoader):
         """
