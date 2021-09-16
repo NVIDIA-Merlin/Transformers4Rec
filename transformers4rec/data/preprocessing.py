@@ -17,15 +17,20 @@ import logging
 import os
 import shutil
 import tempfile
+from typing import Union
 
+import nvtabular as nvt
+from nvtabular.dispatch import DataFrameType
 from tqdm import tqdm
+
+from merlin_standard_lib import Schema
 
 LOG = logging.getLogger("transformers4rec")
 FIRST_SEEN_ITEM_COL_NAME = "item_ts_first"
 
 
 def remove_consecutive_interactions(
-    df, session_id_col="session_id", item_id_col="item_id", timestamp_col="timestamp"
+    df: DataFrameType, session_id_col="session_id", item_id_col="item_id", timestamp_col="timestamp"
 ):
     LOG.info("Count with in-session repeated interactions: {}".format(len(df)))
     # Sorts the dataframe by session and timestamp, to remove consective repetitions
@@ -41,7 +46,7 @@ def remove_consecutive_interactions(
 
 
 def add_item_first_seen_col_to_df(
-    df,
+    df: DataFrameType,
     item_id_column="item_id",
     timestamp_column="timestamp",
     first_seen_column_name=FIRST_SEEN_ITEM_COL_NAME,
@@ -57,8 +62,99 @@ def add_item_first_seen_col_to_df(
     return merged_df
 
 
+def session_aggregator(
+    schema: Schema,
+    data: DataFrameType,
+    maximum_length: int = 20,
+    minimum_length: int = 2,
+    device: str = "gpu",
+):
+    """
+    Util function to aggregate item interactions dataset at session level using NVTabular.
+    It supports `cpu` and `gpu`.
+
+    Parameters:
+    ----------
+    schema: Schema
+        The schema objects describing the columns of data.
+    data: Union[pandas.DataFrame, cudf.DataFrame]
+        The data with row item interactions.
+    maximum_length: int
+        Trim all sessions to a maximum length.
+    minimum_length: int
+        Filter out sessions shorter than minimum_length.
+    device: str
+        Aggregate data using `cpu` or gpu `NVTabular` workflow
+
+    Returns:
+    -------
+    session_data: Union[pandas.DataFrame, cudf.DataFrame]
+        session-level dataset with list features.
+    """
+    if device == "cpu":
+        import dask.dataframe as dd
+        import pandas as pd
+
+        data = dd.from_pandas(
+            data if isinstance(data, pd.DataFrame) else data.to_pandas(), npartitions=3
+        )
+    else:
+        try:
+            import dask_cudf
+        except ImportError:
+            raise ValueError(
+                "Rapids is necessary for running function in gpu, please install: " "dask_cudf."
+            )
+        data = dask_cudf.from_cudf(data, npartitions=3)
+
+    # get item and session features
+    item_features = schema.select_by_tag(["item"]).feature
+    session_feat = schema.select_by_tag(["session"]).column_names
+    groupby_dict = {k.name: ["list"] for k in item_features}
+    for col in session_feat:
+        groupby_dict[col] = ["first"]
+
+    # retrieve session_id column
+    session_column = schema.select_by_tag(["session_id"]).feature
+    if not session_column:
+        raise ValueError("Please provide a schema with `session_id` tagged feature")
+    session_column = session_column[0]
+
+    # define groupby operator
+    groupby_feats = nvt.ColumnSelector(schema.column_names)
+    groupby_features = groupby_feats >> nvt.ops.Groupby(
+        groupby_cols=[session_column.name], aggs=groupby_dict, name_sep="-"
+    )
+
+    # max_lengths
+    list_variables = [feat.name + "-list" for feat in item_features]
+    groupby_features_trim = (
+        groupby_features[list_variables]
+        >> nvt.ops.ListSlice(0, maximum_length)
+        >> nvt.ops.Rename(postfix="_trim")
+    )
+
+    # select the feature to return
+    non_list_variable = [col + "-first" for col in session_feat]
+    selected_features = groupby_features[non_list_variable] + groupby_features_trim
+
+    workflow = nvt.Workflow(selected_features)
+    dataset = nvt.Dataset(data, cpu=False)
+    workflow.fit(dataset)
+    session_data = workflow.transform(dataset).to_ddf().compute()
+
+    # filter out small sessions
+    list_variable = list_variables[0] + "_trim"
+    if device == "cpu":
+        session_data = session_data[session_data[list_variable].str.len() >= minimum_length]
+    else:
+        session_data[session_data[list_variable].list.len() >= minimum_length]
+
+    return session_data
+
+
 def save_time_based_splits(
-    data,
+    data: Union[DataFrameType, nvt.Dataset],
     output_dir: str,
     partition_col: str = "day_idx",
     timestamp_col: str = "ts/first",
@@ -114,7 +210,7 @@ def save_time_based_splits(
 
 
 def _save_time_based_splits_gpu(
-    data,
+    data: Union[DataFrameType, nvt.Dataset],
     output_dir: str,
     partition_col: str = "day_idx",
     timestamp_col: str = "ts/first",
@@ -195,7 +291,7 @@ def _save_time_based_splits_gpu(
 
 
 def _save_time_based_splits_cpu(
-    data,
+    data: Union[DataFrameType, nvt.Dataset],
     output_dir: str,
     partition_col: str = "day_idx",
     timestamp_col: str = "ts/first",
@@ -206,6 +302,7 @@ def _save_time_based_splits_cpu(
     """Split a dataset into time-based splits.
     Note, this function requires Rapids dependencies to be installed:
     cudf, cupy and dask_cudf
+
     Parameters
     -----
     data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
