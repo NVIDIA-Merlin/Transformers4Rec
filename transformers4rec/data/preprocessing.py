@@ -91,7 +91,12 @@ def session_aggregator(
     session_data: Union[pandas.DataFrame, cudf.DataFrame]
         session-level dataset with list features.
     """
-    import nvtabular as nvt
+    try:
+        import nvtabular as nvt
+    except ImportError:
+        raise ValueError(
+            "NVTabular is necessary for this function, please install it"
+        )
 
     if device == "cpu":
         import dask.dataframe as dd
