@@ -74,7 +74,7 @@ from .tabular.tabular import (
     TabularTransformation,
 )
 from .tabular.transformations import StochasticSwapNoise, TabularLayerNorm
-from .trainer import Trainer
+from .trainer import Trainer  # type: ignore
 
 __all__ = [
     "Schema",
