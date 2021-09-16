@@ -40,6 +40,9 @@ jobs:
     - name: Lint with isort
       run: |
         isort -c .
+    - name: Lint with mypy
+      run: |
+        mypy transformers4rec
     - name: Build
       run: |
         python setup.py develop

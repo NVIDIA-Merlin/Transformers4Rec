@@ -5,6 +5,7 @@ black==20.8b1
 flake8
 isort
 nbsphinx>=0.6
+mypy
 Sphinx>=3
 sphinx_markdown_tables
 sphinx_rtd_theme
