@@ -16,7 +16,7 @@ Welcome to Transformers4Rec's documentation!
    Training and Evaluation <training_eval>
    End-to-end pipeline with NVIDIA Merlin <pipeline>
    Examples <examples/index>
-   API Documentation <api/modules>
+   API Documentation <api/modules>   
    Additional Resources <resources>
 
 

@@ -19,6 +19,7 @@ pip install -r requirements/dev.txt
 
 3. If you have updated the docstrings, you need to delete the folder docs/source/api and then run this command within the docs/ folder
 `sphinx-apidoc -f -o source/api ../transformers4rec`
+`sphinx-apidoc -f -o source/api/merlin_standard_lib ../merlin_standard_lib`
 
 
 4. Navigate to Transformers4Rec/docs/. If you have your documentation written and want to turn it into HTML, run makefile:

@@ -1,4 +1,4 @@
-transformers4rec
+API Documentation
 ================
 
 .. toctree::
