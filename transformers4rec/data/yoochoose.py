@@ -79,7 +79,7 @@ def process_clicks(data_path: str, device="gpu"):
             parse_dates=["timestamp"],
         )
 
-        df = remove_consecutive_interactions(df)
-        df = add_item_first_seen_col_to_df(df)
+    df = remove_consecutive_interactions(df)
+    df = add_item_first_seen_col_to_df(df)
 
-        return df
+    return df
