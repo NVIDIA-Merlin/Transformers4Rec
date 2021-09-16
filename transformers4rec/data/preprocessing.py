@@ -94,9 +94,7 @@ def session_aggregator(
     try:
         import nvtabular as nvt
     except ImportError:
-        raise ValueError(
-            "NVTabular is necessary for this function, please install it"
-        )
+        raise ValueError("NVTabular is necessary for this function, please install it")
 
     if device == "cpu":
         import dask.dataframe as dd
