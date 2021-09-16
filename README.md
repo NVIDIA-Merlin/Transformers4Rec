@@ -1,4 +1,12 @@
 # Transformers4Rec
+<p align="left">
+    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml">
+        <img alt="Build" src="https://img.shields.io/github/workflow/status/NVIDIA-Merlin/Transformers4Rec/ci.yml">
+    </a>
+    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE">
+        <img alt="GitHub" src="https://img.shields.io/github/license/huggingface/transformers.svg?color=blue">
+    </a>
+</p>
 
 Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation, available for both PyTorch and Tensorflow. 
 
