@@ -16,7 +16,6 @@
 
 import collections
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
 from ..utils import proto_utils
