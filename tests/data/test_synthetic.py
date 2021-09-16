@@ -1,12 +1,15 @@
 import pytest
 
-from transformers4rec.data.synthetic import generate_item_interactions
+from transformers4rec.data.synthetic import (
+    generate_item_interactions,
+    synthetic_ecommerce_data_schema,
+)
 
 pd = pytest.importorskip("pandas")
 
 
-def test_generate_item_interactions(synthetic_schema):
-    data = generate_item_interactions(500, synthetic_schema)
+def test_generate_item_interactions():
+    data = generate_item_interactions(500, synthetic_ecommerce_data_schema)
 
     assert isinstance(data, pd.DataFrame)
     assert len(data) == 500
