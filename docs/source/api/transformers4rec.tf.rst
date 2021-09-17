@@ -17,14 +17,6 @@ Subpackages
 Submodules
 ----------
 
-transformers4rec.tf.data module
--------------------------------
-
-.. automodule:: transformers4rec.tf.data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 transformers4rec.tf.masking module
 ----------------------------------
 
