@@ -12,14 +12,6 @@ transformers4rec.utils.dependencies module
    :undoc-members:
    :show-inheritance:
 
-transformers4rec.utils.gpu\_preprocessing module
-------------------------------------------------
-
-.. automodule:: transformers4rec.utils.gpu_preprocessing
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

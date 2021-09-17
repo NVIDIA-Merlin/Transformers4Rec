@@ -20,6 +20,14 @@ transformers4rec.tf.model.model module
    :undoc-members:
    :show-inheritance:
 
+transformers4rec.tf.model.prediction\_task module
+-------------------------------------------------
+
+.. automodule:: transformers4rec.tf.model.prediction_task
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
