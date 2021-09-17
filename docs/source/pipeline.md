@@ -61,5 +61,12 @@ workflow.save(os.path.join(OUTPUT_PATH, "workflow"))
 ```
 
 ### Integration with Triton Inference Server
+​
+NVIDIA [Triton Inference Server (TIS)](https://github.com/triton-inference-server/server) simplifies the deployment of AI models at scale in production. TIS is a cloud and edge inferencing solution optimized to deploy machine learning models both for GPUs and CPUs and it supports a number of different deep learning frameworks such as TensorFlow and PyTorch.  
 
-**TODO: Describe the integration with Triton**
+​
+An end-to-end ML/DL pipeline consists of preprocessing and feature engineering (ETL), model training, and model deployment for inference. Model deployment in production is the critical step of this pipeline since it enables model inference for practical business decisions. In the production setting, we want to apply to the input data the same transformation ops done during training (ETL). That is, the preprocessing ops, like standardizing continuous features and encoding categorical features, should be compatible with the statistics of the original data, before feeding data to the deep learning model. NVTabular supports such scenario, allowing to export the preproc workflow together with a PyTorch or Tensorflow trained model in a single ensemble pipeline to be served on TIS.
+
+The TIS integration enables the deployment of deep learning recommender models at scale with GPU acceleration. Transformers4Rec currently support exporting a model trained with the PyTorch API to Triton Inference Server using the Python backend. In the upcoming release of Transformers4Rec, we will support deployment of models trained with Tensorflow to TIS.
+
+To see how you can deploy a large and complex recommender workflow to production with only a few lines of code, visit our [end-to-end-session-based recommendation](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/tutorial/examples/end-to-end-session-based) and [tutorial](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/tutorial/examples/tutorial) example notebooks for inference with Triton examples.
