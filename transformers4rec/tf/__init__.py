@@ -33,6 +33,7 @@ from ..config.transformer import (
     T4RecConfig,
     XLNetConfig,
 )
+from . import ranking_metric
 from .block.base import Block, SequentialBlock, right_shift_layer
 from .block.dlrm import DLRMBlock
 from .block.mlp import MLPBlock
@@ -67,6 +68,7 @@ OptimizerV2.__repr__ = repr_utils.layer_repr_no_children
 __all__ = [
     "Schema",
     "Tag",
+    ranking_metric,
     "requires_schema",
     "T4RecTrainingArgumentsTF",
     "T4RecConfig",
