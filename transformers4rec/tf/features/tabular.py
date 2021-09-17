@@ -23,8 +23,14 @@ from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
-from ..typing import TabularAggregationType, TabularBlock, TabularTransformationType
+from ..tabular.tabular import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    AsTabular,
+    MergeTabular,
+    TabularAggregationType,
+    TabularBlock,
+    TabularTransformationType,
+)
 from ..utils import tf_utils
 from .base import InputBlock
 from .continuous import ContinuousFeatures

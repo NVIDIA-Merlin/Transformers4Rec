@@ -21,8 +21,12 @@ import torch
 from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
-from .. import typing
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.tabular import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    FilterFeatures,
+    TabularAggregationType,
+    TabularTransformationType,
+)
 from .base import InputBlock
 
 
@@ -40,9 +44,9 @@ class ContinuousFeatures(InputBlock):
     def __init__(
         self,
         features: List[str],
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
     ):
         super().__init__(aggregation=aggregation, pre=pre, post=post, schema=schema)

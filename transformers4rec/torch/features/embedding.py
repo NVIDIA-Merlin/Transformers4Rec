@@ -23,8 +23,12 @@ from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
-from .. import typing
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.tabular import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    FilterFeatures,
+    TabularAggregationType,
+    TabularTransformationType,
+)
 from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
 from .base import InputBlock
 
@@ -56,9 +60,9 @@ class EmbeddingFeatures(InputBlock):
         self,
         feature_config: Dict[str, "FeatureConfig"],
         item_id: Optional[str] = None,
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
     ):
         super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
@@ -271,9 +275,9 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         self,
         feature_config: Dict[str, "FeatureConfig"],
         layer_norm: bool = True,
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
     ):
         if layer_norm:
             from transformers4rec.torch import TabularLayerNorm

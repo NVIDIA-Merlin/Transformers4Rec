@@ -14,18 +14,23 @@
 # limitations under the License.
 #
 
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import tensorflow as tf
 
 from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
-from ..block.base import SequentialBlock
+from ..block.base import Block, SequentialBlock
 from ..block.mlp import MLPBlock
-from ..masking import masking_registry
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, TabularBlock
-from ..typing import Block, MaskSequence, TabularAggregationType, TabularTransformationType
+from ..masking import MaskSequence, masking_registry
+from ..tabular.tabular import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    AsTabular,
+    TabularAggregationType,
+    TabularBlock,
+    TabularTransformationType,
+)
 from ..utils import tf_utils
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
@@ -319,3 +324,6 @@ class TabularSequenceFeatures(TabularFeatures):
         config = tf_utils.maybe_deserialize_keras_objects(config, ["projection_block", "masking"])
 
         return super().from_config(config)
+
+
+TabularFeaturesType = Union[TabularSequenceFeatures, TabularFeatures]

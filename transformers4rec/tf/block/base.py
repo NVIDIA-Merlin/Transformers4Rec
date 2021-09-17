@@ -24,14 +24,12 @@ import tensorflow as tf
 from merlin_standard_lib.utils.misc_utils import filter_kwargs
 from transformers4rec.config.schema import SchemaMixin
 
-from ..typing import Head, PredictionTask
-
 
 class Block(SchemaMixin, tf.keras.layers.Layer):
-    def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
-        from ..model import head, model
+    def to_model(self, prediction_task_or_head, inputs=None, **kwargs):
+        from ..model.base import Head, Model, PredictionTask
 
-        if isinstance(prediction_task_or_head, head.PredictionTask):
+        if isinstance(prediction_task_or_head, PredictionTask):
             head = prediction_task_or_head.to_head(self, inputs=inputs, **kwargs)
         elif isinstance(prediction_task_or_head, Head):
             head = prediction_task_or_head
@@ -41,7 +39,7 @@ class Block(SchemaMixin, tf.keras.layers.Layer):
                 f"found: {type(prediction_task_or_head)}"
             )
 
-        return model.Model(head, **kwargs)
+        return Model(head, **kwargs)
 
     def as_tabular(self, name=None):
         from ..tabular.tabular import AsTabular

@@ -21,11 +21,16 @@ import torch
 from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
-from .. import typing
-from ..block.base import BuildableBlock, SequentialBlock
+from ..block.base import BlockOrModule, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import MaskSequence, masking_registry
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
+from ..tabular.tabular import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    AsTabular,
+    TabularAggregationType,
+    TabularModule,
+    TabularTransformationType,
+)
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
@@ -51,9 +56,9 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         feature_config: Dict[str, embedding.FeatureConfig],
         item_id: Optional[str] = None,
         padding_idx: int = 0,
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
     ):
         self.padding_idx = padding_idx
@@ -107,14 +112,14 @@ class TabularSequenceFeatures(TabularFeatures):
 
     def __init__(
         self,
-        continuous_module: Optional[typing.TabularModule] = None,
-        categorical_module: Optional[typing.TabularModule] = None,
-        text_embedding_module: Optional[typing.TabularModule] = None,
-        projection_module: Optional[typing.BlockOrModule] = None,
-        masking: Optional[typing.MaskSequence] = None,
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        continuous_module: Optional[TabularModule] = None,
+        categorical_module: Optional[TabularModule] = None,
+        text_embedding_module: Optional[TabularModule] = None,
+        projection_module: Optional[BlockOrModule] = None,
+        masking: Optional[MaskSequence] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
     ):
         super().__init__(
@@ -281,3 +286,6 @@ class TabularSequenceFeatures(TabularFeatures):
             output_sizes = self.projection_module.output_size()
 
         return output_sizes
+
+
+TabularFeaturesType = Union[TabularSequenceFeatures, TabularFeatures]

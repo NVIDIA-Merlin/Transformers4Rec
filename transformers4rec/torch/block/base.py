@@ -25,16 +25,14 @@ from torch.nn import Module
 
 from merlin_standard_lib.utils.misc_utils import filter_kwargs
 
-from ..typing import Head, PredictionTask
 from ..utils import torch_utils
 
 LOG = logging.getLogger("transformers4rec")
 
 
 class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCMeta):
-    def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
-        from ..model.head import Head, PredictionTask
-        from ..model.model import Model
+    def to_model(self, prediction_task_or_head, inputs=None, **kwargs):
+        from ..model.base import Head, Model, PredictionTask
 
         if isinstance(prediction_task_or_head, PredictionTask):
             head = prediction_task_or_head.to_head(self, inputs=inputs, **kwargs)
@@ -274,3 +272,7 @@ def right_shift_block(self, other):
         out.to("cuda")
 
     return out
+
+
+BlockType = Union[Block, BuildableBlock]
+BlockOrModule = Union[Block, BuildableBlock, torch.nn.Module]

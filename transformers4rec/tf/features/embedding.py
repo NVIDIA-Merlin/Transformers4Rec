@@ -25,9 +25,14 @@ from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
+from ..tabular.tabular import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    FilterFeatures,
+    TabularAggregationType,
+    TabularTransformationType,
+)
 from ..tabular.transformations import AsSparseFeatures
-from ..typing import TabularAggregationType, TabularData, TabularTransformationType
+from ..typing import TabularData
 from .base import InputBlock
 
 # pylint has issues with TF array ops, so disable checks until fixed:

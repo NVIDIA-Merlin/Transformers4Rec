@@ -19,10 +19,16 @@ from typing import List, Optional, Union
 from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
-from .. import typing
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
+from ..tabular.tabular import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    AsTabular,
+    MergeTabular,
+    TabularAggregationType,
+    TabularModule,
+    TabularTransformationType,
+)
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
 from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
@@ -56,12 +62,12 @@ class TabularFeatures(MergeTabular):
 
     def __init__(
         self,
-        continuous_module: Optional[typing.TabularModule] = None,
-        categorical_module: Optional[typing.TabularModule] = None,
-        text_embedding_module: Optional[typing.TabularModule] = None,
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        continuous_module: Optional[TabularModule] = None,
+        categorical_module: Optional[TabularModule] = None,
+        text_embedding_module: Optional[TabularModule] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
     ):
         to_merge = {}
@@ -198,14 +204,14 @@ class TabularFeatures(MergeTabular):
         return output_sizes
 
     @property
-    def continuous_module(self) -> Optional[typing.TabularModule]:
+    def continuous_module(self) -> Optional[TabularModule]:
         if "continuous_module" in self.to_merge:
             return self.to_merge["continuous_module"]
 
         return None
 
     @property
-    def categorical_module(self) -> Optional[typing.TabularModule]:
+    def categorical_module(self) -> Optional[TabularModule]:
         if "categorical_module" in self.to_merge:
             return self.to_merge["categorical_module"]
 

@@ -1,15 +1,20 @@
 import logging
 from types import SimpleNamespace
 from typing import Dict, List, Optional, Text, Type, Union
+from typing import List, Optional
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
+
+from ..block.mlp import MLPBlock
+from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
+
+LOG = logging.getLogger("transformers4rec")
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
-from ..typing import Head, Model
 from ..utils.tf_utils import (
     LossMixin,
     MetricsMixin,
@@ -160,65 +165,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
         for metric in self.prediction_metrics:
             update_ops.append(metric.update_state(predictions, sample_weight=sample_weight))
 
-        for metric in self.label_metrics:
-            update_ops.append(metric.update_state(targets, sample_weight=sample_weight))
-
-        for metric in self.loss_metrics:
-            if not loss:
-                loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
-            update_ops.append(metric.update_state(loss, sample_weight=sample_weight))
-
-        return update_ops
-
-    def metric_results(self, mode: str = None):
-        return {metric.name: metric.result() for metric in self.metrics}
-
-    def reset_metrics(self):
-        for metric in self.metrics:
-            metric.reset()
-
-    def to_head(self, body, inputs=None, **kwargs) -> Head:
-        from .head import Head as _Head
-
-        return _Head(body, self, inputs=inputs, **kwargs)
-
-    def to_model(self, body, inputs=None, **kwargs) -> Model:
-        from .head import Head as _Head
-        from .model import Model as _Model
-
-        return _Model(_Head(body, self, inputs=inputs, **kwargs), **kwargs)
-
-    @classmethod
-    def from_config(cls, config):
-        config = maybe_deserialize_keras_objects(
-            config,
-            {
-                "pre": tf.keras.layers.deserialize,
-                "loss": tf.keras.losses.deserialize,
-                "metrics": tf.keras.metrics.deserialize,
-                "prediction_metrics": tf.keras.metrics.deserialize,
-                "label_metrics": tf.keras.metrics.deserialize,
-                "loss_metrics": tf.keras.metrics.deserialize,
-            },
-        )
-
-        return super().from_config(config)
-
-    def get_config(self):
-        config = super().get_config()
-        config = maybe_serialize_keras_objects(
-            self,
-            config,
-            ["metrics", "prediction_metrics", "label_metrics", "loss_metrics", "loss", "pre"],
-        )
-
-        config["summary_type"] = self.sequence_summary.summary_type
-        if self.target_name:
-            config["target_name"] = self.target_name
-        if self._task_name:
-            config["task_name"] = self._task_name
-
-        return config
+from .base import MetricOrMetricClass, PredictionTask
 
 
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
