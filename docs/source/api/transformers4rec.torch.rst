@@ -16,14 +16,6 @@ Subpackages
 Submodules
 ----------
 
-transformers4rec.torch.data module
-----------------------------------
-
-.. automodule:: transformers4rec.torch.data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 transformers4rec.torch.masking module
 -------------------------------------
 

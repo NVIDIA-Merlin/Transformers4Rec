@@ -11,9 +11,12 @@ Welcome to Transformers4Rec's documentation!
    :caption: Contents:
 
    Getting Started <getting_started>
-   Core features <core_features>
+   Why Transformers4Rec? <why_transformers4rec>
+   Model Architectures <model_definition>
+   Training and Evaluation <training_eval>
+   End-to-end pipeline with NVIDIA Merlin <pipeline>
    Examples <examples/index>
-   API Documentation <api/modules>
+   API Documentation <api/modules>   
    Additional Resources <resources>
 
 
