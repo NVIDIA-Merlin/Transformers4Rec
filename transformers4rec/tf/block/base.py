@@ -141,6 +141,14 @@ class SequentialBlock(Block):
         return self.block_name if self.block_name else f"{self.__class__.__name__}"
 
     @property
+    def inputs(self):
+        from transformers4rec.tf import TabularFeatures, TabularSequenceFeatures
+
+        first = list(self)[0]
+        if isinstance(first, (TabularSequenceFeatures, TabularFeatures)):
+            return first
+
+    @property
     def trainable_weights(self):
         if not self.trainable:
             return []

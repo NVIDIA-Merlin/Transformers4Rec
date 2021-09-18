@@ -43,7 +43,13 @@ from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
-from .model.head import BinaryClassificationTask, Head, PredictionTask, RegressionTask
+from .model.head import (
+    BinaryClassificationTask,
+    Head,
+    NextItemPredictionTask,
+    PredictionTask,
+    RegressionTask,
+)
 from .model.model import Model
 from .tabular.aggregation import (
     ConcatFeatures,
@@ -68,7 +74,7 @@ OptimizerV2.__repr__ = repr_utils.layer_repr_no_children
 __all__ = [
     "Schema",
     "Tag",
-    ranking_metric,
+    "ranking_metric",
     "requires_schema",
     "T4RecTrainingArgumentsTF",
     "T4RecConfig",
@@ -105,6 +111,7 @@ __all__ = [
     "StackFeatures",
     "PredictionTask",
     "BinaryClassificationTask",
+    "NextItemPredictionTask",
     "RegressionTask",
     "Model",
     "StochasticSwapNoise",
