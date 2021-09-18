@@ -280,31 +280,6 @@ class RegressionTask(PredictionTask):
         self.pre = tf.keras.layers.Dense(1, name=self.child_name("logit"))
 
 
-"""
-    def __init__(
-        self,
-        loss: torch.nn.Module = torch.nn.NLLLoss(ignore_index=0),
-        metrics: Iterable[tm.Metric] = DEFAULT_METRICS,
-        task_block: Optional[torch.nn.Module] = None,
-        task_name: str = "next-item",
-        weight_tying: bool = False,
-        softmax_temperature: float = 1,
-        padding_idx: int = 0,
-        target_dim: int = None,
-        hf_format=False,
-    ):
-        super().__init__(loss=loss, metrics=metrics, task_block=task_block, task_name=task_name)
-        self.softmax_temperature = softmax_temperature
-        self.weight_tying = weight_tying
-        self.padding_idx = padding_idx
-        self.target_dim = target_dim
-        self.hf_format = hf_format
-
-        self.item_embedding_table = None
-        self.masking = None
-"""
-
-
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class NextItemPredictionTask(PredictionTask):
     """Next-item prediction task.
@@ -312,9 +287,9 @@ class NextItemPredictionTask(PredictionTask):
     Parameters
     ----------
     loss:
-        Loss function. Defaults to BinaryCrossentropy.
+        Loss function. SparseCategoricalCrossentropy()
     metrics:
-        List of Keras metrics to be evaluated.
+        List of RankingMetrics to be evaluated.
     prediction_metrics:
         List of Keras metrics used to summarize the predictions.
     label_metrics:
@@ -323,15 +298,15 @@ class NextItemPredictionTask(PredictionTask):
         List of Keras metrics used to summarize the loss.
     name:
         Optional task name.
+    target_dim: int
+        Dimension of the target.
     weight_tying: bool
         The item id embedding table weights are shared with the prediction network layer.
+    item_embedding_table: torch.nn.Module
+        Module that's used to store the embedding table for the item.
     softmax_temperature: float
         Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
         Value 1.0 reduces to regular softmax.
-    padding_idx: int
-        pad token id.
-    target_dim: int
-        vocabulary size of item ids
     """
 
     DEFAULT_LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
@@ -520,15 +495,15 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
         Causal LM, Masked LM, Permutation LM and Replacement Token Detection
     Parameters:
     -----------
-        target_dim: int
-            Dimension of the target.
-        weight_tying: bool
-            The item id embedding table weights are shared with the prediction network layer.
-        item_embedding_table: torch.nn.Module
-            Module that's used to store the embedding table for the item.
-        softmax_temperature: float
-            Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
-            Value 1.0 reduces to regular softmax.
+    target_dim: int
+        Dimension of the target.
+    weight_tying: bool
+        The item id embedding table weights are shared with the prediction network layer.
+    item_embedding_table: torch.nn.Module
+        Module that's used to store the embedding table for the item.
+    softmax_temperature: float
+        Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
+        Value 1.0 reduces to regular softmax.
     """
 
     def __init__(
