@@ -23,7 +23,12 @@ from merlin_standard_lib import Schema, Tag
 
 from ..typing import TabularFeaturesType
 from ..utils.tf_utils import maybe_deserialize_keras_objects, maybe_serialize_keras_objects
-from .prediction_task import BinaryClassificationTask, PredictionTask, RegressionTask
+from .prediction_task import (
+    BinaryClassificationTask,
+    NextItemPredictionTask,
+    PredictionTask,
+    RegressionTask,
+)
 
 
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
@@ -39,6 +44,7 @@ class Head(tf.keras.layers.Layer):
         **kwargs,
     ):
         super().__init__(**kwargs)
+        self.inputs = inputs
         self.body = body
         self.loss_reduction = loss_reduction
 
@@ -151,6 +157,10 @@ class Head(tf.keras.layers.Layer):
         return outputs
 
     def build(self, input_shape):
+        # set modules for item prediction task
+        for task in self.prediction_task_dict.values():
+            if isinstance(task, NextItemPredictionTask):
+                task._prepare_modules(input_shape, self.body, inputs=self.inputs)
         return super().build(input_shape)
 
     def call(self, body_outputs: tf.Tensor, call_body=False, always_output_dict=False, **kwargs):
@@ -176,7 +186,7 @@ class Head(tf.keras.layers.Layer):
             body_outputs = self.body(body_outputs)
 
         for name, task in self.prediction_task_dict.items():
-            loss = task.compute_loss(body_outputs, targets, training=training, **kwargs)
+            loss = task.compute_loss(body_outputs, targets, **kwargs)
             losses.append(loss * self._task_weight_dict[name])
 
         return self.loss_reduction(losses)

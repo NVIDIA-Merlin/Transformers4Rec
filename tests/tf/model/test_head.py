@@ -95,3 +95,19 @@ def test_head_with_multiple_tasks(tf_tabular_features, tf_tabular_data, task_blo
     if task_blocks:
         task_blocks = list(head.task_blocks.values())
         assert task_blocks[0] != task_blocks[1]
+
+
+def test_item_prediction_head_with_input_size(
+    tf_yoochoose_tabular_sequence_features, tf_yoochoose_like
+):
+
+    body = tr.SequentialBlock(
+        [tf_yoochoose_tabular_sequence_features, tr.MLPBlock([64])],
+    )
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+    head = task.to_head(body)
+
+    outputs = head(body(tf_yoochoose_like))
+
+    assert outputs.shape[-1] == 51997
