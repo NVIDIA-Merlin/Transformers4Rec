@@ -67,8 +67,7 @@ def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
         max_sequence_length=20,
         continuous_projection=64,
         d_output=100,
-        # TODO: Add masking when we add it
-        # masking="causal",
+        masking="causal",
     )
 
 

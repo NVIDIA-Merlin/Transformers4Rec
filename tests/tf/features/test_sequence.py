@@ -132,39 +132,37 @@ def test_tabular_features_yoochoose_direct(
     assert len(outputs.shape) == 3
 
 
-# Add these tests when we port Masking to TF
+def test_sequential_tabular_features_with_masking(yoochoose_schema, tf_yoochoose_like):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=100,
+        masking="causal",
+    )
 
-# def test_sequential_tabular_features_with_masking(yoochoose_schema, tf_yoochoose_like):
-#     input_module = tf4rec.SequentialTabularFeatures.from_schema(
-#         yoochoose_schema,
-#         max_sequence_length=20,
-#         continuous_projection=64,
-#         d_output=100,
-#         masking="causal",
-#     )
-#
-#     outputs = input_module(tf_yoochoose_like)
-#
-#     assert outputs.ndim == 3
-#     assert outputs.shape[-1] == 100
-#     assert outputs.shape[1] == 20
-#
-#
-# def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
-#     with pytest.raises(ValueError) as excinfo:
-#
-#         yoochoose_schema = yoochoose_schema - ["item_id/list"]
-#
-#         tf4rec.SequentialTabularFeatures.from_schema(
-#             yoochoose_schema,
-#             max_sequence_length=20,
-#             continuous_projection=64,
-#             d_output=100,
-#             masking="causal",
-#         )
-#
-#     err = excinfo.value
-#     assert "For masking a categorical_module is required including an item_id" in str(err)
+    outputs = input_module(tf_yoochoose_like)
+
+    assert outputs.ndim == 3
+    assert outputs.shape[-1] == 100
+    assert outputs.shape[1] == 20
+
+
+def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
+    with pytest.raises(ValueError) as excinfo:
+
+        yoochoose_schema = yoochoose_schema.remove_by_name(["item_id/list"])
+
+        tr.TabularSequenceFeatures.from_schema(
+            yoochoose_schema,
+            max_sequence_length=20,
+            continuous_projection=64,
+            d_output=100,
+            masking="causal",
+        )
+
+    err = excinfo.value
+    assert "For masking a categorical_module is required including an item_id" in str(err)
 
 
 def test_sequence_tabular_features_with_projection_and_d_output(yoochoose_schema):
