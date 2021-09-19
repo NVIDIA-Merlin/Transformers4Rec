@@ -97,9 +97,7 @@ def test_head_with_multiple_tasks(tf_tabular_features, tf_tabular_data, task_blo
         assert task_blocks[0] != task_blocks[1]
 
 
-def test_item_prediction_head_with_input_size(
-    tf_yoochoose_tabular_sequence_features, tf_yoochoose_like
-):
+def test_item_prediction_head_shape(tf_yoochoose_tabular_sequence_features, tf_yoochoose_like):
 
     body = tr.SequentialBlock(
         [tf_yoochoose_tabular_sequence_features, tr.MLPBlock([64])],
@@ -111,3 +109,46 @@ def test_item_prediction_head_with_input_size(
     outputs = head(body(tf_yoochoose_like))
 
     assert outputs.shape[-1] == 51997
+
+
+# Test loss and metrics outputs
+@pytest.mark.parametrize("weight_tying", [True, False])
+def test_item_prediction_loss_and_metrics(
+    tf_yoochoose_tabular_sequence_features, tf_yoochoose_like, weight_tying
+):
+    body = tr.SequentialBlock(
+        [tf_yoochoose_tabular_sequence_features, tr.MLPBlock([64])],
+    )
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+    head = task.to_head(body)
+
+    body_outputs = body(tf_yoochoose_like)
+
+    outputs = head(body_outputs)
+
+    loss = head.compute_loss(body_outputs=body_outputs, targets=None)
+
+    metrics = head.metric_results()
+    assert len(metrics) == 6
+    default_metric = [
+        "ndcg_at_10",
+        "ndcg_at_20",
+        "avg_precision_at_10",
+        "avg_precision_at_20",
+        "recall_at_10",
+        "recall_at_20",
+    ]
+    assert set(default_metric).issubset(set(metrics.keys()))
+    assert outputs.shape[-1] == 51997
+    assert loss != 0
+
+
+def test_item_prediction_head_with_wrong_body(tf_tabular_features, tf_tabular_data):
+    with pytest.raises(ValueError) as excinfo:
+        body = tr.SequentialBlock([tf_tabular_features, tr.MLPBlock([64])])
+        task = tr.NextItemPredictionTask(weight_tying=True)
+        head = task.to_head(body)
+        _ = head(body(tf_tabular_data))
+
+        assert "NextItemPredictionTask needs a 3-dim vector as input, found:" in str(excinfo.value)

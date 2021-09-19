@@ -160,7 +160,7 @@ class Head(tf.keras.layers.Layer):
         # set modules for item prediction task
         for task in self.prediction_task_dict.values():
             if isinstance(task, NextItemPredictionTask):
-                task._prepare_modules(input_shape, self.body, inputs=self.inputs)
+                task.build(input_shape, self.body, inputs=self.inputs)
         return super().build(input_shape)
 
     def call(self, body_outputs: tf.Tensor, call_body=False, always_output_dict=False, **kwargs):

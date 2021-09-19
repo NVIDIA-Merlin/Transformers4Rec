@@ -302,8 +302,8 @@ class NextItemPredictionTask(PredictionTask):
         Dimension of the target.
     weight_tying: bool
         The item id embedding table weights are shared with the prediction network layer.
-    item_embedding_table: torch.nn.Module
-        Module that's used to store the embedding table for the item.
+    item_embedding_table: tf.Variable
+        Variable of embedding table for the item.
     softmax_temperature: float
         Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
         Value 1.0 reduces to regular softmax.
@@ -341,8 +341,12 @@ class NextItemPredictionTask(PredictionTask):
         self.target_dim = target_dim
         self.softmax_temperature = softmax_temperature
 
-    def _prepare_modules(self, input_shape, body, inputs=None):
+    def build(self, input_shape, body, inputs=None):
         # Retrieve the embedding module to get the name of itemid col and its related table
+        if not len(input_shape) == 3 or isinstance(input_shape, dict):
+            raise ValueError(
+                "NextItemPredictionTask needs a 3-dim vector as input, found:" f"{input_shape}"
+            )
         if not inputs:
             inputs = body.inputs
         if not getattr(inputs, "item_id", None):
@@ -376,6 +380,7 @@ class NextItemPredictionTask(PredictionTask):
             item_embedding_table=self.item_embedding_table,
             softmax_temperature=self.softmax_temperature,
         )
+        return super().build(input_shape)
 
     def call(self, inputs):
         if isinstance(inputs, (tuple, list)):
@@ -386,7 +391,7 @@ class NextItemPredictionTask(PredictionTask):
         if self.task_block:
             x = self.task_block(x)
 
-        # retrieve labels either from masking or input module
+        # retrieve labels from masking
         if self.masking:
             labels = self.masking.masked_targets
         else:
@@ -480,7 +485,7 @@ class NextItemPredictionTask(PredictionTask):
     def metric_results(self, mode: str = None) -> Dict[str, tf.Tensor]:
         metrics = {metric.name: metric.result() for metric in self.eval_metrics}
         topks = {metric.name: metric.top_ks for metric in self.eval_metrics}
-        # explode metrics for each cut-off on the list top_ks
+        # explode metrics for each cut-off in top_ks
         results = {}
         for name, metric in metrics.items():
             for measure, k in zip(metric, topks[name]):
@@ -499,8 +504,8 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
         Dimension of the target.
     weight_tying: bool
         The item id embedding table weights are shared with the prediction network layer.
-    item_embedding_table: torch.nn.Module
-        Module that's used to store the embedding table for the item.
+    item_embedding_table: tf.Variable
+        Variable of embedding table for the item.
     softmax_temperature: float
         Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
         Value 1.0 reduces to regular softmax.
