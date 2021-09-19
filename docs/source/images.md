@@ -11,12 +11,3 @@ Figures from "Core features"
 ![](_images/transformers4rec_metaarchitecture.png)
 ![](_images/pipeline.png)
 ![](_images/preproc_data_example.png)
-
-
-Figures from tutorial notebooks
-![](../../examples/tutorial/_images/encoder.png)
-![](../../examples/tutorial/_images/gru_based.png)
-![](../../examples/tutorial/_images/masking.png)
-![](../../examples/tutorial/_images/tf4rec_meta.png)
-![](../../examples/tutorial/_images/torch_triton.png)
-![](../../examples/tutorial/_images/transformer_vs_rnn.png)
