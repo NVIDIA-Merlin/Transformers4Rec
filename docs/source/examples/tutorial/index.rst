@@ -54,6 +54,6 @@ Notebooks
    :maxdepth: 1
 
    1. Preliminary Preprocessing <01-preprocess>
-   2. ETL with NVTabular <02-ETL_with_NVTabular>
-   3. Session-based recommendation with Transformers4Rec <03-Session_based_recsys>
+   2. ETL with NVTabular <02-ETL-with-NVTabular>
+   3. Session-based recommendation with Transformers4Rec <03-Session-based-recsys>
    4. Inference with Triton <04-Inference-with-Triton>
