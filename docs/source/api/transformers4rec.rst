@@ -8,6 +8,7 @@ Subpackages
    :maxdepth: 4
 
    transformers4rec.config
+   transformers4rec.data
    transformers4rec.tf
    transformers4rec.torch
    transformers4rec.utils

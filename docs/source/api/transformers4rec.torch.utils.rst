@@ -12,6 +12,14 @@ transformers4rec.torch.utils.data\_utils module
    :undoc-members:
    :show-inheritance:
 
+transformers4rec.torch.utils.examples\_utils module
+---------------------------------------------------
+
+.. automodule:: transformers4rec.torch.utils.examples_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 transformers4rec.torch.utils.schema\_utils module
 -------------------------------------------------
 

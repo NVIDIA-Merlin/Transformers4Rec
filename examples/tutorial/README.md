@@ -39,4 +39,4 @@ We use only 2019-Oct.csv file for training our models, so you can visit this sit
 
 You need to pull https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-pytorch-training container to be able to run the ETL and training notebooks. Please note that to use this Docker container, you'll first need to install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to provide GPU support for Docker. 
 
-Follow the steps in the [READ.me](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/README.md) file in the examples folder for Docker launch and start instructions both for training and inference containers.
+Follow the steps in this [README.md](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/README.md) for Docker launch and instructions for both training and inference containers.
