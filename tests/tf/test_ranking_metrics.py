@@ -28,7 +28,8 @@ def test_metrics_shape(tf_ranking_metrics_inputs, metric):
     metric = tr.ranking_metric.ranking_metrics_registry[metric]
     metric.top_ks = tf_ranking_metrics_inputs["ks"]
     result = metric(
-        tf_ranking_metrics_inputs["scores"], tf_ranking_metrics_inputs["labels_one_hot"]
+        y_pred=tf_ranking_metrics_inputs["scores"],
+        y_true=tf_ranking_metrics_inputs["labels_one_hot"],
     )
     assert result.shape[0] == len(tf_ranking_metrics_inputs["ks"])
 
@@ -39,5 +40,7 @@ def test_score_with_transform_onehot(tf_ranking_metrics_inputs, metric):
     metric = tr.ranking_metric.ranking_metrics_registry[metric]
     metric.top_ks = tf_ranking_metrics_inputs["ks"]
     metric.labels_onehot = True
-    result = metric(tf_ranking_metrics_inputs["scores"], tf_ranking_metrics_inputs["labels"])
+    result = metric(
+        y_pred=tf_ranking_metrics_inputs["scores"], y_true=tf_ranking_metrics_inputs["labels"]
+    )
     assert len(result) == len(tf_ranking_metrics_inputs["ks"])

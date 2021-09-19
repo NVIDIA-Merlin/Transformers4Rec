@@ -54,12 +54,12 @@ class RankingMetric(tf.keras.metrics.Metric):
         # Store the mean vector of the batch metrics (for each cut-off at topk) in ListWrapper
         self.metric_mean = []
 
-    def update_state(self, preds: tf.Tensor, target: tf.Tensor, **kwargs):
+    def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, **kwargs):
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
-            target = tf_utils.tranform_label_to_onehot(target, preds.shape[-1])
+            y_true = tf_utils.tranform_label_to_onehot(y_true, y_pred.shape[-1])
         metric = self._metric(
-            tf.convert_to_tensor(self.top_ks), tf.reshape(preds, [-1, preds.shape[-1]]), target
+            tf.convert_to_tensor(self.top_ks), tf.reshape(y_pred, [-1, y_pred.shape[-1]]), y_true
         )
         self.metric_mean.append(metric)
 
@@ -145,7 +145,11 @@ class RecallAt(RankingMetric):
                 # Ensuring type is double, because it can be float if --fp16
 
                 update_indices = tf.concat(
-                    [rel_indices, tf.expand_dims(index * tf.ones(30, tf.int64), -1)], axis=1
+                    [
+                        rel_indices,
+                        tf.expand_dims(index * tf.ones(rel_indices.shape[0], tf.int64), -1),
+                    ],
+                    axis=1,
                 )
                 recalls = tf.tensor_scatter_nd_update(
                     recalls, indices=update_indices, updates=tf.reshape(batch_recall_k, -1)
