@@ -16,8 +16,9 @@
 
 import pytest
 
+tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
-
+tfr = pytest.importorskip("tensorflow_ranking")
 # fixed parameters for tests
 list_metrics = list(tr.ranking_metric.ranking_metrics_registry.keys())
 
@@ -44,3 +45,33 @@ def test_score_with_transform_onehot(tf_ranking_metrics_inputs, metric):
         y_pred=tf_ranking_metrics_inputs["scores"], y_true=tf_ranking_metrics_inputs["labels"]
     )
     assert len(result) == len(tf_ranking_metrics_inputs["ks"])
+
+
+# compare implemented metrics w.r.t tensorflow_ranking
+metrics_to_compare = [
+    (tfr.keras.metrics.RecallMetric, "recall"),
+    (tfr.keras.metrics.PrecisionMetric, "precision"),
+    (tfr.keras.metrics.DCGMetric, "dcg"),
+]
+
+
+@pytest.mark.parametrize("metric", metrics_to_compare)
+def test_compare_with_tfr(tf_ranking_metrics_inputs, metric):
+    np = pytest.importorskip("numpy")
+    tfr_metric = [metric[0](topn=topn) for topn in tf_ranking_metrics_inputs["ks"]]
+    results_tfr = [
+        metric(
+            y_pred=tf_ranking_metrics_inputs["scores"],
+            y_true=tf.cast(tf_ranking_metrics_inputs["labels_one_hot"], tf.float32),
+        ).numpy()
+        for metric in tfr_metric
+    ]
+
+    tr_metric = tr.ranking_metric.ranking_metrics_registry[metric[1]]
+    tr_metric.top_ks = tf_ranking_metrics_inputs["ks"]
+    results_tr = tr_metric(
+        y_pred=tf_ranking_metrics_inputs["scores"],
+        y_true=tf_ranking_metrics_inputs["labels_one_hot"],
+    ).numpy()
+
+    assert np.allclose(results_tr, np.array(results_tfr), rtol=1e-04, atol=1e-08)

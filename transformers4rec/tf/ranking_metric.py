@@ -251,8 +251,8 @@ class NDCGAt(RankingMetric):
         topk_scores, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
 
         # Compute discounted cumulative gains
-        gains = self.dcg_at(ks, topk_scores, topk_labels)
-        normalizing_gains = self.dcg_at(ks, topk_labels, topk_labels)
+        gains = self.dcg_at(ks, topk_scores, topk_labels, log_base=log_base)
+        normalizing_gains = self.dcg_at(ks, topk_labels, topk_labels, log_base=log_base)
 
         # Prevent divisions by zero
         relevant_pos = tf.where(normalizing_gains != 0)
