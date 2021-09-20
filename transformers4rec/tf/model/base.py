@@ -242,6 +242,7 @@ class Head(tf.keras.layers.Layer):
     ):
         super().__init__(**kwargs)
         self.body = body
+        self.inputs = inputs
         self.loss_reduction = loss_reduction
 
         self.prediction_tasks = prediction_tasks
