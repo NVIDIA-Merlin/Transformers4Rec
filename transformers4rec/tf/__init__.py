@@ -44,7 +44,7 @@ from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeature
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
 from .model.base import Head, Model, PredictionTask
-from .model.prediction_task import BinaryClassificationTask, RegressionTask, NextItemPredictionTask
+from .model.prediction_task import BinaryClassificationTask, NextItemPredictionTask, RegressionTask
 from .tabular.aggregation import (
     ConcatFeatures,
     ElementwiseSum,
