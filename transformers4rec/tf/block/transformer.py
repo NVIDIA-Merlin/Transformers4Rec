@@ -21,11 +21,11 @@ import tensorflow as tf
 import transformers
 from transformers import PretrainedConfig, TFPreTrainedModel
 
-from ...config.transformer import T4RecConfig, transformer_registry
+from ...config.transformer import transformer_registry
 from ..masking import MaskSequence
 from .base import Block
 
-TransformerBody = Union[TFPreTrainedModel, T4RecConfig]
+TransformerBody = Union[TFPreTrainedModel, PretrainedConfig]
 
 
 class TransformerPrepare(tf.keras.layers.Layer):
