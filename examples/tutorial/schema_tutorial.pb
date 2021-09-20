@@ -21,7 +21,7 @@ feature {
   int_domain {
     name: "category_id-list_seq"
     min: 1
-    max: 567
+    max: 566
     is_categorical: true
   }
   annotation {
@@ -40,7 +40,7 @@ feature {
   int_domain {
     name: "category_code-list_seq"
     min: 1
-    max: 125
+    max: 124
     is_categorical: true
   }
   annotation {
@@ -59,7 +59,7 @@ feature {
   int_domain {
     name: "brand-list_seq"
     min: 1
-    max: 2641
+    max: 2640
     is_categorical: true
   }
   annotation {
@@ -78,7 +78,7 @@ feature {
   int_domain {
     name: "product_id-list_seq"
     min: 1
-    max: 118335
+    max: 118334
     is_categorical: true
   }
   annotation {
