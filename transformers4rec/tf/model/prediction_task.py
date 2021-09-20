@@ -497,7 +497,9 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
     """Predict the interacted item-id probabilities.
     - During inference, the task consists of predicting the next item.
     - During training, the class supports the following Language modeling tasks:
-        Causal LM, Masked LM, Permutation LM and Replacement Token Detection
+        Causal LM and Masked LM.
+        p.s: we are planning to support Permutation LM and Replacement Token Detection
+        in future release.
     Parameters:
     -----------
     target_dim: int

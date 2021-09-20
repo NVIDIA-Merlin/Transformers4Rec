@@ -155,22 +155,6 @@ def maybe_deserialize_keras_objects(
     return config
 
 
-def check_inputs(ks, scores, labels):
-    if len(ks.shape) > 1:
-        raise ValueError("ks should be a 1-dimensional tensor")
-
-    if len(scores.shape) != 2:
-        raise ValueError("scores must be a 2-dimensional tensor")
-
-    if len(labels.shape) != 2:
-        raise ValueError("labels must be a 2-dimensional tensor")
-
-    if scores.shape != labels.shape:
-        raise ValueError("scores and labels must be the same shape")
-
-    return (tf.cast(ks, tf.int32), tf.cast(scores, tf.float32), tf.cast(labels, tf.float32))
-
-
 def extract_topk(ks, scores, labels):
     max_k = int(max(ks))
     topk_scores, topk_indices = tf.math.top_k(scores, max_k)

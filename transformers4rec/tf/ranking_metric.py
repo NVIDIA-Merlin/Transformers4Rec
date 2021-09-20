@@ -97,7 +97,7 @@ class PrecisionAt(RankingMetric):
         {METRIC_PARAMETERS_DOCSTRING}
         """
 
-        ks, scores, labels = tf_utils.check_inputs(ks, scores, labels)
+        ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
         precisions = tf_utils.create_output_placeholder(scores, ks)
 
@@ -121,7 +121,7 @@ class RecallAt(RankingMetric):
         {METRIC_PARAMETERS_DOCSTRING}
         """
 
-        ks, scores, labels = tf_utils.check_inputs(ks, scores, labels)
+        ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
         recalls = tf_utils.create_output_placeholder(scores, ks)
 
@@ -172,19 +172,21 @@ class AvgPrecisionAt(RankingMetric):
         ----------
         {METRIC_PARAMETERS_DOCSTRING}
         """
-        ks, scores, labels = tf_utils.check_inputs(ks, scores, labels)
+        ks, scores, labels = check_inputs(ks, scores, labels)
         topk_scores, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
         avg_precisions = tf_utils.create_output_placeholder(scores, ks)
 
         num_relevant = tf.reduce_sum(labels, axis=-1)
-        max_k = tf.reduce_max(ks).numpy()
+        max_k = tf.reduce_max(ks)
 
         precisions = self.precision_at(1 + tf.range(max_k), topk_scores, topk_labels)
         rel_precisions = precisions * topk_labels
 
         for index, k in enumerate(ks):
-            tf_total_prec = tf.reduce_sum(rel_precisions[:, : int(k)], axis=1)
-            clip_value = tf.clip_by_value(num_relevant, clip_value_min=1, clip_value_max=k.numpy())
+            tf_total_prec = tf.reduce_sum(rel_precisions[:, :k], axis=1)
+            clip_value = tf.clip_by_value(
+                num_relevant, clip_value_min=1, clip_value_max=tf.cast(k, tf.float32)
+            )
             avg_precisions[:, index].assign(tf_total_prec / clip_value)
             # Ensuring type is double, because it can be float if --fp16
         return avg_precisions
@@ -207,14 +209,14 @@ class DCGAt(RankingMetric):
         ----------
         {METRIC_PARAMETERS_DOCSTRING}
         """
-        ks, scores, labels = tf_utils.check_inputs(ks, scores, labels)
+        ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
         dcgs = tf_utils.create_output_placeholder(scores, ks)
 
         # Compute discounts
-        max_k = tf.reduce_max(ks).numpy()
+        max_k = tf.reduce_max(ks)
         discount_positions = tf.cast(tf.range(max_k), tf.float32)
-        discount_log_base = tf.math.log(tf.convert_to_tensor([log_base], dtype=tf.float32)).numpy()
+        discount_log_base = tf.math.log(tf.convert_to_tensor([log_base], dtype=tf.float32))
 
         discounts = 1 / (tf.math.log(discount_positions + 2) / discount_log_base)
 
@@ -247,7 +249,7 @@ class NDCGAt(RankingMetric):
         ----------
         {METRIC_PARAMETERS_DOCSTRING}
         """
-        ks, scores, labels = tf_utils.check_inputs(ks, scores, labels)
+        ks, scores, labels = check_inputs(ks, scores, labels)
         topk_scores, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
 
         # Compute discounted cumulative gains
@@ -262,3 +264,19 @@ class NDCGAt(RankingMetric):
         gains = tf.tensor_scatter_nd_update(gains, relevant_pos, updates)
 
         return gains
+
+
+def check_inputs(ks, scores, labels):
+    if len(ks.shape) > 1:
+        raise ValueError("ks should be a 1-dimensional tensor")
+
+    if len(scores.shape) != 2:
+        raise ValueError("scores must be a 2-dimensional tensor")
+
+    if len(labels.shape) != 2:
+        raise ValueError("labels must be a 2-dimensional tensor")
+
+    if scores.shape != labels.shape:
+        raise ValueError("scores and labels must be the same shape")
+
+    return (tf.cast(ks, tf.int32), tf.cast(scores, tf.float32), tf.cast(labels, tf.float32))
