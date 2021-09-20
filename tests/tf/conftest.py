@@ -67,8 +67,7 @@ def tf_yoochoose_tabular_sequence_features(yoochoose_schema):
         max_sequence_length=20,
         continuous_projection=64,
         d_output=100,
-        # TODO: Add masking when we add it
-        # masking="causal",
+        masking="causal",
     )
 
 
@@ -105,4 +104,19 @@ def tf_masking_inputs():
     features["padding_idx"] = PAD_TOKEN
     features["vocab_size"] = MAX_CARDINALITY
 
+    return features
+
+
+@pytest.fixture
+def tf_ranking_metrics_inputs():
+    POS_EXAMPLE = 30
+    VOCAB_SIZE = 40
+    features = {}
+    features["scores"] = tf.convert_to_tensor(np.random.uniform(0, 1, (POS_EXAMPLE, VOCAB_SIZE)))
+    features["ks"] = tf.convert_to_tensor([1, 2, 3, 5, 10, 20])
+    features["labels_one_hot"] = tf.convert_to_tensor(
+        np.random.choice(a=[0, 1], size=(POS_EXAMPLE, VOCAB_SIZE))
+    )
+
+    features["labels"] = tf.convert_to_tensor(np.random.randint(1, VOCAB_SIZE, (POS_EXAMPLE,)))
     return features
