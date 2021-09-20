@@ -1,24 +1,12 @@
-from typing import Optional, Sequence, Union, Type
-from types import SimpleNamespace
-from typing import Dict, List, Optional, Text, Type, Union
-from typing import List, Optional
 import logging
+from typing import Dict, Optional, Sequence, Type, Union
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
 
-
-from tensorflow.python.keras.utils import generic_utils
-from transformers.modeling_tf_utils import TFSequenceSummary
-
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
-from ..utils.tf_utils import (
-    LossMixin,
-    MetricsMixin,
-    maybe_deserialize_keras_objects,
-    maybe_serialize_keras_objects,
-)
+from .base import PredictionTask
 
 
 def name_fn(name, inp):
@@ -29,141 +17,6 @@ MetricOrMetricClass = Union[tf.keras.metrics.Metric, Type[tf.keras.metrics.Metri
 
 
 LOG = logging.getLogger("transformers4rec")
-
-
-class PredictionTask(Layer, LossMixin, MetricsMixin):
-    def __init__(
-        self,
-        loss: tf.keras.losses.Loss,
-        target_name: Optional[str] = None,
-        task_name: Optional[str] = None,
-        metrics: Optional[List[MetricOrMetricClass]] = None,
-        pre: Optional[Layer] = None,
-        task_block: Optional[Layer] = None,
-        prediction_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
-        label_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
-        loss_metrics: Optional[List[tf.keras.metrics.Metric]] = None,
-        name: Optional[Text] = None,
-        summary_type="last",
-        **kwargs,
-    ) -> None:
-        """Initializes the task.
-
-        Parameters
-        ----------
-        loss:
-            Loss function. Defaults to BinaryCrossentropy.
-        metrics:
-            List of Keras metrics to be evaluated.
-        prediction_metrics:
-            List of Keras metrics used to summarize the predictions.
-        label_metrics:
-            List of Keras metrics used to summarize the labels.
-        loss_metrics:
-            List of Keras metrics used to summarize the loss.
-        name:
-            Optional task name.
-        """
-
-        super().__init__(name=name, **kwargs)
-        self.target_name = target_name
-        self.sequence_summary = TFSequenceSummary(
-            SimpleNamespace(summary_type=summary_type)
-        )  # noqa
-        self.pre = pre
-        self.task_block = task_block
-        self.loss = loss
-        self._task_name = task_name
-
-        create_metrics = self._create_metrics
-        self.eval_metrics = create_metrics(metrics) if metrics else []
-        self.prediction_metrics = create_metrics(prediction_metrics) if prediction_metrics else []
-        self.label_metrics = create_metrics(label_metrics) if label_metrics else []
-        self.loss_metrics = create_metrics(loss_metrics) if loss_metrics else []
-
-    def build(self, input_shape, inputs=None):
-        return super().build(input_shape)
-
-    def call(self, inputs, **kwargs):
-        x = inputs
-
-        if len(x.shape) == 3:
-            x = self.sequence_summary(x)
-
-        if self.task_block:
-            x = self.task_block(x)
-
-        if self.pre:
-            x = self.pre(x)
-
-        return x
-
-    def _create_metrics(self, metrics: List[MetricOrMetricClass]) -> List[tf.keras.metrics.Metric]:
-        outputs = []
-        for metric in metrics:
-            if not isinstance(metric, tf.keras.metrics.Metric):
-                metric = metric(name=self.child_name(generic_utils.to_snake_case(metric.__name__)))
-            outputs.append(metric)
-
-        return outputs
-
-    @property
-    def task_name(self):
-        if self._task_name:
-            return self._task_name
-
-        base_name = generic_utils.to_snake_case(self.__class__.__name__)
-
-        return name_fn(self.target_name, base_name) if self.target_name else base_name
-
-    def child_name(self, name):
-        return name_fn(self.task_name, name)
-
-    def compute_loss(
-        self,
-        inputs,
-        targets,
-        compute_metrics=True,
-        sample_weight: Optional[tf.Tensor] = None,
-        **kwargs,
-    ) -> tf.Tensor:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        predictions = self(inputs, **kwargs)
-        loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
-
-        if compute_metrics:
-            update_ops = self.calculate_metrics(predictions, targets, forward=False, loss=loss)
-
-            update_ops = [x for x in update_ops if x is not None]
-
-            with tf.control_dependencies(update_ops):
-                return tf.identity(loss)
-
-        return loss
-
-    def repr_add(self):
-        return [("loss", self.loss)]
-
-    def calculate_metrics(self, predictions, targets, sample_weight=None, forward=True, loss=None):
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        if forward:
-            predictions = self(predictions)
-
-        update_ops = []
-
-        for metric in self.eval_metrics:
-            update_ops.append(
-                metric.update_state(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
-            )
-
-        for metric in self.prediction_metrics:
-            update_ops.append(metric.update_state(predictions, sample_weight=sample_weight))
-
-from .base import MetricOrMetricClass, PredictionTask
 
 
 @tf.keras.utils.register_keras_serializable(package="transformers4rec")
@@ -327,7 +180,7 @@ class NextItemPredictionTask(PredictionTask):
         )
         return super().build(input_shape)
 
-    def call(self, inputs):
+    def call(self, inputs, **kwargs):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
 
@@ -360,12 +213,13 @@ class NextItemPredictionTask(PredictionTask):
         out_tensor = tf.reshape(inp_tensor_fl, (-1, inp_tensor.shape[1]))
         return out_tensor
 
-    def compute_loss(
+    def compute_loss(  # type: ignore
         self,
         inputs,
         targets=None,
         compute_metrics=True,
         sample_weight: Optional[tf.Tensor] = None,
+        **kwargs,
     ) -> tf.Tensor:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
@@ -491,7 +345,7 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
                 name="logits",
             )
 
-    def call(self, inputs: tf.Tensor):
+    def call(self, inputs: tf.Tensor, **kwargs):
         if self.weight_tying:
             logits = tf.matmul(inputs, tf.transpose(self.item_embedding_table))
             logits = tf.nn.bias_add(logits, self.output_layer_bias)
