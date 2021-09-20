@@ -42,7 +42,7 @@ jobs:
         check-manifest .
     - name: Type-checks using mypy
       run: |
-        yes | mypy transformers4rec --install-types
+        mypy transformers4rec --install-types --non-interactive
     - name: Build
       run: |
         python setup.py develop
