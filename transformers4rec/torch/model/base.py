@@ -17,7 +17,7 @@ import copy
 import inspect
 from collections import defaultdict
 from types import SimpleNamespace
-from typing import Callable, Dict, Iterable, List, Optional, Type, Union
+from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
 
 import numpy as np
 import torch
@@ -29,7 +29,7 @@ from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.registry import camelcase_to_snakecase
 
 from ...tf.features.base import InputBlock
-from ..block.base import BlockOrModule, BlockType
+from ..block.base import BlockBase, BlockOrModule, BlockType
 from ..features.sequence import TabularFeaturesType
 from ..typing import TabularData, TensorOrTabularData
 from ..utils.torch_utils import LossMixin, MetricsMixin
@@ -80,7 +80,9 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         summary_type: str = "last",
     ):
         super().__init__()
-        self.sequence_summary = SequenceSummary(SimpleNamespace(summary_type=summary_type))  # noqa
+        self.sequence_summary = SequenceSummary(
+            SimpleNamespace(summary_type=summary_type)  # type: ignore
+        )  # noqa
         self.target_name = target_name
         self.forward_to_prediction_fn = forward_to_prediction_fn
         self.set_metrics(metrics)
@@ -95,7 +97,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         input_size,
         inputs: Optional[InputBlock] = None,
         device=None,
-        task_block=None,
+        task_block: Optional[BlockType] = None,
         pre=None,
     ):
         """
@@ -109,6 +111,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         device:
             set the device for the metrics and layers of the task
         """
+
         if task_block:
             # TODO: What to do when `self.task_block is not None`?
             self.task_block = task_block
@@ -187,27 +190,27 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
         return loss
 
-    def calculate_metrics(
+    def calculate_metrics(  # type: ignore
         self,
         predictions: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
         forward: bool = True,
         **kwargs,
-    ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+    ) -> Dict[str, torch.Tensor]:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
         outputs = {}
         if forward:
             predictions = self(predictions)
-        predictions = self.forward_to_prediction_fn(predictions)
+        predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
 
         for metric in self.metrics:
             if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
-                targets = targets.int()
+                targets = cast(torch.Tensor, targets).int()
             outputs[self.metric_name(metric)] = metric(predictions, targets)
 
         return outputs
@@ -250,7 +253,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
     def __init__(
         self,
-        body: BlockType,
+        body: BlockBase,
         prediction_tasks: Union[List[PredictionTask], PredictionTask],
         task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
         task_weights: Optional[List[float]] = None,
@@ -269,7 +272,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         self._task_weights = defaultdict(lambda: 1.0)
         if task_weights:
-            for task, val in zip(prediction_tasks, task_weights):
+            for task, val in zip(cast(List[PredictionTask], prediction_tasks), task_weights):
                 self._task_weights[task.task_name] = val
 
         self.build(inputs=inputs, task_blocks=task_blocks)
@@ -306,7 +309,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
     def from_schema(
         cls,
         schema: Schema,
-        body: BlockType,
+        body: BlockBase,
         task_blocks: Optional[Union[BlockType, Dict[str, BlockType]]] = None,
         task_weight_dict: Optional[Dict[str, float]] = None,
         loss_reduction: str = "mean",
@@ -328,6 +331,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         -------
         Head
         """
+        task_weight_dict = task_weight_dict or {}
         tasks: List[PredictionTask] = []
         task_weights = []
 
@@ -391,7 +395,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         return outputs
 
-    def compute_loss(
+    def compute_loss(  # type: ignore
         self,
         body_outputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
@@ -415,7 +419,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         return getattr(loss_tensor, self.loss_reduction)()
 
-    def calculate_metrics(
+    def calculate_metrics(  # type: ignore
         self,
         body_outputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
@@ -488,7 +492,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self,
         *head: Head,
         head_weights: Optional[List[float]] = None,
-        head_reduction: Optional[str] = "mean",
+        head_reduction: str = "mean",
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name=None,
     ):
@@ -535,7 +539,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         return getattr(loss_tensor, self.head_reduction)()
 
-    def calculate_metrics(
+    def calculate_metrics(  # type: ignore
         self, inputs, targets, mode="val", call_body=True, forward=True, **kwargs
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         outputs = {}

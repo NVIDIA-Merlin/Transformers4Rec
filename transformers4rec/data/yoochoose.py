@@ -58,7 +58,10 @@ def process_clicks(data_path: str, device="gpu"):
     -------
     Union[cudf.DataFrame, pandas.DataFrame]
     """
-    from .preprocessing import add_item_first_seen_col_to_df, remove_consecutive_interactions
+    from .preprocessing import (  # type: ignore
+        add_item_first_seen_col_to_df,
+        remove_consecutive_interactions,
+    )
 
     if device == "gpu":
         import cudf

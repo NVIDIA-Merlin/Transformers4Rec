@@ -21,7 +21,7 @@ import torch
 from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
-from ..tabular.tabular import (
+from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,
     FilterFeatures,
     TabularAggregationType,

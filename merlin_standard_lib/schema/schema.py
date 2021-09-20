@@ -211,7 +211,7 @@ FilterT = TypeVar("FilterT")
 class Schema(_Schema):
     """A collection of column schemas for a dataset."""
 
-    feature: Sequence["ColumnSchema"] = betterproto.message_field(1)
+    feature: List["ColumnSchema"] = betterproto.message_field(1)
 
     @classmethod
     def create(

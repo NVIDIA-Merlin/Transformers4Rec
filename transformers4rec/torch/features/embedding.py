@@ -23,7 +23,7 @@ from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
-from ..tabular.tabular import (
+from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,
     FilterFeatures,
     TabularAggregationType,
@@ -76,8 +76,8 @@ class EmbeddingFeatures(InputBlock):
         for name, feature in self.feature_config.items():
             table: TableConfig = feature.table
             features_dim[name] = table.dim
-            if table.name not in tables:
-                tables[table.name] = table
+            if name not in tables:
+                tables[name] = table
 
         for name, table in tables.items():
             embedding_tables[name] = self.table_to_embedding_module(table)
@@ -98,15 +98,15 @@ class EmbeddingFeatures(InputBlock):
         return embedding_table
 
     @classmethod
-    def from_schema(
+    def from_schema(  # type: ignore
         cls,
         schema: Schema,
         embedding_dims: Optional[Dict[str, int]] = None,
-        embedding_dim_default: Optional[int] = 64,
+        embedding_dim_default: int = 64,
         infer_embedding_sizes: bool = False,
-        infer_embedding_sizes_multiplier: Optional[float] = 2.0,
+        infer_embedding_sizes_multiplier: float = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
-        combiner: Optional[str] = "mean",
+        combiner: str = "mean",
         tags: Optional[Union[Tag, list, str]] = None,
         item_id: Optional[str] = None,
         automatic_build: bool = True,
@@ -287,16 +287,16 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         super().__init__(feature_config, pre=pre, post=post, aggregation=aggregation)
 
     @classmethod
-    def from_schema(
+    def from_schema(  # type: ignore
         cls,
         schema: Schema,
         soft_embedding_cardinalities: Optional[Dict[str, int]] = None,
-        soft_embedding_cardinality_default: Optional[int] = 10,
+        soft_embedding_cardinality_default: int = 10,
         soft_embedding_dims: Optional[Dict[str, int]] = None,
-        soft_embedding_dim_default: Optional[int] = 8,
+        soft_embedding_dim_default: int = 8,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         layer_norm: bool = True,
-        combiner: Optional[str] = "mean",
+        combiner: str = "mean",
         tags: Optional[Union[Tag, list, str]] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -394,7 +394,7 @@ class TableConfig:
         self,
         vocabulary_size: int,
         dim: int,
-        initializer: Optional[Callable[[Any], None]] = None,
+        initializer: Optional[Callable[[torch.Tensor], None]] = None,
         combiner: Text = "mean",
         name: Optional[Text] = None,
     ):
@@ -409,14 +409,17 @@ class TableConfig:
 
         if (initializer is not None) and (not callable(initializer)):
             raise ValueError("initializer must be callable if specified.")
+
+        self.initializer: Callable[[torch.Tensor], None]
         if initializer is None:
-            initializer = partial(torch.nn.init.normal_, mean=0.0, std=0.05)
+            self.initializer = partial(torch.nn.init.normal_, mean=0.0, std=0.05)  # type: ignore
+        else:
+            self.initializer = initializer
 
         self.vocabulary_size = vocabulary_size
         self.dim = dim
         self.combiner = combiner
         self.name = name
-        self.initializer = initializer
 
     def __repr__(self):
         return (

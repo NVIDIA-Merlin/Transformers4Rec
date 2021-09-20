@@ -1,15 +1,13 @@
-import logging
+from typing import Optional, Sequence, Union, Type
 from types import SimpleNamespace
 from typing import Dict, List, Optional, Text, Type, Union
 from typing import List, Optional
+import logging
 
 import tensorflow as tf
 from tensorflow.keras.layers import Layer
 
-from ..block.mlp import MLPBlock
-from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 
-LOG = logging.getLogger("transformers4rec")
 from tensorflow.python.keras.utils import generic_utils
 from transformers.modeling_tf_utils import TFSequenceSummary
 
@@ -184,13 +182,13 @@ class BinaryClassificationTask(PredictionTask):
         task_name: Optional[str] = None,
         task_block: Optional[Layer] = None,
         loss=DEFAULT_LOSS,
-        metrics: List[MetricOrMetricClass] = DEFAULT_METRICS,
+        metrics: Sequence[MetricOrMetricClass] = DEFAULT_METRICS,
         summary_type="first",
         **kwargs,
     ):
         super().__init__(
             loss=loss,
-            metrics=metrics,
+            metrics=list(metrics),
             target_name=target_name,
             task_name=task_name,
             summary_type=summary_type,

@@ -42,7 +42,7 @@ class Block(SchemaMixin, tf.keras.layers.Layer):
         return Model(head, **kwargs)
 
     def as_tabular(self, name=None):
-        from ..tabular.tabular import AsTabular
+        from ..tabular.base import AsTabular
 
         if not name:
             name = self.name
@@ -91,7 +91,7 @@ class SequentialBlock(Block):
 
         super(SequentialBlock, self).__init__(**kwargs)
         if filter_features:
-            from ..tabular.tabular import FilterFeatures
+            from ..tabular.base import FilterFeatures
 
             self.layers = [FilterFeatures(filter_features), *copy.copy(layers)]
         else:
@@ -110,7 +110,7 @@ class SequentialBlock(Block):
         return output_signature
 
     def build(self, input_shape=None):
-        from ..tabular.tabular import TabularBlock
+        from ..tabular.base import TabularBlock
 
         last_layer = None
         for layer in self.layers:
@@ -228,7 +228,7 @@ BlockType = Union[tf.keras.layers.Layer, Block]
 
 
 def right_shift_layer(self, other):
-    from ..tabular.tabular import FilterFeatures
+    from ..tabular.base import FilterFeatures
 
     if isinstance(other, list):
         left_side = [FilterFeatures(other)]

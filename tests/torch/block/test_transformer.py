@@ -52,7 +52,7 @@ def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
     block = tr.SequentialBlock(
         tab_module,
         tr.MLPBlock([64]),
-        tr.TransformerBlock(transformer=transformer_config, masking=tab_module.masking),
+        tr.TransformerBlock(transformer_config, masking=tab_module.masking),
     )
 
     outputs = block(torch_yoochoose_like)

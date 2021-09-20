@@ -24,7 +24,7 @@ from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from ..block.base import Block, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import MaskSequence, masking_registry
-from ..tabular.tabular import (
+from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,
     AsTabular,
     TabularAggregationType,
@@ -162,7 +162,7 @@ class TabularSequenceFeatures(TabularFeatures):
         self.set_masking(masking)
 
     @classmethod
-    def from_schema(
+    def from_schema(  # type: ignore
         cls,
         schema: Schema,
         continuous_tags=(Tag.CONTINUOUS,),
@@ -299,15 +299,15 @@ class TabularSequenceFeatures(TabularFeatures):
 
     @property
     def item_id(self) -> Optional[str]:
-        if "categorical_layer" in self.to_merge:
-            return getattr(self.to_merge["categorical_layer"], "item_id", None)
+        if "categorical_layer" in self.to_merge_dict:
+            return getattr(self.to_merge_dict["categorical_layer"], "item_id", None)
 
         return None
 
     @property
     def item_embedding_table(self):
-        if "categorical_module" in self.to_merge:
-            return getattr(self.to_merge["categorical_layer"], "item_embedding_table", None)
+        if "categorical_layer" in self.to_merge_dict:
+            return getattr(self.to_merge_dict["categorical_layer"], "item_embedding_table", None)
 
         return None
 

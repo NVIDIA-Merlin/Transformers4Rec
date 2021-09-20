@@ -71,12 +71,10 @@ def test_mask_all_next_item_for_eval(torch_masking_inputs, task):
         padding_idx=torch_masking_inputs["padding_idx"],
         eval_on_last_item_seq_only=False,
     )
-    mask_schema, masked_targets = lm.compute_masked_targets(
-        torch_masking_inputs["labels"], training=False
-    )
+    masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=False)
     # get the labels from output
-    trgt_pad = masked_targets != torch_masking_inputs["padding_idx"]
-    labels = masked_targets[trgt_pad].flatten().numpy()
+    trgt_pad = masking_info.targets != torch_masking_inputs["padding_idx"]
+    labels = masking_info.targets[trgt_pad].flatten().numpy()
     # get non padded items when shifting input sequence
     shift_inputs = torch_masking_inputs["labels"][:, 1:]
     non_padded_mask = shift_inputs != torch_masking_inputs["padding_idx"]
@@ -84,7 +82,7 @@ def test_mask_all_next_item_for_eval(torch_masking_inputs, task):
     all_labels = shift_inputs[non_padded_mask].flatten().numpy()
 
     # check that number of labels per session matches
-    assert all(mask_schema.sum(1) == n_labels_sessions)
+    assert all(masking_info.schema.sum(1) == n_labels_sessions)
     # check all next items are masked
     assert all(all_labels == labels)
 
@@ -121,8 +119,8 @@ def test_at_least_one_masked_item_mlm(torch_masking_inputs, task):
     lm = tr.masking.masking_registry[task](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
-    _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
-    trgt_mask = masked_targets != torch_masking_inputs["padding_idx"]
+    masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
+    trgt_mask = masking_info.targets != torch_masking_inputs["padding_idx"]
     assert all(trgt_mask.sum(axis=1).numpy() > 0)
 
 
@@ -168,8 +166,8 @@ def test_replaced_fake_tokens(torch_masking_inputs):
     lm = tr.masking.masking_registry["replacement"](
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"]
     )
-    _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
-    trg_flat = masked_targets.flatten()
+    masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
+    trg_flat = masking_info.targets.flatten()
     non_pad_mask = trg_flat != torch_masking_inputs["padding_idx"]
     # Nb of pos items
     pos_items = non_pad_mask.sum()
@@ -190,9 +188,9 @@ def test_replacement_from_batch(torch_masking_inputs):
     lm = tr.masking.ReplacementLanguageModeling(
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"], sample_from_batch=True
     )
-    _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
+    masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
 
-    trg_flat = masked_targets.flatten()
+    trg_flat = masking_info.targets.flatten()
     non_pad_mask = trg_flat != torch_masking_inputs["padding_idx"]
     # Nb of pos items
     pos_items = non_pad_mask.sum()
@@ -211,8 +209,8 @@ def test_sample_from_softmax_output(torch_masking_inputs):
     lm = tr.masking.ReplacementLanguageModeling(
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"], sample_from_batch=True
     )
-    _, masked_targets = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
-    trg_flat = masked_targets.flatten()
+    masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
+    trg_flat = masking_info.targets.flatten()
     non_pad_mask = trg_flat != torch_masking_inputs["padding_idx"]
     # Nb of pos items
     pos_items = non_pad_mask.sum()
@@ -228,9 +226,7 @@ def test_masked_positions(torch_masking_inputs, mode):
     lm = tr.masking.ReplacementLanguageModeling(
         hidden_dim, padding_idx=torch_masking_inputs["padding_idx"], sample_from_batch=True
     )
-    mask_labels, masked_targets = lm.compute_masked_targets(
-        torch_masking_inputs["labels"], training=mode
-    )
+    masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=mode)
 
-    targets = pytorch.masked_select(masked_targets, mask_labels)
+    targets = pytorch.masked_select(masking_info.targets, masking_info.schema)
     assert all(targets != torch_masking_inputs["padding_idx"])

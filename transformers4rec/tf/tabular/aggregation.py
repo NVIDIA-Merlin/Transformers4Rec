@@ -21,7 +21,7 @@ from merlin_standard_lib import Schema
 from ...config.schema import requires_schema
 from ..typing import TabularData
 from ..utils.tf_utils import calculate_batch_size_from_input_shapes
-from .tabular import TabularAggregation, tabular_aggregation_registry
+from .base import TabularAggregation, tabular_aggregation_registry
 
 # pylint has issues with TF array ops, so disable checks until fixed:
 # https://github.com/PyCQA/pylint/issues/3613
@@ -132,7 +132,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         self.item_id_col_name = None
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
-        schema: Schema = self.schema
+        schema: Schema = self.schema  # type: ignore
         item_id_inputs = self.get_item_ids_from_inputs(inputs)
         self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)

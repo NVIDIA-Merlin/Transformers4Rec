@@ -51,7 +51,7 @@ from .tabular.aggregation import (
     ElementwiseSumItemMulti,
     StackFeatures,
 )
-from .tabular.tabular import AsTabular, FilterFeatures, MergeTabular, TabularBlock
+from .tabular.base import AsTabular, FilterFeatures, MergeTabular, TabularBlock
 from .tabular.transformations import AsDenseFeatures, AsSparseFeatures, StochasticSwapNoise
 from .utils import repr_utils
 

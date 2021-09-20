@@ -15,17 +15,18 @@
 #
 
 from copy import deepcopy
-from typing import Any, Callable, Dict, Optional, Union
+from typing import Any, Callable, Dict, Optional
 
 import tensorflow as tf
 from tensorflow.python.keras import backend
 from tensorflow.python.tpu.tpu_embedding_v2_utils import FeatureConfig, TableConfig
 
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Schema
+from merlin_standard_lib.schema.tag import TagsType
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
-from ..tabular.tabular import (
+from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,
     FilterFeatures,
     TabularAggregationType,
@@ -82,7 +83,7 @@ class EmbeddingFeatures(InputBlock):
 
         if add_default_pre:
             embedding_pre = [FilterFeatures(list(feature_config.keys())), AsSparseFeatures()]
-            pre = [embedding_pre, pre] if pre else embedding_pre
+            pre = [embedding_pre, pre] if pre else embedding_pre  # type: ignore
         self.feature_config = feature_config
         self.item_id = item_id
 
@@ -91,16 +92,16 @@ class EmbeddingFeatures(InputBlock):
         )
 
     @classmethod
-    def from_schema(
+    def from_schema(  # type: ignore
         cls,
         schema: Schema,
         embedding_dims: Optional[Dict[str, int]] = None,
         embedding_dim_default: Optional[int] = 64,
         infer_embedding_sizes: bool = False,
-        infer_embedding_sizes_multiplier: Optional[float] = 2.0,
+        infer_embedding_sizes_multiplier: float = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         combiner: Optional[str] = "mean",
-        tags: Optional[Union[Tag, list, str]] = None,
+        tags: Optional[TagsType] = None,
         item_id: Optional[str] = None,
         max_sequence_length: Optional[int] = None,
         **kwargs,

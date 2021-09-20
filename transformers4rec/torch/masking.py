@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Any, Dict, Tuple
+from dataclasses import dataclass
+from typing import Any, Dict, Optional, Tuple
 
 import torch
 from torch import nn
@@ -25,8 +26,12 @@ from .utils.torch_utils import OutputSizeMixin
 
 masking_registry = Registry("torch.masking")
 
-MaskingSchema = torch.Tensor
-MaskedTargets = torch.Tensor
+
+@dataclass
+class MaskingInfo:
+    schema: torch.Tensor
+    targets: torch.Tensor
+
 
 MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
     hidden_size: int
@@ -77,8 +82,8 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         self.padding_idx = padding_idx
         self.hidden_size = hidden_size
         self.eval_on_last_item_seq_only = eval_on_last_item_seq_only
-        self.mask_schema = None
-        self.masked_targets = None
+        self.mask_schema: Optional[torch.Tensor] = None
+        self.masked_targets: Optional[torch.Tensor] = None
 
         # Create a trainable embedding to replace masked interactions
         self.masked_item_embedding = nn.Parameter(torch.Tensor(self.hidden_size))
@@ -88,9 +93,7 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
             std=0.001,
         )
 
-    def _compute_masked_targets(
-        self, item_ids: torch.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
+    def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
         """
         Method to prepare masked labels based on the sequence of item ids.
         It returns The true labels of masked positions and the related boolean mask.
@@ -110,9 +113,7 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         """
         raise NotImplementedError
 
-    def compute_masked_targets(
-        self, item_ids: torch.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
+    def compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
         """
         Method to prepare masked labels based on the sequence of item ids.
         It returns The true labels of masked positions and the related boolean mask.
@@ -135,13 +136,12 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         Tuple[MaskingSchema, MaskedTargets]
         """
         assert item_ids.ndim == 2, "`item_ids` must have 2 dimensions."
-        self.mask_schema, self.masked_targets = self._compute_masked_targets(
-            item_ids, training=training
-        )
+        masking_info = self._compute_masked_targets(item_ids, training=training)
+        self.mask_schema, self.masked_targets = masking_info.schema, masking_info.targets
 
-        return self.mask_schema, self.masked_targets
+        return masking_info
 
-    def apply_mask_to_inputs(self, inputs: torch.Tensor, schema: MaskingSchema) -> torch.Tensor:
+    def apply_mask_to_inputs(self, inputs: torch.Tensor, schema: torch.Tensor) -> torch.Tensor:
         """
         Control the masked positions in the inputs by replacing the true interaction
         by a learnable masked embedding.
@@ -161,7 +161,7 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         )
         return inputs
 
-    def predict_all(self, item_ids: torch.tensor) -> Tuple[MaskingSchema, MaskedTargets]:
+    def predict_all(self, item_ids: torch.Tensor) -> MaskingInfo:
         """
         Prepare labels for all next item predictions instead of
         last-item predictions in a user's sequence.
@@ -182,7 +182,7 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         # As after shifting the sequence length will be subtracted by one, adding a masked item in
         # the sequence to return to the initial sequence.
         # This is important for ReformerModel(), for example
-        labels = torch.cat(
+        labels = torch.cat(  # type: ignore
             [
                 labels,
                 torch.zeros((labels.shape[0], 1), dtype=labels.dtype).to(item_ids.device),
@@ -191,11 +191,15 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         )
         # apply mask on input where target is on padding index
         mask_labels = labels != self.padding_idx
-        return mask_labels, labels
+
+        return MaskingInfo(mask_labels, labels)
 
     def forward(self, inputs: torch.Tensor, item_ids: torch.Tensor, training=False) -> torch.Tensor:
         _ = self.compute_masked_targets(item_ids=item_ids, training=training)
-        return self.apply_mask_to_inputs(inputs, self.mask_schema)
+        if self.mask_schema is None:
+            raise ValueError("`mask_schema must be set.`")
+        schema: torch.Tensor = self.mask_schema
+        return self.apply_mask_to_inputs(inputs, schema)
 
     def forward_output_size(self, input_size):
         return input_size
@@ -241,30 +245,30 @@ class CausalLanguageModeling(MaskSequence):
         )
         self.train_on_last_item_seq_only = train_on_last_item_seq_only
 
-    def _compute_masked_targets(
-        self, item_ids: torch.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
-        mask_labels, labels = self.predict_all(item_ids)
+    def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
+        masking_info = self.predict_all(item_ids)
+        mask_labels, labels = masking_info.schema, masking_info.targets
 
         if (self.eval_on_last_item_seq_only and not training) or (
             self.train_on_last_item_seq_only and training
         ):
-            rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=item_ids.device)
-            last_item_sessions = mask_labels.sum(axis=1) - 1
+            rows_ids = torch.arange(
+                labels.size(0), dtype=torch.long, device=item_ids.device  # type: ignore
+            )
+            last_item_sessions = mask_labels.sum(dim=1) - 1
             label_seq_trg_eval = torch.zeros(labels.shape, dtype=torch.long, device=item_ids.device)
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
             mask_labels = label_seq_trg_eval != self.padding_idx
-        return mask_labels, labels
 
-    def apply_mask_to_inputs(
-        self, inputs: torch.Tensor, mask_schema: MaskingSchema
-    ) -> torch.Tensor:
+        return MaskingInfo(mask_labels, labels)
+
+    def apply_mask_to_inputs(self, inputs: torch.Tensor, mask_schema: torch.Tensor) -> torch.Tensor:
         # shift sequence of interaction embeddings
         pos_emb_inp = inputs[:, :-1]
         # Adding a masked item in the sequence to return to the initial sequence.
-        pos_emb_inp = torch.cat(
+        pos_emb_inp = torch.cat(  # type: ignore
             [
                 pos_emb_inp,
                 torch.zeros(
@@ -316,9 +320,7 @@ class MaskedLanguageModeling(MaskSequence):
         )
         self.mlm_probability = mlm_probability
 
-    def _compute_masked_targets(
-        self, item_ids: torch.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
+    def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
         """
         Prepare sequence with mask schema for masked language modeling prediction
         the function is based on HuggingFace's transformers/data/data_collator.py
@@ -367,7 +369,7 @@ class MaskedLanguageModeling(MaskSequence):
             mask_labels = labels != self.padding_idx
 
             # If a sequence has only masked labels, unmasks one of the labels
-            sequences_with_only_labels = mask_labels.sum(axis=1) == non_padded_mask.sum(axis=1)
+            sequences_with_only_labels = mask_labels.sum(dim=1) == non_padded_mask.sum(dim=1)
             sampled_labels_to_unmask = torch.multinomial(
                 mask_labels.float(), num_samples=1
             ).squeeze()
@@ -382,12 +384,14 @@ class MaskedLanguageModeling(MaskSequence):
 
         else:
             if self.eval_on_last_item_seq_only:
-                last_item_sessions = non_padded_mask.sum(axis=1) - 1
+                last_item_sessions = non_padded_mask.sum(dim=1) - 1
                 labels[rows_ids, last_item_sessions] = item_ids[rows_ids, last_item_sessions]
                 mask_labels = labels != self.padding_idx
             else:
-                mask_labels, labels = self.predict_all(item_ids)
-        return mask_labels, labels
+                masking_info = self.predict_all(item_ids)
+                mask_labels, labels = masking_info.schema, masking_info.targets
+
+        return MaskingInfo(mask_labels, labels)
 
 
 @masking_registry.register_with_multiple_names("plm", "permutation")
@@ -429,14 +433,21 @@ class PermutationLanguageModeling(MaskSequence):
         self.permute_all = permute_all
 
         # additional masked scheme needed for XLNet-PLM task :
-        self.target_mapping = None
-        self.perm_mask = None
+        self.target_mapping: Optional[torch.Tensor] = None
+        self.perm_mask: Optional[torch.Tensor] = None
 
     def _compute_masked_targets(
         self,
         item_ids: torch.Tensor,
         training=False,
-    ) -> torch.Tensor:
+    ):
+        pass
+
+    def _compute_masked_targets_extended(
+        self,
+        item_ids: torch.Tensor,
+        training=False,
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Prepare the attention masks needed for permutation language modeling
         The function is based on HuggingFace's transformers/data/data_collator.py
@@ -499,7 +510,10 @@ class PermutationLanguageModeling(MaskSequence):
                         # Sample a starting point `start_index`
                         # from the interval `[cur_len, cur_len + context_length - span_length]`
                         start_index = (
-                            cur_len + torch.randint(context_length - span_length + 1, (1,)).item()
+                            cur_len
+                            + torch.randint(  # type: ignore
+                                context_length - span_length + 1, (1,)
+                            ).item()
                         )
                         if start_index < max_len:
                             # Mask the span of non-padded items
@@ -526,7 +540,7 @@ class PermutationLanguageModeling(MaskSequence):
             labels = torch.where(mask_labels, item_ids, torch.full_like(item_ids, self.padding_idx))
 
             # If a sequence has only masked labels, unmasks one of the labels
-            sequences_with_only_labels = mask_labels.sum(axis=1) == non_padded_mask.sum(axis=1)
+            sequences_with_only_labels = mask_labels.sum(dim=1) == non_padded_mask.sum(dim=1)
             sampled_labels_to_unmask = torch.multinomial(
                 mask_labels.float(), num_samples=1
             ).squeeze()
@@ -566,7 +580,7 @@ class PermutationLanguageModeling(MaskSequence):
         # During evaluation always mask the last item of the session
         else:
             if self.eval_on_last_item_seq_only:
-                last_item_sessions = non_padded_mask.sum(axis=1) - 1
+                last_item_sessions = non_padded_mask.sum(dim=1) - 1
                 labels[rows_ids, last_item_sessions] = item_ids[rows_ids, last_item_sessions]
                 mask_labels = labels != self.padding_idx
                 perm_mask = torch.zeros(
@@ -590,7 +604,8 @@ class PermutationLanguageModeling(MaskSequence):
 
             else:
                 # predict all next items
-                mask_labels, labels = self.predict_all(item_ids)
+                masking_info = self.predict_all(item_ids)
+                mask_labels, labels = masking_info.schema, masking_info.targets
                 # targets:  the i-th predict corresponds to the i-th item in the sequence.
                 target_mapping = torch.nn.functional.one_hot(
                     torch.arange(0, labels.size(1), dtype=torch.long), num_classes=labels.size(1)
@@ -612,19 +627,18 @@ class PermutationLanguageModeling(MaskSequence):
                     mask_up.expand((labels.size(0), labels.size(1), labels.size(1))) + perm_mask
                 )
                 perm_mask = (temp_perm > 0).long()
+
         return mask_labels, labels, target_mapping, perm_mask
 
-    def compute_masked_targets(
-        self, item_ids: torch.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets, torch.tensor, torch.tensor]:
+    def compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
         (
             self.mask_schema,
             self.masked_targets,
             self.target_mapping,
             self.perm_mask,
-        ) = self._compute_masked_targets(item_ids, training=training)
+        ) = self._compute_masked_targets_extended(item_ids, training=training)
 
-        return self.mask_schema, self.masked_targets
+        return MaskingInfo(self.mask_schema, self.masked_targets)
 
     def transformer_required_arguments(self) -> Dict[str, Any]:
         return dict(target_mapping=self.target_mapping, perm_mask=self.perm_mask)

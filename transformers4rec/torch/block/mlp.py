@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from typing import List, Optional
 
 import torch
 
@@ -71,17 +72,17 @@ class DenseBlock(SequentialBlock):
         out_features: int,
         activation=torch.nn.ReLU,
         use_bias: bool = True,
-        dropout=None,
+        dropout: Optional[float] = None,
         normalization=None,
     ):
-        args = [torch.nn.Linear(in_features, out_features, bias=use_bias)]
+        args: List[torch.nn.Module] = [torch.nn.Linear(in_features, out_features, bias=use_bias)]
         if activation:
             args.append(activation(inplace=True))
         if normalization:
             if normalization == "batch_norm":
                 args.append(torch.nn.BatchNorm1d(out_features))
         if dropout:
-            args.append(torch.nn.Dropout(self.dropout))
+            args.append(torch.nn.Dropout(dropout))
 
         super().__init__(*args)
         self._input_shape = input_shape

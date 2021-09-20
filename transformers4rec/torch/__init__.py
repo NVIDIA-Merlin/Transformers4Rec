@@ -57,7 +57,7 @@ from .tabular.aggregation import (
     ElementwiseSumItemMulti,
     StackFeatures,
 )
-from .tabular.tabular import (
+from .tabular.base import (
     AsTabular,
     FilterFeatures,
     MergeTabular,

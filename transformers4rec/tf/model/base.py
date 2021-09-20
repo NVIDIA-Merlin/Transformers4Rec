@@ -79,7 +79,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
         super().__init__(name=name, **kwargs)
         self.target_name = target_name
         self.sequence_summary = TFSequenceSummary(
-            SimpleNamespace(summary_type=summary_type)
+            SimpleNamespace(summary_type=summary_type)  # type: ignore
         )  # noqa
         self.pre = pre
         self.task_block = task_block
@@ -127,7 +127,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
     def child_name(self, name):
         return name_fn(self.task_name, name)
 
-    def compute_loss(
+    def compute_loss(  # type: ignore
         self,
         inputs,
         targets,
@@ -272,6 +272,8 @@ class Head(tf.keras.layers.Layer):
         inputs: Optional[TabularFeaturesType] = None,
         **kwargs,
     ) -> "Head":
+        task_weight_dict = task_weight_dict or {}
+
         tasks: List[PredictionTask] = []
         task_weights = []
 
@@ -500,7 +502,7 @@ class Model(BaseModel):
 
         return outputs
 
-    def compute_loss(
+    def compute_loss(  # type: ignore
         self, inputs, targets, training: bool = False, compute_metrics=True, **kwargs
     ) -> tf.Tensor:
         losses = tuple(

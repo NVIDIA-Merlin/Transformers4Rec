@@ -14,14 +14,15 @@
 # limitations under the License.
 #
 
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Type, Union
 
 from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.schema.tag import TagsType
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular.tabular import (
+from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,
     AsTabular,
     MergeTabular,
@@ -56,9 +57,9 @@ class TabularFeatures(MergeTabular):
     {tabular_module_parameters}
     """
 
-    CONTINUOUS_MODULE_CLASS = ContinuousFeatures
-    EMBEDDING_MODULE_CLASS = EmbeddingFeatures
-    SOFT_EMBEDDING_MODULE_CLASS = SoftEmbeddingFeatures
+    CONTINUOUS_MODULE_CLASS: Type[TabularModule] = ContinuousFeatures
+    EMBEDDING_MODULE_CLASS: Type[TabularModule] = EmbeddingFeatures
+    SOFT_EMBEDDING_MODULE_CLASS: Type[TabularModule] = SoftEmbeddingFeatures
 
     def __init__(
         self,
@@ -108,16 +109,16 @@ class TabularFeatures(MergeTabular):
             continuous, MLPBlock(mlp_layers_dims), AsTabular("continuous_projection")
         )
 
-        self.to_merge["continuous_module"] = continuous
+        self.to_merge["continuous_module"] = continuous  # type: ignore
 
         return self
 
     @classmethod
-    def from_schema(
+    def from_schema(  # type: ignore
         cls,
         schema: Schema,
-        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
-        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
+        continuous_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,

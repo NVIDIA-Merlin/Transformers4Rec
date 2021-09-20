@@ -146,7 +146,7 @@ class NextItemPredictionTask(PredictionTask):
         self,
         loss: torch.nn.Module = torch.nn.NLLLoss(ignore_index=0),
         metrics: Iterable[tm.Metric] = DEFAULT_METRICS,
-        task_block: Optional[torch.nn.Module] = None,
+        task_block: Optional[BlockType] = None,
         task_name: str = "next-item",
         weight_tying: bool = False,
         softmax_temperature: float = 1,
@@ -215,7 +215,7 @@ class NextItemPredictionTask(PredictionTask):
         x = inputs.float()
 
         if self.task_block:
-            x = self.task_block(x)
+            x = self.task_block(x)  # type: ignore
 
         # Retrieve labels either from masking or input module
         if self.masking:
@@ -230,7 +230,7 @@ class NextItemPredictionTask(PredictionTask):
         x = self.remove_pad_3d(x, non_pad_mask)
 
         # Compute predictions probs
-        x = self.pre(x)
+        x = self.pre(x)  # type: ignore
 
         # prepare outputs for HF trainer
         if self.hf_format:
@@ -255,7 +255,7 @@ class NextItemPredictionTask(PredictionTask):
         out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
         return out_tensor
 
-    def calculate_metrics(
+    def calculate_metrics(  # type: ignore
         self, predictions, targets, mode="val", forward=True, **kwargs
     ) -> Dict[str, torch.Tensor]:
         if isinstance(targets, dict) and self.target_name:
@@ -314,7 +314,7 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
                 self.item_embedding_table,
                 self.softmax_temperature,
             ),
-            [None, self.target_dim],
+            [-1, self.target_dim],
         )
 
 
@@ -360,13 +360,15 @@ class _NextItemPredictionTask(torch.nn.Module):
             self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.target_dim))
             torch.nn.init.zeros_(self.output_layer_bias)
         else:
-            self.output_layer = torch.nn.Linear(self.input_size[-1], self.target_dim)
+            self.output_layer = torch.nn.Linear(
+                self.input_size[-1], self.target_dim  # type: ignore
+            )
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         if self.weight_tying:
             logits = torch.nn.functional.linear(
                 inputs,
-                weight=self.item_embedding_table.weight,
+                weight=self.item_embedding_table.weight,  # type: ignore
                 bias=self.output_layer_bias,
             )
         else:
