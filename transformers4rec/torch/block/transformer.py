@@ -21,7 +21,7 @@ import torch
 import transformers
 from transformers import GPT2Model, PretrainedConfig, PreTrainedModel
 
-from ...config.transformer import transformer_registry
+from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
 from .base import BlockBase
 
@@ -79,7 +79,9 @@ class TransformerBlock(BlockBase):
         super().__init__()
 
         self.transformer: PreTrainedModel
-        if isinstance(transformer, PretrainedConfig):
+        if isinstance(transformer, T4RecConfig):
+            self.transformer = transformer.to_huggingface_torch_model()
+        elif isinstance(transformer, PretrainedConfig):
             model_cls = transformers.MODEL_MAPPING[transformer.__class__]
             self.transformer = model_cls(transformer)
         else:

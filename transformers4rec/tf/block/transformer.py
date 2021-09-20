@@ -21,7 +21,7 @@ import tensorflow as tf
 import transformers
 from transformers import PretrainedConfig, TFPreTrainedModel
 
-from ...config.transformer import transformer_registry
+from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
 from .base import Block
 
@@ -66,7 +66,9 @@ class TransformerBlock(Block):
         super().__init__(**kwargs)
 
         self.transformer: TFPreTrainedModel
-        if isinstance(transformer, PretrainedConfig):
+        if isinstance(transformer, T4RecConfig):
+            self.transformer = transformer.to_huggingface_tf_model()
+        elif isinstance(transformer, PretrainedConfig):
             model_cls = transformers.TF_MODEL_MAPPING[transformer.__class__]
             self.transformer = model_cls(transformer)
         else:

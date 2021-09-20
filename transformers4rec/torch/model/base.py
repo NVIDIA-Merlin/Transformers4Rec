@@ -126,7 +126,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
                 self.task_block = copy.deepcopy(self.task_block)
             else:
                 self.task_block = self.task_block.build(input_size)
-            pre_input_size = self.task_block.output_size()
+            pre_input_size = self.task_block.output_size()  # type: ignore
 
         if self.pre:
             if isinstance(self.pre, torch.nn.Module):
