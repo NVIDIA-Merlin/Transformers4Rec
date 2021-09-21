@@ -48,7 +48,7 @@ You need to pull the `NVIDIA Merlin PyTorch training container <https://ngc.nvid
 Follow the steps in this `README.md <https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/README.md>`_ for instructions on Docker launch for both training and inference containers.
 
 Notebooks
----------
+=========
 
 .. toctree::
    :maxdepth: 1
