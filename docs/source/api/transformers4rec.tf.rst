@@ -25,6 +25,14 @@ transformers4rec.tf.masking module
    :undoc-members:
    :show-inheritance:
 
+transformers4rec.tf.ranking\_metric module
+------------------------------------------
+
+.. automodule:: transformers4rec.tf.ranking_metric
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 transformers4rec.tf.typing module
 ---------------------------------
 
