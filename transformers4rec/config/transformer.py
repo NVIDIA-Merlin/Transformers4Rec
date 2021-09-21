@@ -288,3 +288,105 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
             vocab_size=1,
             **kwargs
         )
+
+
+@transformer_registry.register("bert")
+class BertConfig(T4RecConfig, transformers.BertConfig):
+    @classmethod
+    def build(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
+        return cls(
+            hidden_size=d_model,
+            num_hidden_layers=n_layer,
+            num_attention_heads=n_head,
+            hidden_act=hidden_act,
+            initializer_range=initializer_range,
+            layer_norm_eps=layer_norm_eps,
+            dropout=dropout,
+            pad_token_id=pad_token,
+            output_attentions=log_attention_weights,
+            vocab_size=1,
+            **kwargs
+        )
+
+
+@transformer_registry.register("roberta")
+class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
+    @classmethod
+    def build(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
+        return cls(
+            hidden_size=d_model,
+            num_hidden_layers=n_layer,
+            num_attention_heads=n_head,
+            hidden_act=hidden_act,
+            initializer_range=initializer_range,
+            layer_norm_eps=layer_norm_eps,
+            dropout=dropout,
+            pad_token_id=pad_token,
+            output_attentions=log_attention_weights,
+            vocab_size=1,
+            **kwargs
+        )
+
+
+@transformer_registry.register("transfo-xl")
+class TransfoXLConfig(T4RecConfig, transformers.TransfoXLConfig):
+    @classmethod
+    def build(
+        cls,
+        d_model,
+        n_head,
+        n_layer,
+        total_seq_length,
+        hidden_act="gelu",
+        initializer_range=0.01,
+        layer_norm_eps=0.03,
+        dropout=0.3,
+        pad_token=0,
+        log_attention_weights=True,
+        **kwargs
+    ):
+        return cls(
+            d_model=d_model,
+            d_embed=d_model,
+            n_layer=n_layer,
+            n_head=n_head,
+            d_inner=d_model * 4,
+            hidden_act=hidden_act,
+            untie_r=True,
+            attn_type=0,
+            initializer_range=initializer_range,
+            layer_norm_eps=layer_norm_eps,
+            dropout=dropout,
+            pad_token_id=pad_token,
+            output_attentions=log_attention_weights,
+            vocab_size=1,
+            mem_len=1,
+            div_val=1,
+            **kwargs
+        )
