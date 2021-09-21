@@ -32,7 +32,7 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 
 
 ## Quick tour
-To train a model on a dataset, the first step is to provide the [schema](TODO/add/link) and use this to construct an input-module.
+To train a model on a dataset, the first step is to provide the [schema](https://nvidia-merlin.github.io/Transformers4Rec/main/api/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema) and use this to construct an input-module.
 For session-based recommendation problems you typically want to use [TabularSequenceFeatures](http://localhost:8000/api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures), which 
 merges context features with sequential features. Next, we need to provide the prediction-task(s) 
 (the tasks we provide out of the box can be found [here](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.model.html#module-transformers4rec.torch.model.prediction_task)).
@@ -140,4 +140,4 @@ To use these Docker containers, you'll first need to install the [NVIDIA Contain
 If you'd like to contribute to the library directly, see the [CONTRIBUTING.md](CONTRIBUTING.md). We're particularly interested in contributions or feature requests for our feature engineering and preprocessing operations. To further advance our Merlin Roadmap, we encourage you to share all the details regarding your recommender system pipeline in this [survey](https://developer.nvidia.com/merlin-devzone-survey).
 
 If you're interested in learning more about how NVTabular works, see
-[Transformers4Rec documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/Introduction.html). We also have the [API documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/api/index.html) that outlines  specifics of the available modules and classes within the Transformers4Rec library.
+[Transformers4Rec documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/getting_started.html). We also have the [API documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/api/modules.html) that outlines  specifics of the available modules and classes within the Transformers4Rec library.
