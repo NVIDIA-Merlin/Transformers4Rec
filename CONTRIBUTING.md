@@ -5,7 +5,7 @@ into three categories:
 1. You want to report a bug, feature request, or documentation issue
     - File an [issue](https://github.com/NVIDIA-Merlin/Transformers4Rec/issues/new/choose)
     describing what you encountered or what you want to see changed.
-    - The NVTabular team will evaluate the issues and triage them, scheduling
+    - The NVIDIA-Merlin team will evaluate the issues and triage them, scheduling
     them for a release. If you believe the issue needs priority attention
     comment on the issue to notify the team.
 2. You want to propose a new Feature and implement it
