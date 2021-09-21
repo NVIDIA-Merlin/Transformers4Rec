@@ -1,4 +1,4 @@
-# Transformers4Rec
+## [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec/) | [Documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/)
 <p align="left">
     <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml">
         <img alt="Build" src="https://img.shields.io/github/checks-status/NVIDIA-Merlin/Transformers4Rec/main">
