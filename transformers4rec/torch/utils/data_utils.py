@@ -37,7 +37,9 @@ class T4RecDataLoader(ABC):
     """
 
     @classmethod
-    def from_schema(self, schema: Schema):
+    def from_schema(
+        self, schema: Schema, paths_or_dataset, batch_size, max_sequence_length, **kwargs
+    ):
         # Build the data-loader from the schema
         raise NotImplementedError
 

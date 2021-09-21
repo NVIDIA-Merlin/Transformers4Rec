@@ -18,14 +18,14 @@ import inspect
 from typing import Any, Dict, Optional, Type, Union
 
 import tensorflow as tf
-from keras.utils.generic_utils import register_keras_serializable
+import transformers
 from transformers import PretrainedConfig, TFPreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
 from .base import Block
 
-TransformerBody = Union[TFPreTrainedModel, T4RecConfig]
+TransformerBody = Union[TFPreTrainedModel, PretrainedConfig]
 
 
 class TransformerPrepare(tf.keras.layers.Layer):
@@ -38,7 +38,7 @@ class TransformerPrepare(tf.keras.layers.Layer):
         raise NotImplementedError()
 
 
-@register_keras_serializable(package="transformers4rec")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class TransformerBlock(Block):
     """
     Class to support HF Transformers for session-based and sequential-based recommendation models.
@@ -51,7 +51,7 @@ class TransformerBlock(Block):
         Needed when masking is applied on the inputs.
     """
 
-    TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {}
+    TRANSFORMER_TO_PREPARE: Dict[Type[TFPreTrainedModel], Type[TransformerPrepare]] = {}
 
     # TODO: Add {GPT2Model: GPT2Prepare}
 
@@ -65,10 +65,14 @@ class TransformerBlock(Block):
     ):
         super().__init__(**kwargs)
 
+        self.transformer: TFPreTrainedModel
         if isinstance(transformer, T4RecConfig):
-            transformer = transformer.to_huggingface_tf_model()
-
-        self.transformer = transformer
+            self.transformer = transformer.to_huggingface_tf_model()
+        elif isinstance(transformer, PretrainedConfig):
+            model_cls = transformers.TF_MODEL_MAPPING[transformer.__class__]
+            self.transformer = model_cls(transformer)
+        else:
+            self.transformer = transformer
 
         if masking:
             required = list(masking.transformer_required_arguments().keys())
@@ -84,9 +88,9 @@ class TransformerBlock(Block):
                 )
 
         self.masking = masking
-        self.prepare_module = prepare_module
-        if not prepare_module and self.transformer in self.TRANSFORMER_TO_PREPARE:
-            prepare_module = self.TRANSFORMER_TO_PREPARE[self.transformer]
+        self.prepare_module: Optional[TransformerPrepare] = None
+        if not prepare_module and type(self.transformer) in self.TRANSFORMER_TO_PREPARE:
+            prepare_module = self.TRANSFORMER_TO_PREPARE[type(self.transformer)]
         if prepare_module:
             self.prepare_module = prepare_module(transformer, masking)
         self.output_fn = output_fn
@@ -118,14 +122,14 @@ class TransformerBlock(Block):
         total_seq_length: int
             The maximum sequence length
         """
-        transformer = transformer_registry.parse(transformer).build(
+        _transformer: TFPreTrainedModel = transformer_registry.parse(transformer).build(
             d_model=d_model,
             n_head=n_head,
             n_layer=n_layer,
             total_seq_length=total_seq_length,
         )
 
-        return cls(transformer, masking)
+        return cls(_transformer, masking=masking)
 
     def call(self, inputs_embeds: tf.Tensor, **kwargs):
         """

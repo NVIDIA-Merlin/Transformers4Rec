@@ -1,3 +1,5 @@
+# type: ignore
+
 #
 # Copyright (c) 2021, NVIDIA CORPORATION.
 #
@@ -42,7 +44,7 @@ from transformers.utils import logging
 from merlin_standard_lib import Schema
 
 from ..config.trainer import T4RecTrainingArguments
-from .model.model import Model
+from .model.base import Model
 from .utils.data_utils import T4RecDataLoader
 
 logger = logging.get_logger(__name__)

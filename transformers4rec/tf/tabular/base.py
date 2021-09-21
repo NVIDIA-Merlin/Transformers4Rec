@@ -36,7 +36,9 @@ tabular_transformation_registry: Registry = Registry.class_registry("tf.tabular_
 tabular_aggregation_registry: Registry = Registry.class_registry("tf.tabular_aggregations")
 
 
-class TabularTransformation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC):
+class TabularTransformation(
+    SchemaMixin, tf.keras.layers.Layer, RegistryMixin["TabularTransformation"], ABC
+):
     """Transformation that takes in `TabularData` and outputs `TabularData`."""
 
     def call(self, inputs: TabularData, **kwargs) -> TabularData:
@@ -47,7 +49,9 @@ class TabularTransformation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, A
         return tabular_transformation_registry
 
 
-class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC):
+class TabularAggregation(
+    SchemaMixin, tf.keras.layers.Layer, RegistryMixin["TabularAggregation"], ABC
+):
     """Aggregation of `TabularData` that outputs a single `Tensor`"""
 
     def call(self, inputs: TabularData, **kwargs) -> tf.Tensor:
@@ -110,9 +114,8 @@ class TabularAggregation(SchemaMixin, tf.keras.layers.Layer, RegistryMixin, ABC)
             return (batch_size, agg_dim)
 
 
-TabularTransformationType = Union[
-    str, TabularTransformation, List[str], List[TabularTransformation]
-]
+TabularTransformationType = Union[str, TabularTransformation]
+TabularTransformationsType = Union[TabularTransformationType, List[TabularTransformationType]]
 TabularAggregationType = Union[str, TabularAggregation]
 
 
@@ -126,7 +129,7 @@ class SequentialTabularTransformations(SequentialBlock):
         transformations that are passed in here will be called in order.
     """
 
-    def __init__(self, transformation: TabularTransformationType):
+    def __init__(self, transformation: TabularTransformationsType):
         if len(transformation) == 1 and isinstance(transformation, list):
             transformation = transformation[0]
         if not isinstance(transformation, (list, tuple)):
@@ -182,12 +185,12 @@ class TabularBlock(Block):
 
     def __init__(
         self,
-        pre: Optional[TabularTransformationType] = None,
-        post: Optional[TabularTransformationType] = None,
+        pre: Optional[TabularTransformationsType] = None,
+        post: Optional[TabularTransformationsType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
         name: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(name=name, **kwargs)
         self.input_size = None
@@ -226,11 +229,11 @@ class TabularBlock(Block):
     def from_features(
         cls,
         features: List[str],
-        pre: Optional[TabularTransformationType] = None,
-        post: Optional[TabularTransformationType] = None,
+        pre: Optional[TabularTransformationsType] = None,
+        post: Optional[TabularTransformationsType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         name=None,
-        **kwargs
+        **kwargs,
     ) -> "TabularBlock":
         """
         Initializes a TabularLayer instance where the contents of features will be filtered out
@@ -246,12 +249,12 @@ class TabularBlock(Block):
         -------
         TabularModule
         """
-        pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)
+        pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)  # type: ignore
 
         return cls(pre=pre, post=post, aggregation=aggregation, name=name, **kwargs)
 
     def pre_call(
-        self, inputs: TabularData, transformations: Optional[TabularAggregationType] = None
+        self, inputs: TabularData, transformations: Optional[TabularTransformationsType] = None
     ) -> TabularData:
         """Method that's typically called before the forward method for pre-processing.
 
@@ -259,7 +262,7 @@ class TabularBlock(Block):
         ----------
         inputs: TabularData
              input-data, typically the output of the forward method.
-        transformations: TabularAggregationType, optional
+        transformations: TabularTransformationsType, optional
 
         Returns
         -------
@@ -269,13 +272,13 @@ class TabularBlock(Block):
             inputs, transformations=transformations or self.pre
         )
 
-    def call(self, x: TabularData, *args, **kwargs) -> TabularData:
-        return x
+    def call(self, inputs: TabularData, **kwargs) -> TabularData:
+        return inputs
 
     def post_call(
         self,
         inputs: TabularData,
-        transformations: Optional[TabularTransformationType] = None,
+        transformations: Optional[TabularTransformationsType] = None,
         merge_with: Union["TabularBlock", List["TabularBlock"]] = None,
         aggregation: Optional[TabularAggregationType] = None,
     ) -> TensorOrTabularData:
@@ -296,9 +299,10 @@ class TabularBlock(Block):
         -------
         TensorOrTabularData (Tensor when aggregation is set, else TabularData)
         """
+        _aggregation: Optional[TabularAggregation] = None
         if aggregation:
-            aggregation = TabularAggregation.parse(aggregation)
-        aggregation = aggregation or getattr(self, "aggregation", None)
+            _aggregation = TabularAggregation.parse(aggregation)
+        _aggregation = _aggregation or getattr(self, "aggregation", None)
 
         outputs = inputs
         if merge_with:
@@ -312,22 +316,22 @@ class TabularBlock(Block):
             outputs, transformations=transformations or self.post
         )
 
-        if aggregation:
+        if _aggregation:
             schema = getattr(self, "schema", None)
-            aggregation.set_schema(schema)
-            return aggregation(outputs)
+            _aggregation.set_schema(schema)
+            return _aggregation(outputs)
 
         return outputs
 
-    def __call__(
+    def __call__(  # type: ignore
         self,
         inputs: TabularData,
         *args,
-        pre: Optional[TabularTransformationType] = None,
-        post: Optional[TabularTransformationType] = None,
+        pre: Optional[TabularTransformationsType] = None,
+        post: Optional[TabularTransformationsType] = None,
         merge_with: Union["TabularBlock", List["TabularBlock"]] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        **kwargs
+        **kwargs,
     ) -> TensorOrTabularData:
         """We overwrite the call method in order to be able to do pre- and post-processing.
 
@@ -335,10 +339,10 @@ class TabularBlock(Block):
         ----------
         inputs: TabularData
             Input TabularData.
-        pre: TabularTransformationType, optional
+        pre: TabularTransformationsType, optional
             Transformations to apply before calling the forward method. If pre is None, this method
             will check if `self.pre` is set.
-        post: TabularTransformationType, optional
+        post: TabularTransformationsType, optional
             Transformations to apply after calling the forward method. If post is None, this method
             will check if `self.post` is set.
         merge_with: Union[TabularModule, List[TabularModule]]
@@ -365,7 +369,7 @@ class TabularBlock(Block):
     def _maybe_apply_transformations(
         self,
         inputs: TabularData,
-        transformations: Optional[TabularTransformationType] = None,
+        transformations: Optional[TabularTransformationsType] = None,
     ) -> TabularData:
         """Apply transformations to the inputs if these are defined.
 
@@ -439,13 +443,13 @@ class TabularBlock(Block):
 
         return super().set_schema(schema)
 
-    def set_pre(
-        self, value: Union[str, TabularTransformation, List[str], List[TabularTransformation]]
-    ):
-        if value and not isinstance(value, tf.keras.layers.Layer):
+    def set_pre(self, value: Optional[TabularTransformationsType]):
+        if value and isinstance(value, SequentialTabularTransformations):
+            self._pre: Optional[SequentialTabularTransformations] = value
+        elif value and isinstance(value, (tf.keras.layers.Layer, list)):
             self._pre = SequentialTabularTransformations(value)
         else:
-            self._pre = value
+            self._pre = None
 
     @property
     def pre(self) -> Optional[SequentialTabularTransformations]:
@@ -467,13 +471,13 @@ class TabularBlock(Block):
         """
         return self._post
 
-    def set_post(
-        self, value: Union[str, TabularTransformation, List[str], List[TabularTransformation]]
-    ):
-        if value and not isinstance(value, tf.keras.layers.Layer):
+    def set_post(self, value: Optional[TabularTransformationsType]):
+        if value and isinstance(value, SequentialTabularTransformations):
+            self._post: Optional[SequentialTabularTransformations] = value
+        elif value and isinstance(value, (tf.keras.layers.Layer, list)):
             self._post = SequentialTabularTransformations(value)
         else:
-            self._post = value
+            self._post = None
 
     @property
     def aggregation(self) -> Optional[TabularAggregation]:
@@ -493,7 +497,7 @@ class TabularBlock(Block):
         value
         """
         if value:
-            self._aggregation = TabularAggregation.parse(value)
+            self._aggregation: Optional[TabularAggregation] = TabularAggregation.parse(value)
         else:
             self._aggregation = None
 
@@ -586,27 +590,43 @@ class MergeTabular(TabularBlock):
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
         name: Optional[str] = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             pre=pre, post=post, aggregation=aggregation, schema=schema, name=name, **kwargs
         )
+        self.to_merge: Union[List[TabularBlock], Dict[str, TabularBlock]]
         if all(isinstance(x, dict) for x in blocks_to_merge):
-            blocks_to_merge = reduce(lambda a, b: dict(a, **b), blocks_to_merge)
-            self.to_merge = blocks_to_merge
+            to_merge: Dict[str, TabularBlock] = reduce(
+                lambda a, b: dict(a, **b), blocks_to_merge
+            )  # type: ignore
+            self.to_merge = to_merge
+        elif all(isinstance(x, tf.keras.layers.Layer) for x in blocks_to_merge):
+            self.to_merge = list(blocks_to_merge)  # type: ignore
         else:
-            self.to_merge = list(blocks_to_merge)
+            raise ValueError(
+                "Please provide one or multiple layer's to merge or "
+                f"dictionaries of layer. got: {blocks_to_merge}"
+            )
 
         # Merge schemas if necessary.
         if not schema and all(getattr(m, "schema", False) for m in self.merge_values):
-            self.set_schema(reduce(lambda a, b: a + b, [m.schema for m in self.merge_values]))
+            s = reduce(lambda a, b: a + b, [m.schema for m in self.merge_values])  # type: ignore
+            self.set_schema(s)
 
     @property
-    def merge_values(self):
+    def merge_values(self) -> List[tf.keras.layers.Layer]:
         if isinstance(self.to_merge, dict):
             return list(self.to_merge.values())
 
         return self.to_merge
+
+    @property
+    def to_merge_dict(self) -> Dict[str, tf.keras.layers.Layer]:
+        if isinstance(self.to_merge, dict):
+            return self.to_merge
+
+        return {str(i): m for i, m in enumerate(self.to_merge)}
 
     def call(self, inputs, **kwargs):
         assert isinstance(inputs, dict), "Inputs needs to be a dict"

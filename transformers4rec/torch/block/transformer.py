@@ -18,13 +18,14 @@ import inspect
 from typing import Any, Dict, Optional, Type, Union
 
 import torch
+import transformers
 from transformers import GPT2Model, PretrainedConfig, PreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
 from .base import BlockBase
 
-TransformerBody = Union[PreTrainedModel, T4RecConfig]
+TransformerBody = Union[PreTrainedModel, PretrainedConfig]
 
 
 class TransformerPrepare(torch.nn.Module):
@@ -49,7 +50,7 @@ class GPT2Prepare(TransformerPrepare):
             .repeat(self.transformer.config.num_hidden_layers, 1, 1, 1, 1)
         )
 
-        return {"input_embeds": inputs_embeds, "head_mask": head_mask}
+        return {"inputs_embeds": inputs_embeds, "head_mask": head_mask}
 
 
 class TransformerBlock(BlockBase):
@@ -64,7 +65,7 @@ class TransformerBlock(BlockBase):
         Needed when masking is applied on the inputs.
     """
 
-    TRANSFORMER_TO_PREPARE: Dict[PretrainedConfig, Type[TransformerPrepare]] = {
+    TRANSFORMER_TO_PREPARE: Dict[Type[PreTrainedModel], Type[TransformerPrepare]] = {
         GPT2Model: GPT2Prepare
     }
 
@@ -77,10 +78,14 @@ class TransformerBlock(BlockBase):
     ):
         super().__init__()
 
+        self.transformer: PreTrainedModel
         if isinstance(transformer, T4RecConfig):
-            transformer = transformer.to_huggingface_torch_model()
-
-        self.transformer = transformer
+            self.transformer = transformer.to_huggingface_torch_model()
+        elif isinstance(transformer, PretrainedConfig):
+            model_cls = transformers.MODEL_MAPPING[transformer.__class__]
+            self.transformer = model_cls(transformer)
+        else:
+            self.transformer = transformer
 
         if masking:
             required = list(masking.transformer_required_arguments().keys())
@@ -96,11 +101,11 @@ class TransformerBlock(BlockBase):
                 )
 
         self.masking = masking
-        self.prepare_module = prepare_module
-        if not prepare_module and self.transformer in self.TRANSFORMER_TO_PREPARE:
-            prepare_module = self.TRANSFORMER_TO_PREPARE[self.transformer]
+        self.prepare_module: Optional[TransformerPrepare] = None
+        if not prepare_module and type(self.transformer) in self.TRANSFORMER_TO_PREPARE:
+            prepare_module = self.TRANSFORMER_TO_PREPARE[type(self.transformer)]
         if prepare_module:
-            self.prepare_module = prepare_module(transformer, masking)
+            self.prepare_module = prepare_module(self.transformer, self.masking)
         self.output_fn = output_fn
 
     @classmethod
@@ -130,14 +135,14 @@ class TransformerBlock(BlockBase):
         total_seq_length: int
             The maximum sequence length
         """
-        transformer = transformer_registry.parse(transformer).build(
+        _transformer = transformer_registry.parse(transformer).build(
             d_model=d_model,
             n_head=n_head,
             n_layer=n_layer,
             total_seq_length=total_seq_length,
         )
 
-        return cls(transformer, masking)
+        return cls(_transformer, masking)
 
     def forward(self, inputs_embeds, **kwargs):
         """

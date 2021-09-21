@@ -25,16 +25,14 @@ from torch.nn import Module
 
 from merlin_standard_lib.utils.misc_utils import filter_kwargs
 
-from ..typing import Head, PredictionTask
 from ..utils import torch_utils
 
 LOG = logging.getLogger("transformers4rec")
 
 
 class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCMeta):
-    def to_model(self, prediction_task_or_head: Union[PredictionTask, Head], inputs=None, **kwargs):
-        from ..model.head import Head, PredictionTask
-        from ..model.model import Model
+    def to_model(self, prediction_task_or_head, inputs=None, **kwargs):
+        from ..model.base import Head, Model, PredictionTask
 
         if isinstance(prediction_task_or_head, PredictionTask):
             head = prediction_task_or_head.to_head(self, inputs=inputs, **kwargs)
@@ -49,7 +47,7 @@ class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCM
         return Model(head, **kwargs)
 
     def as_tabular(self, name=None):
-        from ..tabular.tabular import AsTabular
+        from ..tabular.base import AsTabular
 
         if not name:
             name = self.name
@@ -115,8 +113,8 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         if isinstance(first, (TabularSequenceFeatures, TabularFeatures)):
             return first
 
-    def add_module(self, name: str, module: Optional[Union[Module, str]]) -> None:
-        from ..tabular.tabular import FilterFeatures
+    def add_module(self, name: str, module: Optional[Module]) -> None:
+        from ..tabular.base import FilterFeatures
 
         if isinstance(module, list):
             module = FilterFeatures(module)
@@ -175,7 +173,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return SequentialBlock(self, AsTabular(name))
 
     def __add__(self, other):
-        from ..tabular.tabular import merge_tabular
+        from ..tabular.base import merge_tabular
 
         return merge_tabular(self, other)
 
@@ -234,7 +232,7 @@ class BuildableBlock(abc.ABC):
 
 
 def right_shift_block(self, other):
-    from ..tabular.tabular import FilterFeatures
+    from ..tabular.base import FilterFeatures
 
     if isinstance(other, list):
         left_side = [FilterFeatures(other)]
@@ -274,3 +272,7 @@ def right_shift_block(self, other):
         out.to("cuda")
 
     return out
+
+
+BlockType = Union[BlockBase, BuildableBlock]
+BlockOrModule = Union[BlockBase, BuildableBlock, torch.nn.Module]

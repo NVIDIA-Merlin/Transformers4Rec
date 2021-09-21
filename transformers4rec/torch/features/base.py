@@ -16,7 +16,7 @@
 
 from abc import ABC
 
-from ..tabular.tabular import TabularBlock
+from ..tabular.base import TabularBlock
 
 
 class InputBlock(TabularBlock, ABC):

@@ -64,7 +64,7 @@ def generate_session_interactions(
     )
     >>> generate_session_interactions(100000, s, 30, 5, 'gpu')
     """
-    from transformers4rec.data.preprocessing import session_aggregator
+    from transformers4rec.data.preprocessing import session_aggregator  # type: ignore
 
     data = generate_item_interactions(num_interactions, schema)
     data = session_aggregator(

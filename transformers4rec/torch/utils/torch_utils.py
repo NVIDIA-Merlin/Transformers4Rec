@@ -88,7 +88,7 @@ class MetricsMixin:
         mode: str = "val",
         forward=True,
         **kwargs,
-    ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+    ) -> Dict[str, torch.Tensor]:
         """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
 
         The state of each metric can be retrieved by calling the `compute_metrics` method.

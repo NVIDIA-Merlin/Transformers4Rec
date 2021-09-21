@@ -43,21 +43,15 @@ from .features.embedding import EmbeddingFeatures, FeatureConfig, TableConfig
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
 from .features.text import TextEmbeddingFeaturesWithTransformers
-from .model.head import (
-    BinaryClassificationTask,
-    Head,
-    NextItemPredictionTask,
-    PredictionTask,
-    RegressionTask,
-)
-from .model.model import Model
+from .model.base import Head, Model, PredictionTask
+from .model.prediction_task import BinaryClassificationTask, NextItemPredictionTask, RegressionTask
 from .tabular.aggregation import (
     ConcatFeatures,
     ElementwiseSum,
     ElementwiseSumItemMulti,
     StackFeatures,
 )
-from .tabular.tabular import AsTabular, FilterFeatures, MergeTabular, TabularBlock
+from .tabular.base import AsTabular, FilterFeatures, MergeTabular, TabularBlock
 from .tabular.transformations import AsDenseFeatures, AsSparseFeatures, StochasticSwapNoise
 from .utils import repr_utils
 
