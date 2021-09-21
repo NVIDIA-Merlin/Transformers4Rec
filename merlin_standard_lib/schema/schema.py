@@ -409,7 +409,7 @@ class Schema(_Schema):
     def add(self, other, allow_overlap=True) -> "Schema":
         if isinstance(other, str):
             other = Schema.create([other])
-        elif isinstance(other, collections.abc.Sequence):
+        elif isinstance(other, collections.abc.Sequence):  # type: ignore
             other = Schema(other)
 
         if not allow_overlap:

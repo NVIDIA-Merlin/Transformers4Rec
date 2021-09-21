@@ -50,8 +50,8 @@ def proto_text_to_better_proto(
 ) -> ProtoMessageType:
     proto_text = path_proto_text
     if os.path.isfile(proto_text):
-        with open(path_proto_text, "rb") as f:
-            proto_text = str(f.read())
+        with open(path_proto_text, "r") as f:
+            proto_text = f.read()
 
     proto = text_format.Parse(proto_text, message)
 
