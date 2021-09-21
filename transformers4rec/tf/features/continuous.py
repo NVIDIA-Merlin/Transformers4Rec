@@ -21,8 +21,12 @@ import tensorflow as tf
 from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, FilterFeatures
-from ..typing import TabularAggregationType, TabularTransformationType
+from ..tabular.base import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    FilterFeatures,
+    TabularAggregationType,
+    TabularTransformationType,
+)
 from .base import InputBlock
 
 

@@ -18,8 +18,9 @@ from typing import Dict, Optional
 
 import torch
 
-from ..typing import FeatureConfig, TableConfig, TabularData, TensorOrTabularData
-from .tabular import TabularTransformation, tabular_transformation_registry
+from ..features.embedding import FeatureConfig, TableConfig
+from ..typing import TabularData, TensorOrTabularData
+from .base import TabularTransformation, tabular_transformation_registry
 
 
 @tabular_transformation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")
@@ -35,7 +36,7 @@ class StochasticSwapNoise(TabularTransformation):
         self.pad_token = pad_token
         self.replacement_prob = replacement_prob
 
-    def forward(
+    def forward(  # type: ignore
         self, inputs: TensorOrTabularData, input_mask: Optional[torch.Tensor] = None, **kwargs
     ) -> TensorOrTabularData:
         if self.schema:
@@ -72,7 +73,9 @@ class StochasticSwapNoise(TabularTransformation):
                 masked = torch.clone(input_tensor)
 
             input_permutation = torch.randperm(masked.shape[0])
-            sampled_values_to_replace = masked[input_permutation][:n_values_to_replace]
+            sampled_values_to_replace = masked[input_permutation][
+                :n_values_to_replace  # type: ignore
+            ]
             output_tensor = input_tensor.clone()
 
             if input_tensor[sse_replacement_mask].size() != sampled_values_to_replace:

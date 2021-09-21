@@ -15,6 +15,7 @@
 #
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 from transformers import TFTrainingArguments, TrainingArguments
 
@@ -61,7 +62,7 @@ class T4RecTrainingArguments(TrainingArguments):
         by default "default"
     """
 
-    avg_session_length: int = field(
+    avg_session_length: Optional[int] = field(
         default=None,
         metadata={
             "help": "When --eval_on_last_item_seq_only False, this conservative estimate of "
@@ -72,7 +73,7 @@ class T4RecTrainingArguments(TrainingArguments):
         },
     )
 
-    max_sequence_length: int = field(
+    max_sequence_length: Optional[int] = field(
         default=None,
         metadata={"help": "maximum length of sequence"},
     )

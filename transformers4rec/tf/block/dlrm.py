@@ -14,16 +14,15 @@
 # limitations under the License.
 #
 
-from typing import List, Optional, Union
+from typing import List, Optional, Union, cast
 
 import tensorflow as tf
-from keras.utils.generic_utils import register_keras_serializable
 
 from merlin_standard_lib import Schema, Tag
 
 from ..features.continuous import ContinuousFeatures
 from ..features.embedding import EmbeddingFeatures
-from ..tabular.tabular import TabularBlock
+from ..tabular.base import TabularBlock
 from .base import Block, BlockType
 
 
@@ -32,42 +31,47 @@ class ExpandDimsAndToTabular(tf.keras.layers.Lambda):
         super().__init__(lambda x: dict(continuous=x), **kwargs)
 
 
-@register_keras_serializable(package="transformers4rec")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class DLRMBlock(Block):
     def __init__(
         self,
-        continuous_features: Union[List[str], Schema, TabularBlock],
+        continuous_features: Union[List[str], Schema, Optional[TabularBlock]],
         embedding_layer: EmbeddingFeatures,
         bottom_mlp: BlockType,
         top_mlp: Optional[BlockType] = None,
         interaction_layer: Optional[tf.keras.layers.Layer] = None,
-        trainable=True,
-        name=None,
-        dtype=None,
-        dynamic=False,
         **kwargs
     ):
-        super().__init__(trainable, name, dtype, dynamic, **kwargs)
+        super().__init__(**kwargs)
 
+        _continuous_features: Optional[TabularBlock]
         if isinstance(continuous_features, Schema):
-            continuous_features = ContinuousFeatures.from_schema(
-                continuous_features, aggregation="concat"
+            _continuous_features = cast(
+                Optional[TabularBlock],
+                ContinuousFeatures.from_schema(
+                    cast(Schema, continuous_features), aggregation="concat"
+                ),
             )
         if isinstance(continuous_features, list):
-            continuous_features = ContinuousFeatures.from_features(
+            _continuous_features = ContinuousFeatures.from_features(
                 continuous_features, aggregation="concat"
             )
+        else:
+            _continuous_features = cast(Optional[TabularBlock], continuous_features)
 
-        continuous_embedding = continuous_features >> bottom_mlp >> ExpandDimsAndToTabular()
-        continuous_embedding.block_name = "ContinuousEmbedding"
+        if _continuous_features:
+            continuous_embedding = _continuous_features >> bottom_mlp >> ExpandDimsAndToTabular()
+            continuous_embedding.block_name = "ContinuousEmbedding"
+            self.stack_features = embedding_layer.merge(continuous_embedding, aggregation="stack")
+        else:
+            embedding_layer.set_aggregation("stack")
+            self.stack_features = embedding_layer
 
         # self.stack_features = tabular.MergeTabular(embedding_layer, continuous_embedding,
         #                                            aggregation_registry="stack")
 
         # self.stack_features = embedding_layer + continuous_embedding
         # self.stack_features.aggregation_registry = "stack"
-
-        self.stack_features = embedding_layer.merge(continuous_embedding, aggregation="stack")
 
         from ..layers import DotProductInteraction
 
@@ -84,9 +88,14 @@ class DLRMBlock(Block):
             infer_embedding_sizes=False,
             embedding_dim_default=bottom_mlp.layers[-1].units,
         )
+        if not embedding_layer:
+            raise ValueError("embedding_layer must be set.")
 
-        continuous_features = ContinuousFeatures.from_schema(
-            schema.select_by_tag(Tag.CONTINUOUS), aggregation="concat"
+        continuous_features = cast(
+            Optional[TabularBlock],
+            ContinuousFeatures.from_schema(
+                schema.select_by_tag(Tag.CONTINUOUS), aggregation="concat"
+            ),
         )
 
         return cls(continuous_features, embedding_layer, bottom_mlp, top_mlp=top_mlp, **kwargs)

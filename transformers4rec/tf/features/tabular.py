@@ -14,17 +14,24 @@
 # limitations under the License.
 #
 
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Type, Union, cast
 
 import tensorflow as tf
 
 from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.schema.tag import TagsType
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular, MergeTabular
-from ..typing import TabularAggregationType, TabularBlock, TabularTransformationType
+from ..tabular.base import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    AsTabular,
+    MergeTabular,
+    TabularAggregationType,
+    TabularBlock,
+    TabularTransformationType,
+)
 from ..utils import tf_utils
 from .base import InputBlock
 from .continuous import ContinuousFeatures
@@ -55,8 +62,8 @@ class TabularFeatures(InputBlock, MergeTabular):
     {tabular_module_parameters}
     """
 
-    CONTINUOUS_MODULE_CLASS = ContinuousFeatures
-    EMBEDDING_MODULE_CLASS = EmbeddingFeatures
+    CONTINUOUS_MODULE_CLASS: Type[TabularBlock] = ContinuousFeatures
+    EMBEDDING_MODULE_CLASS: Type[TabularBlock] = EmbeddingFeatures
 
     def __init__(
         self,
@@ -111,23 +118,23 @@ class TabularFeatures(InputBlock, MergeTabular):
         if isinstance(mlp_layers_dims, int):
             mlp_layers_dims = [mlp_layers_dims]
 
-        continuous = self.continuous_layer
+        continuous = cast(tf.keras.layers.Layer, self.continuous_layer)
         continuous.set_aggregation("concat")
 
         continuous = SequentialBlock(
             [continuous, MLPBlock(mlp_layers_dims), AsTabular("continuous_projection")]
         )
 
-        self.to_merge["continuous_layer"] = continuous
+        self.to_merge_dict["continuous_layer"] = continuous
 
         return self
 
     @classmethod
-    def from_schema(
+    def from_schema(  # type: ignore
         cls,
         schema: Schema,
-        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
-        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
+        continuous_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         continuous_projection: Optional[Union[List[int], int]] = None,
         text_model=None,
@@ -169,23 +176,23 @@ class TabularFeatures(InputBlock, MergeTabular):
         return output
 
     @property
-    def continuous_layer(self):
-        if "continuous_layer" in self.to_merge:
-            return self.to_merge["continuous_layer"]
+    def continuous_layer(self) -> Optional[tf.keras.layers.Layer]:
+        if "continuous_layer" in self.to_merge_dict:
+            return self.to_merge_dict["continuous_layer"]
 
         return None
 
     @property
-    def categorical_layer(self):
-        if "categorical_layer" in self.to_merge:
-            return self.to_merge["categorical_layer"]
+    def categorical_layer(self) -> Optional[tf.keras.layers.Layer]:
+        if "categorical_layer" in self.to_merge_dict:
+            return self.to_merge_dict["categorical_layer"]
 
         return None
 
     @property
-    def text_embedding_layer(self):
-        if "text_embedding_layer" in self.to_merge:
-            return self.to_merge["text_embedding_layer"]
+    def text_embedding_layer(self) -> Optional[tf.keras.layers.Layer]:
+        if "text_embedding_layer" in self.to_merge_dict:
+            return self.to_merge_dict["text_embedding_layer"]
 
         return None
 

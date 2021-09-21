@@ -14,236 +14,20 @@
 # limitations under the License.
 #
 
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
 
-
-import copy
 import logging
-from types import SimpleNamespace
-from typing import Callable, Dict, Iterable, Optional, Union
+from typing import Dict, Iterable, Optional
 
 import torch
 import torchmetrics as tm
-from transformers.modeling_utils import SequenceSummary
-
-from merlin_standard_lib.registry import camelcase_to_snakecase
 
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
-from ..typing import BlockType, Head, InputBlock, Model, TabularData
-from ..utils.torch_utils import LambdaModule, LossMixin, MetricsMixin
+from ..utils.torch_utils import LambdaModule
+from .base import BlockType, PredictionTask
 
 LOG = logging.getLogger("transformers4rec")
-
-
-def name_fn(name, inp):
-    return "/".join([name, inp]) if name else None
-
-
-class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
-    """Individual prediction-task of a model.
-
-    Parameters
-    ----------
-    loss: torch.nn.Module
-        The loss to use during training of this task.
-    metrics: torch.nn.Module
-        The metrics to calculate during training & evaluation.
-    target_name: str, optional
-        Name of the target, this is needed when there are multiple targets.
-    task_name: str, optional
-        Name of the prediction task, if not provided a name will be automatically constructed based
-        on the target-name & class-name.
-    forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor]
-        Function to apply before the prediction
-    task_block: BlockType
-        Module to transform input tensor before computing predictions.
-    pre: BlockType
-        Module to compute the predictions probabilities.
-    summary_type: str
-        This is used to summarize a sequence into a single tensor. Accepted values are:
-            - `"last"` -- Take the last token hidden state (like XLNet)
-            - `"first"` -- Take the first token hidden state (like Bert)
-            - `"mean"` -- Take the mean of all tokens hidden states
-            - `"cls_index"` -- Supply a Tensor of classification token position (GPT/GPT-2)
-            - `"attn"` -- Not implemented now, use multi-head attention
-    """
-
-    def __init__(
-        self,
-        loss: torch.nn.Module,
-        metrics: Iterable[tm.Metric] = None,
-        target_name: Optional[str] = None,
-        task_name: Optional[str] = None,
-        forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor] = lambda x: x,
-        task_block: Optional[BlockType] = None,
-        pre: Optional[BlockType] = None,
-        summary_type: str = "last",
-    ):
-        super().__init__()
-        self.sequence_summary = SequenceSummary(SimpleNamespace(summary_type=summary_type))  # noqa
-        self.target_name = target_name
-        self.forward_to_prediction_fn = forward_to_prediction_fn
-        self.set_metrics(metrics)
-        self.loss = loss
-        self.pre = pre
-        self.task_block = task_block
-        self._task_name = task_name
-
-    def build(
-        self,
-        body: BlockType,
-        input_size,
-        inputs: Optional[InputBlock] = None,
-        device=None,
-        task_block=None,
-        pre=None,
-    ):
-        """
-        The method will be called when block is converted to a model,
-        i.e when linked to prediction head.
-
-        Parameters
-        ----------
-        block:
-            the model block to link with head
-        device:
-            set the device for the metrics and layers of the task
-        """
-        if task_block:
-            # TODO: What to do when `self.task_block is not None`?
-            self.task_block = task_block
-        if pre:
-            # TODO: What to do when `self.pre is not None`?
-            self.pre = pre
-
-        # Build task block
-        pre_input_size = input_size
-        if self.task_block:
-            if isinstance(self.task_block, torch.nn.Module):
-                self.task_block = copy.deepcopy(self.task_block)
-            else:
-                self.task_block = self.task_block.build(input_size)
-            pre_input_size = self.task_block.output_size()
-
-        if self.pre:
-            if isinstance(self.pre, torch.nn.Module):
-                self.pre = copy.deepcopy(self.pre)
-            else:
-                self.pre = self.pre.build(pre_input_size)
-
-        if device:
-            self.to(device)
-            for metric in self.metrics:
-                metric.to(device)
-        self.built = True
-
-    def forward(self, inputs, **kwargs):
-        x = inputs
-
-        if len(x.size()) == 3:
-            x = self.sequence_summary(x)
-
-        if self.task_block:
-            x = self.task_block(x)
-
-        if self.pre:
-            x = self.pre(x)
-
-        return x
-
-    @property
-    def task_name(self):
-        if self._task_name:
-            return self._task_name
-
-        base_name = camelcase_to_snakecase(self.__class__.__name__)
-
-        return name_fn(self.target_name, base_name) if self.target_name else base_name
-
-    def child_name(self, name):
-        return name_fn(self.task_name, name)
-
-    def set_metrics(self, metrics):
-        self.metrics = torch.nn.ModuleList(metrics)
-
-    def compute_loss(
-        self,
-        inputs: Union[torch.Tensor, TabularData],
-        targets: Union[torch.Tensor, TabularData],
-        compute_metrics: bool = True,
-        training: bool = False,
-        **kwargs,
-    ) -> torch.Tensor:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        predictions = self(inputs, training=training)
-        loss = self.loss(predictions, targets)
-
-        if compute_metrics:
-            self.calculate_metrics(predictions, targets, mode="train", forward=False)
-
-            return loss
-
-        return loss
-
-    def calculate_metrics(
-        self,
-        predictions: Union[torch.Tensor, TabularData],
-        targets: Union[torch.Tensor, TabularData],
-        mode: str = "val",
-        forward: bool = True,
-        **kwargs,
-    ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        outputs = {}
-        if forward:
-            predictions = self(predictions)
-        predictions = self.forward_to_prediction_fn(predictions)
-
-        for metric in self.metrics:
-            if isinstance(metric, tuple(type(x) for x in BinaryClassificationTask.DEFAULT_METRICS)):
-                targets = targets.int()
-            outputs[self.metric_name(metric)] = metric(predictions, targets)
-
-        return outputs
-
-    def compute_metrics(self, **kwargs):
-        return {self.metric_name(metric): metric.compute() for metric in self.metrics}
-
-    def metric_name(self, metric: tm.Metric) -> str:
-        return self.child_name(camelcase_to_snakecase(metric.__class__.__name__))
-
-    def reset_metrics(self):
-        for metric in self.metrics:
-            metric.reset()
-
-    def to_head(self, body, inputs=None, **kwargs) -> "Head":
-        from .head import Head as _Head
-
-        return _Head(body, self, inputs=inputs, **kwargs)
-
-    def to_model(self, body, inputs=None, **kwargs) -> Model:
-        from .head import Head as _Head
-        from .model import Model as _Model
-
-        return _Model(_Head(body, self, inputs=inputs, **kwargs), **kwargs)
 
 
 class BinaryClassificationPrepareBlock(BuildableBlock):
@@ -362,7 +146,7 @@ class NextItemPredictionTask(PredictionTask):
         self,
         loss: torch.nn.Module = torch.nn.NLLLoss(ignore_index=0),
         metrics: Iterable[tm.Metric] = DEFAULT_METRICS,
-        task_block: Optional[torch.nn.Module] = None,
+        task_block: Optional[BlockType] = None,
         task_name: str = "next-item",
         weight_tying: bool = False,
         softmax_temperature: float = 1,
@@ -431,7 +215,7 @@ class NextItemPredictionTask(PredictionTask):
         x = inputs.float()
 
         if self.task_block:
-            x = self.task_block(x)
+            x = self.task_block(x)  # type: ignore
 
         # Retrieve labels either from masking or input module
         if self.masking:
@@ -446,7 +230,7 @@ class NextItemPredictionTask(PredictionTask):
         x = self.remove_pad_3d(x, non_pad_mask)
 
         # Compute predictions probs
-        x = self.pre(x)
+        x = self.pre(x)  # type: ignore
 
         # prepare outputs for HF trainer
         if self.hf_format:
@@ -471,7 +255,7 @@ class NextItemPredictionTask(PredictionTask):
         out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
         return out_tensor
 
-    def calculate_metrics(
+    def calculate_metrics(  # type: ignore
         self, predictions, targets, mode="val", forward=True, **kwargs
     ) -> Dict[str, torch.Tensor]:
         if isinstance(targets, dict) and self.target_name:
@@ -530,7 +314,7 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
                 self.item_embedding_table,
                 self.softmax_temperature,
             ),
-            [None, self.target_dim],
+            [-1, self.target_dim],
         )
 
 
@@ -576,13 +360,15 @@ class _NextItemPredictionTask(torch.nn.Module):
             self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.target_dim))
             torch.nn.init.zeros_(self.output_layer_bias)
         else:
-            self.output_layer = torch.nn.Linear(self.input_size[-1], self.target_dim)
+            self.output_layer = torch.nn.Linear(
+                self.input_size[-1], self.target_dim  # type: ignore
+            )
 
     def forward(self, inputs: torch.Tensor) -> torch.Tensor:
         if self.weight_tying:
             logits = torch.nn.functional.linear(
                 inputs,
-                weight=self.item_embedding_table.weight,
+                weight=self.item_embedding_table.weight,  # type: ignore
                 bias=self.output_layer_bias,
             )
         else:

@@ -18,7 +18,7 @@
 # sources: tensorflow_metadata/proto/v0/path.proto, tensorflow_metadata/proto/v0/schema.proto
 # plugin: python-betterproto
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 import betterproto
 
@@ -99,7 +99,7 @@ class _Schema(betterproto.Message):
     """Message to represent schema information. NextID: 14"""
 
     # Features described in this schema.
-    feature: List["Feature"] = betterproto.message_field(1)
+    feature: Sequence["Feature"] = betterproto.message_field(1)
     # Sparse features described in this schema.
     sparse_feature: List["SparseFeature"] = betterproto.message_field(6)
     # Weighted features described in this schema.

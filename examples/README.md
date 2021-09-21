@@ -50,6 +50,7 @@ To run the example notebooks using Docker containers, do the following:
    **NOTES**: 
    
    - If you are running on Docker version 19 and higher, change ```--runtime=nvidia``` to ```--gpus all```.
+   - The most recent PyTorch and TensorFlow docker containers are nvcr.io/nvidia/merlin/merlin-tensorflow-training:21.09 and nvcr.io/nvidia/merlin/merlin-pytorch-training:21.09
    - If you are running examples that require input data (examples 2 or 3) you need to add `-v <path_to_models>:/workspace/models/ -v <path to data>:/workspace/data/ ` to the docker script above. Here `<path_to_models>` is a local directory in your system, and the same directory should also be mounted to the `merlin-inference`container if you would like to run the inference example. Please follow the `launch and start triton server` instructions given in the notebooks. 
 
    The container will open a shell when the run command execution is completed. You will have to start JupyterLab on the Docker container. It should look similar to this:

@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-from transformers4rec.tf.tabular.tabular import TabularBlock
+from transformers4rec.tf.tabular.base import TabularBlock
 
 
 class InputBlock(TabularBlock):

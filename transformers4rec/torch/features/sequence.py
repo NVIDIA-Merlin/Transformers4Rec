@@ -14,18 +14,24 @@
 # limitations under the License.
 #
 
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 
 from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.schema.tag import TagsType
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
-from .. import typing
-from ..block.base import BuildableBlock, SequentialBlock
+from ..block.base import BlockOrModule, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
 from ..masking import MaskSequence, masking_registry
-from ..tabular.tabular import TABULAR_MODULE_PARAMS_DOCSTRING, AsTabular
+from ..tabular.base import (
+    TABULAR_MODULE_PARAMS_DOCSTRING,
+    AsTabular,
+    TabularAggregationType,
+    TabularModule,
+    TabularTransformationType,
+)
 from . import embedding
 from .tabular import TABULAR_FEATURES_PARAMS_DOCSTRING, TabularFeatures
 
@@ -51,9 +57,9 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         feature_config: Dict[str, embedding.FeatureConfig],
         item_id: Optional[str] = None,
         padding_idx: int = 0,
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
     ):
         self.padding_idx = padding_idx
@@ -107,14 +113,14 @@ class TabularSequenceFeatures(TabularFeatures):
 
     def __init__(
         self,
-        continuous_module: Optional[typing.TabularModule] = None,
-        categorical_module: Optional[typing.TabularModule] = None,
-        text_embedding_module: Optional[typing.TabularModule] = None,
-        projection_module: Optional[typing.BlockOrModule] = None,
-        masking: Optional[typing.MaskSequence] = None,
-        pre: Optional[typing.TabularTransformationType] = None,
-        post: Optional[typing.TabularTransformationType] = None,
-        aggregation: Optional[typing.TabularAggregationType] = None,
+        continuous_module: Optional[TabularModule] = None,
+        categorical_module: Optional[TabularModule] = None,
+        text_embedding_module: Optional[TabularModule] = None,
+        projection_module: Optional[BlockOrModule] = None,
+        masking: Optional[MaskSequence] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
     ):
         super().__init__(
@@ -130,11 +136,11 @@ class TabularSequenceFeatures(TabularFeatures):
         self.projection_module = projection_module
 
     @classmethod
-    def from_schema(
+    def from_schema(  # type: ignore
         cls,
         schema: Schema,
-        continuous_tags: Optional[Union[Tag, list, str]] = (Tag.CONTINUOUS,),
-        categorical_tags: Optional[Union[Tag, list, str]] = (Tag.CATEGORICAL,),
+        continuous_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CONTINUOUS,),
+        categorical_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CATEGORICAL,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -182,7 +188,7 @@ class TabularSequenceFeatures(TabularFeatures):
         TabularFeatures
             Returns ``TabularFeatures`` from a dataset schema
         """
-        output = super().from_schema(
+        output: TabularSequenceFeatures = super().from_schema(  # type: ignore
             schema=schema,
             continuous_tags=continuous_tags,
             categorical_tags=categorical_tags,
@@ -197,18 +203,18 @@ class TabularSequenceFeatures(TabularFeatures):
             raise ValueError("You cannot specify both d_output and projection at the same time")
         if (projection or masking or d_output) and not aggregation:
             # TODO: print warning here for clarity
-            output.aggregation = "concat"
+            output.aggregation = "concat"  # type: ignore
         hidden_size = output.output_size()
 
         if d_output and not projection:
             projection = MLPBlock([d_output])
         if projection and hasattr(projection, "build"):
-            projection = projection.build(hidden_size)
+            projection = projection.build(hidden_size)  # type: ignore
         if projection:
-            output.projection_module = projection
-            hidden_size = projection.output_size()
+            output.projection_module = projection  # type: ignore
+            hidden_size = projection.output_size()  # type: ignore
 
-        output.masking = masking
+        output.masking = masking  # type: ignore
 
         return output
 
@@ -239,7 +245,7 @@ class TabularSequenceFeatures(TabularFeatures):
 
         return None
 
-    def forward(self, inputs, training=True):
+    def forward(self, inputs, training=True, **kwargs):
         outputs = super(TabularSequenceFeatures, self).forward(inputs)
 
         if self.masking or self.projection_module:
@@ -281,3 +287,6 @@ class TabularSequenceFeatures(TabularFeatures):
             output_sizes = self.projection_module.output_size()
 
         return output_sizes
+
+
+TabularFeaturesType = Union[TabularSequenceFeatures, TabularFeatures]

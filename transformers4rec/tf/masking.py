@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Any, Dict, Tuple
+from dataclasses import dataclass
+from typing import Any, Dict
 
 import tensorflow as tf
 from tensorflow.keras import backend
@@ -23,9 +24,6 @@ from merlin_standard_lib import Registry
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 masking_registry = Registry("tf.masking")
-
-MaskingSchema = tf.Tensor
-MaskedTargets = tf.Tensor
 
 
 MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
@@ -37,6 +35,12 @@ MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
     eval_on_last_item_seq_only: bool, default = True
         Predict only last item during evaluation
 """
+
+
+@dataclass
+class MaskingInfo:
+    schema: tf.Tensor
+    targets: tf.Tensor
 
 
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
@@ -70,9 +74,7 @@ class MaskSequence(tf.keras.layers.Layer):
         self.mask_schema = None
         self.masked_targets = None
 
-    def _compute_masked_targets(
-        self, item_ids: tf.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
+    def _compute_masked_targets(self, item_ids: tf.Tensor, training=False) -> MaskingInfo:
         """
         Method to prepare masked labels based on the sequence of item ids.
         It returns The true labels of masked positions and the related boolean mask.
@@ -91,9 +93,7 @@ class MaskSequence(tf.keras.layers.Layer):
         """
         raise NotImplementedError
 
-    def compute_masked_targets(
-        self, item_ids: tf.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
+    def compute_masked_targets(self, item_ids: tf.Tensor, training=False) -> MaskingInfo:
         """
         Method to prepare masked labels based on the sequence of item ids.
         It returns The true labels of masked positions and the related boolean mask.
@@ -115,13 +115,12 @@ class MaskSequence(tf.keras.layers.Layer):
         Tuple[MaskingSchema, MaskedTargets]
         """
         assert item_ids.ndim == 2, "`item_ids` must have 2 dimensions."
-        self.mask_schema, self.masked_targets = self._compute_masked_targets(
-            item_ids, training=training
-        )
+        masking_info = self._compute_masked_targets(item_ids, training=training)
+        self.mask_schema, self.masked_targets = masking_info.schema, masking_info.targets
 
-        return self.mask_schema, self.masked_targets
+        return masking_info
 
-    def apply_mask_to_inputs(self, inputs: tf.Tensor, schema: MaskingSchema) -> tf.Tensor:
+    def apply_mask_to_inputs(self, inputs: tf.Tensor, schema: tf.Tensor) -> tf.Tensor:
         """
         Control the masked positions in the inputs by replacing the true interaction
         by a learnable masked embedding.
@@ -141,7 +140,7 @@ class MaskSequence(tf.keras.layers.Layer):
         )
         return inputs
 
-    def predict_all(self, item_ids: tf.Tensor) -> Tuple[MaskingSchema, MaskedTargets]:
+    def predict_all(self, item_ids: tf.Tensor) -> MaskingInfo:
         """
         Prepare labels for all next item predictions instead of
         last-item predictions in a user's sequence.
@@ -170,7 +169,8 @@ class MaskSequence(tf.keras.layers.Layer):
         )
         # apply mask on input where target is on padding index
         mask_labels = labels != self.padding_idx
-        return mask_labels, labels
+
+        return MaskingInfo(mask_labels, labels)
 
     def call(self, inputs: tf.Tensor, item_ids: tf.Tensor, training=False) -> tf.Tensor:
         _ = self.compute_masked_targets(item_ids=item_ids, training=training)
@@ -225,10 +225,9 @@ class CausalLanguageModeling(MaskSequence):
         )
         self.train_on_last_item_seq_only = train_on_last_item_seq_only
 
-    def _compute_masked_targets(
-        self, item_ids: tf.Tensor, training=False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
-        mask_labels, labels = self.predict_all(item_ids)
+    def _compute_masked_targets(self, item_ids: tf.Tensor, training=False) -> MaskingInfo:
+        masking_info: MaskingInfo = self.predict_all(item_ids)
+        mask_labels, labels = masking_info.schema, masking_info.targets
 
         if (self.eval_on_last_item_seq_only and not training) or (
             self.train_on_last_item_seq_only and training
@@ -245,9 +244,10 @@ class CausalLanguageModeling(MaskSequence):
             # Updating labels and mask
             mask_labels = label_seq_trg_eval != self.padding_idx
             labels = label_seq_trg_eval
-        return mask_labels, labels
 
-    def apply_mask_to_inputs(self, inputs: tf.Tensor, mask_schema: MaskingSchema) -> tf.Tensor:
+        return MaskingInfo(mask_labels, labels)
+
+    def apply_mask_to_inputs(self, inputs: tf.Tensor, mask_schema: tf.Tensor) -> tf.Tensor:
         # shift sequence of interaction embeddings
         pos_emb_inp = inputs[:, :-1]
         # Adding a masked item in the sequence to return to the initial sequence.
@@ -298,9 +298,7 @@ class MaskedLanguageModeling(MaskSequence):
         )
         self.mlm_probability = mlm_probability
 
-    def _compute_masked_targets(
-        self, item_ids: tf.Tensor, training: bool = False
-    ) -> Tuple[MaskingSchema, MaskedTargets]:
+    def _compute_masked_targets(self, item_ids: tf.Tensor, training: bool = False) -> MaskingInfo:
         """
         Prepare sequence with mask schema for masked language modeling prediction
         the function is based on HuggingFace's transformers/data/data_collator.py
@@ -370,15 +368,21 @@ class MaskedLanguageModeling(MaskSequence):
                 last_item_sessions = tf.reduce_sum(non_padded_mask, axis=1) - 1
 
                 indices = tf.concat(
-                    [tf.expand_dims(rows_ids, 1), tf.expand_dims(last_item_sessions, 1)], axis=1
+                    [
+                        tf.expand_dims(rows_ids, 1),
+                        tf.cast(tf.expand_dims(last_item_sessions, 1), tf.int64),
+                    ],
+                    axis=1,
                 )
                 labels = tf.tensor_scatter_nd_update(
                     labels, indices=indices, updates=tf.gather_nd(item_ids, indices)
                 )
                 mask_labels = labels != self.padding_idx
             else:
-                mask_labels, labels = self.predict_all(item_ids)
-        return mask_labels, labels
+                masking_info = self.predict_all(item_ids)
+                mask_labels, labels = masking_info.schema, masking_info.targets
+
+        return MaskingInfo(mask_labels, labels)
 
 
 # @masking_registry.register_with_multiple_names("plm", "permutation")

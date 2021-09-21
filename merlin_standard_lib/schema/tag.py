@@ -15,6 +15,7 @@
 
 
 from enum import Enum
+from typing import List, Union
 
 
 class Tag(Enum):
@@ -46,3 +47,6 @@ class Tag(Enum):
 
     def __eq__(self, o: object) -> bool:
         return str(o) == str(self)
+
+
+TagsType = Union[List[str], List[Tag], List[Union[Tag, str]]]
