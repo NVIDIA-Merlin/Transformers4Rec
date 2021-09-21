@@ -42,7 +42,7 @@ Once you have gotten your feet wet and are more comfortable with the code, you
 can look at the prioritized issues of our next release in our [project boards](https://github.com/NVIDIA-Merlin/Transformers4Rec/projects).
 
 > **Pro Tip:** Always look at the release board with the highest number for
-issues to work on. This is where NVTabular developers also focus their efforts.
+issues to work on. This is where Transformers4Rec developers also focus their efforts.
 
 Look at the unassigned issues, and find an issue you are comfortable with
 contributing to. Start with _Step 3_ from above, commenting on the issue to let
