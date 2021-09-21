@@ -15,11 +15,11 @@ Transformers4Rec is part of the NVIDIA Merlin ecosystem for Recommender Systems.
 - [HugeCTR](https://github.com/NVIDIA/HugeCTR) - A GPU-accelerated recommender framework designed to distribute training across multiple GPUs and nodes and estimate Click-Through Rates (CTRs). 
 
 
-## Supported HuggingFace architectures and Pre-training approaches
+## Supported HuggingFace architectures and pre-training approaches
 
 Transformers4Rec supports the four following masking tasks: 
 
-|Accronyms| Definition|
+|Accronym| Definition|
 |---------|--------------|
 | CLM    | Causal Language Modelling|
 | MLM    | Masked Language Modelling|
@@ -27,11 +27,11 @@ Transformers4Rec supports the four following masking tasks:
 | RTD    | Replacement Token Detection|
 
 
-In Transformers4Rec, we decouple the pre-training approach from transformers architectures and provide `TransformerBlock` module that links the config class of transformers architecture to the masking task. Transformers4Rec also defines [`transformer_registry`](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/2c29411fe8c87c72d0a32314788c3ed0dbddb0ef/transformers4rec/config/transformer.py#L21) including pre-defined `T4RecConfig` constructors that automatically set the arguments of the related HuggingFace configuration classes. 
-The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the registered `T4RecConfig` classes in `Included` column.
+In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a [`transformer_registry`](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/2c29411fe8c87c72d0a32314788c3ed0dbddb0ef/transformers4rec/config/transformer.py#L21) including pre-defined `T4RecConfig` constructors that automatically set the arguments of the related HuggingFace configuration classes. 
+The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered `T4RecConfig` classes in the colum `Registered`.
 
 
-|   Model     | CLM |  MLM  |  PLM  |  RTD  | Included |
+|   Model     | CLM |  MLM  |  PLM  |  RTD  | Registered |
 | ----------- |--------|-------|-------|-------|-------|
 |    [BERT](https://huggingface.co/transformers/model_doc/bert.html#bertconfig)     |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
 |  [ConvBERT](https://huggingface.co/transformers/model_doc/convbert.html#convbertconfig)   |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
