@@ -83,7 +83,7 @@ Ranking metrics
 During training, the metrics are computed each N steps for both training and evaluation sets. During evaluation, the metrics are computed for all evaluation batches and averaged.
 
 #### Incremental Evaluation
-You can implement incremental evaluation by splitting your data into time windows (e.g. week, day or hour). Then you can have a loop that trains (or fine-tune a pre-trained model) with session of time window T and evaluates on sessions of time window T+1.
+You can implement incremental evaluation by splitting your data into time windows (e.g. week, day or hour). Then you can have a loop that trains (or fine-tune a pre-trained model) with sessions of time window T and evaluates on sessions of time window T+1.
 
 Here is an example which assumes daily data is split in folders. There is a loop that iterates over the days, trains the model (or fine-tunes the model pre-trained in the previous day) and evaluates with data of the next day.
 
