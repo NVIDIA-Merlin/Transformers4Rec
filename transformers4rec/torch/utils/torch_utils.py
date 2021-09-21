@@ -24,12 +24,6 @@ from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.proto_utils import has_field
 
 from ...config.schema import SchemaMixin
-from ..masking import (
-    CausalLanguageModeling,
-    MaskedLanguageModeling,
-    PermutationLanguageModeling,
-    ReplacementLanguageModeling,
-)
 from ..typing import TabularData
 
 
@@ -222,6 +216,20 @@ class LambdaModule(torch.nn.Module):
 
 @dataclass
 class MappingTransformerMasking:
+    from transformers4rec.torch.masking import (
+        CausalLanguageModeling,
+        MaskedLanguageModeling,
+        PermutationLanguageModeling,
+        ReplacementLanguageModeling,
+    )
+
+    DEFAULT_MASKING = [
+        CausalLanguageModeling,
+        MaskedLanguageModeling,
+        ReplacementLanguageModeling,
+        PermutationLanguageModeling,
+    ]
+
     BertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
     ConvBertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
     DebertaConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
@@ -239,11 +247,3 @@ class MappingTransformerMasking:
         ReplacementLanguageModeling,
         PermutationLanguageModeling,
     ]
-
-
-DEFAULT_MASKING = [
-    CausalLanguageModeling,
-    MaskedLanguageModeling,
-    ReplacementLanguageModeling,
-    PermutationLanguageModeling,
-]

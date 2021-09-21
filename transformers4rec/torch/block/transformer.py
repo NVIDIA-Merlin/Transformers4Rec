@@ -23,7 +23,7 @@ from transformers import GPT2Model, PretrainedConfig, PreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
-from ..utils.torch_utils import DEFAULT_MASKING, MappingTransformerMasking
+from ..utils.torch_utils import MappingTransformerMasking
 from .base import BlockBase
 
 TransformerBody = Union[PreTrainedModel, PretrainedConfig]
@@ -90,7 +90,7 @@ class TransformerBlock(BlockBase):
 
         if masking:
             # check for the four default masking
-            if (masking.__class__ in DEFAULT_MASKING) and (
+            if (masking.__class__ in MappingTransformerMasking.DEFAULT_MASKING) and (
                 masking.__class__
                 not in getattr(
                     MappingTransformerMasking,
