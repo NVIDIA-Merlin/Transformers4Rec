@@ -370,7 +370,11 @@ class MaskedLanguageModeling(MaskSequence):
                 last_item_sessions = tf.reduce_sum(non_padded_mask, axis=1) - 1
 
                 indices = tf.concat(
-                    [tf.expand_dims(rows_ids, 1), tf.expand_dims(last_item_sessions, 1)], axis=1
+                    [
+                        tf.expand_dims(rows_ids, 1),
+                        tf.cast(tf.expand_dims(last_item_sessions, 1), tf.int64),
+                    ],
+                    axis=1,
                 )
                 labels = tf.tensor_scatter_nd_update(
                     labels, indices=indices, updates=tf.gather_nd(item_ids, indices)

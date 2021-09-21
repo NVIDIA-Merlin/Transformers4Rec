@@ -51,3 +51,52 @@ def test_serialization_model(tf_tabular_features, tf_tabular_data, prediction_ta
 
     copy_model = test_utils.assert_serialization(model)
     test_utils.assert_loss_and_metrics_are_valid(copy_model, tf_tabular_data, targets)
+
+
+@pytest.mark.parametrize("d_model", [32, 64, 128])
+def test_with_d_model_different_from_item_dim(tf_yoochoose_like, yoochoose_schema, d_model):
+
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=d_model,
+        masking="causal",
+    )
+    transformer_config = tr.GPT2Config.build(d_model, 4, 2, 20)
+    body = tr.SequentialBlock(
+        [
+            input_module,
+            tr.TransformerBlock(transformer_config, masking=input_module.masking),
+        ]
+    )
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+    model = task.to_model(body=body)
+
+    assert model(tf_yoochoose_like).shape[-1] == 51997
+
+
+@pytest.mark.parametrize("masking", ["causal", "mlm"])
+def test_output_shape_mode_eval(tf_yoochoose_like, yoochoose_schema, masking):
+
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking=masking,
+    )
+
+    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
+    body = tr.SequentialBlock(
+        [
+            input_module,
+            tr.TransformerBlock(transformer_config, masking=input_module.masking),
+        ]
+    )
+    task = tr.NextItemPredictionTask(weight_tying=True)
+    model = task.to_model(body=body)
+
+    out = model(tf_yoochoose_like, training=False)
+    assert out.shape[0] == tf_yoochoose_like["item_id/list"].shape[0]

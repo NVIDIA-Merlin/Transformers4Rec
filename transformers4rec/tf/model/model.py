@@ -86,7 +86,8 @@ class Model(BaseModel):
         # TODO: Optimize this
         outputs = {}
         for head in self.heads:
-            outputs.update(head(inputs, call_body=True, always_output_dict=True))
+            body_outputs = head.body(inputs)
+            outputs.update(head(body_outputs, call_body=False, always_output_dict=True))
 
         if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]
