@@ -23,6 +23,7 @@ from transformers import GPT2Model, PretrainedConfig, PreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
+from ..utils.torch_utils import DEFAULT_MASKING, MappingTransformerMasking
 from .base import BlockBase
 
 TransformerBody = Union[PreTrainedModel, PretrainedConfig]
@@ -88,6 +89,20 @@ class TransformerBlock(BlockBase):
             self.transformer = transformer
 
         if masking:
+            # check for the four default masking
+            if (masking.__class__ in DEFAULT_MASKING) and (
+                masking.__class__
+                not in getattr(
+                    MappingTransformerMasking,
+                    self.transformer.config_class.__name__,
+                    [masking.__class__],
+                )
+            ):
+                raise ValueError(
+                    f"{masking.__class__.__name__} is not supported by: "
+                    f"the {self.transformer.config_class.__name__} architecture"
+                )
+
             required = list(masking.transformer_required_arguments().keys())
             check = all(
                 param in inspect.signature(self.transformer.forward).parameters

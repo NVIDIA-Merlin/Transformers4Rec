@@ -15,6 +15,7 @@
 #
 
 import abc
+from dataclasses import dataclass
 from typing import Dict, Union
 
 import torch
@@ -23,6 +24,12 @@ from merlin_standard_lib import Schema
 from merlin_standard_lib.utils.proto_utils import has_field
 
 from ...config.schema import SchemaMixin
+from ..masking import (
+    CausalLanguageModeling,
+    MaskedLanguageModeling,
+    PermutationLanguageModeling,
+    ReplacementLanguageModeling,
+)
 from ..typing import TabularData
 
 
@@ -211,3 +218,32 @@ class LambdaModule(torch.nn.Module):
 
     def forward(self, x):
         return self.lambda_fn(x)
+
+
+@dataclass
+class MappingTransformerMasking:
+    BertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    ConvBertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    DebertaConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    DistilBertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    GPT2Config = [CausalLanguageModeling]
+    LongformerConfig = [CausalLanguageModeling, MaskedLanguageModeling, ReplacementLanguageModeling]
+    MegatronBertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    MPNetConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    RobertaConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    RoFormerConfig = [CausalLanguageModeling, MaskedLanguageModeling, ReplacementLanguageModeling]
+    TransfoXLConfig = [CausalLanguageModeling]
+    XLNetConfig = [
+        CausalLanguageModeling,
+        MaskedLanguageModeling,
+        ReplacementLanguageModeling,
+        PermutationLanguageModeling,
+    ]
+
+
+DEFAULT_MASKING = [
+    CausalLanguageModeling,
+    MaskedLanguageModeling,
+    ReplacementLanguageModeling,
+    PermutationLanguageModeling,
+]

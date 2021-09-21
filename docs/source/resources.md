@@ -17,7 +17,7 @@ Transformers4Rec is part of the NVIDIA Merlin ecosystem for Recommender Systems.
 
 ## Supported HuggingFace architectures and pre-training approaches
 
-Transformers4Rec supports the four following masking tasks: 
+Transformers4Rec supports the four following [masking tasks](https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking): 
 
 |Accronym| Definition|
 |---------|--------------|
@@ -27,13 +27,13 @@ Transformers4Rec supports the four following masking tasks:
 | RTD    | Replacement Token Detection|
 
 
-In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a [`transformer_registry`](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/2c29411fe8c87c72d0a32314788c3ed0dbddb0ef/transformers4rec/config/transformer.py#L21) including pre-defined `T4RecConfig` constructors that automatically set the arguments of the related HuggingFace configuration classes. 
+In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a `transformer_registry` including pre-defined [`T4RecConfig`](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig) constructors that automatically set the arguments of the related HuggingFace configuration classes. 
 The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered `T4RecConfig` classes in the colum `Registered`.
 
 
 |   Model     | CLM |  MLM  |  PLM  |  RTD  | Registered |
 | ----------- |--------|-------|-------|-------|-------|
-|    [BERT](https://huggingface.co/transformers/model_doc/bert.html#bertconfig)     |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
+|    [BERT](https://huggingface.co/transformers/model_doc/bert.html#bertconfig)     |   ❌   |  ✅    |   ❌   |  ✅  |   ✅   |
 |  [ConvBERT](https://huggingface.co/transformers/model_doc/convbert.html#convbertconfig)   |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
 |   [DeBERTa](https://huggingface.co/transformers/model_doc/deberta.html#debertaconfig)   |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
 |  [DistilBERT](https://huggingface.co/transformers/model_doc/distilbert.html#distilbertmodel) |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
@@ -41,9 +41,9 @@ The table below represents the current supported architectures in Transformers4R
 |  [Longformer](https://huggingface.co/transformers/model_doc/longformer.html#longformerconfig) |   ✅   | ✅     |   ❌   |  ❌  |   ✅   |
 | [MegatronBert](https://huggingface.co/transformers/model_doc/megatron_bert.html#megatronbertconfig) |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
 |   [MPNet](https://huggingface.co/transformers/model_doc/mpnet.html#mpnetconfig)     |   ❌    |  ✅   |   ❌   |  ✅  |   ❌   |
-|   [RoBERTa](https://huggingface.co/transformers/model_doc/roberta.html#robertaconfig)   |   ❌    |  ✅   |   ❌   |  ✅  |   ❌   |
+|   [RoBERTa](https://huggingface.co/transformers/model_doc/roberta.html#robertaconfig)   |   ❌    |  ✅   |   ❌   |  ✅  |   ✅   |
 |   [RoFormer](https://huggingface.co/transformers/model_doc/roformer.html#roformerconfig)  |   ✅    |  ✅   |   ❌   |  ✅  |   ❌   |
-| [Transformer-XL](https://huggingface.co/transformers/model_doc/transformerxl.html#transfoxlconfig)|   ✅    | ❌     |   ❌   |  ❌    |   ❌   |
+| [Transformer-XL](https://huggingface.co/transformers/model_doc/transformerxl.html#transfoxlconfig)|   ✅    | ❌     |   ❌   |  ❌    |   ✅   |
 |   [XLNet](https://huggingface.co/transformers/model_doc/xlnet.html#xlnetconfig)    |   ✅    | ✅     |   ✅   |  ✅    |   ✅   |
 
 
