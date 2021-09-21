@@ -47,7 +47,7 @@ The table below represents the current supported architectures in Transformers4R
 |   [XLNet](https://huggingface.co/transformers/model_doc/xlnet.html#xlnetconfig)    |   ✅    | ✅     |   ✅   |  ✅    |   ✅   |
 
 
-
+ **Note**: The following HF architectures will be supported in future release: `Reformer`, `Funnel Transformer`, `ELECTRA` and `ALBERT`. 
 
 
 
