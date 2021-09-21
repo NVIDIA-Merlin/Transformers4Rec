@@ -105,9 +105,8 @@ class TabularAggregation(OutputSizeMixin, torch.nn.Module, ABC):
         return tabular_aggregation_registry.parse(class_or_str)
 
 
-TabularTransformationType = Union[
-    str, TabularTransformation, List[str], List[TabularTransformation]
-]
+TabularTransformationType = Union[str, TabularTransformation]
+TabularTransformationsType = Union[TabularTransformationType, List[TabularTransformationType]]
 TabularAggregationType = Union[str, TabularAggregation]
 
 
@@ -120,7 +119,7 @@ class SequentialTabularTransformations(SequentialBlock):
         transformations that are passed in here will be called in order.
     """
 
-    def __init__(self, *transformation: TabularTransformationType):
+    def __init__(self, *transformation: TabularTransformationsType):
         if len(transformation) == 1 and isinstance(transformation, list):
             transformation = transformation[0]
         super().__init__(*[TabularTransformation.parse(t) for t in transformation])
@@ -150,17 +149,16 @@ class TabularModule(torch.nn.Module):
 
     def __init__(
         self,
-        pre: Optional[TabularTransformationType] = None,
-        post: Optional[TabularTransformationType] = None,
+        pre: Optional[TabularTransformationsType] = None,
+        post: Optional[TabularTransformationsType] = None,
         aggregation: Optional[TabularAggregationType] = None,
-        schema: Optional[Schema] = None,
+        **kwargs,
     ):
         super().__init__()
         self.input_size = None
-        self.pre = pre
-        self.post = post
-        self.aggregation = aggregation
-        self.schema = schema
+        self.pre = pre  # type: ignore
+        self.post = post  # type: ignore
+        self.aggregation = aggregation  # type: ignore
 
     @classmethod
     def from_schema(cls, schema: Schema, tags=None, **kwargs) -> Optional["TabularModule"]:
@@ -190,8 +188,8 @@ class TabularModule(torch.nn.Module):
     def from_features(
         cls,
         features: List[str],
-        pre: Optional[TabularTransformationType] = None,
-        post: Optional[TabularTransformationType] = None,
+        pre: Optional[TabularTransformationsType] = None,
+        post: Optional[TabularTransformationsType] = None,
         aggregation: Optional[TabularAggregationType] = None,
     ) -> "TabularModule":
         """Initializes a TabularModule instance where the contents of features will be filtered
@@ -208,7 +206,7 @@ class TabularModule(torch.nn.Module):
         -------
         TabularModule
         """
-        pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)
+        pre = [FilterFeatures(features), pre] if pre else FilterFeatures(features)  # type: ignore
 
         return cls(pre=pre, post=post, aggregation=aggregation)
 
@@ -223,9 +221,11 @@ class TabularModule(torch.nn.Module):
         return self._pre
 
     @pre.setter
-    def pre(self, value: Union[str, TabularTransformation, List[str], List[TabularTransformation]]):
+    def pre(self, value: Optional[TabularTransformationsType]):
         if value:
-            self._pre = SequentialTabularTransformations(value)
+            self._pre: Optional[
+                SequentialTabularTransformations
+            ] = SequentialTabularTransformations(value)
         else:
             self._pre = None
 
@@ -240,11 +240,11 @@ class TabularModule(torch.nn.Module):
         return self._post
 
     @post.setter
-    def post(
-        self, value: Union[str, TabularTransformation, List[str], List[TabularTransformation]]
-    ):
+    def post(self, value: Optional[TabularTransformationsType]):
         if value:
-            self._post = SequentialTabularTransformations(value)
+            self._post: Optional[
+                SequentialTabularTransformations
+            ] = SequentialTabularTransformations(value)
         else:
             self._post = None
 
@@ -267,12 +267,12 @@ class TabularModule(torch.nn.Module):
         value
         """
         if value:
-            self._aggregation = TabularAggregation.parse(value)
+            self._aggregation: Optional[TabularAggregation] = TabularAggregation.parse(value)
         else:
             self._aggregation = None
 
     def pre_forward(
-        self, inputs: TabularData, transformations: Optional[TabularAggregationType] = None
+        self, inputs: TabularData, transformations: Optional[TabularTransformationsType] = None
     ) -> TabularData:
         """Method that's typically called before the forward method for pre-processing.
 
@@ -296,7 +296,7 @@ class TabularModule(torch.nn.Module):
     def post_forward(
         self,
         inputs: TabularData,
-        transformations: Optional[TabularTransformationType] = None,
+        transformations: Optional[TabularTransformationsType] = None,
         merge_with: Union["TabularModule", List["TabularModule"]] = None,
         aggregation: Optional[TabularAggregationType] = None,
     ) -> TensorOrTabularData:
@@ -317,9 +317,11 @@ class TabularModule(torch.nn.Module):
         -------
         TensorOrTabularData (Tensor when aggregation is set, else TabularData)
         """
+        _aggregation: Optional[TabularAggregation]
         if aggregation:
-            aggregation = TabularAggregation.parse(aggregation)
-        aggregation = aggregation or getattr(self, "aggregation", None)
+            _aggregation = TabularAggregation.parse(aggregation)
+        else:
+            _aggregation = getattr(self, "aggregation", None)
 
         outputs = inputs
         if merge_with:
@@ -333,10 +335,10 @@ class TabularModule(torch.nn.Module):
             outputs, transformations=transformations or self.post
         )
 
-        if aggregation:
+        if _aggregation:
             schema = getattr(self, "schema", None)
-            aggregation.set_schema(schema)
-            return aggregation(outputs)
+            _aggregation.set_schema(schema)
+            return _aggregation(outputs)
 
         return outputs
 
@@ -344,8 +346,8 @@ class TabularModule(torch.nn.Module):
         self,
         inputs: TabularData,
         *args,
-        pre: Optional[TabularTransformationType] = None,
-        post: Optional[TabularTransformationType] = None,
+        pre: Optional[TabularTransformationsType] = None,
+        post: Optional[TabularTransformationsType] = None,
         merge_with: Union["TabularModule", List["TabularModule"]] = None,
         aggregation: Optional[TabularAggregationType] = None,
         **kwargs,
@@ -386,7 +388,9 @@ class TabularModule(torch.nn.Module):
     def _maybe_apply_transformations(
         self,
         inputs: TabularData,
-        transformations: Optional[TabularTransformationType] = None,
+        transformations: Optional[
+            Union[TabularTransformationsType, SequentialTabularTransformations]
+        ] = None,
     ) -> TabularData:
         """Apply transformations to the inputs if these are defined.
 
@@ -400,8 +404,8 @@ class TabularModule(torch.nn.Module):
 
         """
         if transformations:
-            transformations = TabularTransformation.parse(transformations)
-            return transformations(inputs)
+            _transformations = TabularTransformation.parse(transformations)
+            return _transformations(inputs)
 
         return inputs
 
@@ -553,11 +557,18 @@ class MergeTabular(TabularBlock):
         schema: Optional[Schema] = None,
     ):
         super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
+        self.to_merge: Union[torch.nn.ModuleDict, torch.nn.ModuleList]
         if all(isinstance(x, dict) for x in modules_to_merge):
-            modules_to_merge = reduce(lambda a, b: dict(a, **b), modules_to_merge)
-            self.to_merge = torch.nn.ModuleDict(modules_to_merge)
+            to_merge: Dict[str, TabularModule]
+            to_merge = reduce(lambda a, b: dict(a, **b), modules_to_merge)  # type: ignore
+            self.to_merge = torch.nn.ModuleDict(to_merge)
+        elif all(isinstance(x, torch.nn.Module) for x in modules_to_merge):
+            self.to_merge = torch.nn.ModuleList(modules_to_merge)  # type: ignore
         else:
-            self.to_merge = torch.nn.ModuleList(modules_to_merge)
+            raise ValueError(
+                "Please provide one or multiple TabularBlock's to merge or "
+                f"dictionaries of TabularBlocks. got: {modules_to_merge}"
+            )
 
         # Merge schemas if necessary.
         if not schema and all(getattr(m, "schema", False) for m in self.merge_values):
@@ -570,7 +581,7 @@ class MergeTabular(TabularBlock):
 
         return self.to_merge
 
-    def forward(self, inputs: TabularData, **kwargs) -> TabularData:
+    def forward(self, inputs: TabularData, training=True, **kwargs) -> TabularData:  # type: ignore
         assert isinstance(inputs, dict), "Inputs needs to be a dict"
 
         outputs = {}
@@ -609,16 +620,16 @@ class AsTabular(TabularBlock):
         super().__init__()
         self.output_name = output_name
 
-    def forward(self, inputs: torch.Tensor, **kwargs) -> TabularData:
+    def forward(self, inputs: torch.Tensor, **kwargs) -> TabularData:  # type: ignore
         return {self.output_name: inputs}
 
     def forward_output_size(self, input_size):
         return {self.output_name: input_size}
 
 
-def merge_tabular(self, other, **kwargs):
+def merge_tabular(self, other):
     return MergeTabular(self, other)
 
 
-TabularModule.__add__ = merge_tabular
-TabularModule.merge = merge_tabular
+TabularModule.__add__ = merge_tabular  # type: ignore
+TabularModule.merge = merge_tabular  # type: ignore

@@ -68,12 +68,10 @@ def test_mask_all_next_item_for_eval(tf_masking_inputs, task):
         padding_idx=tf_masking_inputs["padding_idx"],
         eval_on_last_item_seq_only=False,
     )
-    mask_schema, masked_targets = lm.compute_masked_targets(
-        tf_masking_inputs["labels"], training=False
-    )
+    masking_info = lm.compute_masked_targets(tf_masking_inputs["labels"], training=False)
     # get the labels from output
-    trgt_pad = masked_targets != tf_masking_inputs["padding_idx"]
-    labels = masked_targets[trgt_pad].numpy()
+    trgt_pad = masking_info.targets != tf_masking_inputs["padding_idx"]
+    labels = masking_info.targets[trgt_pad].numpy()
     # get non padded items when shifting input sequence
     shift_inputs = tf_masking_inputs["labels"][:, 1:]
     non_padded_mask = shift_inputs != tf_masking_inputs["padding_idx"]
@@ -81,7 +79,7 @@ def test_mask_all_next_item_for_eval(tf_masking_inputs, task):
     all_labels = tf.boolean_mask(shift_inputs, non_padded_mask).numpy()
 
     # check that number of labels per session matches
-    assert all(mask_schema.numpy().sum(1) == n_labels_sessions)
+    assert all(masking_info.schema.numpy().sum(1) == n_labels_sessions)
     # check all next items are masked
     assert all(all_labels == labels)
 
@@ -90,8 +88,8 @@ def test_mask_all_next_item_for_eval(tf_masking_inputs, task):
 @pytest.mark.parametrize("task", ["causal", "masked"])
 def test_at_least_one_masked_item_mlm(tf_masking_inputs, task):
     lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
-    _, masked_targets = lm.compute_masked_targets(tf_masking_inputs["labels"], training=True)
-    trgt_mask = tf.cast(masked_targets != tf_masking_inputs["padding_idx"], tf.int32)
+    masking_info = lm.compute_masked_targets(tf_masking_inputs["labels"], training=True)
+    trgt_mask = tf.cast(masking_info.targets != tf_masking_inputs["padding_idx"], tf.int32)
     assert all(tf.reduce_sum(trgt_mask, axis=1).numpy() > 0)
 
 

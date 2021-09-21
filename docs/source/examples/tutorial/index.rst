@@ -48,12 +48,12 @@ You need to pull the `NVIDIA Merlin PyTorch training container <https://ngc.nvid
 Follow the steps in this `README.md <https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/README.md>`_ for instructions on Docker launch for both training and inference containers.
 
 Notebooks
----------
+=========
 
 .. toctree::
    :maxdepth: 1
 
    1. Preliminary Preprocessing <01-preprocess>
-   2. ETL with NVTabular <02-ETL_with_NVTabular>
-   3. Session-based recommendation with Transformers4Rec <03-Session_based_recsys>
+   2. ETL with NVTabular <02-ETL-with-NVTabular>
+   3. Session-based recommendation with Transformers4Rec <03-Session-based-recsys>
    4. Inference with Triton <04-Inference-with-Triton>

@@ -15,7 +15,7 @@
 #
 
 import random
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import tensorflow as tf
 
@@ -31,7 +31,7 @@ def random_data_from_schema(
     max_session_length: Optional[int] = None,
     min_session_length: int = 5,
 ) -> TabularData:
-    data = {}
+    data: Dict[str, Any] = {}
 
     for i in range(num_rows):
         session_length = None
@@ -61,7 +61,7 @@ def random_data_from_schema(
                     row = tf.random.uniform(tuple(shape))
 
             if is_list_feature:
-                row = (row, [len(row)])
+                row = (row, [len(row)])  # type: ignore
 
             if feature.name in data:
                 if is_list_feature:

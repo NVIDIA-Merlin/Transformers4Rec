@@ -5,8 +5,10 @@ black==20.8b1
 flake8
 isort
 nbsphinx>=0.6
+mypy
 Sphinx>=3
 sphinx_markdown_tables
 sphinx_rtd_theme
 recommonmark>=0.6
 tensorflow-metadata
+tensorflow-ranking>=0.4

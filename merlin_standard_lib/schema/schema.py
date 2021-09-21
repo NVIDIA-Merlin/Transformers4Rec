@@ -16,13 +16,13 @@
 
 import collections
 import os
-from typing import Any, Callable, Dict, List, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
 from ..utils import proto_utils
-from .tag import Tag
+from .tag import TagsType
 
 try:
-    from functools import cached_property
+    from functools import cached_property  # type: ignore
 except ImportError:
     # polyfill cached_property for python <= 3.7 (using lru_cache which was introduced in python3.2)
     from functools import lru_cache
@@ -47,7 +47,7 @@ from ..proto.schema_bp import (
 
 
 def _parse_shape_and_value_count(shape, value_count) -> Dict[str, Any]:
-    output = {}
+    output: Dict[str, Union[ValueCount, ValueCountList, FixedShape]] = {}
     if shape:
         output["shape"] = FixedShape([FixedShapeDim(d) for d in shape])
 
@@ -71,18 +71,17 @@ class ColumnSchema(Feature):
         shape: Optional[Union[Tuple[int, ...], List[int]]] = None,
         value_count: Optional[Union[ValueCount, ValueCountList]] = None,
         min_index: int = 0,
-        tags: Optional[List[Union[Tag, str]]] = None,
+        tags: Optional[TagsType] = None,
         **kwargs,
     ) -> "ColumnSchema":
-        if tags:
-            tags = [str(t) for t in tags]
+        _tags: List[str] = [str(t) for t in tags] if tags else []
 
         extra = _parse_shape_and_value_count(shape, value_count)
         int_domain = IntDomain(name=name, min=min_index, max=num_items, is_categorical=True)
-        tags = list(set(tags or [] + ["categorical"]))
+        _tags = list(set(_tags + ["categorical"]))
         extra["type"] = FeatureType.INT
 
-        return cls(name=name, int_domain=int_domain, **extra, **kwargs).with_tags(tags)
+        return cls(name=name, int_domain=int_domain, **extra, **kwargs).with_tags(_tags)
 
     @classmethod
     def create_continuous(
@@ -96,11 +95,10 @@ class ColumnSchema(Feature):
         is_embedding: bool = False,
         shape: Optional[Union[Tuple[int, ...], List[int]]] = None,
         value_count: Optional[Union[ValueCount, ValueCountList]] = None,
-        tags: Optional[List[Union[Tag, str]]] = None,
+        tags: Optional[TagsType] = None,
         **kwargs,
     ) -> "ColumnSchema":
-        if tags:
-            tags = [str(t) for t in tags]
+        _tags: List[str] = [str(t) for t in tags] if tags else []
 
         extra = _parse_shape_and_value_count(shape, value_count)
         if min_value is not None and max_value is not None:
@@ -118,9 +116,9 @@ class ColumnSchema(Feature):
                     name=name, min=int(min_value), max=int(max_value), is_categorical=False
                 )
         extra["type"] = FeatureType.FLOAT if is_float else FeatureType.INT
-        tags = list(set(tags or [] + ["continuous"]))
+        _tags = list(set(_tags + ["continuous"]))
 
-        return cls(name=name, **extra, **kwargs).with_tags(tags)
+        return cls(name=name, **extra, **kwargs).with_tags(_tags)
 
     def copy(self, **kwargs) -> "ColumnSchema":
         return proto_utils.copy_better_proto_message(self, **kwargs)
@@ -128,7 +126,8 @@ class ColumnSchema(Feature):
     def with_name(self, name: str):
         return self.copy(name=name)
 
-    def with_tags(self, tags: List[str]) -> "ColumnSchema":
+    def with_tags(self, tags: TagsType) -> "ColumnSchema":
+        tags = [str(t) for t in tags]
         output = self.copy()
         if self.annotation:
             output.annotation.tag = list(set(list(self.annotation.tag) + tags))
@@ -182,7 +181,9 @@ class ColumnSchema(Feature):
     @property
     def properties(self) -> Dict[str, Union[str, float, int]]:
         if self.annotation.extra_metadata:
-            return self.annotation.extra_metadata[0]
+            properties: Dict[str, Union[str, float, int]] = self.annotation.extra_metadata[0]
+
+            return properties
 
         return {}
 
@@ -195,7 +196,10 @@ class ColumnSchema(Feature):
     def __str__(self) -> str:
         return self.name
 
-    def __eq__(self, other: "ColumnSchema") -> bool:
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, ColumnSchema):
+            return NotImplemented
+
         return self.to_dict() == other.to_dict()
 
 
@@ -222,7 +226,7 @@ class Schema(_Schema):
         if isinstance(column_schemas, dict):
             column_schemas = list(column_schemas.values())
 
-        features = []
+        features: List[ColumnSchema] = []
         if isinstance(column_schemas, list):
             for column_schema in column_schemas:
                 if isinstance(column_schema, str):
@@ -232,7 +236,7 @@ class Schema(_Schema):
         else:
             raise TypeError("The `column_schemas` parameter must be a list or dict.")
 
-        return cls(features, **kwargs)
+        return cls(feature=features, **kwargs)
 
     def with_tags_based_on_properties(self, using_value_count=True, using_domain=True) -> "Schema":
         column_schemas = []
@@ -253,7 +257,9 @@ class Schema(_Schema):
 
     def apply_inverse(self, selector) -> "Schema":
         if selector:
-            return self - self.select_by_name(selector.names)
+            output_schema: Schema = self - self.select_by_name(selector.names)
+
+            return output_schema
         else:
             return self
 
@@ -272,7 +278,11 @@ class Schema(_Schema):
         def collection_filter_fn(type):
             return type in to_select
 
-        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.type)
+        output: Schema = self._filter_column_schemas(
+            to_select, collection_filter_fn, lambda x: x.type
+        )
+
+        return output
 
     def remove_by_type(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -281,9 +291,11 @@ class Schema(_Schema):
         def collection_filter_fn(type):
             return type in to_remove
 
-        return self._filter_column_schemas(
+        output: Schema = self._filter_column_schemas(
             to_remove, collection_filter_fn, lambda x: x.type, negate=True
         )
+
+        return output
 
     def select_by_tag(self, to_select) -> "Schema":
         if not isinstance(to_select, (list, tuple)) and not callable(to_select):
@@ -292,7 +304,11 @@ class Schema(_Schema):
         def collection_filter_fn(column_tags):
             return all(x in column_tags for x in to_select)
 
-        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
+        output: Schema = self._filter_column_schemas(
+            to_select, collection_filter_fn, lambda x: x.tags
+        )
+
+        return output
 
     def remove_by_tag(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -312,7 +328,11 @@ class Schema(_Schema):
         def collection_filter_fn(column_name):
             return column_name in to_select
 
-        return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.name)
+        output: Schema = self._filter_column_schemas(
+            to_select, collection_filter_fn, lambda x: x.name
+        )
+
+        return output
 
     def remove_by_name(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -355,7 +375,7 @@ class Schema(_Schema):
         return [f.name for f in self.feature]
 
     @property
-    def column_schemas(self) -> List[ColumnSchema]:
+    def column_schemas(self) -> Sequence[ColumnSchema]:
         return self.feature
 
     @cached_property
@@ -389,7 +409,7 @@ class Schema(_Schema):
     def add(self, other, allow_overlap=True) -> "Schema":
         if isinstance(other, str):
             other = Schema.create([other])
-        elif isinstance(other, collections.abc.Sequence):
+        elif isinstance(other, collections.abc.Sequence):  # type: ignore
             other = Schema(other)
 
         if not allow_overlap:
@@ -436,9 +456,9 @@ class Schema(_Schema):
         return Schema(selected_schemas)
 
     def _check_column_schema(
-        self, column_schema: ColumnSchema, filter_fn: Callable[[ColumnSchema], bool], negate=False
+        self, inputs: FilterT, filter_fn: Callable[[FilterT], bool], negate=False
     ) -> bool:
-        check = filter_fn(column_schema)
+        check = filter_fn(inputs)
         if check and not negate:
             return True
         elif not check and negate:

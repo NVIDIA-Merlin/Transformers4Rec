@@ -22,7 +22,7 @@ from betterproto import Message as BetterProtoMessage
 from google.protobuf import text_format
 from google.protobuf.message import Message as ProtoMessage
 
-ProtoMessageType = TypeVar("ProtoMessageType")
+ProtoMessageType = TypeVar("ProtoMessageType", bound=BetterProtoMessage)
 
 
 def has_field(self, field_name):
@@ -50,7 +50,7 @@ def proto_text_to_better_proto(
 ) -> ProtoMessageType:
     proto_text = path_proto_text
     if os.path.isfile(proto_text):
-        with open(path_proto_text, "rb") as f:
+        with open(path_proto_text, "r") as f:
             proto_text = f.read()
 
     proto = text_format.Parse(proto_text, message)

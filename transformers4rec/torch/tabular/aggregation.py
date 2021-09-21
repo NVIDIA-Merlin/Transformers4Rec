@@ -21,7 +21,7 @@ from merlin_standard_lib import Schema
 from ...config.schema import requires_schema
 from ..typing import TabularData
 from ..utils.torch_utils import calculate_batch_size_from_input_size
-from .tabular import TabularAggregation, tabular_aggregation_registry
+from .base import TabularAggregation, tabular_aggregation_registry
 
 
 @tabular_aggregation_registry.register("concat")
@@ -137,7 +137,8 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         self._expand_non_sequential_features(inputs)
         self._check_input_shapes_equal(inputs)
 
-        other_inputs = {k: v for k, v in inputs.items() if k != self.schema.item_id_column_name}
+        schema: Schema = self.schema  # type: ignore
+        other_inputs = {k: v for k, v in inputs.items() if k != schema.item_id_column_name}
         other_inputs_sum = self.stack(other_inputs).sum(dim=0)
         result = item_id_inputs.multiply(other_inputs_sum)
         return result
