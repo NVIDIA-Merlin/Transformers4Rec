@@ -93,3 +93,7 @@ intersphinx_mapping = {
 }
 
 autodoc_inherit_docstrings = False
+
+# Importing this module during docs builds fails with some opaque errors
+# inside betterproto. Exclude for now
+autodoc_mock_imports = ["transformers4rec.data"]
