@@ -1,6 +1,6 @@
 # Contributing to Transformers4Rec
 
-If you are interested in contributing to NVTabular your contributions will fall
+If you are interested in contributing to Transformers4Rec your contributions will fall
 into three categories:
 1. You want to report a bug, feature request, or documentation issue
     - File an [issue](https://github.com/NVIDIA-Merlin/Transformers4Rec/issues/new/choose)
