@@ -2,7 +2,7 @@
 
 Transformers4Rec has a first-class integration with NVIDIA Merlin components, to build end-to-end GPU accelerated pipelines for sequential and session-based recommendation.
 
-<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig.3 -cPipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig.3 - Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
 
 ### Integration with NVTabular
 
