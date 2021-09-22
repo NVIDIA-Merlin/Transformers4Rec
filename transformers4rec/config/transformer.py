@@ -86,7 +86,7 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         axial_pos_shape_first_dim=4,
         **kwargs
     ):
@@ -132,7 +132,7 @@ class GPT2Config(T4RecConfig, transformers.GPT2Config):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
@@ -168,7 +168,7 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
@@ -201,7 +201,7 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
@@ -236,7 +236,7 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
@@ -271,7 +271,7 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
@@ -304,7 +304,7 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
@@ -336,7 +336,7 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
@@ -368,7 +368,7 @@ class TransfoXLConfig(T4RecConfig, transformers.TransfoXLConfig):
         layer_norm_eps=0.03,
         dropout=0.3,
         pad_token=0,
-        log_attention_weights=True,
+        log_attention_weights=False,
         **kwargs
     ):
         return cls(
