@@ -12,10 +12,10 @@ transformers4rec.tf.tabular.aggregation module
    :undoc-members:
    :show-inheritance:
 
-transformers4rec.tf.tabular.tabular module
-------------------------------------------
+transformers4rec.tf.tabular.base module
+---------------------------------------
 
-.. automodule:: transformers4rec.tf.tabular.tabular
+.. automodule:: transformers4rec.tf.tabular.base
    :members:
    :undoc-members:
    :show-inheritance:

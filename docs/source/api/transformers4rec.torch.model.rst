@@ -4,18 +4,10 @@ transformers4rec.torch.model package
 Submodules
 ----------
 
-transformers4rec.torch.model.head module
+transformers4rec.torch.model.base module
 ----------------------------------------
 
-.. automodule:: transformers4rec.torch.model.head
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-transformers4rec.torch.model.model module
------------------------------------------
-
-.. automodule:: transformers4rec.torch.model.model
+.. automodule:: transformers4rec.torch.model.base
    :members:
    :undoc-members:
    :show-inheritance:

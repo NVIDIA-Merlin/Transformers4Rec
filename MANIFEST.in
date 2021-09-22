@@ -1,6 +1,7 @@
 include *.md
 include *.yaml
 include *.ini
+include Makefile
 
 recursive-include _images *.png
 recursive-exclude docs *

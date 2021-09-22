@@ -4,18 +4,10 @@ transformers4rec.tf.model package
 Submodules
 ----------
 
-transformers4rec.tf.model.head module
+transformers4rec.tf.model.base module
 -------------------------------------
 
-.. automodule:: transformers4rec.tf.model.head
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-transformers4rec.tf.model.model module
---------------------------------------
-
-.. automodule:: transformers4rec.tf.model.model
+.. automodule:: transformers4rec.tf.model.base
    :members:
    :undoc-members:
    :show-inheritance:

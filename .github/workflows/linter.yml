@@ -1,4 +1,4 @@
-name: Test
+name: linter
 
 on:
   push:
@@ -43,9 +43,3 @@ jobs:
     - name: Type-checks using mypy
       run: |
         mypy transformers4rec --install-types --non-interactive --no-strict-optional --ignore-missing-imports
-    - name: Build
-      run: |
-        python setup.py develop
-    - name: Run unittests
-      run: |
-        python -m pytest -rsx --cov-config tests/.coveragerc --cov-report term-missing --cov=. tests
