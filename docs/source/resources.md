@@ -19,7 +19,7 @@ Transformers4Rec is part of the NVIDIA Merlin ecosystem for Recommender Systems.
 
 Transformers4Rec supports the four following [masking tasks](https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking): 
 
-|Accronym| Definition|
+|Acronym| Definition|
 |---------|--------------|
 | CLM    | Causal Language Modeling|
 | MLM    | Masked Language Modeling|
