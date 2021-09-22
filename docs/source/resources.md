@@ -21,14 +21,15 @@ Transformers4Rec supports the four following [masking tasks](https://nvidia-merl
 
 |Accronym| Definition|
 |---------|--------------|
-| CLM    | Causal Language Modelling|
-| MLM    | Masked Language Modelling|
-| PLM    | Permutation Language Modelling|
+| CLM    | Causal Language Modeling|
+| MLM    | Masked Language Modeling|
+| PLM    | Permutation Language Modeling|
 | RTD    | Replacement Token Detection|
 
 
-In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a `transformer_registry` including pre-defined [`T4RecConfig`](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig) constructors that automatically set the arguments of the related HuggingFace configuration classes. 
-The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered `T4RecConfig` classes in the colum `Registered`.
+In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a `transformer_registry` including pre-defined [`T4RecConfig`](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig) constructors that automatically set the arguments of the related HuggingFace Transformers' configuration classes. 
+The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered `T4RecConfig` classes in the colum `Registered`. 
+Tip: Registering HF Transformers config classes into Transformers4Rec is a good opportunity for your first contributions to the library ;)
 
 
 |   Model     | CLM |  MLM  |  PLM  |  RTD  | Registered |
