@@ -2,10 +2,10 @@ import pytest
 
 pytorch = pytest.importorskip("torch")
 tr = pytest.importorskip("transformers4rec.torch")
-examples_utils = pytest.importorskip("transformers4rec.torch.utils.examples_utils")
+examples_utils = pytest.importorskip("transformers4rec.torch.losses")
 
 
-@pytest.mark.parametrize("label_smoothing", [0.1, 0.6])
+@pytest.mark.parametrize("label_smoothing", [0.0, 0.1, 0.6])
 def test_item_prediction_with_label_smoothing_ce_loss(
     torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, label_smoothing
 ):
