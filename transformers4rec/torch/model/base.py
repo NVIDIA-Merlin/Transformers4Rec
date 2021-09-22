@@ -28,8 +28,8 @@ from transformers.modeling_utils import SequenceSummary
 from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.registry import camelcase_to_snakecase
 
-from ...tf.features.base import InputBlock
 from ..block.base import BlockBase, BlockOrModule, BlockType
+from ..features.base import InputBlock
 from ..features.sequence import TabularFeaturesType
 from ..typing import TabularData, TensorOrTabularData
 from ..utils.torch_utils import LossMixin, MetricsMixin
