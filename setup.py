@@ -20,6 +20,8 @@ import os
 
 from setuptools import find_packages, setup
 
+import versioneer
+
 
 def read_requirements(filename):
     base = os.path.abspath(os.path.dirname(__file__))
@@ -38,7 +40,8 @@ requirements = {
 
 setup(
     name="transformers4rec",
-    version="0.1",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
     url="https://github.com/NVIDIA-Merlin/Transformers4Rec",
     author="NVIDIA Corporation",
