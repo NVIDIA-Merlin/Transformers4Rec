@@ -17,10 +17,19 @@
 import codecs
 import itertools
 import os
+import sys
 
 from setuptools import find_packages, setup
 
-import versioneer
+try:
+    import versioneer
+except ImportError:
+    # we have a versioneer.py file living in the same directory as this file, but
+    # if we're using pep 517/518 to build from pyproject.toml its not going to find it
+    # https://github.com/python-versioneer/python-versioneer/issues/193#issue-408237852
+    # make this work by adding this directory to the python path
+    sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+    import versioneer
 
 
 def read_requirements(filename):
