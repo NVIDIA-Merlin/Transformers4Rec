@@ -3,17 +3,20 @@
 # Usage:
 #   conda build . -c defaults -c conda-forge -c huggingface -c anaconda
 
+{% set version = environ.get('GIT_DESCRIBE_TAG', '0.1').lstrip('v') + environ.get('VERSION_SUFFIX', '') %}
+{% set git_revision_count=environ.get('GIT_DESCRIBE_NUMBER', 0) %}
 {% set setup_py_data = load_setup_py_data() %}
+
 
 package:
   name: transformers4rec
-  version: 0.0.1
+  version: {{ version }}
 
 source:
   path: ../../
 
 build:
-  number: 0
+  number: {{ git_revision_count }}
   noarch: python
   script: python -m pip install . -vvv
 
