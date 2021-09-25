@@ -60,6 +60,7 @@ setup(
     install_requires=requirements["base"],
     test_suite="tests",
     extras_require={**requirements, "all": list(itertools.chain(*list(requirements.values())))},
+    include_package_data=True,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Programming Language :: Python :: 3",
