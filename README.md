@@ -1,13 +1,13 @@
 # [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec/) | [Documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/)
 <p align="left">
-    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml">
-        <img alt="Build" src="https://img.shields.io/github/checks-status/NVIDIA-Merlin/Transformers4Rec/main">
+    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml?branch=main">
+        <img alt="Build" src="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml/badge.svg?branch=main">
     </a>
     <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE">
         <img alt="GitHub" src="https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4rec.svg?color=blue">
     </a>
-    <a href="https://nvidia-merlin.github.io/Transformers4Rec/">
-        <img alt="Documentation" src="https://img.shields.io/website/https/nvidia-merlin.github.io/Transformers4Rec/.svg?down_color=red&down_message=offline&up_message=online">
+    <a href="https://nvidia-merlin.github.io/Transformers4Rec/main/">
+        <img alt="Documentation" src="https://img.shields.io/website.svg?down_color=red&down_message=offline&up_message=online&url=https%3A%2F%2Fnvidia-merlin.github.io%2FTransformers4Rec%2Fmain%2F">
     </a>
     <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/releases">
         <img alt="GitHub release" src="https://img.shields.io/github/release/NVIDIA-Merlin/Transformers4Rec.svg">
