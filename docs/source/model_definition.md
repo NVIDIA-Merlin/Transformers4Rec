@@ -13,7 +13,7 @@ In order to be fed into a transformer block the sequences of input features (use
 Current feature aggregation options are:
 - **Concat** - Concatenation of the features
 - **Element-wise sum** - Features are summed. For that, all features must have the same dimension, i.e. categorical embeddings must have the same dim and continuous features are projected to that dim.
-- **Element-wise sum & item multiplication** - Similar to *Element-wise sum*, as all features are summed. except for the item id embedding, which is multiplied by the other features sum. The aggregation formula is available in our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
+- **Element-wise sum & item multiplication** - Similar to *Element-wise sum*, as all features are summed. except for the item id embedding, which is multiplied by the other features sum. The aggregation formula is available in our [paper](https://dl.acm.org/doi/10.1145/3460231.3474255).
 
 Categorical features are represented by embeddings. Numerical features can be represented as a scalar, projected by a fully-connected (FC) layer to multiple dimensions, or represented as a weighted average of embeddings by the technique Soft One-Hot embeddings (more info in our [paper online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md)). Categorical input features are optionally normalized (with layer normalization) before aggregation.  Continuous features should be normalized during feature engineering of the dataset.
 
@@ -91,7 +91,7 @@ model = Model(head)
 ```
 
 ### Tying embeddings
-For `NextItemPredictionTask` we have added a best practice, **Tying Embeddings**, proposed originally by the NLP community to tie the weights of the input (item id) embedding matrix with the output projection layer. Not only do tied embeddings reduce the memory requirements significantly, but our own experimentation during [recent competitions](https://resources.nvidia.com/en-us-merlin/recommendation-syste?lx=97GH0Q) and empirical analysis detailed in our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) and [online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md) show how effective this method is.  It is enabled by default, but can be disabled by setting weight_tying=False).
+For `NextItemPredictionTask` we have added a best practice, **Tying Embeddings**, proposed originally by the NLP community to tie the weights of the input (item id) embedding matrix with the output projection layer. Not only do tied embeddings reduce the memory requirements significantly, but our own experimentation during [recent competitions](https://resources.nvidia.com/en-us-merlin/recommendation-syste?lx=97GH0Q) and empirical analysis detailed in our [paper](https://dl.acm.org/doi/10.1145/3460231.3474255) and [online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md) show how effective this method is.  It is enabled by default, but can be disabled by setting weight_tying=False).
 
 
 ## Regularization
