@@ -1,12 +1,15 @@
 # Additional Resources
 
-## Papers
-- [Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) - Paper presented at the [ACM RecSys'21](https://recsys.acm.org/recsys21/) where we discuss the relationship between NLP and RecSys and introduce theTransformers4Rec library, describing its focus and core features. We also provide a comprehensive empirical analysis comparing Transformer architectures with session-based recommendation algorithms, which are outperformed by the former.
+## Transformers4Rec and Session-based recommendation
+- [Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation](https://dl.acm.org/doi/10.1145/3460231.3474255) - Paper presented at the [ACM RecSys'21](https://recsys.acm.org/recsys21/) where we discuss the relationship between NLP and RecSys and introduce theTransformers4Rec library, describing its focus and core features. We also provide a comprehensive empirical analysis comparing Transformer architectures with session-based recommendation algorithms, which are outperformed by the former.
+- [Blog post](https://medium.com/nvidia-merlin/transformers4rec-4523cc7d8fa8) with a gentle introduction of the Transformers4Rec library
+- [End-to-end session based recommendation demo](https://www.youtube.com/watch?v=ajegb0W-JbU) - Recorded demo presented at ACM RecSys'21 on end-to-end session-based recommendation using NVTabular, Transformers4Rec and Triton
+- [Session-based recommenders](https://developer.nvidia.com/session-based-recommenders?ncid=so-medi-151539#cid=dl19_so-medi_en-us) - NVIDIA Developer page about NVIDIA Merlin solution for session-based recommendation
+
 
 ## Competitions
 - **SIGIR eCommerce Workshop Data Challenge 2021, organized by Coveo** - NVIDIA Merlin team was one of the winners of this competition on predicting the next interacted products for user sessions in an e-commerce. In our solution we used only Transformer architectures. Check our [**post**](https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994) and [**paper**](https://arxiv.org/abs/2107.05124).  
 - **WSDM WebTour Challenge 2021 , organized by Booking. com** - Competition on next destination prediction for multi-city trips won by NVIDIA. We leveraged a model from the Transformers4Rec library in the final ensemble. Here is our solution [**post**](https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/) and [**paper**](http://ceur-ws.org/Vol-2855/challenge_short_2.pdf).
-
 
 ## NVIDIA Merlin
 Transformers4Rec is part of the NVIDIA Merlin ecosystem for Recommender Systems. Check our other libraries:
