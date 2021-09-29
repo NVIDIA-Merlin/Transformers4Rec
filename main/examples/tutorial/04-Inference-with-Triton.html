@@ -489,7 +489,7 @@ to Triton Inference. The ensemble model guarantees that the same transformation 
 <p>At this point, before connecing to the Triton Server, we launch the inference docker container and then load the exported ensemble <code class="docutils literal notranslate"><span class="pre">t4r_pytorch</span></code> to the inference server. This is done with the scripts below:</p>
 <div class="section" id="Launch-the-docker-container:">
 <h3>Launch the docker container:<a class="headerlink" href="#Launch-the-docker-container:" title="Permalink to this headline">¶</a></h3>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v &lt;path_to_saved_models&gt;:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:0.6
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v &lt;path_to_saved_models&gt;:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:21.09
 </pre></div>
 </div>
 <p>This script will mount your local model-repository folder that includes your saved models from the previous cell to <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code> directory in the merlin-inference docker container.</p>

@@ -85,7 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Transformers4Rec | Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#highlights">Highlights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#quick-tour">Quick tour</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#use-cases">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
@@ -185,13 +189,10 @@
 <span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.misc_utils</span> <span class="kn">import</span> <span class="n">filter_kwargs</span>
 <span class="kn">from</span> <span class="nn">transformers4rec.config.schema</span> <span class="kn">import</span> <span class="n">SchemaMixin</span>
 
-<span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">Head</span><span class="p">,</span> <span class="n">PredictionTask</span>
-
 
 <div class="viewcode-block" id="Block"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.Block">[docs]</a><span class="k">class</span> <span class="nc">Block</span><span class="p">(</span><span class="n">SchemaMixin</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
-<div class="viewcode-block" id="Block.to_model"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.Block.to_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prediction_task_or_head</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">PredictionTask</span><span class="p">,</span> <span class="n">Head</span><span class="p">],</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">..model.head</span> <span class="kn">import</span> <span class="n">Head</span><span class="p">,</span> <span class="n">PredictionTask</span>
-        <span class="kn">from</span> <span class="nn">..model.model</span> <span class="kn">import</span> <span class="n">Model</span>
+<div class="viewcode-block" id="Block.to_model"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.Block.to_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prediction_task_or_head</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..model.base</span> <span class="kn">import</span> <span class="n">Head</span><span class="p">,</span> <span class="n">Model</span><span class="p">,</span> <span class="n">PredictionTask</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prediction_task_or_head</span><span class="p">,</span> <span class="n">PredictionTask</span><span class="p">):</span>
             <span class="n">head</span> <span class="o">=</span> <span class="n">prediction_task_or_head</span><span class="o">.</span><span class="n">to_head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -206,7 +207,7 @@
         <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">head</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Block.as_tabular"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.Block.as_tabular">[docs]</a>    <span class="k">def</span> <span class="nf">as_tabular</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">..tabular.tabular</span> <span class="kn">import</span> <span class="n">AsTabular</span>
+        <span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="n">AsTabular</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -255,7 +256,7 @@
 
         <span class="nb">super</span><span class="p">(</span><span class="n">SequentialBlock</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">filter_features</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">..tabular.tabular</span> <span class="kn">import</span> <span class="n">FilterFeatures</span>
+            <span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="n">FilterFeatures</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="n">FilterFeatures</span><span class="p">(</span><span class="n">filter_features</span><span class="p">),</span> <span class="o">*</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">layers</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -274,7 +275,7 @@
         <span class="k">return</span> <span class="n">output_signature</span></div>
 
 <div class="viewcode-block" id="SequentialBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.SequentialBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">..tabular.tabular</span> <span class="kn">import</span> <span class="n">TabularBlock</span>
+        <span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="n">TabularBlock</span>
 
         <span class="n">last_layer</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
@@ -392,7 +393,7 @@
 
 
 <div class="viewcode-block" id="right_shift_layer"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.right_shift_layer">[docs]</a><span class="k">def</span> <span class="nf">right_shift_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">..tabular.tabular</span> <span class="kn">import</span> <span class="n">FilterFeatures</span>
+    <span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="n">FilterFeatures</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
         <span class="n">left_side</span> <span class="o">=</span> <span class="p">[</span><span class="n">FilterFeatures</span><span class="p">(</span><span class="n">other</span><span class="p">)]</span>

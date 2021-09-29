@@ -481,8 +481,8 @@ div.rendered_html tbody tr:hover {
 <div class="section" id="1.-Introduction">
 <h2>1. Introduction<a class="headerlink" href="#1.-Introduction" title="Permalink to this headline">¶</a></h2>
 <p>In this notebook, we will create a preprocessing and feature engineering pipeline with <a class="reference external" href="https://github.com/rapidsai/cudf">Rapids cuDF</a> and <a class="reference external" href="https://github.com/NVIDIA/NVTabular">Merlin NVTabular</a> libraries to prepare our dataset for session-based recommendation model training.</p>
-<p>NVTabular is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate terabyte scale datasets and train deep learning (DL) based recommender systems.</p>
-<p>Our main goal is to create session-based features. In order to do that, we are going to perform the following:</p>
+<p>NVTabular is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate terabyte scale datasets and train deep learning (DL) based recommender systems. It provides high-level abstraction to simplify code and accelerates computation on the GPU using the RAPIDS Dask-cuDF library, and is designed to be interoperable with both PyTorch and TensorFlow using dataloaders that have been developed as extensions of native framework code.</p>
+<p>Our main goal is to create sequential features. In order to do that, we are going to perform the following:</p>
 <ul class="simple">
 <li><p>Categorify categorical features with <code class="docutils literal notranslate"><span class="pre">Categorify()</span></code> op</p></li>
 <li><p>Create temporal features with a <code class="docutils literal notranslate"><span class="pre">user-defined</span> <span class="pre">custom</span></code> op and <code class="docutils literal notranslate"><span class="pre">Lambda</span></code> op</p></li>
@@ -556,8 +556,8 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CPU times: user 645 ms, sys: 321 ms, total: 966 ms
-Wall time: 983 ms
+CPU times: user 665 ms, sys: 330 ms, total: 995 ms
+Wall time: 999 ms
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -983,12 +983,23 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </pre></div>
 </div>
 </div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># avoid numba warnings</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="n">config</span><span class="o">.</span><span class="n">CUDA_LOW_OCCUPANCY_WARNINGS</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</div>
 <ul class="simple">
 <li><p>Initialize the NVTabular dataset object and workflow graph.</p></li>
 </ul>
 <p>NVTabular’s preprocessing and feature engineering workflows are directed graphs of operators. When we initialize a Workflow with our pipeline, workflow organizes the input and output columns.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1000,21 +1011,10 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-/root/.local/lib/python3.8/site-packages/numba-0.54.0rc2-py3.8-linux-x86_64.egg/numba/cuda/compiler.py:865: NumbaPerformanceWarning: <span class="ansi-bold">Grid size (1) &lt; 2 * SM count (160) will likely result in GPU under utilization due to low occupancy.</span>
-  warn(NumbaPerformanceWarning(msg))
-/root/.local/lib/python3.8/site-packages/numba-0.54.0rc2-py3.8-linux-x86_64.egg/numba/cuda/compiler.py:865: NumbaPerformanceWarning: <span class="ansi-bold">Grid size (1) &lt; 2 * SM count (160) will likely result in GPU under utilization due to low occupancy.</span>
-  warn(NumbaPerformanceWarning(msg))
-</pre></div></div>
-</div>
-<p>Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the workflow.fit() method so that our Workflow can use these stats to transform any given input.</p>
+<p>Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the <code class="docutils literal notranslate"><span class="pre">workflow.fit()</span></code> method so that our Workflow can use these stats to transform any given input.</p>
 <p>Let’s print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1023,7 +1023,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -1073,7 +1073,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
       <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>
       <td>[-0.22252177, -0.22252177, -0.22252177, -0.222...</td>
       <td>[-0.6063043, -0.5922227, -0.58657265, -0.95319...</td>
-      <td>[0.03519271796785201, 0.0539107076813559, 0.06...</td>
+      <td>[0.03519271796785072, 0.05391070768135458, 0.0...</td>
       <td>[-2.2660856, -2.2660856, -2.2657654, -2.266085...</td>
       <td>1</td>
     </tr>
@@ -1089,7 +1089,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
       <td>[-0.90096927, -0.90096927, -0.90096927, -0.900...</td>
       <td>[0.76379955, 0.40693888, 0.2585879, 0.01305802...</td>
-      <td>[0.0006990395296891112, -0.04875344158592055, ...</td>
+      <td>[0.0006990395296891112, -0.04875344158592035, ...</td>
       <td>[-0.8581507, -0.9379308, -1.0066843, -0.936325...</td>
       <td>2</td>
     </tr>
@@ -1105,7 +1105,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
       <td>[-0.90096927, -0.90096927, -0.90096927, -0.900...</td>
       <td>[-1.7807854, -0.5645747, -0.04535069, -0.43499...</td>
-      <td>[-0.832720989925482, -0.1912324036802525, 0.56...</td>
+      <td>[-0.832720989925482, -0.19123240368025274, 0.5...</td>
       <td>[-0.7992506, -0.78641737, -0.8228414, -0.79577...</td>
       <td>2</td>
     </tr>
@@ -1114,7 +1114,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1123,7 +1123,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1147,7 +1147,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <li><p>Save NVTabular workflow to load at the inference step.</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1163,7 +1163,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <h2>6. Exporting data<a class="headerlink" href="#6.-Exporting-data" title="Permalink to this headline">¶</a></h2>
 <p>We export dataset to parquet partioned by the session <code class="docutils literal notranslate"><span class="pre">day_index</span></code> column.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1191,7 +1191,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">gpu_preprocessing</span></code> function converts the process df to a Dataset object and write out hive-partitioned data to disk.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1209,11 +1209,11 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:02&lt;00:00,  2.61it/s]
+Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:02&lt;00:00,  2.63it/s]
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1235,7 +1235,7 @@ Creating time-based splits: 100%|███████████████�
 <h2>7. Wrap Up<a class="headerlink" href="#7.-Wrap-Up" title="Permalink to this headline">¶</a></h2>
 <p>That’s it! We finished our first task. We reprocessed our dataset and created new features to train a session-based recommendation model. Please run the cell below to shut down the kernel before moving on to the next notebook.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1247,7 +1247,7 @@ Creating time-based splits: 100%|███████████████�
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="output_area docutils container">

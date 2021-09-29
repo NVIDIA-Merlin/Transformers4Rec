@@ -85,7 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Transformers4Rec | Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html#highlights">Highlights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html#quick-tour">Quick tour</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html#use-cases">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
@@ -176,6 +180,7 @@
 <span class="c1">#</span>
 
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">TFTrainingArguments</span><span class="p">,</span> <span class="n">TrainingArguments</span>
 
@@ -222,7 +227,7 @@
 <span class="sd">        by default &quot;default&quot;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">avg_session_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+    <span class="n">avg_session_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span>
             <span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;When --eval_on_last_item_seq_only False, this conservative estimate of &quot;</span>
@@ -233,7 +238,7 @@
         <span class="p">},</span>
     <span class="p">)</span>
 
-    <span class="n">max_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+    <span class="n">max_sequence_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;help&quot;</span><span class="p">:</span> <span class="s2">&quot;maximum length of sequence&quot;</span><span class="p">},</span>
     <span class="p">)</span>

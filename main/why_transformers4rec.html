@@ -40,7 +40,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Model Architectures" href="model_definition.html" />
-    <link rel="prev" title="Transformers4Rec" href="getting_started.html" /> 
+    <link rel="prev" title="Transformers4Rec | Documentation" href="getting_started.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -196,9 +196,9 @@
 <h2>The relationship between NLP and RecSys<a class="headerlink" href="#the-relationship-between-nlp-and-recsys" title="Permalink to this headline">¶</a></h2>
 <p>Over the past decade there has been a trend toward leveraging and adapting approaches proposed by Natural Language Processing (NLP) research like Word2Vec, GRU, and Attention for recommender systems (RecSys). The phenomena is especially noticeable for sequential and session-based recommendation where the sequential processing of users interactions is analogous to the language modeling (LM) task and many key RecSys architectures have been adapted from NLP, like GRU4Rec – the seminal Recurrent Neural Network (RNN)-based architecture for session-based recommendation.</p>
 <p>More recently, Transformer architectures have become the dominant technique over convolutional and recurrent neural networks for language modeling tasks. Because of their efficient parallel training, these architectures scale well with training data and model size, and are effective at modeling long-range sequences.</p>
-<p>Transformers have similarly been applied to sequential recommendation in architectures like <a class="reference external" href="https://arxiv.org/abs/1808.09781">SASRec</a>, <a class="reference external" href="https://arxiv.org/abs/1904.06690">BERT4Rec</a> and <a class="reference external" href="https://arxiv.org/pdf/1905.06874.pdf%C2%A0">BST</a>, providing higher accuracy than architectures based on CNN and RNNs, as can be seen in their reported experiments and also in our <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf">ACM RecSys’21 paper</a>.</p>
-<p>You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation towards Transformers in our <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf">paper</a> too.</p>
-<div style="text-align: center; margin: 20pt"><img src="_images/nlp_x_recsys.png" alt="A timeline illustrating the influence of NLP research in Recommender Systems" style="width:800px;"/><br><figcaption style="font-style: italic;">Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf)">Transformers4Rec paper</a></figcaption></div></div>
+<p>Transformers have similarly been applied to sequential recommendation in architectures like <a class="reference external" href="https://arxiv.org/abs/1808.09781">SASRec</a>, <a class="reference external" href="https://arxiv.org/abs/1904.06690">BERT4Rec</a> and <a class="reference external" href="https://arxiv.org/pdf/1905.06874.pdf%C2%A0">BST</a>, providing higher accuracy than architectures based on CNN and RNNs, as can be seen in their reported experiments and also in our [ACM RecSys’21 paper](Updated references do paper URL in docs).</p>
+<p>You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation towards Transformers in our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">paper</a> too.</p>
+<div style="text-align: center; margin: 20pt"><img src="_images/nlp_x_recsys.png" alt="A timeline illustrating the influence of NLP research in Recommender Systems" style="width:800px;"/><br><figcaption style="font-style: italic;">Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://dl.acm.org/doi/10.1145/3460231.3474255)">Transformers4Rec paper</a></figcaption></div></div>
 <div class="section" id="integration-with-huggingface-transformers">
 <h2>Integration with HuggingFace Transformers<a class="headerlink" href="#integration-with-huggingface-transformers" title="Permalink to this headline">¶</a></h2>
 <p>Transformers4Rec integrates with the <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace (HF) Transformers</a> library, allowing RecSys researchers and practitioners to easily experiment with the latest and state-of-the-art NLP Transformer architectures for sequential and session-based recommendation tasks and deploy those models into production.</p>
@@ -215,7 +215,7 @@
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
         <a href="model_definition.html" class="btn btn-neutral float-right" title="Model Architectures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-        <a href="getting_started.html" class="btn btn-neutral float-left" title="Transformers4Rec" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting_started.html" class="btn btn-neutral float-left" title="Transformers4Rec | Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>

@@ -226,7 +226,7 @@
 
 <dl class="py method">
 <dt id="transformers4rec.tf.block.base.Block.to_model">
-<code class="sig-name descname"><span class="pre">to_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction_task_or_head</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.tf.model.html#transformers4rec.tf.model.prediction_task.PredictionTask" title="transformers4rec.tf.model.prediction_task.PredictionTask"><span class="pre">transformers4rec.tf.model.prediction_task.PredictionTask</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="transformers4rec.tf.model.html#transformers4rec.tf.model.head.Head" title="transformers4rec.tf.model.head.Head"><span class="pre">transformers4rec.tf.model.head.Head</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#Block.to_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.Block.to_model" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">to_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction_task_or_head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#Block.to_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.Block.to_model" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -371,7 +371,7 @@ Usage:</p>
 </dl>
 <dl class="py attribute">
 <dt id="transformers4rec.tf.block.transformer.TransformerBlock.TRANSFORMER_TO_PREPARE">
-<code class="sig-name descname"><span class="pre">TRANSFORMER_TO_PREPARE</span></code><em class="property"><span class="pre">:</span> <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.configuration_utils.PretrainedConfig</span><span class="p"><span class="pre">,</span> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="transformers4rec.tf.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.tf.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">{}</span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.TRANSFORMER_TO_PREPARE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname"><span class="pre">TRANSFORMER_TO_PREPARE</span></code><em class="property"><span class="pre">:</span> <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.modeling_tf_utils.TFPreTrainedModel</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="transformers4rec.tf.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.tf.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">{}</span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.TRANSFORMER_TO_PREPARE" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -410,6 +410,16 @@ Usage:</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.tf.block.transformer.TransformerBlock.prepare_module">
+<code class="sig-name descname"><span class="pre">prepare_module</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="transformers4rec.tf.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.tf.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.prepare_module" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.tf.block.transformer.TransformerBlock.transformer">
+<code class="sig-name descname"><span class="pre">transformer</span></code><em class="property"><span class="pre">:</span> <span class="pre">transformers.modeling_tf_utils.TFPreTrainedModel</span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.transformer" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

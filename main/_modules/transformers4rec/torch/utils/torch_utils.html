@@ -176,6 +176,7 @@
 <span class="c1">#</span>
 
 <span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
@@ -249,7 +250,7 @@
         <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
         <span class="n">forward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Calculate metrics on a batch of data, each metric is stateful and this updates the state.</span>
 
 <span class="sd">        The state of each metric can be retrieved by calling the `compute_metrics` method.</span>
@@ -372,6 +373,41 @@
 
 <div class="viewcode-block" id="LambdaModule.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LambdaModule.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_fn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MappingTransformerMasking"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">MappingTransformerMasking</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">transformers4rec.torch.masking</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">CausalLanguageModeling</span><span class="p">,</span>
+        <span class="n">MaskedLanguageModeling</span><span class="p">,</span>
+        <span class="n">PermutationLanguageModeling</span><span class="p">,</span>
+        <span class="n">ReplacementLanguageModeling</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">DEFAULT_MASKING</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">CausalLanguageModeling</span><span class="p">,</span>
+        <span class="n">MaskedLanguageModeling</span><span class="p">,</span>
+        <span class="n">ReplacementLanguageModeling</span><span class="p">,</span>
+        <span class="n">PermutationLanguageModeling</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">BertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">ConvBertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">DebertaConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">DistilBertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">GPT2Config</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">]</span>
+    <span class="n">LongformerConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">,</span> <span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">MegatronBertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">MPNetConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">RobertaConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">RoFormerConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">,</span> <span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">TransfoXLConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">]</span>
+    <span class="n">XLNetConfig</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">CausalLanguageModeling</span><span class="p">,</span>
+        <span class="n">MaskedLanguageModeling</span><span class="p">,</span>
+        <span class="n">ReplacementLanguageModeling</span><span class="p">,</span>
+        <span class="n">PermutationLanguageModeling</span><span class="p">,</span>
+    <span class="p">]</span></div>
 </pre></div>
 
            </div>

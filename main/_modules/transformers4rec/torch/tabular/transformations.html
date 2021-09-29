@@ -85,7 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Transformers4Rec | Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#highlights">Highlights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#quick-tour">Quick tour</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#use-cases">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
@@ -179,8 +183,9 @@
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
-<span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">FeatureConfig</span><span class="p">,</span> <span class="n">TableConfig</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">,</span> <span class="n">TensorOrTabularData</span>
-<span class="kn">from</span> <span class="nn">.tabular</span> <span class="kn">import</span> <span class="n">TabularTransformation</span><span class="p">,</span> <span class="n">tabular_transformation_registry</span>
+<span class="kn">from</span> <span class="nn">..features.embedding</span> <span class="kn">import</span> <span class="n">FeatureConfig</span><span class="p">,</span> <span class="n">TableConfig</span>
+<span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span><span class="p">,</span> <span class="n">TensorOrTabularData</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">TabularTransformation</span><span class="p">,</span> <span class="n">tabular_transformation_registry</span>
 
 
 <div class="viewcode-block" id="StochasticSwapNoise"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.StochasticSwapNoise">[docs]</a><span class="nd">@tabular_transformation_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;stochastic-swap-noise&quot;</span><span class="p">,</span> <span class="s2">&quot;ssn&quot;</span><span class="p">)</span>
@@ -196,7 +201,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">pad_token</span> <span class="o">=</span> <span class="n">pad_token</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">replacement_prob</span> <span class="o">=</span> <span class="n">replacement_prob</span>
 
-<div class="viewcode-block" id="StochasticSwapNoise.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.StochasticSwapNoise.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+<div class="viewcode-block" id="StochasticSwapNoise.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.StochasticSwapNoise.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTabularData</span><span class="p">,</span> <span class="n">input_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TensorOrTabularData</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">:</span>
@@ -233,7 +238,9 @@
                 <span class="n">masked</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="n">input_tensor</span><span class="p">)</span>
 
             <span class="n">input_permutation</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">masked</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">sampled_values_to_replace</span> <span class="o">=</span> <span class="n">masked</span><span class="p">[</span><span class="n">input_permutation</span><span class="p">][:</span><span class="n">n_values_to_replace</span><span class="p">]</span>
+            <span class="n">sampled_values_to_replace</span> <span class="o">=</span> <span class="n">masked</span><span class="p">[</span><span class="n">input_permutation</span><span class="p">][</span>
+                <span class="p">:</span><span class="n">n_values_to_replace</span>  <span class="c1"># type: ignore</span>
+            <span class="p">]</span>
             <span class="n">output_tensor</span> <span class="o">=</span> <span class="n">input_tensor</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
 
             <span class="k">if</span> <span class="n">input_tensor</span><span class="p">[</span><span class="n">sse_replacement_mask</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">!=</span> <span class="n">sampled_values_to_replace</span><span class="p">:</span>

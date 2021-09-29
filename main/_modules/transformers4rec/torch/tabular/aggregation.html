@@ -85,7 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Transformers4Rec | Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#highlights">Highlights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#quick-tour">Quick tour</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#use-cases">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
@@ -182,7 +186,7 @@
 <span class="kn">from</span> <span class="nn">...config.schema</span> <span class="kn">import</span> <span class="n">requires_schema</span>
 <span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span>
 <span class="kn">from</span> <span class="nn">..utils.torch_utils</span> <span class="kn">import</span> <span class="n">calculate_batch_size_from_input_size</span>
-<span class="kn">from</span> <span class="nn">.tabular</span> <span class="kn">import</span> <span class="n">TabularAggregation</span><span class="p">,</span> <span class="n">tabular_aggregation_registry</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">TabularAggregation</span><span class="p">,</span> <span class="n">tabular_aggregation_registry</span>
 
 
 <div class="viewcode-block" id="ConcatFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ConcatFeatures">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
@@ -298,7 +302,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_expand_non_sequential_features</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_input_shapes_equal</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
-        <span class="n">other_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="o">.</span><span class="n">item_id_column_name</span><span class="p">}</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span>  <span class="c1"># type: ignore</span>
+        <span class="n">other_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">schema</span><span class="o">.</span><span class="n">item_id_column_name</span><span class="p">}</span>
         <span class="n">other_inputs_sum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">other_inputs</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">item_id_inputs</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">other_inputs_sum</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>

@@ -455,7 +455,7 @@ div.rendered_html tbody tr:hover {
 }
 </style>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -508,10 +508,10 @@ gained popularity due to their ability to capture short-term and contextual user
 <li><p><a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask">NextItemPredictionTask</a> is the class to support next item prediction task, combining a model body with a head.</p></li>
 <li><p><a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.Trainer">Trainer</a> extends the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class from HF transformers and manages the model training and evaluation.</p></li>
 </ul>
-<p>You can check the <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/">full documentation</a> of Transformers4Rec if needed.</p>
+<p>You can check the <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/index.html">full documentation</a> of Transformers4Rec if needed.</p>
 <p>In Figure 1, we present a reference architecture that we are going to build with Transformers4Rec PyTorch API in this notebook. We are going to start using only <code class="docutils literal notranslate"><span class="pre">product-id</span></code> as input feature, but as you can notice in the figure, we can add additional categorical and numerical features later to improve recommendation accuracy, as shown in Section 3.2.4.</p>
 <p><img alt="image0" src="../../_images/masking.png" /></p>
-<p><center><p>Figure 1. Transformers4Rec meta-architecure.</p>
+<p><center><p>Figure 1. Transformers4Rec meta-architecture.</p>
 </center></p><div class="section" id="3.1-Training-an-RNN-based-Session-based-Recommendation-Model">
 <h3>3.1 Training an RNN-based Session-based Recommendation Model<a class="headerlink" href="#3.1-Training-an-RNN-based-Session-based-Recommendation-Model" title="Permalink to this headline">¶</a></h3>
 <p>In this section, we use a type of Recurrent Neural Networks (RNN) - the Gated Recurrent Unit (GRU)[5] - to do next-item prediction using a sequence of events (e.g., click, view, or purchase) per user in a given session. There is obviously some sequential patterns that we want to capture to provide more relevant recommendations. In our case, the input of the GRU layer is a representation of the user interaction, the internal GRU hidden state encodes a representation of the session based on past
@@ -532,7 +532,7 @@ interactions and the outputs are the next-item predictions. Basically, for each 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">transformers4rec.torch</span> <span class="k">as</span> <span class="nn">tr</span>
 
-<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">AvgPrecisionAt</span><span class="p">,</span> <span class="n">RecallAt</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
 </pre></div>
 </div>
 </div>
@@ -659,7 +659,6 @@ item embeddings.</p>
     <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                                        <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]),</span>
-    <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
 </pre></div>
@@ -674,8 +673,8 @@ Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requi
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="Initialize-the-Dataloader">
-<h5>Initialize the Dataloader<a class="headerlink" href="#Initialize-the-Dataloader" title="Permalink to this headline">¶</a></h5>
+<div class="section" id="Define-a-Dataloader-function-from-schema">
+<h5>Define a Dataloader function from schema<a class="headerlink" href="#Define-a-Dataloader-function-from-schema" title="Permalink to this headline">¶</a></h5>
 <p>We use optimized NVTabular PyTorch Dataloader which has the following benefits: - removing bottlenecks from dataloading by processing large chunks of data at a time instead iterating by row - processing datasets that don’t fit within the GPU or CPU memory by streaming from the disk - reading data directly into the GPU memory and removing CPU-GPU communication - preparing batch asynchronously into the GPU to avoid CPU-GPU communication - supporting commonly used formats such as parquet - having
 native support to sparse sequential features</p>
 <div class="nbinput nblast docutils container">
@@ -684,62 +683,27 @@ native support to sparse sequential features</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># import NVTabular dependencies</span>
-<span class="kn">from</span> <span class="nn">nvtabular</span> <span class="kn">import</span> <span class="n">Dataset</span> <span class="k">as</span> <span class="n">NVTDataset</span>
-<span class="kn">from</span> <span class="nn">nvtabular.loader.torch</span> <span class="kn">import</span> <span class="n">DLDataLoader</span>
-<span class="kn">from</span> <span class="nn">nvtabular.loader.torch</span> <span class="kn">import</span> <span class="n">TorchAsyncItr</span> <span class="k">as</span> <span class="n">NVTDataLoader</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">NVTabularDataLoader</span>
 
 <span class="n">x_cat_names</span><span class="p">,</span> <span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id-list_seq&#39;</span><span class="p">],</span> <span class="p">[]</span>
 
-<span class="c1">#   dictionary representing max sequence length for column</span>
+<span class="c1"># dictionary representing max sequence length for column</span>
 <span class="n">sparse_features_max</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">fname</span><span class="p">:</span> <span class="n">sequence_length</span>
     <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span>
 <span class="p">}</span>
 
-<span class="c1"># define collate function</span>
-<span class="k">def</span> <span class="nf">dataloader_collate_dict</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
-    <span class="c1"># Gets only the features dict</span>
-    <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-    <span class="k">return</span> <span class="n">inputs</span>
+<span class="c1"># Define a `get_dataloader` function to call in the training loop</span>
+<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
 
-
-<span class="k">class</span> <span class="nc">DLDataLoaderWrapper</span><span class="p">(</span><span class="n">DLDataLoader</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;batch_size&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">)</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-</pre></div>
-</div>
-</div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Define a `get_dataloader` function to call in the training loop</span>
-<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">bs</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
-    <span class="n">dataset</span> <span class="o">=</span> <span class="n">NVTDataset</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">bs</span><span class="p">)</span>
-
-    <span class="n">loader</span> <span class="o">=</span> <span class="n">NVTDataLoader</span><span class="p">(</span>
-        <span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">,</span>
-        <span class="n">batch_size</span><span class="o">=</span> <span class="n">bs</span><span class="p">,</span>
-        <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">cats</span><span class="o">=</span><span class="n">x_cat_names</span><span class="p">,</span>
-        <span class="n">conts</span><span class="o">=</span><span class="n">x_cont_names</span><span class="p">,</span>
-        <span class="n">device</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">labels</span><span class="o">=</span><span class="p">[],</span>
+    <span class="k">return</span> <span class="n">NVTabularDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+        <span class="n">schema</span><span class="p">,</span>
+        <span class="n">path</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">sequence_length</span><span class="p">,</span>
         <span class="n">sparse_names</span><span class="o">=</span><span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span><span class="p">,</span>
         <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_features_max</span><span class="p">,</span>
-        <span class="n">sparse_as_dense</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="n">dl_loader</span> <span class="o">=</span> <span class="n">DLDataLoaderWrapper</span><span class="p">(</span>
-    <span class="n">loader</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">dataloader_collate_dict</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">bs</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">dl_loader</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -751,7 +715,7 @@ native support to sparse sequential features</p>
 <div class="section" id="Set-training-arguments">
 <h5>Set training arguments<a class="headerlink" href="#Set-training-arguments" title="Permalink to this headline">¶</a></h5>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -778,7 +742,7 @@ native support to sparse sequential features</p>
 <div class="section" id="Instantiate-the-Trainer">
 <h5>Instantiate the Trainer<a class="headerlink" href="#Instantiate-the-Trainer" title="Permalink to this headline">¶</a></h5>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -794,7 +758,7 @@ native support to sparse sequential features</p>
 </div>
 <p>Define the output folder of the processed parquet files</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -808,7 +772,7 @@ native support to sparse sequential features</p>
 <p>Training models incrementally, e.g. fine-tuning pre-trained models with new data over time is a common practice in industry to scale to the large streaming data been generated every data. Furthermore, it is common to evaluate recommendation models on data that came after the one used to train the models, for a more realistic evaluation.</p>
 <p>Here, we use a loop that to conduct a time-based finetuning, by iteratively training and evaluating using a sliding time window as follows: At each iteration, we use training data of a specific time index t to train the model then we evaluate on the validation data of next index t + 1. We set the start time to 1 and end time to 4.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -854,7 +818,7 @@ native support to sparse sequential features</p>
   Num examples = 112128
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1314
 </pre></div></div>
@@ -877,7 +841,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:50, Epoch 3/3]
+      [1314/1314 00:51, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -889,27 +853,27 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.796700</td>
+      <td>9.975300</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.627300</td>
+      <td>9.218200</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.978300</td>
+      <td>8.972500</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.287800</td>
+      <td>8.898600</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.795400</td>
+      <td>8.804800</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.303000</td>
+      <td>8.801400</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -937,7 +901,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 01:56]
+  [415/415 01:55]
 </div></div>
 </div>
 <div class="nboutput docutils container">
@@ -951,14 +915,14 @@ Eval results for day 2 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.934112548828125
- eval/next-item/ndcg_at_10 = 0.037846192717552185
- eval/next-item/ndcg_at_20 = 0.04667336121201515
- eval/next-item/recall_at_10 = 0.07186486572027206
- eval/next-item/recall_at_20 = 0.10677927732467651
- eval_runtime = 6.1346
- eval_samples_per_second = 2164.785
- eval_steps_per_second = 16.953
+ eval/loss = 8.881314277648926
+ eval/next-item/ndcg_at_10 = 0.036112383008003235
+ eval/next-item/ndcg_at_20 = 0.04597809165716171
+ eval/next-item/recall_at_10 = 0.06884850561618805
+ eval/next-item/recall_at_20 = 0.10798582434654236
+ eval_runtime = 6.3241
+ eval_samples_per_second = 2099.891
+ eval_steps_per_second = 65.622
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -970,7 +934,7 @@ Eval results for day 2 are:
   Num examples = 106240
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1245
 </pre></div></div>
@@ -993,7 +957,7 @@ Launch training for day 2 are:
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 00:49, Epoch 3/3]
+      [1245/1245 00:48, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1005,27 +969,27 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.953900</td>
+      <td>8.992400</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.319500</td>
+      <td>8.859700</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.658100</td>
+      <td>8.636400</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.045500</td>
+      <td>8.524400</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.506700</td>
+      <td>8.396200</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>7.897800</td>
+      <td>8.369100</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -1057,14 +1021,14 @@ Eval results for day 3 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.61217212677002
- eval/next-item/ndcg_at_10 = 0.05201007425785065
- eval/next-item/ndcg_at_20 = 0.06431205570697784
- eval/next-item/recall_at_10 = 0.09761866182088852
- eval/next-item/recall_at_20 = 0.14614255726337433
- eval_runtime = 6.0611
- eval_samples_per_second = 2027.343
- eval_steps_per_second = 15.839
+ eval/loss = 8.505434036254883
+ eval/next-item/ndcg_at_10 = 0.05683322995901108
+ eval/next-item/ndcg_at_20 = 0.0703873336315155
+ eval/next-item/recall_at_10 = 0.10895449668169022
+ eval/next-item/recall_at_20 = 0.16269777715206146
+ eval_runtime = 5.949
+ eval_samples_per_second = 2065.548
+ eval_steps_per_second = 64.548
 </pre></div></div>
 </div>
 <div class="nboutput docutils container">
@@ -1076,7 +1040,7 @@ Eval results for day 3 are:
   Num examples = 97792
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1146
 </pre></div></div>
@@ -1111,23 +1075,23 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.611000</td>
+      <td>8.581200</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.096000</td>
+      <td>8.463000</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.221400</td>
+      <td>8.274700</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>7.964000</td>
+      <td>8.186600</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.013300</td>
+      <td>8.055800</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -1159,21 +1123,21 @@ Eval results for day 4 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.280722618103027
- eval/next-item/ndcg_at_10 = 0.06102528050541878
- eval/next-item/ndcg_at_20 = 0.07624790817499161
- eval/next-item/recall_at_10 = 0.11575625091791153
- eval/next-item/recall_at_20 = 0.17611441016197205
- eval_runtime = 7.5342
- eval_samples_per_second = 2064.195
- eval_steps_per_second = 16.193
-CPU times: user 2min 18s, sys: 31.4 s, total: 2min 49s
-Wall time: 2min 49s
+ eval/loss = 8.123461723327637
+ eval/next-item/ndcg_at_10 = 0.07151895016431808
+ eval/next-item/ndcg_at_20 = 0.08768121898174286
+ eval/next-item/recall_at_10 = 0.1361762434244156
+ eval/next-item/recall_at_20 = 0.20020613074302673
+ eval_runtime = 7.5055
+ eval_samples_per_second = 2072.086
+ eval_steps_per_second = 64.753
+CPU times: user 2min 18s, sys: 30.2 s, total: 2min 49s
+Wall time: 2min 48s
 </pre></div></div>
 </div>
 <p>Let’s write out model evaluation accuracy results to a text file to compare model at the end</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1196,7 +1160,7 @@ Wall time: 2min 49s
 <div class="section" id="Restart-the-kernel-to-free-our-GPU-memory">
 <h5>Restart the kernel to free our GPU memory<a class="headerlink" href="#Restart-the-kernel-to-free-our-GPU-memory" title="Permalink to this headline">¶</a></h5>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1207,7 +1171,7 @@ Wall time: 2min 49s
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1249,7 +1213,7 @@ masked word based only on its bi-directional context. When we train with MLM, th
 <h4>3.2.3 Train XLNET for Next Item Prediction<a class="headerlink" href="#3.2.3-Train-XLNET-for-Next-Item-Prediction" title="Permalink to this headline">¶</a></h4>
 <p>Now we are going to define an architecture for next-item prediction using the XLNET architecture.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1259,13 +1223,13 @@ masked word based only on its bi-directional context. When we train with MLM, th
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">transformers4rec.torch</span> <span class="k">as</span> <span class="nn">tr</span>
 
-<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">AvgPrecisionAt</span><span class="p">,</span> <span class="n">RecallAt</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
 </pre></div>
 </div>
 </div>
 <p>As we did above, we start with defining our schema object and selecting only the <code class="docutils literal notranslate"><span class="pre">product_id</span></code> feature for training.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1284,7 +1248,7 @@ masked word based only on its bi-directional context. When we train with MLM, th
 <h5>Define Input block<a class="headerlink" href="#Define-Input-block" title="Permalink to this headline">¶</a></h5>
 <p>Here we instantiate <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> from the feature schema and set <code class="docutils literal notranslate"><span class="pre">masking=&quot;mlm&quot;</span></code> to use MLM as training method.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1303,7 +1267,7 @@ masked word based only on its bi-directional context. When we train with MLM, th
 <p>We have inherited the original <code class="docutils literal notranslate"><span class="pre">XLNetConfig</span></code> class of HF transformers with some default arguments in the <code class="docutils literal notranslate"><span class="pre">build()</span></code> method. Here we use it to instantiate an XLNET model according to the arguments (<code class="docutils literal notranslate"><span class="pre">d_model</span></code>, <code class="docutils literal notranslate"><span class="pre">n_head</span></code>, etc.), defining the model architecture.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">TransformerBlock</span></code> class supports HF Transformers for session-based and sequential-based recommendation models. <code class="docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code> is the class to support next item prediction task, encapsulating the corresponding heads and loss.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1322,7 +1286,6 @@ masked word based only on its bi-directional context. When we train with MLM, th
     <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                                        <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]),</span>
-    <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Get the end-to-end Model class</span>
@@ -1340,8 +1303,8 @@ Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requi
 </div>
 <p><strong>Set training arguments</strong></p>
 <p>Among the training arguments you can set the <code class="docutils literal notranslate"><span class="pre">data_loader_engine</span></code> to automatically instantiate the dataloader based on the schema, rather than instantiating the data loader manually like we did for the RNN example. The default value is <code class="docutils literal notranslate"><span class="pre">&quot;nvtabular&quot;</span></code> for optimized GPU-based data-loading. Optionally the PyarrowDataLoader (<code class="docutils literal notranslate"><span class="pre">&quot;pyarrow&quot;</span></code>) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded into CPU memory.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1365,9 +1328,17 @@ Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requi
 </pre></div>
 </div>
 </div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+PyTorch: setting up devices
+</pre></div></div>
+</div>
 <p><strong>Instantiate the trainer</strong></p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1383,7 +1354,7 @@ Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requi
 </div>
 <p>Define the output folder of the processed parquet files</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1393,7 +1364,7 @@ Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requi
 </div>
 <p>Now, we do time-based fine-tuning the model by iteratively training and evaluating using a sliding time window, like we did for the RNN example.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1429,6 +1400,20 @@ Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requi
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+***** Running training *****
+  Num examples = 112128
+  Num Epochs = 3
+  Instantaneous batch size per device = 256
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
+  Gradient Accumulation steps = 1
+  Total optimization steps = 1314
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 ********************
@@ -1440,25 +1425,11 @@ Launch training for day 1 are:
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-***** Running training *****
-  Num examples = 112128
-  Num Epochs = 3
-  Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
-  Gradient Accumulation steps = 1
-  Total optimization steps = 1314
-</pre></div></div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
 <div class="output_area rendered_html docutils container">
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:44, Epoch 3/3]
+      [1314/1314 00:45, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1470,27 +1441,27 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.946200</td>
+      <td>9.927000</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>9.025500</td>
+      <td>9.046400</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.780400</td>
+      <td>8.779300</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.641600</td>
+      <td>8.635800</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.537500</td>
+      <td>8.539400</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.504100</td>
+      <td>8.507000</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -1518,7 +1489,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 01:47]
+  [415/415 01:48]
 </div></div>
 </div>
 <div class="nboutput docutils container">
@@ -1532,14 +1503,14 @@ Eval results for day 2 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.737692832946777
- eval/next-item/ndcg_at_10 = 0.04813284054398537
- eval/next-item/ndcg_at_20 = 0.05864527076482773
- eval/next-item/recall_at_10 = 0.09230072796344757
- eval/next-item/recall_at_20 = 0.1340019553899765
- eval_runtime = 7.175
- eval_samples_per_second = 1850.871
- eval_steps_per_second = 14.495
+ eval/loss = 8.753535270690918
+ eval/next-item/ndcg_at_10 = 0.049175068736076355
+ eval/next-item/ndcg_at_20 = 0.06000332161784172
+ eval/next-item/recall_at_10 = 0.09177286922931671
+ eval/next-item/recall_at_20 = 0.1346806436777115
+ eval_runtime = 7.0703
+ eval_samples_per_second = 1878.271
+ eval_steps_per_second = 58.696
 ********************
 Launch training for day 2 are:
 ********************
@@ -1555,7 +1526,7 @@ Launch training for day 2 are:
   Num examples = 106240
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1245
 </pre></div></div>
@@ -1579,27 +1550,27 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.624400</td>
+      <td>8.635100</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.514100</td>
+      <td>8.523100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.357900</td>
+      <td>8.375600</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.296200</td>
+      <td>8.322400</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.193800</td>
+      <td>8.232100</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.170000</td>
+      <td>8.209900</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -1631,14 +1602,14 @@ Eval results for day 3 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.403376579284668
- eval/next-item/ndcg_at_10 = 0.06307362020015717
- eval/next-item/ndcg_at_20 = 0.0768769383430481
- eval/next-item/recall_at_10 = 0.12020877748727798
- eval/next-item/recall_at_20 = 0.17509378492832184
- eval_runtime = 6.9589
- eval_samples_per_second = 1765.795
- eval_steps_per_second = 13.795
+ eval/loss = 8.421579360961914
+ eval/next-item/ndcg_at_10 = 0.061416078358888626
+ eval/next-item/ndcg_at_20 = 0.07491344213485718
+ eval/next-item/recall_at_10 = 0.11719132959842682
+ eval/next-item/recall_at_20 = 0.17060838639736176
+ eval_runtime = 7.0074
+ eval_samples_per_second = 1753.564
+ eval_steps_per_second = 54.799
 ********************
 Launch training for day 3 are:
 ********************
@@ -1654,7 +1625,7 @@ Launch training for day 3 are:
   Num examples = 97792
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1146
 </pre></div></div>
@@ -1666,7 +1637,7 @@ Launch training for day 3 are:
     <div>
 
       <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1146/1146 00:39, Epoch 3/3]
+      [1146/1146 00:40, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1678,23 +1649,23 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.287800</td>
+      <td>8.312100</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.197600</td>
+      <td>8.226900</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.067500</td>
+      <td>8.095400</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.037500</td>
+      <td>8.065600</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.929600</td>
+      <td>7.965600</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -1726,21 +1697,21 @@ Eval results for day 4 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.089454650878906
- eval/next-item/ndcg_at_10 = 0.07268889248371124
- eval/next-item/ndcg_at_20 = 0.08917907625436783
- eval/next-item/recall_at_10 = 0.1365627497434616
- eval/next-item/recall_at_20 = 0.20200979709625244
- eval_runtime = 8.8626
- eval_samples_per_second = 1754.792
- eval_steps_per_second = 13.766
-CPU times: user 6min 56s, sys: 15.3 s, total: 7min 11s
-Wall time: 2min 34s
+ eval/loss = 8.107558250427246
+ eval/next-item/ndcg_at_10 = 0.07384572923183441
+ eval/next-item/ndcg_at_20 = 0.08944202959537506
+ eval/next-item/recall_at_10 = 0.13939706981182098
+ eval/next-item/recall_at_20 = 0.20175212621688843
+ eval_runtime = 8.9372
+ eval_samples_per_second = 1740.144
+ eval_steps_per_second = 54.38
+CPU times: user 6min 57s, sys: 14.3 s, total: 7min 11s
+Wall time: 2min 35s
 </pre></div></div>
 </div>
 <p>Add eval accuracy metric results to the existing resuls.txt file.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1758,7 +1729,7 @@ Wall time: 2min 34s
 <div class="section" id="id1">
 <h4>Restart the kernel to free our GPU memory<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1769,7 +1740,7 @@ Wall time: 2min 34s
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1794,7 +1765,7 @@ Wall time: 2min 34s
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">transformers4rec.torch</span> <span class="k">as</span> <span class="nn">tr</span>
 
-<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">AvgPrecisionAt</span><span class="p">,</span> <span class="n">RecallAt</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
 </pre></div>
 </div>
 </div>
@@ -1849,7 +1820,6 @@ Wall time: 2min 34s
     <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                                      <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                                               <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]),</span>
-    <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Get the end-to-end Model class</span>
@@ -1971,7 +1941,7 @@ Launch training for day 1 are:
   Num examples = 112128
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1314
 </pre></div></div>
@@ -1995,27 +1965,27 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.800100</td>
+      <td>9.836900</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.914100</td>
+      <td>8.937700</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.631300</td>
+      <td>8.665200</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.495300</td>
+      <td>8.518700</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.386300</td>
+      <td>8.411900</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.345900</td>
+      <td>8.371200</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -2057,14 +2027,14 @@ Eval results for day 2 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.59162712097168
- eval/next-item/ndcg_at_10 = 0.054925039410591125
- eval/next-item/ndcg_at_20 = 0.06662589311599731
- eval/next-item/recall_at_10 = 0.10150063782930374
- eval/next-item/recall_at_20 = 0.14810346066951752
- eval_runtime = 9.4227
- eval_samples_per_second = 1409.362
- eval_steps_per_second = 11.037
+ eval/loss = 8.605655670166016
+ eval/next-item/ndcg_at_10 = 0.0545700266957283
+ eval/next-item/ndcg_at_20 = 0.06626961380243301
+ eval/next-item/recall_at_10 = 0.10270718485116959
+ eval/next-item/recall_at_20 = 0.14915919303894043
+ eval_runtime = 9.5026
+ eval_samples_per_second = 1397.507
+ eval_steps_per_second = 43.672
 ********************
 Launch training for day 2 are:
 ********************
@@ -2080,7 +2050,7 @@ Launch training for day 2 are:
   Num examples = 106240
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1245
 </pre></div></div>
@@ -2092,7 +2062,7 @@ Launch training for day 2 are:
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 00:49, Epoch 3/3]
+      [1245/1245 00:50, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -2104,11 +2074,11 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.452300</td>
+      <td>8.466200</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.314900</td>
+      <td>8.315800</td>
     </tr>
     <tr>
       <td>600</td>
@@ -2116,15 +2086,15 @@ Launch training for day 2 are:
     </tr>
     <tr>
       <td>800</td>
-      <td>8.044700</td>
+      <td>8.036200</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.940800</td>
+      <td>7.920700</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>7.907600</td>
+      <td>7.883900</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -2156,14 +2126,14 @@ Eval results for day 3 are:
 ********************
 
  epoch = 3.0
- eval/loss = 8.177560806274414
- eval/next-item/ndcg_at_10 = 0.07021629810333252
- eval/next-item/ndcg_at_20 = 0.08569338172674179
- eval/next-item/recall_at_10 = 0.13521449267864227
- eval/next-item/recall_at_20 = 0.1965421736240387
- eval_runtime = 9.1669
- eval_samples_per_second = 1340.47
- eval_steps_per_second = 10.472
+ eval/loss = 8.162181854248047
+ eval/next-item/ndcg_at_10 = 0.0733010321855545
+ eval/next-item/ndcg_at_20 = 0.08980806171894073
+ eval/next-item/recall_at_10 = 0.13904747366905212
+ eval/next-item/recall_at_20 = 0.20428968966007233
+ eval_runtime = 9.1126
+ eval_samples_per_second = 1348.468
+ eval_steps_per_second = 42.14
 ********************
 Launch training for day 3 are:
 ********************
@@ -2179,7 +2149,7 @@ Launch training for day 3 are:
   Num examples = 97792
   Num Epochs = 3
   Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 1024
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
   Gradient Accumulation steps = 1
   Total optimization steps = 1146
 </pre></div></div>
@@ -2203,23 +2173,23 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.027300</td>
+      <td>8.016800</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>7.911800</td>
+      <td>7.900500</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>7.742400</td>
+      <td>7.740200</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>7.683000</td>
+      <td>7.691500</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.565600</td>
+      <td>7.583600</td>
     </tr>
   </tbody>
 </table><p></div>
@@ -2251,15 +2221,15 @@ Eval results for day 4 are:
 ********************
 
  epoch = 3.0
- eval/loss = 7.783203125
- eval/next-item/ndcg_at_10 = 0.08664782345294952
- eval/next-item/ndcg_at_20 = 0.10513769090175629
- eval/next-item/recall_at_10 = 0.16290904581546783
- eval/next-item/recall_at_20 = 0.23647256195545197
- eval_runtime = 11.6329
- eval_samples_per_second = 1336.895
- eval_steps_per_second = 10.487
-CPU times: user 7min 28s, sys: 17.2 s, total: 7min 46s
+ eval/loss = 7.774728775024414
+ eval/next-item/ndcg_at_10 = 0.09089759737253189
+ eval/next-item/ndcg_at_20 = 0.10928591340780258
+ eval/next-item/recall_at_10 = 0.16947951912879944
+ eval/next-item/recall_at_20 = 0.24214120209217072
+ eval_runtime = 11.8897
+ eval_samples_per_second = 1308.02
+ eval_steps_per_second = 40.876
+CPU times: user 7min 29s, sys: 16.9 s, total: 7min 45s
 Wall time: 3min 10s
 </pre></div></div>
 </div>
@@ -2274,14 +2244,14 @@ Wall time: 3min 10s
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;XLNet-MLM with side information accuracy results:&#39;</span><span class="p">)</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span>  <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
 </pre></div>
 </div>
 </div>
 <p>After model training and evaluation is completed we can save our trained model in the next section.</p>
 </div>
-<div class="section" id="Exporting-the-preprocessing-worflow-and-model-for-deployment-to-Triton-server">
-<h5>Exporting the preprocessing worflow and model for deployment to Triton server<a class="headerlink" href="#Exporting-the-preprocessing-worflow-and-model-for-deployment-to-Triton-server" title="Permalink to this headline">¶</a></h5>
+<div class="section" id="Exporting-the-preprocessing-workflow-and-model-for-deployment-to-Triton-server">
+<h5>Exporting the preprocessing workflow and model for deployment to Triton server<a class="headerlink" href="#Exporting-the-preprocessing-workflow-and-model-for-deployment-to-Triton-server" title="Permalink to this headline">¶</a></h5>
 <p>Load the preproc workflow that we saved in the ETL notebook.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
@@ -2289,6 +2259,9 @@ Wall time: 3min 10s
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">nvtabular</span> <span class="k">as</span> <span class="nn">nvt</span>
+
+<span class="c1"># define data path about where to get our data</span>
+<span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
 <span class="n">workflow_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;workflow_etl&#39;</span><span class="p">)</span>
 <span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">workflow_path</span><span class="p">)</span>
 </pre></div>
@@ -2325,7 +2298,7 @@ Wall time: 3min 10s
  &#39;relative_price_to_avg_categ_id-list_seq&#39;: 20}
 </pre></div></div>
 </div>
-<p>It is time to export the proc worflow and model in the format required by Triton Inference Server, by using the NVTabular’s <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function.</p>
+<p>It is time to export the proc workflow and model in the format required by Triton Inference Server, by using the NVTabular’s <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -2345,7 +2318,7 @@ Wall time: 3min 10s
 </div>
 <p>Before we move on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton</span></code>, let’s print out our results.txt file.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2359,23 +2332,48 @@ Wall time: 3min 10s
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 GRU accuracy results:
-next-item/ndcg_at_10:0.06393890082836151
-next-item/ndcg_at_20:0.07904116064310074
-next-item/recall_at_10:0.12045864760875702
-next-item/recall_at_20:0.1801726371049881
+next-item/ndcg_at_10:0.07151895016431808
+next-item/ndcg_at_20:0.08768121898174286
+next-item/recall_at_10:0.1361762434244156
+next-item/recall_at_20:0.20020613074302673
 
-XLNET accuracy results:
-next-item/ndcg_at_10:0.07268889248371124
-next-item/ndcg_at_20:0.08917907625436783
-next-item/recall_at_10:0.1365627497434616
-next-item/recall_at_20:0.20200979709625244
+XLNet-MLM accuracy results:
+next-item/ndcg_at_10:0.07384572923183441
+next-item/ndcg_at_20:0.08944202959537506
+next-item/recall_at_10:0.13939706981182098
+next-item/recall_at_20:0.20175212621688843
 
 XLNet-MLM with side information accuracy results:
-next-item/ndcg_at_10:0.08664782345294952
-next-item/ndcg_at_20:0.10513769090175629
-next-item/recall_at_10:0.16290904581546783
-next-item/recall_at_20:0.23647256195545197
+next-item/ndcg_at_10:0.08558817952871323
+next-item/ndcg_at_20:0.10371016710996628
+next-item/recall_at_10:0.1605256348848343
+next-item/recall_at_20:0.2324143350124359
 </pre></div></div>
+</div>
+<p>Let’s plot bar charts to visualize and compare the accuracy results using <code class="docutils literal notranslate"><span class="pre">visuals</span></code> util function.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">visuals</span> <span class="kn">import</span> <span class="n">create_bar_chart</span>
+<span class="n">create_bar_chart</span><span class="p">(</span><span class="s1">&#39;results.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/examples_tutorial_03-Session-based-recsys_105_0.png" src="../../_images/examples_tutorial_03-Session-based-recsys_105_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../../_images/examples_tutorial_03-Session-based-recsys_105_1.png" src="../../_images/examples_tutorial_03-Session-based-recsys_105_1.png" />
+</div>
 </div>
 <p><strong>In the end, using side information provided higher accuracy. Why is that? Have an idea?</strong></p>
 </div>

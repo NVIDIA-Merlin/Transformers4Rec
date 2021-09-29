@@ -85,7 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Transformers4Rec | Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#highlights">Highlights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#quick-tour">Quick tour</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#use-cases">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
@@ -179,14 +183,14 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="kn">from</span> <span class="nn">keras.utils.generic_utils</span> <span class="kn">import</span> <span class="n">register_keras_serializable</span>
+<span class="kn">import</span> <span class="nn">transformers</span>
 <span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">PretrainedConfig</span><span class="p">,</span> <span class="n">TFPreTrainedModel</span>
 
 <span class="kn">from</span> <span class="nn">...config.transformer</span> <span class="kn">import</span> <span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformer_registry</span>
 <span class="kn">from</span> <span class="nn">..masking</span> <span class="kn">import</span> <span class="n">MaskSequence</span>
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">Block</span>
 
-<span class="n">TransformerBody</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">TFPreTrainedModel</span><span class="p">,</span> <span class="n">T4RecConfig</span><span class="p">]</span>
+<span class="n">TransformerBody</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">TFPreTrainedModel</span><span class="p">,</span> <span class="n">PretrainedConfig</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="TransformerPrepare"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerPrepare">[docs]</a><span class="k">class</span> <span class="nc">TransformerPrepare</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
@@ -199,7 +203,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="TransformerBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerBlock">[docs]</a><span class="nd">@register_keras_serializable</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="s2">&quot;transformers4rec&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="TransformerBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerBlock">[docs]</a><span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="s2">&quot;transformers4rec&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">Block</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to support HF Transformers for session-based and sequential-based recommendation models.</span>
@@ -212,7 +216,7 @@
 <span class="sd">        Needed when masking is applied on the inputs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">TRANSFORMER_TO_PREPARE</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">PretrainedConfig</span><span class="p">,</span> <span class="n">Type</span><span class="p">[</span><span class="n">TransformerPrepare</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">TRANSFORMER_TO_PREPARE</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">TFPreTrainedModel</span><span class="p">],</span> <span class="n">Type</span><span class="p">[</span><span class="n">TransformerPrepare</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
 
     <span class="c1"># TODO: Add {GPT2Model: GPT2Prepare}</span>
 
@@ -226,10 +230,14 @@
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">:</span> <span class="n">TFPreTrainedModel</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">T4RecConfig</span><span class="p">):</span>
-            <span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">to_huggingface_tf_model</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">to_huggingface_tf_model</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">PretrainedConfig</span><span class="p">):</span>
+            <span class="n">model_cls</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TF_MODEL_MAPPING</span><span class="p">[</span><span class="n">transformer</span><span class="o">.</span><span class="vm">__class__</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">model_cls</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer</span>
 
         <span class="k">if</span> <span class="n">masking</span><span class="p">:</span>
             <span class="n">required</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">masking</span><span class="o">.</span><span class="n">transformer_required_arguments</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
@@ -245,9 +253,9 @@
                 <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="n">masking</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_module</span> <span class="o">=</span> <span class="n">prepare_module</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">prepare_module</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">TRANSFORMER_TO_PREPARE</span><span class="p">:</span>
-            <span class="n">prepare_module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TRANSFORMER_TO_PREPARE</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TransformerPrepare</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">prepare_module</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">TRANSFORMER_TO_PREPARE</span><span class="p">:</span>
+            <span class="n">prepare_module</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TRANSFORMER_TO_PREPARE</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">)]</span>
         <span class="k">if</span> <span class="n">prepare_module</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_module</span> <span class="o">=</span> <span class="n">prepare_module</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">masking</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_fn</span> <span class="o">=</span> <span class="n">output_fn</span>
@@ -279,14 +287,14 @@
 <span class="sd">        total_seq_length: int</span>
 <span class="sd">            The maximum sequence length</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer_registry</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+        <span class="n">_transformer</span><span class="p">:</span> <span class="n">TFPreTrainedModel</span> <span class="o">=</span> <span class="n">transformer_registry</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
             <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">n_head</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
             <span class="n">n_layer</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
             <span class="n">total_seq_length</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">masking</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">_transformer</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">masking</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TransformerBlock.call"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerBlock.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">:</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>

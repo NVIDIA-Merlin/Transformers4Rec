@@ -804,6 +804,19 @@ Count after removed in-session repeated interactions: 28971543
 </pre></div>
 </div>
 </div>
+<ul class="simple">
+<li><p>Avoid Numba low occupancy warnings</p></li>
+</ul>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="n">config</span><span class="o">.</span><span class="n">CUDA_LOW_OCCUPANCY_WARNINGS</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="2.3-Execute-NVTabular-workflow">
 <h3>2.3 Execute NVTabular workflow<a class="headerlink" href="#2.3-Execute-NVTabular-workflow" title="Permalink to this headline">¶</a></h3>
@@ -1155,12 +1168,14 @@ feature {
 <h3>3.2 Define the end-to-end Session-based Transformer-based recommendation model<a class="headerlink" href="#3.2-Define-the-end-to-end-Session-based-Transformer-based-recommendation-model" title="Permalink to this headline">¶</a></h3>
 <p>For session-based recommendation model definition, the end-to-end model definition requires four steps:</p>
 <ol class="arabic simple">
-<li><p>Instantiate <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> input-module from schema to prepare the embedding tables of categorical variables and project continuous features, if specified. In addition, the module provides different aggregation methods (e.g. ‘concat’, ‘elementwise-sum’) to merge input features and generate the sequence of interactions embeddings. The module also supports language modeling tasks to prepare masked labels for training and evaluation (e.g: ‘mlm’ for masked language modeling)</p></li>
-<li><p>Next, we need to define one or multiple prediction tasks. For this demo, we are going to use <code class="docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code> with ‘Masked Language modeling’: during training randomly selected items are masked and predicted using the unmasked sequence items. For inference it is meant to always predict the next item to be interacted with.</p></li>
+<li><p>Instantiate <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.tf.features.html?highlight=tabularsequence#transformers4rec.tf.features.sequence.TabularSequenceFeatures">TabularSequenceFeatures</a> input-module from schema to prepare the embedding tables of categorical variables and project continuous features, if specified. In addition, the module provides different aggregation methods (e.g. ‘concat’, ‘elementwise-sum’) to merge input features and generate the
+sequence of interactions embeddings. The module also supports language modeling tasks to prepare masked labels for training and evaluation (e.g: ‘mlm’ for masked language modeling)</p></li>
+<li><p>Next, we need to define one or multiple prediction tasks. For this demo, we are going to use <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.tf.model.html?highlight=nextitem#transformers4rec.tf.model.prediction_task.NextItemPredictionTask">NextItemPredictionTask</a> with <code class="docutils literal notranslate"><span class="pre">Masked</span> <span class="pre">Language</span> <span class="pre">modeling</span></code>: during training randomly selected items are masked and predicted using the unmasked sequence items. For inference it is meant to always predict the next item to be
+interacted with.</p></li>
 <li><p>Then we construct a <code class="docutils literal notranslate"><span class="pre">transformer_config</span></code> based on the architectures provided by <a class="reference external" href="https://github.com/huggingface/transformers">Hugging Face Transformers</a> framework.</p></li>
 <li><p>Finally we link the transformer-body to the inputs and the prediction tasks to get the final pytorch <code class="docutils literal notranslate"><span class="pre">Model</span></code> class.</p></li>
 </ol>
-<p>For more details about the features supported by each sub-module, please check the <code class="docutils literal notranslate"><span class="pre">Core</span> <span class="pre">Features</span></code> documentation page .</p>
+<p>For more details about the features supported by each sub-module, please check out the library <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/index.html">documentation</a> page.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
@@ -1539,8 +1554,8 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 </pre></div></div>
 </div>
 </div>
-<div class="section" id="Exports-the-preprocessing-worflow-and-model-in-the-format-required-by-Triton-server:**">
-<h4>Exports the preprocessing worflow and model in the format required by Triton server:**<a class="headerlink" href="#Exports-the-preprocessing-worflow-and-model-in-the-format-required-by-Triton-server:**" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="Exports-the-preprocessing-workflow-and-model-in-the-format-required-by-Triton-server:**">
+<h4>Exports the preprocessing workflow and model in the format required by Triton server:**<a class="headerlink" href="#Exports-the-preprocessing-workflow-and-model-in-the-format-required-by-Triton-server:**" title="Permalink to this headline">¶</a></h4>
 <p>NVTabular’s <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function enables us to create model files and config files to be served to Triton Inference Server.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
@@ -1572,7 +1587,7 @@ to Triton Inference. The ensemble model guarantees that the same transformation 
 <h3>4.1. Pull and Start Inference Container<a class="headerlink" href="#4.1.-Pull-and-Start-Inference-Container" title="Permalink to this headline">¶</a></h3>
 <p>At this point, before connecing to the Triton Server, we launch the inference docker container and then load the ensemble <code class="docutils literal notranslate"><span class="pre">t4r_pytorch</span></code> to the inference server. This is done with the scripts below:</p>
 <p><strong>Launch the docker container</strong></p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v &lt;path_to_saved_models&gt;:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:0.6
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v &lt;path_to_saved_models&gt;:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:21.09
 </pre></div>
 </div>
 <p>This script will mount your local model-repository folder that includes your saved models from the previous cell to <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code> directory in the merlin-inference docker container.</p>

@@ -85,7 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Transformers4Rec | Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html#highlights">Highlights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html#quick-tour">Quick tour</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html#use-cases">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
@@ -179,6 +183,8 @@
 <span class="kn">import</span> <span class="nn">re</span>
 
 <span class="c1"># Camel case to snake case utils</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span>
+
 <span class="n">_first_cap_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;(.)([A-Z][a-z0-9]+)&quot;</span><span class="p">)</span>
 <span class="n">_all_cap_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;([a-z0-9])([A-Z])&quot;</span><span class="p">)</span>
 
@@ -426,10 +432,15 @@
         <span class="k">return</span> <span class="n">class_or_str</span></div></div>
 
 
-<div class="viewcode-block" id="RegistryMixin"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin">[docs]</a><span class="k">class</span> <span class="nc">RegistryMixin</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<span class="n">RegistryClassT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;RegistryClassT&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RegistryMixin"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin">[docs]</a><span class="k">class</span> <span class="nc">RegistryMixin</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">RegistryClassT</span><span class="p">],</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
 <div class="viewcode-block" id="RegistryMixin.parse"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin.parse">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">class_or_str</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="p">()</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">class_or_str</span><span class="p">)</span></div>
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">class_or_str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegistryClassT</span><span class="p">:</span>
+        <span class="n">output</span><span class="p">:</span> <span class="n">RegistryClassT</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="p">()</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">class_or_str</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
 
 <div class="viewcode-block" id="RegistryMixin.registry"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin.registry">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">registry</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Registry</span><span class="p">:</span>

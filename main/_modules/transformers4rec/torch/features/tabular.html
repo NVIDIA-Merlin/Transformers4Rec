@@ -85,7 +85,11 @@
             
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Transformers4Rec | Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#highlights">Highlights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#quick-tour">Quick tour</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#use-cases">Use cases</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
@@ -175,15 +179,22 @@
 <span class="c1"># limitations under the License.</span>
 <span class="c1">#</span>
 
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.schema.tag</span> <span class="kn">import</span> <span class="n">TagsType</span>
 <span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.doc_utils</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
 
-<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">typing</span>
 <span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">SequentialBlock</span>
 <span class="kn">from</span> <span class="nn">..block.mlp</span> <span class="kn">import</span> <span class="n">MLPBlock</span>
-<span class="kn">from</span> <span class="nn">..tabular.tabular</span> <span class="kn">import</span> <span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span> <span class="n">AsTabular</span><span class="p">,</span> <span class="n">MergeTabular</span>
+<span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">AsTabular</span><span class="p">,</span>
+    <span class="n">MergeTabular</span><span class="p">,</span>
+    <span class="n">TabularAggregationType</span><span class="p">,</span>
+    <span class="n">TabularModule</span><span class="p">,</span>
+    <span class="n">TabularTransformationType</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..utils.torch_utils</span> <span class="kn">import</span> <span class="n">get_output_sizes_from_schema</span>
 <span class="kn">from</span> <span class="nn">.continuous</span> <span class="kn">import</span> <span class="n">ContinuousFeatures</span>
 <span class="kn">from</span> <span class="nn">.embedding</span> <span class="kn">import</span> <span class="n">EmbeddingFeatures</span><span class="p">,</span> <span class="n">SoftEmbeddingFeatures</span>
@@ -211,18 +222,18 @@
 <span class="sd">    {tabular_module_parameters}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">CONTINUOUS_MODULE_CLASS</span> <span class="o">=</span> <span class="n">ContinuousFeatures</span>
-    <span class="n">EMBEDDING_MODULE_CLASS</span> <span class="o">=</span> <span class="n">EmbeddingFeatures</span>
-    <span class="n">SOFT_EMBEDDING_MODULE_CLASS</span> <span class="o">=</span> <span class="n">SoftEmbeddingFeatures</span>
+    <span class="n">CONTINUOUS_MODULE_CLASS</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="n">ContinuousFeatures</span>
+    <span class="n">EMBEDDING_MODULE_CLASS</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="n">EmbeddingFeatures</span>
+    <span class="n">SOFT_EMBEDDING_MODULE_CLASS</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="n">SoftEmbeddingFeatures</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">continuous_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">categorical_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">text_embedding_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">continuous_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">categorical_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">text_embedding_module</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Schema</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">to_merge</span> <span class="o">=</span> <span class="p">{}</span>
@@ -263,16 +274,16 @@
             <span class="n">continuous</span><span class="p">,</span> <span class="n">MLPBlock</span><span class="p">(</span><span class="n">mlp_layers_dims</span><span class="p">),</span> <span class="n">AsTabular</span><span class="p">(</span><span class="s2">&quot;continuous_projection&quot;</span><span class="p">)</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;continuous_module&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">continuous</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;continuous_module&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">continuous</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
 <div class="viewcode-block" id="TabularFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
-        <span class="n">continuous_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tag</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">,),</span>
-        <span class="n">categorical_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tag</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,),</span>
+        <span class="n">continuous_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TagsType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tag</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">,),</span>
+        <span class="n">categorical_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TagsType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tag</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,),</span>
         <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">automatic_build</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">max_sequence_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -359,14 +370,14 @@
         <span class="k">return</span> <span class="n">output_sizes</span></div>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">continuous_module</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularModule</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">continuous_module</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]:</span>
         <span class="k">if</span> <span class="s2">&quot;continuous_module&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;continuous_module&quot;</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">categorical_module</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">TabularModule</span><span class="p">]:</span>
+    <span class="k">def</span> <span class="nf">categorical_module</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularModule</span><span class="p">]:</span>
         <span class="k">if</span> <span class="s2">&quot;categorical_module&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;categorical_module&quot;</span><span class="p">]</span>
 
