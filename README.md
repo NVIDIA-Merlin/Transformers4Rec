@@ -47,7 +47,7 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 
 ## Quick tour
 To train a model on a dataset, the first step is to provide the [schema](https://nvidia-merlin.github.io/Transformers4Rec/main/api/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema) and use this to construct an input-module.
-For session-based recommendation problems you typically want to use [TabularSequenceFeatures](http://localhost:8000/api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures), which 
+For session-based recommendation problems you typically want to use [TabularSequenceFeatures](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures), which 
 merges context features with sequential features. Next, we need to provide the prediction-task(s) 
 (the tasks we provide out of the box can be found [here](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.model.html#module-transformers4rec.torch.model.prediction_task)).
 Then all that's left is to construct a transformer-body and convert this to a model.
