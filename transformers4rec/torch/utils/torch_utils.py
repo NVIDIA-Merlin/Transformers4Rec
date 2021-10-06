@@ -15,6 +15,7 @@
 #
 
 import abc
+from dataclasses import dataclass
 from typing import Dict, Union
 
 import torch
@@ -211,3 +212,38 @@ class LambdaModule(torch.nn.Module):
 
     def forward(self, x):
         return self.lambda_fn(x)
+
+
+@dataclass
+class MappingTransformerMasking:
+    from transformers4rec.torch.masking import (
+        CausalLanguageModeling,
+        MaskedLanguageModeling,
+        PermutationLanguageModeling,
+        ReplacementLanguageModeling,
+    )
+
+    DEFAULT_MASKING = [
+        CausalLanguageModeling,
+        MaskedLanguageModeling,
+        ReplacementLanguageModeling,
+        PermutationLanguageModeling,
+    ]
+
+    BertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    ConvBertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    DebertaConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    DistilBertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    GPT2Config = [CausalLanguageModeling]
+    LongformerConfig = [CausalLanguageModeling, MaskedLanguageModeling, ReplacementLanguageModeling]
+    MegatronBertConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    MPNetConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    RobertaConfig = [MaskedLanguageModeling, ReplacementLanguageModeling]
+    RoFormerConfig = [CausalLanguageModeling, MaskedLanguageModeling, ReplacementLanguageModeling]
+    TransfoXLConfig = [CausalLanguageModeling]
+    XLNetConfig = [
+        CausalLanguageModeling,
+        MaskedLanguageModeling,
+        ReplacementLanguageModeling,
+        PermutationLanguageModeling,
+    ]

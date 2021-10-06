@@ -26,6 +26,9 @@ config_classes = [
     tconf.XLNetConfig,
     tconf.LongformerConfig,
     tconf.GPT2Config,
+    tconf.BertConfig,
+    tconf.RobertaConfig,
+    tconf.TransfoXLConfig,
 ]
 
 # fixed parameters for tests
@@ -163,3 +166,32 @@ def test_reformer_block_clm(yoochoose_schema, torch_yoochoose_like):
     assert outputs.ndim == 3
     # 2 * hidden_size because Reformer uses reversible resnet layers
     assert outputs.shape[-1] == 64 * 2
+
+
+def test_transformer_block_with_wrong_masking(
+    yoochoose_schema,
+    torch_yoochoose_like,
+):
+    with pytest.raises(ValueError) as excinfo:
+        col_group = yoochoose_schema
+        tab_module = tr.TabularSequenceFeatures.from_schema(
+            col_group,
+            max_sequence_length=20,
+            aggregation="concat",
+            d_output=64,
+            masking="mlm",
+        )
+
+        transformer_config = tconf.GPT2Config.build(
+            d_model=64, n_head=4, n_layer=2, total_seq_length=20
+        )
+
+        block = (
+            tab_module
+            >> tr.MLPBlock([64])
+            >> tr.TransformerBlock(transformer=transformer_config, masking=tab_module.masking)
+        )
+
+        block(torch_yoochoose_like)
+
+    assert "MaskedLanguageModeling is not supported by: the GPT2Config" in str(excinfo.value)

@@ -30,3 +30,5 @@ exclude .github
 recursive-exclude ci *
 exclude ci
 exclude .pylintrc
+include transformers4rec/_version.py
+include versioneer.py

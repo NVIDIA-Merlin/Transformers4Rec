@@ -1,13 +1,13 @@
-## [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec/) | [Documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/)
+# [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec/) | [Documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/)
 <p align="left">
-    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml">
-        <img alt="Build" src="https://img.shields.io/github/checks-status/NVIDIA-Merlin/Transformers4Rec/main">
+    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml?branch=main">
+        <img alt="Build" src="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml/badge.svg?branch=main">
     </a>
     <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE">
-        <img alt="GitHub" src="https://img.shields.io/github/license/NVIDIA-MerlinTransformers4rec.svg?color=blue">
+        <img alt="GitHub" src="https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4rec.svg?color=blue">
     </a>
-    <a href="https://nvidia-merlin.github.io/Transformers4Rec/">
-        <img alt="Documentation" src="https://img.shields.io/website/https/nvidia-merlin.github.io/Transformers4Rec/.svg?down_color=red&down_message=offline&up_message=online">
+    <a href="https://nvidia-merlin.github.io/Transformers4Rec/main/">
+        <img alt="Documentation" src="https://img.shields.io/website.svg?down_color=red&down_message=offline&up_message=online&url=https%3A%2F%2Fnvidia-merlin.github.io%2FTransformers4Rec%2Fmain%2F">
     </a>
     <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/releases">
         <img alt="GitHub release" src="https://img.shields.io/github/release/NVIDIA-Merlin/Transformers4Rec.svg">
@@ -29,7 +29,7 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 
 ## Highlights
 
-- **Winning and SOTA solution**: We have leveraged and evolved the Transformers4Rec library to win two recent session-based recommendation competitions: the [WSDM WebTour Workshop Challenge 2021, organized by Booking.com](https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/), and the [SIGIR eCommerce Workshop Data Challenge 2021, organized by Coveo](https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994). Furthermore, we have also done extensive empirical evaluation on the usage of Transformers4Rec for session-based recommendation, which was able to provide higher accuracy than baselines algorithms, as published in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
+- **Winning and SOTA solution**: We have leveraged and evolved the Transformers4Rec library to win two recent session-based recommendation competitions: the [WSDM WebTour Workshop Challenge 2021, organized by Booking.com](https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/), and the [SIGIR eCommerce Workshop Data Challenge 2021, organized by Coveo](https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994). Furthermore, we have also done extensive empirical evaluation on the usage of Transformers4Rec for session-based recommendation, which was able to provide higher accuracy than baselines algorithms, as published in our [ACM RecSys'21 paper](https://dl.acm.org/doi/10.1145/3460231.3474255).
 
 - **Flexibility**: The building blocks are modularized and are compatible with vanilla PyTorch modules and TF Keras layers. You can create custom architectures, e.g. with multiple towers, multiple heads/tasks and losses.
 
@@ -37,7 +37,7 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 
 - **Leverages cutting-edge NLP research**: With the integration with [HuggingFace Transformers](https://github.com/huggingface/transformers), you have available more than 64 different Transformer architectures (and counting) to evaluate for your sequential and session-based recommendation task.
 
-- **Support to multiple input features**: HF Transformers supports only sequence of token id as input, as it was originally designed for NLP. Due to the rich features available in RecSys datasets, transformers4Rec enables the usage of HF Transformers with any type of sequential tabular data. The library uses a schema format to configure the input features, and automatically creates the necessary layers (e.g. embedding tables, projection layers, output layers based on the target) without requiring code changes to include new features. Interaction and sequence-level input features can be normalized and combined in configurable ways. 
+- **Support for multiple input features**: HF Transformers supports only sequence of token id as input, as it was originally designed for NLP. Due to the rich features available in RecSys datasets, transformers4Rec enables the usage of HF Transformers with any type of sequential tabular data. The library uses a schema format to configure the input features, and automatically creates the necessary layers (e.g. embedding tables, projection layers, output layers based on the target) without requiring code changes to include new features. Interaction and sequence-level input features can be normalized and combined in configurable ways. 
 
 - **Seamless preprocessing and feature engineering**: The integration with NVTabular has common preprocessing ops for session-based recommendation and exports a dataset schema compatible with Transformers4Rec, so that input features can be configured automatically.
 
@@ -107,7 +107,7 @@ model: tr.Model = transformer_config.to_tf_model(input_module, prediction_tasks)
 ## Use cases
 ### Sequential and Session-based recommendation
 Traditional recommendation algorithms usually ignore the temporal dynamics and the sequence of interactions when trying to model user behaviour. Generally, the next user interaction is related to the sequence of the user's previous choices. In some cases, it might be even a repeated purchase or song play. User interests might also suffer from the interest drift, as preferences might change over time. Those challenges are addressed by the **sequential recommendation** task. 
-A special case of sequential-recommendation is the **session-based recommendation** task, where you have only access to the short sequence of interactions within the current session. This is very common in online services like e-commerce, news and media portals where the user might choose to browse anonymously (and due to GDPR compliance no cookies are collected), or because it is a new user. This task is also relevant for scenarios where users interests change a lot over time depending on the user context or intent, so leveraging the current session interactions is more promising than old interactions to provide relevant recommendations.
+A special case of sequential-recommendation is the **session-based recommendation** task, where you have only access to the short sequence of interactions within the current session. This is very common in online services like e-commerce, news and media portals where the user might choose to browse anonymously (and due to GDPR compliance no cookies are collected), or because it is a new user. This task is also relevant for scenarios where users' interests change a lot over time depending on the user context or intent, so leveraging the current session interactions is more promising than old interactions to provide relevant recommendations.
 
 To deal with sequential and session-based recommendation, many sequence learning algorithms previously applied in machine learning and NLP research have been explored for RecSys, based on k-Nearest Neighbors, Frequent Pattern Mining, Hidden Markov Models, Recurrent Neural Networks, and more recently neural architectures using the Self-Attention Mechanism and the Transformer architectures. 
 
@@ -122,12 +122,12 @@ Differently from Transformers4Rec, existing frameworks for such tasks are genera
 ### Installing with pip
 
 Transformers4Rec comes in two flavors: PyTorch and Tensorflow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended. 
-Those components can be installed as optional args for the pip install package.
+Those components can be installed as optional args for the pip install package. Note that installation NVTabular with `pip` supports only CPU version of NVTabular for now.
 
 - All  
 `pip install transformers4rec[all]`
 - PyTorch  
-`pip install transformers4rec[torch,nvtabular]`  
+`pip install transformers4rec[pytorch,nvtabular]`  
 - Tensorflow:  
 `pip install transformers4rec[tensorflow,nvtabular]`
 
