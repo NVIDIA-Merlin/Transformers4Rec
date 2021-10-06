@@ -217,14 +217,16 @@ class NextItemPredictionTask(PredictionTask):
         self,
         inputs,
         targets=None,
-        compute_metrics=True,
+        compute_metrics: bool = True,
+        call_task: bool = True,
         sample_weight: Optional[tf.Tensor] = None,
         **kwargs,
     ) -> tf.Tensor:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
-
-        predictions = self(inputs)
+        predictions = inputs
+        if call_task:
+            predictions = self(inputs)
         # retrieve labels from masking
         if self.masking:
             targets = self.masking.masked_targets

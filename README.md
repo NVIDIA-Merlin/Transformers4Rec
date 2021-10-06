@@ -122,12 +122,12 @@ Differently from Transformers4Rec, existing frameworks for such tasks are genera
 ### Installing with pip
 
 Transformers4Rec comes in two flavors: PyTorch and Tensorflow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended. 
-Those components can be installed as optional args for the pip install package.
+Those components can be installed as optional args for the pip install package. Note that installation NVTabular with `pip` supports only CPU version of NVTabular for now.
 
 - All  
 `pip install transformers4rec[all]`
 - PyTorch  
-`pip install transformers4rec[torch,nvtabular]`  
+`pip install transformers4rec[pytorch,nvtabular]`  
 - Tensorflow:  
 `pip install transformers4rec[tensorflow,nvtabular]`
 
