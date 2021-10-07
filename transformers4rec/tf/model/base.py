@@ -439,8 +439,10 @@ class Head(tf.keras.layers.Layer):
     def get_config(self):
         config = super().get_config()
         config = maybe_serialize_keras_objects(
-            self, config, ["body", "loss_reduction", "prediction_tasks", "task_weights"]
+            self, config, ["body", "loss_reduction", "prediction_tasks"]
         )
+        if self.task_weights:
+            config["task_weights"] = self.task_weights
 
         return config
 
