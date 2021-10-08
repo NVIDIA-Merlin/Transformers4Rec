@@ -196,7 +196,7 @@ class NextItemPredictionTask(PredictionTask):
             labels = self.embeddings.item_seq
 
         # remove vectors of padded items
-        trg_flat = tf.reshape(labels, -1)
+        trg_flat = tf.reshape(labels, (-1,))
         non_pad_mask = trg_flat != self.padding_idx
         x = self.remove_pad_3d(x, non_pad_mask)
 
@@ -208,7 +208,7 @@ class NextItemPredictionTask(PredictionTask):
         # inp_tensor: (n_batch x seqlen x emb_dim)
         inp_tensor = tf.reshape(inp_tensor, (-1, inp_tensor.shape[-1]))
         inp_tensor_fl = tf.boolean_mask(
-            inp_tensor, tf.broadcast_to(tf.expand_dims(non_pad_mask, 1), inp_tensor.shape)
+            inp_tensor, tf.broadcast_to(tf.expand_dims(non_pad_mask, 1), tf.shape(inp_tensor))
         )
         out_tensor = tf.reshape(inp_tensor_fl, (-1, inp_tensor.shape[1]))
         return out_tensor
@@ -231,7 +231,7 @@ class NextItemPredictionTask(PredictionTask):
         if self.masking:
             targets = self.masking.masked_targets
             # flatten labels and remove padding index
-            targets = tf.reshape(targets, -1)
+            targets = tf.reshape(targets, (-1,))
             non_pad_mask = targets != self.padding_idx
             targets = tf.boolean_mask(targets, non_pad_mask)
 

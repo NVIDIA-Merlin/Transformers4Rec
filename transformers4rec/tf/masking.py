@@ -114,7 +114,7 @@ class MaskSequence(tf.keras.layers.Layer):
         -------
         Tuple[MaskingSchema, MaskedTargets]
         """
-        assert item_ids.ndim == 2, "`item_ids` must have 2 dimensions."
+        assert item_ids.shape.rank == 2, "`item_ids` must have 2 dimensions."
         masking_info = self._compute_masked_targets(item_ids, training=training)
         self.mask_schema, self.masked_targets = masking_info.schema, masking_info.targets
 
@@ -163,7 +163,7 @@ class MaskSequence(tf.keras.layers.Layer):
         labels = tf.concat(
             [
                 labels,
-                tf.zeros((labels.shape[0], 1), dtype=labels.dtype),
+                tf.zeros((tf.shape(labels)[0], 1), dtype=labels.dtype),
             ],
             axis=-1,
         )
@@ -232,8 +232,8 @@ class CausalLanguageModeling(MaskSequence):
         if (self.eval_on_last_item_seq_only and not training) or (
             self.train_on_last_item_seq_only and training
         ):
-            rows_ids = tf.range(labels.shape[0], dtype=item_ids.dtype)
-            label_seq_trg_eval = tf.zeros(labels.shape, dtype=labels.dtype)
+            rows_ids = tf.range(tf.shape(labels)[0], dtype=item_ids.dtype)
+            label_seq_trg_eval = tf.zeros(tf.shape(labels), dtype=labels.dtype)
             last_item_sessions = tf.reduce_sum(tf.cast(mask_labels, labels.dtype), axis=1) - 1
             indices = tf.concat(
                 [tf.expand_dims(rows_ids, 1), tf.expand_dims(last_item_sessions, 1)], axis=1
@@ -254,7 +254,9 @@ class CausalLanguageModeling(MaskSequence):
         pos_emb_inp = tf.concat(
             [
                 pos_emb_inp,
-                tf.zeros((pos_emb_inp.shape[0], 1, pos_emb_inp.shape[2]), dtype=pos_emb_inp.dtype),
+                tf.zeros(
+                    (tf.shape(pos_emb_inp)[0], 1, pos_emb_inp.shape[2]), dtype=pos_emb_inp.dtype
+                ),
             ],
             axis=1,
         )
@@ -316,9 +318,9 @@ class MaskedLanguageModeling(MaskSequence):
             Masking schema for masked targets positions.
         """
 
-        labels = tf.cast(tf.fill(item_ids.shape, self.padding_idx), dtype=item_ids.dtype)
+        labels = tf.cast(tf.fill(tf.shape(item_ids), self.padding_idx), dtype=item_ids.dtype)
         non_padded_mask = tf.cast(item_ids != self.padding_idx, labels.dtype)
-        rows_ids = tf.range(labels.shape[0], dtype=tf.int64)
+        rows_ids = tf.range(tf.shape(labels)[0], dtype=tf.int64)
         # During training, masks labels to be predicted according to a probability, ensuring that
         #   each session has at least one label to predict
         if training:
@@ -332,7 +334,7 @@ class MaskedLanguageModeling(MaskSequence):
             labels = tf.where(
                 tf.cast(mask_labels, tf.bool),
                 item_ids,
-                tf.cast(tf.fill(item_ids.shape, self.padding_idx), dtype=item_ids.dtype),
+                tf.cast(tf.fill(tf.shape(item_ids), self.padding_idx), dtype=item_ids.dtype),
             )
 
             # Set at least one item in the sequence to mask, so that the network
@@ -357,9 +359,9 @@ class MaskedLanguageModeling(MaskSequence):
             labels_to_unmask = tf.boolean_mask(sampled_labels_to_unmask, sequences_with_only_labels)
             rows_to_unmask = tf.boolean_mask(rows_ids, sequences_with_only_labels)
             indices = tf.concat([tf.expand_dims(rows_to_unmask, 1), labels_to_unmask], axis=1)
-            num_updates, _ = indices.shape.as_list()
+            num_updates = tf.shape(indices)[0]
             labels = tf.tensor_scatter_nd_update(
-                labels, indices, tf.cast(tf.fill(num_updates, self.padding_idx), labels.dtype)
+                labels, indices, tf.cast(tf.fill((num_updates,), self.padding_idx), labels.dtype)
             )
             mask_labels = labels != self.padding_idx
 

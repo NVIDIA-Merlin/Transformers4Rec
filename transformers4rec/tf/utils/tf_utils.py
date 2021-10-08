@@ -156,27 +156,30 @@ def maybe_deserialize_keras_objects(
 
 
 def extract_topk(ks, scores, labels):
-    max_k = int(max(ks))
+    max_k = tf.reduce_max(ks)
     topk_scores, topk_indices = tf.math.top_k(scores, max_k)
     topk_labels = gather_torch_like(labels, topk_indices, max_k)
     return topk_scores, topk_indices, topk_labels
 
 
 def tranform_label_to_onehot(labels, vocab_size):
-    return tf.one_hot(tf.reshape(labels, -1), vocab_size)
+    return tf.one_hot(tf.reshape(labels, (-1,)), vocab_size)
 
 
 def create_output_placeholder(scores, ks):
-    return tf.Variable(tf.zeros([scores.shape[0], len(ks)], tf.float32))
+    return tf.Variable(tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32))
 
 
 def gather_torch_like(labels, indices, max_k):
-    gather_indices = []
-    for i in range(indices.shape[0]):
-        gather_indices.append(
+    # gather_indices = []
+    gather_indices = tf.TensorArray(tf.int32, size=tf.shape(indices)[0])
+    for i in range(tf.shape(indices)[0]):
+        gather_indices.write(
+            i,
             tf.concat(
                 [i * tf.ones((max_k, 1), tf.int32), tf.expand_dims(indices[i, :], -1)], axis=1
-            )
+            ),
         )
-    all_indices = tf.concat(gather_indices, 0)
-    return tf.reshape(tf.gather_nd(labels, all_indices), indices.shape)
+    all_indices = gather_indices.stack()
+    labels = tf.reshape(tf.gather_nd(labels, all_indices), tf.shape(indices))
+    return labels

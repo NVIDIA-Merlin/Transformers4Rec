@@ -103,7 +103,8 @@ def test_output_shape_mode_eval(tf_yoochoose_like, yoochoose_schema, masking):
 
 
 @pytest.mark.parametrize("masking", ["causal", "mlm"])
-def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly=True):
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly):
 
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
@@ -120,17 +121,24 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
             tr.TransformerBlock(transformer_config, masking=input_module.masking),
         ]
     )
-    task = tr.NextItemPredictionTask(weight_tying=True)
+    if not run_eagerly:
+        # TODO: Fix computing metrics as part of the model for graph mode (run_eagerly = False)
+        task = tr.NextItemPredictionTask(weight_tying=True, metrics=[])
+    else:
+        task = tr.NextItemPredictionTask(weight_tying=True)
     model = task.to_model(body=body)
     model.compile(optimizer="adam", run_eagerly=run_eagerly)
 
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
     ).batch(50)
-
     losses = model.fit(dataset, epochs=5)
-    metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
 
-    assert len(metrics.keys()) == 6
+    if run_eagerly:
+        metrics = model.evaluate(
+            tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True
+        )
+        assert len(metrics.keys()) == 6
+
     assert len(losses.epoch) == 5
     assert all(loss >= 0 for loss in losses.history["loss"])

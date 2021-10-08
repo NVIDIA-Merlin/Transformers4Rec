@@ -57,9 +57,11 @@ class RankingMetric(tf.keras.metrics.Metric):
     def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, **kwargs):
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
-            y_true = tf_utils.tranform_label_to_onehot(y_true, y_pred.shape[-1])
+            y_true = tf_utils.tranform_label_to_onehot(y_true, tf.shape(y_pred)[-1])
         metric = self._metric(
-            tf.convert_to_tensor(self.top_ks), tf.reshape(y_pred, [-1, y_pred.shape[-1]]), y_true
+            tf.convert_to_tensor(self.top_ks),
+            tf.reshape(y_pred, [-1, tf.shape(y_pred)[-1]]),
+            y_true,
         )
         self.metric_mean.append(metric)
 
@@ -99,10 +101,24 @@ class PrecisionAt(RankingMetric):
 
         ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
-        precisions = tf_utils.create_output_placeholder(scores, ks)
+        bs = tf.shape(scores)[0]
+        precisions = tf.zeros([bs, len(ks)], tf.float32)
 
-        for index, k in enumerate(ks):
-            precisions[:, index].assign(tf.reduce_sum(topk_labels[:, : int(k)], axis=1) / float(k))
+        for index in range(int(tf.shape(ks)[0])):
+            k = ks[index]
+            rows_ids = tf.range(bs, dtype=tf.int64)
+            indices = tf.concat(
+                [
+                    tf.expand_dims(rows_ids, 1),
+                    tf.cast(index, tf.int64) * tf.ones([bs, 1], dtype=tf.int64),
+                ],
+                axis=1,
+            )
+            precisions = tf.tensor_scatter_nd_update(
+                precisions,
+                indices=indices,
+                updates=tf.reduce_sum(topk_labels[:, : int(k)], axis=1) / float(k),
+            )
 
         return precisions
 
@@ -123,15 +139,16 @@ class RecallAt(RankingMetric):
 
         ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
-        recalls = tf_utils.create_output_placeholder(scores, ks)
+        recalls = tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32)
 
         # Compute recalls at K
         num_relevant = tf.reduce_sum(labels, axis=-1)
         rel_indices = tf.where(num_relevant != 0)
         rel_count = tf.gather_nd(num_relevant, rel_indices)
 
-        if rel_indices.shape[0] > 0:
-            for index, k in enumerate(ks):
+        if tf.shape(rel_indices)[0] > 0:
+            for index in range(int(tf.shape(ks)[0])):
+                k = ks[index]
                 rel_labels = tf.cast(
                     tf.gather_nd(topk_labels, rel_indices)[:, : int(k)], tf.float32
                 )
@@ -147,12 +164,15 @@ class RecallAt(RankingMetric):
                 update_indices = tf.concat(
                     [
                         rel_indices,
-                        tf.expand_dims(index * tf.ones(rel_indices.shape[0], tf.int64), -1),
+                        tf.expand_dims(
+                            tf.cast(index, tf.int64) * tf.ones(tf.shape(rel_indices)[0], tf.int64),
+                            -1,
+                        ),
                     ],
                     axis=1,
                 )
                 recalls = tf.tensor_scatter_nd_update(
-                    recalls, indices=update_indices, updates=tf.reshape(batch_recall_k, -1)
+                    recalls, indices=update_indices, updates=tf.reshape(batch_recall_k, (-1,))
                 )
 
         return recalls
@@ -174,20 +194,32 @@ class AvgPrecisionAt(RankingMetric):
         """
         ks, scores, labels = check_inputs(ks, scores, labels)
         topk_scores, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
-        avg_precisions = tf_utils.create_output_placeholder(scores, ks)
+        avg_precisions = tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32)
 
         num_relevant = tf.reduce_sum(labels, axis=-1)
         max_k = tf.reduce_max(ks)
 
         precisions = self.precision_at(1 + tf.range(max_k), topk_scores, topk_labels)
         rel_precisions = precisions * topk_labels
-
-        for index, k in enumerate(ks):
+        bs = tf.shape(scores)[0]
+        for index in range(int(tf.shape(ks)[0])):
+            k = ks[index]
             tf_total_prec = tf.reduce_sum(rel_precisions[:, :k], axis=1)
             clip_value = tf.clip_by_value(
                 num_relevant, clip_value_min=1, clip_value_max=tf.cast(k, tf.float32)
             )
-            avg_precisions[:, index].assign(tf_total_prec / clip_value)
+
+            rows_ids = tf.range(bs, dtype=tf.int64)
+            indices = tf.concat(
+                [
+                    tf.expand_dims(rows_ids, 1),
+                    tf.cast(index, tf.int64) * tf.ones([bs, 1], dtype=tf.int64),
+                ],
+                axis=1,
+            )
+            avg_precisions = tf.tensor_scatter_nd_update(
+                avg_precisions, indices=indices, updates=tf_total_prec / clip_value
+            )
             # Ensuring type is double, because it can be float if --fp16
         return avg_precisions
 
@@ -211,7 +243,7 @@ class DCGAt(RankingMetric):
         """
         ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
-        dcgs = tf_utils.create_output_placeholder(scores, ks)
+        dcgs = tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32)
 
         # Compute discounts
         max_k = tf.reduce_max(ks)
@@ -219,13 +251,25 @@ class DCGAt(RankingMetric):
         discount_log_base = tf.math.log(tf.convert_to_tensor([log_base], dtype=tf.float32))
 
         discounts = 1 / (tf.math.log(discount_positions + 2) / discount_log_base)
-
+        bs = tf.shape(scores)[0]
         # Compute DCGs at K
-        for index, k in enumerate(ks):
+        for index in range(int(tf.shape(ks)[0])):
+            k = ks[index]
             m = topk_labels[:, :k] * tf.repeat(
-                tf.expand_dims(discounts[:k], 0), topk_labels.shape[0], axis=0
+                tf.expand_dims(discounts[:k], 0), tf.shape(topk_labels)[0], axis=0
             )
-            dcgs[:, index].assign(tf.cast(tf.reduce_sum(m, axis=1), tf.float32))
+            rows_ids = tf.range(bs, dtype=tf.int64)
+            indices = tf.concat(
+                [
+                    tf.expand_dims(rows_ids, 1),
+                    tf.cast(index, tf.int64) * tf.ones([bs, 1], dtype=tf.int64),
+                ],
+                axis=1,
+            )
+
+            dcgs = tf.tensor_scatter_nd_update(
+                dcgs, indices=indices, updates=tf.cast(tf.reduce_sum(m, axis=1), tf.float32)
+            )
             # Ensuring type is double, because it can be float if --fp16
 
         return dcgs
@@ -258,7 +302,7 @@ class NDCGAt(RankingMetric):
 
         # Prevent divisions by zero
         relevant_pos = tf.where(normalizing_gains != 0)
-        tf.where(normalizing_gains == 0, 0, gains)
+        tf.where(normalizing_gains == 0, 0.0, gains)
 
         updates = tf.gather_nd(gains, relevant_pos) / tf.gather_nd(normalizing_gains, relevant_pos)
         gains = tf.tensor_scatter_nd_update(gains, relevant_pos, updates)
@@ -276,7 +320,6 @@ def check_inputs(ks, scores, labels):
     if len(labels.shape) != 2:
         raise ValueError("labels must be a 2-dimensional tensor")
 
-    if scores.shape != labels.shape:
-        raise ValueError("scores and labels must be the same shape")
+    scores.get_shape().assert_is_compatible_with(labels.get_shape())
 
     return (tf.cast(ks, tf.int32), tf.cast(scores, tf.float32), tf.cast(labels, tf.float32))
