@@ -8,7 +8,7 @@ Session-based recommendation, a sub-area of sequential recommendation, has been 
 In this tutorial section, we created a series of notebooks that will help you to learn:
 
 - the main concepts and algorithms for session-based recommendation
-- implementation of preprocessing and feature engineering techniques for session-based recommendation model on GPU with [NVTabular](https://github.com/NVIDIA/NVTabular)
+- implementation of preprocessing and feature engineering techniques for session-based recommendation model on GPU with [NVTabular](https://github.com/NVIDIA-Merlin/NVTabular)
 - how to build, train and evaluate a session-based recommendation model based on RNN and Transformer architectures with Transformers4Rec library
 - how to deploy a trained model to the [Triton Inference Server](https://github.com/triton-inference-server/server)
 
@@ -20,8 +20,8 @@ In this tutorial section, we created a series of notebooks that will help you to
 - Introduction to Transformers4Rec
     - Introduction to session-based recommendation
     - Accelerated dataloaders for PyTorch
-    - Traning and evaluating an RNN-based session based recommendation model for next item prediction task 
-    - Traning and evaluating Transformer architecture based session-based recommendation model next item prediction task 
+    - Traning and evaluating an RNN-based session based recommendation model for next item prediction task
+    - Traning and evaluating Transformer architecture based session-based recommendation model next item prediction task
     - Using side information (additional features) to improve the accuracy of a model
 - Deploying to inference with Triton
 
@@ -37,6 +37,6 @@ We use only 2019-Oct.csv file for training our models, so you can visit this sit
 
 ### Launch Docker Container for Training
 
-You need to pull https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-pytorch-training container to be able to run the ETL and training notebooks. Please note that to use this Docker container, you'll first need to install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to provide GPU support for Docker. 
+You need to pull https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-pytorch-training container to be able to run the ETL and training notebooks. Please note that to use this Docker container, you'll first need to install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to provide GPU support for Docker.
 
 Follow the steps in this [README.md](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/README.md) for Docker launch and instructions for both training and inference containers.
