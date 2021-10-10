@@ -91,6 +91,7 @@ class Trainer(BaseTrainer):
         eval_dataset_or_path=None,
         train_dataloader: Optional[DataLoader] = None,
         eval_dataloader: Optional[DataLoader] = None,
+        callbacks: Optional[List[TrainerCallback]] = None,
         compute_metrics=None,
         **kwargs,
     ):
@@ -103,7 +104,7 @@ class Trainer(BaseTrainer):
             args=args,
             train_dataset=mock_dataset,
             eval_dataset=mock_dataset,
-            callbacks=[TrainerCallback],
+            callbacks=callbacks,
             **kwargs,
         )
 
