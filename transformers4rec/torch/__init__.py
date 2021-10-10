@@ -68,7 +68,7 @@ from .tabular.base import (
     TabularModule,
     TabularTransformation,
 )
-from .tabular.transformations import StochasticSwapNoise, TabularLayerNorm
+from .tabular.transformations import StochasticSwapNoise, TabularDropout, TabularLayerNorm
 from .trainer import Trainer  # type: ignore
 
 __all__ = [
@@ -96,6 +96,7 @@ __all__ = [
     "TabularAggregation",
     "StochasticSwapNoise",
     "TabularLayerNorm",
+    "TabularDropout",
     "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",

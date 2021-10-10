@@ -119,3 +119,44 @@ def test_stochastic_swap_noise_raise_exception_not_2d_item_id():
     assert "To extract the padding mask from item id tensor it is expected to have 2 dims" in str(
         excinfo.value
     )
+
+
+def test_dropout_transformation():
+    NUM_SEQS = 100
+    SEQ_LENGTH = 80
+
+    DROPOUT_RATE = 0.3
+
+    inputs = {
+        "embedded_feat": pytorch.rand((NUM_SEQS, SEQ_LENGTH, 10)),
+        "continuous_feat": pytorch.rand((NUM_SEQS, SEQ_LENGTH)),
+    }
+
+    input_dropout = tr.TabularDropout(dropout_rate=DROPOUT_RATE)
+    out_features = input_dropout(inputs)
+
+    for fname in inputs:
+        input_zeros_rate = (inputs[fname] == 0.0).float().mean()
+        output_zeros_rate = (out_features[fname] == 0.0).float().mean()
+        zeroed_rate_diff = output_zeros_rate - input_zeros_rate
+        assert zeroed_rate_diff == pytest.approx(DROPOUT_RATE, abs=0.1)
+
+
+def test_input_dropout_transformation_with_tabular_features(yoochoose_schema, torch_yoochoose_like):
+    DROPOUT_RATE = 0.3
+
+    inputs = torch_yoochoose_like
+    tab_module = tr.TabularSequenceFeatures.from_schema(yoochoose_schema)
+    out_features = tab_module(inputs)
+
+    input_dropout = tr.TabularDropout(dropout_rate=DROPOUT_RATE)
+    out_features_dropout = tab_module(inputs, post=input_dropout)
+
+    for fname in out_features:
+        mask_prev_not_zeros = out_features[fname] != 0.0
+        out_features_dropout_ignoring_zeroes = pytorch.masked_select(
+            out_features_dropout[fname], mask_prev_not_zeros
+        )
+        output_dropout_zeros_rate = (out_features_dropout_ignoring_zeroes == 0.0).float().mean()
+        # zeroed_rate_diff = output_dropout_zeros_rate - output_zeros_rate
+        assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.1)

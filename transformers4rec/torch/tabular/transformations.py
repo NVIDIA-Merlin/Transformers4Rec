@@ -122,3 +122,21 @@ class TabularLayerNorm(TabularTransformation):
                 self.feature_layer_norm[key] = torch.nn.LayerNorm(normalized_shape=size[-1])
 
         return super().build(input_size, **kwargs)
+
+
+@tabular_transformation_registry.register_with_multiple_names("dropout")
+class TabularDropout(TabularTransformation):
+    """
+    Applies dropout transformation.
+    """
+
+    def __init__(self, dropout_rate=0.0):
+        super().__init__()
+        self.dropout = torch.nn.Dropout(dropout_rate)
+
+    def forward(self, inputs: TensorOrTabularData, **kwargs) -> TensorOrTabularData:  # type: ignore
+        outputs = {key: self.dropout(val) for key, val in inputs.items()}
+        return outputs
+
+    def forward_output_size(self, input_size):
+        return input_size
