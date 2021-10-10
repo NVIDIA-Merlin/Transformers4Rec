@@ -112,7 +112,6 @@ def test_create_scheduler(torch_yoochoose_next_item_prediction_model, scheduler)
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         max_steps=5,
-        avg_session_length=20,
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
