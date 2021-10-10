@@ -45,6 +45,7 @@ from .features.embedding import (
 )
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
+from .losses import LabelSmoothCrossEntropyLoss
 
 # Model related imports
 from .model.base import Head, Model, PredictionTask
@@ -120,5 +121,6 @@ __all__ = [
     "TabularModule",
     "SoftEmbedding",
     "Trainer",
+    "LabelSmoothCrossEntropyLoss",
     "data",
 ]
