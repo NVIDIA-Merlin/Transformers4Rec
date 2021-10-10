@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
+import json
 import os
 from typing import TypeVar
 
 import betterproto
 from betterproto import Message as BetterProtoMessage
-from google.protobuf import text_format
+from google.protobuf import json_format, text_format
 from google.protobuf.message import Message as ProtoMessage
 
 ProtoMessageType = TypeVar("ProtoMessageType", bound=BetterProtoMessage)
@@ -55,4 +54,13 @@ def proto_text_to_better_proto(
 
     proto = text_format.Parse(proto_text, message)
 
-    return better_proto_message.__class__().parse(proto.SerializeToString())
+    # This is a hack because as of now we can't parse the Any representation.
+    # TODO: Fix this.
+    d = json_format.MessageToDict(proto)
+    for f in d["feature"]:
+        if "extraMetadata" in f["annotation"]:  # type: ignore
+            extra_metadata = f["annotation"].pop("extraMetadata")  # type: ignore
+            f["annotation"]["comment"] = [json.dumps(extra_metadata[0]["value"])]  # type: ignore
+    json_str = json_format.MessageToJson(json_format.ParseDict(d, message))
+
+    return better_proto_message.__class__().from_json(json_str)
