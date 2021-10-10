@@ -529,13 +529,13 @@ class Trainer(BaseTrainer):
         # Computing the metrics results as the average of all steps
         if self.compute_metrics:
             streaming_metrics_results = model.compute_metrics(mode=metric_key_prefix)
-            metrics = {**metrics, **streaming_metrics_results}
-        metrics[f"{metric_key_prefix}/loss"] = all_losses.mean().item()
+            streaming_metrics_results_flattened = process_metrics(
+                streaming_metrics_results, prefix=metric_key_prefix + "/"
+            )
 
-        # Prefix all keys with metric_key_prefix + '/'
-        for key in list(metrics.keys()):
-            if not key.startswith(f"{metric_key_prefix}/"):
-                metrics[f"{metric_key_prefix}/{key}"] = metrics.pop(key).cpu().numpy().item()
+            metrics = {**metrics, **streaming_metrics_results_flattened}
+
+        metrics[f"{metric_key_prefix}/loss"] = all_losses.mean().item()
 
         return EvalLoopOutput(
             predictions=all_preds_item_ids_scores,
@@ -676,6 +676,18 @@ class Trainer(BaseTrainer):
     def wipe_memory(self):
         gc.collect()
         torch.cuda.empty_cache()
+
+
+def process_metrics(metrics, prefix="", to_cpu=True):
+    metrics_proc = {}
+    for root_key, root_value in metrics.items():
+        if isinstance(root_value, dict):
+            flattened_metrics = process_metrics(root_value, prefix=prefix, to_cpu=to_cpu)
+            metrics_proc = {**metrics_proc, **flattened_metrics}
+        else:
+            value = root_value.cpu().numpy().item() if to_cpu else root_value
+            metrics_proc[f"{prefix}{root_key}"] = value
+    return metrics_proc
 
 
 class IncrementalTrainer(Trainer):
