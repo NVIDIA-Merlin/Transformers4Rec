@@ -130,7 +130,7 @@ class SequentialTabularTransformations(SequentialBlock):
     """
 
     def __init__(self, transformation: TabularTransformationsType):
-        if len(transformation) == 1 and isinstance(transformation, list):
+        if len(transformation) == 1 and isinstance(transformation[0], list):
             transformation = transformation[0]
         if not isinstance(transformation, (list, tuple)):
             transformation = [transformation]
