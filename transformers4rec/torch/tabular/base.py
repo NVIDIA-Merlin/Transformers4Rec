@@ -479,8 +479,9 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
+        **kwargs,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, **kwargs)
         self.schema = schema
 
     def to_module(self, shape_or_module, device=None):
@@ -555,8 +556,9 @@ class MergeTabular(TabularBlock):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
+        **kwargs,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema, **kwargs)
         self.to_merge: Union[torch.nn.ModuleDict, torch.nn.ModuleList]
         if all(isinstance(x, dict) for x in modules_to_merge):
             to_merge: Dict[str, TabularModule]

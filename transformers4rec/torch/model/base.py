@@ -659,7 +659,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
 
 def _output_metrics(metrics):
-    if len(metrics) == 1:
-        return metrics[list(metrics.keys())[0]]
+    # if len(metrics) == 1:
+    #    return metrics[list(metrics.keys())[0]]
 
     return metrics
