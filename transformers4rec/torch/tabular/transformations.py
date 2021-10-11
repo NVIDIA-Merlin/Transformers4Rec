@@ -117,9 +117,10 @@ class TabularLayerNorm(TabularTransformation):
         return input_size
 
     def build(self, input_size, **kwargs):
-        if len(self.feature_layer_norm) == 0:
-            for key, size in input_size.items():
-                self.feature_layer_norm[key] = torch.nn.LayerNorm(normalized_shape=size[-1])
+        if input_size is not None:
+            if len(self.feature_layer_norm) == 0:
+                for key, size in input_size.items():
+                    self.feature_layer_norm[key] = torch.nn.LayerNorm(normalized_shape=size[-1])
 
         return super().build(input_size, **kwargs)
 
