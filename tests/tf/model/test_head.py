@@ -125,8 +125,6 @@ def test_item_prediction_loss_and_metrics(
 
     body_outputs = body(tf_yoochoose_like)
 
-    outputs = head(body_outputs)
-
     loss = head.compute_loss(body_outputs=body_outputs, targets=None)
 
     metrics = head.metric_results()
@@ -140,7 +138,6 @@ def test_item_prediction_loss_and_metrics(
         "recall_at_20",
     ]
     assert set(default_metric).issubset(set(metrics.keys()))
-    assert outputs.shape[-1] == 51997
     assert loss != 0
 
 

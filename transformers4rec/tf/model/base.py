@@ -132,14 +132,16 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
         inputs,
         targets,
         training: bool = False,
+        call_task: bool = True,
         compute_metrics=True,
         sample_weight: Optional[tf.Tensor] = None,
         **kwargs,
     ) -> tf.Tensor:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
-
-        predictions = self(inputs, training=training, **kwargs)
+        predictions = inputs
+        if call_task:
+            predictions = self(inputs, training=training, **kwargs)
         loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
 
         if compute_metrics:
@@ -389,8 +391,11 @@ class Head(tf.keras.layers.Layer):
         if call_body:
             body_outputs = self.body(body_outputs)
 
+        predictions = self(body_outputs, always_output_dict=True)
         for name, task in self.prediction_task_dict.items():
-            loss = task.compute_loss(body_outputs, targets, training=training, **kwargs)
+            loss = task.compute_loss(
+                predictions[name], targets, call_task=False, training=training, **kwargs
+            )
             losses.append(loss * self._task_weight_dict[name])
 
         return self.loss_reduction(losses)
@@ -434,8 +439,10 @@ class Head(tf.keras.layers.Layer):
     def get_config(self):
         config = super().get_config()
         config = maybe_serialize_keras_objects(
-            self, config, ["body", "loss_reduction", "prediction_tasks", "task_weights"]
+            self, config, ["body", "loss_reduction", "prediction_tasks"]
         )
+        if self.task_weights:
+            config["task_weights"] = self.task_weights
 
         return config
 
