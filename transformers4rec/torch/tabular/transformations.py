@@ -135,7 +135,7 @@ class TabularDropout(TabularTransformation):
         self.dropout = torch.nn.Dropout(dropout_rate)
 
     def forward(self, inputs: TensorOrTabularData, **kwargs) -> TensorOrTabularData:  # type: ignore
-        outputs = {key: self.dropout(val) for key, val in inputs.items()}
+        outputs = {key: self.dropout(val) for key, val in inputs.items()}  # type: ignore
         return outputs
 
     def forward_output_size(self, input_size):
