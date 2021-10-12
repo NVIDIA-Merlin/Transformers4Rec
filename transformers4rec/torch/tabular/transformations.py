@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import logging
 from typing import Dict, Optional
 
 import torch
@@ -21,6 +22,8 @@ import torch
 from ..features.embedding import FeatureConfig, TableConfig
 from ..typing import TabularData, TensorOrTabularData
 from .base import TabularTransformation, tabular_transformation_registry
+
+LOG = logging.getLogger("transformers4rec")
 
 
 @tabular_transformation_registry.register_with_multiple_names("stochastic-swap-noise", "ssn")
@@ -94,11 +97,21 @@ class TabularLayerNorm(TabularTransformation):
 
     def __init__(self, features_dim: Optional[Dict[str, int]] = None):
         super().__init__()
+        self.feature_layer_norm = torch.nn.ModuleDict()
+        self._set_features_layer_norm(features_dim)
+
+    def _set_features_layer_norm(self, features_dim):
         feature_layer_norm = {}
         if features_dim:
             for fname, dim in features_dim.items():
+                if dim == 1:
+                    LOG.warning(
+                        f"Layer norm can only be applied on features with more than 1 dim, "
+                        f"but feature {fname} has dim {dim}"
+                    )
+                    continue
                 feature_layer_norm[fname] = torch.nn.LayerNorm(normalized_shape=dim)
-        self.feature_layer_norm = torch.nn.ModuleDict(feature_layer_norm)
+            self.feature_layer_norm.update(feature_layer_norm)
 
     @classmethod
     def from_feature_config(cls, feature_config: Dict[str, FeatureConfig]):
@@ -111,16 +124,18 @@ class TabularLayerNorm(TabularTransformation):
     def forward(self, inputs: TabularData, **kwargs) -> TabularData:
         if len(self.feature_layer_norm) == 0:
             raise ValueError("`features_dim is empty.`")
-        return {key: self.feature_layer_norm[key](val) for key, val in inputs.items()}
+        return {
+            key: (self.feature_layer_norm[key](val) if key in self.feature_layer_norm else val)
+            for key, val in inputs.items()
+        }
 
     def forward_output_size(self, input_size):
         return input_size
 
     def build(self, input_size, **kwargs):
         if input_size is not None:
-            if len(self.feature_layer_norm) == 0:
-                for key, size in input_size.items():
-                    self.feature_layer_norm[key] = torch.nn.LayerNorm(normalized_shape=size[-1])
+            features_dim = {k: v[-1] for k, v in input_size.items()}
+            self._set_features_layer_norm(features_dim)
 
         return super().build(input_size, **kwargs)
 
