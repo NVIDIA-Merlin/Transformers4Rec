@@ -507,14 +507,14 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         output = super().build(input_size, schema=schema, **kwargs)
         output_size = input_size
         if self.pre:
-            output_size = self.pre.output_size(self.pre.build(input_size, schema=schema, **kwargs))
+            self.pre.build(input_size, schema=schema, **kwargs)
+            output_size = self.pre.output_size(input_size)
 
         output_size = self.forward_output_size(output_size)
 
         if self.post:
-            output_size = self.post.output_size(
-                self.post.build(output_size, schema=schema, **kwargs)
-            )
+            self.post.build(output_size, schema=schema, **kwargs)
+            output_size = self.post.output_size(output_size)
 
         if self.aggregation:
             self.aggregation.build(output_size, schema=schema, **kwargs)

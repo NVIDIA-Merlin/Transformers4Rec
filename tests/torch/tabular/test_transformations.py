@@ -78,6 +78,41 @@ def test_stochastic_swap_noise_with_tabular_features(
         assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
 
 
+@pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
+def test_stochastic_swap_noise_with_tabular_features_from_schema(
+    yoochoose_schema, torch_yoochoose_like, replacement_prob
+):
+    PAD_TOKEN = 0
+
+    inputs = torch_yoochoose_like
+
+    tab_module = tr.TabularSequenceFeatures.from_schema(yoochoose_schema)
+    out_features = tab_module(inputs)
+
+    ssn = tr.StochasticSwapNoise(
+        pad_token=PAD_TOKEN, replacement_prob=replacement_prob, schema=yoochoose_schema
+    )
+    tab_module_ssn = tr.TabularSequenceFeatures.from_schema(yoochoose_schema, pre=ssn)
+    # Enforcing embedding tables of TabularSequenceFeatures to be equal (shared)
+    # so that only replacement makes output differ
+    tab_module_ssn.categorical_module.embedding_tables = (
+        tab_module.categorical_module.embedding_tables
+    )
+    out_features_ssn = tab_module_ssn(inputs)
+
+    for fname in out_features:
+        replaced_mask = out_features_ssn[fname] != out_features[fname]
+
+        # Ignoring padding items to compute the mean replacement rate
+        feat_non_padding_mask = inputs[fname] != PAD_TOKEN
+        # For embedding features it is necessary to expand the mask
+        if len(replaced_mask.shape) > len(feat_non_padding_mask.shape):
+            feat_non_padding_mask = feat_non_padding_mask.unsqueeze(-1)
+        replaced_mask_non_padded = pytorch.masked_select(replaced_mask, feat_non_padding_mask)
+        replacement_rate = replaced_mask_non_padded.float().mean()
+        assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
+
+
 @pytest.mark.parametrize("layer_norm", ["layer-norm", tr.TabularLayerNorm()])
 def test_layer_norm(yoochoose_schema, torch_yoochoose_like, layer_norm):
     schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
@@ -90,6 +125,45 @@ def test_layer_norm(yoochoose_schema, torch_yoochoose_like, layer_norm):
 
     assert list(out["item_id/list"].shape) == [100, 100]
     assert list(out["category/list"].shape) == [100, 64]
+
+    # Check if layer norm was applied to categ features
+    assert out["item_id/list"].mean(axis=-1).mean().item() == pytest.approx(0.0, abs=0.02)
+    assert out["item_id/list"].std(axis=-1).mean().item() == pytest.approx(1.0, abs=0.02)
+    assert out["category/list"].mean(axis=-1).mean().item() == pytest.approx(0.0, abs=0.02)
+    assert out["category/list"].std(axis=-1).mean().item() == pytest.approx(1.0, abs=0.02)
+
+
+def test_layer_norm_apply_only_categ_features(yoochoose_schema, torch_yoochoose_like):
+    inputs = torch_yoochoose_like
+    schema = yoochoose_schema
+
+    schema = schema.select_by_name(
+        [
+            "item_id/list",
+            "category/list",
+            "timestamp/weekday/sin/list",
+            "timestamp/weekday/cos/list",
+        ]
+    )
+
+    layer_norm = tr.TabularLayerNorm()
+    tab_module = tr.TabularSequenceFeatures.from_schema(schema, post=layer_norm)
+    out_features = tab_module(inputs)
+
+    assert pytorch.all(
+        out_features["timestamp/weekday/sin/list"]
+        == inputs["timestamp/weekday/sin/list"].unsqueeze(-1)
+    )
+    assert pytorch.all(
+        out_features["timestamp/weekday/cos/list"]
+        == inputs["timestamp/weekday/cos/list"].unsqueeze(-1)
+    )
+
+    # Check if layer norm was applied to categ features
+    assert out_features["item_id/list"].mean(axis=-1).mean().item() == pytest.approx(0.0, abs=0.02)
+    assert out_features["item_id/list"].std(axis=-1).mean().item() == pytest.approx(1.0, abs=0.02)
+    assert out_features["category/list"].mean(axis=-1).mean().item() == pytest.approx(0.0, abs=0.02)
+    assert out_features["category/list"].std(axis=-1).mean().item() == pytest.approx(1.0, abs=0.02)
 
 
 def test_stochastic_swap_noise_raise_exception_not_2d_item_id():
@@ -142,7 +216,7 @@ def test_dropout_transformation():
         assert zeroed_rate_diff == pytest.approx(DROPOUT_RATE, abs=0.1)
 
 
-def test_input_dropout_transformation_with_tabular_features(yoochoose_schema, torch_yoochoose_like):
+def test_input_dropout_with_tabular_features_post(yoochoose_schema, torch_yoochoose_like):
     DROPOUT_RATE = 0.3
 
     inputs = torch_yoochoose_like
@@ -158,5 +232,37 @@ def test_input_dropout_transformation_with_tabular_features(yoochoose_schema, to
             out_features_dropout[fname], mask_prev_not_zeros
         )
         output_dropout_zeros_rate = (out_features_dropout_ignoring_zeroes == 0.0).float().mean()
-        # zeroed_rate_diff = output_dropout_zeros_rate - output_zeros_rate
+        assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.1)
+
+
+def test_input_dropout_with_tabular_features_post_from_squema(
+    yoochoose_schema, torch_yoochoose_like
+):
+    DROPOUT_RATE = 0.3
+
+    inputs = torch_yoochoose_like
+    schema = yoochoose_schema
+
+    schema = schema.select_by_name(
+        [
+            "item_id/list",
+            "category/list",
+            "timestamp/weekday/sin/list",
+            "timestamp/weekday/cos/list",
+        ]
+    )
+
+    tab_module = tr.TabularSequenceFeatures.from_schema(schema)
+    out_features = tab_module(inputs)
+
+    input_dropout = tr.TabularDropout(dropout_rate=DROPOUT_RATE)
+    tab_module_dropout = tr.TabularSequenceFeatures.from_schema(schema, post=input_dropout)
+    out_features_dropout = tab_module_dropout(inputs)
+
+    for fname in out_features:
+        mask_prev_not_zeros = out_features[fname] != 0.0
+        out_features_dropout_ignoring_zeroes = pytorch.masked_select(
+            out_features_dropout[fname], mask_prev_not_zeros
+        )
+        output_dropout_zeros_rate = (out_features_dropout_ignoring_zeroes == 0.0).float().mean()
         assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.1)
