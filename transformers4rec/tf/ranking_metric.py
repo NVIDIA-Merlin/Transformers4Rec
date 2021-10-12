@@ -18,6 +18,7 @@
 from abc import abstractmethod
 
 import tensorflow as tf
+from keras import backend
 
 from merlin_standard_lib import Registry
 
@@ -53,11 +54,34 @@ class RankingMetric(tf.keras.metrics.Metric):
         self.labels_onehot = labels_onehot
         # Store the mean vector of the batch metrics (for each cut-off at topk) in ListWrapper
         self.metric_mean = []
+        self.built = False
+
+    def _build(self, shape):
+        with tf.init_scope():
+            # This should only be necessary for handling v1 behavior. In v2, AUC
+            # should be initialized outside of any tf.functions, and therefore in
+            # eager mode.
+            if not tf.executing_eagerly():
+                backend._initialize_variables(backend._get_session())
+
+        if not self.built:
+            self.accumulator = tf.Variable(
+                tf.zeros(shape=[1, len(self.top_ks)]),
+                shape=tf.TensorShape([None, tf.compat.v1.Dimension(len(self.top_ks))]),
+            )
+
+        bs = shape[0]
+        variable_shape = [bs, tf.compat.v1.Dimension(len(self.top_ks))]
+        self.accumulator.assign(tf.zeros(variable_shape))
+        self.built = True
 
     def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, **kwargs):
         # Computing the metrics at different cut-offs
+        # init batch accumulator
+        self._build(shape=tf.shape(y_pred))
         if self.labels_onehot:
             y_true = tf_utils.tranform_label_to_onehot(y_true, tf.shape(y_pred)[-1])
+
         metric = self._metric(
             tf.convert_to_tensor(self.top_ks),
             tf.reshape(y_pred, [-1, tf.shape(y_pred)[-1]]),
@@ -102,7 +126,6 @@ class PrecisionAt(RankingMetric):
         ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
         bs = tf.shape(scores)[0]
-        precisions = tf.zeros([bs, len(ks)], tf.float32)
 
         for index in range(int(tf.shape(ks)[0])):
             k = ks[index]
@@ -114,13 +137,12 @@ class PrecisionAt(RankingMetric):
                 ],
                 axis=1,
             )
-            precisions = tf.tensor_scatter_nd_update(
-                precisions,
-                indices=indices,
-                updates=tf.reduce_sum(topk_labels[:, : int(k)], axis=1) / float(k),
+
+            self.accumulator.scatter_nd_update(
+                indices=indices, updates=tf.reduce_sum(topk_labels[:, : int(k)], axis=1) / float(k)
             )
 
-        return precisions
+        return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("recall_at", "recall")
@@ -139,7 +161,6 @@ class RecallAt(RankingMetric):
 
         ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
-        recalls = tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32)
 
         # Compute recalls at K
         num_relevant = tf.reduce_sum(labels, axis=-1)
@@ -171,18 +192,19 @@ class RecallAt(RankingMetric):
                     ],
                     axis=1,
                 )
-                recalls = tf.tensor_scatter_nd_update(
-                    recalls, indices=update_indices, updates=tf.reshape(batch_recall_k, (-1,))
+                self.accumulator.scatter_nd_update(
+                    indices=update_indices, updates=tf.reshape(batch_recall_k, (-1,))
                 )
 
-        return recalls
+        return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("avg_precision_at", "avg_precision", "map")
 class AvgPrecisionAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False):
         super(AvgPrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
-        self.precision_at = PrecisionAt(top_ks)._metric
+        max_k = tf.reduce_max(top_ks)
+        self.precision_at = PrecisionAt(top_ks=1 + tf.range(max_k))
 
     def _metric(self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
         """
@@ -194,14 +216,15 @@ class AvgPrecisionAt(RankingMetric):
         """
         ks, scores, labels = check_inputs(ks, scores, labels)
         topk_scores, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
-        avg_precisions = tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32)
 
         num_relevant = tf.reduce_sum(labels, axis=-1)
         max_k = tf.reduce_max(ks)
 
-        precisions = self.precision_at(1 + tf.range(max_k), topk_scores, topk_labels)
-        rel_precisions = precisions * topk_labels
         bs = tf.shape(scores)[0]
+        self.precision_at._build(shape=tf.shape(scores))
+        precisions = self.precision_at._metric(1 + tf.range(max_k), topk_scores, topk_labels)
+        rel_precisions = precisions * topk_labels
+
         for index in range(int(tf.shape(ks)[0])):
             k = ks[index]
             tf_total_prec = tf.reduce_sum(rel_precisions[:, :k], axis=1)
@@ -217,11 +240,9 @@ class AvgPrecisionAt(RankingMetric):
                 ],
                 axis=1,
             )
-            avg_precisions = tf.tensor_scatter_nd_update(
-                avg_precisions, indices=indices, updates=tf_total_prec / clip_value
-            )
+            self.accumulator.scatter_nd_update(indices=indices, updates=tf_total_prec / clip_value)
             # Ensuring type is double, because it can be float if --fp16
-        return avg_precisions
+        return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("dcg_at", "dcg")
@@ -243,7 +264,6 @@ class DCGAt(RankingMetric):
         """
         ks, scores, labels = check_inputs(ks, scores, labels)
         _, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
-        dcgs = tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32)
 
         # Compute discounts
         max_k = tf.reduce_max(ks)
@@ -253,7 +273,7 @@ class DCGAt(RankingMetric):
         discounts = 1 / (tf.math.log(discount_positions + 2) / discount_log_base)
         bs = tf.shape(scores)[0]
         # Compute DCGs at K
-        for index in range(int(tf.shape(ks)[0])):
+        for index in range(len(self.top_ks)):
             k = ks[index]
             m = topk_labels[:, :k] * tf.repeat(
                 tf.expand_dims(discounts[:k], 0), tf.shape(topk_labels)[0], axis=0
@@ -267,19 +287,19 @@ class DCGAt(RankingMetric):
                 axis=1,
             )
 
-            dcgs = tf.tensor_scatter_nd_update(
-                dcgs, indices=indices, updates=tf.cast(tf.reduce_sum(m, axis=1), tf.float32)
+            self.accumulator.scatter_nd_update(
+                indices=indices, updates=tf.cast(tf.reduce_sum(m, axis=1), tf.float32)
             )
             # Ensuring type is double, because it can be float if --fp16
 
-        return dcgs
+        return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
 class NDCGAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False):
         super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
-        self.dcg_at = DCGAt(top_ks)._metric
+        self.dcg_at = DCGAt(top_ks)
 
     def _metric(
         self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor, log_base: int = 2
@@ -297,15 +317,18 @@ class NDCGAt(RankingMetric):
         topk_scores, _, topk_labels = tf_utils.extract_topk(ks, scores, labels)
 
         # Compute discounted cumulative gains
-        gains = self.dcg_at(ks, topk_scores, topk_labels, log_base=log_base)
-        normalizing_gains = self.dcg_at(ks, topk_labels, topk_labels, log_base=log_base)
+        self.dcg_at._build(shape=tf.shape(scores))
+        gains = self.dcg_at._metric(ks, topk_scores, topk_labels, log_base=log_base)
+        # Re-init states of dcg_at accumulator
+        self.dcg_at._build(shape=tf.shape(scores))
+        normalizing_gains = self.dcg_at._metric(ks, topk_labels, topk_labels, log_base=log_base)
 
         # Prevent divisions by zero
         relevant_pos = tf.where(normalizing_gains != 0)
         tf.where(normalizing_gains == 0, 0.0, gains)
 
         updates = tf.gather_nd(gains, relevant_pos) / tf.gather_nd(normalizing_gains, relevant_pos)
-        gains = tf.tensor_scatter_nd_update(gains, relevant_pos, updates)
+        gains.scatter_nd_update(relevant_pos, updates)
 
         return gains
 

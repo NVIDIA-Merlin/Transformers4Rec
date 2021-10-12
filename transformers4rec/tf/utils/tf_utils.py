@@ -174,7 +174,7 @@ def gather_torch_like(labels, indices, max_k):
     # gather_indices = []
     gather_indices = tf.TensorArray(tf.int32, size=tf.shape(indices)[0])
     for i in range(tf.shape(indices)[0]):
-        gather_indices.write(
+        gather_indices = gather_indices.write(
             i,
             tf.concat(
                 [i * tf.ones((max_k, 1), tf.int32), tf.expand_dims(indices[i, :], -1)], axis=1

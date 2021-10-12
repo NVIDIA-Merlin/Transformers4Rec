@@ -21,9 +21,8 @@ tr = pytest.importorskip("transformers4rec.tf")
 test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 
-# TODO: Fix this test when `run_eagerly=False`
-# @pytest.mark.parametrize("run_eagerly", [True, False])
-def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly=True):
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly):
     targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
 
     inputs = tf_tabular_features
@@ -121,11 +120,9 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
             tr.TransformerBlock(transformer_config, masking=input_module.masking),
         ]
     )
-    if not run_eagerly:
-        # TODO: Fix computing metrics as part of the model for graph mode (run_eagerly = False)
-        task = tr.NextItemPredictionTask(weight_tying=True, metrics=[])
-    else:
-        task = tr.NextItemPredictionTask(weight_tying=True)
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+
     model = task.to_model(body=body)
     model.compile(optimizer="adam", run_eagerly=run_eagerly)
 
@@ -133,12 +130,13 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
     ).batch(50)
     losses = model.fit(dataset, epochs=5)
+    metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
 
-    if run_eagerly:
-        metrics = model.evaluate(
-            tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True
-        )
-        assert len(metrics.keys()) == 6
-
+    assert len(metrics.keys()) == 6
     assert len(losses.epoch) == 5
     assert all(loss >= 0 for loss in losses.history["loss"])
+
+
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_save_model(run_eagerly):
+    pass
