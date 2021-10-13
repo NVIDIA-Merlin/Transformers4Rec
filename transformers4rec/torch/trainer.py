@@ -19,6 +19,7 @@
 import collections
 import inspect
 import random
+import re
 from collections.abc import Sized
 from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
@@ -698,6 +699,10 @@ class Trainer(BaseTrainer):
         return general_global_step
 
     def log(self, logs: Dict[str, float]) -> None:
+        # Ensuring that eval metrics are prefixed as "eval_" so that the HF integration loggers
+        # do not prefix metrics names with 'train/' (as 'train/' is always added when not eval)
+        logs = {re.sub("^eval/", "eval_", k).replace("train/", ""): v for k, v in logs.items()}
+
         if not self.incremental_logging:
             super().log(logs)
         else:
