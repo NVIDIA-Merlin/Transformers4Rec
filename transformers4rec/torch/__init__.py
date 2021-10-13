@@ -25,6 +25,7 @@ from ..config.transformer import (
     LongformerConfig,
     ReformerConfig,
     T4RecConfig,
+    TransfoXLConfig,
     XLNetConfig,
 )
 from . import ranking_metric
@@ -79,6 +80,7 @@ __all__ = [
     "T4RecConfig",
     "GPT2Config",
     "XLNetConfig",
+    "TransfoXLConfig",
     "LongformerConfig",
     "AlbertConfig",
     "ReformerConfig",
