@@ -1,4 +1,17 @@
 feature {
+  name: "session_id"
+  type: INT
+  int_domain {
+    name: "session_id"
+    min: 1
+    max: 9249733 
+    is_categorical: false
+  }
+  annotation {
+    tag: "groupby_col"
+  }
+}
+feature {
   name: "item_id-list_seq"
   value_count {
     min: 2
@@ -16,19 +29,6 @@ feature {
     tag: "list"
     tag: "categorical"
     tag: "item"
-  }
-}
-feature {
-  name: "session_id"
-  type: INT
-  int_domain {
-    name: "session_id"
-    min: 1
-    max: 9249733 
-    is_categorical: false
-  }
-  annotation {
-    tag: "groupby_col"
   }
 }
 feature {
@@ -80,6 +80,7 @@ feature {
     max: 0.9995285
   }
   annotation {
+    tag: "continuous"
     tag: "time"
     tag: "list"
   }

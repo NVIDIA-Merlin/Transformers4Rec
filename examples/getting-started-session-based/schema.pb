@@ -80,6 +80,7 @@ feature {
     max: 0.9999999
   }
   annotation {
+    tag: "continuous"
     tag: "time"
     tag: "list"
   }
