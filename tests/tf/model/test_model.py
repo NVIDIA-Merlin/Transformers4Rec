@@ -14,6 +14,8 @@
 # limitations under the License.
 #
 
+import tempfile
+
 import pytest
 
 tf = pytest.importorskip("tensorflow")
@@ -147,21 +149,17 @@ def test_save_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
         masking="causal",
     )
 
-    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
-    body = tr.SequentialBlock(
-        [
-            input_module,
-            tr.TransformerBlock(transformer_config, masking=input_module.masking),
-        ]
-    )
+    body = tr.SequentialBlock([input_module, tr.MLPBlock([64])])
 
-    task = tr.NextItemPredictionTask(weight_tying=True)
+    task = tr.NextItemPredictionTask(weight_tying=True, metrics=[])
 
     model = task.to_model(body=body)
     model.compile(optimizer="adam", run_eagerly=run_eagerly)
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
     ).batch(50)
-    losses = model.fit(dataset, epochs=5)
-    losses
-    model.save("tmp")
+
+    inputs = next(iter(dataset))[0]
+    model._set_inputs(inputs)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model.save(tmpdir)
