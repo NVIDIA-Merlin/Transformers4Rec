@@ -153,7 +153,7 @@ class EmbeddingFeatures(InputBlock):
         Optional[EmbeddingFeatures]
             Returns the ``EmbeddingFeatures`` for the dataset schema
         """
-        # TODO: propogate item-id from ITEM_ID tag
+        # TODO: propagate item-id from ITEM_ID tag
 
         if tags:
             schema = schema.select_by_tag(tags)
@@ -336,7 +336,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         Optional[SoftEmbeddingFeatures]
             Returns a ``SoftEmbeddingFeatures`` instance from the dataset schema
         """
-        # TODO: propogate item-id from ITEM_ID tag
+        # TODO: propagate item-id from ITEM_ID tag
 
         if tags:
             schema = schema.select_by_tag(tags)
