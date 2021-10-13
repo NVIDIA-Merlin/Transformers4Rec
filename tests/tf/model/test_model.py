@@ -138,5 +138,30 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
 
 
 @pytest.mark.parametrize("run_eagerly", [True, False])
-def test_save_model(run_eagerly):
-    pass
+def test_save_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+    )
+
+    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
+    body = tr.SequentialBlock(
+        [
+            input_module,
+            tr.TransformerBlock(transformer_config, masking=input_module.masking),
+        ]
+    )
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+
+    model = task.to_model(body=body)
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
+    dataset = tf.data.Dataset.from_tensor_slices(
+        (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
+    ).batch(50)
+    losses = model.fit(dataset, epochs=5)
+    losses
+    model.save("tmp")
