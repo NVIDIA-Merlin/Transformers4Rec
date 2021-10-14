@@ -284,6 +284,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
+        **kwarg,
     ):
         if layer_norm:
             from transformers4rec.torch import TabularLayerNorm
