@@ -565,8 +565,8 @@ class Trainer(BaseTrainer):
 
         Parameters
         ----------
-        save_model_class: Optioanl[bool]
-            Wether to save the Model class or not.
+        save_model_class: Optional[bool]
+            Whether to save the Model class or not.
             by default False
         """
         import os
