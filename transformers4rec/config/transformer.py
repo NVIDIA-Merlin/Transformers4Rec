@@ -265,7 +265,8 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
         d_model,
         n_head,
         n_layer,
-        total_seq_length,
+        total_seq_length=None,
+        attn_type="bi",
         hidden_act="gelu",
         initializer_range=0.01,
         layer_norm_eps=0.03,
@@ -279,6 +280,7 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
             d_inner=d_model * 4,
             n_layer=n_layer,
             n_head=n_head,
+            attn_type=attn_type,
             ff_activation=hidden_act,
             initializer_range=initializer_range,
             layer_norm_eps=layer_norm_eps,
@@ -385,8 +387,8 @@ class TransfoXLConfig(T4RecConfig, transformers.TransfoXLConfig):
             dropout=dropout,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
-            vocab_size=1,
-            mem_len=1,
-            div_val=1,
+            vocab_size=1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
+            mem_len=1,  # We do not use mems, because we feed the full sequence to the Transformer models and not sliding segments (which is useful for the long sequences in NLP. As setting mem_len to 0 leads to NaN in loss, we set it to one, to minimize the computing overhead)
+            div_val=1,  # Disables adaptative input (embeddings), because the embeddings are managed by TabularFeatures
             **kwargs
         )

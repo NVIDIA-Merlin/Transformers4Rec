@@ -78,9 +78,23 @@ class StackFeatures(TabularAggregation):
 
     def forward_output_size(self, input_size):
         batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = list(input_size.values())[0][-1]
+        seq_features_shapes, sequence_length = self._get_seq_features_shapes(input_size)
 
-        return batch_size, len(input_size), last_dim
+        if len(seq_features_shapes) > 0:
+            output_size = [
+                batch_size,
+                sequence_length,
+            ]
+        else:
+            output_size = [batch_size]
+
+        num_features = len(input_size)
+        if self.axis == -1:
+            output_size.append(num_features)
+        else:
+            output_size.insert(self.axis, num_features)
+
+        return tuple(output_size)
 
 
 class ElementwiseFeatureAggregation(TabularAggregation):
@@ -88,8 +102,16 @@ class ElementwiseFeatureAggregation(TabularAggregation):
         all_input_shapes_equal = len(set([x.shape for x in inputs.values()])) == 1
         if not all_input_shapes_equal:
             raise ValueError(
-                "The shapes of all input features are not equal, which is required for element-wise"
-                " aggregation: {}".format({k: v.shape for k, v in inputs.items()})
+                "The shapes of all input features are not equal, which is required for"
+                " element-wise aggregation: {}".format({k: v.shape for k, v in inputs.items()})
+            )
+
+    def _check_inputs_last_dim_equal(self, inputs_sizes):
+        all_input_last_dim_equal = len(set([x[-1] for x in inputs_sizes.values()])) == 1
+        if not all_input_last_dim_equal:
+            raise ValueError(
+                f"The last dim of all input features is not equal, which is"
+                f" required for element-wise aggregation: {inputs_sizes}"
             )
 
 
@@ -108,10 +130,10 @@ class ElementwiseSum(ElementwiseFeatureAggregation):
         return self.stack(inputs).sum(dim=0)
 
     def forward_output_size(self, input_size):
-        batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = list(input_size.values())[0][-1]
-
-        return batch_size, last_dim
+        self._check_inputs_last_dim_equal(input_size)
+        agg_dim = list(input_size.values())[0][-1]
+        output_size = self._get_agg_output_size(input_size, agg_dim)
+        return output_size
 
 
 @tabular_aggregation_registry.register("element-wise-sum-item-multi")
@@ -144,7 +166,7 @@ class ElementwiseSumItemMulti(ElementwiseFeatureAggregation):
         return result
 
     def forward_output_size(self, input_size):
-        batch_size = calculate_batch_size_from_input_size(input_size)
-        last_dim = list(input_size.values())[0][-1]
-
-        return batch_size, last_dim
+        self._check_inputs_last_dim_equal(input_size)
+        agg_dim = list(input_size.values())[0][-1]
+        output_size = self._get_agg_output_size(input_size, agg_dim)
+        return output_size

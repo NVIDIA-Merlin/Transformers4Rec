@@ -16,7 +16,7 @@
 
 import abc
 from dataclasses import dataclass
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 import torch
 
@@ -182,8 +182,8 @@ def check_inputs(ks, scores, labels):
 
     return (
         ks.to(dtype=torch.int32, device=scores.device),
-        scores.to(dtype=torch.float32, device=scores.device),
-        labels.to(dtype=torch.float32, device=scores.device),
+        scores,
+        labels,  # .to(dtype=torch.float32, device=scores.device),
     )
 
 
@@ -199,7 +199,58 @@ def create_output_placeholder(scores, ks):
 
 
 def tranform_label_to_onehot(labels, vocab_size):
-    return torch.nn.functional.one_hot(labels.reshape(-1), vocab_size).detach()
+    return one_hot_1d(labels.reshape(-1), vocab_size, dtype=torch.float32).detach()
+
+
+def one_hot_1d(
+    labels: torch.Tensor,
+    num_classes: int,
+    device: Optional[torch.device] = None,
+    dtype: Optional[torch.dtype] = torch.float32,
+) -> torch.Tensor:
+    r"""Coverts a 1d label tensor to one-hot representation
+
+    Args:
+        labels (torch.Tensor) : tensor with labels of shape :math:`(N, H, W)`,
+                                where N is batch siz. Each value is an integer
+                                representing correct classification.
+        num_classes (int): number of classes in labels.
+        device (Optional[torch.device]): the desired device of returned tensor.
+         Default: if None, uses the current device for the default tensor type
+         (see torch.set_default_tensor_type()). device will be the CPU for CPU
+         tensor types and the current CUDA device for CUDA tensor types.
+        dtype (Optional[torch.dtype]): the desired data type of returned
+         tensor. Default: torch.float32
+
+    Returns:
+        torch.Tensor: the labels in one hot tensor.
+
+    Examples::
+        >>> labels = torch.LongTensor([0, 1, 2, 0])
+        >>> one_hot_1d(labels, num_classes=3)
+        tensor([[1., 0., 0.],
+                [0., 1., 0.],
+                [0., 0., 1.],
+                [1., 0., 0.],
+               ])
+    """
+    if not torch.is_tensor(labels):
+        raise TypeError("Input labels type is not a torch.Tensor. Got {}".format(type(labels)))
+    if not len(labels.shape) == 1:
+        raise ValueError("Expected tensor should have 1 dim. Got: {}".format(labels.shape))
+    if not labels.dtype == torch.int64:
+        raise ValueError(
+            "labels must be of the same dtype torch.int64. Got: {}".format(labels.dtype)
+        )
+    if num_classes < 1:
+        raise ValueError(
+            "The number of classes must be bigger than one." " Got: {}".format(num_classes)
+        )
+    if device is None:
+        device = labels.device
+    labels_size = labels.shape[0]
+    one_hot = torch.zeros(labels_size, num_classes, device=device, dtype=dtype)
+    return one_hot.scatter_(1, labels.unsqueeze(-1), 1.0)
 
 
 class LambdaModule(torch.nn.Module):

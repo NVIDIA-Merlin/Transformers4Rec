@@ -21,7 +21,7 @@ from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_s
 
 def test_schema_from_yoochoose_schema(yoochoose_schema):
     assert len(yoochoose_schema.column_names) == 22
-    assert len(yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 7
+    assert len(yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 11
     assert len(yoochoose_schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 3
 
 

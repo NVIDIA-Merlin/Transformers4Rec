@@ -17,10 +17,11 @@
 #
 
 import collections
-import gc
 import inspect
 import random
+import re
 from collections.abc import Sized
+from copy import deepcopy
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
@@ -80,6 +81,11 @@ class Trainer(BaseTrainer):
     compute_metrics: Optional[bool], optional
         Whether to compute metrics defined by Model class or not.
         by default None
+    incremental_logging: bool
+        Whether to enable incremental logging or not. If True, it ensures that
+        global steps are incremented over many `trainer.train()` calls, so that
+        train and eval metrics steps do not overlap and can be seen properly
+        in reports like W&B and Tensorboard
     """
 
     def __init__(
@@ -91,19 +97,27 @@ class Trainer(BaseTrainer):
         eval_dataset_or_path=None,
         train_dataloader: Optional[DataLoader] = None,
         eval_dataloader: Optional[DataLoader] = None,
+        callbacks: Optional[List[TrainerCallback]] = [],
         compute_metrics=None,
+        incremental_logging: bool = False,
         **kwargs,
     ):
 
         mock_dataset = DatasetMock()
         hf_model = HFWrapper(model)
 
+        self.incremental_logging = incremental_logging
+        if self.incremental_logging:
+            self.past_global_steps = 0
+            incremental_logging_callback = IncrementalLoggingCallback(self)
+            callbacks.append(incremental_logging_callback)
+
         super(Trainer, self).__init__(
             model=hf_model,
             args=args,
             train_dataset=mock_dataset,
             eval_dataset=mock_dataset,
-            callbacks=[TrainerCallback],
+            callbacks=callbacks,
             **kwargs,
         )
 
@@ -113,6 +127,7 @@ class Trainer(BaseTrainer):
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
         self.schema = schema
+        self.incremental_logging = incremental_logging
 
     def get_train_dataloader(self):
         """
@@ -401,9 +416,10 @@ class Trainer(BaseTrainer):
             # TODO: compute metrics each N eval_steps to speedup evaluation
             metrics_results_detailed = None
             if self.compute_metrics:
-                metrics_results_detailed = model.calculate_metrics(
-                    preds, labels, mode=metric_key_prefix, forward=False, call_body=False
-                )
+                if step % self.args.compute_metrics_each_n_steps == 0:
+                    metrics_results_detailed = model.calculate_metrics(
+                        preds, labels, mode=metric_key_prefix, forward=False, call_body=False
+                    )
 
             # Update containers on host
             if loss is not None:
@@ -528,13 +544,13 @@ class Trainer(BaseTrainer):
         # Computing the metrics results as the average of all steps
         if self.compute_metrics:
             streaming_metrics_results = model.compute_metrics(mode=metric_key_prefix)
-            metrics = {**metrics, **streaming_metrics_results}
-        metrics[f"{metric_key_prefix}/loss"] = all_losses.mean().item()
+            streaming_metrics_results_flattened = process_metrics(
+                streaming_metrics_results, prefix=metric_key_prefix + "/"
+            )
 
-        # Prefix all keys with metric_key_prefix + '/'
-        for key in list(metrics.keys()):
-            if not key.startswith(f"{metric_key_prefix}/"):
-                metrics[f"{metric_key_prefix}/{key}"] = metrics.pop(key).cpu().numpy().item()
+            metrics = {**metrics, **streaming_metrics_results_flattened}
+
+        metrics[f"{metric_key_prefix}/loss"] = all_losses.mean().item()
 
         return EvalLoopOutput(
             predictions=all_preds_item_ids_scores,
@@ -672,38 +688,75 @@ class Trainer(BaseTrainer):
                 dataset_type=metric_key_prefix,
             )
 
-    def wipe_memory(self):
-        gc.collect()
-        torch.cuda.empty_cache()
+    def _increment_past_global_steps(self, current_global_step: int):
+        self.past_global_steps += current_global_step
+
+    def _get_general_global_step(self) -> int:
+        general_global_step = self.past_global_steps
+        if self.model.training:
+            general_global_step += self.state.global_step
+
+        return general_global_step
+
+    def log(self, logs: Dict[str, float]) -> None:
+        # Ensuring that eval metrics are prefixed as "eval_" so that the HF integration loggers
+        # do not prefix metrics names with 'train/' (as 'train/' is always added when not eval)
+        logs = {re.sub("^eval/", "eval_", k).replace("train/", ""): v for k, v in logs.items()}
+
+        if not self.incremental_logging:
+            super().log(logs)
+        else:
+            # If Incremental logging is enabled, ensures that global steps are always
+            # incremented after train() calls
+            # so that metrics are logger with no overlap on W&B and Tensorboard
+            if self.state.epoch is not None:
+                logs["epoch"] = round(self.state.epoch, 2)
+
+            # As state.global_step is also used for the learning rate schedules,
+            # we create a copy only for logging
+            state_copy = deepcopy(self.state)
+            state_copy.global_step = self._get_general_global_step()
+
+            output = {**logs, **{"step": state_copy.global_step}}
+            self.state.log_history.append(output)
+            self.control = self.callback_handler.on_log(self.args, state_copy, self.control, logs)
 
 
-class IncrementalTrainer(Trainer):
+def process_metrics(metrics, prefix="", to_cpu=True):
+    metrics_proc = {}
+    for root_key, root_value in metrics.items():
+        if isinstance(root_value, dict):
+            flattened_metrics = process_metrics(root_value, prefix=prefix, to_cpu=to_cpu)
+            metrics_proc = {**metrics_proc, **flattened_metrics}
+        else:
+            value = root_value.cpu().numpy().item() if to_cpu else root_value
+            metrics_proc[f"{prefix}{root_key}"] = value
+    return metrics_proc
+
+
+class IncrementalLoggingCallback(TrainerCallback):
     """
-    An :class:`~transformers.Trainer` specialized for
-    incremental training of  sequential recommendation
-    including (session-based and sequtial recommendation)
+    An :class:`~transformers.TrainerCallback` that changes the state of the Trainer
+    on specific hooks for the purpose of the incremental logging
+    Parameters
+    ----------
+    trainer: Trainer
     """
 
-    def __init__(
-        self,
-        model: Model,
-        args: T4RecTrainingArguments,
-        schema=None,
-        train_dataset_or_path=None,
-        eval_dataset_or_path=None,
-        start_time_window_index=None,
-        final_time_window_index=None,
-        compute_metrics=None,
-        **kwargs,
-    ):
-        super().init(
-            self,
-            model,
-            args,
-            schema,
-        )
+    def __init__(self, trainer: Trainer):
+        self.trainer = trainer
 
-        # TODO
+    def on_train_begin(self, args, state, control, model=None, **kwargs):
+        pass
+
+    def on_train_end(self, args, state, control, model=None, **kwargs):
+        # Increments the global steps for logging with the global steps of the last train()
+        self.trainer._increment_past_global_steps(state.global_step)
+
+    def on_epoch_end(self, args, state, control, model=None, **kwargs):
+        # Evaluates on eval set
+        # self.trainer.evaluate()
+        pass
 
 
 class DatasetMock(Dataset, Sized):

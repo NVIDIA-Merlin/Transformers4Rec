@@ -33,7 +33,6 @@ from transformers4rec.torch import Trainer
 
 training_args = T4RecTrainingArguments(
             output_dir="./tmp",
-            avg_session_length=20,
             num_train_epochs=3,            
             fp16=True,
         )

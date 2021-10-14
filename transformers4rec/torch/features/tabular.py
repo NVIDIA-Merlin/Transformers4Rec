@@ -70,6 +70,7 @@ class TabularFeatures(MergeTabular):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
+        **kwargs,
     ):
         to_merge = {}
         if continuous_module:
@@ -81,7 +82,7 @@ class TabularFeatures(MergeTabular):
 
         assert to_merge != {}, "Please provide at least one input layer"
         super(TabularFeatures, self).__init__(
-            to_merge, pre=pre, post=post, aggregation=aggregation, schema=schema
+            to_merge, pre=pre, post=post, aggregation=aggregation, schema=schema, **kwargs
         )
 
     def project_continuous_features(
@@ -164,7 +165,7 @@ class TabularFeatures(MergeTabular):
                 )
             else:
                 maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
-                    schema, tags=continuous_tags
+                    schema, tags=continuous_tags, **kwargs
                 )
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(

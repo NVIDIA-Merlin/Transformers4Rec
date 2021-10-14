@@ -120,8 +120,10 @@ class SequentialTabularTransformations(SequentialBlock):
     """
 
     def __init__(self, *transformation: TabularTransformationsType):
-        if len(transformation) == 1 and isinstance(transformation, list):
-            transformation = transformation[0]
+        if len(transformation) == 1 and isinstance(transformation[0], list):
+            transformation = transformation[0]  # type: ignore
+        if not isinstance(transformation, (list, tuple)):
+            transformation = [transformation]  # type: ignore
         super().__init__(*[TabularTransformation.parse(t) for t in transformation])
 
     def append(self, transformation):
@@ -479,8 +481,9 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
+        **kwargs,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, **kwargs)
         self.schema = schema
 
     def to_module(self, shape_or_module, device=None):
@@ -504,14 +507,14 @@ class TabularBlock(BlockBase, TabularModule, ABC):
         output = super().build(input_size, schema=schema, **kwargs)
         output_size = input_size
         if self.pre:
-            output_size = self.pre.output_size(self.pre.build(input_size, schema=schema, **kwargs))
+            self.pre.build(input_size, schema=schema, **kwargs)
+            output_size = self.pre.output_size(input_size)
 
         output_size = self.forward_output_size(output_size)
 
         if self.post:
-            output_size = self.post.output_size(
-                self.post.build(output_size, schema=schema, **kwargs)
-            )
+            self.post.build(output_size, schema=schema, **kwargs)
+            output_size = self.post.output_size(output_size)
 
         if self.aggregation:
             self.aggregation.build(output_size, schema=schema, **kwargs)
@@ -555,8 +558,9 @@ class MergeTabular(TabularBlock):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
+        **kwargs,
     ):
-        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema, **kwargs)
         self.to_merge: Union[torch.nn.ModuleDict, torch.nn.ModuleList]
         if all(isinstance(x, dict) for x in modules_to_merge):
             to_merge: Dict[str, TabularModule]
