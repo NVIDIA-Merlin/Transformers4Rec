@@ -77,6 +77,7 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         hidden_size: int,
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
+        **kwargs
     ):
         super(MaskSequence, self).__init__()
         self.padding_idx = padding_idx
@@ -237,11 +238,13 @@ class CausalLanguageModeling(MaskSequence):
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         train_on_last_item_seq_only: bool = False,
+        **kwargs
     ):
         super(CausalLanguageModeling, self).__init__(
             hidden_size=hidden_size,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
+            kwargs=kwargs,
         )
         self.train_on_last_item_seq_only = train_on_last_item_seq_only
 
@@ -312,11 +315,13 @@ class MaskedLanguageModeling(MaskSequence):
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         mlm_probability: float = 0.15,
+        **kwargs
     ):
         super(MaskedLanguageModeling, self).__init__(
             hidden_size=hidden_size,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
+            kwargs=kwargs,
         )
         self.mlm_probability = mlm_probability
 
@@ -421,11 +426,13 @@ class PermutationLanguageModeling(MaskSequence):
         plm_probability: float = 1 / 6,
         max_span_length: int = 5,
         permute_all: bool = False,
+        **kwargs
     ):
         super(PermutationLanguageModeling, self).__init__(
             hidden_size=hidden_size,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
+            kwargs=kwargs,
         )
 
         self.plm_probability = plm_probability
@@ -667,11 +674,13 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
         padding_idx: int = 0,
         eval_on_last_item_seq_only: bool = True,
         sample_from_batch: bool = False,
+        **kwargs
     ):
         super(ReplacementLanguageModeling, self).__init__(
             hidden_size=hidden_size,
             padding_idx=padding_idx,
             eval_on_last_item_seq_only=eval_on_last_item_seq_only,
+            kwargs=kwargs,
         )
 
         self.sample_from_batch = sample_from_batch

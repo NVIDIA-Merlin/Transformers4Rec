@@ -659,7 +659,8 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
 
 def _output_metrics(metrics):
-    if len(metrics) == 1:
+    # If there is only a single head with metrics, returns just those metrics
+    if len(metrics) == 1 and isinstance(metrics[list(metrics.keys())[0]], dict):
         return metrics[list(metrics.keys())[0]]
 
     return metrics

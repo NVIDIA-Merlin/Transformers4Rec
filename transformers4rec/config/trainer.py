@@ -28,11 +28,6 @@ class T4RecTrainingArguments(TrainingArguments):
 
     Parameters
     ----------
-    avg_session_length : int
-        the avg. session length (rounded up to the next int),
-        It is used to estimate the number of interactions from the batch_size (# sessions)
-        so that the tensor that accumulates all predictions is sufficient
-        to concatenate all predictions
     shuffle_buffer_size:
     validate_every: Optional[int], int
         Run validation set every this epoch.
@@ -62,17 +57,6 @@ class T4RecTrainingArguments(TrainingArguments):
         by default "default"
     """
 
-    avg_session_length: Optional[int] = field(
-        default=None,
-        metadata={
-            "help": "When --eval_on_last_item_seq_only False, this conservative estimate of "
-            "the avg. session length (rounded up to the next int) "
-            "is used to estimate the number of interactions from the batch_size (# sessions) "
-            "so that the tensor that accumulates all predictions is sufficient "
-            "to concatenate all predictions"
-        },
-    )
-
     max_sequence_length: Optional[int] = field(
         default=None,
         metadata={"help": "maximum length of sequence"},
@@ -94,14 +78,6 @@ class T4RecTrainingArguments(TrainingArguments):
         },
     )
 
-    validate_every: int = field(
-        default=-1,
-        metadata={
-            "help": "Run validation set every this epoch. "
-            "-1 means no validation is used (default: -1)"
-        },
-    )
-
     eval_on_test_set: bool = field(
         default=False,
         metadata={"help": "Evaluate on test set (by default, evaluates on the validation set)."},
@@ -119,20 +95,6 @@ class T4RecTrainingArguments(TrainingArguments):
         },
     )
 
-    log_predictions: bool = field(
-        default=False,
-        metadata={
-            "help": "Logs predictions, labels and metadata features each --compute_metrics_each_n_steps (for test set)."
-        },
-    )
-
-    log_attention_weights: bool = field(
-        default=False,
-        metadata={
-            "help": "Logs the inputs and attention weights each --compute_metrics_each_n_steps (only test set)"
-        },
-    )
-
     learning_rate_num_cosine_cycles_by_epoch: float = field(
         default=1.25,
         metadata={
@@ -140,6 +102,18 @@ class T4RecTrainingArguments(TrainingArguments):
             "The number of waves in the cosine schedule "
             "(e.g. 0.5 is to just decrease from the max value to 0, following a half-cosine)."
         },
+    )
+
+    log_predictions: bool = field(
+        default=False,
+        metadata={
+            "help": "Logs predictions, labels and metadata features each --compute_metrics_each_n_steps (for test set)."
+        },
+    )
+
+    compute_metrics_each_n_steps: int = field(
+        default=1,
+        metadata={"help": "Log metrics each n steps (for train, validation and test sets)"},
     )
 
     experiments_group: str = field(

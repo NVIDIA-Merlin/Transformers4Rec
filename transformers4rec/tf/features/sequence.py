@@ -170,7 +170,6 @@ class TabularSequenceFeatures(TabularFeatures):
         aggregation=None,
         max_sequence_length=None,
         continuous_projection=None,
-        continuous_soft_embeddings_shape=None,
         projection=None,
         d_output=None,
         masking=None,
@@ -195,10 +194,6 @@ class TabularSequenceFeatures(TabularFeatures):
         continuous_projection : Optional[Union[List[int], int]], optional
             If set, concatenate all numerical features and project them by a number of MLP layers
             The argument accepts a list with the dimensions of the MLP layers, by default None
-        continuous_soft_embeddings_shape : Optional[Union[Tuple[int, int], List[int, int]]]
-            If set, uses soft one-hot encoding technique to represent continuous features.
-            The argument accepts a tuple with 2 elements: [embeddings cardinality, embeddings dim],
-            by default None
         projection: Optional[torch.nn.Module, BuildableBlock], optional
             If set, project the aggregated embeddings vectors into hidden dimension vector space,
             by default None
