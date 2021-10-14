@@ -140,13 +140,14 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
 
 
 @pytest.mark.parametrize("run_eagerly", [True, False])
-def test_save_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
+@pytest.mark.parametrize("masking", ["causal", "mlm"])
+def test_save_model(yoochoose_schema, tf_yoochoose_like, run_eagerly, masking):
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=64,
-        masking="causal",
+        masking=masking,
     )
 
     body = tr.SequentialBlock([input_module, tr.MLPBlock([64])])

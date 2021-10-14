@@ -32,7 +32,7 @@ def test_metrics_shape(tf_ranking_metrics_inputs, metric):
         y_pred=tf_ranking_metrics_inputs["scores"],
         y_true=tf_ranking_metrics_inputs["labels_one_hot"],
     )
-    assert result.shape[0] == len(tf_ranking_metrics_inputs["ks"])
+    assert tf.shape(result)[0] == len(tf_ranking_metrics_inputs["ks"])
 
 
 # Test label one hot encoding

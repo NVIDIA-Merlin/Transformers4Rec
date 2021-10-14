@@ -28,8 +28,8 @@ lm_tasks = list(tr.masking.masking_registry.keys())
 def test_task_output_shape(tf_masking_inputs, task):
     lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
     out = lm(tf_masking_inputs["input_tensor"], tf_masking_inputs["labels"], training=True)
-    assert lm.masked_targets.shape[0] == tf_masking_inputs["input_tensor"].shape[0]
-    assert lm.masked_targets.shape[1] == tf_masking_inputs["input_tensor"].shape[1]
+    assert tf.shape(lm.masked_targets)[0] == tf_masking_inputs["input_tensor"].shape[0]
+    assert tf.shape(lm.masked_targets)[1] == tf_masking_inputs["input_tensor"].shape[1]
     assert out.shape[2] == tf_masking_inputs["input_tensor"].shape[2]
 
 
