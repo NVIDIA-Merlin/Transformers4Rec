@@ -161,12 +161,18 @@ class EmbeddingFeatures(InputBlock):
         if not item_id and schema.select_by_tag(["item_id"]).column_names:
             item_id = schema.select_by_tag(["item_id"]).column_names[0]
 
+        embedding_dims = embedding_dims or {}
+
         if infer_embedding_sizes:
-            embedding_dims = get_embedding_sizes_from_schema(
+            embedding_dims_infered = get_embedding_sizes_from_schema(
                 schema, infer_embedding_sizes_multiplier
             )
 
-        embedding_dims = embedding_dims or {}
+            embedding_dims = {
+                **embedding_dims,
+                **{k: v for k, v in embedding_dims_infered.items() if k not in embedding_dims},
+            }
+
         embeddings_initializers = embeddings_initializers or {}
 
         emb_config = {}
@@ -278,6 +284,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
+        **kwarg,
     ):
         if layer_norm:
             from transformers4rec.torch import TabularLayerNorm

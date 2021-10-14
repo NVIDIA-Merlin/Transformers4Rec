@@ -25,6 +25,7 @@ from ..config.transformer import (
     LongformerConfig,
     ReformerConfig,
     T4RecConfig,
+    TransfoXLConfig,
     XLNetConfig,
 )
 from . import ranking_metric
@@ -45,6 +46,7 @@ from .features.embedding import (
 )
 from .features.sequence import SequenceEmbeddingFeatures, TabularSequenceFeatures
 from .features.tabular import TabularFeatures
+from .losses import LabelSmoothCrossEntropyLoss
 
 # Model related imports
 from .model.base import Head, Model, PredictionTask
@@ -67,7 +69,7 @@ from .tabular.base import (
     TabularModule,
     TabularTransformation,
 )
-from .tabular.transformations import StochasticSwapNoise, TabularLayerNorm
+from .tabular.transformations import StochasticSwapNoise, TabularDropout, TabularLayerNorm
 from .trainer import Trainer  # type: ignore
 
 __all__ = [
@@ -78,6 +80,7 @@ __all__ = [
     "T4RecConfig",
     "GPT2Config",
     "XLNetConfig",
+    "TransfoXLConfig",
     "LongformerConfig",
     "AlbertConfig",
     "ReformerConfig",
@@ -95,6 +98,7 @@ __all__ = [
     "TabularAggregation",
     "StochasticSwapNoise",
     "TabularLayerNorm",
+    "TabularDropout",
     "TransformerBlock",
     "ContinuousFeatures",
     "EmbeddingFeatures",
@@ -120,5 +124,6 @@ __all__ = [
     "TabularModule",
     "SoftEmbedding",
     "Trainer",
+    "LabelSmoothCrossEntropyLoss",
     "data",
 ]

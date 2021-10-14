@@ -111,12 +111,21 @@ class EmbeddingFeatures(InputBlock):
         if tags:
             schema_copy = schema_copy.select_by_tag(tags)
 
+        if not item_id and schema.select_by_tag(["item_id"]).column_names:
+            item_id = schema.select_by_tag(["item_id"]).column_names[0]
+
+        embedding_dims = embedding_dims or {}
+
         if infer_embedding_sizes:
-            embedding_dims = get_embedding_sizes_from_schema(
+            embedding_dims_infered = get_embedding_sizes_from_schema(
                 schema, infer_embedding_sizes_multiplier
             )
 
-        embedding_dims = embedding_dims or {}
+            embedding_dims = {
+                **embedding_dims,
+                **{k: v for k, v in embedding_dims_infered.items() if k not in embedding_dims},
+            }
+
         embeddings_initializers = embeddings_initializers or {}
 
         emb_config = {}

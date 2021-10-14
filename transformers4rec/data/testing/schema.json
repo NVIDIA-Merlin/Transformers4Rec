@@ -172,6 +172,7 @@
       },
       "annotation": {
         "tag": [
+          "continuous",
           "time",
           "list"
         ]
@@ -191,6 +192,7 @@
       },
       "annotation": {
         "tag": [
+          "continuous",
           "time",
           "list"
         ]
@@ -211,7 +213,8 @@
       "annotation": {
         "tag": [
           "time",
-          "list"
+          "list",
+          "continuous"
         ]
       }
     },
@@ -230,7 +233,8 @@
       "annotation": {
         "tag": [
           "time",
-          "list"
+          "list",
+          "continuous"
         ]
       }
     },
@@ -363,7 +367,7 @@
       "name": "user_age",
       "type": "FLOAT",
       "floatDomain": {
-        "name": "timestamp/weekday/sin/list",
+        "name": "user_age",
         "max": 0.4079650044441223
       },
       "annotation": {

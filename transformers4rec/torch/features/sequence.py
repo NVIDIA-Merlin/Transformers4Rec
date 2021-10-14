@@ -122,6 +122,7 @@ class TabularSequenceFeatures(TabularFeatures):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
+        **kwargs
     ):
         super().__init__(
             continuous_module,
@@ -131,9 +132,10 @@ class TabularSequenceFeatures(TabularFeatures):
             post=post,
             aggregation=aggregation,
             schema=schema,
+            **kwargs
         )
-        self.masking = masking
         self.projection_module = projection_module
+        self.set_masking(masking)
 
     @classmethod
     def from_schema(  # type: ignore
@@ -214,7 +216,13 @@ class TabularSequenceFeatures(TabularFeatures):
             output.projection_module = projection  # type: ignore
             hidden_size = projection.output_size()  # type: ignore
 
-        output.masking = masking  # type: ignore
+        if isinstance(masking, str):
+            masking = masking_registry.parse(masking)(
+                hidden_size=output.output_size()[-1], **kwargs
+            )
+        if masking and not getattr(output, "item_id", None):
+            raise ValueError("For masking a categorical_module is required including an item_id.")
+        output.set_masking(masking)  # type: ignore
 
         return output
 
@@ -222,13 +230,7 @@ class TabularSequenceFeatures(TabularFeatures):
     def masking(self):
         return self._masking
 
-    @masking.setter
-    def masking(self, value, **kwargs):
-        if isinstance(value, str):
-            value = masking_registry.parse(value)(hidden_size=self.output_size()[-1], **kwargs)
-        if value and not getattr(self, "item_id", None):
-            raise ValueError("For masking a categorical_module is required including an item_id.")
-
+    def set_masking(self, value):
         self._masking = value
 
     @property

@@ -170,4 +170,4 @@ def test_sequential_and_non_sequential_tabular_features(yoochoose_schema, torch_
 
     outputs = tab_module(torch_yoochoose_like)
 
-    assert list(outputs.shape) == [100, 20, 199]
+    assert list(outputs.shape) == [100, 20, 203]

@@ -48,6 +48,7 @@ class ContinuousFeatures(InputBlock):
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
+        **kwargs
     ):
         super().__init__(aggregation=aggregation, pre=pre, post=post, schema=schema)
         self.filter_features = FilterFeatures(features)
