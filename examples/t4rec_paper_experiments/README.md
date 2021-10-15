@@ -25,10 +25,30 @@ We have used four datasets for the paper experiments with session-based recommen
 
 We provide links to download the original datasets and preprocessing scripts [here](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021/datasets), i.e., for creating features and grouping interactions features by sessions. 
 
-But for your convenience we also provide the [pre-processed version of the datasets](https://drive.google.com/drive/folders/1fxZozQuwd4fieoD0lmcD3mQ2Siu62ilD?usp=sharing) for download, so that you jump directly into running experiments with Transformers4Rec. 
+But for your convenience we also provide the [pre-processed version of the datasets](https://drive.google.com/drive/folders/1fxZozQuwd4fieoD0lmcD3mQ2Siu62ilD?usp=sharing) for download, so that you can directly jump into running experiments with Transformers4Rec. 
 
+### Requirements and Setup
 
+To run the experiments you need:
 
+- Install Transformers4Rec for PyTorch API and NVTabular (more instructions [here](https://github.com/NVIDIA-Merlin/Transformers4Rec)): `pip install transformers4rec[pytorch,nvtabular]`
+- Install the example additional requirements (available in this folder): `pip install -r requirements.txt`
+
+### Weights & Biases logging setup
+
+By default, Huggingface uses [Weights & Biases (W&B)](https://wandb.ai/) to log training and evaluation metrics.
+It allows a nice management of experiments, including config logging, and provides plots with the evolution of losses and metrics over time. 
+To see the experiment metrics reported in W&B you can follow the following steps. Otherwise you need to disable wandb sync to the online service by setting this environment variable: `WANDB_MODE="dryrun"`.
+
+1. Create account if you don't have and obtain API key: https://www.wandb.com
+2. Run the following command and follow the instructions to get an API key.
+```bash
+wandb login
+```
+After you get the API key, you can set it as an environment variable with
+```bash
+export WANDB_API_KEY=<YOUR API KEY HERE>
+```
 
 ### Training and evaluation commands
 In our paper we have performed hyperparameter tuning for each experiment group (dataset and algorithm pair), whose search space and best hyperparameters can be found in the paper [Online Appendix C](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_C-Hyperparameters.md). The command lines to run each experiment group with the best hyperparameters using the original scripts can be found [here](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md).
@@ -49,7 +69,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m t4r_paper_repro.transf_exp_main --output_dir .
 ```
 
 #### Remarks
-For the experiments with multiple input features and element-wise aggregation of features (`--input_features_aggregation elementwise_sum_multiply_item_embedding`), it is necessary that all features have the same dimension. In the original implementation of the paper experiments we used a linear layer to project the continuous features to the the same dimension of the categorical embeddings. But that option is not available in the API, as the [soft-one hot embedding technique](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md) is more effective to represent continuous features. So reproducing exacly the experiment results for the element-wise aggregation will not be possible with the new API, but instead we recommend enabling Soft-One Hot Embeddings to represent continuous features, by setting the arguments `--numeric_features_project_to_embedding_dim` to be equal to the `--item_embedding_dim` value and also `--numeric_features_soft_one_hot_encoding_num_embeddings` to the number of desired embeddings (generally a value between 10-20 is a good default choice).
+For the experiments with multiple input features and element-wise aggregation of features (`--input_features_aggregation elementwise_sum_multiply_item_embedding`), it is necessary that all features have the same dimension. In the original implementation of the paper experiments we used a linear layer to project the continuous features to the the same dimension of the categorical embeddings. But that option is not available in the API, as the [soft-one hot embedding technique](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md) is more effective to represent continuous features. So reproducing exactly the experiment results for the element-wise aggregation will not be possible with the new API, but instead we recommend enabling Soft-One Hot Embeddings to represent continuous features, by setting the arguments `--numeric_features_project_to_embedding_dim` to be equal to the `--item_embedding_dim` value and also `--numeric_features_soft_one_hot_encoding_num_embeddings` to the number of desired embeddings (generally a value between 10-20 is a good default choice).
 
 ### Code organization
 The main script of this example is [transf_exp_main.py](transf_exp_main.py), which parses the command line arguments and use the Transformers4Rec PyTorch API to build a model for session-based recommendation according to the arguments and perform incremental training and evaluation over time.

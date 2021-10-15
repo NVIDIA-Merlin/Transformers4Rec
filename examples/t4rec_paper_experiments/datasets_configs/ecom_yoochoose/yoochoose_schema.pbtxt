@@ -76,7 +76,6 @@ feature {
   }
 }
 
-
 feature {
   name: "timestamp_hour_sin-list"
   value_count {
@@ -95,8 +94,6 @@ feature {
   }
 }
 
-
-
 feature {
   name: "timestamp_wd_sin-list"
   value_count {
@@ -114,8 +111,6 @@ feature {
     tag: "continuous"
   }
 }
-
-
 
 feature {
   name: "timestamp_wd_cos-list"

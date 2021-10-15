@@ -57,7 +57,6 @@ feature {
   }
 }
 
-
 feature {
   name: "click_os"
   value_count {
@@ -76,7 +75,6 @@ feature {
     tag: "categorical"
   }
 }
-
 
 feature {
   name: "click_region"
@@ -116,7 +114,6 @@ feature {
   }
 }
 
-
 feature {
   name: "item_age_hours_norm"
   value_count {
@@ -154,7 +151,6 @@ feature {
   }
 }
 
-
 feature {
   name: "hour_cos"
   value_count {
@@ -173,8 +169,6 @@ feature {
   }
 }
 
-
-
 feature {
   name: "weekday_sin"
   value_count {
@@ -192,8 +186,6 @@ feature {
     tag: "continuous"
   }
 }
-
-
 
 feature {
   name: "weekday_sin"

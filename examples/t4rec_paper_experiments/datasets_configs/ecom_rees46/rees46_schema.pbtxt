@@ -155,7 +155,6 @@ feature {
   }
 }
 
-
 feature {
   name: "sess_et_hour_cos_seq"
   value_count {
@@ -174,8 +173,6 @@ feature {
   }
 }
 
-
-
 feature {
   name: "sess_et_dayofweek_sin_seq"
   value_count {
@@ -193,8 +190,6 @@ feature {
     tag: "continuous"
   }
 }
-
-
 
 feature {
   name: "sess_et_dayofweek_cos_seq"
