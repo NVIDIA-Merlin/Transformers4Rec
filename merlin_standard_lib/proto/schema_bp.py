@@ -261,7 +261,7 @@ class DatasetConstraints(betterproto.Message):
     # Tests differences in number of examples between the current data and the
     # previous span.
     num_examples_drift_comparator: "NumericValueComparator" = betterproto.message_field(1)
-    # Tests comparisions in number of examples between the current data and the
+    # Tests comparisons in number of examples between the current data and the
     # previous version of that data.
     num_examples_version_comparator: "NumericValueComparator" = betterproto.message_field(2)
     # Minimum number of examples in the dataset.
