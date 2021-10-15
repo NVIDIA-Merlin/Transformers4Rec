@@ -1,0 +1,228 @@
+feature {
+  name: "sess_pid_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "sess_pid_seq"
+    min: 1
+    max: 390000
+    is_categorical: true
+  }
+  annotation {
+    tag: "item_id"
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "sess_ccid_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "sess_ccid_seq"
+    min: 1
+    max: 150
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "sess_csid_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "sess_csid_seq"
+    min: 1
+    max: 1400
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+
+feature {
+  name: "sess_bid_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "sess_bid_seq"
+    min: 1
+    max: 7000
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "sess_price_log_norm_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_price_log_norm_seq"
+    min: 0.0
+    max: 10000.0
+  }
+  annotation {
+    tag: "item"
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "sess_relative_price_to_avg_category_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_relative_price_to_avg_category_seq"
+    min: -10000.0
+    max: 10000.0
+  }
+  annotation {
+    tag: "item"
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "sess_prod_recency_days_log_norm_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_prod_recency_days_log_norm_seq"
+    min: -10000.0
+    max: 10000.0
+  }
+  annotation {
+    tag: "item"
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "sess_et_hour_sin_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_et_hour_sin_seq"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "sess_et_hour_cos_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_et_hour_cos_seq"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "sess_et_dayofweek_sin_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_et_dayofweek_sin_seq"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "sess_et_dayofweek_cos_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_et_dayofweek_cos_seq"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "sess_etime_seq"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "sess_etime_seq"
+    min: 0
+    max: 0
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}

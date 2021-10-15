@@ -32,6 +32,10 @@ This tutorial was presented at the ACM RecSys 2021. It covers the following topi
 - How to build, train and evaluate a session-based recommendation models based on RNN and Transformer architectures with Transformers4Rec library
 - How to deploy a session-based recommendation pipeline (preprocessing workflow and trained model) to the Triton Inference Server
 
+### 4. [Transformers4Rec paper experiments reproducibility](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/t4rec_paper_experiments/)
+
+This example contains scripts to reproduce the experiments reported in the Transformers4Rec [paper](https://dl.acm.org/doi/10.1145/3460231.3474255) at RecSys 2021. The experiments focused in the session-based recommendation using incremental training and evaluation over time on two e-commerce and two news datasets.
+
 
 ## Running the Example Notebooks
 
