@@ -24,7 +24,7 @@ from merlin_standard_lib import Registry
 
 from .utils import tf_utils
 
-ranking_metrics_registry = Registry.class_registry("tf.ranking_metrics")
+ranking_metrics_registry = Registry("tf.ranking_metrics")
 
 METRIC_PARAMETERS_DOCSTRING = """
     ks : tf.Tensor
@@ -297,7 +297,7 @@ class DCGAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
 class NDCGAt(RankingMetric):
-    def __init__(self, top_ks=None, labels_onehot=False):
+    def __init__(self, top_ks=[1], labels_onehot=False):
         super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
         self.dcg_at = DCGAt(top_ks)
 
