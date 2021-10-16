@@ -18,6 +18,8 @@ import tempfile
 
 import pytest
 
+from transformers4rec.config import transformer as tconf
+
 tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
 test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
@@ -141,7 +143,7 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
 
 @pytest.mark.parametrize("run_eagerly", [True, False])
 @pytest.mark.parametrize("masking", ["causal", "mlm"])
-def test_save_model(yoochoose_schema, tf_yoochoose_like, run_eagerly, masking):
+def test_save_masking(yoochoose_schema, tf_yoochoose_like, masking, run_eagerly):
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
@@ -150,15 +152,70 @@ def test_save_model(yoochoose_schema, tf_yoochoose_like, run_eagerly, masking):
         masking=masking,
     )
 
-    body = tr.SequentialBlock([input_module, tr.MLPBlock([64])])
+    body = tr.SequentialBlock(
+        [
+            input_module,
+            tr.MLPBlock([64]),
+        ]
+    )
 
-    task = tr.NextItemPredictionTask(weight_tying=True, metrics=[])
+    task = tr.NextItemPredictionTask(weight_tying=True)
 
     model = task.to_model(body=body)
     model.compile(optimizer="adam", run_eagerly=run_eagerly)
+
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
-    ).batch(50)
+    ).batch(5)
+
+    inputs = next(iter(dataset))[0]
+    model._set_inputs(inputs)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model.save(tmpdir)
+
+
+config_classes = [
+    tconf.XLNetConfig,
+    tconf.LongformerConfig,
+    tconf.GPT2Config,
+    tconf.BertConfig,
+    tconf.RobertaConfig,
+    tconf.AlbertConfig,
+]
+
+
+@pytest.mark.parametrize("run_eagerly", [True, False])
+@pytest.mark.parametrize("config", config_classes)
+def test_save_transformer_model(
+    yoochoose_schema,
+    tf_yoochoose_like,
+    config,
+    run_eagerly,
+):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+    )
+
+    transformer_config = config.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
+    body = tr.SequentialBlock(
+        [
+            input_module,
+            tr.TransformerBlock(transformer_config, masking=input_module.masking),
+        ]
+    )
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+
+    model = task.to_model(body=body)
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
+
+    dataset = tf.data.Dataset.from_tensor_slices(
+        (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
+    ).batch(5)
 
     inputs = next(iter(dataset))[0]
     model._set_inputs(inputs)

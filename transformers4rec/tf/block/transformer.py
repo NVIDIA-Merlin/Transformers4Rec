@@ -156,9 +156,8 @@ class TransformerBlock(Block):
             if param in transformer_kwargs:
                 filtered_transformer_kwargs[param] = transformer_kwargs[param]
 
-        # In Keras the first (inputs) arg always needs to be set, therefore we supply the
-        # transformer_kwargs both as arg and **kwargs
-        model_outputs = self.transformer(transformer_kwargs, **filtered_transformer_kwargs)
+        # In HF the call accept inputs as a dictionnary contaning all needed tensors
+        model_outputs = self.transformer(filtered_transformer_kwargs)
         outputs = self.output_fn(model_outputs)
 
         # TODO: store the attention outputs for meta-data logging
