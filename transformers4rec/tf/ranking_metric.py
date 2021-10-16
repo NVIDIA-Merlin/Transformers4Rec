@@ -67,6 +67,7 @@ class RankingMetric(tf.keras.metrics.Metric):
         if not self.built:
             self.accumulator = tf.Variable(
                 tf.zeros(shape=[1, len(self.top_ks)]),
+                trainable=False,
                 shape=tf.TensorShape([None, tf.compat.v1.Dimension(len(self.top_ks))]),
             )
 
