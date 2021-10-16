@@ -107,7 +107,9 @@ class NextItemPredictionTask(PredictionTask):
         Value 1.0 reduces to regular softmax.
     """
 
-    DEFAULT_LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
+    DEFAULT_LOSS = tf.keras.losses.SparseCategoricalCrossentropy(
+        from_logits=True,
+    )
     DEFAULT_METRICS = (
         # default metrics suppose labels are int encoded
         NDCGAt(top_ks=[10, 20], labels_onehot=True),
