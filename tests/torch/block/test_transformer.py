@@ -29,6 +29,7 @@ config_classes = [
     tconf.BertConfig,
     tconf.RobertaConfig,
     tconf.TransfoXLConfig,
+    tconf.AlbertConfig,
 ]
 
 # fixed parameters for tests
