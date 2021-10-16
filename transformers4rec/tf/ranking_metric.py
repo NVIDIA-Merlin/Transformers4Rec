@@ -201,7 +201,7 @@ class RecallAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("avg_precision_at", "avg_precision", "map")
 class AvgPrecisionAt(RankingMetric):
-    def __init__(self, top_ks=[1], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(AvgPrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
         max_k = tf.reduce_max(self.top_ks)
         self.precision_at = PrecisionAt(top_ks=1 + tf.range(max_k))
@@ -247,7 +247,7 @@ class AvgPrecisionAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("dcg_at", "dcg")
 class DCGAt(RankingMetric):
-    def __init__(self, top_ks=[1], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(DCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
 
     def _metric(
@@ -297,7 +297,7 @@ class DCGAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
 class NDCGAt(RankingMetric):
-    def __init__(self, top_ks=[1], labels_onehot=False):
+    def __init__(self, top_ks=None, labels_onehot=False):
         super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
         self.dcg_at = DCGAt(top_ks)
 
