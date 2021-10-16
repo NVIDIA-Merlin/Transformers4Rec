@@ -44,6 +44,35 @@ def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly):
     assert all(0 <= loss <= 1 for loss in losses.history["loss"])
 
 
+def test_simple_seq_classification(yoochoose_schema, tf_yoochoose_like):
+    targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
+
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+    )
+    transformer_config = tr.GPT2Config.build(64, 4, 2, 20)
+    body = tr.SequentialBlock(
+        [
+            input_module,
+            tr.TransformerBlock(transformer_config, masking=input_module.masking),
+        ]
+    )
+    model = tr.BinaryClassificationTask("target", summary_type="first").to_model(body, input_module)
+    model.compile(optimizer="adam", run_eagerly=True)
+
+    dataset = tf.data.Dataset.from_tensor_slices((tf_yoochoose_like, targets)).batch(50)
+    losses = model.fit(dataset, epochs=5)
+    metrics = model.evaluate(tf_yoochoose_like, targets, return_dict=True)
+
+    assert len(metrics.keys()) == 7
+    assert len(losses.epoch) == 5
+    assert losses.history["loss"][-1] < losses.history["loss"][0]
+
+
 @pytest.mark.parametrize("prediction_task", [tr.BinaryClassificationTask, tr.RegressionTask])
 def test_serialization_model(tf_tabular_features, tf_tabular_data, prediction_task):
     targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
@@ -139,6 +168,7 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
     assert len(metrics.keys()) == 6
     assert len(losses.epoch) == 5
     assert all(loss >= 0 for loss in losses.history["loss"])
+    assert losses.history["loss"][-1] < losses.history["loss"][0]
 
 
 @pytest.mark.parametrize("run_eagerly", [True, False])
