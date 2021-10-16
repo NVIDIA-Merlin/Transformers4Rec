@@ -384,7 +384,7 @@ class Head(tf.keras.layers.Layer):
         return outputs
 
     def compute_loss(
-        self, body_outputs, targets, training=False, call_body=False, **kwargs
+        self, body_outputs, targets, training=False, call_body=False, compute_metrics=True, **kwargs
     ) -> tf.Tensor:
         losses = []
 
@@ -394,7 +394,12 @@ class Head(tf.keras.layers.Layer):
         predictions = self(body_outputs, always_output_dict=True)
         for name, task in self.prediction_task_dict.items():
             loss = task.compute_loss(
-                predictions[name], targets, call_task=False, training=training, **kwargs
+                predictions[name],
+                targets,
+                call_task=False,
+                training=training,
+                compute_metrics=compute_metrics,
+                **kwargs,
             )
             losses.append(loss * self._task_weight_dict[name])
 
