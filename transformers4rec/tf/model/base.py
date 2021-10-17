@@ -27,6 +27,7 @@ from transformers import TFSequenceSummary
 from merlin_standard_lib import Schema, Tag
 
 from ..features.sequence import TabularFeaturesType
+from ..ranking_metric import process_metrics
 from ..utils.tf_utils import (
     LossMixin,
     MetricsMixin,
@@ -492,18 +493,6 @@ class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
         metrics["total_loss"] = total_loss
 
         return metrics
-
-
-def process_metrics(metrics, prefix=""):
-    metrics_proc = {}
-    for metric in metrics:
-        results = metric.result()
-        if tf.shape(results)[0] > 1:
-            names = [f"{prefix}{metric.name}{ks}" for ks in metric.top_ks]
-            metrics_proc.update(dict(zip(names, results)))
-        else:
-            metrics_proc[metric.name] = results
-    return metrics_proc
 
 
 class Model(BaseModel):

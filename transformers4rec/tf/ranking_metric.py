@@ -347,3 +347,15 @@ def check_inputs(ks, scores, labels):
     scores.get_shape().assert_is_compatible_with(labels.get_shape())
 
     return (tf.cast(ks, tf.int32), tf.cast(scores, tf.float32), tf.cast(labels, tf.float32))
+
+
+def process_metrics(metrics, prefix=""):
+    metrics_proc = {}
+    for metric in metrics:
+        results = metric.result()
+        if getattr(metric, "top_ks", None):
+            for i, ks in enumerate(metric.top_ks):
+                metrics_proc.update({f"{prefix}{metric.name}{ks}": tf.gather(results, i)})
+        else:
+            metrics_proc[metric.name] = results
+    return metrics_proc
