@@ -165,7 +165,7 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
     losses = model.fit(dataset, epochs=5)
     metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
 
-    assert len(metrics.keys()) == 6
+    assert len(metrics.keys()) == 9
     assert len(losses.epoch) == 5
     assert all(loss >= 0 for loss in losses.history["loss"])
     assert losses.history["loss"][-1] < losses.history["loss"][0]
