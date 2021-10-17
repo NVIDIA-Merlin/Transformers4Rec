@@ -189,7 +189,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
 
     def reset_metrics(self):
         for metric in self.metrics:
-            metric.reset()
+            metric.reset_state()
 
     def to_head(self, body, inputs=None, **kwargs) -> "Head":
         return Head(body, self, inputs=inputs, **kwargs)
@@ -468,7 +468,7 @@ class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
         gradients = tape.gradient(total_loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-        metrics = {metric.name: metric.result() for metric in self.metrics}
+        metrics = process_metrics(self.metrics, prefix="train_")
         metrics["loss"] = loss
         metrics["regularization_loss"] = regularization_loss
         metrics["total_loss"] = total_loss
@@ -485,12 +485,25 @@ class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
 
         total_loss = loss + regularization_loss
 
-        metrics = {metric.name: metric.result() for metric in self.metrics}
+        metrics = process_metrics(self.metrics, prefix="eval_")
+
         metrics["loss"] = loss
         metrics["regularization_loss"] = regularization_loss
         metrics["total_loss"] = total_loss
 
         return metrics
+
+
+def process_metrics(metrics, prefix=""):
+    metrics_proc = {}
+    for metric in metrics:
+        results = metric.result()
+        if tf.shape(results)[0] > 1:
+            names = [f"{prefix}{metric.name}{ks}" for ks in metric.top_ks]
+            metrics_proc.update(dict(zip(names, results)))
+        else:
+            metrics_proc[metric.name] = results
+    return metrics_proc
 
 
 class Model(BaseModel):
