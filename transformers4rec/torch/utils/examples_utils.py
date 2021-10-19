@@ -1,7 +1,9 @@
+import gc
 import glob
 import os
 
 import numpy as np
+import torch
 
 
 def list_files(startpath):
@@ -87,6 +89,11 @@ def fit_and_evaluate(trainer, start_time_index, end_time_index, input_dir):
                     aot_metrics["AOT_" + key.replace("_at_", "@")] = [eval_metrics[key]]
 
         # free GPU for next day training
-        trainer.wipe_memory()
+        wipe_memory()
 
     return aot_metrics
+
+
+def wipe_memory():
+    gc.collect()
+    torch.cuda.empty_cache()

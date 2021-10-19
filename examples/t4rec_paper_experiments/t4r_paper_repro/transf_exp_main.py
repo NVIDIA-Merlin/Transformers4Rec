@@ -14,7 +14,6 @@
 # limitations under the License.
 #
 
-import gc
 import glob
 import logging
 import os
@@ -29,6 +28,7 @@ from transformers.trainer_utils import is_main_process
 import transformers4rec.torch as t4r
 from merlin_standard_lib import Schema, Tag
 from transformers4rec.torch import Trainer
+from transformers4rec.torch.utils.examples_utils import wipe_memory
 
 from .exp_outputs import (
     config_dllogger,
@@ -388,11 +388,6 @@ def config_logging(training_args):
         transformers.utils.logging.enable_explicit_format()
 
     config_dllogger(training_args.output_dir)
-
-
-def wipe_memory():
-    gc.collect()
-    torch.cuda.empty_cache()
 
 
 if __name__ == "__main__":
