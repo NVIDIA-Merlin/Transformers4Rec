@@ -77,7 +77,7 @@ def test_stochastic_swap_noise_with_tabular_features(
         replacement_rate = tf.reduce_mean(
             tf.cast(replaced_mask_non_padded, dtype=tf.float32)
         ).numpy()
-        assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
+        assert replacement_rate == pytest.approx(replacement_prob, abs=0.20)
 
 
 def test_stochastic_swap_noise_raise_exception_not_2d_item_id():
