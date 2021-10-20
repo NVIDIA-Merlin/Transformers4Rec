@@ -16,7 +16,9 @@
 
 # Adapted from source code: https://github.com/karlhigley/ranking-metrics-torch
 from abc import abstractmethod
+from typing import List
 
+import numpy as np
 import tensorflow as tf
 from keras import backend
 
@@ -55,6 +57,11 @@ class RankingMetric(tf.keras.metrics.Metric):
         # Store the mean vector of the batch metrics (for each cut-off at topk) in ListWrapper
         self.metric_mean = []
         self.built = False
+
+    def get_config(self):
+        config = {"top_ks": self.top_ks, "labels_onehot": self.labels_onehot}
+        base_config = super(RankingMetric, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
 
     def _build(self, shape):
         with tf.init_scope():
@@ -98,7 +105,7 @@ class RankingMetric(tf.keras.metrics.Metric):
         self.metric_mean = []
 
     @abstractmethod
-    def _metric(self, ks: tf.Tensor, preds: tf.Tensor, target: tf.Tensor) -> tf.Tensor:
+    def _metric(self, ks: List[int], preds: tf.Tensor, target: tf.Tensor) -> tf.Tensor:
         """
         Compute ranking metric over predictions and one-hot targets for different cut-offs.
         This method should be overridden by subclasses.
@@ -112,10 +119,10 @@ class RankingMetric(tf.keras.metrics.Metric):
 
 @ranking_metrics_registry.register_with_multiple_names("precision_at", "precision")
 class PrecisionAt(RankingMetric):
-    def __init__(self, top_ks=None, labels_onehot=False):
-        super(PrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+    def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
+        super(PrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
 
-    def _metric(self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
+    def _metric(self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
         """
         Compute precision@K for each provided cutoff in ks
 
@@ -148,10 +155,10 @@ class PrecisionAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("recall_at", "recall")
 class RecallAt(RankingMetric):
-    def __init__(self, top_ks=None, labels_onehot=False):
-        super(RecallAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+    def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
+        super(RecallAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
 
-    def _metric(self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
+    def _metric(self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
         """
         Compute recall@K for each provided cutoff in ks
 
@@ -202,12 +209,12 @@ class RecallAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("avg_precision_at", "avg_precision", "map")
 class AvgPrecisionAt(RankingMetric):
-    def __init__(self, top_ks=None, labels_onehot=False):
-        super(AvgPrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+    def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
+        super(AvgPrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
         max_k = tf.reduce_max(self.top_ks)
-        self.precision_at = PrecisionAt(top_ks=1 + tf.range(max_k))
+        self.precision_at = PrecisionAt(top_ks=1 + np.array((range(max_k))))
 
-    def _metric(self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
+    def _metric(self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
         """
         Compute average precision @K for provided cutoff in ks
 
@@ -248,11 +255,11 @@ class AvgPrecisionAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("dcg_at", "dcg")
 class DCGAt(RankingMetric):
-    def __init__(self, top_ks=None, labels_onehot=False):
-        super(DCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+    def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
+        super(DCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
 
     def _metric(
-        self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor, log_base: int = 2
+        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, log_base: int = 2
     ) -> tf.Tensor:
 
         """
@@ -298,12 +305,12 @@ class DCGAt(RankingMetric):
 
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
 class NDCGAt(RankingMetric):
-    def __init__(self, top_ks=None, labels_onehot=False):
-        super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+    def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
+        super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
         self.dcg_at = DCGAt(top_ks)
 
     def _metric(
-        self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor, log_base: int = 2
+        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, log_base: int = 2
     ) -> tf.Tensor:
 
         """

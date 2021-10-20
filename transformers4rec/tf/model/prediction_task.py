@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Layer
 
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
+from ..utils.tf_utils import maybe_deserialize_keras_objects, maybe_serialize_keras_objects
 from .base import PredictionTask
 
 
@@ -348,6 +349,20 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
                 bias_initializer="zeros",
                 name="logits",
             )
+
+    @classmethod
+    def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(config, ["output_layer"])
+        return super().from_config(config)
+
+    def get_config(self):
+        config = super().get_config()
+        config = maybe_serialize_keras_objects(self, config, ["output_layer"])
+        config["target_dim"] = self.target_dim
+        config["weight_tying"] = self.weight_tying
+        config["softmax_temperature"] = self.softmax_temperature
+
+        return config
 
     def call(self, inputs: tf.Tensor, **kwargs):
         if self.weight_tying:
