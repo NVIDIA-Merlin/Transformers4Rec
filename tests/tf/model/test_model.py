@@ -47,7 +47,8 @@ def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly):
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir, include_optimizer=False)
-        model = tf.keras.models.load_model(tmpdir)
+        custom_objects = {"Model": tr.model.base.Model}
+        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_objects)
 
 
 def test_simple_seq_classification(yoochoose_schema, tf_yoochoose_like):
@@ -209,8 +210,9 @@ def test_save_load_item_prediction(yoochoose_schema, tf_yoochoose_like, masking,
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir, include_optimizer=False)
-        custom_metrics = dict([(e.__class__.__name__, e) for e in task.metrics])
-        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_metrics)
+        custom_objects = dict([(e.__class__.__name__, e) for e in task.metrics])
+        custom_objects.update({"Model": tr.model.base.Model})
+        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_objects)
 
     assert tf.shape(model(inputs))[1] == 51997
 
@@ -262,7 +264,8 @@ def test_save_load_transformer_model(
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir)
-        custom_metrics = dict([(e.__class__.__name__, e) for e in task.metrics])
-        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_metrics)
+        custom_objects = dict([(e.__class__.__name__, e) for e in task.metrics])
+        custom_objects.update({"Model": tr.model.base.Model})
+        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_objects)
 
     assert tf.shape(model(inputs))[1] == 51997
