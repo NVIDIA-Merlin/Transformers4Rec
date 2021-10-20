@@ -43,6 +43,12 @@ def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly):
     assert len(losses.epoch) == 5
     assert all(0 <= loss <= 1 for loss in losses.history["loss"])
 
+    inputs = next(iter(dataset))[0]
+    model._set_inputs(inputs)
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model.save(tmpdir, include_optimizer=False)
+        model = tf.keras.models.load_model(tmpdir)
+
 
 def test_simple_seq_classification(yoochoose_schema, tf_yoochoose_like):
     targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
@@ -173,7 +179,7 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
 
 @pytest.mark.parametrize("run_eagerly", [True, False])
 @pytest.mark.parametrize("masking", ["causal", "mlm"])
-def test_save_masking(yoochoose_schema, tf_yoochoose_like, masking, run_eagerly):
+def test_save_load_item_prediction(yoochoose_schema, tf_yoochoose_like, masking, run_eagerly):
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
@@ -197,11 +203,16 @@ def test_save_masking(yoochoose_schema, tf_yoochoose_like, masking, run_eagerly)
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
     ).batch(5)
+    _ = model.fit(dataset, epochs=1)
 
     inputs = next(iter(dataset))[0]
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
-        model.save(tmpdir)
+        model.save(tmpdir, include_optimizer=False)
+        custom_metrics = dict([(e.__class__.__name__, e) for e in task.metrics])
+        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_metrics)
+
+    assert tf.shape(model(inputs))[1] == 51997
 
 
 config_classes = [
@@ -216,7 +227,7 @@ config_classes = [
 
 @pytest.mark.parametrize("run_eagerly", [True, False])
 @pytest.mark.parametrize("config", config_classes)
-def test_save_transformer_model(
+def test_save_load_transformer_model(
     yoochoose_schema,
     tf_yoochoose_like,
     config,
@@ -251,3 +262,7 @@ def test_save_transformer_model(
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir)
+        custom_metrics = dict([(e.__class__.__name__, e) for e in task.metrics])
+        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_metrics)
+
+    assert tf.shape(model(inputs))[1] == 51997
