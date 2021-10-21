@@ -12,6 +12,7 @@ recursive-include requirements *.txt
 recursive-exclude tests *.coveragerc
 recursive-include tests *.parquet
 recursive-include tests *.pbtxt
+recursive-include tests *.py
 
 recursive-include transformers4rec *.parquet *.json *.py *.typed
 
