@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import importlib
 import itertools
 import json
 import os
@@ -21,10 +22,13 @@ import subprocess
 import sys
 from os.path import dirname, realpath
 
+import pytest
+
 TEST_PATH = dirname(dirname(realpath(__file__)))
 SESSION_PATH = "examples/getting-started-session-based/"
 
 
+@pytest.mark.skipif(importlib.util.find_spec("cudf") is None, reason="needs cudf")
 def test_session(tmpdir):
     # Run ETL
     nb_path = os.path.join(dirname(TEST_PATH), SESSION_PATH, "01-ETL-with-NVTabular.ipynb")

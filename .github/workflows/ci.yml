@@ -48,4 +48,4 @@ jobs:
         python setup.py develop
     - name: Run unittests
       run: |
-        python -m pytest -rsx --cov-config tests/.coveragerc --cov-report term-missing --cov=. tests/config tests/data tests/merlin_standard_lib tests/tf tests/torch
+        python -m pytest -rsx --cov-config tests/.coveragerc --cov-report term-missing --cov=. tests
