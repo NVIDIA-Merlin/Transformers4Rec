@@ -168,7 +168,7 @@ def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly
 
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
-    ).batch(50)
+    ).batch(5)
     losses = model.fit(dataset, epochs=5)
     metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
 
@@ -203,7 +203,7 @@ def test_save_load_item_prediction(yoochoose_schema, tf_yoochoose_like, masking,
 
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
-    ).batch(5)
+    ).batch(50)
     _ = model.fit(dataset, epochs=1)
 
     inputs = next(iter(dataset))[0]
@@ -258,7 +258,7 @@ def test_save_load_transformer_model(
 
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
-    ).batch(5)
+    ).batch(50)
 
     inputs = next(iter(dataset))[0]
     model._set_inputs(inputs)
@@ -269,3 +269,48 @@ def test_save_load_transformer_model(
         model = tf.keras.models.load_model(tmpdir, custom_objects=custom_objects)
 
     assert tf.shape(model(inputs))[1] == 51997
+
+
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_resume_training(
+    yoochoose_schema,
+    tf_yoochoose_like,
+    run_eagerly,
+):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking="causal",
+    )
+
+    transformer_config = tconf.XLNetConfig.build(
+        d_model=64, n_head=8, n_layer=2, total_seq_length=20
+    )
+    body = tr.SequentialBlock(
+        [
+            input_module,
+            tr.TransformerBlock(transformer_config, masking=input_module.masking),
+        ]
+    )
+
+    task = tr.NextItemPredictionTask(weight_tying=True)
+
+    model = task.to_model(body=body)
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
+
+    dataset = tf.data.Dataset.from_tensor_slices(
+        (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
+    ).batch(50)
+
+    _ = model.fit(dataset, epochs=5)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model.save_weights(tmpdir)
+        model.load_weights(tmpdir)
+
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
+    losses = model.fit(dataset, epochs=5)
+
+    assert all(loss >= 0 for loss in losses.history["loss"])

@@ -297,6 +297,7 @@ class NextItemPredictionTask(PredictionTask):
         return results
 
 
+@tf.keras.utils.register_keras_serializable(package="merlin_models")
 class _NextItemPredictionTask(tf.keras.layers.Layer):
     """Predict the interacted item-id probabilities.
     - During inference, the task consists of predicting the next item.
@@ -323,8 +324,9 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
         weight_tying: bool = False,
         item_embedding_table: Optional[tf.Variable] = None,
         softmax_temperature: float = 0,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.target_dim = target_dim
         self.weight_tying = weight_tying
         self.item_embedding_table = item_embedding_table

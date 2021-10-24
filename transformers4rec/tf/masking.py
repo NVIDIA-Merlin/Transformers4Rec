@@ -44,6 +44,7 @@ class MaskingInfo:
 
 
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
+@tf.keras.utils.register_keras_serializable(package="merlin_models")
 class MaskSequence(tf.keras.layers.Layer):
     """Base class to prepare masked items inputs/labels for language modeling tasks.
 
@@ -213,6 +214,7 @@ class MaskSequence(tf.keras.layers.Layer):
 
 @masking_registry.register_with_multiple_names("clm", "causal")
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
+@tf.keras.utils.register_keras_serializable(package="merlin_models")
 class CausalLanguageModeling(MaskSequence):
     """
     In Causal Language Modeling (clm) you predict the next item based on past positions of the
@@ -301,6 +303,7 @@ class CausalLanguageModeling(MaskSequence):
 
 
 @masking_registry.register_with_multiple_names("mlm", "masked")
+@tf.keras.utils.register_keras_serializable(package="merlin_models")
 class MaskedLanguageModeling(MaskSequence):
     """
     In Masked Language Modeling (mlm) you randomly select some positions of the sequence to be
