@@ -47,8 +47,7 @@ def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly):
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir, include_optimizer=False)
-        custom_objects = {"Model": tr.model.base.Model}
-        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_objects)
+        model = tf.keras.models.load_model(tmpdir)
 
 
 def test_simple_seq_classification(yoochoose_schema, tf_yoochoose_like):
@@ -210,9 +209,7 @@ def test_save_load_item_prediction(yoochoose_schema, tf_yoochoose_like, masking,
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir, include_optimizer=False)
-        custom_objects = dict([(e.__class__.__name__, e) for e in task.metrics])
-        custom_objects.update({"Model": tr.model.base.Model})
-        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_objects)
+        model = tf.keras.models.load_model(tmpdir)
 
     assert tf.shape(model(inputs))[1] == 51997
 
@@ -264,9 +261,7 @@ def test_save_load_transformer_model(
     model._set_inputs(inputs)
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir)
-        custom_objects = dict([(e.__class__.__name__, e) for e in task.metrics])
-        custom_objects.update({"Model": tr.model.base.Model})
-        model = tf.keras.models.load_model(tmpdir, custom_objects=custom_objects)
+        model = tf.keras.models.load_model(tmpdir)
 
     assert tf.shape(model(inputs))[1] == 51997
 
@@ -304,13 +299,19 @@ def test_resume_training(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
     ).batch(50)
 
-    _ = model.fit(dataset, epochs=5)
+    _ = model.fit(dataset, epochs=1)
+    inputs = next(iter(dataset))[0]
+    model._set_inputs(inputs)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save_weights(tmpdir)
         model.load_weights(tmpdir)
 
+    # with tempfile.TemporaryDirectory() as tmpdir:
+    #    model.save(tmpdir)
+    #    model = tf.keras.models.load_model(tmpdir)
+
     model.compile(optimizer="adam", run_eagerly=run_eagerly)
-    losses = model.fit(dataset, epochs=5)
+    losses = model.fit(dataset, epochs=1)
 
     assert all(loss >= 0 for loss in losses.history["loss"])
