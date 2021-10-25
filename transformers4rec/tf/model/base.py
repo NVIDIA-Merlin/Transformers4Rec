@@ -495,6 +495,7 @@ class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
         return metrics
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class Model(BaseModel):
     def __init__(
         self, *head: Head, head_weights: Optional[List[float]] = None, name=None, **kwargs

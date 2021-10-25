@@ -37,6 +37,7 @@ METRIC_PARAMETERS_DOCSTRING = """
 """
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class RankingMetric(tf.keras.metrics.Metric):
     """
     Metric wrapper for computing ranking metrics@K for session-based task.
@@ -106,6 +107,7 @@ class RankingMetric(tf.keras.metrics.Metric):
 
 
 @ranking_metrics_registry.register_with_multiple_names("precision_at", "precision")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class PrecisionAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
         super(PrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
@@ -142,6 +144,7 @@ class PrecisionAt(RankingMetric):
 
 
 @ranking_metrics_registry.register_with_multiple_names("recall_at", "recall")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class RecallAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
         super(RecallAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
@@ -196,6 +199,7 @@ class RecallAt(RankingMetric):
 
 
 @ranking_metrics_registry.register_with_multiple_names("avg_precision_at", "avg_precision", "map")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class AvgPrecisionAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
         super(AvgPrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
@@ -242,6 +246,7 @@ class AvgPrecisionAt(RankingMetric):
 
 
 @ranking_metrics_registry.register_with_multiple_names("dcg_at", "dcg")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class DCGAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
         super(DCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
@@ -292,6 +297,7 @@ class DCGAt(RankingMetric):
 
 
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class NDCGAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
         super(NDCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
