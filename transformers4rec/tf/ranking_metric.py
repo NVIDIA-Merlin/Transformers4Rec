@@ -20,7 +20,6 @@ from typing import List
 
 import numpy as np
 import tensorflow as tf
-from keras import backend
 
 from merlin_standard_lib import Registry
 
@@ -56,7 +55,11 @@ class RankingMetric(tf.keras.metrics.Metric):
         self.labels_onehot = labels_onehot
         # Store the mean vector of the batch metrics (for each cut-off at topk) in ListWrapper
         self.metric_mean = []
-        self.built = False
+        self.accumulator = tf.Variable(
+            tf.zeros(shape=[1, len(self.top_ks)]),
+            trainable=False,
+            shape=tf.TensorShape([None, tf.compat.v1.Dimension(len(self.top_ks))]),
+        )
 
     def get_config(self):
         config = {"top_ks": self.top_ks, "labels_onehot": self.labels_onehot}
@@ -64,24 +67,9 @@ class RankingMetric(tf.keras.metrics.Metric):
         return dict(list(base_config.items()) + list(config.items()))
 
     def _build(self, shape):
-        with tf.init_scope():
-            # This should only be necessary for handling v1 behavior. In v2, AUC
-            # should be initialized outside of any tf.functions, and therefore in
-            # eager mode.
-            if not tf.executing_eagerly():
-                backend._initialize_variables(backend._get_session())
-
-        if not self.built:
-            self.accumulator = tf.Variable(
-                tf.zeros(shape=[1, len(self.top_ks)]),
-                trainable=False,
-                shape=tf.TensorShape([None, tf.compat.v1.Dimension(len(self.top_ks))]),
-            )
-
         bs = shape[0]
         variable_shape = [bs, tf.compat.v1.Dimension(len(self.top_ks))]
         self.accumulator.assign(tf.zeros(variable_shape))
-        self.built = True
 
     def update_state(self, y_true: tf.Tensor, y_pred: tf.Tensor, **kwargs):
         # Computing the metrics at different cut-offs
@@ -91,9 +79,9 @@ class RankingMetric(tf.keras.metrics.Metric):
             y_true = tf_utils.tranform_label_to_onehot(y_true, tf.shape(y_pred)[-1])
 
         metric = self._metric(
-            tf.convert_to_tensor(self.top_ks),
-            tf.reshape(y_pred, [-1, tf.shape(y_pred)[-1]]),
-            y_true,
+            ks=tf.convert_to_tensor(self.top_ks),
+            scores=tf.reshape(y_pred, [-1, tf.shape(y_pred)[-1]]),
+            labels=y_true,
         )
         self.metric_mean.append(metric)
 
@@ -105,7 +93,7 @@ class RankingMetric(tf.keras.metrics.Metric):
         self.metric_mean = []
 
     @abstractmethod
-    def _metric(self, ks: List[int], preds: tf.Tensor, target: tf.Tensor) -> tf.Tensor:
+    def _metric(self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
         """
         Compute ranking metric over predictions and one-hot targets for different cut-offs.
         This method should be overridden by subclasses.
@@ -326,19 +314,24 @@ class NDCGAt(RankingMetric):
 
         # Compute discounted cumulative gains
         self.dcg_at._build(shape=tf.shape(scores))
-        gains = self.dcg_at._metric(ks, topk_scores, topk_labels, log_base=log_base)
-        # Re-init states of dcg_at accumulator
+        gains = self.dcg_at._metric(
+            ks=ks, labels=topk_labels, scores=topk_scores, log_base=log_base
+        )
+        self.accumulator.assign(gains)
+        # Re-init states of dcg_at
         self.dcg_at._build(shape=tf.shape(scores))
-        normalizing_gains = self.dcg_at._metric(ks, topk_labels, topk_labels, log_base=log_base)
+        normalizing_gains = self.dcg_at._metric(
+            ks=ks, labels=topk_labels, scores=topk_labels, log_base=log_base
+        )
 
         # Prevent divisions by zero
         relevant_pos = tf.where(normalizing_gains != 0)
         tf.where(normalizing_gains == 0, 0.0, gains)
 
         updates = tf.gather_nd(gains, relevant_pos) / tf.gather_nd(normalizing_gains, relevant_pos)
-        gains.scatter_nd_update(relevant_pos, updates)
+        self.accumulator.scatter_nd_update(relevant_pos, updates)
 
-        return gains
+        return self.accumulator
 
 
 def check_inputs(ks, scores, labels):
