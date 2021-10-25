@@ -23,6 +23,7 @@ from transformers import PretrainedConfig, TFPreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
+from ..utils.tf_utils import maybe_deserialize_keras_objects, maybe_serialize_keras_objects
 from .base import Block
 
 TransformerBody = Union[TFPreTrainedModel, PretrainedConfig]
@@ -94,6 +95,20 @@ class TransformerBlock(Block):
         if prepare_module:
             self.prepare_module = prepare_module(transformer, masking)
         self.output_fn = output_fn
+
+    def get_config(self):
+        config = super().get_config()
+        config = maybe_serialize_keras_objects(
+            self, config, ["transformer", "output_fn", "prepare_module", "masking"]
+        )
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(
+            config, ["transformer", "output_fn", "prepare_module", "masking"]
+        )
+        return super().from_config(config)
 
     @classmethod
     def from_registry(
