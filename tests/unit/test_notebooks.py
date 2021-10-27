@@ -35,11 +35,15 @@ def test_session(tmpdir):
     _run_notebook(tmpdir, nb_path)
 
     # Run session based
-    os.environ["INPUT_SCHEMA_PATH"] = SESSION_PATH + "schema.pb"
-    nb_path = os.path.join(
-        dirname(TEST_PATH), SESSION_PATH, "02-session-based-XLNet-with-PyT.ipynb"
-    )
-    _run_notebook(tmpdir, nb_path)
+    torch = importlib.util.find_spec("torch")
+    if torch is not None:
+        os.environ["INPUT_SCHEMA_PATH"] = SESSION_PATH + "schema.pb"
+        nb_path = os.path.join(
+            dirname(TEST_PATH), SESSION_PATH, "02-session-based-XLNet-with-PyT.ipynb"
+        )
+        _run_notebook(tmpdir, nb_path)
+    else:
+        print("Torch needed for this notebook")
 
 
 def _run_notebook(tmpdir, notebook_path, transform=None):
