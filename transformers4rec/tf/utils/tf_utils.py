@@ -116,6 +116,16 @@ def calculate_batch_size_from_input_shapes(input_shapes):
     return [i for i in input_shapes.values() if not isinstance(i, tuple)][0][0]
 
 
+def get_tf_main_layer(hf_model):
+    """
+    Extract serializable custom keras layer `TF*MainLayer` from the HF model
+    """
+    main_layer = [v for _, v in hf_model.__dict__.items() if isinstance(v, tf.keras.layers.Layer)][
+        0
+    ]
+    return main_layer
+
+
 def maybe_serialize_keras_objects(
     self,
     config,
@@ -123,7 +133,7 @@ def maybe_serialize_keras_objects(
 ):
     for key in maybe_serialize_keys:
         maybe_value = getattr(self, key, None)
-        if maybe_value:
+        if maybe_value is not None:
             if isinstance(maybe_value, dict):
                 config[key] = {
                     k: tf.keras.utils.serialize_keras_object(v) for k, v in maybe_value.items()
