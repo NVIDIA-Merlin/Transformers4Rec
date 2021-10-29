@@ -48,6 +48,8 @@ def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly):
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir, include_optimizer=False)
         model = tf.keras.models.load_model(tmpdir)
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
+    _ = model.fit(dataset, epochs=1)
 
 
 def test_simple_seq_classification(yoochoose_schema, tf_yoochoose_like):
@@ -91,6 +93,37 @@ def test_serialization_model(tf_tabular_features, tf_tabular_data, prediction_ta
     test_utils.assert_loss_and_metrics_are_valid(copy_model, tf_tabular_data, targets)
 
 
+@pytest.mark.parametrize("masking", ["causal", "mlm"])
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_next_item_fit(tf_yoochoose_like, tf_next_item_prediction, masking, run_eagerly):
+
+    model = tf_next_item_prediction(masking)
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
+
+    dataset = tf.data.Dataset.from_tensor_slices(
+        (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
+    ).batch(5)
+    losses = model.fit(dataset, epochs=5)
+    metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
+
+    assert len(metrics.keys()) == 9
+    assert len(losses.epoch) == 5
+    assert all(loss >= 0 for loss in losses.history["loss"])
+    assert losses.history["loss"][-1] < losses.history["loss"][0]
+
+
+@pytest.mark.parametrize("masking", ["mlm", "clm"])
+def test_serialization_next_item_fit(tf_next_item_prediction, masking, tf_yoochoose_like):
+    model = tf_next_item_prediction(masking)
+    copy_model = test_utils.assert_serialization(model)
+
+    loss = copy_model.compute_loss(tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
+    metrics = copy_model.metric_results()
+
+    assert loss is not None
+    assert len(metrics) == 6
+
+
 @pytest.mark.parametrize("d_model", [32, 64, 128])
 def test_with_d_model_different_from_item_dim(tf_yoochoose_like, yoochoose_schema, d_model):
 
@@ -116,102 +149,12 @@ def test_with_d_model_different_from_item_dim(tf_yoochoose_like, yoochoose_schem
 
 
 @pytest.mark.parametrize("masking", ["causal", "mlm"])
-def test_output_shape_mode_eval(tf_yoochoose_like, yoochoose_schema, masking):
+def test_output_shape_mode_eval(tf_yoochoose_like, tf_next_item_prediction, masking):
 
-    input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking=masking,
-    )
-
-    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
-    body = tr.SequentialBlock(
-        [
-            input_module,
-            tr.TransformerBlock(transformer_config, masking=input_module.masking),
-        ]
-    )
-    task = tr.NextItemPredictionTask(weight_tying=True)
-    model = task.to_model(body=body)
-
+    model = tf_next_item_prediction(masking)
     out = model(tf_yoochoose_like, training=False)
+
     assert out.shape[0] == tf_yoochoose_like["item_id/list"].shape[0]
-
-
-@pytest.mark.parametrize("masking", ["causal", "mlm"])
-@pytest.mark.parametrize("run_eagerly", [True, False])
-def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly):
-
-    input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking=masking,
-    )
-
-    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
-    body = tr.SequentialBlock(
-        [
-            input_module,
-            tr.TransformerBlock(transformer_config, masking=input_module.masking),
-        ]
-    )
-
-    task = tr.NextItemPredictionTask(weight_tying=True)
-
-    model = task.to_model(body=body)
-    model.compile(optimizer="adam", run_eagerly=run_eagerly)
-
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
-    ).batch(5)
-    losses = model.fit(dataset, epochs=5)
-    metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
-
-    assert len(metrics.keys()) == 9
-    assert len(losses.epoch) == 5
-    assert all(loss >= 0 for loss in losses.history["loss"])
-    assert losses.history["loss"][-1] < losses.history["loss"][0]
-
-
-@pytest.mark.parametrize("run_eagerly", [True, False])
-@pytest.mark.parametrize("masking", ["causal", "mlm"])
-def test_save_load_item_prediction(yoochoose_schema, tf_yoochoose_like, masking, run_eagerly):
-    input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking=masking,
-    )
-
-    body = tr.SequentialBlock(
-        [
-            input_module,
-            tr.MLPBlock([64]),
-        ]
-    )
-
-    task = tr.NextItemPredictionTask(weight_tying=True)
-
-    model = task.to_model(body=body)
-    model.compile(optimizer="adam", run_eagerly=run_eagerly)
-
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
-    ).batch(50)
-    _ = model.fit(dataset, epochs=1)
-
-    inputs = next(iter(dataset))[0]
-    model._set_inputs(inputs)
-    with tempfile.TemporaryDirectory() as tmpdir:
-        model.save(tmpdir, include_optimizer=False)
-        model = tf.keras.models.load_model(tmpdir)
-
-    assert tf.shape(model(inputs))[1] == 51997
 
 
 config_classes = [
@@ -259,6 +202,7 @@ def test_save_load_transformer_model(
 
     inputs = next(iter(dataset))[0]
     model._set_inputs(inputs)
+
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir)
         model = tf.keras.models.load_model(tmpdir)
@@ -272,6 +216,10 @@ def test_resume_training(
     tf_yoochoose_like,
     run_eagerly,
 ):
+    yoochoose_schema = yoochoose_schema.select_by_name(
+        ["item_id/list", "category/list", "timestamp/weekday/cos/list"]
+    )
+
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
@@ -295,11 +243,14 @@ def test_resume_training(
     model = task.to_model(body=body)
     model.compile(optimizer="adam", run_eagerly=run_eagerly)
 
+    tf_yoochoose_like = dict(
+        (name, tf_yoochoose_like[name]) for name in yoochoose_schema.column_names
+    )
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
     ).batch(50)
-
     _ = model.fit(dataset, epochs=1)
+
     inputs = next(iter(dataset))[0]
     model._set_inputs(inputs)
 
@@ -311,7 +262,5 @@ def test_resume_training(
     #    model.save(tmpdir)
     #    model = tf.keras.models.load_model(tmpdir)
 
-    model.compile(optimizer="adam", run_eagerly=run_eagerly)
     losses = model.fit(dataset, epochs=1)
-
     assert all(loss >= 0 for loss in losses.history["loss"])

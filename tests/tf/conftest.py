@@ -120,3 +120,30 @@ def tf_ranking_metrics_inputs():
 
     features["labels"] = tf.convert_to_tensor(np.random.randint(1, VOCAB_SIZE, (POS_EXAMPLE,)))
     return features
+
+
+@pytest.fixture()
+def tf_next_item_prediction(yoochoose_schema):
+    def get_model(masking):
+        input_module = tr.TabularSequenceFeatures.from_schema(
+            yoochoose_schema,
+            max_sequence_length=20,
+            continuous_projection=64,
+            d_output=64,
+            masking=masking,
+        )
+
+        transformer_config = tr.XLNetConfig.build(
+            d_model=64, n_head=8, n_layer=2, total_seq_length=20
+        )
+        body = tr.SequentialBlock(
+            [
+                input_module,
+                tr.TransformerBlock(transformer_config, masking=input_module.masking),
+            ]
+        )
+        task = tr.NextItemPredictionTask(weight_tying=True)
+        model = task.to_model(body=body)
+        return model
+
+    return get_model
