@@ -125,7 +125,7 @@ class NextItemPredictionTask(PredictionTask):
         target_name: Optional[str] = None,
         task_name: Optional[str] = None,
         task_block: Optional[Layer] = None,
-        weight_tying: bool = False,
+        weight_tying: bool = True,
         target_dim: int = None,
         softmax_temperature: float = 1,
         **kwargs,
@@ -321,7 +321,7 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
     def __init__(
         self,
         target_dim: int,
-        weight_tying: bool = False,
+        weight_tying: bool = True,
         item_embedding_table: Optional[tf.Variable] = None,
         softmax_temperature: float = 0,
         **kwargs,
@@ -382,4 +382,4 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
         return predictions
 
     def _get_name(self) -> str:
-        return "NextItemPredictionTask"
+        return "_NextItemPredictionTask"
