@@ -94,13 +94,13 @@ class TransformerBlock(BlockBase):
                 masking.__class__
                 not in getattr(
                     MappingTransformerMasking,
-                    self.transformer.config_class.__name__, # type: ignore
+                    self.transformer.config_class.__name__,  # type: ignore
                     [masking.__class__],
                 )
             ):
                 raise ValueError(
-                    f"{masking.__class__.__name__} is not supported by: " # type: ignore
-                    f"the {self.transformer.config_class.__name__} architecture"# type: ignore
+                    f"{masking.__class__.__name__} is not supported by: "  # type: ignore
+                    f"the {self.transformer.config_class.__name__} architecture"  # type: ignore
                 )
 
             required = list(masking.transformer_required_arguments().keys())
