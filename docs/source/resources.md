@@ -37,6 +37,7 @@ Tip: Registering HF Transformers config classes into Transformers4Rec is a good 
 
 |   Model     | CLM |  MLM  |  PLM  |  RTD  | Registered |
 | ----------- |--------|-------|-------|-------|-------|
+|    [AlBERT](https://huggingface.co/transformers/model_doc/albert.html#bertconfig) |   ❌   |  ✅    |   ❌   |  ✅  |   ✅   |
 |    [BERT](https://huggingface.co/transformers/model_doc/bert.html#bertconfig)     |   ❌   |  ✅    |   ❌   |  ✅  |   ✅   |
 |  [ConvBERT](https://huggingface.co/transformers/model_doc/convbert.html#convbertconfig)   |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
 |   [DeBERTa](https://huggingface.co/transformers/model_doc/deberta.html#debertaconfig)   |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
@@ -51,7 +52,7 @@ Tip: Registering HF Transformers config classes into Transformers4Rec is a good 
 |   [XLNet](https://huggingface.co/transformers/model_doc/xlnet.html#xlnetconfig)    |   ✅    | ✅     |   ✅   |  ✅    |   ✅   |
 
 
- **Note**: The following HF architectures will be supported in future release: `Reformer`, `Funnel Transformer`, `ELECTRA` and `ALBERT`.
+ **Note**: The following HF architectures will be supported in future release: `Reformer`, `Funnel Transformer`, `ELECTRA`
 
 
 

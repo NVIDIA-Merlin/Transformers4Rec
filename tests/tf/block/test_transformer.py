@@ -24,6 +24,7 @@ config_classes = [
     tconf.XLNetConfig,
     tconf.LongformerConfig,
     tconf.GPT2Config,
+    tconf.AlbertConfig,
 ]
 
 # fixed parameters for tests

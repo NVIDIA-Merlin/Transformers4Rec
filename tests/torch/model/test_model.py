@@ -151,8 +151,8 @@ def test_multi_head_model_wrong_weights(torch_tabular_features, torch_yoochoose_
 
 config_classes = [
     tconf.XLNetConfig,
-    # TODO: Add Electra when HF fix is released
-    # tconf.ElectraConfig,
+    # TODO: Add support of Electra
+    tconf.AlbertConfig,
     tconf.LongformerConfig,
     tconf.GPT2Config,
 ]
