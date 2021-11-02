@@ -44,6 +44,43 @@ def test_serialization_simple_heads(tf_tabular_features, tf_tabular_data, predic
     test_utils.assert_loss_and_metrics_are_valid(copy_head, tf_tabular_data, targets)
 
 
+def test_serialization_item_prediction_head(tf_yoochoose_like, yoochoose_schema):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+    )
+    body = tr.SequentialBlock([input_module, tr.MLPBlock([64])])
+    task = tr.NextItemPredictionTask(weight_tying=True, metrics=[])
+
+    head = task.to_head(body, input_module)
+
+    copy_head = test_utils.assert_serialization(head)
+    targets = tf_yoochoose_like["item_id/list"]
+
+    loss = copy_head.compute_loss(tf_yoochoose_like, targets, call_body=True)
+    assert loss is not None
+
+
+@test_utils.mark_run_eagerly_modes
+def test_item_prediction_yoochoose_model(yoochoose_schema, tf_yoochoose_like, run_eagerly):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+    )
+    body = tr.SequentialBlock([input_module, tr.MLPBlock([64])])
+    task = tr.NextItemPredictionTask(weight_tying=True, metrics=[])
+
+    model = task.to_model(body, input_module)
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
+
+    outputs = model(tf_yoochoose_like)
+    assert outputs.shape[-1] == 51997
+
+
 @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
 @pytest.mark.parametrize("task_block", [None, tr.MLPBlock([32])])
 @pytest.mark.parametrize("summary", ["last", "first", "mean", "cls_index"])
