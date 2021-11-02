@@ -732,7 +732,7 @@ class ReplacementLanguageModeling(MaskedLanguageModeling):
         corrupted_labels = (
             target_flat.clone().detach().scatter(-1, non_pad_mask.nonzero().flatten(), updates)
         )
-        # Build discriminator label : distinguish orginal token from replaced one
+        # Build discriminator label : distinguish original token from replaced one
         discriminator_labels = (corrupted_labels != target_flat).view(-1, itemid_seq.size(1))
         # Build corrupted inputs : replacing [MASK] by sampled item
         corrupted_inputs = (

@@ -1,0 +1,309 @@
+feature {
+  name: "article_id"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "article_id"
+    min: 1
+    max: 72933
+    is_categorical: true
+  }
+  annotation {
+    tag: "item_id"
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "city"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "city"
+    min: 1
+    max: 1022
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "region"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "region"
+    min: 1
+    max: 237
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+
+feature {
+  name: "country"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "country"
+    min: 1
+    max: 70
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "country"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "country"
+    min: 1
+    max: 70
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "os"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "os"
+    min: 1
+    max: 10
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "referrer_class"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "referrer_class"
+    min: 1
+    max: 7
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "category0_encoded"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "category0_encoded"
+    min: 1
+    max: 41
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "category1_encoded"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "category1_encoded"
+    min: 1
+    max: 128
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "author_encoded"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "author_encoded"
+    min: 1
+    max: 112
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "item_age_hours_norm"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "item_age_hours_norm"
+    min: -10000.0
+    max: 10000.0
+  }
+  annotation {
+    tag: "item"
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "hour_sin"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "hour_sin"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+
+feature {
+  name: "hour_cos"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "hour_cos"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+
+
+feature {
+  name: "weekday_sin"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "weekday_sin"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+
+
+feature {
+  name: "weekday_cos"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "weekday_cos"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "timestamp"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "timestamp"
+    min: 0
+    max: 0
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}

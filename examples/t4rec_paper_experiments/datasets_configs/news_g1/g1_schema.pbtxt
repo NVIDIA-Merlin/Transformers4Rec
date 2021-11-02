@@ -1,0 +1,224 @@
+feature {
+  name: "click_article_id"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "click_article_id"
+    min: 1
+    max: 365000
+    is_categorical: true
+  }
+  annotation {
+    tag: "item_id"
+    tag: "list"
+    tag: "categorical"
+    tag: "item"
+  }
+}
+
+feature {
+  name: "click_environment"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "click_environment"
+    min: 1
+    max: 5
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "click_deviceGroup"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "click_deviceGroup"
+    min: 1
+    max: 6
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "click_os"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "click_os"
+    min: 1
+    max: 21
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "click_region"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "click_region"
+    min: 1
+    max: 30
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "click_country"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: INT
+  int_domain {
+    name: "click_country"
+    min: 1
+    max: 12
+    is_categorical: true
+  }
+  annotation {
+    tag: "list"
+    tag: "categorical"
+  }
+}
+
+feature {
+  name: "item_age_hours_norm"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "item_age_hours_norm"
+    min: -10000.0
+    max: 10000.0
+  }
+  annotation {
+    tag: "item"
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "hour_sin"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "hour_sin"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "hour_cos"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "hour_cos"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "weekday_sin"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "weekday_sin"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "weekday_sin"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "weekday_sin"
+    min: -1.0
+    max: 1.0
+  }
+  annotation {
+    tag: "list"
+    tag: "continuous"
+  }
+}
+
+feature {
+  name: "click_timestamp"
+  value_count {
+    min: 2
+    max: 20
+  }
+  type: FLOAT
+  float_domain {
+    name: "click_timestamp"
+    min: 0
+    max: 0
+  }
+  annotation {
+    tag: "time"
+    tag: "list"
+  }
+}

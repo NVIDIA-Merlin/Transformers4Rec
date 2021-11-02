@@ -29,6 +29,7 @@ config_classes = [
     tconf.BertConfig,
     tconf.RobertaConfig,
     tconf.TransfoXLConfig,
+    tconf.AlbertConfig,
 ]
 
 # fixed parameters for tests
@@ -36,7 +37,7 @@ lm_tasks = list(tr.masking.masking_registry.keys())
 lm_tasks.remove("permutation")
 
 
-# Test output of XLNet with different masking taks using SequentialBlock
+# Test output of XLNet with different masking tasks using SequentialBlock
 @pytest.mark.parametrize("task", lm_tasks)
 def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
 

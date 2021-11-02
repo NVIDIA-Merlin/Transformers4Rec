@@ -31,12 +31,13 @@ Transformers4Rec supports the four following [masking tasks](https://nvidia-merl
 
 
 In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide `TransformerBlock` module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a `transformer_registry` including pre-defined [`T4RecConfig`](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig) constructors that automatically set the arguments of the related HuggingFace Transformers' configuration classes.
-The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered `T4RecConfig` classes in the colum `Registered`.
+The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered `T4RecConfig` classes in the column `Registered`.
 Tip: Registering HF Transformers config classes into Transformers4Rec is a good opportunity for your first contributions to the library ;)
 
 
 |   Model     | CLM |  MLM  |  PLM  |  RTD  | Registered |
 | ----------- |--------|-------|-------|-------|-------|
+|    [AlBERT](https://huggingface.co/transformers/model_doc/albert.html#bertconfig) |   ❌   |  ✅    |   ❌   |  ✅  |   ✅   |
 |    [BERT](https://huggingface.co/transformers/model_doc/bert.html#bertconfig)     |   ❌   |  ✅    |   ❌   |  ✅  |   ✅   |
 |  [ConvBERT](https://huggingface.co/transformers/model_doc/convbert.html#convbertconfig)   |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
 |   [DeBERTa](https://huggingface.co/transformers/model_doc/deberta.html#debertaconfig)   |   ❌   |  ✅    |   ❌   |  ✅  |   ❌   |
@@ -51,7 +52,7 @@ Tip: Registering HF Transformers config classes into Transformers4Rec is a good 
 |   [XLNet](https://huggingface.co/transformers/model_doc/xlnet.html#xlnetconfig)    |   ✅    | ✅     |   ✅   |  ✅    |   ✅   |
 
 
- **Note**: The following HF architectures will be supported in future release: `Reformer`, `Funnel Transformer`, `ELECTRA` and `ALBERT`.
+ **Note**: The following HF architectures will be supported in future release: `Reformer`, `Funnel Transformer`, `ELECTRA`
 
 
 
