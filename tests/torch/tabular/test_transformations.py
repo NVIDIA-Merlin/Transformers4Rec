@@ -232,7 +232,7 @@ def test_input_dropout_with_tabular_features_post(yoochoose_schema, torch_yoocho
             out_features_dropout[fname], mask_prev_not_zeros
         )
         output_dropout_zeros_rate = (out_features_dropout_ignoring_zeroes == 0.0).float().mean()
-        assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.1)
+        assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.2)
 
 
 def test_input_dropout_with_tabular_features_post_from_squema(
