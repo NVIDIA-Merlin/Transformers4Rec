@@ -30,17 +30,16 @@ SESSION_PATH = "examples/getting-started-session-based/"
 
 @pytest.mark.skipif(importlib.util.find_spec("cudf") is None, reason="needs cudf")
 def test_session(tmpdir):
+    BASE_PATH = os.path.join(dirname(TEST_PATH), SESSION_PATH)
     # Run ETL
-    nb_path = os.path.join(dirname(TEST_PATH), SESSION_PATH, "01-ETL-with-NVTabular.ipynb")
+    nb_path = os.path.join(BASE_PATH, "01-ETL-with-NVTabular.ipynb")
     _run_notebook(tmpdir, nb_path)
 
     # Run session based
     torch = importlib.util.find_spec("torch")
     if torch is not None:
-        os.environ["INPUT_SCHEMA_PATH"] = SESSION_PATH + "schema.pb"
-        nb_path = os.path.join(
-            dirname(TEST_PATH), SESSION_PATH, "02-session-based-XLNet-with-PyT.ipynb"
-        )
+        os.environ["INPUT_SCHEMA_PATH"] = BASE_PATH + "schema.pb"
+        nb_path = os.path.join(BASE_PATH, "02-session-based-XLNet-with-PyT.ipynb")
         _run_notebook(tmpdir, nb_path)
     else:
         print("Torch needed for this notebook")
