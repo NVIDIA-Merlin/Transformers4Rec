@@ -18,7 +18,7 @@ import pytest
 
 tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
-
+test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 lm_tasks = list(tr.masking.masking_registry.keys())
 
@@ -28,9 +28,35 @@ lm_tasks = list(tr.masking.masking_registry.keys())
 def test_task_output_shape(tf_masking_inputs, task):
     lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
     out = lm(tf_masking_inputs["input_tensor"], tf_masking_inputs["labels"], training=True)
-    assert lm.masked_targets.shape[0] == tf_masking_inputs["input_tensor"].shape[0]
-    assert lm.masked_targets.shape[1] == tf_masking_inputs["input_tensor"].shape[1]
+    assert tf.shape(lm.masked_targets)[0] == tf_masking_inputs["input_tensor"].shape[0]
+    assert tf.shape(lm.masked_targets)[1] == tf_masking_inputs["input_tensor"].shape[1]
     assert out.shape[2] == tf_masking_inputs["input_tensor"].shape[2]
+
+
+# Test class serialization
+@pytest.mark.parametrize("task", ["causal", "masked"])
+def test_serialization_masking(tf_masking_inputs, task):
+    lm = tr.masking.masking_registry[task](padding_idx=tf_masking_inputs["padding_idx"])
+    copy_layer = test_utils.assert_serialization(lm)
+
+    out = copy_layer(tf_masking_inputs["input_tensor"], tf_masking_inputs["labels"], training=True)
+    assert tf.shape(copy_layer.masked_targets)[0] == tf_masking_inputs["input_tensor"].shape[0]
+    assert out.shape[2] == tf_masking_inputs["input_tensor"].shape[2]
+
+
+# Test eager + graph modes
+@pytest.mark.parametrize("run_eagerly", [True, False])
+@pytest.mark.parametrize("task", ["causal", "masked"])
+def test_masking_model(yoochoose_schema, tf_yoochoose_like, run_eagerly, task):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=64,
+        masking=task,
+    )
+    body = tr.SequentialBlock([input_module, tr.MLPBlock([64])])
+    test_utils.assert_body_works_in_model(tf_yoochoose_like, input_module, body, run_eagerly)
 
 
 # Test only last item is masked when eval_on_last_item_seq_only

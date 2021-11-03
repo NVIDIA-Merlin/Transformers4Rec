@@ -6,6 +6,7 @@ from tensorflow.keras.layers import Layer
 
 from ..block.mlp import MLPBlock
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
+from ..utils.tf_utils import maybe_deserialize_keras_objects, maybe_serialize_keras_objects
 from .base import PredictionTask
 
 
@@ -107,7 +108,9 @@ class NextItemPredictionTask(PredictionTask):
         Value 1.0 reduces to regular softmax.
     """
 
-    DEFAULT_LOSS = tf.keras.losses.SparseCategoricalCrossentropy()
+    DEFAULT_LOSS = tf.keras.losses.SparseCategoricalCrossentropy(
+        from_logits=True,
+    )
     DEFAULT_METRICS = (
         # default metrics suppose labels are int encoded
         NDCGAt(top_ks=[10, 20], labels_onehot=True),
@@ -122,9 +125,10 @@ class NextItemPredictionTask(PredictionTask):
         target_name: Optional[str] = None,
         task_name: Optional[str] = None,
         task_block: Optional[Layer] = None,
-        weight_tying: bool = False,
+        weight_tying: bool = True,
         target_dim: int = None,
         softmax_temperature: float = 1,
+        padding_idx: int = 0,
         **kwargs,
     ):
         super().__init__(
@@ -138,6 +142,7 @@ class NextItemPredictionTask(PredictionTask):
         self.weight_tying = weight_tying
         self.target_dim = target_dim
         self.softmax_temperature = softmax_temperature
+        self.padding_idx = padding_idx
 
     def build(self, input_shape, body, inputs=None):
         # Retrieve the embedding module to get the name of itemid col and its related table
@@ -196,7 +201,7 @@ class NextItemPredictionTask(PredictionTask):
             labels = self.embeddings.item_seq
 
         # remove vectors of padded items
-        trg_flat = tf.reshape(labels, -1)
+        trg_flat = tf.reshape(labels, (-1,))
         non_pad_mask = trg_flat != self.padding_idx
         x = self.remove_pad_3d(x, non_pad_mask)
 
@@ -208,7 +213,7 @@ class NextItemPredictionTask(PredictionTask):
         # inp_tensor: (n_batch x seqlen x emb_dim)
         inp_tensor = tf.reshape(inp_tensor, (-1, inp_tensor.shape[-1]))
         inp_tensor_fl = tf.boolean_mask(
-            inp_tensor, tf.broadcast_to(tf.expand_dims(non_pad_mask, 1), inp_tensor.shape)
+            inp_tensor, tf.broadcast_to(tf.expand_dims(non_pad_mask, 1), tf.shape(inp_tensor))
         )
         out_tensor = tf.reshape(inp_tensor_fl, (-1, inp_tensor.shape[1]))
         return out_tensor
@@ -230,10 +235,14 @@ class NextItemPredictionTask(PredictionTask):
         # retrieve labels from masking
         if self.masking:
             targets = self.masking.masked_targets
-            # flatten labels and remove padding index
-            targets = tf.reshape(targets, -1)
-            non_pad_mask = targets != self.padding_idx
-            targets = tf.boolean_mask(targets, non_pad_mask)
+
+        else:
+            targets = self.embeddings.item_seq
+
+        # flatten labels and remove padding index
+        targets = tf.reshape(targets, (-1,))
+        non_pad_mask = targets != self.padding_idx
+        targets = tf.boolean_mask(targets, non_pad_mask)
 
         loss = self.loss(y_true=targets, y_pred=predictions, sample_weight=sample_weight)
 
@@ -294,6 +303,7 @@ class NextItemPredictionTask(PredictionTask):
         return results
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class _NextItemPredictionTask(tf.keras.layers.Layer):
     """Predict the interacted item-id probabilities.
     - During inference, the task consists of predicting the next item.
@@ -317,11 +327,12 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
     def __init__(
         self,
         target_dim: int,
-        weight_tying: bool = False,
+        weight_tying: bool = True,
         item_embedding_table: Optional[tf.Variable] = None,
         softmax_temperature: float = 0,
+        **kwargs,
     ):
-        super().__init__()
+        super().__init__(**kwargs)
         self.target_dim = target_dim
         self.weight_tying = weight_tying
         self.item_embedding_table = item_embedding_table
@@ -347,6 +358,20 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
                 name="logits",
             )
 
+    @classmethod
+    def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(config, ["output_layer"])
+        return super().from_config(config)
+
+    def get_config(self):
+        config = super().get_config()
+        config = maybe_serialize_keras_objects(self, config, ["output_layer"])
+        config["target_dim"] = self.target_dim
+        config["weight_tying"] = self.weight_tying
+        config["softmax_temperature"] = self.softmax_temperature
+
+        return config
+
     def call(self, inputs: tf.Tensor, **kwargs):
         if self.weight_tying:
             logits = tf.matmul(inputs, tf.transpose(self.item_embedding_table))
@@ -363,4 +388,4 @@ class _NextItemPredictionTask(tf.keras.layers.Layer):
         return predictions
 
     def _get_name(self) -> str:
-        return "NextItemPredictionTask"
+        return "_NextItemPredictionTask"
