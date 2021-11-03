@@ -116,6 +116,16 @@ def calculate_batch_size_from_input_shapes(input_shapes):
     return [i for i in input_shapes.values() if not isinstance(i, tuple)][0][0]
 
 
+def get_tf_main_layer(hf_model):
+    """
+    Extract serializable custom keras layer `TF*MainLayer` from the HF model
+    """
+    main_layer = [v for _, v in hf_model.__dict__.items() if isinstance(v, tf.keras.layers.Layer)][
+        0
+    ]
+    return main_layer
+
+
 def maybe_serialize_keras_objects(
     self,
     config,
@@ -123,7 +133,7 @@ def maybe_serialize_keras_objects(
 ):
     for key in maybe_serialize_keys:
         maybe_value = getattr(self, key, None)
-        if maybe_value:
+        if maybe_value is not None:
             if isinstance(maybe_value, dict):
                 config[key] = {
                     k: tf.keras.utils.serialize_keras_object(v) for k, v in maybe_value.items()
@@ -156,27 +166,30 @@ def maybe_deserialize_keras_objects(
 
 
 def extract_topk(ks, scores, labels):
-    max_k = int(max(ks))
+    max_k = tf.reduce_max(ks)
     topk_scores, topk_indices = tf.math.top_k(scores, max_k)
     topk_labels = gather_torch_like(labels, topk_indices, max_k)
     return topk_scores, topk_indices, topk_labels
 
 
 def tranform_label_to_onehot(labels, vocab_size):
-    return tf.one_hot(tf.reshape(labels, -1), vocab_size)
+    return tf.one_hot(tf.reshape(labels, (-1,)), vocab_size)
 
 
 def create_output_placeholder(scores, ks):
-    return tf.Variable(tf.zeros([scores.shape[0], len(ks)], tf.float32))
+    return tf.Variable(tf.zeros([tf.shape(scores)[0], len(ks)], tf.float32))
 
 
 def gather_torch_like(labels, indices, max_k):
-    gather_indices = []
-    for i in range(indices.shape[0]):
-        gather_indices.append(
+    # gather_indices = []
+    gather_indices = tf.TensorArray(tf.int32, size=tf.shape(indices)[0])
+    for i in range(tf.shape(indices)[0]):
+        gather_indices = gather_indices.write(
+            i,
             tf.concat(
                 [i * tf.ones((max_k, 1), tf.int32), tf.expand_dims(indices[i, :], -1)], axis=1
-            )
+            ),
         )
-    all_indices = tf.concat(gather_indices, 0)
-    return tf.reshape(tf.gather_nd(labels, all_indices), indices.shape)
+    all_indices = gather_indices.stack()
+    labels = tf.reshape(tf.gather_nd(labels, all_indices), tf.shape(indices))
+    return labels

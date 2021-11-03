@@ -19,11 +19,14 @@ import pytest
 from transformers4rec.config import transformer as tconf
 
 tr = pytest.importorskip("transformers4rec.tf")
+test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 config_classes = [
     tconf.XLNetConfig,
     tconf.LongformerConfig,
     tconf.GPT2Config,
+    tconf.BertConfig,
+    tconf.RobertaConfig,
     tconf.AlbertConfig,
 ]
 
@@ -34,19 +37,17 @@ lm_tasks = list(tr.masking.masking_registry.keys())
 
 # Test output of XLNet with different masking tasks using SequentialBlock
 @pytest.mark.parametrize("task", lm_tasks[2:])
-def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
+@pytest.mark.parametrize("config", config_classes)
+def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task, config):
 
-    col_group = yoochoose_schema
     tab_module = tr.TabularSequenceFeatures.from_schema(
-        col_group,
+        yoochoose_schema,
         max_sequence_length=20,
         aggregation="concat",
         masking=task,
     )
 
-    transformer_config = tconf.XLNetConfig.build(
-        d_model=64, n_head=4, n_layer=2, total_seq_length=20
-    )
+    transformer_config = config.build(d_model=64, n_head=4, n_layer=2, total_seq_length=20)
 
     block = tr.SequentialBlock(
         [
@@ -58,6 +59,24 @@ def test_transformer_block(yoochoose_schema, tf_yoochoose_like, task):
 
     outputs = block(tf_yoochoose_like)
 
+    assert outputs.ndim == 3
+    assert outputs.shape[-1] == 64
+
+
+@pytest.mark.parametrize("config", config_classes)
+def test_serialization_transformer_block(
+    tf_yoochoose_tabular_sequence_features, tf_yoochoose_like, config
+):
+
+    transformer_config = config.build(d_model=64, n_head=4, n_layer=2, total_seq_length=20)
+    transformer_block = tr.TransformerBlock(transformer_config)
+    copy_transformer = test_utils.assert_serialization(transformer_block)
+
+    body = tr.SequentialBlock(
+        [tf_yoochoose_tabular_sequence_features, tr.MLPBlock([64]), copy_transformer]
+    )
+
+    outputs = body(tf_yoochoose_like)
     assert outputs.ndim == 3
     assert outputs.shape[-1] == 64
 
