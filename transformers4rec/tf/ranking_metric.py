@@ -78,12 +78,12 @@ class RankingMetric(tf.keras.metrics.Metric):
         if self.labels_onehot:
             y_true = tf_utils.tranform_label_to_onehot(y_true, tf.shape(y_pred)[-1])
 
-        metric = self._metric(
+        self._metric(
             ks=tf.convert_to_tensor(self.top_ks),
             scores=tf.reshape(y_pred, [-1, tf.shape(y_pred)[-1]]),
             labels=y_true,
         )
-        self.metric_mean.append(metric)
+        self.metric_mean.append(self.accumulator)
 
     def result(self):
         # Computing the mean of the batch metrics (for each cut-off at topk)
@@ -93,7 +93,9 @@ class RankingMetric(tf.keras.metrics.Metric):
         self.metric_mean = []
 
     @abstractmethod
-    def _metric(self, ks: tf.Tensor, scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
+    def _metric(
+        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, return_value: bool = False
+    ) -> tf.Tensor:
         """
         Compute ranking metric over predictions and one-hot targets for different cut-offs.
         This method should be overridden by subclasses.
@@ -110,7 +112,9 @@ class PrecisionAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
         super(PrecisionAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
 
-    def _metric(self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
+    def _metric(
+        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, return_value: bool = False
+    ) -> tf.Tensor:
         """
         Compute precision@K for each provided cutoff in ks
         Parameters
@@ -136,8 +140,8 @@ class PrecisionAt(RankingMetric):
             self.accumulator.scatter_nd_update(
                 indices=indices, updates=tf.reduce_sum(topk_labels[:, : int(k)], axis=1) / float(k)
             )
-
-        return self.accumulator
+        if return_value:
+            return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("recall_at", "recall")
@@ -146,7 +150,9 @@ class RecallAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False, **kwargs):
         super(RecallAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
 
-    def _metric(self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
+    def _metric(
+        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, return_value: bool = False
+    ) -> tf.Tensor:
         """
         Compute recall@K for each provided cutoff in ks
         Parameters
@@ -190,8 +196,8 @@ class RecallAt(RankingMetric):
                 self.accumulator.scatter_nd_update(
                     indices=update_indices, updates=tf.reshape(batch_recall_k, (-1,))
                 )
-
-        return self.accumulator
+        if return_value:
+            return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("avg_precision_at", "avg_precision", "map")
@@ -202,7 +208,9 @@ class AvgPrecisionAt(RankingMetric):
         max_k = tf.reduce_max(self.top_ks)
         self.precision_at = PrecisionAt(top_ks=1 + np.array((range(max_k))))
 
-    def _metric(self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor) -> tf.Tensor:
+    def _metric(
+        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, return_value: bool = False
+    ) -> tf.Tensor:
         """
         Compute average precision @K for provided cutoff in ks
         Parameters
@@ -217,7 +225,9 @@ class AvgPrecisionAt(RankingMetric):
 
         bs = tf.shape(scores)[0]
         self.precision_at._build(shape=tf.shape(scores))
-        precisions = self.precision_at._metric(1 + tf.range(max_k), topk_scores, topk_labels)
+        precisions = self.precision_at._metric(
+            1 + tf.range(max_k), topk_scores, topk_labels, return_value=True
+        )
         rel_precisions = precisions * topk_labels
 
         for index in range(int(tf.shape(ks)[0])):
@@ -237,7 +247,8 @@ class AvgPrecisionAt(RankingMetric):
             )
             self.accumulator.scatter_nd_update(indices=indices, updates=tf_total_prec / clip_value)
             # Ensuring type is double, because it can be float if --fp16
-        return self.accumulator
+        if return_value:
+            return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("dcg_at", "dcg")
@@ -247,7 +258,12 @@ class DCGAt(RankingMetric):
         super(DCGAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot, **kwargs)
 
     def _metric(
-        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, log_base: int = 2
+        self,
+        ks: List[int],
+        scores: tf.Tensor,
+        labels: tf.Tensor,
+        return_value: bool = False,
+        log_base: int = 2,
     ) -> tf.Tensor:
 
         """
@@ -286,8 +302,8 @@ class DCGAt(RankingMetric):
                 indices=indices, updates=tf.cast(tf.reduce_sum(m, axis=1), tf.float32)
             )
             # Ensuring type is double, because it can be float if --fp16
-
-        return self.accumulator
+        if return_value:
+            return self.accumulator
 
 
 @ranking_metrics_registry.register_with_multiple_names("ndcg_at", "ndcg")
@@ -298,7 +314,12 @@ class NDCGAt(RankingMetric):
         self.dcg_at = DCGAt(top_ks)
 
     def _metric(
-        self, ks: List[int], scores: tf.Tensor, labels: tf.Tensor, log_base: int = 2
+        self,
+        ks: List[int],
+        scores: tf.Tensor,
+        labels: tf.Tensor,
+        return_value: bool = False,
+        log_base: int = 2,
     ) -> tf.Tensor:
 
         """
@@ -314,13 +335,13 @@ class NDCGAt(RankingMetric):
         # Compute discounted cumulative gains
         self.dcg_at._build(shape=tf.shape(scores))
         gains = self.dcg_at._metric(
-            ks=ks, labels=topk_labels, scores=topk_scores, log_base=log_base
+            ks=ks, labels=topk_labels, scores=topk_scores, log_base=log_base, return_value=True
         )
         self.accumulator.assign(gains)
         # Re-init states of dcg_at
         self.dcg_at._build(shape=tf.shape(scores))
         normalizing_gains = self.dcg_at._metric(
-            ks=ks, labels=topk_labels, scores=topk_labels, log_base=log_base
+            ks=ks, labels=topk_labels, scores=topk_labels, log_base=log_base, return_value=True
         )
 
         # Prevent divisions by zero
@@ -329,8 +350,8 @@ class NDCGAt(RankingMetric):
 
         updates = tf.gather_nd(gains, relevant_pos) / tf.gather_nd(normalizing_gains, relevant_pos)
         self.accumulator.scatter_nd_update(relevant_pos, updates)
-
-        return self.accumulator
+        if return_value:
+            return self.accumulator
 
 
 def check_inputs(ks, scores, labels):
