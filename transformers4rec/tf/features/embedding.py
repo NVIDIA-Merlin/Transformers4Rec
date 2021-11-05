@@ -76,6 +76,7 @@ class EmbeddingFeatures(InputBlock):
         schema: Optional[Schema] = None,
         name=None,
         add_default_pre=True,
+        embedding_tables={},
         **kwargs,
     ):
         if not item_id and schema and schema.select_by_tag(["item_id"]).column_names:
@@ -86,6 +87,7 @@ class EmbeddingFeatures(InputBlock):
             pre = [embedding_pre, pre] if pre else embedding_pre  # type: ignore
         self.feature_config = feature_config
         self.item_id = item_id
+        self.embedding_tables = embedding_tables
 
         super().__init__(
             pre=pre, post=post, aggregation=aggregation, name=name, schema=schema, **kwargs
@@ -150,12 +152,13 @@ class EmbeddingFeatures(InputBlock):
         if not feature_config:
             return None
 
-        output = cls(feature_config, item_id=item_id, schema=schema_copy, **kwargs)
+        output = cls(
+            feature_config, item_id=item_id, schema=schema_copy, embedding_tables={}, **kwargs
+        )
 
         return output
 
     def build(self, input_shapes):
-        self.embedding_tables = {}
         tables: Dict[str, TableConfig] = {}
         for name, feature in self.feature_config.items():
             table: TableConfig = feature.table
@@ -164,12 +167,13 @@ class EmbeddingFeatures(InputBlock):
 
         for name, table in tables.items():
             shape = (table.vocabulary_size, table.dim)
-            self.embedding_tables[name] = self.add_weight(
-                name="{}/embedding_weights".format(name),
-                trainable=True,
-                initializer=table.initializer,
-                shape=shape,
-            )
+            if name not in self.embedding_tables:
+                self.embedding_tables[name] = self.add_weight(
+                    name="{}/embedding_weights".format(name),
+                    trainable=True,
+                    initializer=table.initializer,
+                    shape=shape,
+                )
         super().build(input_shapes)
 
     def call(self, inputs: TabularData, **kwargs) -> TabularData:
@@ -243,7 +247,6 @@ class EmbeddingFeatures(InputBlock):
         config["feature_config"] = feature_configs
         if self.item_id:
             config["item_id"] = self.item_id
-
         return config
 
     @classmethod

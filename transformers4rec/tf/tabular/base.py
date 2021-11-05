@@ -614,6 +614,15 @@ class MergeTabular(TabularBlock):
             s = reduce(lambda a, b: a + b, [m.schema for m in self.merge_values])  # type: ignore
             self.set_schema(s)
 
+    def build(self, input_shape):
+        if isinstance(self.to_merge, dict):
+            layers = self.to_merge.values()
+        else:
+            layers = self.to_merge
+
+        for layer in layers:
+            layer.build(input_shape)
+
     @property
     def merge_values(self) -> List[tf.keras.layers.Layer]:
         if isinstance(self.to_merge, dict):
@@ -647,7 +656,7 @@ class MergeTabular(TabularBlock):
 
     def get_config(self):
         return maybe_serialize_keras_objects(
-            self, super(MergeTabular, self).get_config(), ["merge_layers"]
+            self, super(MergeTabular, self).get_config(), ["to_merge"]
         )
 
 
