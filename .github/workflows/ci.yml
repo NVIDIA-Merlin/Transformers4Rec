@@ -43,6 +43,9 @@ jobs:
     - name: Type-checks using mypy
       run: |
         mypy transformers4rec --install-types --non-interactive --no-strict-optional --ignore-missing-imports
+    - name: Spellcheck with codespell
+      run: |
+        codespell
     - name: Build
       run: |
         python setup.py develop
