@@ -1,1 +1,2 @@
 tensorflow>=2.3
+keras==2.6.*

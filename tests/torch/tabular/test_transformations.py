@@ -110,7 +110,7 @@ def test_stochastic_swap_noise_with_tabular_features_from_schema(
             feat_non_padding_mask = feat_non_padding_mask.unsqueeze(-1)
         replaced_mask_non_padded = pytorch.masked_select(replaced_mask, feat_non_padding_mask)
         replacement_rate = replaced_mask_non_padded.float().mean()
-        assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
+        assert replacement_rate == pytest.approx(replacement_prob, abs=0.20)
 
 
 @pytest.mark.parametrize("layer_norm", ["layer-norm", tr.TabularLayerNorm()])
@@ -232,7 +232,7 @@ def test_input_dropout_with_tabular_features_post(yoochoose_schema, torch_yoocho
             out_features_dropout[fname], mask_prev_not_zeros
         )
         output_dropout_zeros_rate = (out_features_dropout_ignoring_zeroes == 0.0).float().mean()
-        assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.1)
+        assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.2)
 
 
 def test_input_dropout_with_tabular_features_post_from_squema(

@@ -23,9 +23,14 @@ from transformers import PretrainedConfig, TFPreTrainedModel
 
 from ...config.transformer import T4RecConfig, transformer_registry
 from ..masking import MaskSequence
+from ..utils.tf_utils import (
+    get_tf_main_layer,
+    maybe_deserialize_keras_objects,
+    maybe_serialize_keras_objects,
+)
 from .base import Block
 
-TransformerBody = Union[TFPreTrainedModel, PretrainedConfig]
+TransformerBody = Union[TFPreTrainedModel, PretrainedConfig, tf.keras.layers.Layer]
 
 
 class TransformerPrepare(tf.keras.layers.Layer):
@@ -46,7 +51,8 @@ class TransformerBlock(Block):
     Parameters
     ----------
     transformer: TransformerBody
-        The T4RecConfig or a pre-trained HF object related to specific transformer architecture.
+        The T4RecConfig, The pre-trained HF model or the custom keras layer TF*MainLayer,
+        related to specific transformer architecture.
     masking:
         Needed when masking is applied on the inputs.
     """
@@ -67,10 +73,12 @@ class TransformerBlock(Block):
 
         self.transformer: TFPreTrainedModel
         if isinstance(transformer, T4RecConfig):
-            self.transformer = transformer.to_huggingface_tf_model()
+            self.transformer = get_tf_main_layer(transformer.to_huggingface_tf_model())
         elif isinstance(transformer, PretrainedConfig):
             model_cls = transformers.TF_MODEL_MAPPING[transformer.__class__]
-            self.transformer = model_cls(transformer)
+            self.transformer = get_tf_main_layer(model_cls(transformer))
+        elif isinstance(transformer, TFPreTrainedModel):
+            self.transformer = get_tf_main_layer(transformer)
         else:
             self.transformer = transformer
 
@@ -94,6 +102,21 @@ class TransformerBlock(Block):
         if prepare_module:
             self.prepare_module = prepare_module(transformer, masking)
         self.output_fn = output_fn
+
+    def get_config(self):
+        config = super().get_config()
+        config = maybe_serialize_keras_objects(
+            self, config, ["transformer", "prepare_module", "masking"]
+        )
+        return config
+
+    @classmethod
+    def from_config(cls, config):
+        config = maybe_deserialize_keras_objects(
+            config, ["transformer", "prepare_module", "masking"]
+        )
+
+        return super().from_config(config)
 
     @classmethod
     def from_registry(
@@ -156,9 +179,8 @@ class TransformerBlock(Block):
             if param in transformer_kwargs:
                 filtered_transformer_kwargs[param] = transformer_kwargs[param]
 
-        # In Keras the first (inputs) arg always needs to be set, therefore we supply the
-        # transformer_kwargs both as arg and **kwargs
-        model_outputs = self.transformer(transformer_kwargs, **filtered_transformer_kwargs)
+        # In HF the call accept inputs as a dictionnary contaning all needed tensors
+        model_outputs = self.transformer(filtered_transformer_kwargs)
         outputs = self.output_fn(model_outputs)
 
         # TODO: store the attention outputs for meta-data logging

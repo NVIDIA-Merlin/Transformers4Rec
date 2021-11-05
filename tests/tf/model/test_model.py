@@ -16,6 +16,8 @@
 
 import pytest
 
+from transformers4rec.config import transformer as tconf
+
 tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
 test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
@@ -51,6 +53,35 @@ def test_serialization_model(tf_tabular_features, tf_tabular_data, prediction_ta
 
     copy_model = test_utils.assert_serialization(model)
     test_utils.assert_loss_and_metrics_are_valid(copy_model, tf_tabular_data, targets)
+
+
+config_classes = [
+    tconf.XLNetConfig,
+    tconf.LongformerConfig,
+    tconf.GPT2Config,
+    tconf.BertConfig,
+    tconf.RobertaConfig,
+    tconf.AlbertConfig,
+]
+
+
+@pytest.mark.parametrize("config_cls", config_classes)
+def test_to_tf_model_from_config(yoochoose_schema, tf_yoochoose_like, config_cls):
+    transformer_config = config_cls.build(128, 4, 2, 20)
+
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=128,
+        masking="causal",
+    )
+    task = tr.BinaryClassificationTask("classification")
+    model = transformer_config.to_tf_model(input_module, task)
+
+    out = model(tf_yoochoose_like)
+
+    assert tf.shape(out)[0] == 100
 
 
 @pytest.mark.parametrize("d_model", [32, 64, 128])

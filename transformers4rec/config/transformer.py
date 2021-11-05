@@ -55,8 +55,43 @@ class T4RecConfig:
             *prediction_task,
             task_blocks=task_blocks,
             task_weights=task_weights,
-            loss_reduction=loss_reduction
+            loss_reduction=loss_reduction,
         ).to_model(**kwargs)
+
+    def to_tf_model(
+        self,
+        input_features,
+        *prediction_task,
+        task_blocks=None,
+        task_weights=None,
+        loss_reduction="mean",
+        **kwargs
+    ):
+        from .. import tf as tf4rec
+
+        if not isinstance(input_features, tf4rec.TabularSequenceFeatures):
+            raise ValueError("`input_features` must an instance of SequentialTabularFeatures")
+        if not all(isinstance(t, tf4rec.PredictionTask) for t in prediction_task):
+            raise ValueError(
+                "`task` is of the wrong type, please provide one or multiple "
+                "instance(s) of PredictionTask"
+            )
+
+        body = tf4rec.SequentialBlock(
+            [input_features, tf4rec.TransformerBlock(self, masking=input_features.masking)]
+        )
+
+        return tf4rec.Model(
+            tf4rec.Head(
+                body,
+                *prediction_task,
+                task_blocks=task_blocks,
+                task_weights=task_weights,
+                loss_reduction=loss_reduction,
+                inputs=input_features,
+            ),
+            **kwargs,
+        )
 
     def to_huggingface_tf_model(self):
         model_cls = transformers.TF_MODEL_MAPPING[self.transformers_config_cls]
@@ -114,7 +149,7 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
                 total_seq_length // axial_pos_shape_first_dim,
             ],
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -150,7 +185,7 @@ class GPT2Config(T4RecConfig, transformers.GPT2Config):
             n_ctx=total_seq_length,
             output_attentions=log_attention_weights,
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -183,7 +218,7 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -218,7 +253,7 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -253,7 +288,7 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
             layer_norm_eps=layer_norm_eps,
             output_attentions=log_attention_weights,
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -288,7 +323,7 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -320,7 +355,7 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -352,7 +387,7 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             vocab_size=1,
-            **kwargs
+            **kwargs,
         )
 
 
@@ -390,5 +425,5 @@ class TransfoXLConfig(T4RecConfig, transformers.TransfoXLConfig):
             vocab_size=1,  # As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used
             mem_len=1,  # We do not use mems, because we feed the full sequence to the Transformer models and not sliding segments (which is useful for the long sequences in NLP. As setting mem_len to 0 leads to NaN in loss, we set it to one, to minimize the computing overhead)
             div_val=1,  # Disables adaptative input (embeddings), because the embeddings are managed by TabularFeatures
-            **kwargs
+            **kwargs,
         )
