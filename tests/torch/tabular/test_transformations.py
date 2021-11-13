@@ -51,6 +51,32 @@ def test_stochastic_swap_noise(replacement_prob):
 
 
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
+def test_stochastic_swap_noise_disable_on_eval(replacement_prob):
+    NUM_SEQS = 100
+    SEQ_LENGTH = 80
+    PAD_TOKEN = 0
+
+    # Creating some input sequences with padding in the end
+    # (to emulate sessions with different lengths)
+    seq_inputs = {
+        "categ_seq_feat": pytorch.tril(
+            pytorch.randint(low=1, high=100, size=(NUM_SEQS, SEQ_LENGTH)), 1
+        ),
+        "cont_seq_feat": pytorch.tril(pytorch.rand((NUM_SEQS, SEQ_LENGTH)), 1),
+        "categ_non_seq_feat": pytorch.randint(low=1, high=100, size=(NUM_SEQS,)),
+    }
+
+    ssn = tr.StochasticSwapNoise(pad_token=PAD_TOKEN, replacement_prob=replacement_prob)
+    # Set the eval mode and checks that swap noise is not applied on eval
+    ssn.eval()
+    out_features_ssn = ssn(seq_inputs, input_mask=seq_inputs["categ_seq_feat"] != PAD_TOKEN)
+
+    for fname in seq_inputs:
+        replaced_mask = out_features_ssn[fname] == seq_inputs[fname]
+        assert pytorch.all(replaced_mask)
+
+
+@pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
 def test_stochastic_swap_noise_with_tabular_features(
     yoochoose_schema, torch_yoochoose_like, replacement_prob
 ):

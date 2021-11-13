@@ -170,7 +170,7 @@ def main():
     )
 
     if training_args.do_eval:
-        logger.info("Computing and loging AOT (Average Over Time) metrics")
+        logger.info("Computing and logging AOT (Average Over Time) metrics")
         results_df = pd.DataFrame.from_dict(results_over_time, orient="index")
         results_df.reset_index().to_csv(
             os.path.join(training_args.output_dir, "eval_train_results.csv"),
