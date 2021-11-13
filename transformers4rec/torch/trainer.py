@@ -288,6 +288,7 @@ class Trainer(BaseTrainer):
         like returning labels that are not exactly one input feature
         model
         """
+        inputs = self._prepare_inputs(inputs)
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
