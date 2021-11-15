@@ -20,8 +20,8 @@ echo "Running bandit"
 bandit -q -ll --recursive merlin_models
 # echo "Running pylint"
 # pylint tests
-echo "Running flake8-nb"
-flake8-nb examples
+# echo "Running flake8-nb"
+# flake8-nb examples
 
 # test out our codebase
 py.test --cov-config tests/unit/.coveragerc --cov-report term-missing --cov-report xml --cov-fail-under 70 --cov=. tests/tensorflow
