@@ -24,4 +24,4 @@ bandit -q -ll --recursive merlin_models
 # flake8-nb examples
 
 # test out our codebase
-py.test --cov-config tests/.coveragerc --cov-report term-missing --cov-report xml --cov-fail-under 70 --cov=. tests/tensorflow
+py.test --cov-config tests/.coveragerc --cov-report term-missing --cov-report xml --cov-fail-under 70 --cov=. tests
