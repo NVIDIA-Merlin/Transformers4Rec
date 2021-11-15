@@ -19,7 +19,7 @@ isort -c .
 echo "Running bandit"
 bandit -q -ll --recursive merlin_models
 echo "Running pylint"
-pylint merlin_models tests
+pylint tests
 echo "Running flake8-nb"
 flake8-nb examples
 
