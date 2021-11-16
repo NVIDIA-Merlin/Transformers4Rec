@@ -7,7 +7,7 @@ nvt_directory="$(dirname -- $ci_directory)"
 cd $nvt_directory
 
 echo "Installing models"
-pip install -e .[tensorflow, pytorch, nvtabular]
+pip install --user -e .[tensorflow,pytorch,nvtabular]
 
 # following checks requirement requirements-dev.txt to be installed
 echo "Running black --check"
@@ -18,10 +18,10 @@ echo "Running isort"
 isort -c .
 echo "Running bandit"
 bandit -q -ll --recursive merlin_models
-echo "Running pylint"
-pylint merlin_models tests
-echo "Running flake8-nb"
-flake8-nb examples
+# echo "Running pylint"
+# pylint tests
+# echo "Running flake8-nb"
+# flake8-nb examples
 
 # test out our codebase
-py.test --cov-config tests/unit/.coveragerc --cov-report term-missing --cov-report xml --cov-fail-under 70 --cov=. tests/tensorflow
+py.test --cov-config tests/.coveragerc --cov-report term-missing --cov-report xml --cov=. tests/tf
