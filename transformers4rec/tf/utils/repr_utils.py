@@ -83,7 +83,7 @@ def _layer_repr(self, track_children=True):
             children = children + to_add
 
         for key, child in children:
-            if not child:
+            if child is not None:
                 continue
             mod_str = repr(child)
             mod_str = _addindent(mod_str, 2)

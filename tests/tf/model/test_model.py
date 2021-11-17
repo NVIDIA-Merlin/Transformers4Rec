@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import tempfile
 
 import pytest
 
@@ -23,9 +24,8 @@ tr = pytest.importorskip("transformers4rec.tf")
 test_utils = pytest.importorskip("transformers4rec.tf.utils.testing_utils")
 
 
-# TODO: Fix this test when `run_eagerly=False`
-# @pytest.mark.parametrize("run_eagerly", [True, False])
-def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly=True):
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_simple_model(tf_tabular_features, tf_tabular_data, run_eagerly):
     targets = {"target": tf.cast(tf.random.uniform((100,), maxval=2, dtype=tf.int32), tf.float32)}
 
     inputs = tf_tabular_features
@@ -85,83 +85,65 @@ def test_to_tf_model_from_config(yoochoose_schema, tf_yoochoose_like, config_cls
 
 
 @pytest.mark.parametrize("d_model", [32, 64, 128])
-def test_with_d_model_different_from_item_dim(tf_yoochoose_like, yoochoose_schema, d_model):
+def test_with_d_model_different_from_item_dim(
+    tf_yoochoose_like, tf_next_item_prediction_model, d_model
+):
 
-    input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=d_model,
-        masking="causal",
-    )
-    transformer_config = tr.GPT2Config.build(d_model, 4, 2, 20)
-    body = tr.SequentialBlock(
-        [
-            input_module,
-            tr.TransformerBlock(transformer_config, masking=input_module.masking),
-        ]
-    )
-
-    task = tr.NextItemPredictionTask(weight_tying=True)
-    model = task.to_model(body=body)
+    model = tf_next_item_prediction_model(d_output=d_model)
 
     assert model(tf_yoochoose_like).shape[-1] == 51997
 
 
 @pytest.mark.parametrize("masking", ["causal", "mlm"])
-def test_output_shape_mode_eval(tf_yoochoose_like, yoochoose_schema, masking):
+def test_output_shape_mode_eval(tf_yoochoose_like, tf_next_item_prediction_model, masking):
 
-    input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking=masking,
-    )
-
-    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
-    body = tr.SequentialBlock(
-        [
-            input_module,
-            tr.TransformerBlock(transformer_config, masking=input_module.masking),
-        ]
-    )
-    task = tr.NextItemPredictionTask(weight_tying=True)
-    model = task.to_model(body=body)
+    model = tf_next_item_prediction_model(masking=masking)
 
     out = model(tf_yoochoose_like, training=False)
     assert out.shape[0] == tf_yoochoose_like["item_id/list"].shape[0]
 
 
 @pytest.mark.parametrize("masking", ["causal", "mlm"])
-def test_next_item_fit(tf_yoochoose_like, yoochoose_schema, masking, run_eagerly=True):
+@pytest.mark.parametrize("run_eagerly", [True, False])
+def test_next_item_fit_model(
+    tf_yoochoose_like, tf_next_item_prediction_model, masking, run_eagerly
+):
 
-    input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
-        max_sequence_length=20,
-        continuous_projection=64,
-        d_output=64,
-        masking=masking,
-    )
+    model = tf_next_item_prediction_model(masking=masking)
+    model.compile(optimizer="adam", run_eagerly=run_eagerly)
 
-    transformer_config = tr.XLNetConfig.build(d_model=64, n_head=8, n_layer=2, total_seq_length=20)
-    body = tr.SequentialBlock(
-        [
-            input_module,
-            tr.TransformerBlock(transformer_config, masking=input_module.masking),
-        ]
-    )
-    task = tr.NextItemPredictionTask(weight_tying=True)
-    model = task.to_model(body=body)
+    dataset = tf.data.Dataset.from_tensor_slices(
+        (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
+    ).batch(50)
+    losses = model.fit(dataset, epochs=5)
+    metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
+
+    assert len(metrics.keys()) == 9
+    assert len(losses.epoch) == 5
+    assert all(loss >= 0 for loss in losses.history["loss"])
+    assert losses.history["loss"][-1] < losses.history["loss"][0]
+
+
+@pytest.mark.parametrize("run_eagerly", [True, False])
+@pytest.mark.parametrize("config", config_classes)
+def test_save_and_load_transformer_model(
+    tf_next_item_prediction_model,
+    tf_yoochoose_like,
+    config,
+    run_eagerly,
+):
+    model = tf_next_item_prediction_model(config=config)
     model.compile(optimizer="adam", run_eagerly=run_eagerly)
 
     dataset = tf.data.Dataset.from_tensor_slices(
         (tf_yoochoose_like, tf_yoochoose_like["item_id/list"])
     ).batch(50)
 
-    losses = model.fit(dataset, epochs=5)
-    metrics = model.evaluate(tf_yoochoose_like, tf_yoochoose_like["item_id/list"], return_dict=True)
+    inputs = next(iter(dataset))[0]
+    model._set_inputs(inputs)
 
-    assert len(metrics.keys()) == 6
-    assert len(losses.epoch) == 5
-    assert all(loss >= 0 for loss in losses.history["loss"])
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model.save(tmpdir)
+        model = tf.keras.models.load_model(tmpdir)
+
+    assert tf.shape(model(inputs))[1] == 51997

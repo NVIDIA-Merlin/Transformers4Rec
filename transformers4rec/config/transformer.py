@@ -308,6 +308,7 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
         dropout=0.3,
         pad_token=0,
         log_attention_weights=False,
+        mem_len=1,
         **kwargs
     ):
         return cls(
@@ -323,6 +324,7 @@ class XLNetConfig(T4RecConfig, transformers.XLNetConfig):
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
             vocab_size=1,
+            mem_len=mem_len,
             **kwargs,
         )
 

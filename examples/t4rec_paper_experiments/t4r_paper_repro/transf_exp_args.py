@@ -368,7 +368,7 @@ class ModelArguments:
     item_id_embeddings_init_std: Optional[float] = field(
         default=0.5,
         metadata={
-            "help": "Uniform distribution maximum and minimun (-bound) value to be used to "
+            "help": "Uniform distribution maximum and minimum (-bound) value to be used to "
             "initialize the item id embedding (usually must be higher than "
             "--categs_embeddings_init_uniform_bound, as those weights are also used "
             "as the output layer when --mf_constrained_embeddings)"
@@ -378,7 +378,7 @@ class ModelArguments:
     other_embeddings_init_std: Optional[float] = field(
         default=0.05,
         metadata={
-            "help": "Uniform distribution maximum and minimun (-bound) value to be used "
+            "help": "Uniform distribution maximum and minimum (-bound) value to be used "
             "to initialize the other feature embeddings (other than the item_id, "
             "which is defined by --item_id_embeddings_init_uniform_bound)"
         },

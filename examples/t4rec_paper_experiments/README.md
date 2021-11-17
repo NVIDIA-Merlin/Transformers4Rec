@@ -9,7 +9,7 @@ The original experiments for that paper were performed in a former pre-release v
 
 In this example, we demonstrate how to reproduce the most of the paper experiments (only Transformers, not the baselines algorithms) with the PyTorch API of the released Transformers4Rec library. 
 
-For researchers and practioners aiming to perform experiments similar to the ones presented in our paper (e.g. incremental training and evaluation of session-based recommendation with Transformers), we strongly encourage the usage of our released PyTorch API (like in this example), because it is more modularized and documented than the original scripts, and is supported by the NVIDIA Merlin team.
+For researchers and practitioners aiming to perform experiments similar to the ones presented in our paper (e.g. incremental training and evaluation of session-based recommendation with Transformers), we strongly encourage the usage of our released PyTorch API (like in this example), because it is more modularized and documented than the original scripts, and is supported by the NVIDIA Merlin team.
 
 A few warnings:
 - It is natural to find some differences in evaluation metrics results, as the library was completely refactored after the paper experiments and even the same random seeds won't initialize the model weights identically when layers are build in different order.  

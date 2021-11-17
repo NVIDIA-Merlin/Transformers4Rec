@@ -1,2 +1,4 @@
 wandb
 pandas
+nvidia-pyindex
+nvidia-dllogger

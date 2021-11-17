@@ -55,6 +55,10 @@ class StochasticSwapNoise(TabularTransformation):
     def augment(
         self, input_tensor: torch.Tensor, mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
+        # Applies this transformation only during training
+        if not self.training:
+            return input_tensor
+
         with torch.no_grad():
             if mask is not None:
                 if input_tensor.ndim == mask.ndim - 1:

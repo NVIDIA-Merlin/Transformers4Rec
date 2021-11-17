@@ -179,7 +179,7 @@ class TransformerBlock(Block):
             if param in transformer_kwargs:
                 filtered_transformer_kwargs[param] = transformer_kwargs[param]
 
-        # In HF the call accept inputs as a dictionnary contaning all needed tensors
+        # In HF the call accept inputs as a dictionary containing all needed tensors
         model_outputs = self.transformer(filtered_transformer_kwargs)
         outputs = self.output_fn(model_outputs)
 

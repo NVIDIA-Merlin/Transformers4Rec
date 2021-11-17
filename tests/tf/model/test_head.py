@@ -143,7 +143,7 @@ def test_item_prediction_head_shape(tf_yoochoose_tabular_sequence_features, tf_y
     task = tr.NextItemPredictionTask(weight_tying=True)
     head = task.to_head(body)
 
-    outputs = head(body(tf_yoochoose_like))
+    outputs = head(tf_yoochoose_like)
 
     assert outputs.shape[-1] == 51997
 
@@ -160,9 +160,7 @@ def test_item_prediction_loss_and_metrics(
     task = tr.NextItemPredictionTask(weight_tying=True)
     head = task.to_head(body)
 
-    body_outputs = body(tf_yoochoose_like)
-
-    loss = head.compute_loss(body_outputs=body_outputs, targets=None)
+    loss = head.compute_loss(body_outputs=tf_yoochoose_like, targets=None)
 
     metrics = head.metric_results()
     assert len(metrics) == 6
@@ -183,6 +181,6 @@ def test_item_prediction_head_with_wrong_body(tf_tabular_features, tf_tabular_da
         body = tr.SequentialBlock([tf_tabular_features, tr.MLPBlock([64])])
         task = tr.NextItemPredictionTask(weight_tying=True)
         head = task.to_head(body)
-        _ = head(body(tf_tabular_data))
+        _ = head(tf_tabular_data)
 
         assert "NextItemPredictionTask needs a 3-dim vector as input, found:" in str(excinfo.value)

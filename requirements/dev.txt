@@ -13,3 +13,4 @@ recommonmark>=0.6
 tensorflow-metadata
 tensorflow-estimator==2.6.*
 tensorflow-ranking>=0.4
+codespell
