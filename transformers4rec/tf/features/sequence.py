@@ -64,6 +64,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
         aggregation: Optional[TabularAggregationType] = None,
         schema: Optional[Schema] = None,
         name: Optional[str] = None,
+        embedding_tables={},
         **kwargs
     ):
         super().__init__(
@@ -74,6 +75,7 @@ class SequenceEmbeddingFeatures(embedding.EmbeddingFeatures):
             aggregation=aggregation,
             schema=schema,
             name=name,
+            embedding_tables=embedding_tables,
             **kwargs,
         )
         self.padding_idx = padding_idx

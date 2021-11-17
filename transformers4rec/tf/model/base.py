@@ -27,6 +27,7 @@ from transformers import TFSequenceSummary
 from merlin_standard_lib import Schema, Tag
 
 from ..features.sequence import TabularFeaturesType
+from ..ranking_metric import process_metrics
 from ..utils.tf_utils import (
     LossMixin,
     MetricsMixin,
@@ -189,7 +190,7 @@ class PredictionTask(Layer, LossMixin, MetricsMixin):
 
     def reset_metrics(self):
         for metric in self.metrics:
-            metric.reset()
+            metric.reset_state()
 
     def to_head(self, body, inputs=None, **kwargs) -> "Head":
         return Head(body, self, inputs=inputs, **kwargs)
@@ -363,13 +364,15 @@ class Head(tf.keras.layers.Layer):
     def build(self, input_shape):
         from .prediction_task import NextItemPredictionTask
 
-        # set modules for item prediction task
+        self.body.build(input_shape)
+        input_shape = self.body.compute_output_shape(input_shape)
+
         for task in self.prediction_task_dict.values():
             if isinstance(task, NextItemPredictionTask):
                 task.build(input_shape, self.body, inputs=self.inputs)
         return super().build(input_shape)
 
-    def call(self, body_outputs: tf.Tensor, call_body=False, always_output_dict=False, **kwargs):
+    def call(self, body_outputs: tf.Tensor, call_body=True, always_output_dict=False, **kwargs):
         outputs = {}
 
         if call_body:
@@ -384,17 +387,19 @@ class Head(tf.keras.layers.Layer):
         return outputs
 
     def compute_loss(
-        self, body_outputs, targets, training=False, call_body=False, **kwargs
+        self, body_outputs, targets, training=False, call_body=True, compute_metrics=True, **kwargs
     ) -> tf.Tensor:
         losses = []
 
-        if call_body:
-            body_outputs = self.body(body_outputs)
-
-        predictions = self(body_outputs, always_output_dict=True)
+        predictions = self(body_outputs, call_body=call_body, always_output_dict=True)
         for name, task in self.prediction_task_dict.items():
             loss = task.compute_loss(
-                predictions[name], targets, call_task=False, training=training, **kwargs
+                predictions[name],
+                targets,
+                call_task=False,
+                training=training,
+                compute_metrics=compute_metrics,
+                **kwargs,
             )
             losses.append(loss * self._task_weight_dict[name])
 
@@ -463,7 +468,7 @@ class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
         gradients = tape.gradient(total_loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(gradients, self.trainable_variables))
 
-        metrics = {metric.name: metric.result() for metric in self.metrics}
+        metrics = process_metrics(self.metrics, prefix="train_")
         metrics["loss"] = loss
         metrics["regularization_loss"] = regularization_loss
         metrics["total_loss"] = total_loss
@@ -480,7 +485,8 @@ class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
 
         total_loss = loss + regularization_loss
 
-        metrics = {metric.name: metric.result() for metric in self.metrics}
+        metrics = process_metrics(self.metrics, prefix="eval_")
+
         metrics["loss"] = loss
         metrics["regularization_loss"] = regularization_loss
         metrics["total_loss"] = total_loss
@@ -488,6 +494,7 @@ class BaseModel(tf.keras.Model, LossMixin, abc.ABC):
         return metrics
 
 
+@tf.keras.utils.register_keras_serializable(package="transformers4rec")
 class Model(BaseModel):
     def __init__(
         self, *head: Head, head_weights: Optional[List[float]] = None, name=None, **kwargs
@@ -509,8 +516,7 @@ class Model(BaseModel):
         # TODO: Optimize this
         outputs = {}
         for head in self.heads:
-            body_outputs = head.body(inputs)
-            outputs.update(head(body_outputs, call_body=False, always_output_dict=True))
+            outputs.update(head(inputs, call_body=True, always_output_dict=True))
 
         if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]
