@@ -59,6 +59,15 @@ def test_score_different_from_zero(tf_ranking_metrics_inputs, metric):
     assert all(e > 0 for e in result)
 
 
+@pytest.mark.parametrize("metric", list_metrics)
+def test_score_different_between_thresholds(tf_ranking_metrics_inputs, metric):
+    metric = tr.ranking_metric.ranking_metrics_registry[metric](top_ks=[5, 20], labels_onehot=True)
+    result = metric(
+        y_pred=tf_ranking_metrics_inputs["scores"], y_true=tf_ranking_metrics_inputs["labels"]
+    )
+    assert result[-1] != result[0]
+
+
 # compare implemented metrics w.r.t tensorflow_ranking
 metrics_to_compare = [
     (tfr.keras.metrics.RecallMetric, "recall"),
