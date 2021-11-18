@@ -358,7 +358,9 @@ def process_metrics(metrics, prefix=""):
         if getattr(metric, "top_ks", None):
             for i, ks in enumerate(metric.top_ks):
 
-                metrics_proc.update({f"{prefix}{metric.name}{ks}": tf.gather(results, i)})
+                metrics_proc.update(
+                    {f"{prefix}{metric.name.split('_')[0]}@{ks}": tf.gather(results, i)}
+                )
         else:
             metrics_proc[metric.name] = results
     return metrics_proc
