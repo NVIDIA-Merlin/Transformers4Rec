@@ -59,10 +59,10 @@ def fit_and_evaluate(trainer, start_time_index, end_time_index, input_dir):
 
     Returns
     -------
-    aot_metrics: dict
-        The average over time of ranking metrics.
+    indexed_by_time_metrics: dict
+        The dictionary of ranking metrics: each item is the list of scores over time indices.
     """
-    aot_metrics = {}
+    indexed_by_time_metrics = {}
     for time_index in range(start_time_index, end_time_index + 1):
         # 1. Set data
         time_index_train = time_index
@@ -82,16 +82,20 @@ def fit_and_evaluate(trainer, start_time_index, end_time_index, input_dir):
         print("\n***** Evaluation results for day %s:*****\n" % time_index_eval)
         for key in sorted(eval_metrics.keys()):
             if "at_" in key:
-                print(" %s = %s" % (key.replace("at_", "@"), str(eval_metrics[key])))
-                if "AOT_" + key.replace("at_", "@") in aot_metrics:
-                    aot_metrics["AOT_" + key.replace("_at_", "@")] += [eval_metrics[key]]
+                print(" %s = %s" % (key.replace("_at_", "@"), str(eval_metrics[key])))
+                if "indexed_by_time_" + key.replace("_at_", "@") in indexed_by_time_metrics:
+                    indexed_by_time_metrics["indexed_by_time_" + key.replace("_at_", "@")] += [
+                        eval_metrics[key]
+                    ]
                 else:
-                    aot_metrics["AOT_" + key.replace("_at_", "@")] = [eval_metrics[key]]
+                    indexed_by_time_metrics["indexed_by_time_" + key.replace("_at_", "@")] = [
+                        eval_metrics[key]
+                    ]
 
         # free GPU for next day training
         wipe_memory()
 
-    return aot_metrics
+    return indexed_by_time_metrics
 
 
 def wipe_memory():
