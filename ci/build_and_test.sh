@@ -8,6 +8,7 @@ cd $nvt_directory
 
 echo "Installing models"
 pip install --user -e .[tensorflow,pytorch,nvtabular]
+pip install numpy==1.20
 
 # following checks requirement requirements-dev.txt to be installed
 echo "Running black --check"
