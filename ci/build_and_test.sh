@@ -8,6 +8,7 @@ cd $nvt_directory
 
 echo "Installing models"
 pip install --user -e .[tensorflow,pytorch,nvtabular]
+pip install --user numpy==1.20
 
 # following checks requirement requirements-dev.txt to be installed
 echo "Running black --check"
@@ -24,4 +25,4 @@ bandit -q -ll --recursive merlin_models
 # flake8-nb examples
 
 # test out our codebase
-py.test --cov-config tests/.coveragerc --cov-report term-missing --cov-report xml --cov=. tests/tf
+py.test --cov-config tests/.coveragerc --cov-report term-missing --cov-report xml --cov=. tests/tf tests/torch
