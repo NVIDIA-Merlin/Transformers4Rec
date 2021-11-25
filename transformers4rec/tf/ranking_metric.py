@@ -330,7 +330,9 @@ class NDCGAt(RankingMetric):
         relevant_pos = tf.where(normalizing_gains != 0)
         tf.where(normalizing_gains == 0, 0.0, gains)
 
-        updates = tf.gather_nd(gains, relevant_pos) / tf.gather_nd(normalizing_gains, relevant_pos)
+        updates = tf.gather_nd(self.accumulator, relevant_pos) / tf.gather_nd(
+            normalizing_gains, relevant_pos
+        )
         self.accumulator.scatter_nd_update(relevant_pos, updates)
 
 
@@ -355,7 +357,10 @@ def process_metrics(metrics, prefix=""):
         results = metric.result()
         if getattr(metric, "top_ks", None):
             for i, ks in enumerate(metric.top_ks):
-                metrics_proc.update({f"{prefix}{metric.name}{ks}": tf.gather(results, i)})
+
+                metrics_proc.update(
+                    {f"{prefix}{metric.name.split('_')[0]}@{ks}": tf.gather(results, i)}
+                )
         else:
             metrics_proc[metric.name] = results
     return metrics_proc
