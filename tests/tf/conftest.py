@@ -20,6 +20,26 @@ import numpy as np
 import pytest
 
 tf = pytest.importorskip("tensorflow")
+if tf:
+
+    def enable_tf_gpus_memory_growth():
+        """Sets the GPU memory to be allocated as need by TF, so that TF does not
+        reserve all GPU memory and causes OOM errors on the PyTorch tests
+        """
+        gpus = tf.config.list_physical_devices("GPU")
+        if gpus:
+            try:
+                # Currently, memory growth needs to be the same across GPUs
+                for gpu in gpus:
+                    tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.list_logical_devices("GPU")
+                print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+            except RuntimeError as e:
+                # Memory growth must be set before GPUs have been initialized
+                print(e)
+
+    enable_tf_gpus_memory_growth()
+
 tr = pytest.importorskip("transformers4rec.tf")
 schema_utils = pytest.importorskip("transformers4rec.tf.utils.schema_utils")
 
