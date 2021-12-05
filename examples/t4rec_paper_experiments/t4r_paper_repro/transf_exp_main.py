@@ -30,14 +30,14 @@ from merlin_standard_lib import Schema, Tag
 from transformers4rec.torch import Trainer
 from transformers4rec.torch.utils.examples_utils import wipe_memory
 
-from .exp_outputs import (
+from exp_outputs import (
     config_dllogger,
     creates_output_dir,
     log_aot_metric_results,
     log_metric_results,
     log_parameters,
 )
-from .transf_exp_args import DataArguments, ModelArguments, TrainingArguments
+from transf_exp_args import DataArguments, ModelArguments, TrainingArguments
 
 logger = logging.getLogger(__name__)
 

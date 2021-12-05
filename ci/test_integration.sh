@@ -21,9 +21,12 @@ fi
 # Run integration tests for PyTorch and Inference containers
 
 ## Install requirements
-pip install -r examples/t4rec_paper_experiments/requirements.txt
+cd examples/t4rec_paper_experiments
+pip install -r requirements.txt
 
 ## Get data
+cd t4r_paper_repro
+FEATURE_SCHEMA_PATH=../datasets_configs/ecom_rees46/rees46_schema.pbtxt
 pip install gdown
 gdown https://drive.google.com/uc?id=1payLwuwfa_QG6GvFVg4KT1w7dSkO-jPZ
 apt-get install unzip -y
@@ -32,7 +35,7 @@ unzip -d $DATA_PATH "rees46_ecom_dataset_small_for_ci.zip"
 
 ## Run tests
 ### GPT-2 (CLM) - Item Id feature
-CUDA_VISIBLE_DEVICES=$devices python3 -m t4r_paper_repro.transf_exp_main --output_dir ./tmp/ --overwrite_output_dir --do_train --do_eval --validate_every 10 --logging_steps 20 --save_steps 0 --data_path $DATA_PATH --features_schema_path $FEATURE_SCHEMA_PATH --fp16 --data_loader_engine nvtabular --start_time_window_index 1 --final_time_window_index 3 --time_window_folder_pad_digits 4 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 512 --similarity_type concat_mlp --tf_out_activation tanh --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_schedule linear_with_warmup --hidden_act gelu --num_train_epochs 5 --dataloader_drop_last --compute_metrics_each_n_steps 1 --session_seq_length_max 20 --eval_on_last_item_seq_only --mf_constrained_embeddings --layer_norm_featurewise --per_device_train_batch_size 384 --learning_rate 0.0008781937894379981 --dropout 0.2 --input_dropout 0.4 --weight_decay 1.4901138106122045e-05 --d_model 128 --item_embedding_dim 448 --n_layer 1 --n_head 1 --label_smoothing 0.9 --stochastic_shared_embeddings_replacement_prob 0.0 --item_id_embeddings_init_std 0.03 --other_embeddings_init_std 0.034999999999999996 --eval_on_test_set --seed 100 --report_to none
+CUDA_VISIBLE_DEVICES=$devices python3 transf_exp_main.py --output_dir ./tmp/ --overwrite_output_dir --do_train --do_eval --validate_every 10 --logging_steps 20 --save_steps 0 --data_path $DATA_PATH --features_schema_path $FEATURE_SCHEMA_PATH --fp16 --data_loader_engine nvtabular --start_time_window_index 1 --final_time_window_index 3 --time_window_folder_pad_digits 4 --model_type gpt2 --loss_type cross_entropy --per_device_eval_batch_size 512 --similarity_type concat_mlp --tf_out_activation tanh --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_schedule linear_with_warmup --hidden_act gelu --num_train_epochs 5 --dataloader_drop_last --compute_metrics_each_n_steps 1 --session_seq_length_max 20 --eval_on_last_item_seq_only --mf_constrained_embeddings --layer_norm_featurewise --per_device_train_batch_size 384 --learning_rate 0.0008781937894379981 --dropout 0.2 --input_dropout 0.4 --weight_decay 1.4901138106122045e-05 --d_model 128 --item_embedding_dim 448 --n_layer 1 --n_head 1 --label_smoothing 0.9 --stochastic_shared_embeddings_replacement_prob 0.0 --item_id_embeddings_init_std 0.03 --other_embeddings_init_std 0.034999999999999996 --eval_on_test_set --seed 100 --report_to none
 
 ### Transformer-XL (CLM) - Item Id feature
 CUDA_VISIBLE_DEVICES=$devices python3 -m t4r_paper_repro.transf_exp_main --output_dir ./tmp/ --overwrite_output_dir --do_train --do_eval --validate_every 10 --logging_steps 20 --save_steps 0 --data_path $DATA_PATH --features_schema_path $FEATURE_SCHEMA_PATH --fp16 --data_loader_engine nvtabular --start_time_window_index 1 --final_time_window_index 3 --time_window_folder_pad_digits 4 --model_type transfoxl --loss_type cross_entropy --per_device_eval_batch_size 512 --similarity_type concat_mlp --tf_out_activation tanh --inp_merge mlp --learning_rate_warmup_steps 0 --learning_rate_schedule linear_with_warmup --hidden_act gelu --num_train_epochs 5 --dataloader_drop_last --compute_metrics_each_n_steps 1 --session_seq_length_max 20 --eval_on_last_item_seq_only --mf_constrained_embeddings --layer_norm_featurewise --per_device_train_batch_size 512 --learning_rate 0.001007765821083962 --dropout 0.1 --input_dropout 0.30000000000000004 --weight_decay 1.0673054163921092e-06 --d_model 448 --item_embedding_dim 320 --n_layer 1 --n_head 1 --label_smoothing 0.2 --stochastic_shared_embeddings_replacement_prob 0.02 --item_id_embeddings_init_std 0.15 --other_embeddings_init_std 0.01 --eval_on_test_set --seed 100 --report_to none
