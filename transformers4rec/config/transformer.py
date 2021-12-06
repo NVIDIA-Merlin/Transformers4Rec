@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 
+import tensorflow as tf
 import transformers
 
 from merlin_standard_lib import Registry
@@ -64,7 +65,7 @@ class T4RecConfig:
         *prediction_task,
         task_blocks=None,
         task_weights=None,
-        loss_reduction="mean",
+        loss_reduction=tf.reduce_mean,
         **kwargs
     ):
         from .. import tf as tf4rec
