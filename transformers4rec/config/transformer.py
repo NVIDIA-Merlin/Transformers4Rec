@@ -14,8 +14,9 @@
 # limitations under the License.
 #
 
-import transformers
 import tensorflow as tf
+import transformers
+
 from merlin_standard_lib import Registry
 
 transformer_registry: Registry = Registry("transformers")
