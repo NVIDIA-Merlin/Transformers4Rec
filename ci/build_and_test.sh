@@ -7,7 +7,6 @@ nvt_directory="$(dirname -- $ci_directory)"
 cd $nvt_directory
 
 echo "Installing models"
-pip install git+https://github.com/NVIDIA-Merlin/NVTabular.git --user
 pip install --user -e .[tensorflow,pytorch]
 pip install --user numpy==1.20
 
