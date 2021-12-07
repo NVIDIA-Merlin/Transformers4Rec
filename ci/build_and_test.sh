@@ -7,7 +7,7 @@ nvt_directory="$(dirname -- $ci_directory)"
 cd $nvt_directory
 
 echo "Installing models"
-pip install --user -e .[tensorflow,pytorch,nvtabular]
+pip install --user -e .[tensorflow,pytorch]
 pip install --user numpy==1.20
 
 # following checks requirement requirements-dev.txt to be installed
