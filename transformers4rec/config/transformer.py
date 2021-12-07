@@ -19,10 +19,10 @@ import transformers
 from merlin_standard_lib import Registry
 
 try:
-   import tensorflow as tf
+    import tensorflow as tf
 except ImportError:
     tf = None
-    
+
 transformer_registry: Registry = Registry("transformers")
 
 
@@ -62,8 +62,9 @@ class T4RecConfig:
             task_weights=task_weights,
             loss_reduction=loss_reduction,
         ).to_model(**kwargs)
-    
-    if tf: 
+
+    if tf:
+
         def to_tf_model(
             self,
             input_features,
