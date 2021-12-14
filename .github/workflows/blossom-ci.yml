@@ -17,10 +17,14 @@ name: Blossom-CI
 on:
   issue_comment:
     types: [created]
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
       inputs:
           platform:
-            description: 'runs-on argument'     
+            description: 'runs-on pull request, push, and comment'     
             required: false
           args:
             description: 'argument'     
