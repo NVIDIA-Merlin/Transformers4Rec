@@ -17,14 +17,10 @@ name: Blossom-CI
 on:
   issue_comment:
     types: [created]
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
       inputs:
           platform:
-            description: 'runs-on pull request, push, and comment'     
+            description: 'runs-on argument'     
             required: false
           args:
             description: 'argument'     
@@ -50,7 +46,7 @@ jobs:
       rjzamora,\
       rnyak,\
       sararb,\
-      ', format('{0},', github.actor)) && github.event.comment.body == '/blossom-ci'
+      ', format('{0},', github.actor)) && github.event.comment.body == 'blossom-ci'
     steps:
       - name: Check if comment is issued by authorized person
         run: blossom-ci
@@ -117,4 +113,3 @@ jobs:
           OPERATION: 'POST-PROCESSING'
           CI_SERVER: ${{ secrets.CI_SERVER }}
           REPO_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
