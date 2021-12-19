@@ -276,3 +276,38 @@ class NDCGAt(RankingMetric):
         gains[relevant_pos] /= normalizing_gains[relevant_pos]
 
         return gains
+
+
+@ranking_metrics_registry.register_with_multiple_names("mrr_at", "mrr")
+class MeanRecipricolRankAt(RankingMetric):
+    def __init__(self, top_ks=None, labels_onehot=False):
+        super(MeanRecipricolRankAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+
+    def _metric(
+            self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
+    ) -> torch.Tensor:
+        """Compute mean recipricol rank at K for provided cutoffs (ignoring ties)
+
+        Parameters
+        ----------
+        ks : torch.Tensor or list
+            list of cutoffs
+        scores : torch.Tensor
+            predicted item scores
+        labels : torch.Tensor
+            true item labels
+
+        Returns
+        -------
+        torch.Tensor :
+            list of mean recipricol rank at cutoffs
+        """
+        ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
+        topk_scores, topk_indices, topk_labels = torch_utils.extract_topk(ks, scores, labels)
+
+        results = torch.zeros(scores.shape[0], len(ks)) \
+            .to(device=scores.device, dtype=torch.float32)
+        for index, k in enumerate(ks):
+            values, _ = (topk_labels[:, :k] / (torch.arange(k) + 1)).max(dim=1)
+            results[:, index] = values
+        return results
