@@ -17,7 +17,6 @@
 import pytest
 import torch
 
-# from transformers4rec.torch.ranking_metric import MeanRecipricolRankAt
 from transformers4rec.torch.ranking_metric import MeanRecipricolRankAt
 
 tr = pytest.importorskip("transformers4rec.torch")
