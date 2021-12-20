@@ -50,14 +50,19 @@ def test_mean_recipricol_rank():
     metric = MeanRecipricolRankAt()
     metric.top_ks = [1, 2, 3, 4]
     metric.labels_onehot = False
-    result = metric(torch.tensor([[1, 2, 3, 4, 5, 4, 3, 2, 1],
-                                  [1, 2, 3, 4, 5, 4, 3, 2, 1],
-                                  [1, 2, 3, 4, 5, 4, 3, 2, 1]]),
-                    torch.tensor([[0, 0, 0, 0, 0, 0, 0, 1, 0],
-                                  [0, 0, 0, 0, 0, 1, 0, 0, 0],
-                                  [0, 0, 0, 0, 1, 0, 0, 0, 0]]))
-    assert torch.all(torch.lt(torch.abs(torch.add(result,
-                                                  -torch.tensor([0.3333, 0.3333, 0.4444, 0.4444]))), 1e-3))
+    result = metric(
+        torch.tensor(
+            [[1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1], [1, 2, 3, 4, 5, 4, 3, 2, 1]]
+        ),
+        torch.tensor(
+            [[0, 0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0, 0], [0, 0, 0, 0, 1, 0, 0, 0, 0]]
+        ),
+    )
+    assert torch.all(
+        torch.lt(
+            torch.abs(torch.add(result, -torch.tensor([0.3333, 0.3333, 0.4444, 0.4444]))), 1e-3
+        )
+    )
 
 
 # TODO: Compare the metrics @K between pytorch and numpy
