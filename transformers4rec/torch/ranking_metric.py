@@ -284,7 +284,7 @@ class MeanRecipricolRankAt(RankingMetric):
         super(MeanRecipricolRankAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
 
     def _metric(
-            self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
+        self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
     ) -> torch.Tensor:
         """Compute mean recipricol rank at K for provided cutoffs (ignoring ties)
 
@@ -305,8 +305,9 @@ class MeanRecipricolRankAt(RankingMetric):
         ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
         topk_scores, topk_indices, topk_labels = torch_utils.extract_topk(ks, scores, labels)
 
-        results = torch.zeros(scores.shape[0], len(ks)) \
-            .to(device=scores.device, dtype=torch.float32)
+        results = torch.zeros(scores.shape[0], len(ks)).to(
+            device=scores.device, dtype=torch.float32
+        )
         for index, k in enumerate(ks):
             values, _ = (topk_labels[:, :k] / (torch.arange(k) + 1)).max(dim=1)
             results[:, index] = values
