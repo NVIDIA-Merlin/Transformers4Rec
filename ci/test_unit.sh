@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # Get latest Transformers4Rec version
 cd /transformers4rec/
