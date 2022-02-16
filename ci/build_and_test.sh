@@ -8,9 +8,9 @@ cd $nvt_directory
 
 echo "Installing models"
 pip uninstall nvtabular -y
-pip install git+https://github.com/NVIDIA-Merlin/NVTabular.git --user
-pip install --user -e .[tensorflow,pytorch]
-pip install --user numpy==1.20
+pip install git+https://github.com/NVIDIA-Merlin/NVTabular.git --user --no-deps
+pip install --user -e .[tensorflow,pytorch] --no-deps
+#pip install --user numpy==1.20
 
 # following checks requirement requirements-dev.txt to be installed
 echo "Running black --check"
