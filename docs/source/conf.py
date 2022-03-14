@@ -29,9 +29,9 @@
 import os
 import subprocess
 import sys
+from typing import List, cast
 
 from natsort import natsorted
-from recommonmark.parser import CommonMarkParser
 
 sys.path.insert(0, os.path.abspath("../../"))
 
@@ -52,11 +52,11 @@ author = "NVIDIA"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "myst_nb",
+    "sphinx_external_toc",
     "sphinx_multiversion",
     "sphinx_rtd_theme",
-    "recommonmark",
     "sphinx_markdown_tables",
-    "nbsphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
@@ -64,7 +64,24 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx.ext.intersphinx",
+    "sphinxcontrib.copydirs",
 ]
+
+# MyST configuration settings
+external_toc_path = "toc.yaml"
+myst_enable_extensions = [
+    "deflist",
+    "html_image",
+    "linkify",
+    "replacements",
+    "tasklist",
+]
+myst_linkify_fuzzy_links = False
+myst_heading_anchors = 3
+jupyter_execute_notebooks = "off"
+
+# The API documents are RST and include `.. toctree::` directives.
+suppress_warnings = ["etoc.toctree", "myst.header", "misc.highlighting_failure"]
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -82,6 +99,10 @@ exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
+html_theme_options = {
+    "navigation_depth": 2,
+}
+html_show_sourcelink = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -89,25 +110,22 @@ html_theme = "sphinx_rtd_theme"
 # html_static_path = ["../../images"]
 # html_extra_path = ["images"]
 
-source_parsers = {".md": CommonMarkParser}
 source_suffix = [".rst", ".md"]
-
-nbsphinx_allow_errors = True
-html_show_sourcelink = False
 
 # Determine if Sphinx is reading conf.py from the checked out
 # repo (a Git repo) vs SMV reading conf.py from an archive of the repo
 # at a commit (not a Git repo).
 if os.path.exists(gitdir):
     tag_refs = subprocess.check_output(["git", "tag", "-l", "v*"]).decode("utf-8").split()
-    tag_refs = natsorted(tag_refs)[-6:]
+    tag_refs = cast(List[str], natsorted(tag_refs)[-6:])
     smv_tag_whitelist = r"^(" + r"|".join(tag_refs) + r")$"
 else:
     # SMV is reading conf.py from a Git archive of the repo at a specific commit.
     smv_tag_whitelist = r"^v.*$"
-
 # Only include main branch for now
 smv_branch_whitelist = "^main$"
+
+smv_refs_override_suffix = "-docs"
 
 html_sidebars = {"**": ["versions.html"]}
 
@@ -130,6 +148,14 @@ autodoc_default_options = {
 
 autosummary_generate = True
 
+copydirs_additional_dirs = [
+    "../../examples/",
+    "../../README.md",
+]
+copydirs_file_rename = {
+    "README.md": "index.md",
+}
+
 # Importing this module during docs builds fails with some opaque errors
 # inside betterproto. Exclude for now
-autodoc_mock_imports = ["transformers4rec.data"]
+# autodoc_mock_imports = ["transformers4rec.data"]
