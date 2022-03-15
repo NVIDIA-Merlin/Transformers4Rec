@@ -6,7 +6,7 @@ flake8
 isort
 bandit
 nbsphinx>=0.6
-mypy
+mypy==0.930
 Sphinx>=3
 sphinx_markdown_tables
 sphinx_rtd_theme
