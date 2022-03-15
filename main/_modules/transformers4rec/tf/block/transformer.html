@@ -1,69 +1,30 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>transformers4rec.tf.block.transformer &mdash; Transformers4Rec  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>transformers4rec.tf.block.transformer &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    
-    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../../../index.html" class="icon icon-home"> Transformers4Rec
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -71,25 +32,10 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Transformers4Rec | Documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#highlights">Highlights</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#quick-tour">Quick tour</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#use-cases">Use cases</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
@@ -99,69 +45,30 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Additional Resources</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../index.html">Transformers4Rec</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../../../index.html">Module code</a> &raquo;</li>
-        
       <li>transformers4rec.tf.block.transformer</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for transformers4rec.tf.block.transformer</h1><div class="highlight"><pre>
 <span></span><span class="c1">#</span>
 <span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
@@ -188,9 +95,14 @@
 
 <span class="kn">from</span> <span class="nn">...config.transformer</span> <span class="kn">import</span> <span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformer_registry</span>
 <span class="kn">from</span> <span class="nn">..masking</span> <span class="kn">import</span> <span class="n">MaskSequence</span>
+<span class="kn">from</span> <span class="nn">..utils.tf_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_tf_main_layer</span><span class="p">,</span>
+    <span class="n">maybe_deserialize_keras_objects</span><span class="p">,</span>
+    <span class="n">maybe_serialize_keras_objects</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">Block</span>
 
-<span class="n">TransformerBody</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">TFPreTrainedModel</span><span class="p">,</span> <span class="n">PretrainedConfig</span><span class="p">]</span>
+<span class="n">TransformerBody</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">TFPreTrainedModel</span><span class="p">,</span> <span class="n">PretrainedConfig</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="TransformerPrepare"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerPrepare">[docs]</a><span class="k">class</span> <span class="nc">TransformerPrepare</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">):</span>
@@ -211,7 +123,8 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    transformer: TransformerBody</span>
-<span class="sd">        The T4RecConfig or a pre-trained HF object related to specific transformer architecture.</span>
+<span class="sd">        The T4RecConfig, The pre-trained HF model or the custom keras layer TF*MainLayer,</span>
+<span class="sd">        related to specific transformer architecture.</span>
 <span class="sd">    masking:</span>
 <span class="sd">        Needed when masking is applied on the inputs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -232,10 +145,12 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">:</span> <span class="n">TFPreTrainedModel</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">T4RecConfig</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer</span><span class="o">.</span><span class="n">to_huggingface_tf_model</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">get_tf_main_layer</span><span class="p">(</span><span class="n">transformer</span><span class="o">.</span><span class="n">to_huggingface_tf_model</span><span class="p">())</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">PretrainedConfig</span><span class="p">):</span>
             <span class="n">model_cls</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TF_MODEL_MAPPING</span><span class="p">[</span><span class="n">transformer</span><span class="o">.</span><span class="vm">__class__</span><span class="p">]</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">model_cls</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">get_tf_main_layer</span><span class="p">(</span><span class="n">model_cls</span><span class="p">(</span><span class="n">transformer</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">TFPreTrainedModel</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">get_tf_main_layer</span><span class="p">(</span><span class="n">transformer</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer</span>
 
@@ -259,6 +174,21 @@
         <span class="k">if</span> <span class="n">prepare_module</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_module</span> <span class="o">=</span> <span class="n">prepare_module</span><span class="p">(</span><span class="n">transformer</span><span class="p">,</span> <span class="n">masking</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_fn</span> <span class="o">=</span> <span class="n">output_fn</span>
+
+<div class="viewcode-block" id="TransformerBlock.get_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerBlock.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">maybe_serialize_keras_objects</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;transformer&quot;</span><span class="p">,</span> <span class="s2">&quot;prepare_module&quot;</span><span class="p">,</span> <span class="s2">&quot;masking&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="TransformerBlock.from_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerBlock.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">maybe_deserialize_keras_objects</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;transformer&quot;</span><span class="p">,</span> <span class="s2">&quot;prepare_module&quot;</span><span class="p">,</span> <span class="s2">&quot;masking&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TransformerBlock.from_registry"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.block.html#transformers4rec.tf.TransformerBlock.from_registry">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_registry</span><span class="p">(</span>
@@ -321,9 +251,8 @@
             <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">transformer_kwargs</span><span class="p">:</span>
                 <span class="n">filtered_transformer_kwargs</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="n">transformer_kwargs</span><span class="p">[</span><span class="n">param</span><span class="p">]</span>
 
-        <span class="c1"># In Keras the first (inputs) arg always needs to be set, therefore we supply the</span>
-        <span class="c1"># transformer_kwargs both as arg and **kwargs</span>
-        <span class="n">model_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">(</span><span class="n">transformer_kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">filtered_transformer_kwargs</span><span class="p">)</span>
+        <span class="c1"># In HF the call accept inputs as a dictionary containing all needed tensors</span>
+        <span class="n">model_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">(</span><span class="n">filtered_transformer_kwargs</span><span class="p">)</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_fn</span><span class="p">(</span><span class="n">model_outputs</span><span class="p">)</span>
 
         <span class="c1"># TODO: store the attention outputs for meta-data logging</span>
@@ -331,46 +260,30 @@
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, NVIDIA.
-
-    </p>
+    <p>&#169; Copyright 2021, NVIDIA.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

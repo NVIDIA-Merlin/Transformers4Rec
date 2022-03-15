@@ -1,73 +1,34 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
-  <title>ETL with NVTabular &mdash; Transformers4Rec  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+  <title>ETL with NVTabular &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
-  
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
         <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
-    
-    <script type="text/javascript" src="../../_static/js/theme.js"></script>
-
-    
+    <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="Session-based recommendation with Transformers4Rec" href="03-Session-based-recsys.html" />
     <link rel="prev" title="Preliminary Preprocessing" href="01-preprocess.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../index.html" class="icon icon-home"> Transformers4Rec
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -75,18 +36,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption"><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
@@ -115,75 +65,32 @@
 <li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../index.html">Transformers4Rec</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
-        
           <li><a href="index.html">Tutorial: End-to-end Session-based recommendation</a> &raquo;</li>
-        
       <li>ETL with NVTabular</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
-          
             <a href="../../_sources/examples/tutorial/02-ETL-with-NVTabular.ipynb.txt" rel="nofollow"> View page source</a>
-          
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   
 <style>
 /* CSS for nbsphinx extension */
@@ -394,7 +301,7 @@ div.nboutput.container div.output_area > div[class^='highlight']{
 }
 
 /* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt a.copybtn {
+.prompt .copybtn {
     display: none;
 }
 
@@ -458,8 +365,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -477,10 +383,10 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="section" id="ETL-with-NVTabular">
-<h1>ETL with NVTabular<a class="headerlink" href="#ETL-with-NVTabular" title="Permalink to this headline">¶</a></h1>
+<h1>ETL with NVTabular<a class="headerlink" href="#ETL-with-NVTabular" title="Permalink to this headline"></a></h1>
 <div class="section" id="1.-Introduction">
-<h2>1. Introduction<a class="headerlink" href="#1.-Introduction" title="Permalink to this headline">¶</a></h2>
-<p>In this notebook, we will create a preprocessing and feature engineering pipeline with <a class="reference external" href="https://github.com/rapidsai/cudf">Rapids cuDF</a> and <a class="reference external" href="https://github.com/NVIDIA/NVTabular">Merlin NVTabular</a> libraries to prepare our dataset for session-based recommendation model training.</p>
+<h2>1. Introduction<a class="headerlink" href="#1.-Introduction" title="Permalink to this headline"></a></h2>
+<p>In this notebook, we will create a preprocessing and feature engineering pipeline with <a class="reference external" href="https://github.com/rapidsai/cudf">Rapids cuDF</a> and <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular">Merlin NVTabular</a> libraries to prepare our dataset for session-based recommendation model training.</p>
 <p>NVTabular is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate terabyte scale datasets and train deep learning (DL) based recommender systems. It provides high-level abstraction to simplify code and accelerates computation on the GPU using the RAPIDS Dask-cuDF library, and is designed to be interoperable with both PyTorch and TensorFlow using dataloaders that have been developed as extensions of native framework code.</p>
 <p>Our main goal is to create sequential features. In order to do that, we are going to perform the following:</p>
 <ul class="simple">
@@ -491,19 +397,18 @@ div.rendered_html tbody tr:hover {
 <li><p>Finally export the preprocessed datasets to parquet files by hive-partitioning.</p></li>
 </ul>
 <div class="section" id="1.1.-Dataset">
-<h3>1.1. Dataset<a class="headerlink" href="#1.1.-Dataset" title="Permalink to this headline">¶</a></h3>
+<h3>1.1. Dataset<a class="headerlink" href="#1.1.-Dataset" title="Permalink to this headline"></a></h3>
 <p>In our hands-on exercise notebooks we are going to use a subset of the publicly available <a class="reference external" href="https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store">eCommerce dataset</a>. The eCommerce behavior data contains 7 months of data (from October 2019 to April 2020) from a large multi-category online store. Each row in the file represents an event. All events are related to products and users. Each event is like many-to-many relation between products and users.</p>
 <p>Data collected by Open CDP project and the source of the dataset is <a class="reference external" href="https://rees46.com/">REES46 Marketing Platform</a>.</p>
 </div>
 </div>
 <div class="section" id="2.-Import-Libraries">
-<h2>2. Import Libraries<a class="headerlink" href="#2.-Import-Libraries" title="Permalink to this headline">¶</a></h2>
+<h2>2. Import Libraries<a class="headerlink" href="#2.-Import-Libraries" title="Permalink to this headline"></a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">os</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">cupy</span> <span class="k">as</span> <span class="nn">cp</span>
@@ -517,20 +422,19 @@ div.rendered_html tbody tr:hover {
 </div>
 </div>
 <div class="section" id="3.-Set-up-Input-and-Output-Data-Paths">
-<h2>3. Set up Input and Output Data Paths<a class="headerlink" href="#3.-Set-up-Input-and-Output-Data-Paths" title="Permalink to this headline">¶</a></h2>
+<h2>3. Set up Input and Output Data Paths<a class="headerlink" href="#3.-Set-up-Input-and-Output-Data-Paths" title="Permalink to this headline"></a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># define data path about where to get our data</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># define data path about where to get our data</span>
 <span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="4.-Read-the-Input-Parquet-file">
-<h2>4. Read the Input Parquet file<a class="headerlink" href="#4.-Read-the-Input-Parquet-file" title="Permalink to this headline">¶</a></h2>
+<h2>4. Read the Input Parquet file<a class="headerlink" href="#4.-Read-the-Input-Parquet-file" title="Permalink to this headline"></a></h2>
 <p>We already performed certain preprocessing steps on the first month (Oct-2019) of the raw dataset in the <code class="docutils literal notranslate"><span class="pre">01-preprocess</span></code> notebook:</p>
 <ul class="simple">
 <li><p>we created <code class="docutils literal notranslate"><span class="pre">event_time_ts</span></code> column from <code class="docutils literal notranslate"><span class="pre">event_time</span></code> column which shows the time when event happened at (in UTC).</p></li>
@@ -544,8 +448,7 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="o">%%time</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;Oct-2019.parquet&#39;</span><span class="p">))</span>
 <span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
@@ -669,8 +572,7 @@ Wall time: 999 ms
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">df</span><span class="o">.</span><span class="n">shape</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">shape</span>
 </pre></div>
 </div>
 </div>
@@ -688,8 +590,7 @@ Wall time: 999 ms
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">df</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -715,28 +616,26 @@ dtype: bool
 <p>We see that <code class="docutils literal notranslate"><span class="pre">'category_code'</span></code> and <code class="docutils literal notranslate"><span class="pre">'brand'</span></code> columns have null values, and in the following cell we are going to fill these nulls with via categorify op, and then all categorical columns will be encoded to continuous integers. Note that we add <code class="docutils literal notranslate"><span class="pre">start_index=1</span></code> in the <code class="docutils literal notranslate"><span class="pre">Categorify</span> <span class="pre">op</span></code> for the categorical columns, the reason for that we want the encoded null values to start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p>
 </div>
 <div class="section" id="5.-Initialize-NVTabular-Workflow">
-<h2>5. Initialize NVTabular Workflow<a class="headerlink" href="#5.-Initialize-NVTabular-Workflow" title="Permalink to this headline">¶</a></h2>
+<h2>5. Initialize NVTabular Workflow<a class="headerlink" href="#5.-Initialize-NVTabular-Workflow" title="Permalink to this headline"></a></h2>
 <div class="section" id="5.1.-Categorical-Features-Encoding">
-<h3>5.1. Categorical Features Encoding<a class="headerlink" href="#5.1.-Categorical-Features-Encoding" title="Permalink to this headline">¶</a></h3>
+<h3>5.1. Categorical Features Encoding<a class="headerlink" href="#5.1.-Categorical-Features-Encoding" title="Permalink to this headline"></a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># categorify features</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># categorify features</span>
 <span class="n">cat_feats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">,</span> <span class="s1">&#39;category_code&#39;</span><span class="p">,</span> <span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;product_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">(</span><span class="n">start_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="5.2.-Extract-Temporal-Features">
-<h3>5.2. Extract Temporal Features<a class="headerlink" href="#5.2.-Extract-Temporal-Features" title="Permalink to this headline">¶</a></h3>
+<h3>5.2. Extract Temporal Features<a class="headerlink" href="#5.2.-Extract-Temporal-Features" title="Permalink to this headline"></a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># create time features</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create time features</span>
 <span class="n">session_ts</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">]</span>
 
 <span class="n">session_time</span> <span class="o">=</span> <span class="p">(</span>
@@ -759,8 +658,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="k">def</span> <span class="nf">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_value</span><span class="p">):</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_value</span><span class="p">):</span>
     <span class="n">value_scaled</span> <span class="o">=</span> <span class="p">(</span><span class="n">col</span> <span class="o">+</span> <span class="mf">0.000001</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_value</span>
     <span class="n">value_sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">value_scaled</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">value_sin</span>
@@ -776,15 +674,14 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">weekday_sin</span> <span class="o">=</span> <span class="n">sessiontime_weekday</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;et_dayofweek_sin&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weekday_sin</span> <span class="o">=</span> <span class="n">sessiontime_weekday</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;et_dayofweek_sin&#39;</span><span class="p">)</span>
 <span class="n">weekday_cos</span><span class="o">=</span> <span class="n">sessiontime_weekday</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">get_cycled_feature_value_cos</span><span class="p">(</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;et_dayofweek_cos&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="section" id="5.2.1-Add-Product-Recency-feature">
-<h3>5.2.1 Add Product Recency feature<a class="headerlink" href="#5.2.1-Add-Product-Recency-feature" title="Permalink to this headline">¶</a></h3>
+<h3>5.2.1 Add Product Recency feature<a class="headerlink" href="#5.2.1-Add-Product-Recency-feature" title="Permalink to this headline"></a></h3>
 <ul class="simple">
 <li><p>Let’s define a custom op to calculate product recency in days</p></li>
 </ul>
@@ -792,8 +689,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">nvtabular.ops</span> <span class="kn">import</span> <span class="n">Operator</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nvtabular.ops</span> <span class="kn">import</span> <span class="n">Operator</span>
 
 <span class="k">class</span> <span class="nc">ItemRecency</span><span class="p">(</span><span class="n">Operator</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">gdf</span><span class="p">):</span>
@@ -820,8 +716,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">time_features</span> <span class="o">=</span> <span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">time_features</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">session_time</span> <span class="o">+</span>
     <span class="n">sessiontime_weekday</span> <span class="o">+</span>
     <span class="n">weekday_sin</span> <span class="o">+</span>
@@ -833,13 +728,12 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div>
 </div>
 <div class="section" id="5.3.-Normalize-Continuous-Features¶">
-<h3>5.3. Normalize Continuous Features¶<a class="headerlink" href="#5.3.-Normalize-Continuous-Features¶" title="Permalink to this headline">¶</a></h3>
+<h3>5.3. Normalize Continuous Features¶<a class="headerlink" href="#5.3.-Normalize-Continuous-Features¶" title="Permalink to this headline"></a></h3>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Smoothing price long-tailed distribution and applying standardization</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Smoothing price long-tailed distribution and applying standardization</span>
 <span class="n">price_log</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LogOp</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Normalize</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;price_log_norm&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -848,8 +742,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Relative price to the average price for the category_id</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Relative price to the average price for the category_id</span>
 <span class="k">def</span> <span class="nf">relative_price_to_avg_categ</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">gdf</span><span class="p">):</span>
     <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-5</span>
     <span class="n">col</span> <span class="o">=</span> <span class="p">((</span><span class="n">gdf</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">col</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">col</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">col</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
@@ -862,15 +755,14 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div>
 </div>
 <div class="section" id="5.4.-Grouping-interactions-into-sessions">
-<h3>5.4. Grouping interactions into sessions<a class="headerlink" href="#5.4.-Grouping-interactions-into-sessions" title="Permalink to this headline">¶</a></h3>
+<h3>5.4. Grouping interactions into sessions<a class="headerlink" href="#5.4.-Grouping-interactions-into-sessions" title="Permalink to this headline"></a></h3>
 <div class="section" id="Aggregate-by-session-id-and-creates-the-sequential-features">
-<h4>Aggregate by session id and creates the sequential features<a class="headerlink" href="#Aggregate-by-session-id-and-creates-the-sequential-features" title="Permalink to this headline">¶</a></h4>
+<h4>Aggregate by session id and creates the sequential features<a class="headerlink" href="#Aggregate-by-session-id-and-creates-the-sequential-features" title="Permalink to this headline"></a></h4>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">groupby_feats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">,</span> <span class="s1">&#39;user_session&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cat_feats</span> <span class="o">+</span> <span class="n">time_features</span> <span class="o">+</span> <span class="n">price_log</span> <span class="o">+</span> <span class="n">relative_price_to_avg_category</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">groupby_feats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">,</span> <span class="s1">&#39;user_session&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">cat_feats</span> <span class="o">+</span> <span class="n">time_features</span> <span class="o">+</span> <span class="n">price_log</span> <span class="o">+</span> <span class="n">relative_price_to_avg_category</span>
 </pre></div>
 </div>
 </div>
@@ -878,8 +770,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Define Groupby Workflow</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define Groupby Workflow</span>
 <span class="n">groupby_features</span> <span class="o">=</span> <span class="n">groupby_feats</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Groupby</span><span class="p">(</span>
     <span class="n">groupby_cols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;user_session&quot;</span><span class="p">],</span>
     <span class="n">sort_cols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;event_time_ts&quot;</span><span class="p">],</span>
@@ -909,8 +800,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">groupby_features_list</span> <span class="o">=</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;product_id-list&#39;</span><span class="p">,</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">groupby_features_list</span> <span class="o">=</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;product_id-list&#39;</span><span class="p">,</span>
         <span class="s1">&#39;category_code-list&#39;</span><span class="p">,</span>
         <span class="s1">&#39;event_type-list&#39;</span><span class="p">,</span>
         <span class="s1">&#39;brand-list&#39;</span><span class="p">,</span>
@@ -927,8 +817,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">SESSIONS_MAX_LENGTH</span> <span class="o">=</span> <span class="mi">20</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SESSIONS_MAX_LENGTH</span> <span class="o">=</span> <span class="mi">20</span>
 <span class="n">MINIMUM_SESSION_LENGTH</span> <span class="o">=</span> <span class="mi">2</span>
 </pre></div>
 </div>
@@ -938,8 +827,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">groupby_features_trim</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">postfix</span> <span class="o">=</span> <span class="s1">&#39;_seq&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">groupby_features_trim</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">postfix</span> <span class="o">=</span> <span class="s1">&#39;_seq&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -950,8 +838,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># calculate session day index based on &#39;timestamp-first&#39; column</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># calculate session day index based on &#39;timestamp-first&#39; column</span>
 <span class="n">day_index</span> <span class="o">=</span> <span class="p">((</span><span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;event_time_dt-first&#39;</span><span class="p">])</span>  <span class="o">&gt;&gt;</span>
     <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LambdaOp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="p">(</span><span class="n">col</span> <span class="o">-</span> <span class="n">col</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;&gt;</span>
     <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="s2">&quot;day_index&quot;</span><span class="p">)</span>
@@ -966,8 +853,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">selected_features</span> <span class="o">=</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">,</span> <span class="s1">&#39;product_id-count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">groupby_features_trim</span> <span class="o">+</span> <span class="n">day_index</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">selected_features</span> <span class="o">=</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">,</span> <span class="s1">&#39;product_id-count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">groupby_features_trim</span> <span class="o">+</span> <span class="n">day_index</span>
 </pre></div>
 </div>
 </div>
@@ -978,8 +864,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">filtered_sessions</span> <span class="o">=</span> <span class="n">selected_features</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;product_id-count&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MINIMUM_SESSION_LENGTH</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_sessions</span> <span class="o">=</span> <span class="n">selected_features</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;product_id-count&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MINIMUM_SESSION_LENGTH</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -987,8 +872,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># avoid numba warnings</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># avoid numba warnings</span>
 <span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">config</span>
 <span class="n">config</span><span class="o">.</span><span class="n">CUDA_LOW_OCCUPANCY_WARNINGS</span> <span class="o">=</span> <span class="mi">0</span>
 </pre></div>
@@ -1002,8 +886,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
 
 <span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">filtered_sessions</span><span class="p">)</span>
 <span class="n">workflow</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
@@ -1011,14 +894,13 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </pre></div>
 </div>
 </div>
-<p>Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the <code class="docutils literal notranslate"><span class="pre">workflow.fit()</span></code> method so that our Workflow can use these stats to transform any given input.</p>
+<p>Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the <code class="docutils literal notranslate"><span class="pre">workflow.fit()</span></code> method so that our Workflow can use these stats to transform any given input.</p>
 <p>Let’s print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">sessions_gdf</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_gdf</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1117,8 +999,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span>
 </pre></div>
 </div>
 </div>
@@ -1150,8 +1031,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">workflow_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;workflow_etl&#39;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;workflow_etl&#39;</span><span class="p">)</span>
 <span class="n">workflow</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">workflow_path</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1160,14 +1040,13 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 </div>
 </div>
 <div class="section" id="6.-Exporting-data">
-<h2>6. Exporting data<a class="headerlink" href="#6.-Exporting-data" title="Permalink to this headline">¶</a></h2>
-<p>We export dataset to parquet partioned by the session <code class="docutils literal notranslate"><span class="pre">day_index</span></code> column.</p>
+<h2>6. Exporting data<a class="headerlink" href="#6.-Exporting-data" title="Permalink to this headline"></a></h2>
+<p>We export dataset to parquet partitioned by the session <code class="docutils literal notranslate"><span class="pre">day_index</span></code> column.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># define partition column</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># define partition column</span>
 <span class="n">PARTITION_COL</span> <span class="o">=</span> <span class="s1">&#39;day_index&#39;</span>
 
 <span class="c1"># define output_folder to store the partitioned parquet files</span>
@@ -1194,8 +1073,7 @@ about it <a class="reference external" href="https://ianlondon.github.io/blog/en
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">transformers4rec.data.preprocessing</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.data.preprocessing</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
 <span class="n">save_time_based_splits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="p">),</span>
                        <span class="n">output_dir</span><span class="o">=</span> <span class="n">OUTPUT_FOLDER</span><span class="p">,</span>
                        <span class="n">partition_col</span><span class="o">=</span><span class="n">PARTITION_COL</span><span class="p">,</span>
@@ -1216,8 +1094,7 @@ Creating time-based splits: 100%|███████████████�
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># check out the OUTPUT_FOLDER</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># check out the OUTPUT_FOLDER</span>
 <span class="o">!</span>ls <span class="nv">$OUTPUT_FOLDER</span>
 </pre></div>
 </div>
@@ -1232,14 +1109,13 @@ Creating time-based splits: 100%|███████████████�
 </div>
 </div>
 <div class="section" id="7.-Wrap-Up">
-<h2>7. Wrap Up<a class="headerlink" href="#7.-Wrap-Up" title="Permalink to this headline">¶</a></h2>
+<h2>7. Wrap Up<a class="headerlink" href="#7.-Wrap-Up" title="Permalink to this headline"></a></h2>
 <p>That’s it! We finished our first task. We reprocessed our dataset and created new features to train a session-based recommendation model. Please run the cell below to shut down the kernel before moving on to the next notebook.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">IPython</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
 
 <span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
 <span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
@@ -1260,50 +1136,33 @@ Creating time-based splits: 100%|███████████████�
 
 
            </div>
-           
           </div>
-          <footer>
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="03-Session-based-recsys.html" class="btn btn-neutral float-right" title="Session-based recommendation with Transformers4Rec" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="01-preprocess.html" class="btn btn-neutral float-left" title="Preliminary Preprocessing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="03-Session-based-recsys.html" class="btn btn-neutral float-right" title="Session-based recommendation with Transformers4Rec" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, NVIDIA.
-
-    </p>
+    <p>&#169; Copyright 2021, NVIDIA.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>

@@ -36,7 +36,7 @@
    "id": "ab6085c0",
    "metadata": {},
    "source": [
-    "In this notebook we are going to generate synthetic data and then create sequential features with [NVTabular](https://github.com/NVIDIA/NVTabular). Such data will be used in the next notebook to train a session-based recommendation model.\n",
+    "In this notebook we are going to generate synthetic data and then create sequential features with [NVTabular](https://github.com/NVIDIA-Merlin/NVTabular). Such data will be used in the next notebook to train a session-based recommendation model.\n",
     "\n",
     "NVTabular is a feature engineering and preprocessing library for tabular data designed to quickly and easily manipulate terabyte scale datasets used to train deep learning based recommender systems. It provides a high level abstraction to simplify code and accelerates computation on the GPU using the RAPIDS cuDF library."
    ]
@@ -59,7 +59,6 @@
     "import os\n",
     "import glob\n",
     "\n",
-    "import torch \n",
     "import numpy as np\n",
     "import pandas as pd\n",
     "\n",
@@ -286,9 +285,7 @@
     "    name_sep=\"-\")\n",
     "\n",
     "# Select and truncate the sequential features\n",
-    "sequence_features_truncated = (groupby_features['category-list', 'item_id-list', \n",
-    "                                          'timestamp/age_days-list', 'timestamp/weekday/sin-list']) >> \\\n",
-    "                            nvt.ops.ListSlice(0,20) >> nvt.ops.Rename(postfix = '_trim')\n",
+    "sequence_features_truncated = (groupby_features['category-list', 'item_id-list', 'timestamp/age_days-list', 'timestamp/weekday/sin-list']) >>nvt.ops.ListSlice(0,20) >> nvt.ops.Rename(postfix = '_trim')\n",
     "\n",
     "# Filter out sessions with length 1 (not valid for next-item prediction training and evaluation)\n",
     "MINIMUM_SESSION_LENGTH = 2\n",

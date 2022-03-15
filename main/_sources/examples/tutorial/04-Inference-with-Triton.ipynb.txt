@@ -341,7 +341,7 @@
    "id": "26345f7d",
    "metadata": {},
    "source": [
-    "If all models are loaded succesfully, you should be seeing successfully loaded status next to each model name on your terminal."
+    "If all models are loaded successfully, you should be seeing successfully loaded status next to each model name on your terminal."
    ]
   },
   {
