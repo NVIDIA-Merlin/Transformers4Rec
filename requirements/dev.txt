@@ -7,11 +7,16 @@ isort
 bandit
 nbsphinx>=0.6
 mypy==0.930
-Sphinx>=3
-sphinx_markdown_tables
-sphinx_rtd_theme
-recommonmark>=0.6
 tensorflow-metadata
 tensorflow-estimator==2.6.*
 tensorflow-ranking>=0.4
 codespell
+
+# docs
+Sphinx==3.5.4
+sphinx_rtd_theme==1.0.0
+sphinx_markdown_tables==0.0.15
+sphinx-multiversion==0.2.4
+recommonmark==0.7.1
+nbsphinx>=0.6
+ipython==8.1.1
