@@ -9,10 +9,11 @@ env:
   WF_ID: ${{ github.event.workflow_run.id }}
 
 jobs:
-
   # Always determine if GitHub Pages are configured for this repo.
   get-gh-pages-url:
-    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success'
+    if:
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       url: ${{ steps.api-resp.outputs.html_url }}
@@ -74,17 +75,10 @@ jobs:
           rm -rf ./pr
 
       # Permutations:
-      # - PR was merged, update `main` directory; PR_ACTION is closed, need to delete review directory.
+      # - REMOVED: PR was merged, update `main` directory; PR_ACTION is closed, need to delete review directory.
       # - PR was updated, PR_ACTION is !closed, need to delete review directory and update it.
       # - PR was closed (regardless of merge), PR_ACTION is closed, need to delete review directory.
 
-      # If the PR was merged, store in directory `main`. PR_ACTION is closed and handled two steps later.
-      - name: Handle HTML for merges to main
-        if: env.MERGE_STATUS == 'true'
-        run: |
-          rm -rf main 2>/dev/null || true
-          mv ./html-build-artifact/  main
-          git add main
       # If this PR is still open, store HTML in a review directory.
       - name: Handle HTML review directory for open PRs and updates to PRs
         if: env.MERGE_STATUS == 'false' && env.PR_ACTION != 'closed'
@@ -110,7 +104,7 @@ jobs:
           git status
           if git commit -m 'Pushing changes to GitHub Pages.'; then
             git push -f
-          else 
+          else
            echo "Nothing changed."
           fi
       - name: Check for existing documentation review comment
@@ -131,4 +125,3 @@ jobs:
           echo -e "<${{ env.URL }}${{ env.PR_REVIEW_DIR }}>" >> body
           cat body
           gh pr comment ${{ env.PR_NO }} --body-file body
-

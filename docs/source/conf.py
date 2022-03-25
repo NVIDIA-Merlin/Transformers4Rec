@@ -27,11 +27,16 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import subprocess
 import sys
 
+from natsort import natsorted
 from recommonmark.parser import CommonMarkParser
 
 sys.path.insert(0, os.path.abspath("../../"))
+
+repodir = os.path.abspath(os.path.join(__file__, r"../../.."))
+gitdir = os.path.join(repodir, r".git")
 
 
 # -- Project information -----------------------------------------------------
@@ -47,11 +52,13 @@ author = "NVIDIA"
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
+    "sphinx_multiversion",
     "sphinx_rtd_theme",
     "recommonmark",
     "sphinx_markdown_tables",
     "nbsphinx",
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
@@ -85,14 +92,43 @@ html_theme = "sphinx_rtd_theme"
 source_parsers = {".md": CommonMarkParser}
 source_suffix = [".rst", ".md"]
 
+nbsphinx_allow_errors = True
+html_show_sourcelink = False
+
+# Determine if Sphinx is reading conf.py from the checked out
+# repo (a Git repo) vs SMV reading conf.py from an archive of the repo
+# at a commit (not a Git repo).
+if os.path.exists(gitdir):
+    tag_refs = subprocess.check_output(["git", "tag", "-l", "v*"]).decode("utf-8").split()
+    tag_refs = natsorted(tag_refs)[-6:]
+    smv_tag_whitelist = r"^(" + r"|".join(tag_refs) + r")$"
+else:
+    # SMV is reading conf.py from a Git archive of the repo at a specific commit.
+    smv_tag_whitelist = r"^v.*$"
+
+# Only include main branch for now
+smv_branch_whitelist = "^main$"
+
+html_sidebars = {"**": ["versions.html"]}
+
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "cudf": ("https://docs.rapids.ai/api/cudf/stable/", None),
     "distributed": ("https://distributed.dask.org/en/latest/", None),
     "torch": ("https://pytorch.org/docs/stable/", None),
+    "merlin-core": ("https://nvidia-merlin.github.io/core/main", None),
 }
 
 autodoc_inherit_docstrings = False
+
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": True,
+    "show-inheritance": False,
+    "member-order": "bysource",
+}
+
+autosummary_generate = True
 
 # Importing this module during docs builds fails with some opaque errors
 # inside betterproto. Exclude for now
