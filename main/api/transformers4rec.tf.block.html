@@ -82,7 +82,6 @@
           <li><a href="transformers4rec.tf.html">transformers4rec.tf package</a> &raquo;</li>
       <li>transformers4rec.tf.block package</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/api/transformers4rec.tf.block.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -126,13 +125,13 @@
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.block.base.</span></code><code class="sig-name descname"><span class="pre">Block</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#Block"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.Block" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code></p>
 <dl class="py method">
-<dt id="transformers4rec.tf.block.base.Block.as_tabular">
-<code class="sig-name descname"><span class="pre">as_tabular</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#Block.as_tabular"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.Block.as_tabular" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.tf.block.base.Block.to_model">
+<code class="sig-name descname"><span class="pre">to_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction_task_or_head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#Block.to_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.Block.to_model" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.tf.block.base.Block.to_model">
-<code class="sig-name descname"><span class="pre">to_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prediction_task_or_head</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#Block.to_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.Block.to_model" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.tf.block.base.Block.as_tabular">
+<code class="sig-name descname"><span class="pre">as_tabular</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#Block.as_tabular"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.Block.as_tabular" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -154,16 +153,6 @@ Usage:</p>
 </pre></div>
 </div>
 <dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.build">
-<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.build" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.call">
-<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.call" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="transformers4rec.tf.block.base.SequentialBlock.compute_output_shape">
 <code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.compute_output_shape" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -174,33 +163,8 @@ Usage:</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.from_config">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_objects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.from_config" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.get_config">
-<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.get_config" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.inputs">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">inputs</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.inputs" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.losses">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">losses</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.losses" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.non_trainable_weights">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">non_trainable_weights</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.non_trainable_weights" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.regularizers">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">regularizers</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.regularizers" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.tf.block.base.SequentialBlock.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.build" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -209,13 +173,48 @@ Usage:</p>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.tf.block.base.SequentialBlock.trainable">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">trainable</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.trainable" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.tf.block.base.SequentialBlock.inputs">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">inputs</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.inputs" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt id="transformers4rec.tf.block.base.SequentialBlock.trainable_weights">
 <em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">trainable_weights</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.trainable_weights" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.block.base.SequentialBlock.non_trainable_weights">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">non_trainable_weights</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.non_trainable_weights" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.block.base.SequentialBlock.trainable">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">trainable</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.trainable" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.block.base.SequentialBlock.losses">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">losses</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.losses" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.block.base.SequentialBlock.regularizers">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">regularizers</span></code><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.regularizers" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.block.base.SequentialBlock.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.block.base.SequentialBlock.get_config">
+<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.get_config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.block.base.SequentialBlock.from_config">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_objects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/base.html#SequentialBlock.from_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.base.SequentialBlock.from_config" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -229,25 +228,25 @@ Usage:</p>
 <div class="section" id="module-transformers4rec.tf.block.dlrm">
 <span id="transformers4rec-tf-block-dlrm-module"></span><h2>transformers4rec.tf.block.dlrm module<a class="headerlink" href="#module-transformers4rec.tf.block.dlrm" title="Permalink to this headline"></a></h2>
 <dl class="py class">
+<dt id="transformers4rec.tf.block.dlrm.ExpandDimsAndToTabular">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.block.dlrm.</span></code><code class="sig-name descname"><span class="pre">ExpandDimsAndToTabular</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/dlrm.html#ExpandDimsAndToTabular"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.dlrm.ExpandDimsAndToTabular" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.layers.core.Lambda</span></code></p>
+</dd></dl>
+
+<dl class="py class">
 <dt id="transformers4rec.tf.block.dlrm.DLRMBlock">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.block.dlrm.</span></code><code class="sig-name descname"><span class="pre">DLRMBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/dlrm.html#DLRMBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.dlrm.DLRMBlock" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.tf.block.base.Block" title="transformers4rec.tf.block.base.Block"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.tf.block.base.Block</span></code></a></p>
-<dl class="py method">
-<dt id="transformers4rec.tf.block.dlrm.DLRMBlock.call">
-<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/dlrm.html#DLRMBlock.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.dlrm.DLRMBlock.call" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt id="transformers4rec.tf.block.dlrm.DLRMBlock.from_schema">
 <em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="merlin_standard_lib/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema" title="merlin_standard_lib.schema.schema.Schema"><span class="pre">merlin_standard_lib.schema.schema.Schema</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottom_mlp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.engine.base_layer.Layer</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#transformers4rec.tf.block.base.Block" title="transformers4rec.tf.block.base.Block"><span class="pre">transformers4rec.tf.block.base.Block</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_mlp</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">keras.engine.base_layer.Layer</span><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#transformers4rec.tf.block.base.Block" title="transformers4rec.tf.block.base.Block"><span class="pre">transformers4rec.tf.block.base.Block</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/dlrm.html#DLRMBlock.from_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.dlrm.DLRMBlock.from_schema" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-</dd></dl>
+<dl class="py method">
+<dt id="transformers4rec.tf.block.dlrm.DLRMBlock.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/dlrm.html#DLRMBlock.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.dlrm.DLRMBlock.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
-<dl class="py class">
-<dt id="transformers4rec.tf.block.dlrm.ExpandDimsAndToTabular">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.block.dlrm.</span></code><code class="sig-name descname"><span class="pre">ExpandDimsAndToTabular</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/dlrm.html#ExpandDimsAndToTabular"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.dlrm.ExpandDimsAndToTabular" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.layers.core.Lambda</span></code></p>
 </dd></dl>
 
 </div>
@@ -262,6 +261,17 @@ Usage:</p>
 </div>
 <div class="section" id="module-transformers4rec.tf.block.transformer">
 <span id="transformers4rec-tf-block-transformer-module"></span><h2>transformers4rec.tf.block.transformer module<a class="headerlink" href="#module-transformers4rec.tf.block.transformer" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.tf.block.transformer.TransformerPrepare">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.block.transformer.</span></code><code class="sig-name descname"><span class="pre">TransformerPrepare</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerPrepare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code></p>
+<dl class="py method">
+<dt id="transformers4rec.tf.block.transformer.TransformerPrepare.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_embeds</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerPrepare.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerPrepare.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 <dl class="py class">
 <dt id="transformers4rec.tf.block.transformer.TransformerBlock">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.block.transformer.</span></code><code class="sig-name descname"><span class="pre">TransformerBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock" title="Permalink to this definition"></a></dt>
@@ -281,24 +291,20 @@ related to specific transformer architecture.</p></li>
 <code class="sig-name descname"><span class="pre">TRANSFORMER_TO_PREPARE</span></code><em class="property"><span class="pre">:</span> <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.modeling_tf_utils.TFPreTrainedModel</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="transformers4rec.tf.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.tf.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">{}</span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.TRANSFORMER_TO_PREPARE" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt id="transformers4rec.tf.block.transformer.TransformerBlock.transformer">
+<code class="sig-name descname"><span class="pre">transformer</span></code><em class="property"><span class="pre">:</span> <span class="pre">transformers.modeling_tf_utils.TFPreTrainedModel</span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.transformer" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.tf.block.transformer.TransformerBlock.prepare_module">
+<code class="sig-name descname"><span class="pre">prepare_module</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="transformers4rec.tf.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.tf.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.prepare_module" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
-<dt id="transformers4rec.tf.block.transformer.TransformerBlock.call">
-<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_embeds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerBlock.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.call" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>tf.Tensor of shape</strong><strong> (</strong><strong>{0}</strong> (<em>inputs_embeds</em>) – An embedded representation of a sequence.</p></li>
-<li><p><strong>hidden_size</strong><strong>)</strong><strong>`</strong> – An embedded representation of a sequence.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><cite>tf.Tensor</cite></p>
-</dd>
-</dl>
-</dd></dl>
+<dt id="transformers4rec.tf.block.transformer.TransformerBlock.get_config">
+<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerBlock.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.get_config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="transformers4rec.tf.block.transformer.TransformerBlock.from_config">
@@ -324,30 +330,23 @@ related to specific transformer architecture.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.tf.block.transformer.TransformerBlock.get_config">
-<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerBlock.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.get_config" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.tf.block.transformer.TransformerBlock.prepare_module">
-<code class="sig-name descname"><span class="pre">prepare_module</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="transformers4rec.tf.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.tf.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.prepare_module" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.tf.block.transformer.TransformerBlock.transformer">
-<code class="sig-name descname"><span class="pre">transformer</span></code><em class="property"><span class="pre">:</span> <span class="pre">transformers.modeling_tf_utils.TFPreTrainedModel</span></em><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.transformer" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
+<dt id="transformers4rec.tf.block.transformer.TransformerBlock.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_embeds</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerBlock.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerBlock.call" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tf.Tensor of shape</strong><strong> (</strong><strong>{0}</strong> (<em>inputs_embeds</em>) – An embedded representation of a sequence.</p></li>
+<li><p><strong>hidden_size</strong><strong>)</strong><strong>`</strong> – An embedded representation of a sequence.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><cite>tf.Tensor</cite></p>
+</dd>
+</dl>
 </dd></dl>
-
-<dl class="py class">
-<dt id="transformers4rec.tf.block.transformer.TransformerPrepare">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.block.transformer.</span></code><code class="sig-name descname"><span class="pre">TransformerPrepare</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerPrepare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerPrepare" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code></p>
-<dl class="py method">
-<dt id="transformers4rec.tf.block.transformer.TransformerPrepare.call">
-<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs_embeds</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/tf/block/transformer.html#TransformerPrepare.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.block.transformer.TransformerPrepare.call" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 </dd></dl>
 
@@ -381,7 +380,29 @@ related to specific transformer architecture.</p></li>
       </div>
     </section>
   </div>
-  <script>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v0.1.1/api/transformers4rec.tf.block.html">v0.1.1</a></dd>
+      <dd><a href="../../v0.1.2/api/transformers4rec.tf.block.html">v0.1.2</a></dd>
+      <dd><a href="../../v0.1.3/api/transformers4rec.tf.block.html">v0.1.3</a></dd>
+      <dd><a href="../../v0.1.4/api/transformers4rec.tf.block.html">v0.1.4</a></dd>
+      <dd><a href="../../v0.1.5/api/transformers4rec.tf.block.html">v0.1.5</a></dd>
+      <dd><a href="../../v0.1.6/api/transformers4rec.tf.block.html">v0.1.6</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="transformers4rec.tf.block.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });

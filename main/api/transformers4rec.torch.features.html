@@ -82,7 +82,6 @@
           <li><a href="transformers4rec.torch.html">transformers4rec.torch package</a> &raquo;</li>
       <li>transformers4rec.torch.features package</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/api/transformers4rec.torch.features.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -146,6 +145,11 @@
 </dd>
 </dl>
 <dl class="py method">
+<dt id="transformers4rec.torch.features.continuous.ContinuousFeatures.from_features">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_features</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/continuous.html#ContinuousFeatures.from_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.continuous.ContinuousFeatures.from_features" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt id="transformers4rec.torch.features.continuous.ContinuousFeatures.forward">
 <code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/continuous.html#ContinuousFeatures.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.continuous.ContinuousFeatures.forward" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -155,77 +159,11 @@
 <code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/continuous.html#ContinuousFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.continuous.ContinuousFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py method">
-<dt id="transformers4rec.torch.features.continuous.ContinuousFeatures.from_features">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_features</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/continuous.html#ContinuousFeatures.from_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.continuous.ContinuousFeatures.from_features" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 </div>
 <div class="section" id="module-transformers4rec.torch.features.embedding">
 <span id="transformers4rec-torch-features-embedding-module"></span><h2>transformers4rec.torch.features.embedding module<a class="headerlink" href="#module-transformers4rec.torch.features.embedding" title="Permalink to this headline"></a></h2>
-<dl class="py class">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.features.embedding.</span></code><code class="sig-name descname"><span class="pre">EmbeddingBagWrapper</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_embeddings</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_norm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_grad_by_freq</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparse</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_weight</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_last_offset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingBagWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.sparse.EmbeddingBag</span></code></p>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.embedding_dim">
-<code class="sig-name descname"><span class="pre">embedding_dim</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.embedding_dim" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.forward">
-<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingBagWrapper.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.forward" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.include_last_offset">
-<code class="sig-name descname"><span class="pre">include_last_offset</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.include_last_offset" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.max_norm">
-<code class="sig-name descname"><span class="pre">max_norm</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.max_norm" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.mode">
-<code class="sig-name descname"><span class="pre">mode</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.mode" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.norm_type">
-<code class="sig-name descname"><span class="pre">norm_type</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.norm_type" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.num_embeddings">
-<code class="sig-name descname"><span class="pre">num_embeddings</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.num_embeddings" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.padding_idx">
-<code class="sig-name descname"><span class="pre">padding_idx</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.padding_idx" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.scale_grad_by_freq">
-<code class="sig-name descname"><span class="pre">scale_grad_by_freq</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.scale_grad_by_freq" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.sparse">
-<code class="sig-name descname"><span class="pre">sparse</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.sparse" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.weight">
-<code class="sig-name descname"><span class="pre">weight</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.weight" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
 <dl class="py class">
 <dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.features.embedding.</span></code><code class="sig-name descname"><span class="pre">EmbeddingFeatures</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#transformers4rec.torch.features.embedding.FeatureConfig" title="transformers4rec.torch.features.embedding.FeatureConfig"><span class="pre">transformers4rec.torch.features.embedding.FeatureConfig</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_id</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">transformers4rec.torch.tabular.base.TabularTransformation</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">transformers4rec.torch.tabular.base.TabularTransformation</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aggregation</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">transformers4rec.torch.tabular.base.TabularAggregation</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="merlin_standard_lib/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema" title="merlin_standard_lib.schema.schema.Schema"><span class="pre">merlin_standard_lib.schema.schema.Schema</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures" title="Permalink to this definition"></a></dt>
@@ -250,13 +188,13 @@ TableConfig can be used for multiple features.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.forward">
-<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.forward" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.item_embedding_table">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">item_embedding_table</span></code><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.item_embedding_table" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.forward_output_size">
-<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.table_to_embedding_module">
+<code class="sig-name descname"><span class="pre">table_to_embedding_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#transformers4rec.torch.features.embedding.TableConfig" title="transformers4rec.torch.features.embedding.TableConfig"><span class="pre">transformers4rec.torch.features.embedding.TableConfig</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">torch.nn.modules.module.Module</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures.table_to_embedding_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.table_to_embedding_module" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -294,42 +232,79 @@ its cardinality. Generally reasonable values range between 2.0 and 10.0</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.item_embedding_table">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">item_embedding_table</span></code><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.item_embedding_table" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.item_ids">
 <code class="sig-name descname"><span class="pre">item_ids</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures.item_ids"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.item_ids" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.table_to_embedding_module">
-<code class="sig-name descname"><span class="pre">table_to_embedding_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#transformers4rec.torch.features.embedding.TableConfig" title="transformers4rec.torch.features.embedding.TableConfig"><span class="pre">transformers4rec.torch.features.embedding.TableConfig</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">torch.nn.modules.module.Module</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures.table_to_embedding_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.table_to_embedding_module" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingFeatures.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="transformers4rec.torch.features.embedding.FeatureConfig">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.features.embedding.</span></code><code class="sig-name descname"><span class="pre">FeatureConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#transformers4rec.torch.features.embedding.TableConfig" title="transformers4rec.torch.features.embedding.TableConfig"><span class="pre">transformers4rec.torch.features.embedding.TableConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#FeatureConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.FeatureConfig" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
-</dd></dl>
-
-<dl class="py class">
-<dt id="transformers4rec.torch.features.embedding.SoftEmbedding">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.features.embedding.</span></code><code class="sig-name descname"><span class="pre">SoftEmbedding</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#SoftEmbedding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.SoftEmbedding" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
-<p>Soft-one hot encoding embedding technique, from <a class="reference external" href="https://arxiv.org/pdf/1708.00065.pdf">https://arxiv.org/pdf/1708.00065.pdf</a>
-In a nutshell, it represents a continuous feature as a weighted average of embeddings</p>
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.features.embedding.</span></code><code class="sig-name descname"><span class="pre">EmbeddingBagWrapper</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_embeddings</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding_dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_norm</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_type</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_grad_by_freq</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparse</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_weight</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_last_offset</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingBagWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.sparse.EmbeddingBag</span></code></p>
 <dl class="py method">
-<dt id="transformers4rec.torch.features.embedding.SoftEmbedding.forward">
-<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_numeric</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#SoftEmbedding.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.SoftEmbedding.forward" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#EmbeddingBagWrapper.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.forward" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt id="transformers4rec.torch.features.embedding.SoftEmbedding.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.SoftEmbedding.training" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.num_embeddings">
+<code class="sig-name descname"><span class="pre">num_embeddings</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.num_embeddings" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.embedding_dim">
+<code class="sig-name descname"><span class="pre">embedding_dim</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.embedding_dim" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.max_norm">
+<code class="sig-name descname"><span class="pre">max_norm</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.max_norm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.norm_type">
+<code class="sig-name descname"><span class="pre">norm_type</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.norm_type" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.scale_grad_by_freq">
+<code class="sig-name descname"><span class="pre">scale_grad_by_freq</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.scale_grad_by_freq" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.weight">
+<code class="sig-name descname"><span class="pre">weight</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.weight" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.mode">
+<code class="sig-name descname"><span class="pre">mode</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.mode" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.sparse">
+<code class="sig-name descname"><span class="pre">sparse</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.sparse" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.include_last_offset">
+<code class="sig-name descname"><span class="pre">include_last_offset</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.include_last_offset" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.EmbeddingBagWrapper.padding_idx">
+<code class="sig-name descname"><span class="pre">padding_idx</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.padding_idx" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -398,6 +373,30 @@ is not found in <code class="docutils literal notranslate"><span class="pre">sof
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 </dd></dl>
 
+<dl class="py class">
+<dt id="transformers4rec.torch.features.embedding.FeatureConfig">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.features.embedding.</span></code><code class="sig-name descname"><span class="pre">FeatureConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#transformers4rec.torch.features.embedding.TableConfig" title="transformers4rec.torch.features.embedding.TableConfig"><span class="pre">transformers4rec.torch.features.embedding.TableConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#FeatureConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.FeatureConfig" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.features.embedding.SoftEmbedding">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.features.embedding.</span></code><code class="sig-name descname"><span class="pre">SoftEmbedding</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_initializer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#SoftEmbedding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.SoftEmbedding" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Soft-one hot encoding embedding technique, from <a class="reference external" href="https://arxiv.org/pdf/1708.00065.pdf">https://arxiv.org/pdf/1708.00065.pdf</a>
+In a nutshell, it represents a continuous feature as a weighted average of embeddings</p>
+<dl class="py attribute">
+<dt id="transformers4rec.torch.features.embedding.SoftEmbedding.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.features.embedding.SoftEmbedding.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.features.embedding.SoftEmbedding.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_numeric</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/embedding.html#SoftEmbedding.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.embedding.SoftEmbedding.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
 </div>
 <div class="section" id="module-transformers4rec.torch.features.sequence">
 <span id="transformers4rec-torch-features-sequence-module"></span><h2>transformers4rec.torch.features.sequence module<a class="headerlink" href="#module-transformers4rec.torch.features.sequence" title="Permalink to this headline"></a></h2>
@@ -421,13 +420,13 @@ TableConfig can be used for multiple features.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt id="transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.forward_output_size">
-<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#SequenceEmbeddingFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.table_to_embedding_module">
+<code class="sig-name descname"><span class="pre">table_to_embedding_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#transformers4rec.torch.features.embedding.TableConfig" title="transformers4rec.torch.features.embedding.TableConfig"><span class="pre">transformers4rec.torch.features.embedding.TableConfig</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">torch.nn.modules.sparse.Embedding</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#SequenceEmbeddingFeatures.table_to_embedding_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.table_to_embedding_module" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.table_to_embedding_module">
-<code class="sig-name descname"><span class="pre">table_to_embedding_module</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="#transformers4rec.torch.features.embedding.TableConfig" title="transformers4rec.torch.features.embedding.TableConfig"><span class="pre">transformers4rec.torch.features.embedding.TableConfig</span></a></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">torch.nn.modules.sparse.Embedding</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#SequenceEmbeddingFeatures.table_to_embedding_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.table_to_embedding_module" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#SequenceEmbeddingFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -457,16 +456,6 @@ categorical &amp; text.</p>
 <code class="sig-name descname"><span class="pre">EMBEDDING_MODULE_CLASS</span></code><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.EMBEDDING_MODULE_CLASS" title="Permalink to this definition"></a></dt>
 <dd><p>alias of <a class="reference internal" href="#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures" title="transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures</span></code></a></p>
 </dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward">
-<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#TabularSequenceFeatures.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward_output_size">
-<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#TabularSequenceFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
 
 <dl class="py method">
 <dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.from_schema">
@@ -503,8 +492,13 @@ a categorical_module including an item_id column, by default None</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.item_embedding_table">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">item_embedding_table</span></code><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.item_embedding_table" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.masking">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">masking</span></code><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.masking" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.set_masking">
+<code class="sig-name descname"><span class="pre">set_masking</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#TabularSequenceFeatures.set_masking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.set_masking" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -513,8 +507,13 @@ a categorical_module including an item_id column, by default None</p></li>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.masking">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">masking</span></code><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.masking" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.item_embedding_table">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">item_embedding_table</span></code><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.item_embedding_table" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#TabularSequenceFeatures.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -523,8 +522,8 @@ a categorical_module including an item_id column, by default None</p></li>
 <dd></dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.set_masking">
-<code class="sig-name descname"><span class="pre">set_masking</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#TabularSequenceFeatures.set_masking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.set_masking" title="Permalink to this definition"></a></dt>
+<dt id="transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/sequence.html#TabularSequenceFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -573,19 +572,21 @@ a categorical_module including an item_id column, by default None</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.tabular.TabularFeatures.categorical_module">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">categorical_module</span></code><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.categorical_module" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.features.tabular.TabularFeatures.continuous_module">
-<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">continuous_module</span></code><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.continuous_module" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.features.tabular.TabularFeatures.forward_output_size">
-<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/tabular.html#TabularFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dt id="transformers4rec.torch.features.tabular.TabularFeatures.project_continuous_features">
+<code class="sig-name descname"><span class="pre">project_continuous_features</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlp_layers_dims</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#transformers4rec.torch.features.tabular.TabularFeatures" title="transformers4rec.torch.features.tabular.TabularFeatures"><span class="pre">transformers4rec.torch.features.tabular.TabularFeatures</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/features/tabular.html#TabularFeatures.project_continuous_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.project_continuous_features" title="Permalink to this definition"></a></dt>
+<dd><p>Combine all concatenated continuous features with stacked MLP layers</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mlp_layers_dims</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – The MLP layer dimensions</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Returns the same <code class="docutils literal notranslate"><span class="pre">TabularFeatures</span></code> object with the continuous features projected</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#transformers4rec.torch.features.tabular.TabularFeatures" title="transformers4rec.torch.features.tabular.TabularFeatures">TabularFeatures</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt id="transformers4rec.torch.features.tabular.TabularFeatures.from_schema">
@@ -616,21 +617,19 @@ represent continuous features, by default False</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="transformers4rec.torch.features.tabular.TabularFeatures.project_continuous_features">
-<code class="sig-name descname"><span class="pre">project_continuous_features</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlp_layers_dims</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="#transformers4rec.torch.features.tabular.TabularFeatures" title="transformers4rec.torch.features.tabular.TabularFeatures"><span class="pre">transformers4rec.torch.features.tabular.TabularFeatures</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/features/tabular.html#TabularFeatures.project_continuous_features"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.project_continuous_features" title="Permalink to this definition"></a></dt>
-<dd><p>Combine all concatenated continuous features with stacked MLP layers</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>mlp_layers_dims</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>]</em>) – The MLP layer dimensions</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Returns the same <code class="docutils literal notranslate"><span class="pre">TabularFeatures</span></code> object with the continuous features projected</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#transformers4rec.torch.features.tabular.TabularFeatures" title="transformers4rec.torch.features.tabular.TabularFeatures">TabularFeatures</a></p>
-</dd>
-</dl>
-</dd></dl>
+<dt id="transformers4rec.torch.features.tabular.TabularFeatures.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/features/tabular.html#TabularFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.features.tabular.TabularFeatures.continuous_module">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">continuous_module</span></code><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.continuous_module" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.features.tabular.TabularFeatures.categorical_module">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">categorical_module</span></code><a class="headerlink" href="#transformers4rec.torch.features.tabular.TabularFeatures.categorical_module" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -667,7 +666,29 @@ represent continuous features, by default False</p></li>
       </div>
     </section>
   </div>
-  <script>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v0.1.1/api/transformers4rec.torch.features.html">v0.1.1</a></dd>
+      <dd><a href="../../v0.1.2/api/transformers4rec.torch.features.html">v0.1.2</a></dd>
+      <dd><a href="../../v0.1.3/api/transformers4rec.torch.features.html">v0.1.3</a></dd>
+      <dd><a href="../../v0.1.4/api/transformers4rec.torch.features.html">v0.1.4</a></dd>
+      <dd><a href="../../v0.1.5/api/transformers4rec.torch.features.html">v0.1.5</a></dd>
+      <dd><a href="../../v0.1.6/api/transformers4rec.torch.features.html">v0.1.6</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="transformers4rec.torch.features.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });

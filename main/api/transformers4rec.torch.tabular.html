@@ -82,7 +82,6 @@
           <li><a href="transformers4rec.torch.html">transformers4rec.torch package</a> &raquo;</li>
       <li>transformers4rec.torch.tabular package</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/api/transformers4rec.torch.tabular.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -141,6 +140,28 @@ converted to a sequence.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt id="transformers4rec.torch.tabular.aggregation.StackFeatures">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">StackFeatures</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#StackFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.StackFeatures" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.tabular.base.TabularAggregation</span></code></p>
+<p>Aggregation by stacking all values in input dictionary in the given dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>default=-1</em>) – Axis to use for the stacking operation.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.tabular.aggregation.StackFeatures.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#StackFeatures.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.StackFeatures.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.tabular.aggregation.StackFeatures.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#StackFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.StackFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="transformers4rec.torch.tabular.aggregation.ElementwiseFeatureAggregation">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">ElementwiseFeatureAggregation</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#ElementwiseFeatureAggregation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.ElementwiseFeatureAggregation" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.tabular.base.TabularAggregation</span></code></p>
@@ -175,11 +196,6 @@ and then multiplying this with the item-ids.</p>
 <dd class="field-odd"><p><strong>schema</strong> (<em>DatasetSchema</em>) – </p>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.REQUIRES_SCHEMA">
-<code class="sig-name descname"><span class="pre">REQUIRES_SCHEMA</span></code><em class="property"> <span class="pre">=</span> <span class="pre">True</span></em><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.REQUIRES_SCHEMA" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt id="transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.forward">
 <code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#ElementwiseSumItemMulti.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.forward" title="Permalink to this definition"></a></dt>
@@ -191,30 +207,13 @@ and then multiplying this with the item-ids.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt id="transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.REQUIRES_SCHEMA">
+<code class="sig-name descname"><span class="pre">REQUIRES_SCHEMA</span></code><em class="property"> <span class="pre">=</span> <span class="pre">True</span></em><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.REQUIRES_SCHEMA" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt id="transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.training">
 <code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="transformers4rec.torch.tabular.aggregation.StackFeatures">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">StackFeatures</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#StackFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.StackFeatures" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.tabular.base.TabularAggregation</span></code></p>
-<p>Aggregation by stacking all values in input dictionary in the given dimension.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>axis</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>default=-1</em>) – Axis to use for the stacking operation.</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt id="transformers4rec.torch.tabular.aggregation.StackFeatures.forward">
-<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#StackFeatures.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.StackFeatures.forward" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.tabular.aggregation.StackFeatures.forward_output_size">
-<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/aggregation.html#StackFeatures.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.aggregation.StackFeatures.forward_output_size" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -232,11 +231,6 @@ and then multiplying this with the item-ids.</p>
 <p>Applies Stochastic replacement of sequence features.
 It can be applied as a <cite>pre</cite> transform like <cite>TransformerBlock(pre=”stochastic-swap-noise”)</cite></p>
 <dl class="py method">
-<dt id="transformers4rec.torch.tabular.transformations.StochasticSwapNoise.augment">
-<code class="sig-name descname"><span class="pre">augment</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#StochasticSwapNoise.augment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.StochasticSwapNoise.augment" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="transformers4rec.torch.tabular.transformations.StochasticSwapNoise.forward">
 <code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_mask</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#StochasticSwapNoise.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.StochasticSwapNoise.forward" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
@@ -244,6 +238,38 @@ It can be applied as a <cite>pre</cite> transform like <cite>TransformerBlock(pr
 <dl class="py method">
 <dt id="transformers4rec.torch.tabular.transformations.StochasticSwapNoise.forward_output_size">
 <code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#StochasticSwapNoise.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.StochasticSwapNoise.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.tabular.transformations.StochasticSwapNoise.augment">
+<code class="sig-name descname"><span class="pre">augment</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#StochasticSwapNoise.augment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.StochasticSwapNoise.augment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.tabular.transformations.</span></code><code class="sig-name descname"><span class="pre">TabularLayerNorm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features_dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.tabular.base.TabularTransformation</span></code></p>
+<p>Applies Layer norm to each input feature individually, before the aggregation</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.from_feature_config">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_feature_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.FeatureConfig" title="transformers4rec.torch.features.embedding.FeatureConfig"><span class="pre">transformers4rec.torch.features.embedding.FeatureConfig</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.from_feature_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.from_feature_config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.build" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -261,33 +287,6 @@ It can be applied as a <cite>pre</cite> transform like <cite>TransformerBlock(pr
 <dl class="py method">
 <dt id="transformers4rec.torch.tabular.transformations.TabularDropout.forward_output_size">
 <code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularDropout.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularDropout.forward_output_size" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.tabular.transformations.</span></code><code class="sig-name descname"><span class="pre">TabularLayerNorm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features_dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.tabular.base.TabularTransformation</span></code></p>
-<p>Applies Layer norm to each input feature individually, before the aggregation</p>
-<dl class="py method">
-<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.build">
-<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.build" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward">
-<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward_output_size">
-<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.forward_output_size" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.torch.tabular.transformations.TabularLayerNorm.from_feature_config">
-<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_feature_config</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_config</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.FeatureConfig" title="transformers4rec.torch.features.embedding.FeatureConfig"><span class="pre">transformers4rec.torch.features.embedding.FeatureConfig</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/tabular/transformations.html#TabularLayerNorm.from_feature_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.tabular.transformations.TabularLayerNorm.from_feature_config" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -322,7 +321,29 @@ It can be applied as a <cite>pre</cite> transform like <cite>TransformerBlock(pr
       </div>
     </section>
   </div>
-  <script>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: main
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../v0.1.1/api/transformers4rec.torch.tabular.html">v0.1.1</a></dd>
+      <dd><a href="../../v0.1.2/api/transformers4rec.torch.tabular.html">v0.1.2</a></dd>
+      <dd><a href="../../v0.1.3/api/transformers4rec.torch.tabular.html">v0.1.3</a></dd>
+      <dd><a href="../../v0.1.4/api/transformers4rec.torch.tabular.html">v0.1.4</a></dd>
+      <dd><a href="../../v0.1.5/api/transformers4rec.torch.tabular.html">v0.1.5</a></dd>
+      <dd><a href="../../v0.1.6/api/transformers4rec.torch.tabular.html">v0.1.6</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="transformers4rec.torch.tabular.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });

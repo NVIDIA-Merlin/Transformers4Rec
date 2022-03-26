@@ -1,0 +1,1089 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "#\n",
+    "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+    "# you may not use this file except in compliance with the License.\n",
+    "# You may obtain a copy of the License at\n",
+    "#\n",
+    "#     http://www.apache.org/licenses/LICENSE-2.0\n",
+    "#\n",
+    "# Unless required by applicable law or agreed to in writing, software\n",
+    "# distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+    "# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+    "# See the License for the specific language governing permissions and\n",
+    "# limitations under the License.\n",
+    "# =============================================================================="
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# ETL with NVTabular\n",
+    "## 1. Introduction"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In this notebook, we will create a preprocessing and feature engineering pipeline with [Rapids cuDF](https://github.com/rapidsai/cudf) and [Merlin NVTabular](https://github.com/NVIDIA-Merlin/NVTabular) libraries to prepare our dataset for session-based recommendation model training. \n",
+    "\n",
+    "NVTabular is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate terabyte scale datasets and train deep learning (DL) based recommender systems. It provides high-level abstraction to simplify code and accelerates computation on the GPU using the RAPIDS Dask-cuDF library, and is designed to be interoperable with both PyTorch and TensorFlow using dataloaders that have been developed as extensions of native framework code.\n",
+    "\n",
+    "Our main goal is to create sequential features. In order to do that, we are going to perform the following:\n",
+    "\n",
+    "- Categorify categorical features with `Categorify()` op\n",
+    "- Create temporal features with a `user-defined custom` op and `Lambda` op\n",
+    "- Transform continuous features using `Log` and `Normalize` ops\n",
+    "- Group all these features together at the session level sorting the interactions by time with `Groupby`\n",
+    "- Finally export the preprocessed datasets to parquet files by hive-partitioning."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 1.1. Dataset"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In our hands-on exercise notebooks we are going to use a subset of the publicly available [eCommerce dataset](https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store). The eCommerce behavior data contains 7 months of data (from October 2019 to April 2020) from a large multi-category online store. Each row in the file represents an event. All events are related to products and users. Each event is like many-to-many relation between products and users.\n",
+    "\n",
+    "Data collected by Open CDP project and the source of the dataset is [REES46 Marketing Platform](https://rees46.com/)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 2. Import Libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "\n",
+    "import numpy as np \n",
+    "import cupy as cp\n",
+    "import glob\n",
+    "\n",
+    "import cudf\n",
+    "import nvtabular as nvt\n",
+    "from nvtabular import ColumnSelector"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 3. Set up Input and Output Data Paths"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# define data path about where to get our data\n",
+    "INPUT_DATA_DIR = os.environ.get(\"INPUT_DATA_DIR\", \"/workspace/data/\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 4. Read the Input Parquet file"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We already performed certain preprocessing steps on the first month (Oct-2019) of the raw dataset in the `01-preprocess` notebook: <br>\n",
+    "\n",
+    "- we created `event_time_ts` column from `event_time` column which shows the time when event happened at (in UTC).\n",
+    "- we created `prod_first_event_time_ts` column which indicates the timestamp that an item was seen first time.\n",
+    "- we removed the rows where the `user_session` is Null. As a result, 2 rows were removed.\n",
+    "- we categorified the `user_session` column, so that it now has only integer values.\n",
+    "- we removed consequetively repeated (user, item) interactions. For example, an original session with `[1, 2, 4, 1, 2, 2, 3, 3, 3]` product interactions has become `[1, 2, 4, 1, 2, 3]` after removing the repeated interactions on the same item within the same session."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Even though the original dataset contains 7 months data files, we are going to use the first seven days of the `Oct-2019.csv` ecommerce dataset. We use cuDF to read the parquet file. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 665 ms, sys: 330 ms, total: 995 ms\n",
+      "Wall time: 999 ms\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>user_session</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>event_time_ts</th>\n",
+       "      <th>prod_first_event_time_ts</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300797</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>panasonic</td>\n",
+       "      <td>39.90</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460611</td>\n",
+       "      <td>1569948287</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300798</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>panasonic</td>\n",
+       "      <td>32.18</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460616</td>\n",
+       "      <td>1569934097</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300284</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>rowenta</td>\n",
+       "      <td>30.86</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460621</td>\n",
+       "      <td>1569927253</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300382</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>remington</td>\n",
+       "      <td>28.22</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460636</td>\n",
+       "      <td>1570026747</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300366</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>polaris</td>\n",
+       "      <td>26.46</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460650</td>\n",
+       "      <td>1570097085</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   user_session event_type  product_id          category_id category_code  \\\n",
+       "0            43       view     5300797  2053013563173241677          <NA>   \n",
+       "1            43       view     5300798  2053013563173241677          <NA>   \n",
+       "2            43       view     5300284  2053013563173241677          <NA>   \n",
+       "3            43       view     5300382  2053013563173241677          <NA>   \n",
+       "4            43       view     5300366  2053013563173241677          <NA>   \n",
+       "\n",
+       "       brand  price    user_id  event_time_ts  prod_first_event_time_ts  \n",
+       "0  panasonic  39.90  513903572     1570460611                1569948287  \n",
+       "1  panasonic  32.18  513903572     1570460616                1569934097  \n",
+       "2    rowenta  30.86  513903572     1570460621                1569927253  \n",
+       "3  remington  28.22  513903572     1570460636                1570026747  \n",
+       "4    polaris  26.46  513903572     1570460650                1570097085  "
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "df = cudf.read_parquet(os.path.join(INPUT_DATA_DIR, 'Oct-2019.parquet'))  \n",
+    "df.head(5)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(6390928, 10)"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let's check if there is any column with nulls."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "user_session                False\n",
+       "event_type                  False\n",
+       "product_id                  False\n",
+       "category_id                 False\n",
+       "category_code                True\n",
+       "brand                        True\n",
+       "price                       False\n",
+       "user_id                     False\n",
+       "event_time_ts               False\n",
+       "prod_first_event_time_ts    False\n",
+       "dtype: bool"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.isnull().any()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "We see that `'category_code'` and `'brand'` columns have null values, and in the following cell we are going to fill these nulls with via categorify op, and then all categorical columns will be encoded to continuous integers. Note that we add `start_index=1` in the `Categorify op` for the categorical columns, the reason for that we want the encoded null values to start from `1` instead of `0` because we reserve `0` for padding the sequence features."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 5. Initialize NVTabular Workflow\n",
+    "\n",
+    "### 5.1. Categorical Features Encoding"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# categorify features \n",
+    "cat_feats = ['user_session', 'category_code', 'brand', 'user_id', 'product_id', 'category_id', 'event_type'] >> nvt.ops.Categorify(start_index=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 5.2. Extract Temporal Features"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# create time features\n",
+    "session_ts = ['event_time_ts']\n",
+    "\n",
+    "session_time = (\n",
+    "    session_ts >> \n",
+    "    nvt.ops.LambdaOp(lambda col: cudf.to_datetime(col, unit='s')) >> \n",
+    "    nvt.ops.Rename(name = 'event_time_dt')\n",
+    ")\n",
+    "\n",
+    "sessiontime_weekday = (\n",
+    "    session_time >> \n",
+    "    nvt.ops.LambdaOp(lambda col: col.dt.weekday) >> \n",
+    "    nvt.ops.Rename(name ='et_dayofweek')\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Now let's create cycling features from the `sessiontime_weekday` column. We would like to use the temporal features (hour, day of week, month, etc.) that have inherently cyclical characteristic. We represent the day of week as a cycling feature (sine and cosine), so that it can be represented in a continuous space. That way, the difference between the representation of two different days is the same, in other words, with cyclical features we can convey closeness between data. You can read more about it [here](https://ianlondon.github.io/blog/encoding-cyclical-features-24hour-time/)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def get_cycled_feature_value_sin(col, max_value):\n",
+    "    value_scaled = (col + 0.000001) / max_value\n",
+    "    value_sin = np.sin(2*np.pi*value_scaled)\n",
+    "    return value_sin\n",
+    "\n",
+    "def get_cycled_feature_value_cos(col, max_value):\n",
+    "    value_scaled = (col + 0.000001) / max_value\n",
+    "    value_cos = np.cos(2*np.pi*value_scaled)\n",
+    "    return value_cos"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "weekday_sin = sessiontime_weekday >> (lambda col: get_cycled_feature_value_sin(col+1, 7)) >> nvt.ops.Rename(name = 'et_dayofweek_sin')\n",
+    "weekday_cos= sessiontime_weekday >> (lambda col: get_cycled_feature_value_cos(col+1, 7)) >> nvt.ops.Rename(name = 'et_dayofweek_cos')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 5.2.1 Add Product Recency feature"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Let's define a custom op to calculate product recency in days"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from nvtabular.ops import Operator\n",
+    "\n",
+    "class ItemRecency(Operator):\n",
+    "    def transform(self, columns, gdf):\n",
+    "        for column in columns.names:\n",
+    "            col = gdf[column]\n",
+    "            item_first_timestamp = gdf['prod_first_event_time_ts']\n",
+    "            delta_days = (col - item_first_timestamp) / (60*60*24)\n",
+    "            gdf[column + \"_age_days\"] = delta_days * (delta_days >=0)\n",
+    "        return gdf\n",
+    "            \n",
+    "    def output_column_names(self, columns):\n",
+    "        return ColumnSelector([column + \"_age_days\" for column in columns.names])\n",
+    "\n",
+    "    def dependencies(self):\n",
+    "        return [\"prod_first_event_time_ts\"]\n",
+    "    \n",
+    "    \n",
+    "recency_features = ['event_time_ts'] >> ItemRecency() \n",
+    "recency_features_norm = recency_features >> nvt.ops.LogOp() >> nvt.ops.Normalize() >> nvt.ops.Rename(name='product_recency_days_log_norm')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "time_features = (\n",
+    "    session_time +\n",
+    "    sessiontime_weekday +\n",
+    "    weekday_sin +\n",
+    "    weekday_cos +\n",
+    "    recency_features_norm\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 5.3. Normalize Continuous Features¶"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Smoothing price long-tailed distribution and applying standardization\n",
+    "price_log = ['price'] >> nvt.ops.LogOp() >> nvt.ops.Normalize() >> nvt.ops.Rename(name='price_log_norm')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Relative price to the average price for the category_id\n",
+    "def relative_price_to_avg_categ(col, gdf):\n",
+    "    epsilon = 1e-5\n",
+    "    col = ((gdf['price'] - col) / (col + epsilon)) * (col > 0).astype(int)\n",
+    "    return col\n",
+    "    \n",
+    "avg_category_id_pr = ['category_id'] >> nvt.ops.JoinGroupby(cont_cols =['price'], stats=[\"mean\"]) >> nvt.ops.Rename(name='avg_category_id_price')\n",
+    "relative_price_to_avg_category = avg_category_id_pr >> nvt.ops.LambdaOp(relative_price_to_avg_categ, dependency=['price']) >> nvt.ops.Rename(name=\"relative_price_to_avg_categ_id\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 5.4. Grouping interactions into sessions"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### Aggregate by session id and creates the sequential features"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "groupby_feats = ['event_time_ts', 'user_session'] + cat_feats + time_features + price_log + relative_price_to_avg_category"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Define Groupby Workflow\n",
+    "groupby_features = groupby_feats >> nvt.ops.Groupby(\n",
+    "    groupby_cols=[\"user_session\"], \n",
+    "    sort_cols=[\"event_time_ts\"],\n",
+    "    aggs={\n",
+    "        'user_id': ['first'],\n",
+    "        'product_id': [\"list\", \"count\"],\n",
+    "        'category_code': [\"list\"],  \n",
+    "        'event_type': [\"list\"], \n",
+    "        'brand': [\"list\"], \n",
+    "        'category_id': [\"list\"], \n",
+    "        'event_time_ts': [\"first\"],\n",
+    "        'event_time_dt': [\"first\"],\n",
+    "        'et_dayofweek_sin': [\"list\"],\n",
+    "        'et_dayofweek_cos': [\"list\"],\n",
+    "        'price_log_norm': [\"list\"],\n",
+    "        'relative_price_to_avg_categ_id': [\"list\"],\n",
+    "        'product_recency_days_log_norm': [\"list\"]\n",
+    "        },\n",
+    "    name_sep=\"-\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Select columns which are list"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "groupby_features_list = groupby_features['product_id-list',\n",
+    "        'category_code-list',  \n",
+    "        'event_type-list', \n",
+    "        'brand-list', \n",
+    "        'category_id-list', \n",
+    "        'et_dayofweek_sin-list',\n",
+    "        'et_dayofweek_cos-list',\n",
+    "        'price_log_norm-list',\n",
+    "        'relative_price_to_avg_categ_id-list',\n",
+    "        'product_recency_days_log_norm-list']"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "SESSIONS_MAX_LENGTH = 20 \n",
+    "MINIMUM_SESSION_LENGTH = 2"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We truncate the sequence features in length according to sessions_max_length param, which is set as 20 in our example."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "groupby_features_trim = groupby_features_list >> nvt.ops.ListSlice(0,SESSIONS_MAX_LENGTH) >> nvt.ops.Rename(postfix = '_seq')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Create a `day_index` column in order to partition sessions by day when saving the parquet files."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# calculate session day index based on 'timestamp-first' column\n",
+    "day_index = ((groupby_features['event_time_dt-first'])  >> \n",
+    "    nvt.ops.LambdaOp(lambda col: (col - col.min()).dt.days +1) >> \n",
+    "    nvt.ops.Rename(f = lambda col: \"day_index\")\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Select certain columns to be used in model training"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "selected_features = groupby_features['user_session', 'product_id-count'] + groupby_features_trim + day_index"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Filter out the session that have less than 2 interactions."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df[\"product_id-count\"] >= MINIMUM_SESSION_LENGTH)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# avoid numba warnings\n",
+    "from numba import config\n",
+    "config.CUDA_LOW_OCCUPANCY_WARNINGS = 0"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Initialize the NVTabular dataset object and workflow graph."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "NVTabular's preprocessing and feature engineering workflows are directed graphs of operators. When we initialize a Workflow with our pipeline, workflow organizes the input and output columns."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "dataset = nvt.Dataset(df)\n",
+    "\n",
+    "workflow = nvt.Workflow(filtered_sessions)\n",
+    "workflow.fit(dataset)\n",
+    "sessions_gdf = workflow.transform(dataset).to_ddf()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the `workflow.fit()` method so that our Workflow can use these stats to transform any given input."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Let's print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>user_session</th>\n",
+       "      <th>product_id-count</th>\n",
+       "      <th>product_id-list_seq</th>\n",
+       "      <th>category_code-list_seq</th>\n",
+       "      <th>event_type-list_seq</th>\n",
+       "      <th>brand-list_seq</th>\n",
+       "      <th>category_id-list_seq</th>\n",
+       "      <th>et_dayofweek_sin-list_seq</th>\n",
+       "      <th>et_dayofweek_cos-list_seq</th>\n",
+       "      <th>price_log_norm-list_seq</th>\n",
+       "      <th>relative_price_to_avg_categ_id-list_seq</th>\n",
+       "      <th>product_recency_days_log_norm-list_seq</th>\n",
+       "      <th>day_index</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2</td>\n",
+       "      <td>779</td>\n",
+       "      <td>[19064, 52057, 13290, 11446, 15835, 879, 633, ...</td>\n",
+       "      <td>[1, 1, 1, 1, 1, 12, 12, 12, 12, 12, 12, 12, 12...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
+       "      <td>[171, 120, 231, 392, 562, 20, 9, 20, 295, 143,...</td>\n",
+       "      <td>[3, 3, 3, 3, 3, 17, 17, 17, 17, 17, 17, 17, 17...</td>\n",
+       "      <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>\n",
+       "      <td>[-0.22252177, -0.22252177, -0.22252177, -0.222...</td>\n",
+       "      <td>[-0.6063043, -0.5922227, -0.58657265, -0.95319...</td>\n",
+       "      <td>[0.03519271796785072, 0.05391070768135458, 0.0...</td>\n",
+       "      <td>[-2.2660856, -2.2660856, -2.2657654, -2.266085...</td>\n",
+       "      <td>1</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>3</td>\n",
+       "      <td>316</td>\n",
+       "      <td>[252, 2801, 5399, 1074, 252, 355, 327, 319, 34...</td>\n",
+       "      <td>[1, 17, 17, 15, 1, 1, 17, 31, 17, 17, 17, 17, ...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
+       "      <td>[1, 1, 1, 1, 1, 50, 1, 1, 36, 1, 1, 36, 50, 1,...</td>\n",
+       "      <td>[234, 36, 36, 30, 234, 52, 36, 48, 36, 36, 36,...</td>\n",
+       "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
+       "      <td>[-0.90096927, -0.90096927, -0.90096927, -0.900...</td>\n",
+       "      <td>[0.76379955, 0.40693888, 0.2585879, 0.01305802...</td>\n",
+       "      <td>[0.0006990395296891112, -0.04875344158592035, ...</td>\n",
+       "      <td>[-0.8581507, -0.9379308, -1.0066843, -0.936325...</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>4</td>\n",
+       "      <td>277</td>\n",
+       "      <td>[765, 353, 1360, 1965, 2204, 3129, 726, 861, 9...</td>\n",
+       "      <td>[12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 1...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
+       "      <td>[448, 114, 1, 20, 20, 72, 114, 143, 20, 141, 7...</td>\n",
+       "      <td>[17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 1...</td>\n",
+       "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
+       "      <td>[-0.90096927, -0.90096927, -0.90096927, -0.900...</td>\n",
+       "      <td>[-1.7807854, -0.5645747, -0.04535069, -0.43499...</td>\n",
+       "      <td>[-0.832720989925482, -0.19123240368025274, 0.5...</td>\n",
+       "      <td>[-0.7992506, -0.78641737, -0.8228414, -0.79577...</td>\n",
+       "      <td>2</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   user_session  product_id-count  \\\n",
+       "0             2               779   \n",
+       "1             3               316   \n",
+       "2             4               277   \n",
+       "\n",
+       "                                 product_id-list_seq  \\\n",
+       "0  [19064, 52057, 13290, 11446, 15835, 879, 633, ...   \n",
+       "1  [252, 2801, 5399, 1074, 252, 355, 327, 319, 34...   \n",
+       "2  [765, 353, 1360, 1965, 2204, 3129, 726, 861, 9...   \n",
+       "\n",
+       "                              category_code-list_seq  \\\n",
+       "0  [1, 1, 1, 1, 1, 12, 12, 12, 12, 12, 12, 12, 12...   \n",
+       "1  [1, 17, 17, 15, 1, 1, 17, 31, 17, 17, 17, 17, ...   \n",
+       "2  [12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 1...   \n",
+       "\n",
+       "                                 event_type-list_seq  \\\n",
+       "0  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...   \n",
+       "1  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...   \n",
+       "2  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...   \n",
+       "\n",
+       "                                      brand-list_seq  \\\n",
+       "0  [171, 120, 231, 392, 562, 20, 9, 20, 295, 143,...   \n",
+       "1  [1, 1, 1, 1, 1, 50, 1, 1, 36, 1, 1, 36, 50, 1,...   \n",
+       "2  [448, 114, 1, 20, 20, 72, 114, 143, 20, 141, 7...   \n",
+       "\n",
+       "                                category_id-list_seq  \\\n",
+       "0  [3, 3, 3, 3, 3, 17, 17, 17, 17, 17, 17, 17, 17...   \n",
+       "1  [234, 36, 36, 30, 234, 52, 36, 48, 36, 36, 36,...   \n",
+       "2  [17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 1...   \n",
+       "\n",
+       "                           et_dayofweek_sin-list_seq  \\\n",
+       "0  [0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...   \n",
+       "1  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   \n",
+       "2  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   \n",
+       "\n",
+       "                           et_dayofweek_cos-list_seq  \\\n",
+       "0  [-0.22252177, -0.22252177, -0.22252177, -0.222...   \n",
+       "1  [-0.90096927, -0.90096927, -0.90096927, -0.900...   \n",
+       "2  [-0.90096927, -0.90096927, -0.90096927, -0.900...   \n",
+       "\n",
+       "                             price_log_norm-list_seq  \\\n",
+       "0  [-0.6063043, -0.5922227, -0.58657265, -0.95319...   \n",
+       "1  [0.76379955, 0.40693888, 0.2585879, 0.01305802...   \n",
+       "2  [-1.7807854, -0.5645747, -0.04535069, -0.43499...   \n",
+       "\n",
+       "             relative_price_to_avg_categ_id-list_seq  \\\n",
+       "0  [0.03519271796785072, 0.05391070768135458, 0.0...   \n",
+       "1  [0.0006990395296891112, -0.04875344158592035, ...   \n",
+       "2  [-0.832720989925482, -0.19123240368025274, 0.5...   \n",
+       "\n",
+       "              product_recency_days_log_norm-list_seq  day_index  \n",
+       "0  [-2.2660856, -2.2660856, -2.2657654, -2.266085...          1  \n",
+       "1  [-0.8581507, -0.9379308, -1.0066843, -0.936325...          2  \n",
+       "2  [-0.7992506, -0.78641737, -0.8228414, -0.79577...          2  "
+      ]
+     },
+     "execution_count": 25,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "sessions_gdf.head(3)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['user_session',\n",
+       " 'product_id-count',\n",
+       " 'product_id-list_seq',\n",
+       " 'category_code-list_seq',\n",
+       " 'event_type-list_seq',\n",
+       " 'brand-list_seq',\n",
+       " 'category_id-list_seq',\n",
+       " 'et_dayofweek_sin-list_seq',\n",
+       " 'et_dayofweek_cos-list_seq',\n",
+       " 'price_log_norm-list_seq',\n",
+       " 'relative_price_to_avg_categ_id-list_seq',\n",
+       " 'product_recency_days_log_norm-list_seq',\n",
+       " 'day_index']"
+      ]
+     },
+     "execution_count": 26,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "workflow.output_schema.column_names"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Save NVTabular workflow to load at the inference step."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "workflow_path = os.path.join(INPUT_DATA_DIR, 'workflow_etl')\n",
+    "workflow.save(workflow_path)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 6. Exporting data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We export dataset to parquet partitioned by the session `day_index` column."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 28,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# define partition column\n",
+    "PARTITION_COL = 'day_index'\n",
+    "\n",
+    "# define output_folder to store the partitioned parquet files\n",
+    "OUTPUT_FOLDER = os.environ.get(\"OUTPUT_FOLDER\", INPUT_DATA_DIR + \"sessions_by_day\")\n",
+    "!mkdir -p $OUTPUT_FOLDER"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In this section we are going to create a folder structure as shown below. As we explained above, this is just to structure parquet files so that it would be easier to do incremental training and evaluation."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "```\n",
+    "/sessions_by_day/\n",
+    "|-- 1\n",
+    "|   |-- train.parquet\n",
+    "|   |-- valid.parquet\n",
+    "|   |-- test.parquet\n",
+    "\n",
+    "|-- 2\n",
+    "|   |-- train.parquet\n",
+    "|   |-- valid.parquet\n",
+    "|   |-- test.parquet\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "`gpu_preprocessing` function converts the process df to a Dataset object and write out hive-partitioned data to disk."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:02<00:00,  2.63it/s]\n"
+     ]
+    }
+   ],
+   "source": [
+    "from transformers4rec.data.preprocessing import save_time_based_splits\n",
+    "save_time_based_splits(data=nvt.Dataset(sessions_gdf),\n",
+    "                       output_dir= OUTPUT_FOLDER,\n",
+    "                       partition_col=PARTITION_COL,\n",
+    "                       timestamp_col='user_session', \n",
+    "                      )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 30,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "1  2  3  4  5  6  7\n"
+     ]
+    }
+   ],
+   "source": [
+    "# check out the OUTPUT_FOLDER\n",
+    "!ls $OUTPUT_FOLDER"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## 7. Wrap Up "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "That's it! We finished our first task. We reprocessed our dataset and created new features to train a session-based recommendation model. Please run the cell below to shut down the kernel before moving on to the next notebook."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'status': 'ok', 'restart': True}"
+      ]
+     },
+     "execution_count": 31,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import IPython\n",
+    "\n",
+    "app = IPython.Application.instance()\n",
+    "app.kernel.do_shutdown(True)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
