@@ -92,7 +92,7 @@ def test_stochastic_swap_noise_with_tabular_features(
         pad_token=PAD_TOKEN, replacement_prob=replacement_prob, schema=yoochoose_schema
     )
 
-    out_features_ssn = tab_module(inputs, pre=ssn)
+    out_features_ssn = tab_module(inputs, pre=ssn, training=True)
 
     for fname in out_features_ssn:
         replaced_mask = out_features[fname] != out_features_ssn[fname]
