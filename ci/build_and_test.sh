@@ -7,7 +7,7 @@ nvt_directory="$(dirname -- $ci_directory)"
 cd $nvt_directory
 
 echo "Installing models"
-pip uninstall nvtabular -y
+python3 -m pip uninstall nvtabular -y
 pip install git+https://github.com/NVIDIA-Merlin/NVTabular.git --user --no-deps
 pip install . --user --no-deps
 #pip install --user numpy==1.20
