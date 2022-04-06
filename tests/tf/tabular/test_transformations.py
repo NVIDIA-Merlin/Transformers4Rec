@@ -80,6 +80,7 @@ def test_stochastic_swap_noise_disable_on_eval(replacement_prob):
         assert tf.reduce_all(replaced_mask).numpy()
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
 def test_stochastic_swap_noise_with_tabular_features(
     yoochoose_schema, tf_yoochoose_like, replacement_prob
@@ -108,6 +109,7 @@ def test_stochastic_swap_noise_with_tabular_features(
         assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
 
 
+@pytest.mark.xfail
 def test_stochastic_swap_noise_raise_exception_not_2d_item_id():
 
     s = schema.Schema(
