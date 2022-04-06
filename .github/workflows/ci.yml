@@ -1,8 +1,11 @@
 name: Test
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main ]
+    tags:
+      - v*
   pull_request:
     branches: [ main ]
 
@@ -52,6 +55,14 @@ jobs:
     - name: Run unittests
       run: |
         python -m pytest -rsx --cov-config tests/.coveragerc --cov-report term-missing --cov=. tests
+    - name: Generate package for pypi
+      run: |
+        python setup.py sdist
+    - name: Upload artifacts to github
+      uses: actions/upload-artifact@v2
+      with:
+        name: dist
+        path: dist
     # Build docs, treat warnings as errors (TODO SPHINXOPTS="-W -q")
     - name: Building docs
       run: |
@@ -74,3 +85,29 @@ jobs:
       with:
         name: pr
         path: pr/
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: "startsWith(github.ref, 'refs/tags/')"
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: dist
+      - name: Create GitHub Release
+        uses: fnkr/github-action-ghr@v1.3
+        env:
+          GHR_PATH: .
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Push to PyPi
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          pip install --upgrade wheel pip setuptools twine
+          twine upload *
+
