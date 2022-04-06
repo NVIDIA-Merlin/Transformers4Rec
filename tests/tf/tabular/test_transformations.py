@@ -22,6 +22,7 @@ tf = pytest.importorskip("tensorflow")
 tr = pytest.importorskip("transformers4rec.tf")
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
 def test_stochastic_swap_noise(replacement_prob):
     NUM_SEQS = 100
@@ -52,6 +53,7 @@ def test_stochastic_swap_noise(replacement_prob):
         assert replacement_rate == pytest.approx(replacement_prob, abs=0.15)
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
 def test_stochastic_swap_noise_disable_on_eval(replacement_prob):
     NUM_SEQS = 100
