@@ -86,11 +86,6 @@
 <span class="c1"># ==============================================================================</span>
 <span class="sd">&quot;&quot;&quot;Companion classes for mid level API for TPU Embeddings in TF2.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">absolute_import</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">unicode_literals</span>
-
 <span class="kn">import</span> <span class="nn">abc</span>
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">typing</span>
@@ -103,6 +98,7 @@
 <span class="kn">from</span> <span class="nn">tensorflow.core.protobuf.tpu</span> <span class="kn">import</span> <span class="n">tpu_embedding_configuration_pb2</span>
 <span class="kn">from</span> <span class="nn">tensorflow.python.distribute</span> <span class="kn">import</span> <span class="n">sharded_variable</span>
 <span class="kn">from</span> <span class="nn">tensorflow.python.framework</span> <span class="kn">import</span> <span class="n">ops</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.framework.tensor_shape</span> <span class="kn">import</span> <span class="n">TensorShape</span>
 <span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">init_ops_v2</span>
 <span class="kn">from</span> <span class="nn">tensorflow.python.ops</span> <span class="kn">import</span> <span class="n">variables</span> <span class="k">as</span> <span class="n">tf_variables</span>
 <span class="kn">from</span> <span class="nn">tensorflow.python.tpu.ops</span> <span class="kn">import</span> <span class="n">tpu_ops</span>
@@ -137,9 +133,10 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">clip_weight_min</span> <span class="o">=</span> <span class="n">clip_weight_min</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">clip_weight_max</span> <span class="o">=</span> <span class="n">clip_weight_max</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">use_gradient_accumulation</span> <span class="ow">and</span> <span class="n">clipvalue</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Received non-None gradient clipping limit </span><span class="si">{}</span><span class="s2"> but &quot;</span>
-                       <span class="s2">&quot;use_gradient_accumulation is not set to True.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                           <span class="n">clipvalue</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;When `use_gradient_accumulation` is False, gradient clipping &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;cannot be used and `clipvalue` should be left as None. &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received value </span><span class="si">{</span><span class="n">clipvalue</span><span class="si">}</span><span class="s2"> for argument `clipvalue`.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">clipvalue</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
       <span class="n">clipvalue</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
     <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">clipvalue</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -152,8 +149,9 @@
 
     <span class="k">if</span> <span class="p">(</span><span class="n">slot_variable_creation_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span>
         <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">slot_variable_creation_fn</span><span class="p">)):</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;slot_variable_creation_fn must be either None or a &quot;</span>
-                       <span class="s2">&quot;callable.&quot;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `slot_variable_creation_fn` must be either None or a &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;callable. Received: </span><span class="si">{</span><span class="n">slot_variable_creation_fn</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">slot_variable_creation_fn</span> <span class="o">=</span> <span class="n">slot_variable_creation_fn</span>
 
   <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
@@ -428,7 +426,9 @@
         <span class="n">multiply_weight_decay_factor_by_learning_rate</span><span class="p">,</span> <span class="n">clipvalue</span><span class="p">,</span>
         <span class="n">slot_variable_creation_fn</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">initial_accumulator_value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Adagrad initial_accumulator_value must be positive&quot;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `initial_accumulator_value` must be a positive float. &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="n">initial_accumulator_value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">initial_accumulator_value</span> <span class="o">=</span> <span class="n">initial_accumulator_value</span>
 
   <span class="k">def</span> <span class="nf">_slot_names</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Text</span><span class="p">]:</span>
@@ -569,7 +569,9 @@
                      <span class="n">multiply_weight_decay_factor_by_learning_rate</span><span class="p">,</span> <span class="n">clipvalue</span><span class="p">,</span>
                      <span class="n">slot_variable_creation_fn</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">initial_accumulator_value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;FTRL initial_accumulator_value must be positive&quot;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `initial_accumulator_value` must be a positive float. &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="n">initial_accumulator_value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">initial_accumulator_value</span> <span class="o">=</span> <span class="n">initial_accumulator_value</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">learning_rate_power</span> <span class="o">=</span> <span class="n">learning_rate_power</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">l1_regularization_strength</span> <span class="o">=</span> <span class="n">l1_regularization_strength</span>
@@ -716,16 +718,18 @@
         <span class="n">multiply_weight_decay_factor_by_learning_rate</span><span class="p">,</span> <span class="n">clipvalue</span><span class="p">,</span>
         <span class="n">slot_variable_creation_fn</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">beta_1</span> <span class="o">&lt;</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">beta_1</span> <span class="o">&gt;=</span> <span class="mf">1.</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;beta1 must be in the range [0, 1), but received </span><span class="si">{}</span><span class="s2">.&quot;</span>
-                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">beta_1</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `beta_1` must be &gt;= 0 and &lt; 1. Received: </span><span class="si">{</span><span class="n">beta_1</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">beta_2</span> <span class="o">&lt;</span> <span class="mf">0.</span> <span class="ow">or</span> <span class="n">beta_2</span> <span class="o">&gt;=</span> <span class="mf">1.</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;beta2 must be in the range [0, 1), but received </span><span class="si">{}</span><span class="s2">.&quot;</span>
-                       <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">beta_2</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `beta_2` must be &gt;= 0 and &lt; 1. Received: </span><span class="si">{</span><span class="n">beta_1</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">epsilon</span> <span class="o">&lt;=</span> <span class="mf">0.</span><span class="p">:</span>
       <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;epsilon must be positive; got </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">epsilon</span><span class="p">))</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">use_gradient_accumulation</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">lazy_adam</span><span class="p">:</span>
       <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-          <span class="s2">&quot;When disabling Lazy Adam, gradient accumulation must be used.&quot;</span><span class="p">)</span>
+          <span class="s2">&quot;When disabling lazy Adam (`lazy_adam=False`), &quot;</span>
+          <span class="s2">&quot;gradient accumulation must be used. &quot;</span>
+          <span class="s2">&quot;Set `use_gradient_accumulation` to False.&quot;</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">beta_1</span> <span class="o">=</span> <span class="n">beta_1</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">beta_2</span> <span class="o">=</span> <span class="n">beta_2</span>
@@ -795,7 +799,7 @@
   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
                <span class="n">vocabulary_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-               <span class="n">initializer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span>
+               <span class="n">initializer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">optimizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">_Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">combiner</span><span class="p">:</span> <span class="n">Text</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
                <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
@@ -831,19 +835,27 @@
 <span class="sd">      ValueError: if `combiner` is not supported.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vocabulary_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">vocabulary_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid vocabulary_size </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vocabulary_size</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `vocabulary_size` must be an int and must be &gt;= 1. &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="n">vocabulary_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">dim</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid dim </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `dim` (embedding dimension) &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;must be an int and must be &gt;= 1. Received: </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">initializer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">initializer</span><span class="p">)):</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;initializer must be callable if specified.&quot;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `initializer` must be a callable (or None). &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="n">initializer</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">initializer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
       <span class="n">initializer</span> <span class="o">=</span> <span class="n">init_ops_v2</span><span class="o">.</span><span class="n">TruncatedNormal</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
                                                 <span class="n">stddev</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="n">math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
-
-    <span class="k">if</span> <span class="n">combiner</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="s2">&quot;sqrtn&quot;</span><span class="p">):</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid combiner </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">combiner</span><span class="p">))</span>
+    <span class="n">accepted_combiners</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span> <span class="s2">&quot;sqrtn&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">combiner</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">accepted_combiners</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `combiner` must be one of </span><span class="si">{</span><span class="n">accepted_combiners</span><span class="si">}</span><span class="s2">. &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="n">combiner</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">vocabulary_size</span> <span class="o">=</span> <span class="n">vocabulary_size</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">dim</span> <span class="o">=</span> <span class="n">dim</span>
@@ -908,6 +920,15 @@
 <span class="sd">  features will be looked up in the first table and the third feature will be</span>
 <span class="sd">  looked up in the second table.</span>
 
+<span class="sd">  You can also specify the output shape for each feature. The output shape</span>
+<span class="sd">  should be the expected activation shape excluding the table dimension. For</span>
+<span class="sd">  dense and sparse tensor, the output shape should be the same as the input</span>
+<span class="sd">  shape excluding the last dimension. For ragged tensor, the output shape can</span>
+<span class="sd">  mismatch the input shape.</span>
+
+<span class="sd">  NOTE: The `max_sequence_length` will be only used when the input tensor has</span>
+<span class="sd">  rank 2 and the `output_shape` is not set in the feature config.</span>
+
 <span class="sd">  When feeding features into `embedding.enqueue` they can be `tf.Tensor`s,</span>
 <span class="sd">  `tf.SparseTensor`s or `tf.RaggedTensor`s. When the argument</span>
 <span class="sd">  `max_sequence_length` is 0, the default, you should expect a output of</span>
@@ -921,6 +942,7 @@
                <span class="n">table</span><span class="p">:</span> <span class="n">TableConfig</span><span class="p">,</span>
                <span class="n">max_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
                <span class="n">validate_weights_and_indices</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+               <span class="n">output_shape</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">TensorShape</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Feature configuration.</span>
 
@@ -931,9 +953,14 @@
 <span class="sd">        the corresponding maximum sequence length. If the sequence is longer</span>
 <span class="sd">        than this, it will be truncated. If 0, the feature is not a sequence</span>
 <span class="sd">        feature.</span>
-<span class="sd">      validate_weights_and_indices: If true, uses safe_embedding_lookup</span>
-<span class="sd">        during serving which ensures there are no empty rows and all weights</span>
-<span class="sd">        and ids are positive at the expense of extra compute cost.</span>
+<span class="sd">      validate_weights_and_indices: If true, uses safe_embedding_lookup during</span>
+<span class="sd">        serving which ensures there are no empty rows and all weights and ids</span>
+<span class="sd">        are positive at the expense of extra compute cost.</span>
+<span class="sd">      output_shape: Optional argument to config the output shape of the feature</span>
+<span class="sd">        activation. If provided, the feature feeding to the `embedding.enqueue`</span>
+<span class="sd">        has to match the shape (for ragged tensor, the input shape and output</span>
+<span class="sd">        shape can mismatch). If not provided, the shape can be either provided</span>
+<span class="sd">        to the `embedding.build` or auto detected at the runtime.</span>
 <span class="sd">      name: An optional name for the feature, useful for debugging.</span>
 
 <span class="sd">    Returns:</span>
@@ -945,17 +972,25 @@
 <span class="sd">      ValueError: if `max_sequence_length` not an integer or is negative.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">table</span><span class="p">,</span> <span class="n">TableConfig</span><span class="p">):</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;table is type </span><span class="si">{}</span><span class="s2">, expected &quot;</span>
-                       <span class="s2">&quot;`tf.tpu.experimental.embedding.TableConfig`&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                           <span class="nb">type</span><span class="p">(</span><span class="n">table</span><span class="p">)))</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Argument `table` has invalid type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">table</span><span class="p">)</span><span class="si">}</span><span class="s2">. &quot;</span>
+                       <span class="s2">&quot;Expected `tf.tpu.experimental.embedding.TableConfig`.&quot;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">max_sequence_length</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">max_sequence_length</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid max_sequence_length </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-          <span class="n">max_sequence_length</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `max_sequence_length` must be an int and must be &gt;= 0. &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="n">max_sequence_length</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">table</span> <span class="o">=</span> <span class="n">table</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="n">max_sequence_length</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">output_shape</span> <span class="o">=</span> <span class="n">TensorShape</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">validate_weights_and_indices</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="sa">f</span><span class="s2">&quot;Argument `validate_weights_and_indices` must be a boolean. &quot;</span>
+          <span class="sa">f</span><span class="s2">&quot;Received: </span><span class="si">{</span><span class="n">validate_weights_and_indices</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
     <span class="bp">self</span><span class="o">.</span><span class="n">validate_weights_and_indices</span> <span class="o">=</span> <span class="n">validate_weights_and_indices</span>
 
   <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1014,12 +1049,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../../../v0.1.1/index.html">v0.1.1</a></dd>
       <dd><a href="../../../../../v0.1.2/index.html">v0.1.2</a></dd>
       <dd><a href="../../../../../v0.1.3/index.html">v0.1.3</a></dd>
       <dd><a href="../../../../../v0.1.4/index.html">v0.1.4</a></dd>
       <dd><a href="../../../../../v0.1.5/index.html">v0.1.5</a></dd>
       <dd><a href="../../../../../v0.1.6/index.html">v0.1.6</a></dd>
+      <dd><a href="../../../../../v0.1.7/index.html">v0.1.7</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
