@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preliminary Preprocessing &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="ETL with NVTabular" href="02-ETL-with-NVTabular.html" />
+    <link rel="prev" title="Tutorial: End-to-end Session-based Recommendation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#running-the-example-notebooks">Running the Example Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based recommendation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
+          <li><a href="index.html">Tutorial: End-to-end Session-based Recommendation</a> &raquo;</li>
+      <li>Preliminary Preprocessing</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ==============================================================================</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="tex2jax_ignore mathjax_ignore section" id="preliminary-preprocessing">
+<h1>Preliminary Preprocessing<a class="headerlink" href="#preliminary-preprocessing" title="Permalink to this headline"></a></h1>
+<div class="section" id="read-and-process-e-commerce-data">
+<h2>Read and Process E-Commerce data<a class="headerlink" href="#read-and-process-e-commerce-data" title="Permalink to this headline"></a></h2>
+<p>In this notebook, we are going to use a subset of a publicly available <a class="reference external" href="https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store">eCommerce dataset</a>. The full dataset contains 7 months data (from October 2019 to April 2020) from a large multi-category online store. Each row in the file represents an event. All events are related to products and users. Each event is like many-to-many relation between products and users.
+Data collected by Open CDP project and the source of the dataset is <a class="reference external" href="https://rees46.com/">REES46 Marketing Platform</a>.</p>
+<p>We use only <code class="docutils literal notranslate"><span class="pre">2019-Oct.csv</span></code> file for training our models, so you can visit this site and download the csv file: <a class="reference external" href="https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store">https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store</a>.</p>
+<div class="section" id="import-the-required-libraries">
+<h3>Import the required libraries<a class="headerlink" href="#import-the-required-libraries" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+<span class="kn">import</span> <span class="nn">gc</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+
+<span class="kn">import</span> <span class="nn">cudf</span>
+<span class="kn">import</span> <span class="nn">nvtabular</span> <span class="k">as</span> <span class="nn">nvt</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="read-data-via-cudf-from-csv">
+<h3>Read Data via cuDF from CSV<a class="headerlink" href="#read-data-via-cudf-from-csv" title="Permalink to this headline"></a></h3>
+<p>At this point we expect that you have already downloaded the <code class="docutils literal notranslate"><span class="pre">2019-Oct.csv</span></code> dataset and stored it in the <code class="docutils literal notranslate"><span class="pre">INPUT_DATA_DIR</span></code> as defined below. It is worth mentioning that the raw dataset is ~ 6 GB, therefore a single GPU with 16 GB or less memory might run out of memory. To avoid that, you can directly start from the second notebook, <code class="docutils literal notranslate"><span class="pre">02-ETL_with_NVTabular</span></code>, using <code class="docutils literal notranslate"><span class="pre">'Oct-2019.parquet</span></code> provided in <a class="reference external" href="https://drive.google.com/drive/folders/1GjNKerPMvEtQHt9Z37ncF1zFedDXL_RJ">here</a>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># define some information about where to get our data</span>
+<span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">raw_df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;2019-Oct.csv&#39;</span><span class="p">))</span> 
+<span class="n">raw_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 3.2 s, sys: 1.5 s, total: 4.69 s
+Wall time: 5.32 s
+</pre></div>
+</div>
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>event_time</th>
+      <th>event_type</th>
+      <th>product_id</th>
+      <th>category_id</th>
+      <th>category_code</th>
+      <th>brand</th>
+      <th>price</th>
+      <th>user_id</th>
+      <th>user_session</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2019-10-01 00:00:00 UTC</td>
+      <td>view</td>
+      <td>44600062</td>
+      <td>2103807459595387724</td>
+      <td>&lt;NA&gt;</td>
+      <td>shiseido</td>
+      <td>35.79</td>
+      <td>541312140</td>
+      <td>72d76fde-8bb3-4e00-8c23-a032dfed738c</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2019-10-01 00:00:00 UTC</td>
+      <td>view</td>
+      <td>3900821</td>
+      <td>2053013552326770905</td>
+      <td>appliances.environment.water_heater</td>
+      <td>aqua</td>
+      <td>33.20</td>
+      <td>554748717</td>
+      <td>9333dfbd-b87a-4708-9857-6336556b0fcc</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2019-10-01 00:00:01 UTC</td>
+      <td>view</td>
+      <td>17200506</td>
+      <td>2053013559792632471</td>
+      <td>furniture.living_room.sofa</td>
+      <td>&lt;NA&gt;</td>
+      <td>543.10</td>
+      <td>519107250</td>
+      <td>566511c2-e2e3-422b-b695-cf8e6e792ca8</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2019-10-01 00:00:01 UTC</td>
+      <td>view</td>
+      <td>1307067</td>
+      <td>2053013558920217191</td>
+      <td>computers.notebook</td>
+      <td>lenovo</td>
+      <td>251.74</td>
+      <td>550050854</td>
+      <td>7c90fc70-0e80-4590-96f3-13c02c18c713</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2019-10-01 00:00:04 UTC</td>
+      <td>view</td>
+      <td>1004237</td>
+      <td>2053013555631882655</td>
+      <td>electronics.smartphone</td>
+      <td>apple</td>
+      <td>1081.98</td>
+      <td>535871217</td>
+      <td>c6bd7419-2748-4c56-95b4-8cec9ff8b80d</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">raw_df</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(42448764, 9)
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="convert-timestamp-from-datetime">
+<h3>Convert timestamp from datetime<a class="headerlink" href="#convert-timestamp-from-datetime" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">raw_df</span><span class="p">[</span><span class="s1">&#39;event_time_dt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_df</span><span class="p">[</span><span class="s1">&#39;event_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;datetime64[s]&#39;</span><span class="p">)</span>
+<span class="n">raw_df</span><span class="p">[</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">raw_df</span><span class="p">[</span><span class="s1">&#39;event_time_dt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+<span class="n">raw_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>event_time</th>
+      <th>event_type</th>
+      <th>product_id</th>
+      <th>category_id</th>
+      <th>category_code</th>
+      <th>brand</th>
+      <th>price</th>
+      <th>user_id</th>
+      <th>user_session</th>
+      <th>event_time_dt</th>
+      <th>event_time_ts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>2019-10-01 00:00:00 UTC</td>
+      <td>view</td>
+      <td>44600062</td>
+      <td>2103807459595387724</td>
+      <td>&lt;NA&gt;</td>
+      <td>shiseido</td>
+      <td>35.79</td>
+      <td>541312140</td>
+      <td>72d76fde-8bb3-4e00-8c23-a032dfed738c</td>
+      <td>2019-10-01 00:00:00</td>
+      <td>1569888000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2019-10-01 00:00:00 UTC</td>
+      <td>view</td>
+      <td>3900821</td>
+      <td>2053013552326770905</td>
+      <td>appliances.environment.water_heater</td>
+      <td>aqua</td>
+      <td>33.20</td>
+      <td>554748717</td>
+      <td>9333dfbd-b87a-4708-9857-6336556b0fcc</td>
+      <td>2019-10-01 00:00:00</td>
+      <td>1569888000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2019-10-01 00:00:01 UTC</td>
+      <td>view</td>
+      <td>17200506</td>
+      <td>2053013559792632471</td>
+      <td>furniture.living_room.sofa</td>
+      <td>&lt;NA&gt;</td>
+      <td>543.10</td>
+      <td>519107250</td>
+      <td>566511c2-e2e3-422b-b695-cf8e6e792ca8</td>
+      <td>2019-10-01 00:00:01</td>
+      <td>1569888001</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2019-10-01 00:00:01 UTC</td>
+      <td>view</td>
+      <td>1307067</td>
+      <td>2053013558920217191</td>
+      <td>computers.notebook</td>
+      <td>lenovo</td>
+      <td>251.74</td>
+      <td>550050854</td>
+      <td>7c90fc70-0e80-4590-96f3-13c02c18c713</td>
+      <td>2019-10-01 00:00:01</td>
+      <td>1569888001</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2019-10-01 00:00:04 UTC</td>
+      <td>view</td>
+      <td>1004237</td>
+      <td>2053013555631882655</td>
+      <td>electronics.smartphone</td>
+      <td>apple</td>
+      <td>1081.98</td>
+      <td>535871217</td>
+      <td>c6bd7419-2748-4c56-95b4-8cec9ff8b80d</td>
+      <td>2019-10-01 00:00:04</td>
+      <td>1569888004</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># check out the columns with nulls</span>
+<span class="n">raw_df</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">.</span><span class="n">any</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>event_time       False
+event_type       False
+product_id       False
+category_id      False
+category_code     True
+brand             True
+price            False
+user_id          False
+user_session      True
+event_time_dt    False
+event_time_ts    False
+dtype: bool
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Remove rows where `user_session` is null.</span>
+<span class="n">raw_df</span> <span class="o">=</span> <span class="n">raw_df</span><span class="p">[</span><span class="n">raw_df</span><span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isnull</span><span class="p">()</span><span class="o">==</span><span class="kc">False</span><span class="p">]</span>
+<span class="nb">len</span><span class="p">(</span><span class="n">raw_df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>42448762
+</pre></div>
+</div>
+</div>
+</div>
+<p>We no longer need <code class="docutils literal notranslate"><span class="pre">event_time</span></code> column.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">raw_df</span> <span class="o">=</span> <span class="n">raw_df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;event_time&#39;</span><span class="p">],</span>  <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="categorify-user-session-column">
+<h3>Categorify <code class="docutils literal notranslate"><span class="pre">user_session</span></code> column<a class="headerlink" href="#categorify-user-session-column" title="Permalink to this headline"></a></h3>
+<p>Although <code class="docutils literal notranslate"><span class="pre">user_session</span></code> is not used as an input feature for the model, it is useful to convert those raw long string to int values to avoid potential failures when grouping interactions by <code class="docutils literal notranslate"><span class="pre">user_session</span></code> in the next notebook.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cols</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">raw_df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+<span class="n">cols</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;user_session&#39;</span><span class="p">)</span>
+<span class="n">cols</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;event_type&#39;,
+ &#39;product_id&#39;,
+ &#39;category_id&#39;,
+ &#39;category_code&#39;,
+ &#39;brand&#39;,
+ &#39;price&#39;,
+ &#39;user_id&#39;,
+ &#39;event_time_dt&#39;,
+ &#39;event_time_ts&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># load data </span>
+<span class="n">df_event</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">raw_df</span><span class="p">)</span> 
+
+<span class="c1"># categorify user_session </span>
+<span class="n">cat_feats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">()</span>
+
+<span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">cols</span> <span class="o">+</span> <span class="n">cat_feats</span><span class="p">)</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">df_event</span><span class="p">)</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">df_event</span><span class="p">)</span><span class="o">.</span><span class="n">to_ddf</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_session</th>
+      <th>event_type</th>
+      <th>product_id</th>
+      <th>category_id</th>
+      <th>category_code</th>
+      <th>brand</th>
+      <th>price</th>
+      <th>user_id</th>
+      <th>event_time_dt</th>
+      <th>event_time_ts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>5126085</td>
+      <td>view</td>
+      <td>44600062</td>
+      <td>2103807459595387724</td>
+      <td>&lt;NA&gt;</td>
+      <td>shiseido</td>
+      <td>35.79</td>
+      <td>541312140</td>
+      <td>2019-10-01 00:00:00</td>
+      <td>1569888000</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>7854470</td>
+      <td>view</td>
+      <td>3900821</td>
+      <td>2053013552326770905</td>
+      <td>appliances.environment.water_heater</td>
+      <td>aqua</td>
+      <td>33.20</td>
+      <td>554748717</td>
+      <td>2019-10-01 00:00:00</td>
+      <td>1569888000</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>730655</td>
+      <td>view</td>
+      <td>17200506</td>
+      <td>2053013559792632471</td>
+      <td>furniture.living_room.sofa</td>
+      <td>&lt;NA&gt;</td>
+      <td>543.10</td>
+      <td>519107250</td>
+      <td>2019-10-01 00:00:01</td>
+      <td>1569888001</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1637332</td>
+      <td>view</td>
+      <td>1307067</td>
+      <td>2053013558920217191</td>
+      <td>computers.notebook</td>
+      <td>lenovo</td>
+      <td>251.74</td>
+      <td>550050854</td>
+      <td>2019-10-01 00:00:01</td>
+      <td>1569888001</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4202155</td>
+      <td>view</td>
+      <td>1004237</td>
+      <td>2053013555631882655</td>
+      <td>electronics.smartphone</td>
+      <td>apple</td>
+      <td>1081.98</td>
+      <td>535871217</td>
+      <td>2019-10-01 00:00:04</td>
+      <td>1569888004</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">raw_df</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="k">del</span><span class="p">(</span><span class="n">raw_df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>145
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="removing-consecutive-repeated-user-item-interactions">
+<h3>Removing consecutive repeated (user, item) interactions<a class="headerlink" href="#removing-consecutive-repeated-user-item-interactions" title="Permalink to this headline"></a></h3>
+<p>We keep repeated interactions on the same items, removing only consecutive interactions, because it might be due to browser tab refreshes or different interaction types (e.g. click, add-to-card, purchase)</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s1">&#39;user_session&#39;</span><span class="p">,</span> <span class="s1">&#39;event_time_ts&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Count with in-session repeated interactions: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)))</span>
+<span class="c1"># Sorts the dataframe by session and timestamp, to remove consecutive repetitions</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;product_id_past&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;product_id&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;session_id_past&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shift</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="c1">#Keeping only no consecutive repeated in session interactions</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="o">~</span><span class="p">((</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;session_id_past&#39;</span><span class="p">])</span> <span class="o">&amp;</span> \
+             <span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;product_id&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;product_id_past&#39;</span><span class="p">]))]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Count after removed in-session repeated interactions: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)))</span>
+<span class="k">del</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;product_id_past&#39;</span><span class="p">])</span>
+<span class="k">del</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;session_id_past&#39;</span><span class="p">])</span>
+
+<span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Count with in-session repeated interactions: 42448762
+Count after removed in-session repeated interactions: 30733301
+CPU times: user 789 ms, sys: 120 ms, total: 909 ms
+Wall time: 1.16 s
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="include-the-item-first-time-seen-feature-for-recency-calculation">
+<h3>Include the item first time seen feature (for recency calculation)<a class="headerlink" href="#include-the-item-first-time-seen-feature-for-recency-calculation" title="Permalink to this headline"></a></h3>
+<p>We create <code class="docutils literal notranslate"><span class="pre">prod_first_event_time_ts</span></code> column which indicates the timestamp that an item was seen first time.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">item_first_interaction_df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;product_id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">agg</span><span class="p">({</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">:</span> <span class="s1">&#39;min&#39;</span><span class="p">})</span> \
+            <span class="o">.</span><span class="n">reset_index</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">:</span> <span class="s1">&#39;prod_first_event_time_ts&#39;</span><span class="p">})</span>
+<span class="n">item_first_interaction_df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">item_first_interaction_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;product_id&#39;</span><span class="p">],</span> <span class="n">how</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_session</th>
+      <th>event_type</th>
+      <th>product_id</th>
+      <th>category_id</th>
+      <th>category_code</th>
+      <th>brand</th>
+      <th>price</th>
+      <th>user_id</th>
+      <th>event_time_dt</th>
+      <th>event_time_ts</th>
+      <th>prod_first_event_time_ts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>94</td>
+      <td>view</td>
+      <td>26202560</td>
+      <td>2053013563693335403</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>388.49</td>
+      <td>512892706</td>
+      <td>2019-10-15 17:21:59</td>
+      <td>1571160119</td>
+      <td>1569925682</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>94</td>
+      <td>view</td>
+      <td>26203994</td>
+      <td>2053013563693335403</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>157.79</td>
+      <td>512892706</td>
+      <td>2019-10-15 17:22:17</td>
+      <td>1571160137</td>
+      <td>1569941460</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>94</td>
+      <td>view</td>
+      <td>26204036</td>
+      <td>2053013563693335403</td>
+      <td>&lt;NA&gt;</td>
+      <td>sokolov</td>
+      <td>471.70</td>
+      <td>512892706</td>
+      <td>2019-10-15 17:22:29</td>
+      <td>1571160149</td>
+      <td>1569897265</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>94</td>
+      <td>view</td>
+      <td>26203994</td>
+      <td>2053013563693335403</td>
+      <td>&lt;NA&gt;</td>
+      <td>&lt;NA&gt;</td>
+      <td>157.79</td>
+      <td>512892706</td>
+      <td>2019-10-15 17:22:58</td>
+      <td>1571160178</td>
+      <td>1569941460</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>94</td>
+      <td>view</td>
+      <td>26203727</td>
+      <td>2053013563693335403</td>
+      <td>&lt;NA&gt;</td>
+      <td>lucente</td>
+      <td>317.38</td>
+      <td>512892706</td>
+      <td>2019-10-15 17:23:19</td>
+      <td>1571160199</td>
+      <td>1569901056</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">del</span><span class="p">(</span><span class="n">item_first_interaction_df</span><span class="p">)</span>
+<span class="n">item_first_interaction_df</span><span class="o">=</span><span class="kc">None</span>
+<span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+</pre></div>
+</div>
+</div>
+</div>
+<p>In this tutorial, we only use one week of data from Oct 2019 dataset.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># check the min date</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;event_time_dt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>numpy.datetime64(&#39;2019-10-01T00:00:00&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Filters only the first week of the data.</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;event_time_dt&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">datetime64</span><span class="p">(</span><span class="s1">&#39;2019-10-08&#39;</span><span class="p">)]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>We verify that we only have the first week of Oct-2019 dataset.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;event_time_dt&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>numpy.datetime64(&#39;2019-10-07T23:59:59&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<p>We drop <code class="docutils literal notranslate"><span class="pre">event_time_dt</span></code> column as it will not be used anymore.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">([</span><span class="s1">&#39;event_time_dt&#39;</span><span class="p">],</span>  <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_session</th>
+      <th>event_type</th>
+      <th>product_id</th>
+      <th>category_id</th>
+      <th>category_code</th>
+      <th>brand</th>
+      <th>price</th>
+      <th>user_id</th>
+      <th>event_time_ts</th>
+      <th>prod_first_event_time_ts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>43</td>
+      <td>view</td>
+      <td>5300797</td>
+      <td>2053013563173241677</td>
+      <td>&lt;NA&gt;</td>
+      <td>panasonic</td>
+      <td>39.90</td>
+      <td>513903572</td>
+      <td>1570460611</td>
+      <td>1569948287</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>43</td>
+      <td>view</td>
+      <td>5300798</td>
+      <td>2053013563173241677</td>
+      <td>&lt;NA&gt;</td>
+      <td>panasonic</td>
+      <td>32.18</td>
+      <td>513903572</td>
+      <td>1570460616</td>
+      <td>1569934097</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>43</td>
+      <td>view</td>
+      <td>5300284</td>
+      <td>2053013563173241677</td>
+      <td>&lt;NA&gt;</td>
+      <td>rowenta</td>
+      <td>30.86</td>
+      <td>513903572</td>
+      <td>1570460621</td>
+      <td>1569927253</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>43</td>
+      <td>view</td>
+      <td>5300382</td>
+      <td>2053013563173241677</td>
+      <td>&lt;NA&gt;</td>
+      <td>remington</td>
+      <td>28.22</td>
+      <td>513903572</td>
+      <td>1570460636</td>
+      <td>1570026747</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>43</td>
+      <td>view</td>
+      <td>5300366</td>
+      <td>2053013563173241677</td>
+      <td>&lt;NA&gt;</td>
+      <td>polaris</td>
+      <td>26.46</td>
+      <td>513903572</td>
+      <td>1570460650</td>
+      <td>1570097085</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>Save the data as a single parquet file to be used in the ETL notebook.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># save df as parquet files on disk</span>
+<span class="n">df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;Oct-2019.parquet&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<ul class="simple">
+<li><p>Shut down the kernel</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
+
+<span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Tutorial: End-to-end Session-based Recommendation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="02-ETL-with-NVTabular.html" class="btn btn-neutral float-right" title="ETL with NVTabular" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

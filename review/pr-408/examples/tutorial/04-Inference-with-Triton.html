@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Triton for Recommender Systems &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Transformers4Rec paper - Experiments reproducibility" href="../t4rec_paper_experiments/index.html" />
+    <link rel="prev" title="Session-based recommendation with Transformers4Rec" href="03-Session-based-recsys.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#running-the-example-notebooks">Running the Example Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based recommendation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
+          <li><a href="index.html">Tutorial: End-to-end Session-based Recommendation</a> &raquo;</li>
+      <li>Triton for Recommender Systems</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ==============================================================================</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="tex2jax_ignore mathjax_ignore section" id="triton-for-recommender-systems">
+<h1>Triton for Recommender Systems<a class="headerlink" href="#triton-for-recommender-systems" title="Permalink to this headline"></a></h1>
+<p>NVIDIA <a class="reference external" href="https://github.com/triton-inference-server/server">Triton Inference Server (TIS)</a> simplifies the deployment of AI models at scale in production. The Triton Inference Server allows us to deploy and serve our model for inference. It supports a number of different machine learning frameworks such as TensorFlow and PyTorch.</p>
+<p>The last step of machine learning (ML)/deep learning (DL) pipeline is to deploy the ETL workflow and saved model to production. In the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the DL model for a prediction. Therefore, we deploy the NVTabular workflow with the PyTorch model as an ensemble model to Triton Inference. The ensemble model guarantees that the same transformation is applied to the raw inputs.</p>
+<p><img alt="" src="../../_images/torch_triton.png" /></p>
+<p><strong>Objectives:</strong></p>
+<p>Learn how to deploy a model to Triton</p>
+<ol class="simple">
+<li><p>Deploy saved NVTabular and PyTorch models to Triton Inference Server</p></li>
+<li><p>Sent requests for predictions</p></li>
+</ol>
+<div class="section" id="pull-and-start-inference-docker-container">
+<h2>Pull and start Inference docker container<a class="headerlink" href="#pull-and-start-inference-docker-container" title="Permalink to this headline"></a></h2>
+<p>At this point, before connecing to the Triton Server, we launch the inference docker container and then load the exported ensemble <code class="docutils literal notranslate"><span class="pre">t4r_pytorch</span></code> to the inference server. This is done with the scripts below:</p>
+<div class="section" id="launch-the-docker-container">
+<h3>Launch the docker container:<a class="headerlink" href="#launch-the-docker-container" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_saved_models</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">models</span><span class="o">/</span> <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">inference</span><span class="p">:</span><span class="mf">21.09</span>
+</pre></div>
+</div>
+<p>This script will mount your local model-repository folder that includes your saved models from the previous cell to <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code> directory in the merlin-inference docker container.</p>
+</div>
+<div class="section" id="start-triton-server">
+<h3>Start triton server<a class="headerlink" href="#start-triton-server" title="Permalink to this headline"></a></h3>
+<p>After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tritonserver</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">repository</span><span class="o">=&lt;</span><span class="n">path_to_models</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">control</span><span class="o">-</span><span class="n">mode</span><span class="o">=</span><span class="n">explicit</span>
+</pre></div>
+</div>
+<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code>. The models haven’t been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.</p>
+</div>
+</div>
+<div class="section" id="deploy-pytorch-and-nvtabular-model-to-triton-inference-server">
+<h2>1. Deploy PyTorch and NVTabular Model to Triton Inference Server<a class="headerlink" href="#deploy-pytorch-and-nvtabular-model-to-triton-inference-server" title="Permalink to this headline"></a></h2>
+<p>Our Triton server has already been launched and is ready to make requests. Remember we already exported the saved PyTorch model in the previous notebook, and generated the config files for Triton Inference Server.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import dependencies</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">cudf</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="review-exported-files">
+<h2>1.2 Review exported files<a class="headerlink" href="#review-exported-files" title="Permalink to this headline"></a></h2>
+<p>Triton expects a specific directory structure for our models as the following format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">model</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;/</span>
+<span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pbtxt</span><span class="p">]</span>
+<span class="o">&lt;</span><span class="n">version</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;/</span>
+  <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">savedmodel</span><span class="p">]</span><span class="o">/</span>
+    <span class="o">&lt;</span><span class="n">pytorch_saved_model_files</span><span class="o">&gt;/</span>
+      <span class="o">...</span>
+</pre></div>
+</div>
+<p>Let’s check out our model repository layout. You can install tree library with <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">tree</span></code>, and then run <code class="docutils literal notranslate"><span class="pre">!tree</span> <span class="pre">/workspace/models/</span></code> to print out the model repository layout as below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>├── t4r_pytorch
+│   ├── 1
+│   └── config.pbtxt
+├── t4r_pytorch_nvt
+│   ├── 1
+│   │   ├── model.py
+│   │   ├── __pycache__
+│   │   │   └── model.cpython-38.pyc
+│   │   └── workflow
+│   │       ├── categories
+│   │       │   ├── cat_stats.category_id.parquet
+│   │       │   ├── unique.brand.parquet
+│   │       │   ├── unique.category_code.parquet
+│   │       │   ├── unique.category_id.parquet
+│   │       │   ├── unique.event_type.parquet
+│   │       │   ├── unique.product_id.parquet
+│   │       │   ├── unique.user_id.parquet
+│   │       │   └── unique.user_session.parquet
+│   │       ├── metadata.json
+│   │       └── workflow.pkl
+│   └── config.pbtxt
+└── t4r_pytorch_pt
+    ├── 1
+    │   ├── model_info.json
+    │   ├── model.pkl
+    │   ├── model.pth
+    │   ├── model.py
+    │   └── __pycache__
+    │       └── model.cpython-38.pyc
+    └── config.pbtxt
+</pre></div>
+</div>
+<p>Triton needs a <a class="reference external" href="https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md">config file</a> to understand how to interpret the model. Let’s look at the generated config file. It defines the input columns with datatype and dimensions and the output layer. Manually creating this config file can be complicated and NVTabular generates it with the <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function, which we used in the previous notebook.</p>
+<p>The <a class="reference external" href="https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md">config file</a> needs the following information:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of our model. Must be the same name as the parent folder.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">platform</span></code>: The type of framework serving the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The input our model expects.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: Should correspond with the model input name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_type</span></code>: Should correspond to the input’s data type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dims</span></code>: The dimensions of the <em>request</em> for the input. For models that support input and output tensors with variable-size dimensions, those dimensions can be listed as -1 in the input and output configuration.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: The output parameters of our model.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: Should correspond with the model output name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_type</span></code>: Should correspond to the output’s data type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dims</span></code>: The dimensions of the output.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="loading-model">
+<h2>1.3. Loading Model<a class="headerlink" href="#loading-model" title="Permalink to this headline"></a></h2>
+<p>Next, let’s build a client to connect to our server. The <code class="docutils literal notranslate"><span class="pre">InferenceServerClient</span></code> object is what we’ll be using to talk to Triton.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tritonhttpclient</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">triton_client</span> <span class="o">=</span> <span class="n">tritonhttpclient</span><span class="o">.</span><span class="n">InferenceServerClient</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;localhost:8000&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;client created.&quot;</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;channel creation failed: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<span class="n">triton_client</span><span class="o">.</span><span class="n">is_server_live</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>client created.
+GET /v2/health/live, headers None
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">get_model_repository_index</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
+
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;201&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNAVAILABLE&quot;,&quot;reason&quot;:&quot;unloaded&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNLOADING&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNLOADING&quot;}]&#39;)
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;,
+  &#39;version&#39;: &#39;1&#39;,
+  &#39;state&#39;: &#39;UNAVAILABLE&#39;,
+  &#39;reason&#39;: &#39;unloaded&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;UNLOADING&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;UNLOADING&#39;}]
+</pre></div>
+</div>
+</div>
+</div>
+<p>We load the ensemble model</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
+<span class="n">triton_client</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/load, headers None
+
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<p>If all models are loaded successfully, you should be seeing successfully loaded status next to each model name on your terminal.</p>
+</div>
+<div class="section" id="sent-requests-for-predictions">
+<h2>2. Sent Requests for Predictions<a class="headerlink" href="#sent-requests-for-predictions" title="Permalink to this headline"></a></h2>
+<p>Load raw data for inference: We select the first 50 interactions and filter out sessions with less than 2 interactions. For this tutorial, just as an example we use the <code class="docutils literal notranslate"><span class="pre">Oct-2019</span></code> dataset that we used for model training.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
+<span class="n">df</span><span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;Oct-2019.parquet&#39;</span><span class="p">))</span>
+<span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">)</span>
+<span class="n">batch</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">50</span><span class="p">,:]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_to_use</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">user_session</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<span class="n">filtered_batch</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">batch</span><span class="o">.</span><span class="n">user_session</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sessions_to_use</span><span class="p">[</span><span class="n">sessions_to_use</span><span class="o">.</span><span class="n">values</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>user_session</th>
+      <th>event_type</th>
+      <th>product_id</th>
+      <th>category_id</th>
+      <th>category_code</th>
+      <th>brand</th>
+      <th>price</th>
+      <th>user_id</th>
+      <th>event_time_ts</th>
+      <th>prod_first_event_time_ts</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>3562914</th>
+      <td>1637332</td>
+      <td>view</td>
+      <td>1307067</td>
+      <td>2053013558920217191</td>
+      <td>computers.notebook</td>
+      <td>lenovo</td>
+      <td>251.74</td>
+      <td>550050854</td>
+      <td>1569888001</td>
+      <td>1569888001</td>
+    </tr>
+    <tr>
+      <th>5173328</th>
+      <td>4202155</td>
+      <td>view</td>
+      <td>1004237</td>
+      <td>2053013555631882655</td>
+      <td>electronics.smartphone</td>
+      <td>apple</td>
+      <td>1081.98</td>
+      <td>535871217</td>
+      <td>1569888004</td>
+      <td>1569888004</td>
+    </tr>
+    <tr>
+      <th>3741261</th>
+      <td>1808164</td>
+      <td>view</td>
+      <td>1480613</td>
+      <td>2053013561092866779</td>
+      <td>computers.desktop</td>
+      <td>pulser</td>
+      <td>908.62</td>
+      <td>512742880</td>
+      <td>1569888005</td>
+      <td>1569888005</td>
+    </tr>
+    <tr>
+      <th>4996937</th>
+      <td>3794756</td>
+      <td>view</td>
+      <td>31500053</td>
+      <td>2053013558031024687</td>
+      <td>&lt;NA&gt;</td>
+      <td>luminarc</td>
+      <td>41.16</td>
+      <td>550978835</td>
+      <td>1569888008</td>
+      <td>1569888008</td>
+    </tr>
+    <tr>
+      <th>5589259</th>
+      <td>5470852</td>
+      <td>view</td>
+      <td>28719074</td>
+      <td>2053013565480109009</td>
+      <td>apparel.shoes.keds</td>
+      <td>baden</td>
+      <td>102.71</td>
+      <td>520571932</td>
+      <td>1569888010</td>
+      <td>1569888010</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nvtabular.inference.triton</span> <span class="k">as</span> <span class="nn">nvt_triton</span>
+<span class="kn">import</span> <span class="nn">tritonclient.grpc</span> <span class="k">as</span> <span class="nn">grpcclient</span>
+
+<span class="n">inputs</span> <span class="o">=</span> <span class="n">nvt_triton</span><span class="o">.</span><span class="n">convert_df_to_triton_input</span><span class="p">(</span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferInput</span><span class="p">)</span>
+
+<span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span>
+
+<span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">:</span>
+    <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grpcclient</span><span class="o">.</span><span class="n">InferRequestedOutput</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+    
+<span class="n">MODEL_NAME_NVT</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
+
+<span class="k">with</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferenceServerClient</span><span class="p">(</span><span class="s2">&quot;localhost:8001&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">infer</span><span class="p">(</span><span class="n">MODEL_NAME_NVT</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">as_numpy</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>output :
+ [[-12.86381   -13.449438   -9.572359  ... -12.689846  -13.033402
+  -13.294905 ]
+ [-24.320768  -26.130745   -4.3342614 ... -24.07727   -25.470228
+  -26.27378  ]
+ [-22.867298  -24.897617   -6.6269407 ... -23.640343  -23.620872
+  -24.977371 ]
+ [-21.455946  -22.92965    -4.8912797 ... -21.020473  -22.514032
+  -22.958193 ]
+ [-24.569319  -26.149971   -4.223791  ... -24.316437  -25.649946
+  -26.920403 ]
+ [-14.218529  -14.833358   -8.438756  ... -14.013732  -14.700138
+  -14.71361  ]]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="visualise-top-k-predictions">
+<h3>Visualise top-k predictions<a class="headerlink" href="#visualise-top-k-predictions" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">visualize_response</span>
+<span class="n">visualize_response</span><span class="p">(</span><span class="n">filtered_batch</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">session_col</span><span class="o">=</span><span class="s1">&#39;user_session&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `1167651`: 1045 || 229 || 233 || 1085 || 10
+
+- Top-5 predictions for session `1637332`: 11 || 7 || 4 || 2 || 3
+
+- Top-5 predictions for session `1808164`: 162 || 142 || 226 || 80 || 200
+
+- Top-5 predictions for session `3794756`: 3 || 2 || 26 || 364 || 10
+
+- Top-5 predictions for session `4202155`: 2 || 57 || 36 || 38 || 10
+
+- Top-5 predictions for session `5470852`: 1710 || 233 || 805 || 555 || 10
+</pre></div>
+</div>
+</div>
+</div>
+<p>As you see we first got prediction results (logits) from the trained model head, and then by using a handy util function <code class="docutils literal notranslate"><span class="pre">visualize_response</span></code> we extracted top-k encoded item-ids from logits. Basically, we  generated recommended items for a given session.</p>
+<p>This is the end of the tutorial. You successfully …</p>
+<ol class="simple">
+<li><p>performed feature engineering with NVTabular</p></li>
+<li><p>trained transformer architecture based session-based recommendation models with Transformers4Rec</p></li>
+<li><p>deployed a trained model to Triton Inference Server, sent request and got responses from the server.</p></li>
+</ol>
+</div>
+<div class="section" id="unload-models-and-shut-down-the-kernel">
+<h3>Unload models and shut down the kernel<a class="headerlink" href="#unload-models-and-shut-down-the-kernel" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
+<span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_nvt&quot;</span><span class="p">)</span>
+<span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_pt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/unload, headers None
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch&#39;
+POST /v2/repository/models/t4r_pytorch_nvt/unload, headers None
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch_nvt&#39;
+POST /v2/repository/models/t4r_pytorch_pt/unload, headers None
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch_pt&#39;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
+<span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
+<span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;status&#39;: &#39;ok&#39;, &#39;restart&#39;: True}
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="03-Session-based-recsys.html" class="btn btn-neutral float-left" title="Session-based recommendation with Transformers4Rec" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../t4rec_paper_experiments/index.html" class="btn btn-neutral float-right" title="Transformers4Rec paper - Experiments reproducibility" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

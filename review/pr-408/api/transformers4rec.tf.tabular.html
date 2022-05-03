@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.tf.tabular package &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="transformers4rec.tf.utils package" href="transformers4rec.tf.utils.html" />
+    <link rel="prev" title="transformers4rec.tf.model package" href="transformers4rec.tf.model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="transformers4rec.html">transformers4rec package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="merlin_standard_lib.html">merlin_standard_lib package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">API Documentation</a> &raquo;</li>
+          <li><a href="transformers4rec.html">transformers4rec package</a> &raquo;</li>
+          <li><a href="transformers4rec.tf.html">transformers4rec.tf package</a> &raquo;</li>
+      <li>transformers4rec.tf.tabular package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="transformers4rec-tf-tabular-package">
+<h1>transformers4rec.tf.tabular package<a class="headerlink" href="#transformers4rec-tf-tabular-package" title="Permalink to this headline"></a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-transformers4rec.tf.tabular.aggregation">
+<span id="transformers4rec-tf-tabular-aggregation-module"></span><h2>transformers4rec.tf.tabular.aggregation module<a class="headerlink" href="#module-transformers4rec.tf.tabular.aggregation" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.aggregation.ConcatFeatures">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">ConcatFeatures</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ConcatFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ConcatFeatures" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularAggregation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ConcatFeatures.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ConcatFeatures.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ConcatFeatures.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ConcatFeatures.compute_output_shape">
+<code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ConcatFeatures.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ConcatFeatures.compute_output_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ConcatFeatures.get_config">
+<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ConcatFeatures.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ConcatFeatures.get_config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.aggregation.StackFeatures">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">StackFeatures</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#StackFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.StackFeatures" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularAggregation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.StackFeatures.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#StackFeatures.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.StackFeatures.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.StackFeatures.compute_output_shape">
+<code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#StackFeatures.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.StackFeatures.compute_output_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.StackFeatures.get_config">
+<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#StackFeatures.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.StackFeatures.get_config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseFeatureAggregation">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">ElementwiseFeatureAggregation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseFeatureAggregation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseFeatureAggregation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularAggregation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSum">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">ElementwiseSum</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseSum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSum" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularAggregation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSum.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseSum.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSum.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSum.compute_output_shape">
+<code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseSum.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSum.compute_output_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.aggregation.</span></code><code class="sig-name descname"><span class="pre">ElementwiseSumItemMulti</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseSumItemMulti"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularAggregation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseSumItemMulti.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.compute_output_shape">
+<code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseSumItemMulti.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.compute_output_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.get_config">
+<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/aggregation.html#ElementwiseSumItemMulti.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.get_config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.REQUIRES_SCHEMA">
+<code class="sig-name descname"><span class="pre">REQUIRES_SCHEMA</span></code><em class="property"> <span class="pre">=</span> <span class="pre">True</span></em><a class="headerlink" href="#transformers4rec.tf.tabular.aggregation.ElementwiseSumItemMulti.REQUIRES_SCHEMA" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="transformers4rec-tf-tabular-tabular-module">
+<h2>transformers4rec.tf.tabular.tabular module<a class="headerlink" href="#transformers4rec-tf-tabular-tabular-module" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-transformers4rec.tf.tabular.transformations">
+<span id="transformers4rec-tf-tabular-transformations-module"></span><h2>transformers4rec.tf.tabular.transformations module<a class="headerlink" href="#module-transformers4rec.tf.tabular.transformations" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.transformations.AsSparseFeatures">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.transformations.</span></code><code class="sig-name descname"><span class="pre">AsSparseFeatures</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#AsSparseFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.AsSparseFeatures" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularTransformation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.AsSparseFeatures.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#AsSparseFeatures.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.AsSparseFeatures.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.AsSparseFeatures.compute_output_shape">
+<code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#AsSparseFeatures.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.AsSparseFeatures.compute_output_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.transformations.AsDenseFeatures">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.transformations.</span></code><code class="sig-name descname"><span class="pre">AsDenseFeatures</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#AsDenseFeatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.AsDenseFeatures" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularTransformation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.AsDenseFeatures.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#AsDenseFeatures.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.AsDenseFeatures.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.AsDenseFeatures.compute_output_shape">
+<code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#AsDenseFeatures.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.AsDenseFeatures.compute_output_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.tf.tabular.transformations.StochasticSwapNoise">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.tabular.transformations.</span></code><code class="sig-name descname"><span class="pre">StochasticSwapNoise</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#StochasticSwapNoise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.StochasticSwapNoise" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">keras.engine.base_layer.Layer</span></code>, <a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin" title="merlin_standard_lib.registry.RegistryMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">merlin_standard_lib.registry.RegistryMixin</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">TabularTransformation</span></code>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Applies Stochastic replacement of sequence features</p>
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.StochasticSwapNoise.call">
+<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_mask</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#StochasticSwapNoise.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.StochasticSwapNoise.call" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.StochasticSwapNoise.augment">
+<code class="sig-name descname"><span class="pre">augment</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_tensor</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">tensorflow.python.framework.ops.Tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#StochasticSwapNoise.augment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.StochasticSwapNoise.augment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.StochasticSwapNoise.compute_output_shape">
+<code class="sig-name descname"><span class="pre">compute_output_shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#StochasticSwapNoise.compute_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.StochasticSwapNoise.compute_output_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.tf.tabular.transformations.StochasticSwapNoise.get_config">
+<code class="sig-name descname"><span class="pre">get_config</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/tabular/transformations.html#StochasticSwapNoise.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.tabular.transformations.StochasticSwapNoise.get_config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.tf.tabular">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-transformers4rec.tf.tabular" title="Permalink to this headline"></a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="transformers4rec.tf.model.html" class="btn btn-neutral float-left" title="transformers4rec.tf.model package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transformers4rec.tf.utils.html" class="btn btn-neutral float-right" title="transformers4rec.tf.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

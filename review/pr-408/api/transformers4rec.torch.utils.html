@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.utils package &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="transformers4rec.utils package" href="transformers4rec.utils.html" />
+    <link rel="prev" title="transformers4rec.torch.tabular package" href="transformers4rec.torch.tabular.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="transformers4rec.html">transformers4rec package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="merlin_standard_lib.html">merlin_standard_lib package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">API Documentation</a> &raquo;</li>
+          <li><a href="transformers4rec.html">transformers4rec package</a> &raquo;</li>
+          <li><a href="transformers4rec.torch.html">transformers4rec.torch package</a> &raquo;</li>
+      <li>transformers4rec.torch.utils package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="transformers4rec-torch-utils-package">
+<h1>transformers4rec.torch.utils package<a class="headerlink" href="#transformers4rec-torch-utils-package" title="Permalink to this headline"></a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-transformers4rec.torch.utils.data_utils">
+<span id="transformers4rec-torch-utils-data-utils-module"></span><h2>transformers4rec.torch.utils.data_utils module<a class="headerlink" href="#module-transformers4rec.torch.utils.data_utils" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.data_utils.T4RecDataLoader">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">T4RecDataLoader</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#T4RecDataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.T4RecDataLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base Helper class to build dataloader from the schema with properties
+required by T4Rec Trainer class.</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.data_utils.T4RecDataLoader.from_schema">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema" title="merlin_standard_lib.schema.schema.Schema"><span class="pre">merlin_standard_lib.schema.schema.Schema</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths_or_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#T4RecDataLoader.from_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.T4RecDataLoader.from_schema" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.data_utils.T4RecDataLoader.set_dataset">
+<code class="sig-name descname"><span class="pre">set_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths_or_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#T4RecDataLoader.set_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.T4RecDataLoader.set_dataset" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.data_utils.T4RecDataLoader.parse">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">parse</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_or_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#T4RecDataLoader.parse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.T4RecDataLoader.parse" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">PyarrowDataLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths_or_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols_to_read</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle_buffer_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#PyarrowDataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.dataloader.T_co</span></code>]</p>
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.batch_size">
+<code class="sig-name descname"><span class="pre">batch_size</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.batch_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.num_workers">
+<code class="sig-name descname"><span class="pre">num_workers</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.num_workers" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.pin_memory">
+<code class="sig-name descname"><span class="pre">pin_memory</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.pin_memory" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.drop_last">
+<code class="sig-name descname"><span class="pre">drop_last</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.drop_last" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.set_dataset">
+<code class="sig-name descname"><span class="pre">set_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cols_to_read</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#PyarrowDataLoader.set_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.set_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>set the Parquet dataset</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>cols_to_read</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The list of features names to load</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.from_schema">
+<em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paths_or_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">continuous_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">categorical_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shuffle_buffer_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pin_memory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#PyarrowDataLoader.from_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.from_schema" title="Permalink to this definition"></a></dt>
+<dd><p>Instantiates <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> from a <code class="docutils literal notranslate"><span class="pre">DatasetSchema</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>schema</strong> (<em>DatasetSchema</em>) – Dataset schema</p></li>
+<li><p><strong>paths_or_dataset</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>Dataset</em><em>]</em>) – Path to paquet data of Dataset object.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – batch size of Dataloader.</p></li>
+<li><p><strong>max_sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The maximum length of list features.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.dataset">
+<code class="sig-name descname"><span class="pre">dataset</span></code><em class="property"><span class="pre">:</span> <span class="pre">torch.utils.data.dataset.Dataset</span><span class="p"><span class="pre">[</span></span><span class="pre">T_co</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.dataset" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.timeout">
+<code class="sig-name descname"><span class="pre">timeout</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.timeout" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.sampler">
+<code class="sig-name descname"><span class="pre">sampler</span></code><em class="property"><span class="pre">:</span> <span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.utils.data.sampler.Sampler</span><span class="p"><span class="pre">,</span> </span><span class="pre">Iterable</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.sampler" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.data_utils.PyarrowDataLoader.prefetch_factor">
+<code class="sig-name descname"><span class="pre">prefetch_factor</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.prefetch_factor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.data_utils.ParquetDataset">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">ParquetDataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parquet_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cols_to_read</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_features_len_pad_trim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#ParquetDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.ParquetDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.dataset.T_co</span></code>]</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.data_utils.ParquetDataset.pad_seq_column_if_needed">
+<code class="sig-name descname"><span class="pre">pad_seq_column_if_needed</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#ParquetDataset.pad_seq_column_if_needed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.ParquetDataset.pad_seq_column_if_needed" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.data_utils.ShuffleDataset">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">ShuffleDataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#ShuffleDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.ShuffleDataset" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.dataset.T_co</span></code>]</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.utils.examples_utils">
+<span id="transformers4rec-torch-utils-examples-utils-module"></span><h2>transformers4rec.torch.utils.examples_utils module<a class="headerlink" href="#module-transformers4rec.torch.utils.examples_utils" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.examples_utils.list_files">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.examples_utils.</span></code><code class="sig-name descname"><span class="pre">list_files</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">startpath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/examples_utils.html#list_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.examples_utils.list_files" title="Permalink to this definition"></a></dt>
+<dd><p>Util function to print the nested structure of a directory</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.examples_utils.visualize_response">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.examples_utils.</span></code><code class="sig-name descname"><span class="pre">visualize_response</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">response</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'session_id'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/examples_utils.html#visualize_response"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.examples_utils.visualize_response" title="Permalink to this definition"></a></dt>
+<dd><p>Util function to extract top-k encoded item-ids from logits</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<a class="reference external" href="https://docs.rapids.ai/api/cudf/stable/api_docs/api/cudf.DataFrame.html#cudf.DataFrame" title="(in cudf v22.04)"><em>cudf.DataFrame</em></a>) – the batch of raw data sent to triton server.</p></li>
+<li><p><strong>response</strong> (<em>tritonclient.grpc.InferResult</em>) – the response returned by grpc client.</p></li>
+<li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – the <cite>top_k</cite> top items to retrieve from predictions.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.examples_utils.fit_and_evaluate">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.examples_utils.</span></code><code class="sig-name descname"><span class="pre">fit_and_evaluate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trainer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/examples_utils.html#fit_and_evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.examples_utils.fit_and_evaluate" title="Permalink to this definition"></a></dt>
+<dd><p>Util function for time-window based fine-tuning using the T4rec Trainer class.
+Iteratively train using data of a given index and evaluate on the validation data
+of the following index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The start index for training, it should match the partitions of the data directory</p></li>
+<li><p><strong>end_time_index</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The end index for training, it should match the partitions of the  data directory</p></li>
+<li><p><strong>input_dir</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – The input directory where the parquet files were saved based on partition column</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>indexed_by_time_metrics</strong> – The dictionary of ranking metrics: each item is the list of scores over time indices.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.10)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.examples_utils.wipe_memory">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.examples_utils.</span></code><code class="sig-name descname"><span class="pre">wipe_memory</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/examples_utils.html#wipe_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.examples_utils.wipe_memory" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.utils.schema_utils">
+<span id="transformers4rec-torch-utils-schema-utils-module"></span><h2>transformers4rec.torch.utils.schema_utils module<a class="headerlink" href="#module-transformers4rec.torch.utils.schema_utils" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.schema_utils.random_data_from_schema">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.schema_utils.</span></code><code class="sig-name descname"><span class="pre">random_data_from_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema" title="merlin_standard_lib.schema.schema.Schema"><span class="pre">merlin_standard_lib.schema.schema.Schema</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rows</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_session_length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_session_length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/schema_utils.html#random_data_from_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.schema_utils.random_data_from_schema" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.utils.torch_utils">
+<span id="transformers4rec-torch-utils-torch-utils-module"></span><h2>transformers4rec.torch.utils.torch_utils module<a class="headerlink" href="#module-transformers4rec.torch.utils.torch_utils" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.OutputSizeMixin">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">OutputSizeMixin</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#OutputSizeMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.OutputSizeMixin" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.config.html#transformers4rec.config.schema.SchemaMixin" title="transformers4rec.config.schema.SchemaMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.config.schema.SchemaMixin</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.OutputSizeMixin.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#OutputSizeMixin.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.OutputSizeMixin.build" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.OutputSizeMixin.output_size">
+<code class="sig-name descname"><span class="pre">output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#OutputSizeMixin.output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.OutputSizeMixin.output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.OutputSizeMixin.forward_output_size">
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#OutputSizeMixin.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.OutputSizeMixin.forward_output_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.LossMixin">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">LossMixin</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#LossMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.LossMixin" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Mixin to use for <a href="#id1"><span class="problematic" id="id2">`</span></a>torch.Module`s that can calculate a loss.</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.LossMixin.compute_loss">
+<code class="sig-name descname"><span class="pre">compute_loss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_metrics</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#LossMixin.compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.LossMixin.compute_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Compute the loss on a batch of data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><em>torch.Tensor</em></a><em>, </em><em>TabularData</em><em>]</em>) – TODO</p></li>
+<li><p><strong>targets</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><em>torch.Tensor</em></a><em>, </em><em>TabularData</em><em>]</em>) – TODO</p></li>
+<li><p><strong>compute_metrics</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>default=True</em>) – Boolean indicating whether or not to update the state of the metrics
+(if they are defined).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.MetricsMixin">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">MetricsMixin</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#MetricsMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MetricsMixin" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Mixin to use for <a href="#id3"><span class="problematic" id="id4">`</span></a>torch.Module`s that can calculate metrics.</p>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MetricsMixin.calculate_metrics">
+<code class="sig-name descname"><span class="pre">calculate_metrics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'val'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#MetricsMixin.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MetricsMixin.calculate_metrics" title="Permalink to this definition"></a></dt>
+<dd><p>Calculate metrics on a batch of data, each metric is stateful and this updates the state.</p>
+<p>The state of each metric can be retrieved by calling the <cite>compute_metrics</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><em>torch.Tensor</em></a><em>, </em><em>TabularData</em><em>]</em>) – TODO</p></li>
+<li><p><strong>targets</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><em>torch.Tensor</em></a><em>, </em><em>TabularData</em><em>]</em>) – TODO</p></li>
+<li><p><strong>forward</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>default True</em>) – </p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>default=&quot;val&quot;</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MetricsMixin.compute_metrics">
+<code class="sig-name descname"><span class="pre">compute_metrics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#MetricsMixin.compute_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MetricsMixin.compute_metrics" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the current state of each metric.</p>
+<p>The state is typically updated each batch by calling the <cite>calculate_metrics</cite> method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>default=&quot;val&quot;</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Dict[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)">str</a>, Union[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)">float</a>, <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)">torch.Tensor</a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MetricsMixin.reset_metrics">
+<code class="sig-name descname"><span class="pre">reset_metrics</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#MetricsMixin.reset_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MetricsMixin.reset_metrics" title="Permalink to this definition"></a></dt>
+<dd><p>Reset all metrics.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.requires_schema">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">requires_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#requires_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.requires_schema" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.check_gpu">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">check_gpu</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#check_gpu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.check_gpu" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.get_output_sizes_from_schema">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">get_output_sizes_from_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema" title="merlin_standard_lib.schema.schema.Schema"><span class="pre">merlin_standard_lib.schema.schema.Schema</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_sequence_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#get_output_sizes_from_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.get_output_sizes_from_schema" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.calculate_batch_size_from_input_size">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">calculate_batch_size_from_input_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#calculate_batch_size_from_input_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.calculate_batch_size_from_input_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.check_inputs">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">check_inputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#check_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.check_inputs" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.extract_topk">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">extract_topk</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#extract_topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.extract_topk" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.create_output_placeholder">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">create_output_placeholder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ks</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#create_output_placeholder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.create_output_placeholder" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.tranform_label_to_onehot">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">tranform_label_to_onehot</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#tranform_label_to_onehot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.tranform_label_to_onehot" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="transformers4rec.torch.utils.torch_utils.one_hot_1d">
+<code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">one_hot_1d</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.device</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.dtype</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">torch.float32</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#one_hot_1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.one_hot_1d" title="Permalink to this definition"></a></dt>
+<dd><p>Coverts a 1d label tensor to one-hot representation</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><em>torch.Tensor</em></a>) – tensor with labels of shape <span class="math notranslate nohighlight">\((N, H, W)\)</span>,
+where N is batch siz. Each value is an integer
+representing correct classification.</p></li>
+<li><p><strong>num_classes</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – number of classes in labels.</p></li>
+<li><p><strong>device</strong> (<em>Optional</em><em>[</em><em>torch.device</em><em>]</em>) – the desired device of returned tensor.
+Default: if None, uses the current device for the default tensor type
+(see torch.set_default_tensor_type()). device will be the CPU for CPU
+tensor types and the current CUDA device for CUDA tensor types.</p></li>
+<li><p><strong>dtype</strong> (<em>Optional</em><em>[</em><em>torch.dtype</em><em>]</em>) – the desired data type of returned
+tensor. Default: torch.float32</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the labels in one hot tensor.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)">torch.Tensor</a></p>
+</dd>
+</dl>
+<dl>
+<dt>Examples::</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">one_hot_1d</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="go">tensor([[1., 0., 0.],</span>
+<span class="go">        [0., 1., 0.],</span>
+<span class="go">        [0., 0., 1.],</span>
+<span class="go">        [1., 0., 0.],</span>
+<span class="go">       ])</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.LambdaModule">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">LambdaModule</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lambda_fn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#LambdaModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.LambdaModule" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.LambdaModule.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#LambdaModule.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.LambdaModule.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.LambdaModule.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.LambdaModule.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">MappingTransformerMasking</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#MappingTransformerMasking"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.10)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling">
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">CausalLanguageModeling</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_on_last_item_seq_only</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_on_last_item_seq_only</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></code></a></p>
+<p>In Causal Language Modeling (clm) you predict the next item based on past positions of the
+sequence. Future positions are masked.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The hidden dimension of input tensors, needed to initialize trainable vector of masked
+positions.</p></li>
+<li><p><strong>padding_idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>default = 0</em>) – Index of padding item used for getting batch of sequences with the same length</p></li>
+<li><p><strong>eval_on_last_item_seq_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>default = True</em>) – Predict only last item during evaluation</p></li>
+<li><p><strong>train_on_last_item_seq_only</strong> (<em>predict only last item during training</em>) – </p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling.apply_mask_to_inputs">
+<code class="sig-name descname"><span class="pre">apply_mask_to_inputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling.apply_mask_to_inputs" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MaskedLanguageModeling">
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">MaskedLanguageModeling</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_on_last_item_seq_only</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mlm_probability</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.15</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MaskedLanguageModeling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></code></a></p>
+<p>In Masked Language Modeling (mlm) you randomly select some positions of the sequence to be
+predicted, which are masked.
+During training, the Transformer layer is allowed to use positions on the right (future info).
+During inference, all past items are visible for the Transformer layer, which tries to predict
+the next item.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The hidden dimension of input tensors, needed to initialize trainable vector of masked
+positions.</p></li>
+<li><p><strong>padding_idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>default = 0</em>) – Index of padding item used for getting batch of sequences with the same length</p></li>
+<li><p><strong>eval_on_last_item_seq_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>default = True</em>) – Predict only last item during evaluation</p></li>
+<li><p><strong>mlm_probability</strong> (<em>Optional</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a><em>]</em><em>, </em><em>default = 0.15</em>) – Probability of an item to be selected (masked) as a label of the given sequence.
+p.s. We enforce that at least one item is masked for each sequence, so that the network can
+learn something with it.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling">
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">PermutationLanguageModeling</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_on_last_item_seq_only</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plm_probability</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0.16666666666666666</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_span_length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">permute_all</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></code></a></p>
+<p>In Permutation Language Modeling (plm) you use a permutation factorization at the level of the
+self-attention layer to define the accessible bidirectional context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The hidden dimension of input tensors, needed to initialize trainable vector of masked
+positions.</p></li>
+<li><p><strong>padding_idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>default = 0</em>) – Index of padding item used for getting batch of sequences with the same length</p></li>
+<li><p><strong>eval_on_last_item_seq_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>default = True</em>) – Predict only last item during evaluation</p></li>
+<li><p><strong>max_span_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – maximum length of a span of masked items</p></li>
+<li><p><strong>plm_probability</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – The ratio of surrounding items to unmask to define the context of the span-based
+prediction segment of items</p></li>
+<li><p><strong>permute_all</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Compute partial span-based prediction (=False) or not.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling.compute_masked_targets">
+<code class="sig-name descname"><span class="pre">compute_masked_targets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskingInfo" title="transformers4rec.torch.masking.MaskingInfo"><span class="pre">transformers4rec.torch.masking.MaskingInfo</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling.compute_masked_targets" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling.transformer_required_arguments">
+<code class="sig-name descname"><span class="pre">transformer_required_arguments</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling.transformer_required_arguments" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling">
+<em class="property"><span class="pre">class</span> </em><code class="sig-name descname"><span class="pre">ReplacementLanguageModeling</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_on_last_item_seq_only</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_from_batch</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskedLanguageModeling" title="transformers4rec.torch.masking.MaskedLanguageModeling"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.masking.MaskedLanguageModeling</span></code></a></p>
+<p>Replacement Language Modeling (rtd) you use MLM to randomly select some items, but replace
+them by random tokens.
+Then, a discriminator model (that can share the weights with the generator or not), is asked
+to classify whether the item at each position belongs or not to the original sequence.
+The generator-discriminator architecture was jointly trained using Masked LM and RTD tasks.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – The hidden dimension of input tensors, needed to initialize trainable vector of masked
+positions.</p></li>
+<li><p><strong>padding_idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a><em>, </em><em>default = 0</em>) – Index of padding item used for getting batch of sequences with the same length</p></li>
+<li><p><strong>eval_on_last_item_seq_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a><em>, </em><em>default = True</em>) – Predict only last item during evaluation</p></li>
+<li><p><strong>sample_from_batch</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Whether to sample replacement item ids from the same batch or not</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling.get_fake_tokens">
+<code class="sig-name descname"><span class="pre">get_fake_tokens</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">itemid_seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_flat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logits</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling.get_fake_tokens" title="Permalink to this definition"></a></dt>
+<dd><p>Second task of RTD is binary classification to train the discriminator.
+The task consists of generating fake data by replacing [MASK] positions with random items,
+ELECTRA discriminator learns to detect fake replacements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>itemid_seq</strong> (<em>torch.Tensor of shape</em><em> (</em><em>bs</em><em>, </em><em>max_seq_len</em><em>)</em>) – input sequence of item ids</p></li>
+<li><p><strong>target_flat</strong> (<em>torch.Tensor of shape</em><em> (</em><em>bs*max_seq_len</em><em>)</em>) – flattened masked label sequences</p></li>
+<li><p><strong>logits</strong> (<em>torch.Tensor of shape</em><em> (</em><em>#pos_item</em><em>, </em><em>vocab_size</em><em> or </em><em>#pos_item</em><em>)</em><em>,</em>) – mlm probabilities of positive items computed by the generator model.
+The logits are over the whole corpus if sample_from_batch = False,
+over the positive items (masked) of the current batch otherwise</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>corrupted_inputs</strong> (<em>torch.Tensor of shape (bs, max_seq_len)</em>) – input sequence of item ids with fake replacement</p></li>
+<li><p><strong>discriminator_labels</strong> (<em>torch.Tensor of shape (bs, max_seq_len)</em>) – binary labels to distinguish between original and replaced items</p></li>
+<li><p><strong>batch_updates</strong> (<em>torch.Tensor of shape (#pos_item)</em>) – the indices of replacement item within the current batch if sample_from_batch is enabled</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling.sample_from_softmax">
+<code class="sig-name descname"><span class="pre">sample_from_softmax</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logits</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling.sample_from_softmax" title="Permalink to this definition"></a></dt>
+<dd><p>Sampling method for replacement token modeling (ELECTRA)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>logits</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><em>torch.Tensor</em></a><em>(</em><em>pos_item</em><em>, </em><em>vocab_size</em><em>)</em>) – scores of probability of masked positions returned  by the generator model</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>samples</strong> – ids of replacements items.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)">torch.Tensor</a>(#pos_item)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.DEFAULT_MASKING">
+<code class="sig-name descname"><span class="pre">DEFAULT_MASKING</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.CausalLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.PermutationLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.DEFAULT_MASKING" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.BertConfig">
+<code class="sig-name descname"><span class="pre">BertConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.BertConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ConvBertConfig">
+<code class="sig-name descname"><span class="pre">ConvBertConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ConvBertConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.DebertaConfig">
+<code class="sig-name descname"><span class="pre">DebertaConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.DebertaConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.DistilBertConfig">
+<code class="sig-name descname"><span class="pre">DistilBertConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.DistilBertConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.GPT2Config">
+<code class="sig-name descname"><span class="pre">GPT2Config</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.CausalLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.GPT2Config" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.LongformerConfig">
+<code class="sig-name descname"><span class="pre">LongformerConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.CausalLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.LongformerConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MegatronBertConfig">
+<code class="sig-name descname"><span class="pre">MegatronBertConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MegatronBertConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MPNetConfig">
+<code class="sig-name descname"><span class="pre">MPNetConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MPNetConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.RobertaConfig">
+<code class="sig-name descname"><span class="pre">RobertaConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.RobertaConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.RoFormerConfig">
+<code class="sig-name descname"><span class="pre">RoFormerConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.CausalLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.RoFormerConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.TransfoXLConfig">
+<code class="sig-name descname"><span class="pre">TransfoXLConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.CausalLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.TransfoXLConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.XLNetConfig">
+<code class="sig-name descname"><span class="pre">XLNetConfig</span></code><em class="property"> <span class="pre">=</span> <span class="pre">[&lt;class</span> <span class="pre">'transformers4rec.torch.masking.CausalLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.MaskedLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.ReplacementLanguageModeling'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.masking.PermutationLanguageModeling'&gt;]</span></em><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.XLNetConfig" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-transformers4rec.torch.utils" title="Permalink to this headline"></a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="transformers4rec.torch.tabular.html" class="btn btn-neutral float-left" title="transformers4rec.torch.tabular package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transformers4rec.utils.html" class="btn btn-neutral float-right" title="transformers4rec.utils package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformers4Rec Example Notebooks &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Getting Started: Session-based Recommendation with Synthetic Data" href="getting-started-session-based/index.html" />
+    <link rel="prev" title="End-to-end pipeline with NVIDIA Merlin" href="../pipeline.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example Notebooks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-the-example-notebooks">Running the Example Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="end-to-end-session-based/index.html">End-to-end session-based recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial/index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Transformers4Rec Example Notebooks</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="tex2jax_ignore mathjax_ignore section" id="transformers4rec-example-notebooks">
+<h1>Transformers4Rec Example Notebooks<a class="headerlink" href="#transformers4rec-example-notebooks" title="Permalink to this headline"></a></h1>
+<p>We have collection of example Jupyter notebooks using different datasets to demonstrate how to use Transformers4Rec with PyTorch and TensorFlow APIs. Each example notebook provides incremental information about Transformers4Rec features and modules.</p>
+<div class="section" id="inventory">
+<h2>Inventory<a class="headerlink" href="#inventory" title="Permalink to this headline"></a></h2>
+<div class="section" id="getting-started-session-based-recommendation-with-synthetic-data">
+<h3><a class="reference internal" href="getting-started-session-based/index.html"><span class="xref myst">Getting started - Session-based recommendation with Synthetic Data</span></a><a class="headerlink" href="#getting-started-session-based-recommendation-with-synthetic-data" title="Permalink to this headline"></a></h3>
+<p>This example notebook is focusing primarily on the basic concepts of Transformers4Rec, which includes:</p>
+<ul class="simple">
+<li><p>Generating synthetic data of user interactions</p></li>
+<li><p>Preprocessing sequential data with NVTabular on GPU</p></li>
+<li><p>Using the NVTabular dataloader with Pytorch</p></li>
+<li><p>Training a session-based recommendation model with a Transformer architecture (XLNET)</p></li>
+</ul>
+</div>
+<div class="section" id="end-to-end-session-based-recommendation">
+<h3><a class="reference internal" href="end-to-end-session-based/index.html"><span class="xref myst">End-to-end session-based recommendation</span></a><a class="headerlink" href="#end-to-end-session-based-recommendation" title="Permalink to this headline"></a></h3>
+<p>This end-to-end example notebook is focuses on:</p>
+<ul class="simple">
+<li><p>Preprocessing the Yoochoose e-commerce dataset</p></li>
+<li><p>Generating session features with on GPU</p></li>
+<li><p>Using the NVTabular dataloader with the Pytorch</p></li>
+<li><p>Training a session-based recommendation model with a Transformer architecture (XLNET)</p></li>
+<li><p>Exporting the preprocessing workflow and trained model to Triton Inference Server (TIS)</p></li>
+<li><p>Sending request to TIS and generating next-item predictions for each session</p></li>
+</ul>
+</div>
+<div class="section" id="tutorial-end-to-end-session-based-recommendation-on-gpu">
+<h3><a class="reference internal" href="tutorial/index.html"><span class="xref myst">Tutorial - End-to-End Session-Based Recommendation on GPU</span></a><a class="headerlink" href="#tutorial-end-to-end-session-based-recommendation-on-gpu" title="Permalink to this headline"></a></h3>
+<p>This tutorial was presented at the ACM RecSys 2021. It covers the following topics:</p>
+<ul class="simple">
+<li><p>The main concepts for session-based recommendation</p></li>
+<li><p>Implementation of preprocessing and feature engineering techniques for session-based recommendation model with NVTabular on GPU</p></li>
+<li><p>How to build, train and evaluate a session-based recommendation models based on RNN and Transformer architectures with Transformers4Rec library</p></li>
+<li><p>How to deploy a session-based recommendation pipeline (preprocessing workflow and trained model) to the Triton Inference Server</p></li>
+</ul>
+</div>
+<div class="section" id="transformers4rec-paper-experiments-reproducibility">
+<h3><a class="reference internal" href="t4rec_paper_experiments/index.html"><span class="xref myst">Transformers4Rec paper experiments reproducibility</span></a><a class="headerlink" href="#transformers4rec-paper-experiments-reproducibility" title="Permalink to this headline"></a></h3>
+<p>This example contains scripts to reproduce the experiments reported in the Transformers4Rec <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">paper</a> at RecSys 2021. The experiments focused in the session-based recommendation using incremental training and evaluation over time on two e-commerce and two news datasets.</p>
+</div>
+</div>
+<div class="section" id="running-the-example-notebooks">
+<h2>Running the Example Notebooks<a class="headerlink" href="#running-the-example-notebooks" title="Permalink to this headline"></a></h2>
+<p>You can run the examples with Docker containers.
+Docker containers are available from the NVIDIA GPU Cloud.
+Access the catalog of containers at <a class="reference external" href="http://ngc.nvidia.com/catalog/containers">http://ngc.nvidia.com/catalog/containers</a>.</p>
+<p>Depending on which example you want to run, you should use any one of these Docker containers:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-tensorflow-training">Merlin-Tensorflow-Training</a> (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular and TensorFlow)</p></li>
+<li><p><a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch-inference">Merlin-PyTorch-Training</a> (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular and PyTorch)</p></li>
+<li><p><a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-inference">Merlin-Inference</a> (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular, TensorFlow, PyTorch, HugeCTR and Triton Inference Server)</p></li>
+</ul>
+<p>To run the example notebooks using Docker containers, perform the following steps:</p>
+<ol>
+<li><p>If you haven’t already created a Docker volume to share models and datasets
+between containers, create the volume by running the following command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker volume create merlin-examples
+</pre></div>
+</div>
+</li>
+<li><p>Pull and start the container by running the following command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker run --gpus all --rm -it <span class="se">\</span>
+  -p <span class="m">8888</span>:8888 -p <span class="m">8797</span>:8787 -p <span class="m">8796</span>:8786 --ipc<span class="o">=</span>host <span class="se">\</span>
+  -v merlin-examples:/workspace/data <span class="se">\</span>
+  &lt;docker container&gt; /bin/bash
+</pre></div>
+</div>
+<p>The container opens a shell when the run command execution is completed.
+Your shell prompt should look similar to the following example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>root@2efa5b50b909:
+</pre></div>
+</div>
+</li>
+<li><p>Install JupyterLab with <code class="docutils literal notranslate"><span class="pre">pip</span></code> by running the following command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install jupyterlab
+</pre></div>
+</div>
+<p>For more information, see the JupyterLab <a class="reference external" href="https://jupyterlab.readthedocs.io/en/stable/getting_started/installation.html">Installation Guide</a>.</p>
+</li>
+<li><p>Start the JupyterLab server by running the following command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>jupyter-lab --allow-root --ip<span class="o">=</span><span class="s1">&#39;0.0.0.0&#39;</span>
+</pre></div>
+</div>
+<p>View the messages in your terminal to identify the URL for JupyterLab.
+The messages in your terminal show similar lines to the following example:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>Or copy and paste one of these URLs:
+http://2efa5b50b909:8888/lab?token<span class="o">=</span>9b537d1fda9e4e9cadc673ba2a472e247deee69a6229ff8d
+or http://127.0.0.1:8888/lab?token<span class="o">=</span>9b537d1fda9e4e9cadc673ba2a472e247deee69a6229ff8d
+</pre></div>
+</div>
+</li>
+<li><p>Open a browser and use the <code class="docutils literal notranslate"><span class="pre">127.0.0.1</span></code> URL provided in the messages by JupyterLab.</p></li>
+<li><p>After you log in to JupyterLab, navigate to the <code class="docutils literal notranslate"><span class="pre">/transformers4rec/examples</span></code> directory to try out the example notebooks.</p></li>
+</ol>
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../pipeline.html" class="btn btn-neutral float-left" title="End-to-end pipeline with NVIDIA Merlin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="getting-started-session-based/index.html" class="btn btn-neutral float-right" title="Getting Started: Session-based Recommendation with Synthetic Data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
