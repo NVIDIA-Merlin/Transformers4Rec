@@ -70,6 +70,8 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/source/examples
+docs/source/README.md
 
 # PyBuilder
 .pybuilder/

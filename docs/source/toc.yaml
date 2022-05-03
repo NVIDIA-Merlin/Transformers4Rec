@@ -1,0 +1,32 @@
+root: index
+subtrees:
+  - caption: Contents
+    entries:
+      - file: README.md
+        title: Introduction
+      - file: why_transformers4rec
+      - file: model_definition
+      - file: training_eval
+      - file: pipeline
+      - file: examples/index
+        title: Example Notebooks
+        subtrees:
+          - entries:
+              - file: examples/getting-started-session-based/index
+                entries:
+                  - file: examples/getting-started-session-based/01-ETL-with-NVTabular.ipynb
+                  - file: examples/getting-started-session-based/02-session-based-XLNet-with-PyT.ipynb
+              - file: examples/end-to-end-session-based/index
+                entries:
+                  - file: examples/end-to-end-session-based/end-to-end-session-based-with-Yoochoose.ipynb
+              - file: examples/tutorial/index
+                entries:
+                  - file: examples/tutorial/01-preprocess.ipynb
+                  - file: examples/tutorial/02-ETL-with-NVTabular.ipynb
+                  - file: examples/tutorial/03-Session-based-recsys.ipynb
+                  - file: examples/tutorial/04-Inference-with-Triton.ipynb
+              - file: examples/t4rec_paper_experiments/index
+      - file: api/modules
+      - file: resources
+        entries:
+          - file: CONTRIBUTING.md

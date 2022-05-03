@@ -7,15 +7,15 @@ The original experiments for that paper were performed in a former pre-release v
 
 ## Paper experiments reproducibility with the released Transformers4Rec API
 
-In this example, we demonstrate how to reproduce the most of the paper experiments (only Transformers, not the baselines algorithms) with the PyTorch API of the released Transformers4Rec library. 
+In this example, we demonstrate how to reproduce the most of the paper experiments (only Transformers, not the baselines algorithms) with the PyTorch API of the released Transformers4Rec library.
 
-For researchers and practioners aiming to perform experiments similar to the ones presented in our paper (e.g. incremental training and evaluation of session-based recommendation with Transformers), we strongly encourage the usage of our released PyTorch API (like in this example), because it is more modularized and documented than the original scripts, and is supported by the NVIDIA Merlin team.
+For researchers and practitioners aiming to perform experiments similar to the ones presented in our paper (e.g. incremental training and evaluation of session-based recommendation with Transformers), we strongly encourage the usage of our released PyTorch API (like in this example), because it is more modularized and documented than the original scripts, and is supported by the NVIDIA Merlin team.
 
 A few warnings:
-- It is natural to find some differences in evaluation metrics results, as the library was completely refactored after the paper experiments and even the same random seeds won't initialize the model weights identically when layers are build in different order.  
+- It is natural to find some differences in evaluation metrics results, as the library was completely refactored after the paper experiments and even the same random seeds won't initialize the model weights identically when layers are build in different order.
 - *WIP*: We are still working to add a few missing components in our PyTorch API necessary to reproduce some experiments: (1) Including ALBERT and ELECTRA and (2) including the Replacement Token Detection (RTD) training task. You can track the progress of those issues in [#262](https://github.com/NVIDIA-Merlin/Transformers4Rec/issues/262) and [#263](https://github.com/NVIDIA-Merlin/Transformers4Rec/issues/263).
 
-### Datasets 
+### Datasets
 
 We have used four datasets for the paper experiments with session-based recommendation:
 - REES46 ecommerce
@@ -23,9 +23,9 @@ We have used four datasets for the paper experiments with session-based recommen
 - G1 news
 - ADRESSA news
 
-We provide links to download the original datasets and preprocessing scripts [here](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021/datasets), i.e., for creating features and grouping interactions features by sessions. 
+We provide links to download the original datasets and preprocessing scripts [here](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021/datasets), i.e., for creating features and grouping interactions features by sessions.
 
-But for your convenience we also provide the [pre-processed version of the datasets](https://drive.google.com/drive/folders/1fxZozQuwd4fieoD0lmcD3mQ2Siu62ilD?usp=sharing) for download, so that you can directly jump into running experiments with Transformers4Rec. 
+But for your convenience we also provide the [pre-processed version of the datasets](https://drive.google.com/drive/folders/1fxZozQuwd4fieoD0lmcD3mQ2Siu62ilD?usp=sharing) for download, so that you can directly jump into running experiments with Transformers4Rec.
 
 ### Requirements and Setup
 
@@ -37,7 +37,7 @@ To run the experiments you need:
 ### Weights & Biases logging setup
 
 By default, Huggingface uses [Weights & Biases (W&B)](https://wandb.ai/) to log training and evaluation metrics.
-It allows a nice management of experiments, including config logging, and provides plots with the evolution of losses and metrics over time. 
+It allows a nice management of experiments, including config logging, and provides plots with the evolution of losses and metrics over time.
 To see the experiment metrics reported in W&B you can follow the following steps. Otherwise you need to disable wandb sync to the online service by setting this environment variable: `WANDB_MODE="dryrun"`.
 
 1. Create account if you don't have and obtain API key: https://www.wandb.com
@@ -53,7 +53,7 @@ export WANDB_API_KEY=<YOUR API KEY HERE>
 ### Training and evaluation commands
 In our paper we have performed hyperparameter tuning for each experiment group (dataset and algorithm pair), whose search space and best hyperparameters can be found in the paper [Online Appendix C](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_C-Hyperparameters.md). The command lines to run each experiment group with the best hyperparameters using the original scripts can be found [here](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md).
 
-This example script was implemented using the released PyTorch API of the Transformers4Rec library, keeping compatibility with the command line arguments used for the [original scripts](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021). 
+This example script was implemented using the released PyTorch API of the Transformers4Rec library, keeping compatibility with the command line arguments used for the [original scripts](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021).
 
 To reproduce the paper experiments with this example, you just need to perform two replacements in the [original scripts command lines](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md):
 1. Replace the Python package name and script  `hf4rec.recsys_main` by `t4r_paper_repro.transf_exp_main`
@@ -72,6 +72,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m t4r_paper_repro.transf_exp_main --output_dir .
 For the experiments with multiple input features and element-wise aggregation of features (`--input_features_aggregation elementwise_sum_multiply_item_embedding`), it is necessary that all features have the same dimension. In the original implementation of the paper experiments we used a linear layer to project the continuous features to the the same dimension of the categorical embeddings. But that option is not available in the API, as the [soft-one hot embedding technique](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md) is more effective to represent continuous features. So reproducing exactly the experiment results for the element-wise aggregation will not be possible with the new API, but instead we recommend enabling Soft-One Hot Embeddings to represent continuous features, by setting the arguments `--numeric_features_project_to_embedding_dim` to be equal to the `--item_embedding_dim` value and also `--numeric_features_soft_one_hot_encoding_num_embeddings` to the number of desired embeddings (generally a value between 10-20 is a good default choice).
 
 ### Code organization
-The main script of this example is [transf_exp_main.py](transf_exp_main.py), which parses the command line arguments and use the Transformers4Rec PyTorch API to build a model for session-based recommendation according to the arguments and perform incremental training and evaluation over time.
+The main script of this example is the `transf_exp_main.py` script that is available from the [`t4r_paper_repro`](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/t4rec_paper_experiments/t4r_paper_repro) directory of the GitHub repository.
+This script parses the command line arguments and use the Transformers4Rec PyTorch API to build a model for session-based recommendation according to the arguments and perform incremental training and evaluation over time.
 
-The available command line arguments are configured in [transf_exp_args.py](transf_exp_args.py) and logic for logging and saving results is available in [exp_outputs.py](exp_outputs.py).
+The available command-line arguments are configured in the `transf_exp_args.py` script and logic for logging and saving results is available in the `exp_outputs.py` script.
