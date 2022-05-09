@@ -1,18 +1,8 @@
-# [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec/) | [Documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/)
-<p align="left">
-    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml?branch=main">
-        <img alt="Build" src="https://github.com/NVIDIA-Merlin/Transformers4Rec/actions/workflows/ci.yml/badge.svg?branch=main">
-    </a>
-    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE">
-        <img alt="GitHub" src="https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4rec.svg?color=blue">
-    </a>
-    <a href="https://nvidia-merlin.github.io/Transformers4Rec/main/">
-        <img alt="Documentation" src="https://img.shields.io/website.svg?down_color=red&down_message=offline&up_message=online&url=https%3A%2F%2Fnvidia-merlin.github.io%2FTransformers4Rec%2Fmain%2F">
-    </a>
-    <a href="https://github.com/NVIDIA-Merlin/Transformers4Rec/releases">
-        <img alt="GitHub release" src="https://img.shields.io/github/release/NVIDIA-Merlin/Transformers4Rec.svg">
-    </a>
-</p>
+# [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec/)
+
+[![PyPI](https://img.shields.io/pypi/v/Transformers4Rec?color=orange&label=version)](https://pypi.python.org/pypi/Transformers4Rec)
+[![LICENSE](https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4Rec)](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE)
+[![Documentation](https://img.shields.io/badge/documentation-blue.svg)](https://nvidia-merlin.github.io/Transformers4Rec/main/README.html)
 
 Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation, available for both PyTorch and Tensorflow.
 
