@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training and Evaluation &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="End-to-end pipeline with NVIDIA Merlin" href="pipeline.html" />
+    <link rel="prev" title="Model Architectures" href="model_definition.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Training and Evaluation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-loading">Data loading</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pytorch">PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tf-training-and-evaluation">TF Training and Evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Training and Evaluation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="tex2jax_ignore mathjax_ignore section" id="training-and-evaluation">
+<h1>Training and Evaluation<a class="headerlink" href="#training-and-evaluation" title="Permalink to this headline"></a></h1>
+<p>Many examples of data preparation, training and deployment of models using Transformers4Rec are available in our <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples">examples</a> directory.</p>
+<div class="section" id="data-loading">
+<h2>Data loading<a class="headerlink" href="#data-loading" title="Permalink to this headline"></a></h2>
+<p>Transformers4Rec leverages by default the NVTabular dataloader for GPU-accelerated loading of preprocessed data stored in Parquet format, which is a suitable format for being structured and queryable.
+The data in Parquet files are directly loaded to GPU memory as feature tensors. CPUs are also supported when GPUs are not available.</p>
+<p>The following example uses the NVTabular data loader, wrapped by the <code class="docutils literal notranslate"><span class="pre">DataLoader</span></code> that automatically sets some options from the dataset schema. Optionally the <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_loader</span> <span class="o">=</span> <span class="n">transformers4rec</span><span class="o">.</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data_utils</span><span class="o">.</span><span class="n">DataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+        <span class="n">schema</span><span class="p">,</span>
+        <span class="n">paths_or_dataset</span><span class="o">=</span><span class="n">train_path</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">TrainingArguments</span><span class="o">.</span><span class="n">train_batch_size</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pytorch">
+<h2>PyTorch<a class="headerlink" href="#pytorch" title="Permalink to this headline"></a></h2>
+<div class="section" id="training">
+<h3>Training<a class="headerlink" href="#training" title="Permalink to this headline"></a></h3>
+<p>For PyTorch we extend the HF Transformers <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class, but keep its <code class="docutils literal notranslate"><span class="pre">train()</span></code> method. That means that we leverage the efficient training implementation from that library, which manages for example half-precision (FP16) and multi-GPU training.</p>
+<p>Two <a class="reference external" href="https://pytorch.org/tutorials/intermediate/ddp_tutorial.html">approaches</a> are available for PyTorch multi-GPU training: <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> and <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code>. <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> uses a single process and multiple threads on a single machine. <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> is more efficient for assigning separate processes for each GPU. Transformers4Rec supports both training approaches when using the NVTabular Dataloader.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.config.trainer</span> <span class="kn">import</span> <span class="n">T4RecTrainingArguments</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch</span> <span class="kn">import</span> <span class="n">Trainer</span>
+
+<span class="n">training_args</span> <span class="o">=</span> <span class="n">T4RecTrainingArguments</span><span class="p">(</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./tmp&quot;</span><span class="p">,</span>
+            <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>            
+            <span class="n">fp16</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+<span class="n">recsys_trainer</span> <span class="o">=</span> <span class="n">Trainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">args</span><span class="o">=</span><span class="n">training_args</span><span class="p">,</span>
+    <span class="n">train_dataloader</span><span class="o">=</span><span class="n">train_loader</span><span class="p">,</span>
+    <span class="n">eval_dataloader</span><span class="o">=</span><span class="n">eval_loader</span><span class="p">,</span>
+<span class="p">)</span>     
+
+<span class="n">recsys_trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can optionally get the data loaders instantiated by the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> when the following arguments are provided.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">training_args</span> <span class="o">=</span> <span class="n">T4RecTrainingArguments</span><span class="p">(</span>
+            <span class="o">...</span><span class="p">,</span>
+            <span class="n">data_loader_engine</span><span class="o">=</span><span class="s2">&quot;nvtabular&quot;</span><span class="p">,</span>
+            <span class="n">per_device_train_batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
+            <span class="n">per_device_eval_batch_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>            
+        <span class="p">)</span>
+
+<span class="c1"># Instantiates the train and eval dataloader</span>
+<span class="n">Trainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">args</span><span class="o">=</span><span class="n">training_args</span><span class="p">,</span>
+    <span class="n">train_dataset_or_path</span><span class="o">=</span><span class="n">train_path</span><span class="p">,</span>
+    <span class="n">eval_dataset_or_path</span><span class="o">=</span><span class="n">eval_path</span><span class="p">,</span>   
+<span class="p">)</span>     
+</pre></div>
+</div>
+</div>
+<div class="section" id="evaluation">
+<h3>Evaluation<a class="headerlink" href="#evaluation" title="Permalink to this headline"></a></h3>
+<p>For the Item Prediction head, top-N metrics comonly used in <a class="reference external" href="https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)">Information Retrieval</a> and RecSys are supported for evaluation:</p>
+<p>Top-N metrics</p>
+<ul class="simple">
+<li><p><strong>Precision&#64;n</strong> - Computes the percentage of the top-N recommended items which are relevant (labels)</p></li>
+<li><p><strong>Recall&#64;n</strong> - Computes the percentage of elevant items (labels) are present among the top-N recommended items</p></li>
+</ul>
+<p>Ranking metrics</p>
+<ul class="simple">
+<li><p><strong>NDCG&#64;n</strong> - Normalized Discounted Cumulative Gain at cut-off N of the recommendation list</p></li>
+<li><p><strong>MAP&#64;n</strong> - Mean Average Precision at cut-off N of the recommendation list</p></li>
+</ul>
+<p>During training, the metrics are computed each N steps for both training and evaluation sets. During evaluation, the metrics are computed for all evaluation batches and averaged.</p>
+<div class="section" id="incremental-evaluation">
+<h4>Incremental Evaluation<a class="headerlink" href="#incremental-evaluation" title="Permalink to this headline"></a></h4>
+<p>You can implement incremental evaluation by splitting your data into time windows (e.g. week, day or hour). Then you can have a loop that trains (or fine-tune a pre-trained model) with sessions of time window T and evaluates on sessions of time window T+1.</p>
+<p>Here is an example which assumes daily data is split in folders. There is a loop that iterates over the days, trains the model (or fine-tunes the model pre-trained in the previous day) and evaluates with data of the next day.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Iterates over parquet files with daily data</span>
+<span class="k">for</span> <span class="n">time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>    
+    <span class="n">train_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;./data/day-</span><span class="si">{</span><span class="n">time_index</span><span class="si">}</span><span class="s2">/data.parquet&quot;</span><span class="p">)</span>
+    <span class="n">eval_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;./data/day-</span><span class="si">{</span><span class="n">time_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/data.parquet&quot;</span><span class="p">)</span>
+    
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Training with day </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_index</span><span class="p">))</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_paths</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">reset_lr_scheduler</span><span class="p">()</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Evaluating with day </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_index</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">eval_paths</span>
+    <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">metric_key_prefix</span><span class="o">=</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">train_metrics</span><span class="p">)</span>
+    <span class="n">trainer</span><span class="o">.</span><span class="n">wipe_memory</span><span class="p">()</span>
+
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="tf-training-and-evaluation">
+<h2>TF Training and Evaluation<a class="headerlink" href="#tf-training-and-evaluation" title="Permalink to this headline"></a></h2>
+<p>Training and evaluation with the Tensorflow API is coming soon!</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="model_definition.html" class="btn btn-neutral float-left" title="Model Architectures" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipeline.html" class="btn btn-neutral float-right" title="End-to-end pipeline with NVIDIA Merlin" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
