@@ -87,7 +87,6 @@ class PrecisionAt(RankingMetric):
         torch.Tensor:
             list of precisions at cutoffs
         """
-
         ks, scores, labels = torch_utils.check_inputs(ks, scores, labels)
         _, _, topk_labels = torch_utils.extract_topk(ks, scores, labels)
         precisions = torch_utils.create_output_placeholder(scores, ks)
@@ -309,6 +308,8 @@ class MeanRecipricolRankAt(RankingMetric):
             device=scores.device, dtype=torch.float32
         )
         for index, k in enumerate(ks):
-            values, _ = (topk_labels[:, :k] / (torch.arange(k) + 1)).max(dim=1)
+            values, _ = (topk_labels[:, :k] / (torch.arange(k).to(
+                device=scores.device) + 1)
+            ).max(dim=1)
             results[:, index] = values
         return results
