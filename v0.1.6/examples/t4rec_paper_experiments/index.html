@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformers4Rec paper - Experiments reproducibility &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API Documentation" href="../../api/modules.html" />
+    <link rel="prev" title="Triton for Recommender Systems" href="../tutorial/04-Inference-with-Triton.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#running-the-example-notebooks">Running the Example Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Transformers4Rec paper - Experiments reproducibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
+      <li>Transformers4Rec paper - Experiments reproducibility</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="tex2jax_ignore mathjax_ignore section" id="transformers4rec-paper-experiments-reproducibility">
+<h1>Transformers4Rec paper - Experiments reproducibility<a class="headerlink" href="#transformers4rec-paper-experiments-reproducibility" title="Permalink to this headline"></a></h1>
+<div class="section" id="context">
+<h2>Context<a class="headerlink" href="#context" title="Permalink to this headline"></a></h2>
+<p>The Transformers4Rec library was introduced in a <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">paper</a> at RecSys’21, which reports experiments on session-based recommendation for two e-commerce and two news datasets.</p>
+<p>The original experiments for that paper were performed in a former pre-release version of the Transformers4Rec library tagged as <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021">recsys2021</a>, which can be used for the full reproducibility of paper experiments, as detailed <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md">here</a> in the paper online appendices.</p>
+</div>
+<div class="section" id="paper-experiments-reproducibility-with-the-released-transformers4rec-api">
+<h2>Paper experiments reproducibility with the released Transformers4Rec API<a class="headerlink" href="#paper-experiments-reproducibility-with-the-released-transformers4rec-api" title="Permalink to this headline"></a></h2>
+<p>In this example, we demonstrate how to reproduce the most of the paper experiments (only Transformers, not the baselines algorithms) with the PyTorch API of the released Transformers4Rec library.</p>
+<p>For researchers and practitioners aiming to perform experiments similar to the ones presented in our paper (e.g. incremental training and evaluation of session-based recommendation with Transformers), we strongly encourage the usage of our released PyTorch API (like in this example), because it is more modularized and documented than the original scripts, and is supported by the NVIDIA Merlin team.</p>
+<p>A few warnings:</p>
+<ul class="simple">
+<li><p>It is natural to find some differences in evaluation metrics results, as the library was completely refactored after the paper experiments and even the same random seeds won’t initialize the model weights identically when layers are build in different order.</p></li>
+<li><p><em>WIP</em>: We are still working to add a few missing components in our PyTorch API necessary to reproduce some experiments: (1) Including ALBERT and ELECTRA and (2) including the Replacement Token Detection (RTD) training task. You can track the progress of those issues in <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/issues/262">#262</a> and <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/issues/263">#263</a>.</p></li>
+</ul>
+<div class="section" id="datasets">
+<h3>Datasets<a class="headerlink" href="#datasets" title="Permalink to this headline"></a></h3>
+<p>We have used four datasets for the paper experiments with session-based recommendation:</p>
+<ul class="simple">
+<li><p>REES46 ecommerce</p></li>
+<li><p>YOOCHOOSE ecommerce</p></li>
+<li><p>G1 news</p></li>
+<li><p>ADRESSA news</p></li>
+</ul>
+<p>We provide links to download the original datasets and preprocessing scripts <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021/datasets">here</a>, i.e., for creating features and grouping interactions features by sessions.</p>
+<p>But for your convenience we also provide the <a class="reference external" href="https://drive.google.com/drive/folders/1fxZozQuwd4fieoD0lmcD3mQ2Siu62ilD?usp=sharing">pre-processed version of the datasets</a> for download, so that you can directly jump into running experiments with Transformers4Rec.</p>
+</div>
+<div class="section" id="requirements-and-setup">
+<h3>Requirements and Setup<a class="headerlink" href="#requirements-and-setup" title="Permalink to this headline"></a></h3>
+<p>To run the experiments you need:</p>
+<ul class="simple">
+<li><p>Install Transformers4Rec for PyTorch API and NVTabular (more instructions <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">here</a>): <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">transformers4rec[pytorch,nvtabular]</span></code></p></li>
+<li><p>Install the example additional requirements (available in this folder): <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="weights-biases-logging-setup">
+<h3>Weights &amp; Biases logging setup<a class="headerlink" href="#weights-biases-logging-setup" title="Permalink to this headline"></a></h3>
+<p>By default, Huggingface uses <a class="reference external" href="https://wandb.ai/">Weights &amp; Biases (W&amp;B)</a> to log training and evaluation metrics.
+It allows a nice management of experiments, including config logging, and provides plots with the evolution of losses and metrics over time.
+To see the experiment metrics reported in W&amp;B you can follow the following steps. Otherwise you need to disable wandb sync to the online service by setting this environment variable: <code class="docutils literal notranslate"><span class="pre">WANDB_MODE=&quot;dryrun&quot;</span></code>.</p>
+<ol class="simple">
+<li><p>Create account if you don’t have and obtain API key: <a class="reference external" href="https://www.wandb.com">https://www.wandb.com</a></p></li>
+<li><p>Run the following command and follow the instructions to get an API key.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wandb login
+</pre></div>
+</div>
+<p>After you get the API key, you can set it as an environment variable with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">WANDB_API_KEY</span><span class="o">=</span>&lt;YOUR API KEY HERE&gt;
+</pre></div>
+</div>
+</div>
+<div class="section" id="training-and-evaluation-commands">
+<h3>Training and evaluation commands<a class="headerlink" href="#training-and-evaluation-commands" title="Permalink to this headline"></a></h3>
+<p>In our paper we have performed hyperparameter tuning for each experiment group (dataset and algorithm pair), whose search space and best hyperparameters can be found in the paper <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_C-Hyperparameters.md">Online Appendix C</a>. The command lines to run each experiment group with the best hyperparameters using the original scripts can be found <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md">here</a>.</p>
+<p>This example script was implemented using the released PyTorch API of the Transformers4Rec library, keeping compatibility with the command line arguments used for the <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/recsys2021">original scripts</a>.</p>
+<p>To reproduce the paper experiments with this example, you just need to perform two replacements in the <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md">original scripts command lines</a>:</p>
+<ol class="simple">
+<li><p>Replace the Python package name and script  <code class="docutils literal notranslate"><span class="pre">hf4rec.recsys_main</span></code> by <code class="docutils literal notranslate"><span class="pre">t4r_paper_repro.transf_exp_main</span></code></p></li>
+<li><p>Replace the argument <code class="docutils literal notranslate"><span class="pre">--feature_config</span> <span class="pre">[.yaml</span> <span class="pre">file</span> <span class="pre">path]</span></code> by <code class="docutils literal notranslate"><span class="pre">--features_schema_path</span> <span class="pre">[schema</span> <span class="pre">file</span> <span class="pre">path]</span></code>, as previoulsy we used an YAML file to configure dataset features and now we use a features schema protobuf text file for the same purpose.</p></li>
+<li><p>For experiments using multiple features (RQ3), include the <code class="docutils literal notranslate"><span class="pre">--use_side_information_features</span></code> argument</p></li>
+</ol>
+<p>Below is the updated command to reproduce the experiment <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md#xlnet-mlm">TRANSFORMERS WITH MULTIPLE FEATURES - XLNet (MLM)</a> for the REES46 ECOMMERCE DATASET.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">DATA_PATH</span><span class="o">=</span>~/transformers4rec_paper_preproc_datasets/ecom_rees46/
+<span class="nv">FEATURE_SCHEMA_PATH</span><span class="o">=</span>datasets_configs/ecom_rees46/rees46_schema.pbtxt
+<span class="nv">CUDA_VISIBLE_DEVICES</span><span class="o">=</span><span class="m">0</span> python3 -m t4r_paper_repro.transf_exp_main --output_dir ./tmp/ --overwrite_output_dir --do_train --do_eval --validate_every <span class="m">10</span> --logging_steps <span class="m">20</span> --save_steps <span class="m">0</span> --data_path <span class="nv">$DATA_PATH</span> --features_schema_path <span class="nv">$FEATURE_SCHEMA_PATH</span> --fp16 --data_loader_engine nvtabular --start_time_window_index <span class="m">1</span> --final_time_window_index <span class="m">30</span> --time_window_folder_pad_digits <span class="m">4</span> --model_type xlnet --loss_type cross_entropy --per_device_eval_batch_size <span class="m">512</span> --similarity_type concat_mlp --tf_out_activation tanh --inp_merge mlp --learning_rate_warmup_steps <span class="m">0</span> --learning_rate_schedule linear_with_warmup --hidden_act gelu --num_train_epochs <span class="m">10</span> --dataloader_drop_last --compute_metrics_each_n_steps <span class="m">1</span> --session_seq_length_max <span class="m">20</span> --eval_on_last_item_seq_only --mf_constrained_embeddings --layer_norm_featurewise --attn_type bi --mlm --input_features_aggregation concat --per_device_train_batch_size <span class="m">256</span> --learning_rate <span class="m">0</span>.00020171456712823088 --dropout <span class="m">0</span>.0 --input_dropout <span class="m">0</span>.0 --weight_decay <span class="m">2</span>.747484129693843e-05 --d_model <span class="m">448</span> --item_embedding_dim <span class="m">448</span> --n_layer <span class="m">2</span> --n_head <span class="m">8</span> --label_smoothing <span class="m">0</span>.5 --stochastic_shared_embeddings_replacement_prob <span class="m">0</span>.0 --item_id_embeddings_init_std <span class="m">0</span>.09 --other_embeddings_init_std <span class="m">0</span>.015 --mlm_probability <span class="m">0</span>.1 --embedding_dim_from_cardinality_multiplier <span class="m">3</span>.0 --eval_on_test_set --seed <span class="m">100</span> --use_side_information_features
+</pre></div>
+</div>
+<div class="section" id="remarks">
+<h4>Remarks<a class="headerlink" href="#remarks" title="Permalink to this headline"></a></h4>
+<p>For the experiments with multiple input features and element-wise aggregation of features (<code class="docutils literal notranslate"><span class="pre">--input_features_aggregation</span> <span class="pre">elementwise_sum_multiply_item_embedding</span></code>), it is necessary that all features have the same dimension. In the original implementation of the paper experiments we used a linear layer to project the continuous features to the the same dimension of the categorical embeddings. But that option is not available in the API, as the <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md">soft-one hot embedding technique</a> is more effective to represent continuous features. So reproducing exactly the experiment results for the element-wise aggregation will not be possible with the new API, but instead we recommend enabling Soft-One Hot Embeddings to represent continuous features, by setting the arguments <code class="docutils literal notranslate"><span class="pre">--numeric_features_project_to_embedding_dim</span></code> to be equal to the <code class="docutils literal notranslate"><span class="pre">--item_embedding_dim</span></code> value and also <code class="docutils literal notranslate"><span class="pre">--numeric_features_soft_one_hot_encoding_num_embeddings</span></code> to the number of desired embeddings (generally a value between 10-20 is a good default choice).</p>
+</div>
+</div>
+<div class="section" id="code-organization">
+<h3>Code organization<a class="headerlink" href="#code-organization" title="Permalink to this headline"></a></h3>
+<p>The main script of this example is the <code class="docutils literal notranslate"><span class="pre">transf_exp_main.py</span></code> script that is available from the <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/t4rec_paper_experiments/t4r_paper_repro"><code class="docutils literal notranslate"><span class="pre">t4r_paper_repro</span></code></a> directory of the GitHub repository.
+This script parses the command line arguments and use the Transformers4Rec PyTorch API to build a model for session-based recommendation according to the arguments and perform incremental training and evaluation over time.</p>
+<p>The available command-line arguments are configured in the <code class="docutils literal notranslate"><span class="pre">transf_exp_args.py</span></code> script and logic for logging and saving results is available in the <code class="docutils literal notranslate"><span class="pre">exp_outputs.py</span></code> script.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorial/04-Inference-with-Triton.html" class="btn btn-neutral float-left" title="Triton for Recommender Systems" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../api/modules.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v0.1.6
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+      <dd><a href="../../../v0.1.4/index.html">v0.1.4</a></dd>
+      <dd><a href="../../../v0.1.5/index.html">v0.1.5</a></dd>
+      <dd><a href="index.html">v0.1.6</a></dd>
+      <dd><a href="../../../v0.1.7/index.html">v0.1.7</a></dd>
+      <dd><a href="../../../v0.1.8/index.html">v0.1.8</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../main/index.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

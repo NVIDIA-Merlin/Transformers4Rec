@@ -1,0 +1,860 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "cb8675ec",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "#\n",
+    "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+    "# you may not use this file except in compliance with the License.\n",
+    "# You may obtain a copy of the License at\n",
+    "#\n",
+    "#     http://www.apache.org/licenses/LICENSE-2.0\n",
+    "#\n",
+    "# Unless required by applicable law or agreed to in writing, software\n",
+    "# distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+    "# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+    "# See the License for the specific language governing permissions and\n",
+    "# limitations under the License.\n",
+    "# =============================================================================="
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f1e6d7c9",
+   "metadata": {},
+   "source": [
+    "## 1. Import Libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "99fa1c8e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import glob\n",
+    "import numpy as np\n",
+    "import gc\n",
+    "\n",
+    "import cudf\n",
+    "import cupy\n",
+    "import nvtabular as nvt\n",
+    "from merlin.dag import ColumnSelector\n",
+    "from merlin.schema import Schema, Tags"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d5c40762",
+   "metadata": {},
+   "source": [
+    "#### Define Data Input and Output Paths"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "648a50e9",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "DATA_FOLDER = \"/workspace/data/\"\n",
+    "FILENAME_PATTERN = 'yoochoose-clicks.dat'\n",
+    "DATA_PATH = os.path.join(DATA_FOLDER, FILENAME_PATTERN)\n",
+    "\n",
+    "OUTPUT_FOLDER = \"./yoochoose_transformed\"\n",
+    "OVERWRITE = False"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c0ffb719",
+   "metadata": {},
+   "source": [
+    "#### Download the data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6fefbc6d",
+   "metadata": {},
+   "source": [
+    "In this notebook we are using the `YOOCHOOSE` dataset which contains a collection of sessions from a retailer. Each session  encapsulates the click events that the user performed in that session.\n",
+    "\n",
+    "The dataset is available on [Kaggle](https://www.kaggle.com/chadgostopp/recsys-challenge-2015). You need to download it and copy to the `DATA_FOLDER` path. Note that we are only using the `yoochoose-clicks.dat` file."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f20e24e7",
+   "metadata": {},
+   "source": [
+    "## 2. Load and clean raw data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "f35dff52",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "interactions_df = cudf.read_csv(DATA_PATH, sep=',', \n",
+    "                                names=['session_id','timestamp', 'item_id', 'category'], \n",
+    "                                dtype=['int', 'datetime64[s]', 'int', 'int'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5209e41e",
+   "metadata": {},
+   "source": [
+    "#### Remove repeated interactions within the same session"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "22c2df72",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Count with in-session repeated interactions: 33003944\n",
+      "Count after removed in-session repeated interactions: 28971543\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\"Count with in-session repeated interactions: {}\".format(len(interactions_df)))\n",
+    "# Sorts the dataframe by session and timestamp, to remove consecutive repetitions\n",
+    "interactions_df.timestamp = interactions_df.timestamp.astype(int)\n",
+    "interactions_df = interactions_df.sort_values(['session_id', 'timestamp'])\n",
+    "past_ids = interactions_df['item_id'].shift(1).fillna()\n",
+    "session_past_ids = interactions_df['session_id'].shift(1).fillna()\n",
+    "# Keeping only no consecutive repeated in session interactions\n",
+    "interactions_df = interactions_df[~((interactions_df['session_id'] == session_past_ids) & (interactions_df['item_id'] == past_ids))]\n",
+    "print(\"Count after removed in-session repeated interactions: {}\".format(len(interactions_df)))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5250e189",
+   "metadata": {},
+   "source": [
+    "#### Create new feature with the timestamp when the item was first seen"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "66a1bd13",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>session_id</th>\n",
+       "      <th>timestamp</th>\n",
+       "      <th>item_id</th>\n",
+       "      <th>category</th>\n",
+       "      <th>itemid_ts_first</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>10962</td>\n",
+       "      <td>1396529065</td>\n",
+       "      <td>214716935</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1396321225</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>10962</td>\n",
+       "      <td>1396529088</td>\n",
+       "      <td>214716932</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1396323181</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>10963</td>\n",
+       "      <td>1396329338</td>\n",
+       "      <td>214833800</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1396327488</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>10963</td>\n",
+       "      <td>1396329372</td>\n",
+       "      <td>214832728</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1396327694</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>10963</td>\n",
+       "      <td>1396329388</td>\n",
+       "      <td>214833800</td>\n",
+       "      <td>0</td>\n",
+       "      <td>1396327488</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   session_id   timestamp    item_id  category  itemid_ts_first\n",
+       "0       10962  1396529065  214716935         0       1396321225\n",
+       "1       10962  1396529088  214716932         0       1396323181\n",
+       "2       10963  1396329338  214833800         0       1396327488\n",
+       "3       10963  1396329372  214832728         0       1396327694\n",
+       "4       10963  1396329388  214833800         0       1396327488"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "items_first_ts_df = interactions_df.groupby('item_id').agg({'timestamp': 'min'}).reset_index().rename(columns={'timestamp': 'itemid_ts_first'})\n",
+    "interactions_merged_df = interactions_df.merge(items_first_ts_df, on=['item_id'], how='left')\n",
+    "interactions_merged_df.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "719637f3",
+   "metadata": {},
+   "source": [
+    "Let's save the interactions_merged_df to disk to be able to use in the inference step."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "a0f908a1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "interactions_merged_df.to_parquet(os.path.join(DATA_FOLDER, 'interactions_merged_df.parquet'))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "04a3b5b7",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "15"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# free gpu memory\n",
+    "del interactions_df, session_past_ids, items_first_ts_df\n",
+    "gc.collect()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "be2991c6",
+   "metadata": {},
+   "source": [
+    "## 3. Define a preprocessing workflow with NVTabular"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f2669af6",
+   "metadata": {},
+   "source": [
+    "NVTabular is a feature engineering and preprocessing library for tabular data designed to quickly and easily manipulate terabyte scale datasets used to train deep learning based recommender systems. It provides a high level abstraction to simplify code and accelerates computation on the GPU using the RAPIDS cuDF library.\n",
+    "\n",
+    "NVTabular supports different feature engineering transformations required by deep learning (DL) models such as Categorical encoding and numerical feature normalization. It also supports feature engineering and generating sequential features. \n",
+    "\n",
+    "More information about the supported features can be found <a href=https://nvidia-merlin.github.io/NVTabular/main/index.html> here. </a>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "69475ddc",
+   "metadata": {},
+   "source": [
+    "### 3.1. Feature engineering: Create and Transform items features"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e6de1f5e",
+   "metadata": {},
+   "source": [
+    "In this cell, we are defining three transformations ops: \n",
+    "\n",
+    "- 1. Encoding categorical variables using `Categorify()` op. We set `start_index` to 1, so that encoded null values start from `1` instead of `0` because we reserve `0` for padding the sequence features.\n",
+    "- 2. Deriving temporal features from timestamp and computing their cyclical representation using a custom lambda function. \n",
+    "- 3. Computing the item recency in days using a custom Op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction. \n",
+    "\n",
+    "For more ETL workflow examples, visit NVTabular [example notebooks](https://github.com/NVIDIA-Merlin/NVTabular/tree/main/examples)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "86f80068",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Encodes categorical features as contiguous integers\n",
+    "cat_feats = nvt.ColumnSelector(['session_id', 'category', 'item_id']) >> nvt.ops.Categorify(start_index=1)\n",
+    "\n",
+    "# create time features\n",
+    "session_ts = nvt.ColumnSelector(['timestamp'])\n",
+    "session_time = (\n",
+    "    session_ts >> \n",
+    "    nvt.ops.LambdaOp(lambda col: cudf.to_datetime(col, unit='s')) >> \n",
+    "    nvt.ops.Rename(name = 'event_time_dt')\n",
+    ")\n",
+    "sessiontime_weekday = (\n",
+    "    session_time >> \n",
+    "    nvt.ops.LambdaOp(lambda col: col.dt.weekday) >> \n",
+    "    nvt.ops.Rename(name ='et_dayofweek')\n",
+    ")\n",
+    "\n",
+    "# Derive cyclical features: Defines a custom lambda function \n",
+    "def get_cycled_feature_value_sin(col, max_value):\n",
+    "    value_scaled = (col + 0.000001) / max_value\n",
+    "    value_sin = np.sin(2*np.pi*value_scaled)\n",
+    "    return value_sin\n",
+    "\n",
+    "weekday_sin = sessiontime_weekday >> (lambda col: get_cycled_feature_value_sin(col+1, 7)) >> nvt.ops.Rename(name = 'et_dayofweek_sin')\n",
+    "\n",
+    "# Compute Item recency: Define a custom Op \n",
+    "class ItemRecency(nvt.ops.Operator):\n",
+    "    def transform(self, columns, gdf):\n",
+    "        for column in columns.names:\n",
+    "            col = gdf[column]\n",
+    "            item_first_timestamp = gdf['itemid_ts_first']\n",
+    "            delta_days = (col - item_first_timestamp) / (60*60*24)\n",
+    "            gdf[column + \"_age_days\"] = delta_days * (delta_days >=0)\n",
+    "        return gdf\n",
+    "\n",
+    "    def compute_selector(\n",
+    "        self,\n",
+    "        input_schema: Schema,\n",
+    "        selector: ColumnSelector,\n",
+    "        parents_selector: ColumnSelector,\n",
+    "        dependencies_selector: ColumnSelector,\n",
+    "    ) -> ColumnSelector:\n",
+    "        self._validate_matching_cols(input_schema, parents_selector, \"computing input selector\")\n",
+    "        return parents_selector\n",
+    "\n",
+    "    def column_mapping(self, col_selector):\n",
+    "        column_mapping = {}\n",
+    "        for col_name in col_selector.names:\n",
+    "            column_mapping[col_name + \"_age_days\"] = [col_name]\n",
+    "        return column_mapping\n",
+    "\n",
+    "    @property\n",
+    "    def dependencies(self):\n",
+    "        return [\"itemid_ts_first\"]\n",
+    "\n",
+    "    @property\n",
+    "    def output_dtype(self):\n",
+    "        return np.float64\n",
+    "    \n",
+    "recency_features = session_ts >> ItemRecency() \n",
+    "# Apply standardization to this continuous feature\n",
+    "recency_features_norm = recency_features >> nvt.ops.LogOp() >> nvt.ops.Normalize() >> nvt.ops.Rename(name='product_recency_days_log_norm')\n",
+    "\n",
+    "time_features = (\n",
+    "    session_time +\n",
+    "    sessiontime_weekday +\n",
+    "    weekday_sin + \n",
+    "    recency_features_norm\n",
+    ")\n",
+    "\n",
+    "features = nvt.ColumnSelector(['timestamp', 'session_id']) + cat_feats + time_features "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bb7dc1df",
+   "metadata": {},
+   "source": [
+    "### 3.2. Define the preprocessing of sequential features"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "018872e9",
+   "metadata": {},
+   "source": [
+    "Once the item features are generated, the objective of this cell is grouping interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "10b5c96c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Define Groupby Operator\n",
+    "groupby_features = features >> nvt.ops.Groupby(\n",
+    "    groupby_cols=[\"session_id\"], \n",
+    "    sort_cols=[\"timestamp\"],\n",
+    "    aggs={\n",
+    "        'item_id': [\"list\", \"count\"],\n",
+    "        'category': [\"list\"],  \n",
+    "        'timestamp': [\"first\"],\n",
+    "        'event_time_dt': [\"first\"],\n",
+    "        'et_dayofweek_sin': [\"list\"],\n",
+    "        'product_recency_days_log_norm': [\"list\"]\n",
+    "        },\n",
+    "    name_sep=\"-\") >> nvt.ops.AddMetadata(tags=[Tags.CATEGORICAL])\n",
+    "\n",
+    "\n",
+    "# Truncate sequence features to first interacted 20 items \n",
+    "SESSIONS_MAX_LENGTH = 20 \n",
+    "\n",
+    "groupby_features_list = groupby_features['item_id-list', 'category-list', 'et_dayofweek_sin-list', 'product_recency_days_log_norm-list']\n",
+    "groupby_features_truncated = groupby_features_list >> nvt.ops.ListSlice(0, SESSIONS_MAX_LENGTH, pad=True) >> nvt.ops.Rename(postfix = '_seq')\n",
+    "\n",
+    "# Calculate session day index based on 'event_time_dt-first' column\n",
+    "day_index = ((groupby_features['event_time_dt-first'])  >> \n",
+    "    nvt.ops.LambdaOp(lambda col: (col - col.min()).dt.days +1) >> \n",
+    "    nvt.ops.Rename(f = lambda col: \"day_index\")\n",
+    ")\n",
+    "\n",
+    "# Select features for training \n",
+    "selected_features = groupby_features['session_id', 'item_id-count'] + groupby_features_truncated + day_index\n",
+    "\n",
+    "# Filter out sessions with less than 2 interactions \n",
+    "MINIMUM_SESSION_LENGTH = 2\n",
+    "filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df[\"item_id-count\"] >= MINIMUM_SESSION_LENGTH) "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5eacbb6c",
+   "metadata": {},
+   "source": [
+    "- Avoid Numba low occupancy warnings"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "d60bf673",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from numba import config\n",
+    "config.CUDA_LOW_OCCUPANCY_WARNINGS = 0"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1465a499",
+   "metadata": {},
+   "source": [
+    "### 3.3. Execute NVTabular workflow"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "26fdbd0c",
+   "metadata": {},
+   "source": [
+    "Once we have defined the general workflow (`filtered_sessions`), we provide our cudf dataset to nvt.Dataset class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "45803886",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/usr/lib/python3.8/site-packages/cudf/core/dataframe.py:1253: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.\n",
+      "  warnings.warn(\n"
+     ]
+    }
+   ],
+   "source": [
+    "dataset = nvt.Dataset(interactions_merged_df)\n",
+    "workflow = nvt.Workflow(filtered_sessions)\n",
+    "# Learns features statistics necessary of the preprocessing workflow\n",
+    "workflow.fit(dataset)\n",
+    "# Apply the preprocessing workflow in the dataset and converts the resulting Dask cudf dataframe to a cudf dataframe\n",
+    "sessions_gdf = workflow.transform(dataset).compute()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fc8d0b7c",
+   "metadata": {},
+   "source": [
+    "Let's print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "eaa0cbf0",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>session_id</th>\n",
+       "      <th>item_id-count</th>\n",
+       "      <th>item_id-list_seq</th>\n",
+       "      <th>category-list_seq</th>\n",
+       "      <th>et_dayofweek_sin-list_seq</th>\n",
+       "      <th>product_recency_days_log_norm-list_seq</th>\n",
+       "      <th>day_index</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2</td>\n",
+       "      <td>200</td>\n",
+       "      <td>[2223, 2125, 1800, 123, 3030, 1861, 1076, 1285...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
+       "      <td>[1.1285199e-06, 1.1285199e-06, 1.1285199e-06, ...</td>\n",
+       "      <td>[-1.1126340627670288, -0.9665389060974121, -0....</td>\n",
+       "      <td>27</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>3</td>\n",
+       "      <td>200</td>\n",
+       "      <td>[35137, 19260, 46449, 29027, 39096, 27266, 326...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
+       "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
+       "      <td>[0.39331725239753723, 0.5418465733528137, -3.0...</td>\n",
+       "      <td>58</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>4</td>\n",
+       "      <td>200</td>\n",
+       "      <td>[23212, 30448, 16468, 2052, 22490, 31097, 6243...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
+       "      <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>\n",
+       "      <td>[0.6801630854606628, 0.7174695134162903, 0.718...</td>\n",
+       "      <td>71</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>5</td>\n",
+       "      <td>200</td>\n",
+       "      <td>[230, 451, 732, 1268, 2014, 567, 497, 439, 338...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, ...</td>\n",
+       "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
+       "      <td>[1.3680888414382935, -0.6530480980873108, -0.6...</td>\n",
+       "      <td>149</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>6</td>\n",
+       "      <td>200</td>\n",
+       "      <td>[23, 70, 160, 70, 90, 742, 851, 359, 734, 878,...</td>\n",
+       "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
+       "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
+       "      <td>[1.3714823722839355, 1.3715883493423462, 1.371...</td>\n",
+       "      <td>149</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   session_id  item_id-count  \\\n",
+       "0           2            200   \n",
+       "1           3            200   \n",
+       "2           4            200   \n",
+       "3           5            200   \n",
+       "4           6            200   \n",
+       "\n",
+       "                                    item_id-list_seq  \\\n",
+       "0  [2223, 2125, 1800, 123, 3030, 1861, 1076, 1285...   \n",
+       "1  [35137, 19260, 46449, 29027, 39096, 27266, 326...   \n",
+       "2  [23212, 30448, 16468, 2052, 22490, 31097, 6243...   \n",
+       "3  [230, 451, 732, 1268, 2014, 567, 497, 439, 338...   \n",
+       "4  [23, 70, 160, 70, 90, 742, 851, 359, 734, 878,...   \n",
+       "\n",
+       "                                   category-list_seq  \\\n",
+       "0  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...   \n",
+       "1  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...   \n",
+       "2  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...   \n",
+       "3  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, ...   \n",
+       "4  [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...   \n",
+       "\n",
+       "                           et_dayofweek_sin-list_seq  \\\n",
+       "0  [1.1285199e-06, 1.1285199e-06, 1.1285199e-06, ...   \n",
+       "1  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   \n",
+       "2  [0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...   \n",
+       "3  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   \n",
+       "4  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   \n",
+       "\n",
+       "              product_recency_days_log_norm-list_seq  day_index  \n",
+       "0  [-1.1126340627670288, -0.9665389060974121, -0....         27  \n",
+       "1  [0.39331725239753723, 0.5418465733528137, -3.0...         58  \n",
+       "2  [0.6801630854606628, 0.7174695134162903, 0.718...         71  \n",
+       "3  [1.3680888414382935, -0.6530480980873108, -0.6...        149  \n",
+       "4  [1.3714823722839355, 1.3715883493423462, 1.371...        149  "
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "sessions_gdf.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "70b05fd6",
+   "metadata": {},
+   "source": [
+    "#### Save the preprocessing workflow"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "211b0697",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "workflow.save('workflow_etl')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "551018fc",
+   "metadata": {},
+   "source": [
+    "### 3.4. Export pre-processed data by day"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9515d625",
+   "metadata": {},
+   "source": [
+    "In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day: `train.parquet`, `validation.parquet` and `test.parquet`\n",
+    "  \n",
+    "P.s. It is worthwhile a note that the dataset have a single categorical feature (category), but it is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "e18d9c63",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "sessions_gdf = sessions_gdf[sessions_gdf.day_index>=178]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "5175aeaf",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Creating time-based splits: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00,  5.91it/s]\n"
+     ]
+    }
+   ],
+   "source": [
+    "from transformers4rec.data.preprocessing import save_time_based_splits\n",
+    "save_time_based_splits(data=nvt.Dataset(sessions_gdf),\n",
+    "                       output_dir= \"./preproc_sessions_by_day\",\n",
+    "                       partition_col='day_index',\n",
+    "                       timestamp_col='session_id', \n",
+    "                      )"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "8600e0ce",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def list_files(startpath):\n",
+    "    \"\"\"\n",
+    "    Util function to print the nested structure of a directory\n",
+    "    \"\"\"\n",
+    "    for root, dirs, files in os.walk(startpath):\n",
+    "        level = root.replace(startpath, \"\").count(os.sep)\n",
+    "        indent = \" \" * 4 * (level)\n",
+    "        print(\"{}{}/\".format(indent, os.path.basename(root)))\n",
+    "        subindent = \" \" * 4 * (level + 1)\n",
+    "        for f in files:\n",
+    "            print(\"{}{}\".format(subindent, f))"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "37f76949",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "preproc_sessions_by_day/\n",
+      "    181/\n",
+      "        test.parquet\n",
+      "        train.parquet\n",
+      "        valid.parquet\n",
+      "    179/\n",
+      "        test.parquet\n",
+      "        train.parquet\n",
+      "        valid.parquet\n",
+      "    178/\n",
+      "        test.parquet\n",
+      "        train.parquet\n",
+      "        valid.parquet\n",
+      "    180/\n",
+      "        test.parquet\n",
+      "        train.parquet\n",
+      "        valid.parquet\n",
+      "    182/\n",
+      "        test.parquet\n",
+      "        train.parquet\n",
+      "        valid.parquet\n"
+     ]
+    }
+   ],
+   "source": [
+    "list_files('./preproc_sessions_by_day')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "3bd1bad9",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "619"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# free gpu memory\n",
+    "del  sessions_gdf\n",
+    "gc.collect()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "64772bf1",
+   "metadata": {},
+   "source": [
+    "That's it! We created our sequential features, now we can go to next notebook to train a PyTorch or Tensorflow session-based model."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

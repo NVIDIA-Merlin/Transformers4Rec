@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.masking &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.torch.masking</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.torch.masking</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.doc_utils</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
+
+<span class="kn">from</span> <span class="nn">.utils.torch_utils</span> <span class="kn">import</span> <span class="n">OutputSizeMixin</span>
+
+<span class="n">masking_registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;torch.masking&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MaskingInfo"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskingInfo">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">MaskingInfo</span><span class="p">:</span>
+    <span class="n">schema</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
+    <span class="n">targets</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span></div>
+
+
+<span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    hidden_size: int</span>
+<span class="s2">        The hidden dimension of input tensors, needed to initialize trainable vector of masked</span>
+<span class="s2">        positions.</span>
+<span class="s2">    padding_idx: int, default = 0</span>
+<span class="s2">        Index of padding item used for getting batch of sequences with the same length</span>
+<span class="s2">    eval_on_last_item_seq_only: bool, default = True</span>
+<span class="s2">        Predict only last item during evaluation</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="MaskSequence"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MaskSequence</span><span class="p">(</span><span class="n">OutputSizeMixin</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class to prepare masked items inputs/labels for language modeling tasks.</span>
+
+<span class="sd">    Transformer architectures can be trained in different ways. Depending of the training method,</span>
+<span class="sd">    there is a specific masking schema. The masking schema sets the items to be predicted (labels)</span>
+<span class="sd">    and mask (hide) their positions in the sequence so that they are not used by the Transformer</span>
+<span class="sd">    layers for prediction.</span>
+
+<span class="sd">    We currently provide 4 different masking schemes out of the box:</span>
+<span class="sd">        - Causal LM (clm)</span>
+<span class="sd">        - Masked LM (mlm)</span>
+<span class="sd">        - Permutation LM (plm)</span>
+<span class="sd">        - Replacement Token Detection (rtd)</span>
+
+<span class="sd">    This class can be extended to add different a masking scheme.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hidden_size:</span>
+<span class="sd">        The hidden dimension of input tensors, needed to initialize trainable vector of</span>
+<span class="sd">        masked positions.</span>
+<span class="sd">    pad_token: int, default = 0</span>
+<span class="sd">        Index of the padding token used for getting batch of sequences with the same length</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: Link to masking-class in the doc-string.</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">eval_on_last_item_seq_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MaskSequence</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span> <span class="o">=</span> <span class="n">padding_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">=</span> <span class="n">hidden_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eval_on_last_item_seq_only</span> <span class="o">=</span> <span class="n">eval_on_last_item_seq_only</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_schema</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">masked_targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Create a trainable embedding to replace masked interactions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">masked_item_embedding</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">))</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">normal_</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">masked_item_embedding</span><span class="p">,</span>
+            <span class="n">mean</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">std</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to prepare masked labels based on the sequence of item ids.</span>
+<span class="sd">        It returns The true labels of masked positions and the related boolean mask.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item_ids: torch.Tensor</span>
+<span class="sd">            The sequence of input item ids used for deriving labels of</span>
+<span class="sd">            next item prediction task.</span>
+
+<span class="sd">        training: bool</span>
+<span class="sd">            Flag to indicate whether we are in `Training` mode or not.</span>
+<span class="sd">            During training, the labels can be any items within the sequence</span>
+<span class="sd">            based on the selected masking task.</span>
+<span class="sd">            During evaluation, we are predicting all next items or last item only</span>
+<span class="sd">            in the sequence based on the param `eval_on_last_item_seq_only`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<div class="viewcode-block" id="MaskSequence.compute_masked_targets"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.compute_masked_targets">[docs]</a>    <span class="k">def</span> <span class="nf">compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Method to prepare masked labels based on the sequence of item ids.</span>
+<span class="sd">        It returns The true labels of masked positions and the related boolean mask.</span>
+<span class="sd">        And the attributes of the class `mask_schema` and `masked_targets`</span>
+<span class="sd">        are updated to be re-used in other modules.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item_ids: torch.Tensor</span>
+<span class="sd">            The sequence of input item ids used for deriving labels of</span>
+<span class="sd">            next item prediction task.</span>
+
+<span class="sd">        training: bool</span>
+<span class="sd">            Flag to indicate whether we are in `Training` mode or not.</span>
+<span class="sd">            During training, the labels can be any items within the sequence</span>
+<span class="sd">            based on the selected masking task.</span>
+<span class="sd">            During evaluation, we are predicting the last item in the sequence.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[MaskingSchema, MaskedTargets]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">item_ids</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;`item_ids` must have 2 dimensions.&quot;</span>
+        <span class="n">masking_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_masked_targets</span><span class="p">(</span><span class="n">item_ids</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_schema</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">masked_targets</span> <span class="o">=</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">targets</span>
+
+        <span class="k">return</span> <span class="n">masking_info</span></div>
+
+<div class="viewcode-block" id="MaskSequence.apply_mask_to_inputs"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.apply_mask_to_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">apply_mask_to_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">schema</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Control the masked positions in the inputs by replacing the true interaction</span>
+<span class="sd">        by a learnable masked embedding.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs: torch.Tensor</span>
+<span class="sd">            The 3-D tensor of interaction embeddings resulting from the ops:</span>
+<span class="sd">            TabularFeatures + aggregation + projection(optional)</span>
+<span class="sd">        schema: MaskingSchema</span>
+<span class="sd">            The boolean mask indicating masked positions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">schema</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">(),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">masked_item_embedding</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="n">inputs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">inputs</span></div>
+
+<div class="viewcode-block" id="MaskSequence.predict_all"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.predict_all">[docs]</a>    <span class="k">def</span> <span class="nf">predict_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare labels for all next item predictions instead of</span>
+<span class="sd">        last-item predictions in a user&#39;s sequence.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item_ids: torch.Tensor</span>
+<span class="sd">            The sequence of input item ids used for deriving labels of</span>
+<span class="sd">            next item prediction task.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[MaskingSchema, MaskedTargets]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO : Add option to predict N-last items</span>
+        <span class="c1"># shift sequence of item-ids</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">item_ids</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+        <span class="c1"># As after shifting the sequence length will be subtracted by one, adding a masked item in</span>
+        <span class="c1"># the sequence to return to the initial sequence.</span>
+        <span class="c1"># This is important for ReformerModel(), for example</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="p">[</span>
+                <span class="n">labels</span><span class="p">,</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># apply mask on input where target is on padding index</span>
+        <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+        <span class="k">return</span> <span class="n">MaskingInfo</span><span class="p">(</span><span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MaskSequence.forward"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_masked_targets</span><span class="p">(</span><span class="n">item_ids</span><span class="o">=</span><span class="n">item_ids</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_schema</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`mask_schema must be set.`&quot;</span><span class="p">)</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_schema</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">apply_mask_to_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">schema</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MaskSequence.forward_output_size"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">input_size</span></div>
+
+<div class="viewcode-block" id="MaskSequence.transformer_required_arguments"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.transformer_required_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">transformer_required_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="MaskSequence.transformer_optional_arguments"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.transformer_optional_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">transformer_optional_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">{}</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transformer_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare additional arguments to pass to the Transformer forward methods.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer_required_arguments</span><span class="p">(),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer_optional_arguments</span><span class="p">()}</span></div>
+
+
+<div class="viewcode-block" id="CausalLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.CausalLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;clm&quot;</span><span class="p">,</span> <span class="s2">&quot;causal&quot;</span><span class="p">)</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CausalLanguageModeling</span><span class="p">(</span><span class="n">MaskSequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In Causal Language Modeling (clm) you predict the next item based on past positions of the</span>
+<span class="sd">    sequence. Future positions are masked.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {mask_sequence_parameters}</span>
+<span class="sd">    train_on_last_item_seq_only: predict only last item during training</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">eval_on_last_item_seq_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">train_on_last_item_seq_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">CausalLanguageModeling</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">padding_idx</span><span class="o">=</span><span class="n">padding_idx</span><span class="p">,</span>
+            <span class="n">eval_on_last_item_seq_only</span><span class="o">=</span><span class="n">eval_on_last_item_seq_only</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_on_last_item_seq_only</span> <span class="o">=</span> <span class="n">train_on_last_item_seq_only</span>
+
+    <span class="k">def</span> <span class="nf">_compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
+        <span class="n">masking_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_all</span><span class="p">(</span><span class="n">item_ids</span><span class="p">)</span>
+        <span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">targets</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_on_last_item_seq_only</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">training</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_on_last_item_seq_only</span> <span class="ow">and</span> <span class="n">training</span>
+        <span class="p">):</span>
+            <span class="n">rows_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span>  <span class="c1"># type: ignore</span>
+            <span class="p">)</span>
+            <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">mask_labels</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">label_seq_trg_eval</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">label_seq_trg_eval</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
+            <span class="c1"># Updating labels and mask</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">label_seq_trg_eval</span>
+            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">label_seq_trg_eval</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+        <span class="k">return</span> <span class="n">MaskingInfo</span><span class="p">(</span><span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+<div class="viewcode-block" id="CausalLanguageModeling.apply_mask_to_inputs"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.CausalLanguageModeling.apply_mask_to_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">apply_mask_to_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask_schema</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="c1"># shift sequence of interaction embeddings</span>
+        <span class="n">pos_emb_inp</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># Adding a masked item in the sequence to return to the initial sequence.</span>
+        <span class="n">pos_emb_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="p">[</span>
+                <span class="n">pos_emb_inp</span><span class="p">,</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">pos_emb_inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">pos_emb_inp</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">pos_emb_inp</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">inputs</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+            <span class="p">],</span>
+            <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Replacing the inputs corresponding to masked label with a trainable embedding</span>
+        <span class="n">pos_emb_inp</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="n">mask_schema</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">(),</span>
+            <span class="n">pos_emb_inp</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">masked_item_embedding</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">pos_emb_inp</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">pos_emb_inp</span></div></div>
+
+
+<div class="viewcode-block" id="MaskedLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskedLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;mlm&quot;</span><span class="p">,</span> <span class="s2">&quot;masked&quot;</span><span class="p">)</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MaskedLanguageModeling</span><span class="p">(</span><span class="n">MaskSequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In Masked Language Modeling (mlm) you randomly select some positions of the sequence to be</span>
+<span class="sd">    predicted, which are masked.</span>
+<span class="sd">    During training, the Transformer layer is allowed to use positions on the right (future info).</span>
+<span class="sd">    During inference, all past items are visible for the Transformer layer, which tries to predict</span>
+<span class="sd">    the next item.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {mask_sequence_parameters}</span>
+<span class="sd">    mlm_probability: Optional[float], default = 0.15</span>
+<span class="sd">        Probability of an item to be selected (masked) as a label of the given sequence.</span>
+<span class="sd">        p.s. We enforce that at least one item is masked for each sequence, so that the network can</span>
+<span class="sd">        learn something with it.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">eval_on_last_item_seq_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">mlm_probability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.15</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">padding_idx</span><span class="o">=</span><span class="n">padding_idx</span><span class="p">,</span>
+            <span class="n">eval_on_last_item_seq_only</span><span class="o">=</span><span class="n">eval_on_last_item_seq_only</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mlm_probability</span> <span class="o">=</span> <span class="n">mlm_probability</span>
+
+    <span class="k">def</span> <span class="nf">_compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare sequence with mask schema for masked language modeling prediction</span>
+<span class="sd">        the function is based on HuggingFace&#39;s transformers/data/data_collator.py</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item_ids: torch.Tensor</span>
+<span class="sd">            Sequence of input itemid (target) column</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        labels: torch.Tensor</span>
+<span class="sd">            Sequence of masked item ids.</span>
+<span class="sd">        mask_labels: torch.Tensor</span>
+<span class="sd">            Masking schema for masked targets positions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+            <span class="n">item_ids</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">)</span>
+        <span class="n">non_padded_mask</span> <span class="o">=</span> <span class="n">item_ids</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+        <span class="n">rows_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">item_ids</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="c1"># During training, masks labels to be predicted according to a probability, ensuring that</span>
+        <span class="c1">#   each session has at least one label to predict</span>
+        <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
+            <span class="c1"># Selects a percentage of items to be masked (selected as labels)</span>
+            <span class="n">probability_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+                <span class="n">item_ids</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlm_probability</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>
+            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span><span class="n">probability_matrix</span><span class="p">)</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span> <span class="o">&amp;</span> <span class="n">non_padded_mask</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">mask_labels</span><span class="p">,</span>
+                <span class="n">item_ids</span><span class="p">,</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">item_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Set at least one item in the sequence to mask, so that the network</span>
+            <span class="c1"># can learn something with this session</span>
+            <span class="n">one_random_index_by_session</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span>
+                <span class="n">non_padded_mask</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+            <span class="n">labels</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">one_random_index_by_session</span><span class="p">]</span> <span class="o">=</span> <span class="n">item_ids</span><span class="p">[</span>
+                <span class="n">rows_ids</span><span class="p">,</span> <span class="n">one_random_index_by_session</span>
+            <span class="p">]</span>
+            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+            <span class="c1"># If a sequence has only masked labels, unmasks one of the labels</span>
+            <span class="n">sequences_with_only_labels</span> <span class="o">=</span> <span class="n">mask_labels</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">non_padded_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">sampled_labels_to_unmask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span>
+                <span class="n">mask_labels</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+            <span class="n">labels_to_unmask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span>
+                <span class="n">sampled_labels_to_unmask</span><span class="p">,</span> <span class="n">sequences_with_only_labels</span>
+            <span class="p">)</span>
+            <span class="n">rows_to_unmask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">sequences_with_only_labels</span><span class="p">)</span>
+
+            <span class="n">labels</span><span class="p">[</span><span class="n">rows_to_unmask</span><span class="p">,</span> <span class="n">labels_to_unmask</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_on_last_item_seq_only</span><span class="p">:</span>
+                <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_padded_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">labels</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span> <span class="o">=</span> <span class="n">item_ids</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
+                <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">masking_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_all</span><span class="p">(</span><span class="n">item_ids</span><span class="p">)</span>
+                <span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">targets</span>
+
+        <span class="k">return</span> <span class="n">MaskingInfo</span><span class="p">(</span><span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PermutationLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.PermutationLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;plm&quot;</span><span class="p">,</span> <span class="s2">&quot;permutation&quot;</span><span class="p">)</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PermutationLanguageModeling</span><span class="p">(</span><span class="n">MaskSequence</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    In Permutation Language Modeling (plm) you use a permutation factorization at the level of the</span>
+<span class="sd">    self-attention layer to define the accessible bidirectional context.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {mask_sequence_parameters}</span>
+<span class="sd">    max_span_length: int</span>
+<span class="sd">        maximum length of a span of masked items</span>
+<span class="sd">    plm_probability: float</span>
+<span class="sd">        The ratio of surrounding items to unmask to define the context of the span-based</span>
+<span class="sd">        prediction segment of items</span>
+<span class="sd">    permute_all: bool</span>
+<span class="sd">        Compute partial span-based prediction (=False) or not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">eval_on_last_item_seq_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">plm_probability</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">6</span><span class="p">,</span>
+        <span class="n">max_span_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">permute_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PermutationLanguageModeling</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">padding_idx</span><span class="o">=</span><span class="n">padding_idx</span><span class="p">,</span>
+            <span class="n">eval_on_last_item_seq_only</span><span class="o">=</span><span class="n">eval_on_last_item_seq_only</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plm_probability</span> <span class="o">=</span> <span class="n">plm_probability</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_span_length</span> <span class="o">=</span> <span class="n">max_span_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">permute_all</span> <span class="o">=</span> <span class="n">permute_all</span>
+
+        <span class="c1"># additional masked scheme needed for XLNet-PLM task :</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_mapping</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">perm_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_compute_masked_targets</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_compute_masked_targets_extended</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare the attention masks needed for permutation language modeling</span>
+<span class="sd">        The function is based on HuggingFace&#39;s transformers/data/data_collator.py</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        item_ids: torch.Tensor</span>
+<span class="sd">            Sequence of input itemid (target) column.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        labels: torch.Tensor</span>
+<span class="sd">            Sequence of masked item ids.</span>
+<span class="sd">        mask_labels: torch.Tensor</span>
+<span class="sd">            Masking schema for masked targets positions.</span>
+<span class="sd">        perm_mask: torch.Tensor of shape (bs, seq_len, seq_len)</span>
+<span class="sd">            The random factorization order attention mask for each target</span>
+<span class="sd">        target_mapping: torch.Tensor of shape (bs, seq_len, seq_len) :</span>
+<span class="sd">            Binary mask to specify the items to predict.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span>
+            <span class="n">item_ids</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span>
+        <span class="p">)</span>
+        <span class="n">non_padded_mask</span> <span class="o">=</span> <span class="n">item_ids</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+        <span class="n">rows_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">item_ids</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="c1"># During training:</span>
+        <span class="c1"># Masks a span of consecutive items to be predicted according to plm_probability,</span>
+        <span class="c1"># While ensuring that each session has at least one  item to predict</span>
+        <span class="k">if</span> <span class="n">training</span><span class="p">:</span>
+            <span class="n">target_mapping</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">perm_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">permute_all</span><span class="p">:</span>
+                <span class="c1"># Permute all non padded items</span>
+                <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">non_padded_mask</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># For each session select a span of consecutive item ids to be masked</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)):</span>
+                    <span class="c1"># Start from the beginning of the sequence by setting `cur_len = 0`</span>
+                    <span class="c1"># (number of tokens processed so far).</span>
+                    <span class="n">cur_len</span> <span class="o">=</span> <span class="mi">0</span>
+                    <span class="n">max_len</span> <span class="o">=</span> <span class="n">non_padded_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span>  <span class="c1"># mask only non-padded items</span>
+                    <span class="k">while</span> <span class="n">cur_len</span> <span class="o">&lt;</span> <span class="n">max_len</span><span class="p">:</span>
+                        <span class="c1"># Sample a `span_length` from the interval `[1, max_span_length]`</span>
+                        <span class="c1"># (length of span of tokens to be masked)</span>
+                        <span class="n">span_length</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_span_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                        <span class="c1"># Reserve a context</span>
+                        <span class="c1"># to surround span to be masked</span>
+                        <span class="n">context_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">span_length</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">plm_probability</span><span class="p">)</span>
+                        <span class="c1"># Sample a starting point `start_index`</span>
+                        <span class="c1"># from the interval `[cur_len, cur_len + context_length - span_length]`</span>
+                        <span class="n">start_index</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">cur_len</span>
+                            <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+                                <span class="n">context_length</span> <span class="o">-</span> <span class="n">span_length</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+                            <span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                        <span class="p">)</span>
+                        <span class="k">if</span> <span class="n">start_index</span> <span class="o">&lt;</span> <span class="n">max_len</span><span class="p">:</span>
+                            <span class="c1"># Mask the span of non-padded items</span>
+                            <span class="c1">#   `start_index:start_index + span_length`</span>
+                            <span class="n">mask_labels</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">start_index</span> <span class="p">:</span> <span class="n">start_index</span> <span class="o">+</span> <span class="n">span_length</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                        <span class="c1"># Set `cur_len = cur_len + context_length`</span>
+                        <span class="n">cur_len</span> <span class="o">+=</span> <span class="n">context_length</span>
+                    <span class="c1"># if no item was masked:</span>
+                    <span class="k">if</span> <span class="n">mask_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="c1"># Set at least one item in the sequence to mask, so that the network can</span>
+                        <span class="c1"># learn something with this session</span>
+                        <span class="n">one_random_index_by_session</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span>
+                            <span class="n">non_padded_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+                        <span class="n">mask_labels</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">one_random_index_by_session</span><span class="p">]</span> <span class="o">=</span> <span class="n">item_ids</span><span class="p">[</span>
+                            <span class="n">i</span><span class="p">,</span> <span class="n">one_random_index_by_session</span>
+                        <span class="p">]</span>
+                    <span class="c1"># Since we&#39;re replacing non-masked tokens with padding_idxs in the labels tensor</span>
+                    <span class="c1"># instead of skipping them altogether,</span>
+                    <span class="c1"># the i-th predict corresponds to the i-th token.</span>
+                    <span class="c1"># N.B: the loss function will be computed only on non paded items</span>
+                    <span class="n">target_mapping</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">mask_labels</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">item_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">))</span>
+
+            <span class="c1"># If a sequence has only masked labels, unmasks one of the labels</span>
+            <span class="n">sequences_with_only_labels</span> <span class="o">=</span> <span class="n">mask_labels</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">non_padded_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">sampled_labels_to_unmask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span>
+                <span class="n">mask_labels</span><span class="o">.</span><span class="n">float</span><span class="p">(),</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+            <span class="n">labels_to_unmask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span>
+                <span class="n">sampled_labels_to_unmask</span><span class="p">,</span> <span class="n">sequences_with_only_labels</span>
+            <span class="p">)</span>
+            <span class="n">rows_to_unmask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">sequences_with_only_labels</span><span class="p">)</span>
+
+            <span class="n">labels</span><span class="p">[</span><span class="n">rows_to_unmask</span><span class="p">,</span> <span class="n">labels_to_unmask</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+            <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)):</span>
+                <span class="c1"># Generate permutation indices i.e.</span>
+                <span class="c1">#  sample a random factorisation order for the sequence.</span>
+                <span class="c1">#  This will determine which tokens a given token can attend to</span>
+                <span class="c1"># (encoded in `perm_mask`).</span>
+                <span class="c1"># Create a linear factorisation order</span>
+                <span class="n">perm_index</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="c1"># randomly permute indices of each session</span>
+                <span class="n">perm_index</span> <span class="o">=</span> <span class="n">perm_index</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">randperm</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))]</span>
+                <span class="c1"># Set the permutation indices of non-masked (non-functional) tokens to the</span>
+                <span class="c1"># smallest index (-1) so that:</span>
+                <span class="c1"># (1) They can be seen by all other positions</span>
+                <span class="c1"># (2) They cannot see masked positions, so there won&#39;t be information leak</span>
+                <span class="n">perm_index</span><span class="o">.</span><span class="n">masked_fill_</span><span class="p">(</span><span class="o">~</span><span class="n">mask_labels</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+                <span class="c1"># The logic for whether the i-th token can attend on the j-th token</span>
+                <span class="c1"># based on the factorisation order:</span>
+                <span class="c1"># 0 (can attend):</span>
+                <span class="c1"># If perm_index[i] &gt; perm_index[j] or j is neither masked nor a padded item</span>
+                <span class="c1"># 1 (cannot attend):</span>
+                <span class="c1"># If perm_index[i] &lt;= perm_index[j] and j is either masked or a padded item</span>
+                <span class="n">perm_mask</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">perm_index</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="mi">1</span><span class="p">))</span>
+                    <span class="o">&lt;=</span> <span class="n">perm_index</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+                <span class="p">)</span> <span class="o">&amp;</span> <span class="n">mask_labels</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="c1"># During evaluation always mask the last item of the session</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_on_last_item_seq_only</span><span class="p">:</span>
+                <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_padded_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">labels</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span> <span class="o">=</span> <span class="n">item_ids</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
+                <span class="n">mask_labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+                <span class="n">perm_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="c1"># Previous tokens don&#39;t see last non-padded token</span>
+                <span class="n">perm_mask</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="p">:,</span> <span class="n">last_item_sessions</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="c1"># add causal mask to avoid attending to future when evaluating</span>
+                <span class="n">causal_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)],</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">mask_up</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">causal_mask</span><span class="p">,</span> <span class="n">diagonal</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">temp_perm</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mask_up</span><span class="o">.</span><span class="n">expand</span><span class="p">((</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span> <span class="o">+</span> <span class="n">perm_mask</span>
+                <span class="p">)</span>
+                <span class="n">perm_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp_perm</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+                <span class="c1"># the i-th predict corresponds to the i-th token.</span>
+                <span class="n">target_mapping</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">((</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># predict all next items</span>
+                <span class="n">masking_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_all</span><span class="p">(</span><span class="n">item_ids</span><span class="p">)</span>
+                <span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">masking_info</span><span class="o">.</span><span class="n">targets</span>
+                <span class="c1"># targets:  the i-th predict corresponds to the i-th item in the sequence.</span>
+                <span class="n">target_mapping</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">one_hot</span><span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">),</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">target_mapping</span> <span class="o">=</span> <span class="n">target_mapping</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                <span class="p">)</span>
+                <span class="c1"># perm_mask: causal mask</span>
+                <span class="c1"># Perm mask:</span>
+                <span class="n">perm_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span>
+                    <span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="c1"># add causal mask to avoid attending to future when evaluating</span>
+                <span class="n">causal_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)],</span> <span class="n">device</span><span class="o">=</span><span class="n">item_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">mask_up</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">causal_mask</span><span class="p">,</span> <span class="n">diagonal</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">temp_perm</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">mask_up</span><span class="o">.</span><span class="n">expand</span><span class="p">((</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span> <span class="o">+</span> <span class="n">perm_mask</span>
+                <span class="p">)</span>
+                <span class="n">perm_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">temp_perm</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">target_mapping</span><span class="p">,</span> <span class="n">perm_mask</span>
+
+<div class="viewcode-block" id="PermutationLanguageModeling.compute_masked_targets"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.PermutationLanguageModeling.compute_masked_targets">[docs]</a>    <span class="k">def</span> <span class="nf">compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
+        <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask_schema</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">masked_targets</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">target_mapping</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">perm_mask</span><span class="p">,</span>
+        <span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_masked_targets_extended</span><span class="p">(</span><span class="n">item_ids</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MaskingInfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_schema</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">masked_targets</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PermutationLanguageModeling.transformer_required_arguments"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.PermutationLanguageModeling.transformer_required_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">transformer_required_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">target_mapping</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_mapping</span><span class="p">,</span> <span class="n">perm_mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">perm_mask</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ReplacementLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.ReplacementLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;rtd&quot;</span><span class="p">,</span> <span class="s2">&quot;replacement&quot;</span><span class="p">)</span>
+<span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ReplacementLanguageModeling</span><span class="p">(</span><span class="n">MaskedLanguageModeling</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Replacement Language Modeling (rtd) you use MLM to randomly select some items, but replace</span>
+<span class="sd">    them by random tokens.</span>
+<span class="sd">    Then, a discriminator model (that can share the weights with the generator or not), is asked</span>
+<span class="sd">    to classify whether the item at each position belongs or not to the original sequence.</span>
+<span class="sd">    The generator-discriminator architecture was jointly trained using Masked LM and RTD tasks.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {mask_sequence_parameters}</span>
+<span class="sd">    sample_from_batch: bool</span>
+<span class="sd">        Whether to sample replacement item ids from the same batch or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">eval_on_last_item_seq_only</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">sample_from_batch</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ReplacementLanguageModeling</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">hidden_size</span><span class="p">,</span>
+            <span class="n">padding_idx</span><span class="o">=</span><span class="n">padding_idx</span><span class="p">,</span>
+            <span class="n">eval_on_last_item_seq_only</span><span class="o">=</span><span class="n">eval_on_last_item_seq_only</span><span class="p">,</span>
+            <span class="n">kwargs</span><span class="o">=</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sample_from_batch</span> <span class="o">=</span> <span class="n">sample_from_batch</span>
+
+<div class="viewcode-block" id="ReplacementLanguageModeling.get_fake_tokens"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.ReplacementLanguageModeling.get_fake_tokens">[docs]</a>    <span class="k">def</span> <span class="nf">get_fake_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemid_seq</span><span class="p">,</span> <span class="n">target_flat</span><span class="p">,</span> <span class="n">logits</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Second task of RTD is binary classification to train the discriminator.</span>
+<span class="sd">        The task consists of generating fake data by replacing [MASK] positions with random items,</span>
+<span class="sd">        ELECTRA discriminator learns to detect fake replacements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        itemid_seq: torch.Tensor of shape (bs, max_seq_len)</span>
+<span class="sd">            input sequence of item ids</span>
+<span class="sd">        target_flat: torch.Tensor of shape (bs*max_seq_len)</span>
+<span class="sd">            flattened masked label sequences</span>
+<span class="sd">        logits: torch.Tensor of shape (#pos_item, vocab_size or #pos_item),</span>
+<span class="sd">            mlm probabilities of positive items computed by the generator model.</span>
+<span class="sd">            The logits are over the whole corpus if sample_from_batch = False,</span>
+<span class="sd">            over the positive items (masked) of the current batch otherwise</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        corrupted_inputs: torch.Tensor of shape (bs, max_seq_len)</span>
+<span class="sd">            input sequence of item ids with fake replacement</span>
+<span class="sd">        discriminator_labels: torch.Tensor of shape (bs, max_seq_len)</span>
+<span class="sd">            binary labels to distinguish between original and replaced items</span>
+<span class="sd">        batch_updates: torch.Tensor of shape (#pos_item)</span>
+<span class="sd">            the indices of replacement item within the current batch if sample_from_batch is enabled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># TODO: Generate fake interactions embeddings using metadatainfo in addition to item ids.</span>
+
+        <span class="c1"># Replace only items that were masked during MLM</span>
+        <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">target_flat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+        <span class="n">pos_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span><span class="n">target_flat</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">)</span>
+        <span class="c1"># Sample random item ids</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_from_batch</span><span class="p">:</span>
+            <span class="c1"># get batch indices for replacement items</span>
+            <span class="n">batch_updates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_from_softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="c1"># get item ids based on batch indices</span>
+            <span class="n">updates</span> <span class="o">=</span> <span class="n">pos_labels</span><span class="p">[</span><span class="n">batch_updates</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># get replacement item ids directly from logits over the whole corpus</span>
+            <span class="n">updates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample_from_softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+            <span class="n">batch_updates</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Replace masked labels by replacement item ids</span>
+        <span class="c1"># detach() is needed to not propagate the discriminator loss through generator</span>
+        <span class="n">corrupted_labels</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">target_flat</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">updates</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="c1"># Build discriminator label : distinguish original token from replaced one</span>
+        <span class="n">discriminator_labels</span> <span class="o">=</span> <span class="p">(</span><span class="n">corrupted_labels</span> <span class="o">!=</span> <span class="n">target_flat</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">itemid_seq</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># Build corrupted inputs : replacing [MASK] by sampled item</span>
+        <span class="n">corrupted_inputs</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">itemid_seq</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+            <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">updates</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="n">corrupted_inputs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">itemid_seq</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+            <span class="n">discriminator_labels</span><span class="p">,</span>
+            <span class="n">batch_updates</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="ReplacementLanguageModeling.sample_from_softmax"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.ReplacementLanguageModeling.sample_from_softmax">[docs]</a>    <span class="k">def</span> <span class="nf">sample_from_softmax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sampling method for replacement token modeling (ELECTRA)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logits: torch.Tensor(pos_item, vocab_size)</span>
+<span class="sd">            scores of probability of masked positions returned  by the generator model</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        samples: torch.Tensor(#pos_item)</span>
+<span class="sd">            ids of replacements items.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># add noise to logits to prevent from the case where the generator learn to exactly</span>
+        <span class="c1"># retrieve the true item that was masked</span>
+        <span class="n">uniform_noise</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">gumbel_noise</span> <span class="o">=</span> <span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">-</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">uniform_noise</span> <span class="o">+</span> <span class="mf">1e-9</span><span class="p">)</span> <span class="o">+</span> <span class="mf">1e-9</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">logits</span> <span class="o">+</span> <span class="n">gumbel_noise</span>
+
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v0.1.8
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+      <dd><a href="../../../../v0.1.4/index.html">v0.1.4</a></dd>
+      <dd><a href="../../../../v0.1.5/index.html">v0.1.5</a></dd>
+      <dd><a href="../../../../v0.1.6/index.html">v0.1.6</a></dd>
+      <dd><a href="../../../../v0.1.7/index.html">v0.1.7</a></dd>
+      <dd><a href="masking.html">v0.1.8</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../main/index.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>merlin_standard_lib.registry &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -12,7 +14,11 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -33,14 +39,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
 </ul>
@@ -96,16 +102,16 @@
 <span class="n">_all_cap_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s2">&quot;([a-z0-9])([A-Z])&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="camelcase_to_snakecase"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.camelcase_to_snakecase">[docs]</a><span class="k">def</span> <span class="nf">camelcase_to_snakecase</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="camelcase_to_snakecase"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.camelcase_to_snakecase">[docs]</a><span class="k">def</span> <span class="nf">camelcase_to_snakecase</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="n">s1</span> <span class="o">=</span> <span class="n">_first_cap_re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\1_\2&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_all_cap_re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\1_\2&quot;</span><span class="p">,</span> <span class="n">s1</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="snakecase_to_camelcase"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.snakecase_to_camelcase">[docs]</a><span class="k">def</span> <span class="nf">snakecase_to_camelcase</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="snakecase_to_camelcase"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.snakecase_to_camelcase">[docs]</a><span class="k">def</span> <span class="nf">snakecase_to_camelcase</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">w</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="n">w</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)])</span></div>
 
 
-<div class="viewcode-block" id="default_name"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.default_name">[docs]</a><span class="k">def</span> <span class="nf">default_name</span><span class="p">(</span><span class="n">class_or_fn</span><span class="p">):</span>
+<div class="viewcode-block" id="default_name"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.default_name">[docs]</a><span class="k">def</span> <span class="nf">default_name</span><span class="p">(</span><span class="n">class_or_fn</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Default name for a class or function.</span>
 
 <span class="sd">    This is the naming function by default for registries expecting classes or</span>
@@ -123,11 +129,11 @@
     <span class="k">return</span> <span class="n">camelcase_to_snakecase</span><span class="p">(</span><span class="n">class_or_fn</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="default_object_name"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.default_object_name">[docs]</a><span class="k">def</span> <span class="nf">default_object_name</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<div class="viewcode-block" id="default_object_name"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.default_object_name">[docs]</a><span class="k">def</span> <span class="nf">default_object_name</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">default_name</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Registry"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry">[docs]</a><span class="k">class</span> <span class="nc">Registry</span><span class="p">:</span>
+<div class="viewcode-block" id="Registry"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry">[docs]</a><span class="k">class</span> <span class="nc">Registry</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dict-like class for managing function registrations.</span>
 
@@ -190,7 +196,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_on_set</span> <span class="o">=</span> <span class="n">on_set</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_value_transformer</span> <span class="o">=</span> <span class="n">value_transformer</span>
 
-<div class="viewcode-block" id="Registry.class_registry"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.class_registry">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Registry.class_registry"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.class_registry">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">class_registry</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span> <span class="n">registry_name</span><span class="p">,</span> <span class="n">default_key_fn</span><span class="o">=</span><span class="n">default_name</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">on_set</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
@@ -202,7 +208,7 @@
             <span class="n">value_transformer</span><span class="o">=</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">v</span><span class="p">()),</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Registry.default_key"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.default_key">[docs]</a>    <span class="k">def</span> <span class="nf">default_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.default_key"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.default_key">[docs]</a>    <span class="k">def</span> <span class="nf">default_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Default key used when key not provided. Uses function from __init__.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_key_fn</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
@@ -210,12 +216,12 @@
     <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 
-<div class="viewcode-block" id="Registry.validate"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.validate"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Validation function run before setting. Uses function from __init__.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_validator</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Registry.on_set"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.on_set">[docs]</a>    <span class="k">def</span> <span class="nf">on_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.on_set"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.on_set">[docs]</a>    <span class="k">def</span> <span class="nf">on_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Callback called on successful set. Uses function from __init__.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_on_set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
@@ -247,7 +253,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">on_set</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Registry.register"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.register">[docs]</a>    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_or_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.register"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.register">[docs]</a>    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_or_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Decorator to register a function, or registration itself.</span>
 <span class="sd">        This is primarily intended for use as a decorator, either with or without</span>
 <span class="sd">        a key/parentheses.</span>
@@ -296,7 +302,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="n">decorator</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key_or_value</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Registry.register_with_multiple_names"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.register_with_multiple_names">[docs]</a>    <span class="k">def</span> <span class="nf">register_with_multiple_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.register_with_multiple_names"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.register_with_multiple_names">[docs]</a>    <span class="k">def</span> <span class="nf">register_with_multiple_names</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">names</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">names</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
@@ -311,13 +317,13 @@
     <span class="k">def</span> <span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span>
 
-<div class="viewcode-block" id="Registry.keys"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.keys"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.keys">[docs]</a>    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Registry.values"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.values">[docs]</a>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.values"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.values">[docs]</a>    <span class="k">def</span> <span class="nf">values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>  <span class="c1"># complicated because of transformer</span></div>
 
-<div class="viewcode-block" id="Registry.items"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.items">[docs]</a>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.items"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.items">[docs]</a>    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">)</span>  <span class="c1"># complicated because of transformer</span></div>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -329,10 +335,10 @@
     <span class="k">def</span> <span class="nf">_clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Registry.get"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.get"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span> <span class="k">else</span> <span class="n">default</span></div>
 
-<div class="viewcode-block" id="Registry.parse"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_or_str</span><span class="p">):</span>
+<div class="viewcode-block" id="Registry.parse"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">class_or_str</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">class_or_str</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="n">class_or_str</span><span class="p">]</span>
 
@@ -342,19 +348,19 @@
 <span class="n">RegistryClassT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;RegistryClassT&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="RegistryMixin"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin">[docs]</a><span class="k">class</span> <span class="nc">RegistryMixin</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">RegistryClassT</span><span class="p">],</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
-<div class="viewcode-block" id="RegistryMixin.parse"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin.parse">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="RegistryMixin"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin">[docs]</a><span class="k">class</span> <span class="nc">RegistryMixin</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">RegistryClassT</span><span class="p">],</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="RegistryMixin.parse"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin.parse">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">class_or_str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RegistryClassT</span><span class="p">:</span>
         <span class="n">output</span><span class="p">:</span> <span class="n">RegistryClassT</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">registry</span><span class="p">()</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">class_or_str</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">output</span></div>
 
-<div class="viewcode-block" id="RegistryMixin.registry"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin.registry">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="RegistryMixin.registry"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.RegistryMixin.registry">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">registry</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Registry</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
 
 
-<div class="viewcode-block" id="display_list_by_prefix"><a class="viewcode-back" href="../../api/merlin_standard_lib/merlin_standard_lib.html#merlin_standard_lib.registry.display_list_by_prefix">[docs]</a><span class="k">def</span> <span class="nf">display_list_by_prefix</span><span class="p">(</span><span class="n">names_list</span><span class="p">,</span> <span class="n">starting_spaces</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<div class="viewcode-block" id="display_list_by_prefix"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.display_list_by_prefix">[docs]</a><span class="k">def</span> <span class="nf">display_list_by_prefix</span><span class="p">(</span><span class="n">names_list</span><span class="p">,</span> <span class="n">starting_spaces</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creates a help string for names_list grouped by prefix.&quot;&quot;&quot;</span>
     <span class="n">cur_prefix</span><span class="p">,</span> <span class="n">result_lines</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
     <span class="n">space</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">starting_spaces</span>
@@ -398,12 +404,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
       <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
       <dd><a href="../../../v0.1.4/index.html">v0.1.4</a></dd>
       <dd><a href="../../../v0.1.5/index.html">v0.1.5</a></dd>
       <dd><a href="registry.html">v0.1.6</a></dd>
       <dd><a href="../../../v0.1.7/index.html">v0.1.7</a></dd>
+      <dd><a href="../../../v0.1.8/index.html">v0.1.8</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

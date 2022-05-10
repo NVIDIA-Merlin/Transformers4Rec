@@ -1,23 +1,26 @@
-.. Transformers4Rec documentation master file, created by
-   sphinx-quickstart on Tue Aug 31 16:07:09 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Merlin Transformers4Rec
+=======================
 
-Welcome to Transformers4Rec's documentation!
-============================================
+NVIDIA Merlin Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation.
+Transformers4Rec works with the PyTorch and TensorFlow libraries.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+To learn more, start with the `Introduction <README.html>`_.
 
-   Getting Started <getting_started>
-   Why Transformers4Rec? <why_transformers4rec>
-   Model Architectures <model_definition>
-   Training and Evaluation <training_eval>
-   End-to-end pipeline with NVIDIA Merlin <pipeline>
-   Examples <examples/index>
-   API Documentation <api/modules>   
-   Additional Resources <resources>
+
+Related Resources
+-----------------
+
+Merlin Transformers4Rec GitHub Repository
+  `<https://github.com/NVIDIA-Merlin/Transformers4Rec>`_
+
+About Merlin
+  Merlin is the overarching project that brings together the Merlin projects.
+  See the `documentation <https://nvidia-merlin.github.io/Merlin/main/README.html>`_
+  or the `repository <https://github.com/NVIDIA-Merlin/Merlin>`_ on GitHub.
+
+Developer website for Merlin
+  More information about Merlin is available at our developer website:
+  `<https://developer.nvidia.com/nvidia-merlin>`_.
 
 
 Indices and tables

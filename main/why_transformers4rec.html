@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Why Transformers4Rec? &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -12,12 +14,16 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Model Architectures" href="model_definition.html" />
-    <link rel="prev" title="Transformers4Rec | Documentation" href="getting_started.html" /> 
+    <link rel="prev" title="Transformers4Rec" href="README.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -35,9 +41,9 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Why Transformers4Rec?</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#the-relationship-between-nlp-and-recsys">The relationship between NLP and RecSys</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#integration-with-huggingface-transformers">Integration with HuggingFace Transformers</a></li>
@@ -46,7 +52,7 @@
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
 </ul>
@@ -74,31 +80,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="why-transformers4rec">
+  <div class="tex2jax_ignore mathjax_ignore section" id="why-transformers4rec">
 <h1>Why Transformers4Rec?<a class="headerlink" href="#why-transformers4rec" title="Permalink to this headline"></a></h1>
 <div class="section" id="the-relationship-between-nlp-and-recsys">
 <h2>The relationship between NLP and RecSys<a class="headerlink" href="#the-relationship-between-nlp-and-recsys" title="Permalink to this headline"></a></h2>
@@ -106,12 +88,13 @@
 <p>More recently, Transformer architectures have become the dominant technique over convolutional and recurrent neural networks for language modeling tasks. Because of their efficient parallel training, these architectures scale well with training data and model size, and are effective at modeling long-range sequences.</p>
 <p>Transformers have similarly been applied to sequential recommendation in architectures like <a class="reference external" href="https://arxiv.org/abs/1808.09781">SASRec</a>, <a class="reference external" href="https://arxiv.org/abs/1904.06690">BERT4Rec</a> and <a class="reference external" href="https://arxiv.org/pdf/1905.06874.pdf%C2%A0">BST</a>, providing higher accuracy than architectures based on CNN and RNNs, as can be seen in their reported experiments and also in our [ACM RecSys’21 paper](Updated references do paper URL in docs).</p>
 <p>You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation towards Transformers in our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">paper</a> too.</p>
-<div style="text-align: center; margin: 20pt"><img src="_images/nlp_x_recsys.png" alt="A timeline illustrating the influence of NLP research in Recommender Systems" style="width:800px;"/><br><figcaption style="font-style: italic;">Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://dl.acm.org/doi/10.1145/3460231.3474255)">Transformers4Rec paper</a></figcaption></div></div>
+<div style="text-align: center; margin: 20pt"><img src="_images/nlp_x_recsys.png" alt="A timeline illustrating the influence of NLP research in Recommender Systems" style="width:800px;"/><br><figcaption style="font-style: italic;">Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://dl.acm.org/doi/10.1145/3460231.3474255)">Transformers4Rec paper</a></figcaption></div>
+</div>
 <div class="section" id="integration-with-huggingface-transformers">
 <h2>Integration with HuggingFace Transformers<a class="headerlink" href="#integration-with-huggingface-transformers" title="Permalink to this headline"></a></h2>
 <p>Transformers4Rec integrates with the <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace (HF) Transformers</a> library, allowing RecSys researchers and practitioners to easily experiment with the latest and state-of-the-art NLP Transformer architectures for sequential and session-based recommendation tasks and deploy those models into production.</p>
 <p>The HF Transformers was <em>“established with the goal of opening up advancements in NLP to the wider machine learning community”</em>. It has become very popular among NLP researchers and practitioners (more than 900 contributors), providing standardized implementations of the state-of-the-art Transformer architectures (more than 68 and counting) produced by the research community, often within days or weeks of their publication.</p>
-<p>HF Transformers is designed for both research and production. Models are composed of three building blocks: (a) a tokenizer, which converts raw text to sparse index encodings; (b) a transformer architecture; and (c) a head for NLP tasks, like Text Classification, Generation, Sentiment Analysis, Translation, Summarization, among others.</p>
+<p>HF Transformers is designed for both research and production. Models are composed of three building blocks: (a) a tokenizer, which converts raw text to sparse index encodings; (b) a transformer architecture; and © a head for NLP tasks, like Text Classification, Generation, Sentiment Analysis, Translation, Summarization, among others.</p>
 <p>In Transformers4Rec we leverage from HF Transformers only the transformer architectures building block (b) and their configuration classes. Transformers4Rec provides additional blocks necessary for recommendation, e.g., input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class to allow for the evaluation with RecSys metrics.</p>
 </div>
 </div>
@@ -120,7 +103,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="getting_started.html" class="btn btn-neutral float-left" title="Transformers4Rec | Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="README.html" class="btn btn-neutral float-left" title="Transformers4Rec" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="model_definition.html" class="btn btn-neutral float-right" title="Model Architectures" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -150,12 +133,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../v0.1.2/why_transformers4rec.html">v0.1.2</a></dd>
       <dd><a href="../v0.1.3/why_transformers4rec.html">v0.1.3</a></dd>
       <dd><a href="../v0.1.4/why_transformers4rec.html">v0.1.4</a></dd>
       <dd><a href="../v0.1.5/why_transformers4rec.html">v0.1.5</a></dd>
       <dd><a href="../v0.1.6/why_transformers4rec.html">v0.1.6</a></dd>
       <dd><a href="../v0.1.7/why_transformers4rec.html">v0.1.7</a></dd>
+      <dd><a href="../v0.1.8/why_transformers4rec.html">v0.1.8</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

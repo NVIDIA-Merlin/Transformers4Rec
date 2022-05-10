@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.ranking_metric &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.torch.ranking_metric</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.torch.ranking_metric</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="c1"># Adapted from source code: https://github.com/karlhigley/ranking-metrics-torch</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torchmetrics</span> <span class="k">as</span> <span class="nn">tm</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Registry</span>
+
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">torch_utils</span>
+
+<span class="n">ranking_metrics_registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="o">.</span><span class="n">class_registry</span><span class="p">(</span><span class="s2">&quot;torch.ranking_metrics&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RankingMetric"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RankingMetric">[docs]</a><span class="k">class</span> <span class="nc">RankingMetric</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metric wrapper for computing ranking metrics@K for session-based task.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    top_ks : list, default [2, 5])</span>
+<span class="sd">        list of cutoffs</span>
+<span class="sd">    labels_onehot : bool</span>
+<span class="sd">        Enable transform the labels to one-hot representation</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">top_ks</span> <span class="o">=</span> <span class="n">top_ks</span> <span class="ow">or</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels_onehot</span> <span class="o">=</span> <span class="n">labels_onehot</span>
+        <span class="c1"># Store the mean of the batch metrics (for each cut-off at topk)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_state</span><span class="p">(</span><span class="s2">&quot;metric_mean&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="p">[],</span> <span class="n">dist_reduce_fx</span><span class="o">=</span><span class="s2">&quot;cat&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RankingMetric.update"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RankingMetric.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preds</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+        <span class="c1"># Computing the metrics at different cut-offs</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_onehot</span><span class="p">:</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">tranform_label_to_onehot</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">preds</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">metric</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">top_ks</span><span class="p">),</span> <span class="n">preds</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">preds</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric_mean</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>  <span class="c1"># type: ignore</span></div>
+
+<div class="viewcode-block" id="RankingMetric.compute"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RankingMetric.compute">[docs]</a>    <span class="k">def</span> <span class="nf">compute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Computing the mean of the batch metrics (for each cut-off at topk)</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_mean</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">preds</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute a ranking metric over a predictions and one-hot targets.</span>
+<span class="sd">        This method should be overridden by subclasses.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="PrecisionAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.PrecisionAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;precision_at&quot;</span><span class="p">,</span> <span class="s2">&quot;precision&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">PrecisionAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PrecisionAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute precision@K for each of the provided cutoffs</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ks : torch.Tensor or list</span>
+<span class="sd">            list of cutoffs</span>
+<span class="sd">        scores : torch.Tensor</span>
+<span class="sd">            predicted item scores</span>
+<span class="sd">        labels : torch.Tensor</span>
+<span class="sd">            true item labels</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.Tensor:</span>
+<span class="sd">            list of precisions at cutoffs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">topk_labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">extract_topk</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">precisions</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">create_output_placeholder</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ks</span><span class="p">):</span>
+            <span class="n">precisions</span><span class="p">[:,</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">topk_labels</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">precisions</span></div>
+
+
+<div class="viewcode-block" id="RecallAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RecallAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;recall_at&quot;</span><span class="p">,</span> <span class="s2">&quot;recall&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">RecallAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">RecallAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute recall@K for each of the provided cutoffs</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ks : torch.Tensor or list</span>
+<span class="sd">            list of cutoffs</span>
+<span class="sd">        scores : torch.Tensor</span>
+<span class="sd">            predicted item scores</span>
+<span class="sd">        labels : torch.Tensor</span>
+<span class="sd">            true item labels</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">            torch.Tensor: list of recalls at cutoffs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">topk_labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">extract_topk</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">recalls</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">create_output_placeholder</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+
+        <span class="c1"># Compute recalls at K</span>
+        <span class="n">num_relevant</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">rel_indices</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_relevant</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()</span>
+        <span class="n">rel_count</span> <span class="o">=</span> <span class="n">num_relevant</span><span class="p">[</span><span class="n">rel_indices</span><span class="p">]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">rel_indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ks</span><span class="p">):</span>
+                <span class="n">rel_labels</span> <span class="o">=</span> <span class="n">topk_labels</span><span class="p">[</span><span class="n">rel_indices</span><span class="p">,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+
+                <span class="n">recalls</span><span class="p">[</span><span class="n">rel_indices</span><span class="p">,</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">torch</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">rel_labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="n">rel_count</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rel_indices</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+                <span class="p">)</span>  <span class="c1"># Ensuring type is double, because it can be float if --fp16</span>
+
+        <span class="k">return</span> <span class="n">recalls</span></div>
+
+
+<div class="viewcode-block" id="AvgPrecisionAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.AvgPrecisionAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;avg_precision_at&quot;</span><span class="p">,</span> <span class="s2">&quot;avg_precision&quot;</span><span class="p">,</span> <span class="s2">&quot;map&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">AvgPrecisionAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AvgPrecisionAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">precision_at</span> <span class="o">=</span> <span class="n">PrecisionAt</span><span class="p">(</span><span class="n">top_ks</span><span class="p">)</span><span class="o">.</span><span class="n">_metric</span>
+
+    <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute average precision at K for provided cutoffs</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ks : torch.Tensor or list</span>
+<span class="sd">            list of cutoffs</span>
+<span class="sd">        scores : torch.Tensor</span>
+<span class="sd">            2-dim tensor of predicted item scores</span>
+<span class="sd">        labels : torch.Tensor</span>
+<span class="sd">            2-dim tensor of true item labels</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.Tensor:</span>
+<span class="sd">            list of average precisions at cutoffs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">topk_scores</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">topk_labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">extract_topk</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">avg_precisions</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">create_output_placeholder</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+
+        <span class="c1"># Compute average precisions at K</span>
+        <span class="n">num_relevant</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">max_k</span> <span class="o">=</span> <span class="n">ks</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="n">precisions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">precision_at</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_k</span><span class="p">),</span> <span class="n">topk_scores</span><span class="p">,</span> <span class="n">topk_labels</span><span class="p">)</span>
+        <span class="n">rel_precisions</span> <span class="o">=</span> <span class="n">precisions</span> <span class="o">*</span> <span class="n">topk_labels</span>
+
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ks</span><span class="p">):</span>
+            <span class="n">total_prec</span> <span class="o">=</span> <span class="n">rel_precisions</span><span class="p">[:,</span> <span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">)]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">avg_precisions</span><span class="p">[:,</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">total_prec</span> <span class="o">/</span> <span class="n">num_relevant</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>  <span class="c1"># Ensuring type is double, because it can be float if --fp16</span>
+
+        <span class="k">return</span> <span class="n">avg_precisions</span></div>
+
+
+<div class="viewcode-block" id="DCGAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.DCGAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;dcg_at&quot;</span><span class="p">,</span> <span class="s2">&quot;dcg&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DCGAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">DCGAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute discounted cumulative gain at K for provided cutoffs (ignoring ties)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ks : torch.Tensor or list</span>
+<span class="sd">            list of cutoffs</span>
+<span class="sd">        scores : torch.Tensor</span>
+<span class="sd">            predicted item scores</span>
+<span class="sd">        labels : torch.Tensor</span>
+<span class="sd">            true item labels</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.Tensor :</span>
+<span class="sd">            list of discounted cumulative gains at cutoffs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">topk_scores</span><span class="p">,</span> <span class="n">topk_indices</span><span class="p">,</span> <span class="n">topk_labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">extract_topk</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">dcgs</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">create_output_placeholder</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">ks</span><span class="p">)</span>
+
+        <span class="c1"># Compute discounts</span>
+        <span class="n">discount_positions</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">())</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
+        <span class="p">)</span>
+
+        <span class="n">discount_log_base</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([</span><span class="n">log_base</span><span class="p">])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="n">discounts</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">discount_positions</span> <span class="o">+</span> <span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="n">discount_log_base</span><span class="p">)</span>
+
+        <span class="c1"># Compute DCGs at K</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ks</span><span class="p">):</span>
+            <span class="n">dcgs</span><span class="p">[:,</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                <span class="p">(</span><span class="n">topk_labels</span><span class="p">[:,</span> <span class="p">:</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">discounts</span><span class="p">[:</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">topk_labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span>
+            <span class="p">)</span>  <span class="c1"># Ensuring type is double, because it can be float if --fp16</span>
+
+        <span class="k">return</span> <span class="n">dcgs</span></div>
+
+
+<div class="viewcode-block" id="NDCGAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.NDCGAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;ndcg_at&quot;</span><span class="p">,</span> <span class="s2">&quot;ndcg&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">NDCGAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">NDCGAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dcg_at</span> <span class="o">=</span> <span class="n">DCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="p">)</span><span class="o">.</span><span class="n">_metric</span>
+
+    <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute normalized discounted cumulative gain at K for provided cutoffs (ignoring ties)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ks : torch.Tensor or list</span>
+<span class="sd">            list of cutoffs</span>
+<span class="sd">        scores : torch.Tensor</span>
+<span class="sd">            predicted item scores</span>
+<span class="sd">        labels : torch.Tensor</span>
+<span class="sd">            true item labels</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.Tensor :</span>
+<span class="sd">            list of discounted cumulative gains at cutoffs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">topk_scores</span><span class="p">,</span> <span class="n">topk_indices</span><span class="p">,</span> <span class="n">topk_labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">extract_topk</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="c1"># ndcgs = _create_output_placeholder(scores, ks) #TODO track if this line is needed</span>
+
+        <span class="c1"># Compute discounted cumulative gains</span>
+        <span class="n">gains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcg_at</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">topk_scores</span><span class="p">,</span> <span class="n">topk_labels</span><span class="p">)</span>
+        <span class="n">normalizing_gains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcg_at</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">topk_labels</span><span class="p">,</span> <span class="n">topk_labels</span><span class="p">)</span>
+
+        <span class="c1"># Prevent divisions by zero</span>
+        <span class="n">relevant_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalizing_gains</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">as_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">irrelevant_pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">normalizing_gains</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">as_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">gains</span><span class="p">[</span><span class="n">irrelevant_pos</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">gains</span><span class="p">[</span><span class="n">relevant_pos</span><span class="p">]</span> <span class="o">/=</span> <span class="n">normalizing_gains</span><span class="p">[</span><span class="n">relevant_pos</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">gains</span></div>
+
+
+<div class="viewcode-block" id="MeanRecipricolRankAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.MeanRecipricolRankAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;mrr_at&quot;</span><span class="p">,</span> <span class="s2">&quot;mrr&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MeanRecipricolRankAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MeanRecipricolRankAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute mean recipricol rank at K for provided cutoffs (ignoring ties)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ks : torch.Tensor or list</span>
+<span class="sd">            list of cutoffs</span>
+<span class="sd">        scores : torch.Tensor</span>
+<span class="sd">            predicted item scores</span>
+<span class="sd">        labels : torch.Tensor</span>
+<span class="sd">            true item labels</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.Tensor :</span>
+<span class="sd">            list of mean recipricol rank at cutoffs</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">check_inputs</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">topk_scores</span><span class="p">,</span> <span class="n">topk_indices</span><span class="p">,</span> <span class="n">topk_labels</span> <span class="o">=</span> <span class="n">torch_utils</span><span class="o">.</span><span class="n">extract_topk</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">ks</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+            <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ks</span><span class="p">):</span>
+            <span class="n">values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">topk_labels</span><span class="p">[:,</span> <span class="p">:</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">results</span><span class="p">[:,</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
+        <span class="k">return</span> <span class="n">results</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  
+<div class="rst-versions" data-toggle="rst-versions" role="note" aria-label="versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    <span class="fa fa-book"> Other Versions</span>
+    v: v0.1.8
+    <span class="fa fa-caret-down"></span>
+  </span>
+  <div class="rst-other-versions">
+    <dl>
+      <dt>Tags</dt>
+      <dd><a href="../../../../v0.1.3/index.html">v0.1.3</a></dd>
+      <dd><a href="../../../../v0.1.4/index.html">v0.1.4</a></dd>
+      <dd><a href="../../../../v0.1.5/index.html">v0.1.5</a></dd>
+      <dd><a href="../../../../v0.1.6/index.html">v0.1.6</a></dd>
+      <dd><a href="../../../../v0.1.7/index.html">v0.1.7</a></dd>
+      <dd><a href="ranking_metric.html">v0.1.8</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../main/index.html">main</a></dd>
+    </dl>
+  </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

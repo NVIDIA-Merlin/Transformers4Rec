@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to Transformers4Rec’s documentation! &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <title>Merlin Transformers4Rec &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -12,11 +14,15 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Transformers4Rec | Documentation" href="getting_started.html" /> 
+    <link rel="next" title="Transformers4Rec | Documentation" href="README.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -34,14 +40,14 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
 </ul>
@@ -60,7 +66,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home"></a> &raquo;</li>
-      <li>Welcome to Transformers4Rec’s documentation!</li>
+      <li>Merlin Transformers4Rec</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -69,86 +75,24 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="welcome-to-transformers4rec-s-documentation">
-<h1>Welcome to Transformers4Rec’s documentation!<a class="headerlink" href="#welcome-to-transformers4rec-s-documentation" title="Permalink to this headline"></a></h1>
-<div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#highlights">Highlights</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#quick-tour">Quick tour</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#use-cases">Use cases</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="why_transformers4rec.html#the-relationship-between-nlp-and-recsys">The relationship between NLP and RecSys</a></li>
-<li class="toctree-l2"><a class="reference internal" href="why_transformers4rec.html#integration-with-huggingface-transformers">Integration with HuggingFace Transformers</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="model_definition.html#feature-aggregation-input-block">Feature Aggregation (Input Block)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_definition.html#sequence-masking">Sequence Masking</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_definition.html#sequence-processing-transformer-rnn-block">Sequence Processing (Transformer/RNN Block)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_definition.html#prediction-head-output-block">Prediction head (Output Block)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="model_definition.html#regularization">Regularization</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="training_eval.html#data-loading">Data loading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="training_eval.html#pytorch">PyTorch</a></li>
-<li class="toctree-l2"><a class="reference internal" href="training_eval.html#tf-training-and-evaluation">TF Training and Evaluation</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="pipeline.html#integration-with-nvtabular">Integration with NVTabular</a></li>
-<li class="toctree-l2"><a class="reference internal" href="pipeline.html#integration-with-triton-inference-server">Integration with Triton Inference Server</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="examples/getting-started-session-based/index.html">Getting started session-based with Synthetic Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/end-to-end-session-based/index.html">End-to-end session-based with Yoochoose dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="examples/tutorial/index.html">Tutorial: End-to-end session-based recommendation</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/transformers4rec.html">transformers4rec package</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/merlin_standard_lib.html">merlin_standard_lib package</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="resources.html#transformers4rec-and-session-based-recommendation">Transformers4Rec and Session-based recommendation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="resources.html#competitions">Competitions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="resources.html#nvidia-merlin">NVIDIA Merlin</a></li>
-<li class="toctree-l2"><a class="reference internal" href="resources.html#supported-huggingface-architectures-and-pre-training-approaches">Supported HuggingFace architectures and pre-training approaches</a></li>
-<li class="toctree-l2"><a class="reference internal" href="resources.html#other-resources">Other Resources</a></li>
-</ul>
-</li>
-</ul>
+  <div class="section" id="merlin-transformers4rec">
+<h1>Merlin Transformers4Rec<a class="headerlink" href="#merlin-transformers4rec" title="Permalink to this headline"></a></h1>
+<p>NVIDIA Merlin Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation.
+Transformers4Rec works with the PyTorch and TensorFlow libraries.</p>
+<p>To learn more, start with the <a class="reference external" href="README.html">Introduction</a>.</p>
+<div class="section" id="related-resources">
+<h2>Related Resources<a class="headerlink" href="#related-resources" title="Permalink to this headline"></a></h2>
+<dl class="simple">
+<dt>Merlin Transformers4Rec GitHub Repository</dt><dd><p><a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">https://github.com/NVIDIA-Merlin/Transformers4Rec</a></p>
+</dd>
+<dt>About Merlin</dt><dd><p>Merlin is the overarching project that brings together the Merlin projects.
+See the <a class="reference external" href="https://nvidia-merlin.github.io/Merlin/main/README.html">documentation</a>
+or the <a class="reference external" href="https://github.com/NVIDIA-Merlin/Merlin">repository</a> on GitHub.</p>
+</dd>
+<dt>Developer website for Merlin</dt><dd><p>More information about Merlin is available at our developer website:
+<a class="reference external" href="https://developer.nvidia.com/nvidia-merlin">https://developer.nvidia.com/nvidia-merlin</a>.</p>
+</dd>
+</dl>
 </div>
 </div>
 <div class="section" id="indices-and-tables">
@@ -158,13 +102,15 @@
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
+<div class="toctree-wrapper compound">
+</div>
 </div>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="getting_started.html" class="btn btn-neutral float-right" title="Transformers4Rec | Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="README.html" class="btn btn-neutral float-right" title="Transformers4Rec | Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -193,12 +139,12 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../v0.1.2/index.html">v0.1.2</a></dd>
       <dd><a href="../v0.1.3/index.html">v0.1.3</a></dd>
       <dd><a href="index.html">v0.1.4</a></dd>
       <dd><a href="../v0.1.5/index.html">v0.1.5</a></dd>
       <dd><a href="../v0.1.6/index.html">v0.1.6</a></dd>
       <dd><a href="../v0.1.7/index.html">v0.1.7</a></dd>
+      <dd><a href="../v0.1.8/index.html">v0.1.8</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

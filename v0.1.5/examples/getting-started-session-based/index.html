@@ -3,8 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Getting started - Session-based recommendation with Synthetic Data &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <title>Getting Started: Session-based Recommendation with Synthetic Data &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -12,7 +14,11 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -35,21 +41,20 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Getting started session-based with Synthetic Data</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="01-ETL-with-NVTabular.html">ETL with NVTabular</a></li>
-<li class="toctree-l3"><a class="reference internal" href="02-session-based-XLNet-with-PyT.html">Session based XLNet with PyTorch</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based with Yoochoose dataset</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../tutorial/index.html">Tutorial: End-to-end session-based recommendation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#running-the-example-notebooks">Running the Example Notebooks</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
@@ -71,7 +76,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
-      <li>Getting started - Session-based recommendation with Synthetic Data</li>
+      <li>Getting Started: Session-based Recommendation with Synthetic Data</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -80,45 +85,21 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="getting-started-session-based-recommendation-with-synthetic-data">
-<h1>Getting started - Session-based recommendation with Synthetic Data<a class="headerlink" href="#getting-started-session-based-recommendation-with-synthetic-data" title="Permalink to this headline"></a></h1>
-<p>This example notebook is focusing primarily on the basic concepts of Transformers4Rec, which includes:</p>
+  <div class="tex2jax_ignore mathjax_ignore section" id="getting-started-session-based-recommendation-with-synthetic-data">
+<h1>Getting Started: Session-based Recommendation with Synthetic Data<a class="headerlink" href="#getting-started-session-based-recommendation-with-synthetic-data" title="Permalink to this headline"></a></h1>
+<p>This example notebook focuses on the following basic concepts of Transformers4Rec:</p>
 <ul class="simple">
-<li><p>Generating synthetic data of user interactions</p></li>
-<li><p>Preprocessing sequential data with NVTabular on GPU</p></li>
-<li><p>Using the NVTabular dataloader with Pytorch</p></li>
-<li><p>Training a session-based recommendation model with a Transformer architecture (XLNET)</p></li>
+<li><p>Generating synthetic data of user interactions.</p></li>
+<li><p>Preprocessing sequential data with NVTabular on GPU.</p></li>
+<li><p>Using the NVTabular dataloader with Pytorch.</p></li>
+<li><p>Training a session-based recommendation model with a Transformer architecture (XLNET).</p></li>
 </ul>
-<p><strong>Notebooks</strong></p>
+<p>Refer to the following notebooks:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="01-ETL-with-NVTabular.html"><span class="doc std std-doc">ETL with NVTabular</span></a></p></li>
+<li><p>Session based XLNET:  <a class="reference internal" href="03-session-based-XLNet-with-TF.html"><span class="doc std std-doc">TensorFlow</span></a> | <a class="reference internal" href="02-session-based-XLNet-with-PyT.html"><span class="doc std std-doc">PyTorch</span></a></p></li>
+</ul>
 <div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="01-ETL-with-NVTabular.html">ETL with NVTabular</a></li>
-<li class="toctree-l1"><a class="reference internal" href="02-session-based-XLNet-with-PyT.html">Session based XLNet with PyTorch</a></li>
-</ul>
 </div>
 </div>
 
@@ -156,16 +137,16 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../v0.1.2/examples/getting-started-session-based/index.html">v0.1.2</a></dd>
-      <dd><a href="../../../v0.1.3/examples/getting-started-session-based/index.html">v0.1.3</a></dd>
-      <dd><a href="../../../v0.1.4/examples/getting-started-session-based/index.html">v0.1.4</a></dd>
+      <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
+      <dd><a href="../../../v0.1.4/index.html">v0.1.4</a></dd>
       <dd><a href="index.html">v0.1.5</a></dd>
-      <dd><a href="../../../v0.1.6/examples/getting-started-session-based/index.html">v0.1.6</a></dd>
-      <dd><a href="../../../v0.1.7/examples/getting-started-session-based/index.html">v0.1.7</a></dd>
+      <dd><a href="../../../v0.1.6/index.html">v0.1.6</a></dd>
+      <dd><a href="../../../v0.1.7/index.html">v0.1.7</a></dd>
+      <dd><a href="../../../v0.1.8/index.html">v0.1.8</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
-      <dd><a href="../../../main/examples/getting-started-session-based/index.html">main</a></dd>
+      <dd><a href="../../../main/index.html">main</a></dd>
     </dl>
   </div>
 </div><script>

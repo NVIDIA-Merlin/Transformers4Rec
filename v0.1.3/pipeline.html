@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>End-to-end pipeline with NVIDIA Merlin &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -12,7 +14,11 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,21 +41,18 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">End-to-end pipeline with NVIDIA Merlin</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#integration-with-nvtabular">Integration with NVTabular</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#outputs">Outputs</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#integration-with-nvtabular">Integration with NVTabular</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#integration-with-triton-inference-server">Integration with Triton Inference Server</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
 </ul>
@@ -77,39 +80,17 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="end-to-end-pipeline-with-nvidia-merlin">
+  <div class="section" id="end-to-end-pipeline-with-nvidia-merlin">
 <h1>End-to-end pipeline with NVIDIA Merlin<a class="headerlink" href="#end-to-end-pipeline-with-nvidia-merlin" title="Permalink to this headline"></a></h1>
 <p>Transformers4Rec has a first-class integration with NVIDIA Merlin components, to build end-to-end GPU accelerated pipelines for sequential and session-based recommendation.</p>
-<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig.3 - Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div><div class="section" id="integration-with-nvtabular">
+<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig.3 - Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<div class="section" id="integration-with-nvtabular">
 <h2>Integration with NVTabular<a class="headerlink" href="#integration-with-nvtabular" title="Permalink to this headline"></a></h2>
 <p><a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular/">NVTabular</a> is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate terabyte scale datasets and train deep learning (DL) based recommender systems.</p>
 <p>It has some popular <a class="reference external" href="https://nvidia-merlin.github.io/NVTabular/main/api/index.html">techniques</a> to deal with categorical and numerical features like <code class="docutils literal notranslate"><span class="pre">Categorify</span></code>, <code class="docutils literal notranslate"><span class="pre">Normalize</span></code>, <code class="docutils literal notranslate"><span class="pre">Bucketize</span></code>, <code class="docutils literal notranslate"><span class="pre">TargetEncoding</span></code>, <code class="docutils literal notranslate"><span class="pre">DifferenceLag</span></code>, to name a few supported, and also allow for the definition of custom transformations (<code class="docutils literal notranslate"><span class="pre">LambdaOp</span></code>) using cuDF data frame operations.</p>
 <p>Usually the input RecSys datasets contain one example per user interaction. For sequential recommendation, the training example is a sequence of user interactions, and for session-based recommendation it is a sequence of session interactions. In practice, each interaction-level feature needs to be converted to a sequence grouped by user/session and their sequence length must match, as each position of the sequence corresponds to one interaction. You can see in Fig. 4 how the preprocessed parquet should look like.</p>
-<div style="text-align: center; margin: 20pt"><img src="_images/preproc_data_example.png" alt="Example of preprocessed parquet file" style="width:800px;"/><br><figcaption style="font-style: italic;">Example of preprocessed parquet file</figcaption></div><p>NVTabular can easily prepare such data with the <a class="reference external" href="https://nvidia-merlin.github.io/NVTabular/main/api/ops/groupby.html">Groupby</a> op, which allows grouping by a categorical column (e.g. user id, session id), sorting by another column (e.g. timestamp) and aggregating other columns as sequences (<code class="docutils literal notranslate"><span class="pre">list</span></code>) or by taking the <code class="docutils literal notranslate"><span class="pre">first</span></code> or <code class="docutils literal notranslate"><span class="pre">last</span></code> element of the sequence, as exemplified below.</p>
+<div style="text-align: center; margin: 20pt"><img src="_images/preproc_data_example.png" alt="Example of preprocessed parquet file" style="width:800px;"/><br><figcaption style="font-style: italic;">Example of preprocessed parquet file</figcaption></div>
+<p>NVTabular can easily prepare such data with the <a class="reference external" href="https://nvidia-merlin.github.io/NVTabular/main/api/ops/groupby.html">Groupby</a> op, which allows grouping by a categorical column (e.g. user id, session id), sorting by another column (e.g. timestamp) and aggregating other columns as sequences (<code class="docutils literal notranslate"><span class="pre">list</span></code>) or by taking the <code class="docutils literal notranslate"><span class="pre">first</span></code> or <code class="docutils literal notranslate"><span class="pre">last</span></code> element of the sequence, as exemplified below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">groupby_features</span> <span class="o">=</span> <span class="p">[</span>
     <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;session_id&#39;</span><span class="p">,</span> <span class="s1">&#39;product_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span>
 <span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">ops</span><span class="o">.</span><span class="n">Groupby</span><span class="p">(</span>
@@ -193,12 +174,12 @@ An end-to-end ML/DL pipeline consists of preprocessing and feature engineering (
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../v0.1.2/pipeline.html">v0.1.2</a></dd>
       <dd><a href="pipeline.html">v0.1.3</a></dd>
       <dd><a href="../v0.1.4/pipeline.html">v0.1.4</a></dd>
       <dd><a href="../v0.1.5/pipeline.html">v0.1.5</a></dd>
       <dd><a href="../v0.1.6/pipeline.html">v0.1.6</a></dd>
       <dd><a href="../v0.1.7/pipeline.html">v0.1.7</a></dd>
+      <dd><a href="../v0.1.8/pipeline.html">v0.1.8</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

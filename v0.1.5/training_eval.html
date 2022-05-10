@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Training and Evaluation &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -12,7 +14,11 @@
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
         <script src="_static/doctools.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -35,26 +41,19 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Training and Evaluation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#data-loading">Data loading</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#pytorch">PyTorch</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#training">Training</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#evaluation">Evaluation</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#incremental-evaluation">Incremental Evaluation</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#pytorch">PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#tf-training-and-evaluation">TF Training and Evaluation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
-<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
 </ul>
@@ -82,31 +81,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="training-and-evaluation">
+  <div class="tex2jax_ignore mathjax_ignore section" id="training-and-evaluation">
 <h1>Training and Evaluation<a class="headerlink" href="#training-and-evaluation" title="Permalink to this headline"></a></h1>
 <p>Many examples of data preparation, training and deployment of models using Transformers4Rec are available in our <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples">examples</a> directory.</p>
 <div class="section" id="data-loading">
@@ -200,6 +175,7 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
     <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">trainer</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">metric_key_prefix</span><span class="o">=</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">train_metrics</span><span class="p">)</span>
     <span class="n">trainer</span><span class="o">.</span><span class="n">wipe_memory</span><span class="p">()</span>
+
 </pre></div>
 </div>
 </div>
@@ -245,12 +221,12 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../v0.1.2/training_eval.html">v0.1.2</a></dd>
       <dd><a href="../v0.1.3/training_eval.html">v0.1.3</a></dd>
       <dd><a href="../v0.1.4/training_eval.html">v0.1.4</a></dd>
       <dd><a href="training_eval.html">v0.1.5</a></dd>
       <dd><a href="../v0.1.6/training_eval.html">v0.1.6</a></dd>
       <dd><a href="../v0.1.7/training_eval.html">v0.1.7</a></dd>
+      <dd><a href="../v0.1.8/training_eval.html">v0.1.8</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

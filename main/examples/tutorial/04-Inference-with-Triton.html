@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Triton for Recommender Systems &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -12,13 +14,15 @@
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/doctools.js"></script>
-        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
-        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true, "ignoreClass": "tex2jax_ignore|mathjax_ignore|document", "processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="API Documentation" href="../../api/modules.html" />
+    <link rel="next" title="Transformers4Rec paper - Experiments reproducibility" href="../t4rec_paper_experiments/index.html" />
     <link rel="prev" title="Session-based recommendation with Transformers4Rec" href="03-Session-based-recsys.html" /> 
 </head>
 
@@ -37,28 +41,20 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p class="caption"><span class="caption-text">Contents</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Examples</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting started session-based with Synthetic Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based with Yoochoose dataset</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial: End-to-end session-based recommendation</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="index.html#learning-objectives">Learning Objectives</a></li>
-<li class="toctree-l3"><a class="reference internal" href="index.html#setup">Setup</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="index.html#notebooks">Notebooks</a><ul class="current">
-<li class="toctree-l4"><a class="reference internal" href="01-preprocess.html">1. Preliminary Preprocessing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="02-ETL-with-NVTabular.html">2. ETL with NVTabular</a></li>
-<li class="toctree-l4"><a class="reference internal" href="03-Session-based-recsys.html">3. Session-based recommendation with Transformers4Rec</a></li>
-<li class="toctree-l4 current"><a class="current reference internal" href="#">4. Inference with Triton</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html#inventory">Inventory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html#running-the-example-notebooks">Running the Example Notebooks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based recommendation</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
@@ -80,7 +76,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
-          <li><a href="index.html">Tutorial: End-to-end Session-based recommendation</a> &raquo;</li>
+          <li><a href="index.html">Tutorial: End-to-end Session-based Recommendation</a> &raquo;</li>
       <li>Triton for Recommender Systems</li>
       <li class="wy-breadcrumbs-aside">
       </li>
@@ -90,281 +86,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  
-<style>
-/* CSS for nbsphinx extension */
-
-/* remove conflicting styling from Sphinx themes */
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt *,
-div.nbinput.container div.input_area pre,
-div.nboutput.container div.output_area pre,
-div.nbinput.container div.input_area .highlight,
-div.nboutput.container div.output_area .highlight {
-    border: none;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-}
-
-div.nbinput.container > div[class*=highlight],
-div.nboutput.container > div[class*=highlight] {
-    margin: 0;
-}
-
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt * {
-    background: none;
-}
-
-div.nboutput.container div.output_area .highlight,
-div.nboutput.container div.output_area pre {
-    background: unset;
-}
-
-div.nboutput.container div.output_area div.highlight {
-    color: unset;  /* override Pygments text color */
-}
-
-/* avoid gaps between output lines */
-div.nboutput.container div[class*=highlight] pre {
-    line-height: normal;
-}
-
-/* input/output containers */
-div.nbinput.container,
-div.nboutput.container {
-    display: -webkit-flex;
-    display: flex;
-    align-items: flex-start;
-    margin: 0;
-    width: 100%;
-}
-@media (max-width: 540px) {
-    div.nbinput.container,
-    div.nboutput.container {
-        flex-direction: column;
-    }
-}
-
-/* input container */
-div.nbinput.container {
-    padding-top: 5px;
-}
-
-/* last container */
-div.nblast.container {
-    padding-bottom: 5px;
-}
-
-/* input prompt */
-div.nbinput.container div.prompt pre {
-    color: #307FC1;
-}
-
-/* output prompt */
-div.nboutput.container div.prompt pre {
-    color: #BF5B3D;
-}
-
-/* all prompts */
-div.nbinput.container div.prompt,
-div.nboutput.container div.prompt {
-    width: 4.5ex;
-    padding-top: 5px;
-    position: relative;
-    user-select: none;
-}
-
-div.nbinput.container div.prompt > div,
-div.nboutput.container div.prompt > div {
-    position: absolute;
-    right: 0;
-    margin-right: 0.3ex;
-}
-
-@media (max-width: 540px) {
-    div.nbinput.container div.prompt,
-    div.nboutput.container div.prompt {
-        width: unset;
-        text-align: left;
-        padding: 0.4em;
-    }
-    div.nboutput.container div.prompt.empty {
-        padding: 0;
-    }
-
-    div.nbinput.container div.prompt > div,
-    div.nboutput.container div.prompt > div {
-        position: unset;
-    }
-}
-
-/* disable scrollbars on prompts */
-div.nbinput.container div.prompt pre,
-div.nboutput.container div.prompt pre {
-    overflow: hidden;
-}
-
-/* input/output area */
-div.nbinput.container div.input_area,
-div.nboutput.container div.output_area {
-    -webkit-flex: 1;
-    flex: 1;
-    overflow: auto;
-}
-@media (max-width: 540px) {
-    div.nbinput.container div.input_area,
-    div.nboutput.container div.output_area {
-        width: 100%;
-    }
-}
-
-/* input area */
-div.nbinput.container div.input_area {
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    /*background: #f5f5f5;*/
-}
-
-/* override MathJax center alignment in output cells */
-div.nboutput.container div[class*=MathJax] {
-    text-align: left !important;
-}
-
-/* override sphinx.ext.imgmath center alignment in output cells */
-div.nboutput.container div.math p {
-    text-align: left;
-}
-
-/* standard error */
-div.nboutput.container div.output_area.stderr {
-    background: #fdd;
-}
-
-/* ANSI colors */
-.ansi-black-fg { color: #3E424D; }
-.ansi-black-bg { background-color: #3E424D; }
-.ansi-black-intense-fg { color: #282C36; }
-.ansi-black-intense-bg { background-color: #282C36; }
-.ansi-red-fg { color: #E75C58; }
-.ansi-red-bg { background-color: #E75C58; }
-.ansi-red-intense-fg { color: #B22B31; }
-.ansi-red-intense-bg { background-color: #B22B31; }
-.ansi-green-fg { color: #00A250; }
-.ansi-green-bg { background-color: #00A250; }
-.ansi-green-intense-fg { color: #007427; }
-.ansi-green-intense-bg { background-color: #007427; }
-.ansi-yellow-fg { color: #DDB62B; }
-.ansi-yellow-bg { background-color: #DDB62B; }
-.ansi-yellow-intense-fg { color: #B27D12; }
-.ansi-yellow-intense-bg { background-color: #B27D12; }
-.ansi-blue-fg { color: #208FFB; }
-.ansi-blue-bg { background-color: #208FFB; }
-.ansi-blue-intense-fg { color: #0065CA; }
-.ansi-blue-intense-bg { background-color: #0065CA; }
-.ansi-magenta-fg { color: #D160C4; }
-.ansi-magenta-bg { background-color: #D160C4; }
-.ansi-magenta-intense-fg { color: #A03196; }
-.ansi-magenta-intense-bg { background-color: #A03196; }
-.ansi-cyan-fg { color: #60C6C8; }
-.ansi-cyan-bg { background-color: #60C6C8; }
-.ansi-cyan-intense-fg { color: #258F8F; }
-.ansi-cyan-intense-bg { background-color: #258F8F; }
-.ansi-white-fg { color: #C5C1B4; }
-.ansi-white-bg { background-color: #C5C1B4; }
-.ansi-white-intense-fg { color: #A1A6B2; }
-.ansi-white-intense-bg { background-color: #A1A6B2; }
-
-.ansi-default-inverse-fg { color: #FFFFFF; }
-.ansi-default-inverse-bg { background-color: #000000; }
-
-.ansi-bold { font-weight: bold; }
-.ansi-underline { text-decoration: underline; }
-
-
-div.nbinput.container div.input_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight].math,
-div.nboutput.container div.output_area.rendered_html,
-div.nboutput.container div.output_area > div.output_javascript,
-div.nboutput.container div.output_area:not(.rendered_html) > img{
-    padding: 5px;
-    margin: 0;
-}
-
-/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
-div.nbinput.container div.input_area > div[class^='highlight'],
-div.nboutput.container div.output_area > div[class^='highlight']{
-    overflow-y: hidden;
-}
-
-/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt .copybtn {
-    display: none;
-}
-
-/* Some additional styling taken form the Jupyter notebook CSS */
-div.rendered_html table {
-  border: none;
-  border-collapse: collapse;
-  border-spacing: 0;
-  color: black;
-  font-size: 12px;
-  table-layout: fixed;
-}
-div.rendered_html thead {
-  border-bottom: 1px solid black;
-  vertical-align: bottom;
-}
-div.rendered_html tr,
-div.rendered_html th,
-div.rendered_html td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
-}
-div.rendered_html th {
-  font-weight: bold;
-}
-div.rendered_html tbody tr:nth-child(odd) {
-  background: #f5f5f5;
-}
-div.rendered_html tbody tr:hover {
-  background: rgba(66, 165, 245, 0.2);
-}
-
-/* CSS overrides for sphinx_rtd_theme */
-
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -381,41 +105,43 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Triton-for-Recommender-Systems">
-<h1>Triton for Recommender Systems<a class="headerlink" href="#Triton-for-Recommender-Systems" title="Permalink to this headline"></a></h1>
+</div>
+<div class="tex2jax_ignore mathjax_ignore section" id="triton-for-recommender-systems">
+<h1>Triton for Recommender Systems<a class="headerlink" href="#triton-for-recommender-systems" title="Permalink to this headline"></a></h1>
 <p>NVIDIA <a class="reference external" href="https://github.com/triton-inference-server/server">Triton Inference Server (TIS)</a> simplifies the deployment of AI models at scale in production. The Triton Inference Server allows us to deploy and serve our model for inference. It supports a number of different machine learning frameworks such as TensorFlow and PyTorch.</p>
-<p>The last step of machine learning (ML)/deep learning (DL) pipeline is to deploy the ETL workflow and saved model to production. In the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the DL model for a prediction. Therefore, we deploy the NVTabular workflow with the PyTorch model as an ensemble model
-to Triton Inference. The ensemble model guarantees that the same transformation is applied to the raw inputs.</p>
-<p><img alt="image0" src="../../_images/torch_triton.png" /></p>
+<p>The last step of machine learning (ML)/deep learning (DL) pipeline is to deploy the ETL workflow and saved model to production. In the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the DL model for a prediction. Therefore, we deploy the NVTabular workflow with the PyTorch model as an ensemble model to Triton Inference. The ensemble model guarantees that the same transformation is applied to the raw inputs.</p>
+<p><img alt="" src="../../_images/torch_triton.png" /></p>
 <p><strong>Objectives:</strong></p>
-<p>Learn how to deploy a model to Triton 1. Deploy saved NVTabular and PyTorch models to Triton Inference Server 2. Sent requests for predictions</p>
-<div class="section" id="Pull-and-start-Inference-docker-container">
-<h2>Pull and start Inference docker container<a class="headerlink" href="#Pull-and-start-Inference-docker-container" title="Permalink to this headline"></a></h2>
+<p>Learn how to deploy a model to Triton</p>
+<ol class="simple">
+<li><p>Deploy saved NVTabular and PyTorch models to Triton Inference Server</p></li>
+<li><p>Sent requests for predictions</p></li>
+</ol>
+<div class="section" id="pull-and-start-inference-docker-container">
+<h2>Pull and start Inference docker container<a class="headerlink" href="#pull-and-start-inference-docker-container" title="Permalink to this headline"></a></h2>
 <p>At this point, before connecing to the Triton Server, we launch the inference docker container and then load the exported ensemble <code class="docutils literal notranslate"><span class="pre">t4r_pytorch</span></code> to the inference server. This is done with the scripts below:</p>
-<div class="section" id="Launch-the-docker-container:">
-<h3>Launch the docker container:<a class="headerlink" href="#Launch-the-docker-container:" title="Permalink to this headline"></a></h3>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v &lt;path_to_saved_models&gt;:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:21.09
+<div class="section" id="launch-the-docker-container">
+<h3>Launch the docker container:<a class="headerlink" href="#launch-the-docker-container" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_saved_models</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">models</span><span class="o">/</span> <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">inference</span><span class="p">:</span><span class="mf">21.09</span>
 </pre></div>
 </div>
 <p>This script will mount your local model-repository folder that includes your saved models from the previous cell to <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code> directory in the merlin-inference docker container.</p>
 </div>
-<div class="section" id="Start-triton-server">
-<h3>Start triton server<a class="headerlink" href="#Start-triton-server" title="Permalink to this headline"></a></h3>
+<div class="section" id="start-triton-server">
+<h3>Start triton server<a class="headerlink" href="#start-triton-server" title="Permalink to this headline"></a></h3>
 <p>After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>tritonserver --model-repository=&lt;path_to_models&gt; --model-control-mode=explicit
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tritonserver</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">repository</span><span class="o">=&lt;</span><span class="n">path_to_models</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">control</span><span class="o">-</span><span class="n">mode</span><span class="o">=</span><span class="n">explicit</span>
 </pre></div>
 </div>
 <p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code>. The models haven’t been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.</p>
 </div>
 </div>
-<div class="section" id="1.-Deploy-PyTorch-and-NVTabular-Model-to-Triton-Inference-Server">
-<h2>1. Deploy PyTorch and NVTabular Model to Triton Inference Server<a class="headerlink" href="#1.-Deploy-PyTorch-and-NVTabular-Model-to-Triton-Inference-Server" title="Permalink to this headline"></a></h2>
+<div class="section" id="deploy-pytorch-and-nvtabular-model-to-triton-inference-server">
+<h2>1. Deploy PyTorch and NVTabular Model to Triton Inference Server<a class="headerlink" href="#deploy-pytorch-and-nvtabular-model-to-triton-inference-server" title="Permalink to this headline"></a></h2>
 <p>Our Triton server has already been launched and is ready to make requests. Remember we already exported the saved PyTorch model in the previous notebook, and generated the config files for Triton Inference Server.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import dependencies</span>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Import dependencies</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 
@@ -428,19 +154,20 @@ to Triton Inference. The ensemble model guarantees that the same transformation 
 </div>
 </div>
 </div>
-<div class="section" id="1.2-Review-exported-files">
-<h2>1.2 Review exported files<a class="headerlink" href="#1.2-Review-exported-files" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="review-exported-files">
+<h2>1.2 Review exported files<a class="headerlink" href="#review-exported-files" title="Permalink to this headline"></a></h2>
 <p>Triton expects a specific directory structure for our models as the following format:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>&lt;model-name&gt;/
-[config.pbtxt]
-&lt;version-name&gt;/
-  [model.savedmodel]/
-    &lt;pytorch_saved_model_files&gt;/
-      ...
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">model</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;/</span>
+<span class="p">[</span><span class="n">config</span><span class="o">.</span><span class="n">pbtxt</span><span class="p">]</span>
+<span class="o">&lt;</span><span class="n">version</span><span class="o">-</span><span class="n">name</span><span class="o">&gt;/</span>
+  <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">savedmodel</span><span class="p">]</span><span class="o">/</span>
+    <span class="o">&lt;</span><span class="n">pytorch_saved_model_files</span><span class="o">&gt;/</span>
+      <span class="o">...</span>
 </pre></div>
 </div>
 <p>Let’s check out our model repository layout. You can install tree library with <code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">tree</span></code>, and then run <code class="docutils literal notranslate"><span class="pre">!tree</span> <span class="pre">/workspace/models/</span></code> to print out the model repository layout as below:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>├── t4r_pytorch
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>├── t4r_pytorch
 │   ├── 1
 │   └── config.pbtxt
 ├── t4r_pytorch_nvt
@@ -473,17 +200,32 @@ to Triton Inference. The ensemble model guarantees that the same transformation 
 </pre></div>
 </div>
 <p>Triton needs a <a class="reference external" href="https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md">config file</a> to understand how to interpret the model. Let’s look at the generated config file. It defines the input columns with datatype and dimensions and the output layer. Manually creating this config file can be complicated and NVTabular generates it with the <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function, which we used in the previous notebook.</p>
-<p>The <a class="reference external" href="https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md">config file</a> needs the following information: * <code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of our model. Must be the same name as the parent folder. * <code class="docutils literal notranslate"><span class="pre">platform</span></code>: The type of framework serving the model. * <code class="docutils literal notranslate"><span class="pre">input</span></code>: The input our model expects. * <code class="docutils literal notranslate"><span class="pre">name</span></code>: Should correspond with the model input name. * <code class="docutils literal notranslate"><span class="pre">data_type</span></code>: Should correspond to the input’s data type. * <code class="docutils literal notranslate"><span class="pre">dims</span></code>: The dimensions of the <em>request</em> for the
-input. For models that support input and output tensors with variable-size dimensions, those dimensions can be listed as -1 in the input and output configuration. * <code class="docutils literal notranslate"><span class="pre">output</span></code>: The output parameters of our model. * <code class="docutils literal notranslate"><span class="pre">name</span></code>: Should correspond with the model output name. * <code class="docutils literal notranslate"><span class="pre">data_type</span></code>: Should correspond to the output’s data type. * <code class="docutils literal notranslate"><span class="pre">dims</span></code>: The dimensions of the output.</p>
+<p>The <a class="reference external" href="https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md">config file</a> needs the following information:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: The name of our model. Must be the same name as the parent folder.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">platform</span></code>: The type of framework serving the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code>: The input our model expects.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: Should correspond with the model input name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_type</span></code>: Should correspond to the input’s data type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dims</span></code>: The dimensions of the <em>request</em> for the input. For models that support input and output tensors with variable-size dimensions, those dimensions can be listed as -1 in the input and output configuration.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code>: The output parameters of our model.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code>: Should correspond with the model output name.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">data_type</span></code>: Should correspond to the output’s data type.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dims</span></code>: The dimensions of the output.</p></li>
+</ul>
+</li>
+</ul>
 </div>
-<div class="section" id="1.3.-Loading-Model">
-<h2>1.3. Loading Model<a class="headerlink" href="#1.3.-Loading-Model" title="Permalink to this headline"></a></h2>
+<div class="section" id="loading-model">
+<h2>1.3. Loading Model<a class="headerlink" href="#loading-model" title="Permalink to this headline"></a></h2>
 <p>Next, let’s build a client to connect to our server. The <code class="docutils literal notranslate"><span class="pre">InferenceServerClient</span></code> object is what we’ll be using to talk to Triton.</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tritonhttpclient</span>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tritonhttpclient</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">triton_client</span> <span class="o">=</span> <span class="n">tritonhttpclient</span><span class="o">.</span><span class="n">InferenceServerClient</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="s2">&quot;localhost:8000&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -494,118 +236,88 @@ input. For models that support input and output tensors with variable-size dimen
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-client created.
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>client created.
 GET /v2/health/live, headers None
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-True
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">get_model_repository_index</span><span class="p">()</span>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-POST /v2/repository/index, headers None
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">get_model_repository_index</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
 
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;201&#39;}&gt;
-bytearray(b&#39;[{&#34;name&#34;:&#34;t4r_pytorch&#34;,&#34;version&#34;:&#34;1&#34;,&#34;state&#34;:&#34;UNAVAILABLE&#34;,&#34;reason&#34;:&#34;unloaded&#34;},{&#34;name&#34;:&#34;t4r_pytorch_nvt&#34;,&#34;version&#34;:&#34;1&#34;,&#34;state&#34;:&#34;UNLOADING&#34;},{&#34;name&#34;:&#34;t4r_pytorch_pt&#34;,&#34;version&#34;:&#34;1&#34;,&#34;state&#34;:&#34;UNLOADING&#34;}]&#39;)
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNAVAILABLE&quot;,&quot;reason&quot;:&quot;unloaded&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNLOADING&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNLOADING&quot;}]&#39;)
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-[{&#39;name&#39;: &#39;t4r_pytorch&#39;,
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;,
   &#39;version&#39;: &#39;1&#39;,
   &#39;state&#39;: &#39;UNAVAILABLE&#39;,
   &#39;reason&#39;: &#39;unloaded&#39;},
  {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;UNLOADING&#39;},
  {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;UNLOADING&#39;}]
-</pre></div></div>
-</div>
-<p>We load the ensemble model</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
+</div>
+</div>
+<p>We load the ensemble model</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
 <span class="n">triton_client</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-POST /v2/repository/models/t4r_pytorch/load, headers None
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/load, headers None
 
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
 Loaded model &#39;t4r_pytorch&#39;
-</pre></div></div>
+</pre></div>
+</div>
+</div>
 </div>
 <p>If all models are loaded successfully, you should be seeing successfully loaded status next to each model name on your terminal.</p>
 </div>
-<div class="section" id="2.-Sent-Requests-for-Predictions">
-<h2>2. Sent Requests for Predictions<a class="headerlink" href="#2.-Sent-Requests-for-Predictions" title="Permalink to this headline"></a></h2>
+<div class="section" id="sent-requests-for-predictions">
+<h2>2. Sent Requests for Predictions<a class="headerlink" href="#sent-requests-for-predictions" title="Permalink to this headline"></a></h2>
 <p>Load raw data for inference: We select the first 50 interactions and filter out sessions with less than 2 interactions. For this tutorial, just as an example we use the <code class="docutils literal notranslate"><span class="pre">Oct-2019</span></code> dataset that we used for model training.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
 <span class="n">df</span><span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;Oct-2019.parquet&#39;</span><span class="p">))</span>
 <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">)</span>
 <span class="n">batch</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">50</span><span class="p">,:]</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
-</pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_to_use</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">user_session</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_to_use</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">user_session</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
 <span class="n">filtered_batch</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">batch</span><span class="o">.</span><span class="n">user_session</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sessions_to_use</span><span class="p">[</span><span class="n">sessions_to_use</span><span class="o">.</span><span class="n">values</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-</pre></div>
 </div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
-</pre></div>
-</div>
-<div class="output_area rendered_html docutils container">
-<div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
 <style scoped>
     .dataframe tbody tr th:only-of-type {
         vertical-align: middle;
@@ -703,23 +415,20 @@ Loaded model &#39;t4r_pytorch&#39;
     </tr>
   </tbody>
 </table>
-</div></div>
+</div></div></div>
 </div>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s2">&quot;ignore&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
-</pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nvtabular.inference.triton</span> <span class="k">as</span> <span class="nn">nvt_triton</span>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nvtabular.inference.triton</span> <span class="k">as</span> <span class="nn">nvt_triton</span>
 <span class="kn">import</span> <span class="nn">tritonclient.grpc</span> <span class="k">as</span> <span class="nn">grpcclient</span>
 
 <span class="n">inputs</span> <span class="o">=</span> <span class="n">nvt_triton</span><span class="o">.</span><span class="n">convert_df_to_triton_input</span><span class="p">(</span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferInput</span><span class="p">)</span>
@@ -729,7 +438,7 @@ Loaded model &#39;t4r_pytorch&#39;
 <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">:</span>
     <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grpcclient</span><span class="o">.</span><span class="n">InferRequestedOutput</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
-
+    
 <span class="n">MODEL_NAME_NVT</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
 
 <span class="k">with</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferenceServerClient</span><span class="p">(</span><span class="s2">&quot;localhost:8001&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
@@ -738,12 +447,8 @@ Loaded model &#39;t4r_pytorch&#39;
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-output :
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>output :
  [[-12.86381   -13.449438   -9.572359  ... -12.689846  -13.033402
   -13.294905 ]
  [-24.320768  -26.130745   -4.3342614 ... -24.07727   -25.470228
@@ -756,25 +461,21 @@ output :
   -26.920403 ]
  [-14.218529  -14.833358   -8.438756  ... -14.013732  -14.700138
   -14.71361  ]]
-</pre></div></div>
-</div>
-<div class="section" id="Visualise-top-k-predictions">
-<h3>Visualise top-k predictions<a class="headerlink" href="#Visualise-top-k-predictions" title="Permalink to this headline"></a></h3>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">visualize_response</span>
+</div>
+</div>
+<div class="section" id="visualise-top-k-predictions">
+<h3>Visualise top-k predictions<a class="headerlink" href="#visualise-top-k-predictions" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">visualize_response</span>
 <span class="n">visualize_response</span><span class="p">(</span><span class="n">filtered_batch</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">session_col</span><span class="o">=</span><span class="s1">&#39;user_session&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-- Top-5 predictions for session `1167651`: 1045 || 229 || 233 || 1085 || 10
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `1167651`: 1045 || 229 || 233 || 1085 || 10
 
 - Top-5 predictions for session `1637332`: 11 || 7 || 4 || 2 || 3
 
@@ -785,60 +486,57 @@ output :
 - Top-5 predictions for session `4202155`: 2 || 57 || 36 || 38 || 10
 
 - Top-5 predictions for session `5470852`: 1710 || 233 || 805 || 555 || 10
-
-</pre></div></div>
-</div>
-<p>As you see we first got prediction results (logits) from the trained model head, and then by using a handy util function <code class="docutils literal notranslate"><span class="pre">visualize_response</span></code> we extracted top-k encoded item-ids from logits. Basically, we generated recommended items for a given session.</p>
-<p>This is the end of the tutorial. You successfully … 1. performed feature engineering with NVTabular 2. trained transformer architecture based session-based recommendation models with Transformers4Rec 3. deployed a trained model to Triton Inference Server, sent request and got responses from the server.</p>
-<div class="section" id="Unload-models-and-shut-down-the-kernel">
-<h4>Unload models and shut down the kernel<a class="headerlink" href="#Unload-models-and-shut-down-the-kernel" title="Permalink to this headline"></a></h4>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
+</div>
+</div>
+<p>As you see we first got prediction results (logits) from the trained model head, and then by using a handy util function <code class="docutils literal notranslate"><span class="pre">visualize_response</span></code> we extracted top-k encoded item-ids from logits. Basically, we  generated recommended items for a given session.</p>
+<p>This is the end of the tutorial. You successfully …</p>
+<ol class="simple">
+<li><p>performed feature engineering with NVTabular</p></li>
+<li><p>trained transformer architecture based session-based recommendation models with Transformers4Rec</p></li>
+<li><p>deployed a trained model to Triton Inference Server, sent request and got responses from the server.</p></li>
+</ol>
+</div>
+<div class="section" id="unload-models-and-shut-down-the-kernel">
+<h3>Unload models and shut down the kernel<a class="headerlink" href="#unload-models-and-shut-down-the-kernel" title="Permalink to this headline"></a></h3>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
 <span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_nvt&quot;</span><span class="p">)</span>
 <span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_pt&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-POST /v2/repository/models/t4r_pytorch/unload, headers None
-{&#34;parameters&#34;:{&#34;unload_dependents&#34;:false}}
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/unload, headers None
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
 Loaded model &#39;t4r_pytorch&#39;
 POST /v2/repository/models/t4r_pytorch_nvt/unload, headers None
-{&#34;parameters&#34;:{&#34;unload_dependents&#34;:false}}
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
 Loaded model &#39;t4r_pytorch_nvt&#39;
 POST /v2/repository/models/t4r_pytorch_pt/unload, headers None
-{&#34;parameters&#34;:{&#34;unload_dependents&#34;:false}}
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
 Loaded model &#39;t4r_pytorch_pt&#39;
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
 <span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
 <span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;status&#39;: &#39;ok&#39;, &#39;restart&#39;: True}
 </pre></div>
 </div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-{&#39;status&#39;: &#39;ok&#39;, &#39;restart&#39;: True}
-</pre></div></div>
 </div>
 </div>
 </div>
@@ -850,7 +548,7 @@ Loaded model &#39;t4r_pytorch_pt&#39;
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="03-Session-based-recsys.html" class="btn btn-neutral float-left" title="Session-based recommendation with Transformers4Rec" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../../api/modules.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../t4rec_paper_experiments/index.html" class="btn btn-neutral float-right" title="Transformers4Rec paper - Experiments reproducibility" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
@@ -879,12 +577,12 @@ Loaded model &#39;t4r_pytorch_pt&#39;
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../v0.1.2/index.html">v0.1.2</a></dd>
       <dd><a href="../../../v0.1.3/index.html">v0.1.3</a></dd>
       <dd><a href="../../../v0.1.4/index.html">v0.1.4</a></dd>
       <dd><a href="../../../v0.1.5/index.html">v0.1.5</a></dd>
       <dd><a href="../../../v0.1.6/index.html">v0.1.6</a></dd>
       <dd><a href="../../../v0.1.7/index.html">v0.1.7</a></dd>
+      <dd><a href="../../../v0.1.8/index.html">v0.1.8</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
