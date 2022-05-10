@@ -25,8 +25,8 @@ container=$1
 
 ## Tensorflow container
 if [ "$container" == "merlin-tensorflow-training" ]; then
-    pytest tests/tf
+    pytest -rsx tests/tf
 # Pytorch container
 elif [ "$container" == "merlin-pytorch-training" ]; then
-    pytest tests/torch
+    pytest -rsx tests/torch
 fi

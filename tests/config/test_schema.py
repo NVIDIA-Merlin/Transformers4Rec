@@ -34,7 +34,7 @@ def test_schema_cardinalities(yoochoose_schema):
     }
 
 
-@pytest.mark.skip(reason="broken")
+@pytest.mark.xfail
 def test_schema_embedding_sizes_nvt(yoochoose_schema):
     pytest.importorskip("nvtabular")
     schema = yoochoose_schema
