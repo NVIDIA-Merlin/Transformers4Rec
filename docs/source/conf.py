@@ -100,7 +100,7 @@ exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 #
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
-    "navigation_depth": 2,
+    "titles_only": True,
 }
 html_show_sourcelink = False
 
