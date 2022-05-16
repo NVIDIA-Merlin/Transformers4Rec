@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contributing to Transformers4Rec &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Additional Resources" href="resources.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="resources.html">Additional Resources</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Contributing to Transformers4Rec</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="resources.html">Additional Resources</a> &raquo;</li>
+      <li>Contributing to Transformers4Rec</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="tex2jax_ignore mathjax_ignore section" id="contributing-to-transformers4rec">
+<h1>Contributing to Transformers4Rec<a class="headerlink" href="#contributing-to-transformers4rec" title="Permalink to this headline"></a></h1>
+<p>If you are interested in contributing to Transformers4Rec your contributions will fall
+into three categories:</p>
+<ol class="simple">
+<li><p>You want to report a bug, feature request, or documentation issue</p>
+<ul class="simple">
+<li><p>File an <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/issues/new/choose">issue</a>
+describing what you encountered or what you want to see changed.</p></li>
+<li><p>The NVIDIA-Merlin team will evaluate the issues and triage them, scheduling
+them for a release. If you believe the issue needs priority attention
+comment on the issue to notify the team.</p></li>
+</ul>
+</li>
+<li><p>You want to propose a new Feature and implement it</p>
+<ul class="simple">
+<li><p>Post about your intended feature, and we shall discuss the design and
+implementation.</p></li>
+<li><p>Once we agree that the plan looks good, go ahead and implement it, using
+the <a class="reference internal" href="#code-contributions"><span class="std std-doc">code contributions</span></a> guide below.</p></li>
+</ul>
+</li>
+<li><p>You want to implement a feature or bug-fix for an outstanding issue</p>
+<ul class="simple">
+<li><p>Follow the <a class="reference internal" href="#code-contributions"><span class="std std-doc">code contributions</span></a> guide below.</p></li>
+<li><p>If you need more context on a particular issue, please ask and we shall
+provide.</p></li>
+</ul>
+</li>
+</ol>
+<div class="section" id="code-contributions">
+<h2>Code contributions<a class="headerlink" href="#code-contributions" title="Permalink to this headline"></a></h2>
+<div class="section" id="your-first-issue">
+<h3>Your first issue<a class="headerlink" href="#your-first-issue" title="Permalink to this headline"></a></h3>
+<ol class="simple">
+<li><p>Read the project’s <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/README.md">README.md</a>
+to learn how to setup the development environment</p></li>
+<li><p>Find an issue to work on. The best way is to look for the <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22">good first issue</a>
+or <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22">help wanted</a> labels</p></li>
+<li><p>Comment on the issue saying you are going to work on it</p></li>
+<li><p>Code! Make sure to update unit tests!</p></li>
+<li><p>When done, <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/compare">create your pull request</a></p></li>
+<li><p>Verify that CI passes all <a class="reference external" href="https://help.github.com/articles/about-status-checks/">status checks</a>. Fix if needed</p></li>
+<li><p>Wait for other developers to review your code and update code as needed</p></li>
+<li><p>Once reviewed and approved, a developer will merge your pull request</p></li>
+</ol>
+<p>Remember, if you are unsure about anything, don’t hesitate to comment on issues
+and ask for clarifications!</p>
+</div>
+<div class="section" id="seasoned-developers">
+<h3>Seasoned developers<a class="headerlink" href="#seasoned-developers" title="Permalink to this headline"></a></h3>
+<p>Once you have gotten your feet wet and are more comfortable with the code, you
+can look at the prioritized issues of our next release in our <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/projects">project boards</a>.</p>
+<blockquote>
+<div><p><strong>Pro Tip:</strong> Always look at the release board with the highest number for
+issues to work on. This is where Transformers4Rec developers also focus their efforts.</p>
+</div></blockquote>
+<p>Look at the unassigned issues, and find an issue you are comfortable with
+contributing to. Start with <em>Step 3</em> from above, commenting on the issue to let
+others know you are working on it. If you have any questions related to the
+implementation of the issue, ask them in the issue instead of the PR.</p>
+</div>
+</div>
+<div class="section" id="attribution">
+<h2>Attribution<a class="headerlink" href="#attribution" title="Permalink to this headline"></a></h2>
+<p>Portions adopted from <a class="reference external" href="https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md">https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md</a></p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="resources.html" class="btn btn-neutral float-left" title="Additional Resources" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
