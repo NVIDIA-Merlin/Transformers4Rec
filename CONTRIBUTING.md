@@ -49,5 +49,31 @@ contributing to. Start with _Step 3_ from above, commenting on the issue to let
 others know you are working on it. If you have any questions related to the
 implementation of the issue, ask them in the issue instead of the PR.
 
+## Label your PRs
+
+This repository uses the release-drafter action to draft and create our change log.
+
+Please add one of the following labels to your PR to specify the type of contribution
+and help categorize the PR in our change log:
+
+- `breaking` -- The PR creates a breaking change to the API.
+- `bug` -- The PR fixes a problem with the code.
+- `feature` or `enhancement` -- The PR introduces a backward-compatible feature.
+- `documentation` or `examples` -- The PR is an addition or update to documentation.
+- `build`, `dependencies`, `chore`, or `ci` -- The PR is related to maintaining the
+  repository or the project.
+
+By default, an unlabeled PR is listed at the top of the change log and is not
+grouped under a heading like *Features* that groups similar PRs.
+Labeling the PRs so we can categorize them is preferred.
+
+If, for some reason, you do not believe your PR should be included in the change
+log, you can add the `skip-changelog` label.
+This label excludes the PR from the change log.
+
+For more information, see `.github/release-drafter.yml` in the repository
+or go to <https://github.com/release-drafter/release-drafter>.
+
 ## Attribution
+
 Portions adopted from https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md
