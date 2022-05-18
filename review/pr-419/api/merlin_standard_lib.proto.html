@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>merlin_standard_lib.proto package &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="merlin_standard_lib.schema package" href="merlin_standard_lib.schema.html" />
+    <link rel="prev" title="merlin_standard_lib package" href="merlin_standard_lib.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="transformers4rec.html">transformers4rec package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="merlin_standard_lib.html">merlin_standard_lib package</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">merlin_standard_lib.proto package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="merlin_standard_lib.schema.html">merlin_standard_lib.schema package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="merlin_standard_lib.utils.html">merlin_standard_lib.utils package</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">API Documentation</a> &raquo;</li>
+          <li><a href="merlin_standard_lib.html">merlin_standard_lib package</a> &raquo;</li>
+      <li>merlin_standard_lib.proto package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="merlin-standard-lib-proto-package">
+<h1>merlin_standard_lib.proto package<a class="headerlink" href="#merlin-standard-lib-proto-package" title="Permalink to this headline"></a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-merlin_standard_lib.proto.schema_bp">
+<span id="merlin-standard-lib-proto-schema-bp-module"></span><h2>merlin_standard_lib.proto.schema_bp module<a class="headerlink" href="#module-merlin_standard_lib.proto.schema_bp" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">LifecycleStage</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#LifecycleStage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Enum</span></code></p>
+<p>LifecycleStage. Only UNKNOWN_STAGE, BETA, and PRODUCTION features are
+actually validated. PLANNED, ALPHA, DISABLED, and DEBUG are treated as
+DEPRECATED.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.UNKNOWN_STAGE">
+<code class="sig-name descname"><span class="pre">UNKNOWN_STAGE</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.UNKNOWN_STAGE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.PLANNED">
+<code class="sig-name descname"><span class="pre">PLANNED</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.PLANNED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.ALPHA">
+<code class="sig-name descname"><span class="pre">ALPHA</span></code><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.ALPHA" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.BETA">
+<code class="sig-name descname"><span class="pre">BETA</span></code><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.BETA" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.PRODUCTION">
+<code class="sig-name descname"><span class="pre">PRODUCTION</span></code><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.PRODUCTION" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.DEPRECATED">
+<code class="sig-name descname"><span class="pre">DEPRECATED</span></code><em class="property"> <span class="pre">=</span> <span class="pre">5</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.DEPRECATED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.DEBUG_ONLY">
+<code class="sig-name descname"><span class="pre">DEBUG_ONLY</span></code><em class="property"> <span class="pre">=</span> <span class="pre">6</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.DEBUG_ONLY" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.LifecycleStage.DISABLED">
+<code class="sig-name descname"><span class="pre">DISABLED</span></code><em class="property"> <span class="pre">=</span> <span class="pre">7</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage.DISABLED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureType">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FeatureType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FeatureType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Enum</span></code></p>
+<p>Describes the physical representation of a feature. It may be different
+than the logical representation, which is represented as a Domain.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureType.TYPE_UNKNOWN">
+<code class="sig-name descname"><span class="pre">TYPE_UNKNOWN</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureType.TYPE_UNKNOWN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureType.BYTES">
+<code class="sig-name descname"><span class="pre">BYTES</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureType.BYTES" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureType.INT">
+<code class="sig-name descname"><span class="pre">INT</span></code><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureType.INT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureType.FLOAT">
+<code class="sig-name descname"><span class="pre">FLOAT</span></code><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureType.FLOAT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureType.STRUCT">
+<code class="sig-name descname"><span class="pre">STRUCT</span></code><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureType.STRUCT" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TimeDomainIntegerTimeFormat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TimeDomainIntegerTimeFormat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.FORMAT_UNKNOWN">
+<code class="sig-name descname"><span class="pre">FORMAT_UNKNOWN</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.FORMAT_UNKNOWN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_DAYS">
+<code class="sig-name descname"><span class="pre">UNIX_DAYS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">5</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_DAYS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_SECONDS">
+<code class="sig-name descname"><span class="pre">UNIX_SECONDS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_SECONDS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_MILLISECONDS">
+<code class="sig-name descname"><span class="pre">UNIX_MILLISECONDS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_MILLISECONDS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_MICROSECONDS">
+<code class="sig-name descname"><span class="pre">UNIX_MICROSECONDS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">3</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_MICROSECONDS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_NANOSECONDS">
+<code class="sig-name descname"><span class="pre">UNIX_NANOSECONDS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">4</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat.UNIX_NANOSECONDS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TimeOfDayDomainIntegerTimeOfDayFormat</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TimeOfDayDomainIntegerTimeOfDayFormat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat.FORMAT_UNKNOWN">
+<code class="sig-name descname"><span class="pre">FORMAT_UNKNOWN</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat.FORMAT_UNKNOWN" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat.PACKED_64_NANOS">
+<code class="sig-name descname"><span class="pre">PACKED_64_NANOS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat.PACKED_64_NANOS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationRowPartitionDType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationRowPartitionDType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Enum</span></code></p>
+<p>An enumeration.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType.UNSPECIFIED">
+<code class="sig-name descname"><span class="pre">UNSPECIFIED</span></code><em class="property"> <span class="pre">=</span> <span class="pre">0</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType.UNSPECIFIED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType.INT64">
+<code class="sig-name descname"><span class="pre">INT64</span></code><em class="property"> <span class="pre">=</span> <span class="pre">1</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType.INT64" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType.INT32">
+<code class="sig-name descname"><span class="pre">INT32</span></code><em class="property"> <span class="pre">=</span> <span class="pre">2</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType.INT32" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.Path">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">Path</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">step:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#Path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Path" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A path is a more general substitute for the name of a field or feature that
+can be used for flat examples as well as structured data. For example, if
+we had data in a protocol buffer: message Person {   int age = 1;
+optional string gender = 2;   repeated Person parent = 3; } Thus, here the
+path {step:[“parent”, “age”]} in statistics would refer to the age of a
+parent, and {step:[“parent”, “parent”, “age”]} would refer to the age of a
+grandparent. This allows us to distinguish between the statistics of
+parents’ ages and grandparents’ ages. In general, repeated messages are to
+be preferred to linked lists of arbitrary length. For SequenceExample, if
+we have a feature list “foo”, this is represented by {step:[“##SEQUENCE##”,
+“foo”]}.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Path.step">
+<code class="sig-name descname"><span class="pre">step</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Path.step" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.ValueCountList">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">ValueCountList</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">value_count:</span> <span class="pre">List[ForwardRef('ValueCount')]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#ValueCountList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ValueCountList" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.ValueCountList.value_count">
+<code class="sig-name descname"><span class="pre">value_count</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.ValueCount" title="merlin_standard_lib.proto.schema_bp.ValueCount"><span class="pre">merlin_standard_lib.proto.schema_bp.ValueCount</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ValueCountList.value_count" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">Feature</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">deprecated:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">presence:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeaturePresence</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">group_presence:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">shape:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">value_count:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.ValueCount</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">value_counts:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.ValueCountList</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">type:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeatureType</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">domain:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">int_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.IntDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">float_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FloatDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">string_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.StringDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">bool_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.BoolDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">struct_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.StructDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">natural_language_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">image_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.ImageDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">mid_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.MIDDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">url_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.URLDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">time_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TimeDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">time_of_day_domain:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TimeOfDayDomain</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">distribution_constraints:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.DistributionConstraints</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">annotation:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.Annotation</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">skew_comparator:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeatureComparator</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">drift_comparator:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeatureComparator</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">in_environment:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">not_in_environment:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">lifecycle_stage:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.LifecycleStage</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">unique_constraints:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.UniqueConstraints</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#Feature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Describes schema-level information about a specific feature. NextID: 33</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.deprecated">
+<code class="sig-name descname"><span class="pre">deprecated</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.deprecated" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.presence">
+<code class="sig-name descname"><span class="pre">presence</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeaturePresence" title="merlin_standard_lib.proto.schema_bp.FeaturePresence"><span class="pre">merlin_standard_lib.proto.schema_bp.FeaturePresence</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.presence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.group_presence">
+<code class="sig-name descname"><span class="pre">group_presence</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup" title="merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup"><span class="pre">merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.group_presence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.shape">
+<code class="sig-name descname"><span class="pre">shape</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FixedShape" title="merlin_standard_lib.proto.schema_bp.FixedShape"><span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.value_count">
+<code class="sig-name descname"><span class="pre">value_count</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.ValueCount" title="merlin_standard_lib.proto.schema_bp.ValueCount"><span class="pre">merlin_standard_lib.proto.schema_bp.ValueCount</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.value_count" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.value_counts">
+<code class="sig-name descname"><span class="pre">value_counts</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.ValueCountList" title="merlin_standard_lib.proto.schema_bp.ValueCountList"><span class="pre">merlin_standard_lib.proto.schema_bp.ValueCountList</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.value_counts" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.type">
+<code class="sig-name descname"><span class="pre">type</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeatureType" title="merlin_standard_lib.proto.schema_bp.FeatureType"><span class="pre">merlin_standard_lib.proto.schema_bp.FeatureType</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.type" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.domain">
+<code class="sig-name descname"><span class="pre">domain</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.int_domain">
+<code class="sig-name descname"><span class="pre">int_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.IntDomain" title="merlin_standard_lib.proto.schema_bp.IntDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.IntDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.int_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.float_domain">
+<code class="sig-name descname"><span class="pre">float_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FloatDomain" title="merlin_standard_lib.proto.schema_bp.FloatDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.FloatDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.float_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.string_domain">
+<code class="sig-name descname"><span class="pre">string_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.StringDomain" title="merlin_standard_lib.proto.schema_bp.StringDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.StringDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.string_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.bool_domain">
+<code class="sig-name descname"><span class="pre">bool_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.BoolDomain" title="merlin_standard_lib.proto.schema_bp.BoolDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.BoolDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.bool_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.struct_domain">
+<code class="sig-name descname"><span class="pre">struct_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.StructDomain" title="merlin_standard_lib.proto.schema_bp.StructDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.StructDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.struct_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.natural_language_domain">
+<code class="sig-name descname"><span class="pre">natural_language_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain" title="merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.natural_language_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.image_domain">
+<code class="sig-name descname"><span class="pre">image_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.ImageDomain" title="merlin_standard_lib.proto.schema_bp.ImageDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.ImageDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.image_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.mid_domain">
+<code class="sig-name descname"><span class="pre">mid_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.MIDDomain" title="merlin_standard_lib.proto.schema_bp.MIDDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.MIDDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.mid_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.url_domain">
+<code class="sig-name descname"><span class="pre">url_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.URLDomain" title="merlin_standard_lib.proto.schema_bp.URLDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.URLDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.url_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.time_domain">
+<code class="sig-name descname"><span class="pre">time_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TimeDomain" title="merlin_standard_lib.proto.schema_bp.TimeDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.TimeDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.time_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.time_of_day_domain">
+<code class="sig-name descname"><span class="pre">time_of_day_domain</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomain" title="merlin_standard_lib.proto.schema_bp.TimeOfDayDomain"><span class="pre">merlin_standard_lib.proto.schema_bp.TimeOfDayDomain</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.time_of_day_domain" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.distribution_constraints">
+<code class="sig-name descname"><span class="pre">distribution_constraints</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.DistributionConstraints" title="merlin_standard_lib.proto.schema_bp.DistributionConstraints"><span class="pre">merlin_standard_lib.proto.schema_bp.DistributionConstraints</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.distribution_constraints" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.annotation">
+<code class="sig-name descname"><span class="pre">annotation</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.Annotation" title="merlin_standard_lib.proto.schema_bp.Annotation"><span class="pre">merlin_standard_lib.proto.schema_bp.Annotation</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.annotation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.skew_comparator">
+<code class="sig-name descname"><span class="pre">skew_comparator</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeatureComparator" title="merlin_standard_lib.proto.schema_bp.FeatureComparator"><span class="pre">merlin_standard_lib.proto.schema_bp.FeatureComparator</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.skew_comparator" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.drift_comparator">
+<code class="sig-name descname"><span class="pre">drift_comparator</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeatureComparator" title="merlin_standard_lib.proto.schema_bp.FeatureComparator"><span class="pre">merlin_standard_lib.proto.schema_bp.FeatureComparator</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.drift_comparator" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.in_environment">
+<code class="sig-name descname"><span class="pre">in_environment</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.in_environment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.not_in_environment">
+<code class="sig-name descname"><span class="pre">not_in_environment</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.not_in_environment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.lifecycle_stage">
+<code class="sig-name descname"><span class="pre">lifecycle_stage</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage" title="merlin_standard_lib.proto.schema_bp.LifecycleStage"><span class="pre">merlin_standard_lib.proto.schema_bp.LifecycleStage</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.lifecycle_stage" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Feature.unique_constraints">
+<code class="sig-name descname"><span class="pre">unique_constraints</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.UniqueConstraints" title="merlin_standard_lib.proto.schema_bp.UniqueConstraints"><span class="pre">merlin_standard_lib.proto.schema_bp.UniqueConstraints</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Feature.unique_constraints" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.Annotation">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">Annotation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tag:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">comment:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">extra_metadata:</span> <span class="pre">List[Any]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#Annotation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Annotation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Additional information about the schema or about a feature.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Annotation.tag">
+<code class="sig-name descname"><span class="pre">tag</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Annotation.tag" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Annotation.comment">
+<code class="sig-name descname"><span class="pre">comment</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Annotation.comment" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.Annotation.extra_metadata">
+<code class="sig-name descname"><span class="pre">extra_metadata</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Annotation.extra_metadata" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="merlin_standard_lib.proto.schema_bp.Annotation.metadata">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">metadata</span></code><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.Annotation.metadata" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.NumericValueComparator">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">NumericValueComparator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">min_fraction_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max_fraction_threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#NumericValueComparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NumericValueComparator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Checks that the ratio of the current value to the previous value is not
+below the min_fraction_threshold or above the max_fraction_threshold. That
+is, previous value * min_fraction_threshold &lt;= current value &lt;= previous
+value * max_fraction_threshold. To specify that the value cannot change,
+set both min_fraction_threshold and max_fraction_threshold to 1.0.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.NumericValueComparator.min_fraction_threshold">
+<code class="sig-name descname"><span class="pre">min_fraction_threshold</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NumericValueComparator.min_fraction_threshold" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.NumericValueComparator.max_fraction_threshold">
+<code class="sig-name descname"><span class="pre">max_fraction_threshold</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NumericValueComparator.max_fraction_threshold" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.DatasetConstraints">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">DatasetConstraints</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">num_examples_drift_comparator:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.NumericValueComparator</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">num_examples_version_comparator:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.NumericValueComparator</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min_examples_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max_examples_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#DatasetConstraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.DatasetConstraints" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Constraints on the entire dataset.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.DatasetConstraints.num_examples_drift_comparator">
+<code class="sig-name descname"><span class="pre">num_examples_drift_comparator</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.NumericValueComparator" title="merlin_standard_lib.proto.schema_bp.NumericValueComparator"><span class="pre">merlin_standard_lib.proto.schema_bp.NumericValueComparator</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.DatasetConstraints.num_examples_drift_comparator" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.DatasetConstraints.num_examples_version_comparator">
+<code class="sig-name descname"><span class="pre">num_examples_version_comparator</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.NumericValueComparator" title="merlin_standard_lib.proto.schema_bp.NumericValueComparator"><span class="pre">merlin_standard_lib.proto.schema_bp.NumericValueComparator</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.DatasetConstraints.num_examples_version_comparator" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.DatasetConstraints.min_examples_count">
+<code class="sig-name descname"><span class="pre">min_examples_count</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.DatasetConstraints.min_examples_count" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.DatasetConstraints.max_examples_count">
+<code class="sig-name descname"><span class="pre">max_examples_count</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.DatasetConstraints.max_examples_count" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FixedShape">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FixedShape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dim:</span> <span class="pre">List[merlin_standard_lib.proto.schema_bp.FixedShapeDim]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FixedShape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FixedShape" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Specifies a fixed shape for the feature’s values. The immediate implication
+is that each feature has a fixed number of values. Moreover, these values
+can be parsed in a multi-dimensional tensor using the specified axis sizes.
+The FixedShape defines a lexicographical ordering of the data. For
+instance, if there is a FixedShape {   dim {size:3} dim {size:2} } then
+tensor[0][0]=field[0] then tensor[0][1]=field[1] then tensor[1][0]=field[2]
+then tensor[1][1]=field[3] then tensor[2][0]=field[4] then
+tensor[2][1]=field[5] The FixedShape message is identical with the
+TensorFlow TensorShape proto message.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FixedShape.dim">
+<code class="sig-name descname"><span class="pre">dim</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FixedShapeDim" title="merlin_standard_lib.proto.schema_bp.FixedShapeDim"><span class="pre">merlin_standard_lib.proto.schema_bp.FixedShapeDim</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FixedShape.dim" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FixedShapeDim">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FixedShapeDim</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FixedShapeDim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FixedShapeDim" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>An axis in a multi-dimensional feature representation.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FixedShapeDim.size">
+<code class="sig-name descname"><span class="pre">size</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FixedShapeDim.size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FixedShapeDim.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FixedShapeDim.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.ValueCount">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">ValueCount</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">min:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#ValueCount"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ValueCount" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Limits on maximum and minimum number of values in a single example (when
+the feature is present). Use this when the minimum value count can be
+different than the maximum value count. Otherwise prefer FixedShape.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.ValueCount.min">
+<code class="sig-name descname"><span class="pre">min</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ValueCount.min" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.ValueCount.max">
+<code class="sig-name descname"><span class="pre">max</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ValueCount.max" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.WeightedFeature">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">WeightedFeature</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">feature:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.Path</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">weight_feature:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.Path</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">lifecycle_stage:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.LifecycleStage</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#WeightedFeature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.WeightedFeature" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Represents a weighted feature that is encoded as a combination of raw base
+features. The <cite>weight_feature</cite> should be a float feature with identical
+shape as the <cite>feature</cite>. This is useful for representing weights associated
+with categorical tokens (e.g. a TFIDF weight associated with each token).
+TODO(b/142122960): Handle WeightedCategorical end to end in TFX
+(validation, TFX Unit Testing, etc)</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.WeightedFeature.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.WeightedFeature.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.WeightedFeature.feature">
+<code class="sig-name descname"><span class="pre">feature</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.Path" title="merlin_standard_lib.proto.schema_bp.Path"><span class="pre">merlin_standard_lib.proto.schema_bp.Path</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.WeightedFeature.feature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.WeightedFeature.weight_feature">
+<code class="sig-name descname"><span class="pre">weight_feature</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.Path" title="merlin_standard_lib.proto.schema_bp.Path"><span class="pre">merlin_standard_lib.proto.schema_bp.Path</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.WeightedFeature.weight_feature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.WeightedFeature.lifecycle_stage">
+<code class="sig-name descname"><span class="pre">lifecycle_stage</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage" title="merlin_standard_lib.proto.schema_bp.LifecycleStage"><span class="pre">merlin_standard_lib.proto.schema_bp.LifecycleStage</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.WeightedFeature.lifecycle_stage" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">SparseFeature</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">deprecated:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">lifecycle_stage:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.LifecycleStage</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">presence:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeaturePresence</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">dense_shape:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">index_feature:</span> <span class="pre">List[merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">is_sorted:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">value_feature:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">type:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeatureType</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#SparseFeature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A sparse feature represents a sparse tensor that is encoded with a
+combination of raw features, namely index features and a value feature.
+Each index feature defines a list of indices in a different dimension.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.deprecated">
+<code class="sig-name descname"><span class="pre">deprecated</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.deprecated" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.lifecycle_stage">
+<code class="sig-name descname"><span class="pre">lifecycle_stage</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.LifecycleStage" title="merlin_standard_lib.proto.schema_bp.LifecycleStage"><span class="pre">merlin_standard_lib.proto.schema_bp.LifecycleStage</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.lifecycle_stage" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.presence">
+<code class="sig-name descname"><span class="pre">presence</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeaturePresence" title="merlin_standard_lib.proto.schema_bp.FeaturePresence"><span class="pre">merlin_standard_lib.proto.schema_bp.FeaturePresence</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.presence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.dense_shape">
+<code class="sig-name descname"><span class="pre">dense_shape</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FixedShape" title="merlin_standard_lib.proto.schema_bp.FixedShape"><span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.dense_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.index_feature">
+<code class="sig-name descname"><span class="pre">index_feature</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature" title="merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature"><span class="pre">merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.index_feature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.is_sorted">
+<code class="sig-name descname"><span class="pre">is_sorted</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.is_sorted" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.value_feature">
+<code class="sig-name descname"><span class="pre">value_feature</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature" title="merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature"><span class="pre">merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.value_feature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeature.type">
+<code class="sig-name descname"><span class="pre">type</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeatureType" title="merlin_standard_lib.proto.schema_bp.FeatureType"><span class="pre">merlin_standard_lib.proto.schema_bp.FeatureType</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeature.type" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">SparseFeatureIndexFeature</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#SparseFeatureIndexFeature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeatureIndexFeature.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">SparseFeatureValueFeature</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#SparseFeatureValueFeature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SparseFeatureValueFeature.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.DistributionConstraints">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">DistributionConstraints</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">min_domain_mass:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#DistributionConstraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.DistributionConstraints" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Models constraints on the distribution of a feature’s values.
+TODO(martinz): replace min_domain_mass with max_off_domain (but slowly).</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.DistributionConstraints.min_domain_mass">
+<code class="sig-name descname"><span class="pre">min_domain_mass</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.DistributionConstraints.min_domain_mass" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FeatureCoverageConstraints</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">min_coverage:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min_avg_token_length:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">excluded_string_tokens:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">excluded_int_tokens:</span> <span class="pre">List[int]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">oov_string_tokens:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FeatureCoverageConstraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Encodes vocabulary coverage constraints.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.min_coverage">
+<code class="sig-name descname"><span class="pre">min_coverage</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.min_coverage" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.min_avg_token_length">
+<code class="sig-name descname"><span class="pre">min_avg_token_length</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.min_avg_token_length" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.excluded_string_tokens">
+<code class="sig-name descname"><span class="pre">excluded_string_tokens</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.excluded_string_tokens" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.excluded_int_tokens">
+<code class="sig-name descname"><span class="pre">excluded_int_tokens</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.excluded_int_tokens" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.oov_string_tokens">
+<code class="sig-name descname"><span class="pre">oov_string_tokens</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.oov_string_tokens" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">SequenceValueConstraints</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">int_value:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">string_value:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min_per_sequence:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max_per_sequence:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min_fraction_of_sequences:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max_fraction_of_sequences:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#SequenceValueConstraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Encodes constraints on specific values in sequences.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.int_value">
+<code class="sig-name descname"><span class="pre">int_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.int_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.string_value">
+<code class="sig-name descname"><span class="pre">string_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.string_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.min_per_sequence">
+<code class="sig-name descname"><span class="pre">min_per_sequence</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.min_per_sequence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.max_per_sequence">
+<code class="sig-name descname"><span class="pre">max_per_sequence</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.max_per_sequence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.min_fraction_of_sequences">
+<code class="sig-name descname"><span class="pre">min_fraction_of_sequences</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.min_fraction_of_sequences" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.max_fraction_of_sequences">
+<code class="sig-name descname"><span class="pre">max_fraction_of_sequences</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints.max_fraction_of_sequences" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">SequenceLengthConstraints</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">excluded_int_value:</span> <span class="pre">List[int]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">excluded_string_value:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min_sequence_length:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max_sequence_length:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#SequenceLengthConstraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Encodes constraints on sequence lengths.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.excluded_int_value">
+<code class="sig-name descname"><span class="pre">excluded_int_value</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.excluded_int_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.excluded_string_value">
+<code class="sig-name descname"><span class="pre">excluded_string_value</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.excluded_string_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.min_sequence_length">
+<code class="sig-name descname"><span class="pre">min_sequence_length</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.min_sequence_length" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.max_sequence_length">
+<code class="sig-name descname"><span class="pre">max_sequence_length</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints.max_sequence_length" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.IntDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">IntDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">is_categorical:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#IntDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.IntDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Encodes information for domains of integer values. Note that FeatureType
+could be either INT or BYTES.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.IntDomain.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.IntDomain.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.IntDomain.min">
+<code class="sig-name descname"><span class="pre">min</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.IntDomain.min" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.IntDomain.max">
+<code class="sig-name descname"><span class="pre">max</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.IntDomain.max" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.IntDomain.is_categorical">
+<code class="sig-name descname"><span class="pre">is_categorical</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.IntDomain.is_categorical" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FloatDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FloatDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">disallow_nan:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">disallow_inf:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">is_embedding:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FloatDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FloatDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Encodes information for domains of float values. Note that FeatureType
+could be either INT or BYTES.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FloatDomain.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FloatDomain.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FloatDomain.min">
+<code class="sig-name descname"><span class="pre">min</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FloatDomain.min" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FloatDomain.max">
+<code class="sig-name descname"><span class="pre">max</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FloatDomain.max" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FloatDomain.disallow_nan">
+<code class="sig-name descname"><span class="pre">disallow_nan</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FloatDomain.disallow_nan" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FloatDomain.disallow_inf">
+<code class="sig-name descname"><span class="pre">disallow_inf</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FloatDomain.disallow_inf" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FloatDomain.is_embedding">
+<code class="sig-name descname"><span class="pre">is_embedding</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FloatDomain.is_embedding" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.StructDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">StructDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">feature:</span> <span class="pre">List[merlin_standard_lib.proto.schema_bp.Feature]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">sparse_feature:</span> <span class="pre">List[merlin_standard_lib.proto.schema_bp.SparseFeature]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#StructDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.StructDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Domain for a recursive struct. NOTE: If a feature with a StructDomain is
+deprecated, then all the child features (features and sparse_features of
+the StructDomain) are also considered to be deprecated.  Similarly child
+features can only be in environments of the parent feature.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.StructDomain.feature">
+<code class="sig-name descname"><span class="pre">feature</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.Feature" title="merlin_standard_lib.proto.schema_bp.Feature"><span class="pre">merlin_standard_lib.proto.schema_bp.Feature</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.StructDomain.feature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.StructDomain.sparse_feature">
+<code class="sig-name descname"><span class="pre">sparse_feature</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.SparseFeature" title="merlin_standard_lib.proto.schema_bp.SparseFeature"><span class="pre">merlin_standard_lib.proto.schema_bp.SparseFeature</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.StructDomain.sparse_feature" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.StringDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">StringDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">value:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#StringDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.StringDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Encodes information for domains of string values.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.StringDomain.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.StringDomain.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.StringDomain.value">
+<code class="sig-name descname"><span class="pre">value</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.StringDomain.value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.BoolDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">BoolDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">true_value:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">false_value:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#BoolDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.BoolDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Encodes information about the domain of a boolean attribute that encodes
+its TRUE/FALSE values as strings, or 0=false, 1=true. Note that FeatureType
+could be either INT or BYTES.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.BoolDomain.name">
+<code class="sig-name descname"><span class="pre">name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.BoolDomain.name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.BoolDomain.true_value">
+<code class="sig-name descname"><span class="pre">true_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.BoolDomain.true_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.BoolDomain.false_value">
+<code class="sig-name descname"><span class="pre">false_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.BoolDomain.false_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">NaturalLanguageDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">vocabulary:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">coverage:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">token_constraints:</span> <span class="pre">List[merlin_standard_lib.proto.schema_bp.SequenceValueConstraints]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">sequence_length_constraints:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">location_constraint_regex:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#NaturalLanguageDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Natural language text.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.vocabulary">
+<code class="sig-name descname"><span class="pre">vocabulary</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.vocabulary" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.coverage">
+<code class="sig-name descname"><span class="pre">coverage</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints" title="merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints"><span class="pre">merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.coverage" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.token_constraints">
+<code class="sig-name descname"><span class="pre">token_constraints</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints" title="merlin_standard_lib.proto.schema_bp.SequenceValueConstraints"><span class="pre">merlin_standard_lib.proto.schema_bp.SequenceValueConstraints</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.token_constraints" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.sequence_length_constraints">
+<code class="sig-name descname"><span class="pre">sequence_length_constraints</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints" title="merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints"><span class="pre">merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.sequence_length_constraints" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.location_constraint_regex">
+<code class="sig-name descname"><span class="pre">location_constraint_regex</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.location_constraint_regex" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.ImageDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">ImageDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">minimum_supported_image_fraction:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max_image_byte_size:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#ImageDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ImageDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Image data.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.ImageDomain.minimum_supported_image_fraction">
+<code class="sig-name descname"><span class="pre">minimum_supported_image_fraction</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ImageDomain.minimum_supported_image_fraction" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.ImageDomain.max_image_byte_size">
+<code class="sig-name descname"><span class="pre">max_image_byte_size</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.ImageDomain.max_image_byte_size" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.MIDDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">MIDDomain</span></code><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#MIDDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.MIDDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Knowledge graph ID, see: <a class="reference external" href="https://www.wikidata.org/wiki/Property:P646">https://www.wikidata.org/wiki/Property:P646</a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.URLDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">URLDomain</span></code><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#URLDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.URLDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A URL, see: <a class="reference external" href="https://en.wikipedia.org/wiki/URL">https://en.wikipedia.org/wiki/URL</a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TimeDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">string_format:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">integer_format:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TimeDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Time or date representation.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomain.string_format">
+<code class="sig-name descname"><span class="pre">string_format</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomain.string_format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeDomain.integer_format">
+<code class="sig-name descname"><span class="pre">integer_format</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat" title="merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat"><span class="pre">merlin_standard_lib.proto.schema_bp.TimeDomainIntegerTimeFormat</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeDomain.integer_format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeOfDayDomain">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TimeOfDayDomain</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">string_format:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">integer_format:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TimeOfDayDomain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomain" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Time of day, without a particular date.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeOfDayDomain.string_format">
+<code class="sig-name descname"><span class="pre">string_format</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomain.string_format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TimeOfDayDomain.integer_format">
+<code class="sig-name descname"><span class="pre">integer_format</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat" title="merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat"><span class="pre">merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TimeOfDayDomain.integer_format" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FeaturePresence">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FeaturePresence</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">min_fraction:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">min_count:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FeaturePresence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeaturePresence" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Describes constraints on the presence of the feature in the data.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeaturePresence.min_fraction">
+<code class="sig-name descname"><span class="pre">min_fraction</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeaturePresence.min_fraction" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeaturePresence.min_count">
+<code class="sig-name descname"><span class="pre">min_count</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeaturePresence.min_count" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FeaturePresenceWithinGroup</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">required:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FeaturePresenceWithinGroup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Records constraints on the presence of a feature inside a “group” context
+(e.g., .presence inside a group of features that define a sequence).</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup.required">
+<code class="sig-name descname"><span class="pre">required</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup.required" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.InfinityNorm">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">InfinityNorm</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#InfinityNorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.InfinityNorm" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Checks that the L-infinity norm is below a certain threshold between the
+two discrete distributions. Since this is applied to a
+FeatureNameStatistics, it only considers the top k. L_infty(p,q) = max_i
+<a href="#id1"><span class="problematic" id="id2">|p_i-q_i|</span></a></p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.InfinityNorm.threshold">
+<code class="sig-name descname"><span class="pre">threshold</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.InfinityNorm.threshold" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.JensenShannonDivergence">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">JensenShannonDivergence</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">threshold:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#JensenShannonDivergence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.JensenShannonDivergence" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Checks that the approximate Jensen-Shannon Divergence is below a certain
+threshold between the two distributions.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.JensenShannonDivergence.threshold">
+<code class="sig-name descname"><span class="pre">threshold</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.JensenShannonDivergence.threshold" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureComparator">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">FeatureComparator</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">infinity_norm:</span> <span class="pre">'InfinityNorm'</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em>, <em class="sig-param"><span class="pre">jensen_shannon_divergence:</span> <span class="pre">'JensenShannonDivergence'</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#FeatureComparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureComparator" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureComparator.infinity_norm">
+<code class="sig-name descname"><span class="pre">infinity_norm</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.InfinityNorm" title="merlin_standard_lib.proto.schema_bp.InfinityNorm"><span class="pre">merlin_standard_lib.proto.schema_bp.InfinityNorm</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureComparator.infinity_norm" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.FeatureComparator.jensen_shannon_divergence">
+<code class="sig-name descname"><span class="pre">jensen_shannon_divergence</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.JensenShannonDivergence" title="merlin_standard_lib.proto.schema_bp.JensenShannonDivergence"><span class="pre">merlin_standard_lib.proto.schema_bp.JensenShannonDivergence</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.FeatureComparator.jensen_shannon_divergence" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.UniqueConstraints">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">UniqueConstraints</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">min:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">max:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#UniqueConstraints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.UniqueConstraints" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Checks that the number of unique values is greater than or equal to the
+min, and less than or equal to the max.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.UniqueConstraints.min">
+<code class="sig-name descname"><span class="pre">min</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.UniqueConstraints.min" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.UniqueConstraints.max">
+<code class="sig-name descname"><span class="pre">max</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.UniqueConstraints.max" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentation">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentation</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dense_tensor:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">varlen_sparse_tensor:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">sparse_tensor:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">ragged_tensor:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentation" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A TensorRepresentation captures the intent for converting columns in a
+dataset to TensorFlow Tensors (or more generally, tf.CompositeTensors).
+Note that one tf.CompositeTensor may consist of data from multiple columns,
+for example, a N-dimensional tf.SparseTensor may need N + 1 columns to
+provide the sparse indices and values. Note that the “column name” that a
+TensorRepresentation needs is a string, not a Path – it means that the
+column name identifies a top-level Feature in the schema (i.e. you cannot
+specify a Feature nested in a STRUCT Feature).</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentation.dense_tensor">
+<code class="sig-name descname"><span class="pre">dense_tensor</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor" title="merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentation.dense_tensor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentation.varlen_sparse_tensor">
+<code class="sig-name descname"><span class="pre">varlen_sparse_tensor</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor" title="merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentation.varlen_sparse_tensor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentation.sparse_tensor">
+<code class="sig-name descname"><span class="pre">sparse_tensor</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor" title="merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentation.sparse_tensor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentation.ragged_tensor">
+<code class="sig-name descname"><span class="pre">ragged_tensor</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor" title="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentation.ragged_tensor" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationDefaultValue</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">float_value:</span> <span class="pre">float</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em>, <em class="sig-param"><span class="pre">int_value:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em>, <em class="sig-param"><span class="pre">bytes_value:</span> <span class="pre">bytes</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em>, <em class="sig-param"><span class="pre">uint_value:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object</span> <span class="pre">at</span> <span class="pre">0x7fec84b2e490&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationDefaultValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.float_value">
+<code class="sig-name descname"><span class="pre">float_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.float_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.int_value">
+<code class="sig-name descname"><span class="pre">int_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.int_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.bytes_value">
+<code class="sig-name descname"><span class="pre">bytes_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#bytes" title="(in Python v3.10)"><span class="pre">bytes</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.bytes_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.uint_value">
+<code class="sig-name descname"><span class="pre">uint_value</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue.uint_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationDenseTensor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">column_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">shape:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">default_value:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationDenseTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A tf.Tensor</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor.column_name">
+<code class="sig-name descname"><span class="pre">column_name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor.column_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor.shape">
+<code class="sig-name descname"><span class="pre">shape</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FixedShape" title="merlin_standard_lib.proto.schema_bp.FixedShape"><span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor.shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor.default_value">
+<code class="sig-name descname"><span class="pre">default_value</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue" title="merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationDefaultValue</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor.default_value" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationVarLenSparseTensor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">column_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationVarLenSparseTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A ragged tf.SparseTensor that models nested lists.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor.column_name">
+<code class="sig-name descname"><span class="pre">column_name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor.column_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationSparseTensor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">dense_shape:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">index_column_names:</span> <span class="pre">List[str]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">value_column_name:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationSparseTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A tf.SparseTensor whose indices and values come from separate data columns.
+This will replace Schema.sparse_feature eventually. The index columns must
+be of INT type, and all the columns must co-occur and have the same valency
+at the same row.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor.dense_shape">
+<code class="sig-name descname"><span class="pre">dense_shape</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.FixedShape" title="merlin_standard_lib.proto.schema_bp.FixedShape"><span class="pre">merlin_standard_lib.proto.schema_bp.FixedShape</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor.dense_shape" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor.index_column_names">
+<code class="sig-name descname"><span class="pre">index_column_names</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor.index_column_names" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor.value_column_name">
+<code class="sig-name descname"><span class="pre">value_column_name</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor.value_column_name" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationRaggedTensor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">feature_path:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.Path</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">partition:</span> <span class="pre">List[merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">row_partition_dtype:</span> <span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationRaggedTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A tf.RaggedTensor that models nested lists. Currently there is no way for
+the user to specify the shape of the leaf value (the innermost value tensor
+of the RaggedTensor). The leaf value will always be a 1-D tensor.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor.feature_path">
+<code class="sig-name descname"><span class="pre">feature_path</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.Path" title="merlin_standard_lib.proto.schema_bp.Path"><span class="pre">merlin_standard_lib.proto.schema_bp.Path</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor.feature_path" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor.partition">
+<code class="sig-name descname"><span class="pre">partition</span></code><em class="property"><span class="pre">:</span> <span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition" title="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor.partition" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor.row_partition_dtype">
+<code class="sig-name descname"><span class="pre">row_partition_dtype</span></code><em class="property"><span class="pre">:</span> <a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType" title="merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentationRowPartitionDType</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor.row_partition_dtype" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationRaggedTensorPartition</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">uniform_row_length:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">row_length:</span> <span class="pre">str</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationRaggedTensorPartition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>Further partition of the feature values at the leaf level.</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition.uniform_row_length">
+<code class="sig-name descname"><span class="pre">uniform_row_length</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition.uniform_row_length" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition.row_length">
+<code class="sig-name descname"><span class="pre">row_length</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition.row_length" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationGroup">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.proto.schema_bp.</span></code><code class="sig-name descname"><span class="pre">TensorRepresentationGroup</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">tensor_representation:</span> <span class="pre">Dict[str</span></em>, <em class="sig-param"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentation]</span> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/proto/schema_bp.html#TensorRepresentationGroup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationGroup" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">betterproto.Message</span></code></p>
+<p>A TensorRepresentationGroup is a collection of TensorRepresentations with
+names. These names may serve as identifiers when converting the dataset to
+a collection of Tensors or tf.CompositeTensors. For example, given the
+following group: {   key: “dense_tensor”   tensor_representation {
+dense_tensor {       column_name: “univalent_feature”       shape {
+dim {           size: 1         }       }       default_value {
+float_value: 0       }     }   } } {   key: “varlen_sparse_tensor”
+tensor_representation {     varlen_sparse_tensor {       column_name:
+“multivalent_feature”     }   } } Then the schema is expected to have
+feature “univalent_feature” and “multivalent_feature”, and when a batch of
+data is converted to Tensors using this TensorRepresentationGroup, the
+result may be the following dict: {   “dense_tensor”: tf.Tensor(…),
+“varlen_sparse_tensor”: tf.SparseTensor(…), }</p>
+<dl class="py attribute">
+<dt id="merlin_standard_lib.proto.schema_bp.TensorRepresentationGroup.tensor_representation">
+<code class="sig-name descname"><span class="pre">tensor_representation</span></code><em class="property"><span class="pre">:</span> <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentation" title="merlin_standard_lib.proto.schema_bp.TensorRepresentation"><span class="pre">merlin_standard_lib.proto.schema_bp.TensorRepresentation</span></a><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">&lt;betterproto._PLACEHOLDER</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#merlin_standard_lib.proto.schema_bp.TensorRepresentationGroup.tensor_representation" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-merlin_standard_lib.proto">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-merlin_standard_lib.proto" title="Permalink to this headline"></a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="merlin_standard_lib.html" class="btn btn-neutral float-left" title="merlin_standard_lib package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="merlin_standard_lib.schema.html" class="btn btn-neutral float-right" title="merlin_standard_lib.schema package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
