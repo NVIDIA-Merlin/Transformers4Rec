@@ -142,6 +142,28 @@ others know you are working on it. If you have any questions related to the
 implementation of the issue, ask them in the issue instead of the PR.</p>
 </div>
 </div>
+<div class="section" id="label-your-prs">
+<h2>Label your PRs<a class="headerlink" href="#label-your-prs" title="Permalink to this headline"></a></h2>
+<p>This repository uses the release-drafter action to draft and create our change log.</p>
+<p>Please add one of the following labels to your PR to specify the type of contribution
+and help categorize the PR in our change log:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">breaking</span></code> – The PR creates a breaking change to the API.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bug</span></code> – The PR fixes a problem with the code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">feature</span></code> or <code class="docutils literal notranslate"><span class="pre">enhancement</span></code> – The PR introduces a backward-compatible feature.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">documentation</span></code> or <code class="docutils literal notranslate"><span class="pre">examples</span></code> – The PR is an addition or update to documentation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">build</span></code>, <code class="docutils literal notranslate"><span class="pre">dependencies</span></code>, <code class="docutils literal notranslate"><span class="pre">chore</span></code>, or <code class="docutils literal notranslate"><span class="pre">ci</span></code> – The PR is related to maintaining the
+repository or the project.</p></li>
+</ul>
+<p>By default, an unlabeled PR is listed at the top of the change log and is not
+grouped under a heading like <em>Features</em> that groups similar PRs.
+Labeling the PRs so we can categorize them is preferred.</p>
+<p>If, for some reason, you do not believe your PR should be included in the change
+log, you can add the <code class="docutils literal notranslate"><span class="pre">skip-changelog</span></code> label.
+This label excludes the PR from the change log.</p>
+<p>For more information, see <code class="docutils literal notranslate"><span class="pre">.github/release-drafter.yml</span></code> in the repository
+or go to <a class="reference external" href="https://github.com/release-drafter/release-drafter">https://github.com/release-drafter/release-drafter</a>.</p>
+</div>
 <div class="section" id="attribution">
 <h2>Attribution<a class="headerlink" href="#attribution" title="Permalink to this headline"></a></h2>
 <p>Portions adopted from <a class="reference external" href="https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md">https://github.com/pytorch/pytorch/blob/master/CONTRIBUTING.md</a></p>
