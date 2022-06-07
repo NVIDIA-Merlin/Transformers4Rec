@@ -60,7 +60,7 @@ For more information about the evolution of Transformer architectures and bridgi
 ## Transformers4Rec Achievements
 
 Transformers4Rec recently won two session-based recommendation competitions: [WSDM WebTour Workshop Challenge 2021 (organized by Booking.com)](https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/) and [SIGIR eCommerce Workshop Data Challenge 2021 (organized by Coveo)](https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994).
-The library provides higher accuracy for session-based recommendation than baseline algorithms and we performed extensive empirical analysis aboutthe accuracy.
+The library provides higher accuracy for session-based recommendation than baseline algorithms and we performed extensive empirical analysis about the accuracy.
 These observations are published in our [ACM RecSys'21 paper](https://dl.acm.org/doi/10.1145/3460231.3474255).
 
 ## Benefits of Transformers4Rec
