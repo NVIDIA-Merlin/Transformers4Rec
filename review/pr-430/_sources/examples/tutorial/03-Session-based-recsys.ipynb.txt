@@ -1,0 +1,2576 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "32581c84",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "#\n",
+    "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+    "# you may not use this file except in compliance with the License.\n",
+    "# You may obtain a copy of the License at\n",
+    "#\n",
+    "#     http://www.apache.org/licenses/LICENSE-2.0\n",
+    "#\n",
+    "# Unless required by applicable law or agreed to in writing, software\n",
+    "# distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+    "# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+    "# See the License for the specific language governing permissions and\n",
+    "# limitations under the License.\n",
+    "# =============================================================================="
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "18dd7307",
+   "metadata": {},
+   "source": [
+    "# Session-based recommendation with Transformers4Rec\n",
+    "## 1. Introduction"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d9bb25dd",
+   "metadata": {},
+   "source": [
+    "In the previous notebook we went through our ETL pipeline with NVTabular library, and created sequential features to be used for training a session-based recommendation model. In this notebook we will learn:\n",
+    "\n",
+    "- Accelerating data loading of parquet files multiple features on PyTorch using NVTabular library\n",
+    "- Training and evaluating an RNN-based (GRU) session-based recommendation model \n",
+    "- Training and evaluating a Transformer architecture (XLNET) for session-based recommendation model\n",
+    "- Integrate side information (additional features) into transformer architectures in order to improve recommendation accuracy"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a412e6de",
+   "metadata": {},
+   "source": [
+    "## 2. Session-based Recommendation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6ed7e8f1",
+   "metadata": {},
+   "source": [
+    "Session-based recommendation, a sub-area of sequential recommendation, has been an important task in online services like e-commerce and news portals, where most users either browse anonymously or may have very distinct interests for different sessions. Session-Based Recommender Systems (SBRS) have\n",
+    "been proposed to model the sequence of interactions within the current user session, where a session is a short sequence of user interactions typically bounded by user inactivity. They have recently gained popularity due to their ability to capture short-term and contextual user preferences towards items.\n",
+    "\n",
+    "\n",
+    "Many methods have been proposed to leverage the sequence of interactions that occur during a session, including session-based k-NN algorithms like V-SkNN [1] and neural approaches like GRU4Rec [2]. In addition,  state of the art NLP approaches have inspired RecSys practitioners and researchers to leverage the self-attention mechanism and the Transformer-based architectures for sequential [3] and session-based recommendation [4]."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b401e7a9",
+   "metadata": {},
+   "source": [
+    "## 3. Transformers4Rec Library"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1c20a4de",
+   "metadata": {},
+   "source": [
+    "In this tutorial, we introduce the [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec) open-source library for sequential and session-based recommendation task.\n",
+    "\n",
+    "With Transformers4Rec we import from the HF Transformers NLP library the transformer architectures and their configuration classes. \n",
+    "\n",
+    "In addition, Transformers4Rec provides additional blocks necessary for recommendation, e.g., input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their Trainer class to allow for the evaluation with RecSys metrics.\n",
+    "\n",
+    "Here are some of the most important modules:\n",
+    "\n",
+    "- [TabularSequenceFeatures](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.TabularSequenceFeatures) is the input block for sequential features. Based on a `Schema` and options set by the user, it dynamically creates all the necessary layers (e.g. embedding layers) to encode, normalize, and aggregate categorical and continuous features. It also allows to set the `masking` training approach (e.g. Causal LM, Masked LM).\n",
+    "- [TransformerBlock](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.TransformerBlock) class is the bridge that adapts HuggingFace Transformers for session-based and sequential-based recommendation models.\n",
+    "- [SequentialBlock](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.SequentialBlock) allows the definition of a model body as as sequence of layer (similarly to [torch.nn.sequential](https://pytorch.org/docs/stable/generated/torch.nn.Sequential.html)). It is designed to define our model as a sequence of layers and automatically setting the input shape of a layer from the output shape of the previous one.\n",
+    "- [Head](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.Head) class defines the head of a model.\n",
+    "- [NextItemPredictionTask](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask) is the class to support next item prediction task, combining a model body with a head.\n",
+    "- [Trainer](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.Trainer) extends the `Trainer` class from HF transformers and manages the model training and evaluation.\n",
+    "\n",
+    "You can check the [full documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/index.html) of Transformers4Rec if needed."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3282f17c",
+   "metadata": {},
+   "source": [
+    "In Figure 1, we present a reference architecture that we are going to build with Transformers4Rec PyTorch API in this notebook. We are going to start using only `product-id` as input feature, but as you can notice in the figure, we can add additional categorical and numerical features later to improve recommendation accuracy, as shown in Section 3.2.4."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3078054f",
+   "metadata": {},
+   "source": [
+    "![](_images/tf4rec_meta.png)  \n",
+    "<p><center>Figure 1. Transformers4Rec meta-architecture.</center></p>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4345768c",
+   "metadata": {},
+   "source": [
+    "### 3.1 Training an RNN-based Session-based Recommendation Model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "29f14981",
+   "metadata": {},
+   "source": [
+    "In this section, we use a type of Recurrent Neural Networks (RNN) - the Gated Recurrent Unit (GRU)[5] - to do next-item prediction using a sequence of events (e.g., click, view, or purchase) per user in a given session. There is obviously some sequential patterns that we want to capture to provide more relevant recommendations. In our case, the input of the GRU layer is a representation of the user interaction, the internal GRU hidden state encodes a representation of the session based on past interactions and the outputs are the next-item predictions. Basically, for each item in a given session, we generate the output as the predicted preference of the items, i.e. the likelihood of being the next."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7f4fc1b1",
+   "metadata": {},
+   "source": [
+    "Figure 2 illustrates the logic of predicting next item in a given session. First, the product ids are embedded and fed as a sequence to a GRU layer, which outputs a representation than can be used to predict the next item. For the sake of simplicity, we treat the recommendation as a multi-class classification problem and use cross-entropy loss. In our first example, we use a GRU block instead of `Transformer block` (shown in the Figure 1)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "93ee2085",
+   "metadata": {},
+   "source": [
+    "![](_images/gru_based.png)\n",
+    "<p><center>Figure 2. Next item prediction with RNN.</center></p>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5ebbdf01",
+   "metadata": {},
+   "source": [
+    "#### 3.1.1 Import Libraries and Modules"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "c16e5278",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import glob\n",
+    "\n",
+    "import torch \n",
+    "import transformers4rec.torch as tr\n",
+    "\n",
+    "from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt\n",
+    "from transformers4rec.torch.utils.examples_utils import wipe_memory"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "94952739",
+   "metadata": {},
+   "source": [
+    "##### Instantiates Schema object from a `schema` file."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "9735530e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from merlin_standard_lib import Schema\n",
+    "# Define schema object to pass it to the TabularSequenceFeatures class\n",
+    "SCHEMA_PATH = 'schema_tutorial.pb'\n",
+    "schema = Schema().from_proto_text(SCHEMA_PATH)\n",
+    "schema = schema.select_by_name(['product_id-list_seq'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "41681abc",
+   "metadata": {},
+   "source": [
+    "Transformers4Rec library relies on `Schema` object in `TabularSequenceFeatures` that takes the input features as input and create all the necessary layers to process and aggregate them. As you can see below, the `schema.pb` is a protobuf text file contains features metadata, including statistics about features such as cardinality, min and max values and also tags based on their characteristics and dtypes (e.g., `categorical`, `continuous`, `list`, `item_id`). We can tag our target column and even add the prediction task such as `binary`, `regression` or `multiclass` as tags for the target column in the `schema.pb` file. The `Schema` provides a standard representation for metadata that is useful when training machine learning or deep learning models.\n",
+    "\n",
+    "The metadata information loaded from `Schema` and their tags are used to automatically set the parameters of Transformers4rec models. Certain Transformers4rec modules have a `from_schema()` method to instantiate their parameters and layers from protobuf text file respectively. \n",
+    "\n",
+    "Although in this tutorial we are defining the `Schema` manually, the next NVTabular release is going to generate the schema with appropriate types and tags automatically from the preprocessing workflow, allowing the user to set additional feaure tags if needed."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bc6f4445",
+   "metadata": {},
+   "source": [
+    "Let's inspect the first lines of `schema.pb`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "83da720e",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "feature {\n",
+      "  name: \"user_session\"\n",
+      "  type: INT\n",
+      "  int_domain {\n",
+      "    name: \"user_session\"\n",
+      "    min: 1\n",
+      "    max: 1877365\n",
+      "    is_categorical: false\n",
+      "  }\n",
+      "  annotation {\n",
+      "    tag: \"groupby_col\"\n",
+      "  }\n",
+      "}\n",
+      "feature {\n",
+      "  name: \"category_id-list_seq\"\n",
+      "  value_count {\n",
+      "    min: 2\n",
+      "    max: 20\n",
+      "  }\n",
+      "  type: INT\n",
+      "  int_domain {\n",
+      "    name: \"category_id-list_seq\"\n",
+      "    min: 1\n",
+      "    max: 566\n",
+      "    is_categorical: true\n",
+      "  }\n",
+      "  annotation {\n",
+      "    tag: \"list\"\n",
+      "    tag: \"categorical\"\n",
+      "    tag: \"item\"\n"
+     ]
+    }
+   ],
+   "source": [
+    "!head -30 $SCHEMA_PATH"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4adfe7dc",
+   "metadata": {},
+   "source": [
+    "##### Defining the input block: `TabularSequenceFeatures`"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "101c6a2a",
+   "metadata": {},
+   "source": [
+    "We define our input block using `TabularSequenceFeatures` class. The `from_schema()` method directly parses the schema and accepts sequential and non-sequential features. Based on the `Schema` and some user-defined options, the categorical features are represented by embeddings and numerical features can be represented as continuous scalars or by a technique named Soft One-Hot embeddings (more info in our [paper's online appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md)). \n",
+    "\n",
+    "The embedding features can optionally be normalized (`layer_norm=True`). Data augmentation methods like \"Stochastic Swap Noise\" (`pre=\"stochastic-swap-noise\"`) and `aggregation` opptions (like `concat` and `elementwise-sum`) are also available. The continuous features can also be combined and projected by MLP layers by setting `continuous_projection=[dim]`. Finally, the `max_sequence_length` argument defines the maximum sequence length of our sequential input.\n",
+    "\n",
+    "Another important argument is the `masking` method, which sets the training approach. See Section 3.2.2 for details on this."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "e7b122e4",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "sequence_length = 20\n",
+    "inputs = tr.TabularSequenceFeatures.from_schema(\n",
+    "        schema,\n",
+    "        max_sequence_length= sequence_length,\n",
+    "        masking = 'causal',\n",
+    "    )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3fa46a58",
+   "metadata": {},
+   "source": [
+    "##### Connecting the blocks with `SequentialBlock`\n",
+    "\n",
+    "The `SequentialBlock` creates a pipeline by connecting the building blocks in a serial way, so that the input shape of one block is inferred from the output of the previous block. In this example, the `TabularSequenceFeatures` object is followed by an MLP projection layer, which feeds data to a GRU block."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "cd66b9dc",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "d_model = 128\n",
+    "body = tr.SequentialBlock(\n",
+    "        inputs,\n",
+    "        tr.MLPBlock([d_model]),\n",
+    "        tr.Block(torch.nn.GRU(input_size=d_model, hidden_size=d_model, num_layers=1), [None, 20, d_model])\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "390ca27a",
+   "metadata": {},
+   "source": [
+    "##### Item Prediction head and tying embeddings"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3234f8be",
+   "metadata": {},
+   "source": [
+    "In our experiments published in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) [8], we used the next item prediction head, which projects the output of the RNN/Transformer block to the items space, followed by a softmax layer to produce the relevance scores over all items. For the output layer we provide the `Tying Embeddings` technique (`weight_tying`). It was proposed originally by the NLP community to tie the weights of the input (item id) embedding matrix with the output projection layer, showed to be a very effective technique in extensive experimentation for competitions and empirical analysis (for more details see our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) and its online [appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md)). In practice, such technique helps the network to learn faster item embeddings even for rare items, reduces the number of parameters for large item cardinalities and enables Approximate Nearest Neighbours (ANN) search on inference, as the predictions can be obtained by a dot product between the model output and the item embeddings."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "db6da77f",
+   "metadata": {},
+   "source": [
+    "Next, we link the transformer-body to the inputs and the prediction tasks to get the final PyTorch `Model` class."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "99212ad0",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Projecting inputs of NextItemPredictionTask to'64' As weight tying requires the input dimension '128' to be equal to the item-id embedding dimension '64'\n"
+     ]
+    }
+   ],
+   "source": [
+    "head = tr.Head(\n",
+    "    body,\n",
+    "    tr.NextItemPredictionTask(weight_tying=True, hf_format=True, \n",
+    "                              metrics=[NDCGAt(top_ks=[10, 20], labels_onehot=True),  \n",
+    "                                       RecallAt(top_ks=[10, 20], labels_onehot=True)]),\n",
+    ")\n",
+    "model = tr.Model(head)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "56d122ee",
+   "metadata": {},
+   "source": [
+    "##### Define a Dataloader function from schema"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7a2b1359",
+   "metadata": {},
+   "source": [
+    "We use optimized NVTabular PyTorch Dataloader which has the following benefits:\n",
+    "- removing bottlenecks from dataloading by processing large chunks of data at a time instead iterating by row\n",
+    "- processing datasets that don’t fit within the GPU or CPU memory by streaming from the disk\n",
+    "- reading data directly into the GPU memory and removing CPU-GPU communication\n",
+    "- preparing batch asynchronously into the GPU to avoid CPU-GPU communication\n",
+    "- supporting commonly used formats such as parquet\n",
+    "- having native support to sparse sequential features"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "7e50313a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# import NVTabular dependencies\n",
+    "from transformers4rec.torch.utils.data_utils import NVTabularDataLoader\n",
+    "\n",
+    "x_cat_names, x_cont_names = ['product_id-list_seq'], []\n",
+    "\n",
+    "# dictionary representing max sequence length for column\n",
+    "sparse_features_max = {\n",
+    "    fname: sequence_length\n",
+    "    for fname in x_cat_names + x_cont_names\n",
+    "}\n",
+    "\n",
+    "# Define a `get_dataloader` function to call in the training loop\n",
+    "def get_dataloader(path, batch_size=32):\n",
+    "\n",
+    "    return NVTabularDataLoader.from_schema(\n",
+    "        schema,\n",
+    "        path, \n",
+    "        batch_size,\n",
+    "        max_sequence_length=sequence_length,\n",
+    "        sparse_names=x_cat_names + x_cont_names,\n",
+    "        sparse_max=sparse_features_max,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "21a270a2",
+   "metadata": {},
+   "source": [
+    "##### Daily Fine-Tuning: Training over a time window"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bfc043cb",
+   "metadata": {},
+   "source": [
+    "Now that the model is defined, we are going to launch training. For that, Transfromers4rec extends the HF Transformers `Trainer` class to adapt the evaluation loop for session-based recommendation task and the calculation of ranking metrics. \n",
+    "The original HF `Trainer.train()` method is not overloaded, meaning that we leverage the efficient training implementation from HF transformers library, which manages for example half-precision (FP16) training."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "30302ec2",
+   "metadata": {},
+   "source": [
+    "##### Set training arguments"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "e6680322",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from transformers4rec.config.trainer import T4RecTrainingArguments\n",
+    "from transformers4rec.torch import Trainer\n",
+    "\n",
+    "#Set arguments for training \n",
+    "train_args = T4RecTrainingArguments(local_rank = -1, \n",
+    "                                    dataloader_drop_last = False,\n",
+    "                                    report_to = [],   #set empty list to avoid logging metrics to Weights&Biases\n",
+    "                                    gradient_accumulation_steps = 1,\n",
+    "                                    per_device_train_batch_size = 256, \n",
+    "                                    per_device_eval_batch_size = 32,\n",
+    "                                    output_dir = \"./tmp\", \n",
+    "                                    max_sequence_length=sequence_length,\n",
+    "                                    learning_rate=0.00071,\n",
+    "                                    num_train_epochs=3,\n",
+    "                                    logging_steps=200,\n",
+    "                                   )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ac896a68",
+   "metadata": {},
+   "source": [
+    "##### Instantiate the Trainer"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "360b2e18",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Instantiate the T4Rec Trainer, which manages training and evaluation\n",
+    "trainer = Trainer(\n",
+    "    model=model,\n",
+    "    args=train_args,\n",
+    "    schema=schema,\n",
+    "    compute_metrics=True,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9c913243",
+   "metadata": {},
+   "source": [
+    "Define the output folder of the processed parquet files"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "d4221688",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "OUTPUT_DIR = os.environ.get(\"OUTPUT_DIR\", \"/workspace/data/sessions_by_day\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "48aec2fb",
+   "metadata": {},
+   "source": [
+    "##### Model finetuning and incremental evaluation\n",
+    "Training models incrementally, e.g. fine-tuning pre-trained models with new data over time is a common practice in industry to scale to the large streaming data been generated every data. Furthermore, it is common to evaluate recommendation models on data that came after the one used to train the models, for a more realistic evaluation.\n",
+    "\n",
+    "Here, we use a loop that to conduct a time-based finetuning, by iteratively training and evaluating using a sliding time window as follows: At each iteration, we use training data of a specific time index <i>t</i> to train the model then we evaluate on the validation data of next index <i>t + 1</i>. We set the start time to 1 and end time to 4."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "26917fcc",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 112128\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1314\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Launch training for day 1 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1314/1314 00:54, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>9.998800</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>9.232800</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.988600</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.909300</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>8.806200</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1200</td>\n",
+       "      <td>8.794200</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [415/415 02:22]\n",
+       "    </div>\n",
+       "    "
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 2 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " eval/loss = 8.856975555419922\n",
+      " eval/next-item/ndcg_at_10 = 0.03842613101005554\n",
+      " eval/next-item/ndcg_at_20 = 0.04755885899066925\n",
+      " eval/next-item/recall_at_10 = 0.07503204792737961\n",
+      " eval/next-item/recall_at_20 = 0.11130382120609283\n",
+      " eval_runtime = 7.7593\n",
+      " eval_samples_per_second = 1711.5\n",
+      " eval_steps_per_second = 53.484\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 106240\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1245\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Launch training for day 2 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1245/1245 01:01, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>8.966600</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>8.843700</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.653300</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.556200</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>8.428500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1200</td>\n",
+       "      <td>8.404300</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 3 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " eval/loss = 8.518232345581055\n",
+      " eval/next-item/ndcg_at_10 = 0.05569075420498848\n",
+      " eval/next-item/ndcg_at_20 = 0.06843017041683197\n",
+      " eval/next-item/recall_at_10 = 0.10552927851676941\n",
+      " eval/next-item/recall_at_20 = 0.15609200298786163\n",
+      " eval_runtime = 7.3871\n",
+      " eval_samples_per_second = 1663.442\n",
+      " eval_steps_per_second = 51.983\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 97792\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1146\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Launch training for day 3 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1146/1146 00:52, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>8.601800</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>8.478500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.281100</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.190300</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>8.048100</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 4 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " eval/loss = 8.1531982421875\n",
+      " eval/next-item/ndcg_at_10 = 0.06854147464036942\n",
+      " eval/next-item/ndcg_at_20 = 0.08415079861879349\n",
+      " eval/next-item/recall_at_10 = 0.1280597746372223\n",
+      " eval/next-item/recall_at_20 = 0.1900927573442459\n",
+      " eval_runtime = 9.4121\n",
+      " eval_samples_per_second = 1652.345\n",
+      " eval_steps_per_second = 51.636\n",
+      "CPU times: user 2min 43s, sys: 5.41 s, total: 2min 48s\n",
+      "Wall time: 3min 22s\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "start_time_window_index = 1\n",
+    "final_time_window_index = 4\n",
+    "for time_index in range(start_time_window_index, final_time_window_index):\n",
+    "    # Set data \n",
+    "    time_index_train = time_index\n",
+    "    time_index_eval = time_index + 1\n",
+    "    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f\"{time_index_train}/train.parquet\"))\n",
+    "    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f\"{time_index_eval}/valid.parquet\"))\n",
+    "    \n",
+    "    # Initialize dataloaders\n",
+    "    trainer.train_dataloader = get_dataloader(train_paths, train_args.per_device_train_batch_size)\n",
+    "    trainer.eval_dataloader = get_dataloader(eval_paths, train_args.per_device_eval_batch_size)\n",
+    "    \n",
+    "    # Train on day related to time_index \n",
+    "    print('*'*20)\n",
+    "    print(\"Launch training for day %s are:\" %time_index)\n",
+    "    print('*'*20 + '\\n')\n",
+    "    trainer.reset_lr_scheduler()\n",
+    "    trainer.train()\n",
+    "    trainer.state.global_step +=1\n",
+    "    \n",
+    "    # Evaluate on the following day\n",
+    "    train_metrics = trainer.evaluate(metric_key_prefix='eval')\n",
+    "    print('*'*20)\n",
+    "    print(\"Eval results for day %s are:\\t\" %time_index_eval)\n",
+    "    print('\\n' + '*'*20 + '\\n')\n",
+    "    for key in sorted(train_metrics.keys()):\n",
+    "        print(\" %s = %s\" % (key, str(train_metrics[key]))) \n",
+    "    wipe_memory()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "56c51ec2",
+   "metadata": {},
+   "source": [
+    "Let's write out model evaluation accuracy results to a text file to compare model at the end"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "4e0f2335",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with open(\"results.txt\", 'w') as f: \n",
+    "    f.write('GRU accuracy results:')\n",
+    "    f.write('\\n')\n",
+    "    for key, value in  model.compute_metrics().items(): \n",
+    "        f.write('%s:%s\\n' % (key, value.item()))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "41bbb338",
+   "metadata": {
+    "tags": []
+   },
+   "source": [
+    "#### Metrics"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f9fe5d5a",
+   "metadata": {},
+   "source": [
+    "We have extended the HuggingFace transformers Trainer class (PyTorch only) to support evaluation of RecSys metrics. The following information\n",
+    "retrieval metrics are used to compute the Top-20 accuracy of recommendation lists containing all items: <br> \n",
+    "- **Normalized Discounted Cumulative Gain (NDCG@20):** NDCG accounts for rank of the relevant item in the recommendation list and is a more fine-grained metric than HR, which only verifies whether the relevant item is among the top-k items.\n",
+    "\n",
+    "- **Hit Rate (HR@20)**: Also known as `Recall@n` when there is only one relevant item in the recommendation list. HR just verifies whether the relevant item is among the top-n items."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ef9a89f7",
+   "metadata": {},
+   "source": [
+    "##### Restart the kernel to free our GPU memory"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "522961d2",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'status': 'ok', 'restart': True}"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import IPython\n",
+    "app = IPython.Application.instance()\n",
+    "app.kernel.do_shutdown(True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d453614f",
+   "metadata": {},
+   "source": [
+    "At this stage if the kernel does not restart automatically, we expect you to manually restart the kernel to free GPU memory so that you can move on to the next session-based model training with a SOTA deep learning Transformer-based model, [XLNet](https://arxiv.org/pdf/1906.08237.pdf)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "50c3a8c0",
+   "metadata": {},
+   "source": [
+    "### 3.2. Training a Transformer-based Session-based Recommendation Model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "433c39b3",
+   "metadata": {},
+   "source": [
+    "#### 3.2.1 What's Transformers?"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "19f1f53e",
+   "metadata": {},
+   "source": [
+    "The Transformer is a competitive alternative to the models using Recurrent Neural Networks (RNNs) for a range of sequence modeling tasks. The Transformer architecture [6] was introduced as a novel architecture in NLP domain that aims to solve sequence-to-sequence tasks relying entirely on self-attention mechanism to compute representations of its input and output. Hence, the Transformer overperforms RNNs with their three mechanisms: \n",
+    "\n",
+    "- Non-sequential: Transformers network is parallelized where as RNN computations are inherently sequential. That resulted in significant speed-up in the training time.\n",
+    "- Self-attention mechanisms: Transformers rely entirely on self-attention mechanisms that directly model relationships between all item-ids in a sequence.  \n",
+    "- Positional encodings: A representation of the location or “position” of items in a sequence which is used to give the order context to the model architecture."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "46878729",
+   "metadata": {},
+   "source": [
+    "![](_images/transformer_vs_rnn.png)\n",
+    "<p><center> Figure 3. Transformer vs vanilla RNN.</center></p>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "574e6f22",
+   "metadata": {},
+   "source": [
+    "Figure 4 illustrates the differences of Transformer (self-attention based) and a vanilla RNN architecture. As we see, RNN cannot be parallelized because it uses sequential processing over time (notice the sequential path from previous cells to the current one). On the other hand, the Transformer is a more powerful architecture because the self-attention mechanism is capable of representing dependencies within the sequence of tokens, favors parallel processing and handle longer sequences.\n",
+    "\n",
+    "As illustrated in the [Attention is All You Need](https://arxiv.org/pdf/1706.03762.pdf) paper, the original transformer model is made up of an encoder and decoder where each is a stack we can call a transformer block. In Transformers4Rec architectures we use the encoder block of transformer architecture."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d85f6a3e",
+   "metadata": {},
+   "source": [
+    "![](_images/encoder.png)\n",
+    "<p><center> Figure 4. Encoder block of the Transformer Architecture.</center></p>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "43b84355",
+   "metadata": {},
+   "source": [
+    "#### 3.2.2. XLNet"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e695834c",
+   "metadata": {},
+   "source": [
+    "Here, we use XLNet [10] as the Transformer block in our architecture. It was originally proposed to be trained with the *Permutation Language Modeling (PLM)*  technique, that combines the advantages of autoregressive (Causal LM) and autoencoding (Masked LM). Although, we found out in our [paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf) [8] that the *Masked Language Model (MLM)* approach worked better than PLM for the small sequences in session-based recommendation, thus we use MLM for this example. MLM was introduced in *BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding* paper [8]. \n",
+    "\n",
+    "Figure 5 illustrates the causal language modeling (LM) and masked LM. In this example, we use in causal LM for RNN masked LM for XLNet. Causal LM is the task of predicting the token following a sequence of tokens, where the model only attends to the left context, i.e. models the probability of a token given the previous tokens in a sentence [7]. On the other hand, the MLM randomly masks some of the tokens from the input sequence, and the objective is to predict the original vocabulary id of the masked word based only on its bi-directional context. When we train with MLM, the Transformer layer is also allowed to use positions on the right (future information) during training. During inference, all past items are visible for the Transformer layer, which tries to predict the next item. It performs a type of data augmentation, by masking different positions of the sequences in each training epoch."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a964b124",
+   "metadata": {},
+   "source": [
+    "![](_images/masking.png)\n",
+    "<p><center>Figure 5. Causal and Masked Language Model masking methods.</center></p>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c758f0c8",
+   "metadata": {},
+   "source": [
+    "####  3.2.3 Train XLNET for Next Item Prediction"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "95011461",
+   "metadata": {},
+   "source": [
+    "Now we are going to define an architecture for next-item prediction using the XLNET architecture."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "b194a0e1",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import glob\n",
+    "\n",
+    "import torch \n",
+    "import transformers4rec.torch as tr\n",
+    "\n",
+    "from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "99583e60",
+   "metadata": {},
+   "source": [
+    "As we did above, we start with defining our schema object and selecting only the `product_id` feature for training."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "59738175",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from merlin_standard_lib import Schema\n",
+    "\n",
+    "# Define schema object to pass it to the TabularSequenceFeatures class\n",
+    "SCHEMA_PATH = 'schema_tutorial.pb'\n",
+    "schema = Schema().from_proto_text(SCHEMA_PATH)\n",
+    "\n",
+    "# Create a sub-schema only with the selected features\n",
+    "schema = schema.select_by_name(['product_id-list_seq'])"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "529dc88d",
+   "metadata": {},
+   "source": [
+    "##### Define Input block\n",
+    "Here we instantiate `TabularSequenceFeatures` from the feature schema and set `masking=\"mlm\"` to use MLM as training method."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "b6595328",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "#Input \n",
+    "sequence_length, d_model = 20, 192\n",
+    "# Define input module to process tabular input-features and to prepare masked inputs\n",
+    "inputs= tr.TabularSequenceFeatures.from_schema(\n",
+    "    schema,\n",
+    "    max_sequence_length=sequence_length,\n",
+    "    d_output=d_model,\n",
+    "    masking=\"mlm\",\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "26cedff1",
+   "metadata": {},
+   "source": [
+    "We have inherited the original `XLNetConfig` class of HF transformers with some default arguments in the `build()` method. Here we use it to instantiate an XLNET model according to the arguments (`d_model`, `n_head`, etc.), defining the model architecture.\n",
+    "\n",
+    "The `TransformerBlock` class supports HF Transformers for session-based and sequential-based recommendation models. `NextItemPredictionTask` is the class to support next item prediction task, encapsulating the corresponding heads and loss."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "b99c7472",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Projecting inputs of NextItemPredictionTask to'64' As weight tying requires the input dimension '192' to be equal to the item-id embedding dimension '64'\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Define XLNetConfig class and set default parameters for HF XLNet config  \n",
+    "transformer_config = tr.XLNetConfig.build(\n",
+    "    d_model=d_model, n_head=4, n_layer=2, total_seq_length=sequence_length\n",
+    ")\n",
+    "# Define the model block including: inputs, masking, projection and transformer block.\n",
+    "body = tr.SequentialBlock(\n",
+    "    inputs, tr.MLPBlock([192]), tr.TransformerBlock(transformer_config, masking=inputs.masking)\n",
+    ")\n",
+    "\n",
+    "# Define the head for to next item prediction task \n",
+    "head = tr.Head(\n",
+    "    body,\n",
+    "    tr.NextItemPredictionTask(weight_tying=True, hf_format=True, \n",
+    "                              metrics=[NDCGAt(top_ks=[10, 20], labels_onehot=True),  \n",
+    "                                       RecallAt(top_ks=[10, 20], labels_onehot=True)]),\n",
+    ")\n",
+    "\n",
+    "# Get the end-to-end Model class \n",
+    "model = tr.Model(head)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "4a0e8ac1",
+   "metadata": {},
+   "source": [
+    "**Set training arguments**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "617f364a",
+   "metadata": {},
+   "source": [
+    "Among the training arguments you can set the `data_loader_engine` to automatically instantiate the dataloader based on the schema, rather than instantiating the data loader manually like we did for the RNN example. The default value is `\"nvtabular\"` for optimized GPU-based data-loading. Optionally the PyarrowDataLoader (`\"pyarrow\"`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded into CPU memory."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "e6b0822f",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "PyTorch: setting up devices\n"
+     ]
+    }
+   ],
+   "source": [
+    "from transformers4rec.config.trainer import T4RecTrainingArguments\n",
+    "from transformers4rec.torch import Trainer\n",
+    "\n",
+    "#Set arguments for training \n",
+    "training_args = T4RecTrainingArguments(\n",
+    "            output_dir=\"./tmp\",\n",
+    "            max_sequence_length=20,\n",
+    "            data_loader_engine='nvtabular',\n",
+    "            num_train_epochs=3, \n",
+    "            dataloader_drop_last=False,\n",
+    "            per_device_train_batch_size = 256,\n",
+    "            per_device_eval_batch_size = 32,\n",
+    "            gradient_accumulation_steps = 1,\n",
+    "            learning_rate=0.000666,\n",
+    "            report_to = [],\n",
+    "            logging_steps=200,\n",
+    "        )"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2b33656f",
+   "metadata": {},
+   "source": [
+    "**Instantiate the trainer**"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "eae98133",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Instantiate the T4Rec Trainer, which manages training and evaluation\n",
+    "trainer = Trainer(\n",
+    "    model=model,\n",
+    "    args=training_args,\n",
+    "    schema=schema,\n",
+    "    compute_metrics=True,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "78b181f2",
+   "metadata": {},
+   "source": [
+    "Define the output folder of the processed parquet files"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "13e766de",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "OUTPUT_DIR = os.environ.get(\"OUTPUT_DIR\", \"/workspace/data/sessions_by_day\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b41701d1",
+   "metadata": {},
+   "source": [
+    "Now, we do time-based fine-tuning the model by iteratively training and evaluating using a sliding time window, like we did for the RNN example."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "ed0051dd",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 112128\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1314\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Launch training for day 1 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1314/1314 00:45, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>9.927000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>9.046400</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.779300</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.635800</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>8.539400</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1200</td>\n",
+       "      <td>8.507000</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [415/415 01:48]\n",
+       "    </div>\n",
+       "    "
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 2 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " epoch = 3.0\n",
+      " eval/loss = 8.753535270690918\n",
+      " eval/next-item/ndcg_at_10 = 0.049175068736076355\n",
+      " eval/next-item/ndcg_at_20 = 0.06000332161784172\n",
+      " eval/next-item/recall_at_10 = 0.09177286922931671\n",
+      " eval/next-item/recall_at_20 = 0.1346806436777115\n",
+      " eval_runtime = 7.0703\n",
+      " eval_samples_per_second = 1878.271\n",
+      " eval_steps_per_second = 58.696\n",
+      "********************\n",
+      "Launch training for day 2 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 106240\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1245\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1245/1245 00:43, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>8.635100</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>8.523100</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.375600</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.322400</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>8.232100</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1200</td>\n",
+       "      <td>8.209900</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 3 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " epoch = 3.0\n",
+      " eval/loss = 8.421579360961914\n",
+      " eval/next-item/ndcg_at_10 = 0.061416078358888626\n",
+      " eval/next-item/ndcg_at_20 = 0.07491344213485718\n",
+      " eval/next-item/recall_at_10 = 0.11719132959842682\n",
+      " eval/next-item/recall_at_20 = 0.17060838639736176\n",
+      " eval_runtime = 7.0074\n",
+      " eval_samples_per_second = 1753.564\n",
+      " eval_steps_per_second = 54.799\n",
+      "********************\n",
+      "Launch training for day 3 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 97792\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1146\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1146/1146 00:40, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>8.312100</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>8.226900</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.095400</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.065600</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>7.965600</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 4 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " epoch = 3.0\n",
+      " eval/loss = 8.107558250427246\n",
+      " eval/next-item/ndcg_at_10 = 0.07384572923183441\n",
+      " eval/next-item/ndcg_at_20 = 0.08944202959537506\n",
+      " eval/next-item/recall_at_10 = 0.13939706981182098\n",
+      " eval/next-item/recall_at_20 = 0.20175212621688843\n",
+      " eval_runtime = 8.9372\n",
+      " eval_samples_per_second = 1740.144\n",
+      " eval_steps_per_second = 54.38\n",
+      "CPU times: user 6min 57s, sys: 14.3 s, total: 7min 11s\n",
+      "Wall time: 2min 35s\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "start_time_window_index = 1\n",
+    "final_time_window_index = 4\n",
+    "for time_index in range(start_time_window_index, final_time_window_index):\n",
+    "    # Set data \n",
+    "    time_index_train = time_index\n",
+    "    time_index_eval = time_index + 1\n",
+    "    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f\"{time_index_train}/train.parquet\"))\n",
+    "    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f\"{time_index_eval}/valid.parquet\"))\n",
+    "    # Train on day related to time_index \n",
+    "    print('*'*20)\n",
+    "    print(\"Launch training for day %s are:\" %time_index)\n",
+    "    print('*'*20 + '\\n')\n",
+    "    trainer.train_dataset_or_path = train_paths\n",
+    "    trainer.reset_lr_scheduler()\n",
+    "    trainer.train()\n",
+    "    trainer.state.global_step +=1\n",
+    "    # Evaluate on the following day\n",
+    "    trainer.eval_dataset_or_path = eval_paths\n",
+    "    train_metrics = trainer.evaluate(metric_key_prefix='eval')\n",
+    "    print('*'*20)\n",
+    "    print(\"Eval results for day %s are:\\t\" %time_index_eval)\n",
+    "    print('\\n' + '*'*20 + '\\n')\n",
+    "    for key in sorted(train_metrics.keys()):\n",
+    "        print(\" %s = %s\" % (key, str(train_metrics[key]))) \n",
+    "    wipe_memory()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ad99f151",
+   "metadata": {},
+   "source": [
+    "Add eval accuracy metric results to the existing resuls.txt file."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "8c7768af",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with open(\"results.txt\", 'a') as f:\n",
+    "    f.write('\\n')\n",
+    "    f.write('XLNet-MLM accuracy results:')\n",
+    "    f.write('\\n')\n",
+    "    for key, value in  model.compute_metrics().items(): \n",
+    "        f.write('%s:%s\\n' % (key, value.item()))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "992db813",
+   "metadata": {},
+   "source": [
+    "#### Restart the kernel to free our GPU memory"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "1717ffde",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'status': 'ok', 'restart': True}"
+      ]
+     },
+     "execution_count": 24,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import IPython\n",
+    "app = IPython.Application.instance()\n",
+    "app.kernel.do_shutdown(True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ed2524f0",
+   "metadata": {},
+   "source": [
+    "At this stage if the kernel does not restart automatically, we expect you to manually restart the kernel to free GPU memory so that you can move on to the next session-based model training with XLNet using side information."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e7c5c869",
+   "metadata": {},
+   "source": [
+    "#### 3.2.4 Train XLNET with Side Information for Next Item Prediction"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "5a4a9db3",
+   "metadata": {},
+   "source": [
+    "It is a common practice in RecSys to leverage additional tabular features of item (product) metadata and user context, providing the model more\n",
+    "information for meaningful predictions. With that motivation, in this section, we will use additional features to train our XLNET architecture. We already checked our `schema.pb`, saw that it includes features and their tags. Now it is time to use these additional features that we created in the `02_ETL-with-NVTabular.ipynb` notebook."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "11394818",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import glob\n",
+    "import nvtabular as nvt\n",
+    "\n",
+    "import torch \n",
+    "import transformers4rec.torch as tr\n",
+    "\n",
+    "from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "00bcc6a0",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Define categorical and continuous columns to fed to training model\n",
+    "x_cat_names = ['product_id-list_seq', 'category_id-list_seq', 'brand-list_seq']\n",
+    "x_cont_names = ['product_recency_days_log_norm-list_seq', 'et_dayofweek_sin-list_seq', 'et_dayofweek_cos-list_seq', \n",
+    "                'price_log_norm-list_seq', 'relative_price_to_avg_categ_id-list_seq']\n",
+    "\n",
+    "from merlin_standard_lib import Schema\n",
+    "\n",
+    "# Define schema object to pass it to the TabularSequenceFeatures class\n",
+    "SCHEMA_PATH ='schema_tutorial.pb'\n",
+    "schema = Schema().from_proto_text(SCHEMA_PATH)\n",
+    "schema = schema.select_by_name(x_cat_names + x_cont_names)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d10fdffc",
+   "metadata": {},
+   "source": [
+    "Here we set `aggregation=\"concat\"`, so that all categorical and continuous features are concatenated to form an interaction representation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "1ce19f45",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Projecting inputs of NextItemPredictionTask to'64' As weight tying requires the input dimension '192' to be equal to the item-id embedding dimension '64'\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Define input block\n",
+    "sequence_length, d_model = 20, 192\n",
+    "# Define input module to process tabular input-features and to prepare masked inputs\n",
+    "inputs= tr.TabularSequenceFeatures.from_schema(\n",
+    "    schema,\n",
+    "    max_sequence_length=sequence_length,\n",
+    "    aggregation=\"concat\",\n",
+    "    d_output=d_model,\n",
+    "    masking=\"mlm\",\n",
+    ")\n",
+    "\n",
+    "# Define XLNetConfig class and set default parameters for HF XLNet config  \n",
+    "transformer_config = tr.XLNetConfig.build(\n",
+    "    d_model=d_model, n_head=4, n_layer=2, total_seq_length=sequence_length\n",
+    ")\n",
+    "# Define the model block including: inputs, masking, projection and transformer block.\n",
+    "body = tr.SequentialBlock(\n",
+    "    inputs, tr.MLPBlock([192]), tr.TransformerBlock(transformer_config, masking=inputs.masking)\n",
+    ")\n",
+    "\n",
+    "# Define the head related to next item prediction task \n",
+    "head = tr.Head(\n",
+    "    body,\n",
+    "    tr.NextItemPredictionTask(weight_tying=True, hf_format=True, \n",
+    "                                     metrics=[NDCGAt(top_ks=[10, 20], labels_onehot=True),  \n",
+    "                                              RecallAt(top_ks=[10, 20], labels_onehot=True)]),\n",
+    ")\n",
+    "\n",
+    "# Get the end-to-end Model class \n",
+    "model = tr.Model(head)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9b244593",
+   "metadata": {},
+   "source": [
+    "##### Training and Evaluation"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "19394f10",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from transformers4rec.config.trainer import T4RecTrainingArguments\n",
+    "from transformers4rec.torch import Trainer\n",
+    "from transformers4rec.torch.utils.examples_utils import wipe_memory\n",
+    "\n",
+    "#Set arguments for training \n",
+    "training_args = T4RecTrainingArguments(\n",
+    "            output_dir=\"./tmp\",\n",
+    "            max_sequence_length=20,\n",
+    "            data_loader_engine='nvtabular',\n",
+    "            num_train_epochs=3, \n",
+    "            dataloader_drop_last=False,\n",
+    "            per_device_train_batch_size = 256,\n",
+    "            per_device_eval_batch_size = 32,\n",
+    "            gradient_accumulation_steps = 1,\n",
+    "            learning_rate=0.000666,\n",
+    "            report_to = [],\n",
+    "            logging_steps=200,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "e09af459",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Instantiate the T4Rec Trainer, which manages training and evaluation\n",
+    "trainer = Trainer(\n",
+    "    model=model,\n",
+    "    args=training_args,\n",
+    "    schema=schema,\n",
+    "    compute_metrics=True,\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "7de48ac8",
+   "metadata": {},
+   "source": [
+    "Define the output folder of the processed parquet files"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "3924728a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "OUTPUT_DIR = os.environ.get(\"OUTPUT_DIR\", \"/workspace/data/sessions_by_day\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "039242ef",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Launch training for day 1 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 112128\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1314\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1314/1314 00:51, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>9.836900</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>8.937700</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.665200</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.518700</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>8.411900</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1200</td>\n",
+       "      <td>8.371200</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [415/415 02:11]\n",
+       "    </div>\n",
+       "    "
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 2 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " epoch = 3.0\n",
+      " eval/loss = 8.605655670166016\n",
+      " eval/next-item/ndcg_at_10 = 0.0545700266957283\n",
+      " eval/next-item/ndcg_at_20 = 0.06626961380243301\n",
+      " eval/next-item/recall_at_10 = 0.10270718485116959\n",
+      " eval/next-item/recall_at_20 = 0.14915919303894043\n",
+      " eval_runtime = 9.5026\n",
+      " eval_samples_per_second = 1397.507\n",
+      " eval_steps_per_second = 43.672\n",
+      "********************\n",
+      "Launch training for day 2 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 106240\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1245\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1245/1245 00:50, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>8.466200</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>8.315800</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>8.120000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>8.036200</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>7.920700</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1200</td>\n",
+       "      <td>7.883900</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 3 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " epoch = 3.0\n",
+      " eval/loss = 8.162181854248047\n",
+      " eval/next-item/ndcg_at_10 = 0.0733010321855545\n",
+      " eval/next-item/ndcg_at_20 = 0.08980806171894073\n",
+      " eval/next-item/recall_at_10 = 0.13904747366905212\n",
+      " eval/next-item/recall_at_20 = 0.20428968966007233\n",
+      " eval_runtime = 9.1126\n",
+      " eval_samples_per_second = 1348.468\n",
+      " eval_steps_per_second = 42.14\n",
+      "********************\n",
+      "Launch training for day 3 are:\n",
+      "********************\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "***** Running training *****\n",
+      "  Num examples = 97792\n",
+      "  Num Epochs = 3\n",
+      "  Instantaneous batch size per device = 256\n",
+      "  Total train batch size (w. parallel, distributed & accumulation) = 256\n",
+      "  Gradient Accumulation steps = 1\n",
+      "  Total optimization steps = 1146\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "\n",
+       "    <div>\n",
+       "      \n",
+       "      <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>\n",
+       "      [1146/1146 00:47, Epoch 3/3]\n",
+       "    </div>\n",
+       "    <table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: left;\">\n",
+       "      <th>Step</th>\n",
+       "      <th>Training Loss</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <td>200</td>\n",
+       "      <td>8.016800</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>400</td>\n",
+       "      <td>7.900500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>600</td>\n",
+       "      <td>7.740200</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>800</td>\n",
+       "      <td>7.691500</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <td>1000</td>\n",
+       "      <td>7.583600</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table><p>"
+      ],
+      "text/plain": [
+       "<IPython.core.display.HTML object>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    },
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "Saving model checkpoint to ./tmp/checkpoint-500\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "Saving model checkpoint to ./tmp/checkpoint-1000\n",
+      "Trainer.model is not a `PreTrainedModel`, only saving its state dict.\n",
+      "\n",
+      "\n",
+      "Training completed. Do not forget to share your model on huggingface.co/models =)\n",
+      "\n",
+      "\n"
+     ]
+    },
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "********************\n",
+      "Eval results for day 4 are:\t\n",
+      "\n",
+      "********************\n",
+      "\n",
+      " epoch = 3.0\n",
+      " eval/loss = 7.774728775024414\n",
+      " eval/next-item/ndcg_at_10 = 0.09089759737253189\n",
+      " eval/next-item/ndcg_at_20 = 0.10928591340780258\n",
+      " eval/next-item/recall_at_10 = 0.16947951912879944\n",
+      " eval/next-item/recall_at_20 = 0.24214120209217072\n",
+      " eval_runtime = 11.8897\n",
+      " eval_samples_per_second = 1308.02\n",
+      " eval_steps_per_second = 40.876\n",
+      "CPU times: user 7min 29s, sys: 16.9 s, total: 7min 45s\n",
+      "Wall time: 3min 10s\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "start_time_window_index = 1\n",
+    "final_time_window_index = 4\n",
+    "for time_index in range(start_time_window_index, final_time_window_index):\n",
+    "    # Set data \n",
+    "    time_index_train = time_index\n",
+    "    time_index_eval = time_index + 1\n",
+    "    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f\"{time_index_train}/train.parquet\"))\n",
+    "    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f\"{time_index_eval}/valid.parquet\"))\n",
+    "    # Train on day related to time_index \n",
+    "    print('*'*20)\n",
+    "    print(\"Launch training for day %s are:\" %time_index)\n",
+    "    print('*'*20 + '\\n')\n",
+    "    trainer.train_dataset_or_path = train_paths\n",
+    "    trainer.reset_lr_scheduler()\n",
+    "    trainer.train()\n",
+    "    trainer.state.global_step +=1\n",
+    "    # Evaluate on the following day\n",
+    "    trainer.eval_dataset_or_path = eval_paths\n",
+    "    train_metrics = trainer.evaluate(metric_key_prefix='eval')\n",
+    "    print('*'*20)\n",
+    "    print(\"Eval results for day %s are:\\t\" %time_index_eval)\n",
+    "    print('\\n' + '*'*20 + '\\n')\n",
+    "    for key in sorted(train_metrics.keys()):\n",
+    "        print(\" %s = %s\" % (key, str(train_metrics[key]))) \n",
+    "    wipe_memory()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "a62820cf",
+   "metadata": {},
+   "source": [
+    "Add XLNet-MLM with side information accuracy results to the `results.txt`"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "5986e99c",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "with open(\"results.txt\", 'a') as f:\n",
+    "    f.write('\\n')\n",
+    "    f.write('XLNet-MLM with side information accuracy results:')\n",
+    "    f.write('\\n')\n",
+    "    for key, value in  model.compute_metrics().items(): \n",
+    "        f.write('%s %s\\n' % (key, value.item()))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dfd8172f",
+   "metadata": {},
+   "source": [
+    "After model training and evaluation is completed we can save our trained model in the next section. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "e721d830",
+   "metadata": {},
+   "source": [
+    "##### Exporting the preprocessing workflow and model for deployment to Triton server"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2aa9eb95",
+   "metadata": {},
+   "source": [
+    "Load the preproc workflow that we saved in the ETL notebook."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "3dd3aa6a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import nvtabular as nvt\n",
+    "\n",
+    "# define data path about where to get our data\n",
+    "INPUT_DATA_DIR = os.environ.get(\"INPUT_DATA_DIR\", \"/workspace/data/\")\n",
+    "workflow_path = os.path.join(INPUT_DATA_DIR, 'workflow_etl')\n",
+    "workflow = nvt.Workflow.load(workflow_path)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "6e626132",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'product_id-list_seq': 20,\n",
+       " 'category_id-list_seq': 20,\n",
+       " 'brand-list_seq': 20,\n",
+       " 'product_recency_days_log_norm-list_seq': 20,\n",
+       " 'et_dayofweek_sin-list_seq': 20,\n",
+       " 'et_dayofweek_cos-list_seq': 20,\n",
+       " 'price_log_norm-list_seq': 20,\n",
+       " 'relative_price_to_avg_categ_id-list_seq': 20}"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# dictionary representing max sequence length for the sequential (list) columns\n",
+    "sparse_features_max = {\n",
+    "    fname: sequence_length\n",
+    "    for fname in x_cat_names + x_cont_names\n",
+    "}\n",
+    "\n",
+    "sparse_features_max"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "120c5740",
+   "metadata": {},
+   "source": [
+    "It is time to export the proc workflow and model in the format required by Triton Inference Server, by using the NVTabular’s `export_pytorch_ensemble()` function."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "aee05de6",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from nvtabular.inference.triton import export_pytorch_ensemble\n",
+    "export_pytorch_ensemble(\n",
+    "    model,\n",
+    "    workflow,\n",
+    "    sparse_max=sparse_features_max,\n",
+    "    name= \"t4r_pytorch\",\n",
+    "    model_path= \"/workspace/models\",\n",
+    "    label_columns =[],\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "43ee6473",
+   "metadata": {},
+   "source": [
+    "Before we move on to the next notebook, `04-Inference-with-Triton`, let's print out our results.txt file. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "1cbb1225",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "GRU accuracy results:\n",
+      "next-item/ndcg_at_10:0.07151895016431808\n",
+      "next-item/ndcg_at_20:0.08768121898174286\n",
+      "next-item/recall_at_10:0.1361762434244156\n",
+      "next-item/recall_at_20:0.20020613074302673\n",
+      "\n",
+      "XLNet-MLM accuracy results:\n",
+      "next-item/ndcg_at_10:0.07384572923183441\n",
+      "next-item/ndcg_at_20:0.08944202959537506\n",
+      "next-item/recall_at_10:0.13939706981182098\n",
+      "next-item/recall_at_20:0.20175212621688843\n",
+      "\n",
+      "XLNet-MLM with side information accuracy results:\n",
+      "next-item/ndcg_at_10:0.08558817952871323\n",
+      "next-item/ndcg_at_20:0.10371016710996628\n",
+      "next-item/recall_at_10:0.1605256348848343\n",
+      "next-item/recall_at_20:0.2324143350124359"
+     ]
+    }
+   ],
+   "source": [
+    "!cat results.txt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3548312c",
+   "metadata": {},
+   "source": [
+    "Let's plot bar charts to visualize and compare the accuracy results using `visuals` util function."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "3df4f9fc",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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b6S/E1uynmZmZptbi90DltQR+DlwMLAAeEbS1Ih4JVdsHnAScF7Jsr2Bi4CxQAAz0rLLWqq+ZmYbXNyz6Bo0zsUrmnV1M2bM6NupU6dbgN1wT2lTrQderq6uPnXMmDHv11agJR/C+jQwOyLmAEi6BzgC2BCAI2JuyltfsuyXgN9FxNKU/ztgHHB3C9bXzMyATp063bL99tuPqKioWNahQ4couj5t0fr167Vo0aKRCxcuvAU4vLYyLXll0x+Yn5tfkNJaelkzM9s0u1VUVKx08G26Dh06REVFxQqyXoTay2zG+jQ7SadJelbSs4sWLSq6OmZm7UUHB99Nl45hnXG2JQPwO8DA3PyAlNZsy0bEzRExNiLGVlT4d+RmZluSWbNmdRk6dGjVpqxj6tSp3Q866KAhw4YNGzl69OjhEydO7FtdXb0h/7nnnus6evTo4V26dNnrwgsv7JdfdsqUKT0qKyt3GzRo0G4XXHDB9o3ddkveA34GGCppJ7LgeSzw9QYu+whwuaRt0/zfAz9s/iqamVk5lec/OKY51zf3in+Y0Zzra6orr7yy4oEHHuh19dVXz997773XrFy5ssPll1/e97DDDtv5wQcfnNOhQwf69u1b/dOf/nTelClTts0vW11dzTnnnDPokUceeX3nnXdeO2rUqBHjx49fPmbMmDUN3X6LtYAjohr4Z7Jg+ipwb0TMlDRR0uEAkvaWtAA4GrhJ0sy07FLgErIg/gwwseaBLDMza/9mzZrVZeedd6469thjBw8ZMqRqv/32G7pq1So9/vjjn9p1111H7rrrriOvvvrqvjXlq6urOe200wYMHTq0atiwYSMvu+yyvgCTJ0/uudNOO1VVVVWNOOmkkwYeeOCBQwBeeumlre67775tp02b9sbee++9BqBHjx7rr7jiioXDhg1bM2nSpG0B+vfvX73//vt/1Llz54265KdPn77N4MGDPx45cuQnXbt2jaOOOmrplClTejVmH1v0HnBEPBQRwyJil4i4LKVdGBFT0/QzETEgIraJiO0ioiq37G0RMST9/UdL1tPMzFqfefPmdT3rrLPenz179syePXuuu+OOO7Y95ZRTKq+99tp5s2bNyv+klauuuqpi3rx5XV555ZWZr7/++iunnnrqko8++khnn3324N/+9rdvzJw589UlS5Zs6PW96aab+px//vkLO3TowPHH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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    },
+    {
+     "data": {
+      "image/png": "iVBORw0KGgoAAAANSUhEUgAAAd0AAACRCAYAAACG0GLNAAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjQuMiwgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy8rg+JYAAAACXBIWXMAAAsTAAALEwEAmpwYAAAW00lEQVR4nO3de5QV5Znv8e+vu/EWFbkpyMUmYiNIQKVVYmLG42UpcxJFwBlxjDkZGWISjUJiHA+Go2RmJTlRM3DIxFtYiIImIhqTgDrLxKATkwgOKBhABOSu7YggIkJ3P+ePqq2bbV92Y+/dt99nrV7uqnqr6tld2E+9b10eRQRmZmZWeCUtHYCZmVlH4aRrZmZWJE66ZmZmReKka2ZmViROumZmZkXipGtmZlYkZS0dQFN17949ysvLWzoMM7M2ZcmSJW9FRI+WjqOja3NJt7y8nMWLF7d0GGZmbYqk11s6BvPwspmZWdE46ZqZmRWJk66ZmVmRtLlrumZmzWXa9mktHUKTXNflumbd3pIlS44uKyu7FxiCO2HNoRZYXl1dPX748OFv1tXASdfMrIMqKyu7t2fPnoN69OixvaSkxNVvPqHa2lpVVVUN3rZt273ARXW18ZmNmVnHNaRHjx47nXCbR0lJSfTo0WMHychB3W2KGI+ZmbUuJU64zSv9fdabW510zczMisRJ18zMAJAY3pw/LfU9pk+f3u3KK6/sBzBp0qRjp0yZckxmWU1NDXfccUf34cOHDxw4cODgM88884QHH3ywc/b6M2fO7DJgwICTSkpKhi9atOiw7GU33XRTz379+g0pLy8f8sgjjxzZ1NicdM3MrFWora2lpqamoNsfNWpU/+XLlx/62GOPvbZq1apX5syZs37OnDndvv/97x+daXfyySe//8gjj6yprKzclb3+kiVLDpk/f37XVatWrXjiiSdWX3/99f2qq6ubFIOTrpmZtZhVq1YdVF5ePuSSSy4pr6ioOOm73/1uryFDhgyqqKgYPHHixGMz7WbMmNGtoqJi8MCBAwePGjWqP8DcuXM7Dx069MRBgwYNPvPMMys2btzY4BM5M2bM6Na3b9+9M2fO3Ni3b99qgP79++/71a9+tXbhwoWd161b1wng1FNP3TNs2LAPctefN2/eUaNHj3770EMPjRNPPHHvcccd98EzzzzzqaZ8Xz8yZGZmLWrDhg0H//znP1+3Y8eOtx9++OEuL7300l8jgvPOO2/AwoULD+/Ro0f1bbfd1uv5559f2atXr+o33nijFOD888/fddlll60sKSnhjjvu6D516tSe99xzz6b69jN37txuCxYsWLNly5aycePGle/cubPs9NNP31VZWfne17/+9ar77ruv6y233PJGfetv3rz5oBEjRnzY+z322GP3bty48SDgvXy/a0GTrqQLgWlAKXBvRPwwZ/kkYDxQDVQB/xgRfim3mVkH0qtXr73nnnvuexMmTOizaNGiIwcPHjwYYPfu3SUrV6485MUXXyz50pe+tL1Xr17VAMccc0wNwLp16w4aNWpUn6qqqk579+4t6du378d6p9mqq6vVtWvX2quuuqr3+PHj3xo3btw7I0eOPP6kk056f/jw4e899dRTTb5G21QFG16WVAr8FBgJDAbGSRqc0+y/gMqIGArMA/5voeIxM7PW6bDDDqsFiAiuv/76rStXrnxl5cqVr2zYsGH5xIkT36pvvWuuuabfN77xjTdXr179yowZM17/4IMPGsxpJSXJ4ldfffWQMWPG7CgrK+O8887bCbB169ayo48+el9D6/fu3TvTswVgy5YtB/Xt23dvE75qQa/png6siYi1EbEXeAi4OLtBRPw+Inank38C+hQwHjMza8VGjhy58/777+++Y8eOEoB169Z12rx5c9kFF1yw89e//nWXbdu2lQJkhpfffffd0n79+u0DmDVrVrfGti8pdu7cWTJgwIA9jz766JE1NTU8/fTTR+7Zs6fk9ttv73nFFVdsb2j9MWPGvDN//vyu77//vlauXHnQ+vXrDzn77LPzHlqGwg4v9wY2Zk1vAs5ooP1VwMICxmNWUB39Pb7W9kWwpCX3P3r06J0rVqw45LTTTjsRkh7wnDlz1lVWVu759re/vfWss846saSkJIYMGbL7kUceWT958uQt48aNO75z587Vn//859/dsGHDwQ1t/9JLL317ypQpPW+99datl19+ef/bbrut14gRI96dN29e1xtvvHHrKaecsgdg9uzZR91www39tm/fXnbJJZecMGjQoN3PPffcq5WVlXtGjRr1dkVFxUmlpaXccccdr5eVNS2NKqIwLyORNBa4MCLGp9NfBs6IiGvqaHsFcA3wNxHxsTF5SROACQD9+vUb/vrrHeOyb1v6I+4/4G3reIGPGXSs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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "from visuals import create_bar_chart\n",
+    "create_bar_chart('results.txt')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "b6a6f96b",
+   "metadata": {},
+   "source": [
+    "**In the end, using side information provided higher accuracy. Why is that? Have an idea?**"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "aef1ded8",
+   "metadata": {},
+   "source": [
+    "## Wrap Up"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9d968c71",
+   "metadata": {},
+   "source": [
+    "Congratulations on finishing this notebook. In this tutorial, we have presented Transformers4Rec, an open source library designed to enable RecSys researchers and practitioners to quickly and easily explore the latest developments of the NLP for sequential and session-based recommendation tasks."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "045d54e7",
+   "metadata": {},
+   "source": [
+    "Please execute the cell below to shut down the kernel before moving on to the next notebook, `04-Inference-with-Triton.ipynb`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "fead21bf",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import IPython\n",
+    "app = IPython.Application.instance()\n",
+    "app.kernel.do_shutdown(True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "744a2f17",
+   "metadata": {},
+   "source": [
+    "## References"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "03a7b764",
+   "metadata": {},
+   "source": [
+    "[1] Malte Ludewig and Dietmar Jannach. 2018. Evaluation of session-based recommendation algorithms. User Modeling and User-Adapted Interaction 28, 4-5 (2018), 331–390.<br>\n",
+    "[2] Balázs Hidasi and Alexandros Karatzoglou. 2018. Recurrent neural networks with top-k gains for session-based recommendations. In Proceedings of the 27th ACMinternational conference on information and knowledge management. 843–852.<br>\n",
+    "[3] Fei Sun, Jun Liu, Jian Wu, Changhua Pei, Xiao Lin, Wenwu Ou, and Peng Jiang. 2019. BERT4Rec: Sequential recommendation with bidirectional encoder representations from transformer. In Proceedings of the 28th ACM international conference on information and knowledge management. 1441–1450.\n",
+    "[4] Shiming Sun, Yuanhe Tang, Zemei Dai, and Fu Zhou. 2019. Self-attention network for session-based recommendation with streaming data input. IEEE Access 7 (2019), 110499–110509.  \n",
+    "[5] Kyunghyun Cho, Bart Van Merriënboer, Caglar Gulcehre, Dzmitry Bahdanau, Fethi Bougares, Holger Schwenk, and Yoshua Bengio. 2014. Learning phrase representations using RNN encoder-decoder for statistical machine translation. arXiv preprint arXiv:1406.1078 (2014).  \n",
+    "[6] Vaswani, A., et al. (2017). Attention is all you need. In Advances in neural information processing systems (pp. 5998-6008).  \n",
+    "[7] Lample, Guillaume, and Alexis Conneau. \"Cross-lingual language model pretraining.\" arXiv preprint arXiv:1901.07291  \n",
+    "[8] Gabriel De Souza P. Moreira, et al. (2021). Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation. RecSys'21.  \n",
+    "[9] Understanding XLNet, BorealisAI. Online available: https://www.borealisai.com/en/blog/understanding-xlnet/  \n",
+    "[10] Yang, Zhilin, et al. \"Xlnet: Generalized autoregressive pretraining for language understanding.\" Advances in neural information processing systems 32 (2019)."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
