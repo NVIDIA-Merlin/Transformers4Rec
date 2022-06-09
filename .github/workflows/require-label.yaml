@@ -1,0 +1,9 @@
+name: Require PR Labels
+
+on:
+  pull_request:
+    types: [synchronize, opened, reopened, labeled, unlabeled]
+
+jobs:
+  check-labels:
+    uses: nvidia-merlin/.github/.github/workflows/require-label.yaml@main
