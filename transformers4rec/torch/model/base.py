@@ -90,7 +90,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         self.pre = pre
         self.task_block = task_block
         self._task_name = task_name
-
+        self.summary_type = summary_type
     def build(
         self,
         body: BlockType,
@@ -143,7 +143,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(self, inputs, **kwargs):
         x = inputs
 
-        if len(x.size()) == 3:
+        if len(x.size()) == 3 and self.summary_type:
             x = self.sequence_summary(x)
 
         if self.task_block:

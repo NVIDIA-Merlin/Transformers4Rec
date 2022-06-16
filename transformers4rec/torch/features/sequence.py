@@ -247,16 +247,15 @@ class TabularSequenceFeatures(TabularFeatures):
 
         return None
 
-    def forward(self, inputs, training=True, **kwargs):
+    def forward(self, inputs, training=True, ignore_masking=False, **kwargs):
         outputs = super(TabularSequenceFeatures, self).forward(inputs)
-
         if self.masking or self.projection_module:
             outputs = self.aggregation(outputs)
 
         if self.projection_module:
             outputs = self.projection_module(outputs)
 
-        if self.masking:
+        if self.masking and not ignore_masking:
             outputs = self.masking(
                 outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
             )
