@@ -33,6 +33,8 @@ def test_set_train_eval_loaders_attributes(
     train_loader._batch_size = batch_size
     eval_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
     eval_loader._batch_size = batch_size // 2
+    test_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
+    test_loader._batch_size = batch_size // 2
 
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
@@ -46,10 +48,12 @@ def test_set_train_eval_loaders_attributes(
         args=args,
         train_dataloader=train_loader,
         eval_dataloader=eval_loader,
+        test_dataloader=test_loader
     )
 
     assert recsys_trainer.get_train_dataloader() == train_loader
     assert recsys_trainer.get_eval_dataloader() == eval_loader
+    assert recsys_trainer.get_test_dataloader() == test_loader
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
