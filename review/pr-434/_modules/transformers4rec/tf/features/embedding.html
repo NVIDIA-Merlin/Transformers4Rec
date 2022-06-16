@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.tf.features.embedding &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.tf.features.embedding</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.tf.features.embedding</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.keras</span> <span class="kn">import</span> <span class="n">backend</span>
+<span class="kn">from</span> <span class="nn">tensorflow.python.tpu.tpu_embedding_v2_utils</span> <span class="kn">import</span> <span class="n">FeatureConfig</span><span class="p">,</span> <span class="n">TableConfig</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.schema.tag</span> <span class="kn">import</span> <span class="n">TagsType</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.doc_utils</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.embedding_utils</span> <span class="kn">import</span> <span class="n">get_embedding_sizes_from_schema</span>
+
+<span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">FilterFeatures</span><span class="p">,</span>
+    <span class="n">TabularAggregationType</span><span class="p">,</span>
+    <span class="n">TabularTransformationType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..tabular.transformations</span> <span class="kn">import</span> <span class="n">AsSparseFeatures</span>
+<span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">InputBlock</span>
+
+<span class="c1"># pylint has issues with TF array ops, so disable checks until fixed:</span>
+<span class="c1"># https://github.com/PyCQA/pylint/issues/3613</span>
+<span class="c1"># pylint: disable=no-value-for-parameter, unexpected-keyword-arg</span>
+
+
+<span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    feature_config: Dict[str, FeatureConfig]</span>
+<span class="s2">        This specifies what TableConfig to use for each feature. For shared embeddings, the same</span>
+<span class="s2">        TableConfig can be used for multiple features.</span>
+<span class="s2">    item_id: str, optional</span>
+<span class="s2">        The name of the feature that&#39;s used for the item_id.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="EmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+    <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">embedding_features_parameters</span><span class="o">=</span><span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="s2">&quot;transformers4rec&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">EmbeddingFeatures</span><span class="p">(</span><span class="n">InputBlock</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Input block for embedding-lookups for categorical features.</span>
+
+<span class="sd">    For multi-hot features, the embeddings will be aggregated into a single tensor using the mean.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {embedding_features_parameters}</span>
+<span class="sd">    {tabular_module_parameters}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;FeatureConfig&quot;</span><span class="p">],</span>
+        <span class="n">item_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Schema</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">add_default_pre</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">embedding_tables</span><span class="o">=</span><span class="p">{},</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item_id</span> <span class="ow">and</span> <span class="n">schema</span> <span class="ow">and</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">([</span><span class="s2">&quot;item_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
+            <span class="n">item_id</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">([</span><span class="s2">&quot;item_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">add_default_pre</span><span class="p">:</span>
+            <span class="n">embedding_pre</span> <span class="o">=</span> <span class="p">[</span><span class="n">FilterFeatures</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">feature_config</span><span class="o">.</span><span class="n">keys</span><span class="p">())),</span> <span class="n">AsSparseFeatures</span><span class="p">()]</span>
+            <span class="n">pre</span> <span class="o">=</span> <span class="p">[</span><span class="n">embedding_pre</span><span class="p">,</span> <span class="n">pre</span><span class="p">]</span> <span class="k">if</span> <span class="n">pre</span> <span class="k">else</span> <span class="n">embedding_pre</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span> <span class="o">=</span> <span class="n">feature_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">item_id</span> <span class="o">=</span> <span class="n">item_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding_tables</span> <span class="o">=</span> <span class="n">embedding_tables</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="EmbeddingFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
+        <span class="n">embedding_dims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">embedding_dim_default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
+        <span class="n">infer_embedding_sizes</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">infer_embedding_sizes_multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">,</span>
+        <span class="n">embeddings_initializers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="kc">None</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">combiner</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TagsType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">item_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_sequence_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;EmbeddingFeatures&quot;</span><span class="p">]:</span>
+        <span class="n">schema_copy</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tags</span><span class="p">:</span>
+            <span class="n">schema_copy</span> <span class="o">=</span> <span class="n">schema_copy</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">item_id</span> <span class="ow">and</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">([</span><span class="s2">&quot;item_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
+            <span class="n">item_id</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">([</span><span class="s2">&quot;item_id&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">embedding_dims</span> <span class="o">=</span> <span class="n">embedding_dims</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">infer_embedding_sizes</span><span class="p">:</span>
+            <span class="n">embedding_dims_infered</span> <span class="o">=</span> <span class="n">get_embedding_sizes_from_schema</span><span class="p">(</span>
+                <span class="n">schema</span><span class="p">,</span> <span class="n">infer_embedding_sizes_multiplier</span>
+            <span class="p">)</span>
+
+            <span class="n">embedding_dims</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="o">**</span><span class="n">embedding_dims</span><span class="p">,</span>
+                <span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">embedding_dims_infered</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">embedding_dims</span><span class="p">},</span>
+            <span class="p">}</span>
+
+        <span class="n">embeddings_initializers</span> <span class="o">=</span> <span class="n">embeddings_initializers</span> <span class="ow">or</span> <span class="p">{}</span>
+
+        <span class="n">emb_config</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">cardinalities</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">categorical_cardinalities</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">cardinality</span> <span class="ow">in</span> <span class="n">cardinalities</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">embedding_size</span> <span class="o">=</span> <span class="n">embedding_dims</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">embedding_dim_default</span><span class="p">)</span>
+            <span class="n">embedding_initializer</span> <span class="o">=</span> <span class="n">embeddings_initializers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">emb_config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">cardinality</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">embedding_initializer</span><span class="p">)</span>
+
+        <span class="n">feature_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">FeatureConfig</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">vocab_size</span><span class="p">,</span> <span class="n">dim</span><span class="p">,</span> <span class="n">emb_initilizer</span><span class="p">)</span> <span class="ow">in</span> <span class="n">emb_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">feature_config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">FeatureConfig</span><span class="p">(</span>
+                <span class="n">TableConfig</span><span class="p">(</span>
+                    <span class="n">vocabulary_size</span><span class="o">=</span><span class="n">vocab_size</span><span class="p">,</span>
+                    <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">combiner</span><span class="o">=</span><span class="n">combiner</span><span class="p">,</span>
+                    <span class="n">initializer</span><span class="o">=</span><span class="n">emb_initilizer</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">feature_config</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">feature_config</span><span class="p">,</span> <span class="n">item_id</span><span class="o">=</span><span class="n">item_id</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema_copy</span><span class="p">,</span> <span class="n">embedding_tables</span><span class="o">=</span><span class="p">{},</span> <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="EmbeddingFeatures.build"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">):</span>
+        <span class="n">tables</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TableConfig</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">feature</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">table</span><span class="p">:</span> <span class="n">TableConfig</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">table</span>
+            <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+                <span class="n">tables</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">vocabulary_size</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_tables</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">embedding_tables</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">add_weight</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">/embedding_weights&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span>
+                    <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="n">initializer</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">initializer</span><span class="p">,</span>
+                    <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+                <span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EmbeddingFeatures.call"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TabularData</span><span class="p">:</span>
+        <span class="n">embedded_outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">embedded_outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_feature</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+        <span class="c1"># Store raw item ids for masking and/or negative sampling</span>
+        <span class="c1"># This makes this module stateful.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_id</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">item_seq</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_ids</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">embedded_outputs</span></div>
+
+<div class="viewcode-block" id="EmbeddingFeatures.compute_call_output_shape"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.compute_call_output_shape">[docs]</a>    <span class="k">def</span> <span class="nf">compute_call_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">):</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_batch_size_from_input_shapes</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">)</span>
+
+        <span class="n">output_shapes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">input_shapes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">output_shapes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">([</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">dim</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">output_shapes</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">item_embedding_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_tables</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">item_id</span><span class="p">]</span>
+
+<div class="viewcode-block" id="EmbeddingFeatures.item_ids"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.item_ids">[docs]</a>    <span class="k">def</span> <span class="nf">item_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">inputs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">item_id</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="EmbeddingFeatures.lookup_feature"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.lookup_feature">[docs]</a>    <span class="k">def</span> <span class="nf">lookup_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">output_sequence</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">backend</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;int32&quot;</span> <span class="ow">and</span> <span class="n">dtype</span> <span class="o">!=</span> <span class="s2">&quot;int64&quot;</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="s2">&quot;int32&quot;</span><span class="p">)</span>
+
+        <span class="n">table</span><span class="p">:</span> <span class="n">TableConfig</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">table</span>
+        <span class="n">table_var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_tables</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">SparseTensor</span><span class="p">):</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">safe_embedding_lookup_sparse</span><span class="p">(</span><span class="n">table_var</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">combiner</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">combiner</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">output_sequence</span><span class="p">:</span>
+                <span class="n">out</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">table_var</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># TODO: Check if it is correct to retrieve only the 1st element</span>
+                    <span class="c1"># of second dim for non-sequential multi-hot categ features</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">table_var</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">table_var</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype_policy</span><span class="o">.</span><span class="n">compute_dtype</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype_policy</span><span class="o">.</span><span class="n">variable_dtype</span><span class="p">:</span>
+            <span class="c1"># Instead of casting the variable as in most layers, cast the output, as</span>
+            <span class="c1"># this is mathematically equivalent but is faster.</span>
+            <span class="n">out</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dtype_policy</span><span class="o">.</span><span class="n">compute_dtype</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">out</span></div>
+
+<div class="viewcode-block" id="EmbeddingFeatures.get_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+
+        <span class="n">feature_configs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">feature_config_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">max_sequence_length</span><span class="p">)</span>
+
+            <span class="n">feature_config_dict</span><span class="p">[</span><span class="s2">&quot;table&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">serialize_table_config</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">table</span><span class="p">)</span>
+            <span class="n">feature_configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_config_dict</span>
+
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;feature_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_configs</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_id</span><span class="p">:</span>
+            <span class="n">config</span><span class="p">[</span><span class="s2">&quot;item_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_id</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="EmbeddingFeatures.from_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.EmbeddingFeatures.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="c1"># Deserialize feature_config</span>
+        <span class="n">feature_configs</span><span class="p">,</span> <span class="n">table_configs</span> <span class="o">=</span> <span class="p">{},</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;feature_config&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">feature_params</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+            <span class="n">table_params</span> <span class="o">=</span> <span class="n">feature_params</span><span class="p">[</span><span class="s2">&quot;table&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">in</span> <span class="n">table_configs</span><span class="p">:</span>
+                <span class="n">feature_params</span><span class="p">[</span><span class="s2">&quot;table&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">table_configs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">table</span> <span class="o">=</span> <span class="n">deserialize_table_config</span><span class="p">(</span><span class="n">table_params</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+                    <span class="n">table_configs</span><span class="p">[</span><span class="n">table</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
+                <span class="n">feature_params</span><span class="p">[</span><span class="s2">&quot;table&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">table</span>
+            <span class="n">feature_configs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">FeatureConfig</span><span class="p">(</span><span class="o">**</span><span class="n">feature_params</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;feature_config&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_configs</span>
+
+        <span class="c1"># Set `add_default_pre to False` since pre will be provided from the config</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;add_default_pre&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="serialize_table_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.serialize_table_config">[docs]</a><span class="k">def</span> <span class="nf">serialize_table_config</span><span class="p">(</span><span class="n">table_config</span><span class="p">:</span> <span class="n">TableConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">table_config</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s2">&quot;initializer&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="p">:</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;initializer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">&quot;initializer&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s2">&quot;optimizer&quot;</span> <span class="ow">in</span> <span class="n">table</span><span class="p">:</span>
+        <span class="n">table</span><span class="p">[</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="s2">&quot;optimizer&quot;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">table</span></div>
+
+
+<div class="viewcode-block" id="deserialize_table_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.deserialize_table_config">[docs]</a><span class="k">def</span> <span class="nf">deserialize_table_config</span><span class="p">(</span><span class="n">table_params</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">TableConfig</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;initializer&quot;</span> <span class="ow">in</span> <span class="n">table_params</span> <span class="ow">and</span> <span class="n">table_params</span><span class="p">[</span><span class="s2">&quot;initializer&quot;</span><span class="p">]:</span>
+        <span class="n">table_params</span><span class="p">[</span><span class="s2">&quot;initializer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">initializers</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">table_params</span><span class="p">[</span><span class="s2">&quot;initializer&quot;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="s2">&quot;optimizer&quot;</span> <span class="ow">in</span> <span class="n">table_params</span> <span class="ow">and</span> <span class="n">table_params</span><span class="p">[</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]:</span>
+        <span class="n">table_params</span><span class="p">[</span><span class="s2">&quot;optimizer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">deserialize</span><span class="p">(</span><span class="n">table_params</span><span class="p">[</span><span class="s2">&quot;optimizer&quot;</span><span class="p">])</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">TableConfig</span><span class="p">(</span><span class="o">**</span><span class="n">table_params</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">table</span></div>
+
+
+<div class="viewcode-block" id="serialize_feature_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.serialize_feature_config">[docs]</a><span class="k">def</span> <span class="nf">serialize_feature_config</span><span class="p">(</span><span class="n">feature_config</span><span class="p">:</span> <span class="n">FeatureConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">feature_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">feature_config_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">val</span><span class="o">.</span><span class="n">max_sequence_length</span><span class="p">)</span>
+        <span class="n">feature_config_dict</span><span class="p">[</span><span class="s2">&quot;table&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">serialize_table_config</span><span class="p">(</span><span class="n">feature_config_dict</span><span class="p">[</span><span class="s2">&quot;table&quot;</span><span class="p">])</span>
+        <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_config_dict</span>
+
+    <span class="k">return</span> <span class="n">outputs</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
