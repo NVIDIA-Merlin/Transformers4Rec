@@ -24,9 +24,9 @@ git pull origin main
 container=$1
 
 ## Tensorflow container
-if [ "$container" == "merlin-tensorflow-training" ]; then
+if [ "$container" == "merlin-tensorflow" ]; then
     pytest -rsx tests/tf
 # Pytorch container
-elif [ "$container" == "merlin-pytorch-training" ]; then
+elif [ "$container" == "merlin-pytorch" ]; then
     pytest -rsx tests/torch
 fi

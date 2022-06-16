@@ -25,7 +25,7 @@ container=$1
 devices=$2
 
 # Run only for Merlin PyTorch Container
-if [ "$container" != "merlin-pytorch-training" ]; then
+if [ "$container" != "merlin-pytorch" ]; then
    exit 0
 fi
 
