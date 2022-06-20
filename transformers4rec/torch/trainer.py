@@ -448,7 +448,7 @@ class Trainer(BaseTrainer):
                 inputs,
                 prediction_loss_only,
                 ignore_keys=ignore_keys,
-                ignore_masking=ignore_masking
+                ignore_masking=ignore_masking,
             )
 
             # Updates metrics

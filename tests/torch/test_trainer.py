@@ -48,7 +48,7 @@ def test_set_train_eval_loaders_attributes(
         args=args,
         train_dataloader=train_loader,
         eval_dataloader=eval_loader,
-        test_dataloader=test_loader
+        test_dataloader=test_loader,
     )
 
     assert recsys_trainer.get_train_dataloader() == train_loader
