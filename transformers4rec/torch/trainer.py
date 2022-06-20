@@ -304,6 +304,7 @@ class Trainer(BaseTrainer):
         inputs: Dict[str, torch.Tensor],
         prediction_loss_only: bool,
         ignore_keys: Optional[List[str]] = None,
+        ignore_masking: bool = False,
     ) -> Tuple[
         Optional[float],
         Optional[torch.Tensor],
@@ -320,9 +321,9 @@ class Trainer(BaseTrainer):
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
-                    outputs = model(inputs, training=False)
+                    outputs = model(inputs, training=False, ignore_masking=ignore_masking)
             else:
-                outputs = model(inputs, training=False)
+                outputs = model(inputs, training=False, ignore_masking=ignore_masking)
 
             loss = outputs["loss"].mean().detach()
 
@@ -382,6 +383,11 @@ class Trainer(BaseTrainer):
             else self.args.prediction_loss_only
         )
 
+        if description == "Prediction":
+            ignore_masking = True
+        else:
+            ignore_masking = False
+
         # set the model
         model = self.model.module
         # reset metrics for the dataset (Train, Valid or Test)
@@ -438,7 +444,11 @@ class Trainer(BaseTrainer):
                 break
 
             loss, preds, labels, outputs = self.prediction_step(
-                model, inputs, prediction_loss_only, ignore_keys=ignore_keys
+                model,
+                inputs,
+                prediction_loss_only,
+                ignore_keys=ignore_keys,
+                ignore_masking=ignore_masking
             )
 
             # Updates metrics

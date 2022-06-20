@@ -102,6 +102,28 @@ def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoocho
     assert outputs.shape[1] == 20
 
 
+def test_sequential_tabular_features_ignore_masking(yoochoose_schema, torch_yoochoose_like):
+    import numpy as np
+
+    from transformers4rec.torch.masking import CausalLanguageModeling
+
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=100,
+        aggregation='concat'
+    )
+    output_wo_masking = input_module(
+        torch_yoochoose_like, training=False).detach().cpu().numpy()
+
+    input_module.masking = CausalLanguageModeling(hidden_size=100)
+    output_ignore_masking = input_module(
+        torch_yoochoose_like, training=False, ignore_masking=True).detach().cpu().numpy()
+
+    assert np.allclose(output_wo_masking, output_ignore_masking, rtol=1e-04, atol=1e-08)
+
+
 def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_like):
     continuous_module = tr.ContinuousFeatures.from_schema(yoochoose_schema, tags=["continuous"])
     categorical_module = tr.SequenceEmbeddingFeatures.from_schema(

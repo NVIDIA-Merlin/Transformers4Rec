@@ -167,10 +167,12 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
         schema=data.schema,
         train_dataset_or_path=data.path,
         eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
         compute_metrics=True,
     )
 
     eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+    predictions = recsys_trainer.predict(data.path)
 
     assert isinstance(eval_metrics, dict)
     default_metric = [
@@ -183,6 +185,8 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
     ]
     assert set(default_metric).issubset(set(eval_metrics.keys()))
     assert eval_metrics["eval/loss"] is not None
+
+    assert predictions is not None
 
 
 def test_saves_checkpoints(torch_yoochoose_next_item_prediction_model):

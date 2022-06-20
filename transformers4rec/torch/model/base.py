@@ -380,15 +380,16 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         training: bool = True,
         call_body: bool = False,
         always_output_dict: bool = False,
+        ignore_masking: bool = False,
         **kwargs,
     ) -> Union[torch.Tensor, TabularData]:
         outputs = {}
 
         if call_body:
-            body_outputs = self.body(body_outputs, training=training)
+            body_outputs = self.body(body_outputs, training=training, ignore_masking=ignore_masking)
 
         for name, task in self.prediction_task_dict.items():
-            outputs[name] = task(body_outputs, **kwargs)
+            outputs[name] = task(body_outputs, ignore_masking=ignore_masking, **kwargs)
 
         if len(outputs) == 1 and not always_output_dict:
             return outputs[list(outputs.keys())[0]]
@@ -519,7 +520,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         # TODO: Optimize this
         outputs = {}
         for head in self.heads:
-            outputs.update(head(inputs, call_body=True, training=training, always_output_dict=True))
+            outputs.update(
+                head(inputs, call_body=True, training=training, always_output_dict=True, **kwargs)
+            )
 
         if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]
