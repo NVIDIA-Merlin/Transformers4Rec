@@ -117,11 +117,15 @@ def test_sequential_tabular_features_ignore_masking(yoochoose_schema, torch_yooc
     output_wo_masking = input_module(
         torch_yoochoose_like, training=False).detach().cpu().numpy()
 
-    input_module.masking = CausalLanguageModeling(hidden_size=100)
+    input_module._masking = CausalLanguageModeling(hidden_size=100)
+
     output_ignore_masking = input_module(
         torch_yoochoose_like, training=False, ignore_masking=True).detach().cpu().numpy()
+    output_masking = input_module(
+        torch_yoochoose_like, training=False, ignore_masking=False).detach().cpu().numpy()
 
     assert np.allclose(output_wo_masking, output_ignore_masking, rtol=1e-04, atol=1e-08)
+    assert not np.allclose(output_wo_masking, output_masking, rtol=1e-04, atol=1e-08)
 
 
 def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_like):
