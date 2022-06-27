@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.model package &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="transformers4rec.torch.tabular package" href="transformers4rec.torch.tabular.html" />
+    <link rel="prev" title="transformers4rec.torch.features package" href="transformers4rec.torch.features.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="transformers4rec.html">transformers4rec package</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="transformers4rec.config.html">transformers4rec.config package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="transformers4rec.tf.html">transformers4rec.tf package</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="transformers4rec.torch.html">transformers4rec.torch package</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html">transformers4rec.torch.block package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html">transformers4rec.torch.features package</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">transformers4rec.torch.model package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html">transformers4rec.torch.tabular package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html">transformers4rec.torch.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="transformers4rec.utils.html">transformers4rec.utils package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="merlin_standard_lib.html">merlin_standard_lib package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="modules.html">API Documentation</a> &raquo;</li>
+          <li><a href="transformers4rec.html">transformers4rec package</a> &raquo;</li>
+          <li><a href="transformers4rec.torch.html">transformers4rec.torch package</a> &raquo;</li>
+      <li>transformers4rec.torch.model package</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="transformers4rec-torch-model-package">
+<h1>transformers4rec.torch.model package<a class="headerlink" href="#transformers4rec-torch-model-package" title="Permalink to this headline"></a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="transformers4rec-torch-model-head-module">
+<h2>transformers4rec.torch.model.head module<a class="headerlink" href="#transformers4rec-torch-model-head-module" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="transformers4rec-torch-model-model-module">
+<h2>transformers4rec.torch.model.model module<a class="headerlink" href="#transformers4rec-torch-model-model-module" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-transformers4rec.torch.model.prediction_task">
+<span id="transformers4rec-torch-model-prediction-task-module"></span><h2>transformers4rec.torch.model.prediction_task module<a class="headerlink" href="#module-transformers4rec.torch.model.prediction_task" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">BinaryClassificationPrepareBlock</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#BinaryClassificationPrepareBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock"><span class="pre">transformers4rec.torch.block.base.SequentialBlock</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#BinaryClassificationPrepareBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationPrepareBlock.build" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationTask">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">BinaryClassificationTask</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_block</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">BCELoss()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(Precision(),</span> <span class="pre">Recall(),</span> <span class="pre">Accuracy())</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#BinaryClassificationTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationTask" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.model.base.PredictionTask</span></code></p>
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationTask.DEFAULT_LOSS">
+<code class="sig-name descname"><span class="pre">DEFAULT_LOSS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">BCELoss()</span></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationTask.DEFAULT_LOSS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationTask.DEFAULT_METRICS">
+<code class="sig-name descname"><span class="pre">DEFAULT_METRICS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">(Precision(),</span> <span class="pre">Recall(),</span> <span class="pre">Accuracy())</span></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationTask.DEFAULT_METRICS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.BinaryClassificationTask.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.BinaryClassificationTask.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.model.prediction_task.RegressionPrepareBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">RegressionPrepareBlock</span></code><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#RegressionPrepareBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionPrepareBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.RegressionPrepareBlock.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock"><span class="pre">transformers4rec.torch.block.base.SequentialBlock</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#RegressionPrepareBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionPrepareBlock.build" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.model.prediction_task.RegressionTask">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">RegressionTask</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_block</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">MSELoss()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(MeanSquaredError())</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">summary_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#RegressionTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionTask" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.model.base.PredictionTask</span></code></p>
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.RegressionTask.DEFAULT_LOSS">
+<code class="sig-name descname"><span class="pre">DEFAULT_LOSS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">MSELoss()</span></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionTask.DEFAULT_LOSS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.RegressionTask.DEFAULT_METRICS">
+<code class="sig-name descname"><span class="pre">DEFAULT_METRICS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">(MeanSquaredError(),)</span></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionTask.DEFAULT_METRICS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.RegressionTask.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.RegressionTask.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">NextItemPredictionTask</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">torch.nn.modules.module.Module</span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">NLLLoss()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">torchmetrics.metric.Metric</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">(NDCGAt(),</span> <span class="pre">AvgPrecisionAt(),</span> <span class="pre">RecallAt())</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_block</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BlockBase" title="transformers4rec.torch.block.base.BlockBase"><span class="pre">transformers4rec.torch.block.base.BlockBase</span></a><span class="p"><span class="pre">,</span> </span><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_name</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'next-item'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_tying</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_temperature</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_idx</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hf_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.model.base.PredictionTask</span></code></p>
+<p>Next-item prediction task.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loss</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v1.11.0)"><em>torch.nn.Module</em></a>) – Loss function to use. Defaults to NLLLos.</p></li>
+<li><p><strong>metrics</strong> (<em>Iterable</em><em>[</em><em>torchmetrics.Metric</em><em>]</em>) – List of ranking metrics to use for evaluation.</p></li>
+<li><p><strong>task_block</strong> – Module to transform input tensor before computing predictions.</p></li>
+<li><p><strong>task_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a><em>, </em><em>optional</em>) – Name of the prediction task, if not provided a name will be automatically constructed based
+on the target-name &amp; class-name.</p></li>
+<li><p><strong>weight_tying</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – The item id embedding table weights are shared with the prediction network layer.</p></li>
+<li><p><strong>softmax_temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
+Value 1.0 reduces to regular softmax.</p></li>
+<li><p><strong>padding_idx</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – pad token id.</p></li>
+<li><p><strong>target_dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – vocabulary size of item ids</p></li>
+<li><p><strong>hf_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – Output the dictionary of outputs needed by RecSysTrainer, if set to False,
+return the predictions tensor.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask.DEFAULT_METRICS">
+<code class="sig-name descname"><span class="pre">DEFAULT_METRICS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">(NDCGAt(),</span> <span class="pre">AvgPrecisionAt(),</span> <span class="pre">RecallAt())</span></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask.DEFAULT_METRICS" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task_block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionTask.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask.build" title="Permalink to this definition"></a></dt>
+<dd><p>Build method, this is called by the <cite>Head</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask.forward">
+<code class="sig-name descname"><span class="pre">forward</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionTask.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask.forward" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask.remove_pad_3d">
+<code class="sig-name descname"><span class="pre">remove_pad_3d</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_pad_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionTask.remove_pad_3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask.remove_pad_3d" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask.calculate_metrics">
+<code class="sig-name descname"><span class="pre">calculate_metrics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'val'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.11.0)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionTask.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask.calculate_metrics" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask.compute_metrics">
+<code class="sig-name descname"><span class="pre">compute_metrics</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionTask.compute_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask.compute_metrics" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionTask.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionTask.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">NextItemPredictionPrepareBlock</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_dim</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_tying</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">item_embedding_table</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">torch.nn.modules.module.Module</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">softmax_temperature</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionPrepareBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.BuildableBlock" title="transformers4rec.torch.block.base.BuildableBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.block.base.BuildableBlock</span></code></a></p>
+<dl class="py method">
+<dt id="transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock.build">
+<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec.torch.block.base.Block" title="transformers4rec.torch.block.base.Block"><span class="pre">transformers4rec.torch.block.base.Block</span></a><a class="reference internal" href="../_modules/transformers4rec/torch/model/prediction_task.html#NextItemPredictionPrepareBlock.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock.build" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-transformers4rec.torch.model">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-transformers4rec.torch.model" title="Permalink to this headline"></a></h2>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="transformers4rec.torch.features.html" class="btn btn-neutral float-left" title="transformers4rec.torch.features package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transformers4rec.torch.tabular.html" class="btn btn-neutral float-right" title="transformers4rec.torch.tabular package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.tf.features.sequence &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.tf.features.sequence</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.tf.features.sequence</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.doc_utils</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
+
+<span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">SequentialBlock</span>
+<span class="kn">from</span> <span class="nn">..block.mlp</span> <span class="kn">import</span> <span class="n">MLPBlock</span>
+<span class="kn">from</span> <span class="nn">..masking</span> <span class="kn">import</span> <span class="n">MaskSequence</span><span class="p">,</span> <span class="n">masking_registry</span>
+<span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">AsTabular</span><span class="p">,</span>
+    <span class="n">TabularAggregationType</span><span class="p">,</span>
+    <span class="n">TabularBlock</span><span class="p">,</span>
+    <span class="n">TabularTransformationType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">tf_utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">embedding</span>
+<span class="kn">from</span> <span class="nn">.tabular</span> <span class="kn">import</span> <span class="n">TABULAR_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span> <span class="n">TabularFeatures</span>
+
+
+<div class="viewcode-block" id="SequenceEmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.SequenceEmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+    <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">embedding_features_parameters</span><span class="o">=</span><span class="n">embedding</span><span class="o">.</span><span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="s2">&quot;transformers4rec&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">SequenceEmbeddingFeatures</span><span class="p">(</span><span class="n">embedding</span><span class="o">.</span><span class="n">EmbeddingFeatures</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Input block for embedding-lookups for categorical features. This module produces 3-D tensors,</span>
+<span class="sd">    this is useful for sequential models like transformers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {embedding_features_parameters}</span>
+<span class="sd">    padding_idx: int</span>
+<span class="sd">        The symbol to use for padding.</span>
+<span class="sd">    {tabular_module_parameters}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">feature_config</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">embedding</span><span class="o">.</span><span class="n">FeatureConfig</span><span class="p">],</span>
+        <span class="n">item_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">mask_zero</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Schema</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">embedding_tables</span><span class="o">=</span><span class="p">{},</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">feature_config</span><span class="p">,</span>
+            <span class="n">item_id</span><span class="o">=</span><span class="n">item_id</span><span class="p">,</span>
+            <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
+            <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
+            <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">embedding_tables</span><span class="o">=</span><span class="n">embedding_tables</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span> <span class="o">=</span> <span class="n">padding_idx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_zero</span> <span class="o">=</span> <span class="n">mask_zero</span>
+
+<div class="viewcode-block" id="SequenceEmbeddingFeatures.lookup_feature"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.SequenceEmbeddingFeatures.lookup_feature">[docs]</a>    <span class="k">def</span> <span class="nf">lookup_feature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">SequenceEmbeddingFeatures</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">lookup_feature</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">output_sequence</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SequenceEmbeddingFeatures.compute_call_output_shape"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.SequenceEmbeddingFeatures.compute_call_output_shape">[docs]</a>    <span class="k">def</span> <span class="nf">compute_call_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">):</span>
+        <span class="n">batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calculate_batch_size_from_input_shapes</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">)</span>
+        <span class="n">sequence_length</span> <span class="o">=</span> <span class="n">input_shapes</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]][</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">output_shapes</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">input_shapes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">output_shapes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">TensorShape</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">sequence_length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">table</span><span class="o">.</span><span class="n">dim</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output_shapes</span></div>
+
+<div class="viewcode-block" id="SequenceEmbeddingFeatures.compute_mask"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.SequenceEmbeddingFeatures.compute_mask">[docs]</a>    <span class="k">def</span> <span class="nf">compute_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_zero</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">outputs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">not_equal</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="SequenceEmbeddingFeatures.get_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.SequenceEmbeddingFeatures.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;mask_zero&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_zero</span>
+        <span class="n">config</span><span class="p">[</span><span class="s2">&quot;padding_idx&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+
+        <span class="k">return</span> <span class="n">config</span></div></div>
+
+
+<div class="viewcode-block" id="TabularSequenceFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+    <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">tabular_features_parameters</span><span class="o">=</span><span class="n">TABULAR_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="s2">&quot;transformers4rec&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TabularSequenceFeatures</span><span class="p">(</span><span class="n">TabularFeatures</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Input module that combines different types of features to a sequence: continuous,</span>
+<span class="sd">    categorical &amp; text.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {tabular_features_parameters}</span>
+<span class="sd">    projection_module: BlockOrModule, optional</span>
+<span class="sd">        Module that&#39;s used to project the output of this module, typically done by an MLPBlock.</span>
+<span class="sd">    masking: MaskSequence, optional</span>
+<span class="sd">         Masking to apply to the inputs.</span>
+<span class="sd">    {tabular_module_parameters}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">EMBEDDING_MODULE_CLASS</span> <span class="o">=</span> <span class="n">SequenceEmbeddingFeatures</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">continuous_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">categorical_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">text_embedding_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">projection_block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Block</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">masking</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MaskSequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">continuous_layer</span><span class="o">=</span><span class="n">continuous_layer</span><span class="p">,</span>
+            <span class="n">categorical_layer</span><span class="o">=</span><span class="n">categorical_layer</span><span class="p">,</span>
+            <span class="n">text_embedding_layer</span><span class="o">=</span><span class="n">text_embedding_layer</span><span class="p">,</span>
+            <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
+            <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">projection_block</span> <span class="o">=</span> <span class="n">projection_block</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_masking</span><span class="p">(</span><span class="n">masking</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
+        <span class="n">continuous_tags</span><span class="o">=</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">,),</span>
+        <span class="n">categorical_tags</span><span class="o">=</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,),</span>
+        <span class="n">aggregation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">continuous_projection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">projection</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">d_output</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">masking</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TabularSequenceFeatures&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiates ``TabularFeatures`` from a ``DatasetSchema``</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        schema : DatasetSchema</span>
+<span class="sd">            Dataset schema</span>
+<span class="sd">        continuous_tags : Optional[Union[DefaultTags, list, str]], optional</span>
+<span class="sd">            Tags to filter the continuous features, by default Tag.CONTINUOUS</span>
+<span class="sd">        categorical_tags : Optional[Union[DefaultTags, list, str]], optional</span>
+<span class="sd">            Tags to filter the categorical features, by default Tag.CATEGORICAL</span>
+<span class="sd">        aggregation : Optional[str], optional</span>
+<span class="sd">            Feature aggregation option, by default None</span>
+<span class="sd">        automatic_build : bool, optional</span>
+<span class="sd">            Automatically infers input size from features, by default True</span>
+<span class="sd">        max_sequence_length : Optional[int], optional</span>
+<span class="sd">            Maximum sequence length for list features by default None</span>
+<span class="sd">        continuous_projection : Optional[Union[List[int], int]], optional</span>
+<span class="sd">            If set, concatenate all numerical features and project them by a number of MLP layers</span>
+<span class="sd">            The argument accepts a list with the dimensions of the MLP layers, by default None</span>
+<span class="sd">        projection: Optional[torch.nn.Module, BuildableBlock], optional</span>
+<span class="sd">            If set, project the aggregated embeddings vectors into hidden dimension vector space,</span>
+<span class="sd">            by default None</span>
+<span class="sd">        d_output: Optional[int], optional</span>
+<span class="sd">            If set, init a MLPBlock as projection module to project embeddings vectors,</span>
+<span class="sd">            by default None</span>
+<span class="sd">        masking: Optional[Union[str, MaskSequence]], optional</span>
+<span class="sd">            If set, Apply masking to the input embeddings and compute masked labels, It requires</span>
+<span class="sd">            a categorical_module including an item_id column, by default None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TabularFeatures:</span>
+<span class="sd">            Returns ``TabularFeatures`` from a dataset schema&quot;&quot;&quot;</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+            <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+            <span class="n">continuous_tags</span><span class="o">=</span><span class="n">continuous_tags</span><span class="p">,</span>
+            <span class="n">categorical_tags</span><span class="o">=</span><span class="n">categorical_tags</span><span class="p">,</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
+            <span class="n">continuous_projection</span><span class="o">=</span><span class="n">continuous_projection</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">d_output</span> <span class="ow">and</span> <span class="n">projection</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;You cannot specify both d_output and projection at the same time&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">projection</span> <span class="ow">or</span> <span class="n">masking</span> <span class="ow">or</span> <span class="n">d_output</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">aggregation</span><span class="p">:</span>
+            <span class="c1"># TODO: print warning here for clarity</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">set_aggregation</span><span class="p">(</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
+        <span class="c1"># hidden_size = output.output_size()</span>
+
+        <span class="k">if</span> <span class="n">d_output</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">projection</span><span class="p">:</span>
+            <span class="n">projection</span> <span class="o">=</span> <span class="n">MLPBlock</span><span class="p">([</span><span class="n">d_output</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">projection</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">projection_block</span> <span class="o">=</span> <span class="n">projection</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">masking</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">masking</span> <span class="o">=</span> <span class="n">masking_registry</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">masking</span><span class="p">)(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">masking</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s2">&quot;item_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;For masking a categorical_module is required including an item_id.&quot;</span><span class="p">)</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">set_masking</span><span class="p">(</span><span class="n">masking</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.project_continuous_features"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.project_continuous_features">[docs]</a>    <span class="k">def</span> <span class="nf">project_continuous_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">dimensions</span><span class="p">]</span>
+
+        <span class="n">continuous</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_layer</span>
+        <span class="n">continuous</span><span class="o">.</span><span class="n">set_aggregation</span><span class="p">(</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
+
+        <span class="n">continuous</span> <span class="o">=</span> <span class="n">SequentialBlock</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">continuous</span><span class="p">,</span> <span class="n">MLPBlock</span><span class="p">(</span><span class="n">dimensions</span><span class="p">),</span> <span class="n">AsTabular</span><span class="p">(</span><span class="s2">&quot;continuous_projection&quot;</span><span class="p">)]</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;continuous_layer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">continuous</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.call"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.call">[docs]</a>    <span class="k">def</span> <span class="nf">call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">TabularSequenceFeatures</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_block</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregation</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_block</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_block</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">:</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">(</span>
+                <span class="n">outputs</span><span class="p">,</span> <span class="n">item_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;categorical_layer&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item_seq</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.compute_call_output_shape"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.compute_call_output_shape">[docs]</a>    <span class="k">def</span> <span class="nf">compute_call_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">):</span>
+        <span class="n">output_shapes</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_values</span><span class="p">:</span>
+            <span class="n">output_shapes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shape</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">output_shapes</span></div>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.compute_output_shape"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.compute_output_shape">[docs]</a>    <span class="k">def</span> <span class="nf">compute_output_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shapes</span><span class="p">):</span>
+        <span class="n">output_shapes</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">input_shapes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_block</span><span class="p">:</span>
+            <span class="n">output_shapes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_block</span><span class="o">.</span><span class="n">compute_output_shape</span><span class="p">(</span><span class="n">output_shapes</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output_shapes</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">masking</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masking</span>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.set_masking"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.set_masking">[docs]</a>    <span class="k">def</span> <span class="nf">set_masking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_masking</span> <span class="o">=</span> <span class="n">value</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">item_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot;categorical_layer&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">[</span><span class="s2">&quot;categorical_layer&quot;</span><span class="p">],</span> <span class="s2">&quot;item_id&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">item_embedding_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;categorical_layer&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">[</span><span class="s2">&quot;categorical_layer&quot;</span><span class="p">],</span> <span class="s2">&quot;item_embedding_table&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.get_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">tf_utils</span><span class="o">.</span><span class="n">maybe_serialize_keras_objects</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;projection_block&quot;</span><span class="p">,</span> <span class="s2">&quot;masking&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="TabularSequenceFeatures.from_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularSequenceFeatures.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">tf_utils</span><span class="o">.</span><span class="n">maybe_deserialize_keras_objects</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;projection_block&quot;</span><span class="p">,</span> <span class="s2">&quot;masking&quot;</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div></div>
+
+
+<span class="n">TabularFeaturesType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">TabularSequenceFeatures</span><span class="p">,</span> <span class="n">TabularFeatures</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.model.base &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.torch.model.base</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.torch.model.base</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">SimpleNamespace</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torchmetrics</span> <span class="k">as</span> <span class="nn">tm</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">from</span> <span class="nn">transformers.modeling_utils</span> <span class="kn">import</span> <span class="n">SequenceSummary</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.registry</span> <span class="kn">import</span> <span class="n">camelcase_to_snakecase</span>
+
+<span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">BlockBase</span><span class="p">,</span> <span class="n">BlockOrModule</span><span class="p">,</span> <span class="n">BlockType</span>
+<span class="kn">from</span> <span class="nn">..features.base</span> <span class="kn">import</span> <span class="n">InputBlock</span>
+<span class="kn">from</span> <span class="nn">..features.sequence</span> <span class="kn">import</span> <span class="n">TabularFeaturesType</span>
+<span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span><span class="p">,</span> <span class="n">TensorOrTabularData</span>
+<span class="kn">from</span> <span class="nn">..utils.torch_utils</span> <span class="kn">import</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span>
+
+
+<span class="k">def</span> <span class="nf">name_fn</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">inp</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;/&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">name</span><span class="p">,</span> <span class="n">inp</span><span class="p">])</span> <span class="k">if</span> <span class="n">name</span> <span class="k">else</span> <span class="kc">None</span>
+
+
+<div class="viewcode-block" id="PredictionTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask">[docs]</a><span class="k">class</span> <span class="nc">PredictionTask</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Individual prediction-task of a model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loss: torch.nn.Module</span>
+<span class="sd">        The loss to use during training of this task.</span>
+<span class="sd">    metrics: torch.nn.Module</span>
+<span class="sd">        The metrics to calculate during training &amp; evaluation.</span>
+<span class="sd">    target_name: str, optional</span>
+<span class="sd">        Name of the target, this is needed when there are multiple targets.</span>
+<span class="sd">    task_name: str, optional</span>
+<span class="sd">        Name of the prediction task, if not provided a name will be automatically constructed based</span>
+<span class="sd">        on the target-name &amp; class-name.</span>
+<span class="sd">    forward_to_prediction_fn: Callable[[torch.Tensor], torch.Tensor]</span>
+<span class="sd">        Function to apply before the prediction</span>
+<span class="sd">    task_block: BlockType</span>
+<span class="sd">        Module to transform input tensor before computing predictions.</span>
+<span class="sd">    pre: BlockType</span>
+<span class="sd">        Module to compute the predictions probabilities.</span>
+<span class="sd">    summary_type: str</span>
+<span class="sd">        This is used to summarize a sequence into a single tensor. Accepted values are:</span>
+<span class="sd">            - `&quot;last&quot;` -- Take the last token hidden state (like XLNet)</span>
+<span class="sd">            - `&quot;first&quot;` -- Take the first token hidden state (like Bert)</span>
+<span class="sd">            - `&quot;mean&quot;` -- Take the mean of all tokens hidden states</span>
+<span class="sd">            - `&quot;cls_index&quot;` -- Supply a Tensor of classification token position (GPT/GPT-2)</span>
+<span class="sd">            - `&quot;attn&quot;` -- Not implemented now, use multi-head attention</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">tm</span><span class="o">.</span><span class="n">Metric</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">target_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">task_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">forward_to_prediction_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+        <span class="n">task_block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BlockType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BlockType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">summary_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;last&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequence_summary</span> <span class="o">=</span> <span class="n">SequenceSummary</span><span class="p">(</span>
+            <span class="n">SimpleNamespace</span><span class="p">(</span><span class="n">summary_type</span><span class="o">=</span><span class="n">summary_type</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+        <span class="p">)</span>  <span class="c1"># noqa</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_name</span> <span class="o">=</span> <span class="n">target_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forward_to_prediction_fn</span> <span class="o">=</span> <span class="n">forward_to_prediction_fn</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="n">pre</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span> <span class="o">=</span> <span class="n">task_block</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task_name</span> <span class="o">=</span> <span class="n">task_name</span>
+
+<div class="viewcode-block" id="PredictionTask.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">BlockType</span><span class="p">,</span>
+        <span class="n">input_size</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InputBlock</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">task_block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BlockType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The method will be called when block is converted to a model,</span>
+<span class="sd">        i.e when linked to prediction head.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        block:</span>
+<span class="sd">            the model block to link with head</span>
+<span class="sd">        device:</span>
+<span class="sd">            set the device for the metrics and layers of the task</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">task_block</span><span class="p">:</span>
+            <span class="c1"># TODO: What to do when `self.task_block is not None`?</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span> <span class="o">=</span> <span class="n">task_block</span>
+        <span class="k">if</span> <span class="n">pre</span><span class="p">:</span>
+            <span class="c1"># TODO: What to do when `self.pre is not None`?</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="n">pre</span>
+
+        <span class="c1"># Build task block</span>
+        <span class="n">pre_input_size</span> <span class="o">=</span> <span class="n">input_size</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
+            <span class="n">pre_input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="o">.</span><span class="n">output_size</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">pre_input_size</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">device</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+                <span class="n">metric</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">built</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="PredictionTask.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">())</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequence_summary</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">x</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">task_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_name</span>
+
+        <span class="n">base_name</span> <span class="o">=</span> <span class="n">camelcase_to_snakecase</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">name_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_name</span><span class="p">,</span> <span class="n">base_name</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_name</span> <span class="k">else</span> <span class="n">base_name</span>
+
+<div class="viewcode-block" id="PredictionTask.child_name"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.child_name">[docs]</a>    <span class="k">def</span> <span class="nf">child_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">name_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">task_name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PredictionTask.set_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.set_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">set_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PredictionTask.compute_loss"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">compute_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_name</span><span class="p">:</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target_name</span><span class="p">]</span>
+
+        <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">compute_metrics</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">loss</span>
+
+        <span class="k">return</span> <span class="n">loss</span></div>
+
+<div class="viewcode-block" id="PredictionTask.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">predictions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+        <span class="n">forward</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_name</span><span class="p">:</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target_name</span><span class="p">]</span>
+
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">forward</span><span class="p">:</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+        <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_to_prediction_fn</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">predictions</span><span class="p">))</span>
+
+        <span class="kn">from</span> <span class="nn">.prediction_task</span> <span class="kn">import</span> <span class="n">BinaryClassificationTask</span>
+
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">BinaryClassificationTask</span><span class="o">.</span><span class="n">DEFAULT_METRICS</span><span class="p">)):</span>
+                <span class="n">targets</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span><span class="o">.</span><span class="n">int</span><span class="p">()</span>
+            <span class="n">outputs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">(</span><span class="n">metric</span><span class="p">)]</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="PredictionTask.compute_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.compute_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">(</span><span class="n">metric</span><span class="p">):</span> <span class="n">metric</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="PredictionTask.metric_name"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.metric_name">[docs]</a>    <span class="k">def</span> <span class="nf">metric_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">tm</span><span class="o">.</span><span class="n">Metric</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">child_name</span><span class="p">(</span><span class="n">camelcase_to_snakecase</span><span class="p">(</span><span class="n">metric</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PredictionTask.reset_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.reset_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">reset_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="n">metric</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PredictionTask.to_head"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.to_head">[docs]</a>    <span class="k">def</span> <span class="nf">to_head</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Head&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Head</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PredictionTask.to_model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.to_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Model&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="n">Head</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Head"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head">[docs]</a><span class="k">class</span> <span class="nc">Head</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Head of a Model, a head has a single body but could have multiple prediction-tasks.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body: Block</span>
+<span class="sd">        TODO</span>
+<span class="sd">    prediction_tasks: Union[List[PredictionTask], PredictionTask], optional</span>
+<span class="sd">        TODO</span>
+<span class="sd">    task_blocks</span>
+<span class="sd">        TODO</span>
+<span class="sd">    task_weights: List[float], optional</span>
+<span class="sd">        TODO</span>
+<span class="sd">    loss_reduction: str, default=&quot;mean&quot;</span>
+<span class="sd">        TODO</span>
+<span class="sd">    inputs: TabularFeaturesType, optional</span>
+<span class="sd">        TODO</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">BlockBase</span><span class="p">,</span>
+        <span class="n">prediction_tasks</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">PredictionTask</span><span class="p">],</span> <span class="n">PredictionTask</span><span class="p">],</span>
+        <span class="n">task_blocks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">BlockType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BlockType</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">task_weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">loss_reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularFeaturesType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_reduction</span> <span class="o">=</span> <span class="n">loss_reduction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">prediction_tasks</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">prediction_tasks</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">prediction_tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">prediction_tasks</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">prediction_tasks</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">task_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task_weights</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">task_weights</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">task</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">PredictionTask</span><span class="p">],</span> <span class="n">prediction_tasks</span><span class="p">),</span> <span class="n">task_weights</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_task_weights</span><span class="p">[</span><span class="n">task</span><span class="o">.</span><span class="n">task_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">task_blocks</span><span class="o">=</span><span class="n">task_blocks</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Head.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_blocks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Build each prediction task that&#39;s part of the head.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        body</span>
+<span class="sd">        inputs</span>
+<span class="sd">        device</span>
+<span class="sd">        task_blocks</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="s2">&quot;output_size&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span><span class="p">)():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Can&#39;t infer output-size of the body, please provide  &quot;</span>
+                <span class="s2">&quot;a `Block` with a output-size. You can wrap any torch.Module in a Block.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">output_size</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">device</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">task_block</span> <span class="o">=</span> <span class="n">task_blocks</span>
+            <span class="k">if</span> <span class="n">task_blocks</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task_blocks</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">task_blocks</span><span class="p">:</span>
+                <span class="n">task_block</span> <span class="o">=</span> <span class="n">task_blocks</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="n">task_block</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span></div>
+
+<div class="viewcode-block" id="Head.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
+        <span class="n">body</span><span class="p">:</span> <span class="n">BlockBase</span><span class="p">,</span>
+        <span class="n">task_blocks</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">BlockType</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">BlockType</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">task_weight_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">loss_reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularFeaturesType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Head&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate a Head from a Schema through tagged targets.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        schema: DatasetSchema</span>
+<span class="sd">            Schema to use for inferring all targets based on the tags.</span>
+<span class="sd">        body</span>
+<span class="sd">        task_blocks</span>
+<span class="sd">        task_weight_dict</span>
+<span class="sd">        loss_reduction</span>
+<span class="sd">        inputs</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Head</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">task_weight_dict</span> <span class="o">=</span> <span class="n">task_weight_dict</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">tasks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PredictionTask</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">task_weights</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="kn">from</span> <span class="nn">.prediction_task</span> <span class="kn">import</span> <span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span>
+
+        <span class="k">for</span> <span class="n">binary_target</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">BINARY_CLASSIFICATION</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BinaryClassificationTask</span><span class="p">(</span><span class="n">binary_target</span><span class="p">))</span>
+            <span class="n">task_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_weight_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">binary_target</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">regression_target</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">REGRESSION</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
+            <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RegressionTask</span><span class="p">(</span><span class="n">regression_target</span><span class="p">))</span>
+            <span class="n">task_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_weight_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">regression_target</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+
+        <span class="c1"># TODO: Add multi-class classification here. Figure out how to get number of classes</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">body</span><span class="p">,</span>
+            <span class="n">tasks</span><span class="p">,</span>
+            <span class="n">task_blocks</span><span class="o">=</span><span class="n">task_blocks</span><span class="p">,</span>
+            <span class="n">task_weights</span><span class="o">=</span><span class="n">task_weights</span><span class="p">,</span>
+            <span class="n">loss_reduction</span><span class="o">=</span><span class="n">loss_reduction</span><span class="p">,</span>
+            <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="Head.pop_labels"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.pop_labels">[docs]</a>    <span class="k">def</span> <span class="nf">pop_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TabularData</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Pop the labels from the different prediction_tasks from the inputs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs: TabularData</span>
+<span class="sd">            Input dictionary containing all targets.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TabularData</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="Head.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">body_outputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">call_body</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">always_output_dict</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">]:</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">call_body</span><span class="p">:</span>
+            <span class="n">body_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">always_output_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">outputs</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="Head.compute_loss"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">body_outputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">compute_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">call_body</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">call_body</span><span class="p">:</span>
+            <span class="n">body_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span>
+                <span class="n">body_outputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">compute_metrics</span><span class="o">=</span><span class="n">compute_metrics</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+            <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_task_weights</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+
+        <span class="n">loss_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">loss_tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_reduction</span><span class="p">)()</span></div>
+
+<div class="viewcode-block" id="Head.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">body_outputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+        <span class="n">forward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">call_body</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">call_body</span><span class="p">:</span>
+            <span class="n">body_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">task</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">_output_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Head.compute_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.compute_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="k">def</span> <span class="nf">name_fn</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">mode</span><span class="p">,</span> <span class="n">x</span><span class="p">])</span> <span class="k">if</span> <span class="n">mode</span> <span class="k">else</span> <span class="n">x</span>
+
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">name_fn</span><span class="p">(</span><span class="n">name</span><span class="p">):</span> <span class="n">task</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">_output_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Head.reset_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.reset_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">reset_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">task</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">task_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BlockOrModule</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">task_block</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+
+<div class="viewcode-block" id="Head.to_model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.to_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Model&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convert the head to a Model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Model</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Model class that can aggregate one of multiple heads.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    head: Head</span>
+<span class="sd">        One or more heads of the model.</span>
+<span class="sd">    head_weights: List[float], optional</span>
+<span class="sd">        Weight-value to use for each head.</span>
+<span class="sd">    head_reduction: str, optional</span>
+<span class="sd">        How to reduce the losses into a single tensor when multiple heads are used.</span>
+<span class="sd">    optimizer: Type[torch.optim.Optimizer]</span>
+<span class="sd">        Optimizer-class to use during fitting</span>
+<span class="sd">    name: str, optional</span>
+<span class="sd">        Name of the model.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">head</span><span class="p">:</span> <span class="n">Head</span><span class="p">,</span>
+        <span class="n">head_weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">head_reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        #TODO</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">head_weights</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_weights</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`head_weights` must be a list&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">head_weights</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;`head_weights` needs to have the same length &quot;</span> <span class="s2">&quot;as the number of heads&quot;</span>
+                <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">heads</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_weights</span> <span class="o">=</span> <span class="n">head_weights</span> <span class="ow">or</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">head_reduction</span> <span class="o">=</span> <span class="n">head_reduction</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+
+<div class="viewcode-block" id="Model.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTabularData</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="c1"># TODO: Optimize this</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">head</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">call_body</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">always_output_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">outputs</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="Model.compute_loss"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">compute_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">head</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">):</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">head</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">call_body</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">compute_metrics</span><span class="o">=</span><span class="n">compute_metrics</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+            <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_weights</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+
+        <span class="n">loss_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">loss_tensor</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_reduction</span><span class="p">)()</span></div>
+
+<div class="viewcode-block" id="Model.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">call_body</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="n">head</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span>
+                    <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">call_body</span><span class="o">=</span><span class="n">call_body</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="n">forward</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="Model.compute_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.compute_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">head</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">metrics</span></div>
+
+<div class="viewcode-block" id="Model.reset_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.reset_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">reset_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
+            <span class="n">head</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Model.to_lightning"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.to_lightning">[docs]</a>    <span class="k">def</span> <span class="nf">to_lightning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">import</span> <span class="nn">pytorch_lightning</span> <span class="k">as</span> <span class="nn">pl</span>
+
+        <span class="n">parent_self</span> <span class="o">=</span> <span class="bp">self</span>
+
+        <span class="k">class</span> <span class="nc">BlockWithHeadLightning</span><span class="p">(</span><span class="n">pl</span><span class="o">.</span><span class="n">LightningModule</span><span class="p">):</span>
+            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="nb">super</span><span class="p">(</span><span class="n">BlockWithHeadLightning</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">parent</span> <span class="o">=</span> <span class="n">parent_self</span>
+
+            <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">training_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">):</span>
+                <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="o">*</span><span class="n">batch</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">&quot;train_loss&quot;</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">loss</span>
+
+            <span class="k">def</span> <span class="nf">configure_optimizers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+                <span class="n">optimizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
+
+                <span class="k">return</span> <span class="n">optimizer</span>
+
+        <span class="k">return</span> <span class="n">BlockWithHeadLightning</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Model.fit"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">dataloader</span><span class="p">,</span>
+        <span class="n">optimizer</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
+        <span class="n">eval_dataloader</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">num_epochs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">amp</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">):</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataloader</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataloader</span>
+
+        <span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">optimizer</span><span class="p">):</span>
+            <span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">train</span><span class="p">)</span>
+        <span class="n">epoch_losses</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">set_grad_enabled</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">train</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+                <span class="n">losses</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">batch_iterator</span> <span class="o">=</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dataset</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="n">batch_iterator</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">batch_iterator</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch_iterator</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">amp</span><span class="p">:</span>
+                        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">amp</span><span class="o">.</span><span class="n">autocast</span><span class="p">():</span>
+                            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+                    <span class="n">losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">loss</span><span class="p">))</span>
+
+                    <span class="k">if</span> <span class="n">train</span><span class="p">:</span>
+                        <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+                        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+                        <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">))</span>
+                    <span class="k">if</span> <span class="n">eval_dataloader</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">eval_dataloader</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+                <span class="n">epoch_losses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">losses</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">epoch_losses</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.evaluate"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.evaluate">[docs]</a>    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;eval&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataloader</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">):</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataloader</span><span class="o">.</span><span class="n">dataset</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataloader</span>
+
+        <span class="n">batch_iterator</span> <span class="o">=</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">dataset</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">batch_iterator</span> <span class="o">=</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">batch_iterator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="n">batch_iterator</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_name</span><span class="p">()</span></div>
+
+
+<span class="k">def</span> <span class="nf">_output_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
+    <span class="c1"># If there is only a single head with metrics, returns just those metrics</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metrics</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]],</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">metrics</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">return</span> <span class="n">metrics</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
