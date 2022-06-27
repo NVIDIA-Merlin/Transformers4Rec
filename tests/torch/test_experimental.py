@@ -23,7 +23,8 @@ tr = pytest.importorskip("transformers4rec.torch")
 pytorch = pytest.importorskip("torch")
 
 
-def test_post_fusion_context_block(yoochoose_schema, torch_yoochoose_like):
+@pytest.mark.parametrize("fusion_aggregation", ["concat", "elementwise-mul", "elementwise-sum"])
+def test_post_fusion_context_block(yoochoose_schema, torch_yoochoose_like, fusion_aggregation):
 
     tab_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
@@ -45,9 +46,14 @@ def test_post_fusion_context_block(yoochoose_schema, torch_yoochoose_like):
         yoochoose_schema.select_by_name("category/list"), aggregation="concat"
     )
 
-    post_fusion_block = PostContextFusion(sequential_block, post_context)
+    post_fusion_block = PostContextFusion(
+        sequential_block, post_context, fusion_aggregation=fusion_aggregation
+    )
 
     outputs = post_fusion_block(torch_yoochoose_like)
 
     assert outputs.ndim == 3
-    assert outputs.shape[-1] == 64
+    if fusion_aggregation == "concat":
+        assert outputs.shape[-1] == 128
+    else:
+        assert outputs.shape[-1] == 64

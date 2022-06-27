@@ -92,7 +92,12 @@ class PostContextFusion(TabularBlock):
             output = torch.multiply(seq_rep, 1.0 + context_rep)
         elif self.fusion_aggregation == "elementwise-sum":
             output = seq_rep + context_rep
-
+        else:
+            raise ValueError(
+                f"The aggregation {self.fusion_aggregation} is not supported,"
+                f"please select one of the following aggregations "
+                f"['concat', 'elementwise-mul', 'elementwise-sum']"
+            )
         return output
 
     def _get_name(self):
