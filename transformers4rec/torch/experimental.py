@@ -51,8 +51,8 @@ class PostContextFusion(TabularBlock):
 
     def __init__(
         self,
-        sequential_module: Block,
-        post_context_module: Block,
+        sequential_module,
+        post_context_module,
         fusion_aggregation="elementwise-mul",
     ):
         super(PostContextFusion, self).__init__()
