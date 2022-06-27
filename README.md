@@ -106,12 +106,9 @@ Differently from Transformers4Rec, existing frameworks for such tasks are genera
 
 ## Installation
 
-
-
-
 ### Installing with pip
 
-Transformers4Rec comes in two flavors: PyTorch and Tensorflow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended.
+Transformers4Rec comes in two flavors: PyTorch and TensorFlow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended.
 Those components can be installed as optional args for the pip install package. Note that installation NVTabular with `pip` supports only CPU version of NVTabular for now.
 
 - All
@@ -123,7 +120,10 @@ Those components can be installed as optional args for the pip install package. 
 
 
 ### Installing with conda
-`conda install -c nvidia transformers4rec`
+
+```sh
+conda install -c nvidia -c conda-forge transformers4rec
+```
 
 ### Installing with Docker
 
