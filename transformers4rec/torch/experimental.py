@@ -16,7 +16,6 @@
 
 import torch
 
-from transformers4rec.torch import Block
 from transformers4rec.torch.tabular.base import TabularBlock
 
 
