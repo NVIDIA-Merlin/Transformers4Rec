@@ -80,8 +80,9 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         summary_type: str = "last",
     ):
         super().__init__()
+        self.summary_type = summary_type
         self.sequence_summary = SequenceSummary(
-            SimpleNamespace(summary_type=summary_type)  # type: ignore
+            SimpleNamespace(summary_type=self.summary_type)  # type: ignore
         )  # noqa
         self.target_name = target_name
         self.forward_to_prediction_fn = forward_to_prediction_fn
@@ -143,7 +144,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(self, inputs, **kwargs):
         x = inputs
 
-        if len(x.size()) == 3:
+        if len(x.size()) == 3 and self.summary_type:
             x = self.sequence_summary(x)
 
         if self.task_block:
