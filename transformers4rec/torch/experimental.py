@@ -22,8 +22,7 @@ from transformers4rec.torch.tabular.base import TabularBlock
 class PostContextFusion(TabularBlock):
     """ "
 
-    This block leverages the Latent Cross [1] technique to provide contextual information about
-    the target item to be predicted (In Next Item Prediction task).
+    This block leverages the Latent Cross [1] technique to provide contextual information that is not suitable to be fed as input for the sequential module. For example, it might be features about the target item to be predicted (In Next Item Prediction task) or some features from other user-level or sequence-level features.
     In other terms, contextual information  is merged with the output of
     the sequential module right before the prediction step.
     This technique led to a performance boost in our SIGIR'21 challenge [2]
