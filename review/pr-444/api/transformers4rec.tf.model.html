@@ -108,112 +108,11 @@
 <div class="section" id="transformers4rec-tf-model-model-module">
 <h2>transformers4rec.tf.model.model module<a class="headerlink" href="#transformers4rec-tf-model-model-module" title="Permalink to this headline"></a></h2>
 </div>
-<div class="section" id="module-transformers4rec.tf.model.prediction_task">
-<span id="transformers4rec-tf-model-prediction-task-module"></span><h2>transformers4rec.tf.model.prediction_task module<a class="headerlink" href="#module-transformers4rec.tf.model.prediction_task" title="Permalink to this headline"></a></h2>
-<dl class="py function">
-<dt id="transformers4rec.tf.model.prediction_task.name_fn">
-<code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">name_fn</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#name_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.name_fn" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py class">
-<dt id="transformers4rec.tf.model.prediction_task.BinaryClassificationTask">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">BinaryClassificationTask</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#BinaryClassificationTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.BinaryClassificationTask" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.tf.model.base.PredictionTask</span></code></p>
-<dl class="py attribute">
-<dt id="transformers4rec.tf.model.prediction_task.BinaryClassificationTask.DEFAULT_LOSS">
-<code class="sig-name descname"><span class="pre">DEFAULT_LOSS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">&lt;keras.losses.BinaryCrossentropy</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.BinaryClassificationTask.DEFAULT_LOSS" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.tf.model.prediction_task.BinaryClassificationTask.DEFAULT_METRICS">
-<code class="sig-name descname"><span class="pre">DEFAULT_METRICS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">(&lt;class</span> <span class="pre">'keras.metrics.Precision'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'keras.metrics.Recall'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'keras.metrics.BinaryAccuracy'&gt;,</span> <span class="pre">&lt;class</span> <span class="pre">'keras.metrics.AUC'&gt;)</span></em><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.BinaryClassificationTask.DEFAULT_METRICS" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="transformers4rec.tf.model.prediction_task.RegressionTask">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">RegressionTask</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#RegressionTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.RegressionTask" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.tf.model.base.PredictionTask</span></code></p>
-<dl class="py attribute">
-<dt id="transformers4rec.tf.model.prediction_task.RegressionTask.DEFAULT_LOSS">
-<code class="sig-name descname"><span class="pre">DEFAULT_LOSS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">&lt;keras.losses.MeanSquaredError</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.RegressionTask.DEFAULT_LOSS" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.tf.model.prediction_task.RegressionTask.DEFAULT_METRICS">
-<code class="sig-name descname"><span class="pre">DEFAULT_METRICS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">(&lt;class</span> <span class="pre">'keras.metrics.RootMeanSquaredError'&gt;,)</span></em><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.RegressionTask.DEFAULT_METRICS" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.tf.model.prediction_task.</span></code><code class="sig-name descname"><span class="pre">NextItemPredictionTask</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#NextItemPredictionTask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.tf.model.base.PredictionTask</span></code></p>
-<p>Next-item prediction task.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>loss</strong> – Loss function. SparseCategoricalCrossentropy()</p></li>
-<li><p><strong>metrics</strong> – List of RankingMetrics to be evaluated.</p></li>
-<li><p><strong>prediction_metrics</strong> – List of Keras metrics used to summarize the predictions.</p></li>
-<li><p><strong>label_metrics</strong> – List of Keras metrics used to summarize the labels.</p></li>
-<li><p><strong>loss_metrics</strong> – List of Keras metrics used to summarize the loss.</p></li>
-<li><p><strong>name</strong> – Optional task name.</p></li>
-<li><p><strong>target_dim</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.10)"><em>int</em></a>) – Dimension of the target.</p></li>
-<li><p><strong>weight_tying</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><em>bool</em></a>) – The item id embedding table weights are shared with the prediction network layer.</p></li>
-<li><p><strong>item_embedding_table</strong> (<em>tf.Variable</em>) – Variable of embedding table for the item.</p></li>
-<li><p><strong>softmax_temperature</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
-Value 1.0 reduces to regular softmax.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.DEFAULT_LOSS">
-<code class="sig-name descname"><span class="pre">DEFAULT_LOSS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">&lt;keras.losses.SparseCategoricalCrossentropy</span> <span class="pre">object&gt;</span></em><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.DEFAULT_LOSS" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.DEFAULT_METRICS">
-<code class="sig-name descname"><span class="pre">DEFAULT_METRICS</span></code><em class="property"> <span class="pre">=</span> <span class="pre">(NDCGAt(),</span> <span class="pre">AvgPrecisionAt(),</span> <span class="pre">RecallAt())</span></em><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.DEFAULT_METRICS" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.build">
-<code class="sig-name descname"><span class="pre">build</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#NextItemPredictionTask.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.build" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.call">
-<code class="sig-name descname"><span class="pre">call</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#NextItemPredictionTask.call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.call" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.remove_pad_3d">
-<code class="sig-name descname"><span class="pre">remove_pad_3d</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp_tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_pad_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#NextItemPredictionTask.remove_pad_3d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.remove_pad_3d" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.compute_loss">
-<code class="sig-name descname"><span class="pre">compute_loss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_metrics</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call_task</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.10)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">tensorflow.python.framework.ops.Tensor</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#NextItemPredictionTask.compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.compute_loss" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.calculate_metrics">
-<code class="sig-name descname"><span class="pre">calculate_metrics</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predictions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forward</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#NextItemPredictionTask.calculate_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.calculate_metrics" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt id="transformers4rec.tf.model.prediction_task.NextItemPredictionTask.metric_results">
-<code class="sig-name descname"><span class="pre">metric_results</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a><span class="p"><span class="pre">,</span> </span><span class="pre">tensorflow.python.framework.ops.Tensor</span><span class="p"><span class="pre">]</span></span><a class="reference internal" href="../_modules/transformers4rec/tf/model/prediction_task.html#NextItemPredictionTask.metric_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.tf.model.prediction_task.NextItemPredictionTask.metric_results" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
+<div class="section" id="transformers4rec-tf-model-prediction-task-module">
+<h2>transformers4rec.tf.model.prediction_task module<a class="headerlink" href="#transformers4rec-tf-model-prediction-task-module" title="Permalink to this headline"></a></h2>
 </div>
-<div class="section" id="module-transformers4rec.tf.model">
-<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-transformers4rec.tf.model" title="Permalink to this headline"></a></h2>
+<div class="section" id="module-contents">
+<h2>Module contents<a class="headerlink" href="#module-contents" title="Permalink to this headline"></a></h2>
 </div>
 </div>
 
