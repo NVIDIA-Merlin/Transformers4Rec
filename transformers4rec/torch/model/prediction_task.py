@@ -108,7 +108,10 @@ class RegressionTask(PredictionTask):
 
 
 class NextItemPredictionTask(PredictionTask):
-    """Next-item prediction task.
+    """This block performs item prediction task for session and sequential-based models.
+    It requires a body containing a masking schema to use for training and target generation.
+    For the supported masking schemes, please refers to:
+    https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking
 
     Parameters
     ----------
@@ -194,11 +197,13 @@ class NextItemPredictionTask(PredictionTask):
                 # project input tensors to same dimension as item-id embeddings
                 task_block = MLPBlock([item_dim])
 
-        # Retrieve the masking if used in the model block
+        # Retrieve the masking from the input block
         self.masking = inputs.masking
-        if self.masking:
-            self.padding_idx = self.masking.padding_idx
-
+        if not self.masking:
+            raise ValueError(
+                "The input block should contain a masking schema for training and evaluation"
+            )
+        self.padding_idx = self.masking.padding_idx
         pre = NextItemPredictionPrepareBlock(
             target_dim=self.target_dim,
             weight_tying=self.weight_tying,
@@ -217,9 +222,9 @@ class NextItemPredictionTask(PredictionTask):
         if self.task_block:
             x = self.task_block(x)  # type: ignore
 
-        # Retrieve labels either from masking or input module
-        if self.masking and not ignore_masking:
-            labels = self.masking.masked_targets
+        # Retrieve labels from masking
+        if not ignore_masking:
+            labels = self.masking.masked_targets  # type: ignore
             trg_flat = labels.flatten()
             non_pad_mask = trg_flat != self.padding_idx
             labels_all = torch.masked_select(trg_flat, non_pad_mask)
