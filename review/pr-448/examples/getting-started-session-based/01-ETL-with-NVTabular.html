@@ -379,8 +379,8 @@
 <p>In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day folder: train.parquet, validation.parquet and test.parquet</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">OUTPUT_FOLDER</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_FOLDER&quot;</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;sessions_by_day&quot;</span><span class="p">))</span>
-<span class="o">!</span>mkdir -p <span class="nv">$OUTPUT_FOLDER</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;sessions_by_day&quot;</span><span class="p">))</span>
+<span class="o">!</span>mkdir -p <span class="nv">$OUTPUT_DIR</span>
 </pre></div>
 </div>
 </div>
@@ -389,7 +389,7 @@
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.data.preprocessing</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
 <span class="n">save_time_based_splits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="p">),</span>
-                       <span class="n">output_dir</span><span class="o">=</span> <span class="n">OUTPUT_FOLDER</span><span class="p">,</span>
+                       <span class="n">output_dir</span><span class="o">=</span> <span class="n">OUTPUT_DIR</span><span class="p">,</span>
                        <span class="n">partition_col</span><span class="o">=</span><span class="s1">&#39;day-first&#39;</span><span class="p">,</span>
                        <span class="n">timestamp_col</span><span class="o">=</span><span class="s1">&#39;session_id&#39;</span><span class="p">,</span> 
                       <span class="p">)</span>
@@ -407,7 +407,7 @@
 <h2>Checking the preprocessed outputs<a class="headerlink" href="#checking-the-preprocessed-outputs" title="Permalink to this headline"></a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">TRAIN_PATHS</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_FOLDER</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;train.parquet&quot;</span><span class="p">)))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">TRAIN_PATHS</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;train.parquet&quot;</span><span class="p">)))</span>
 </pre></div>
 </div>
 </div>
