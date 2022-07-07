@@ -31,6 +31,7 @@ SESSION_PATH = "examples/getting-started-session-based/"
 @pytest.mark.skipif(importlib.util.find_spec("cudf") is None, reason="needs cudf")
 def test_session(tmpdir):
     BASE_PATH = os.path.join(dirname(TEST_PATH), SESSION_PATH)
+    os.environ["INPUT_DATA_DIR"] = "/tmp/data/"
     # Run ETL
     nb_path = os.path.join(BASE_PATH, "01-ETL-with-NVTabular.ipynb")
     _run_notebook(tmpdir, nb_path)
