@@ -22,7 +22,11 @@ from transformers4rec.torch.tabular.base import TabularBlock
 class PostContextFusion(TabularBlock):
     """ "
 
-    This block leverages the Latent Cross [1] technique to provide contextual information that is not suitable to be fed as input for the sequential module. For example, it might be features about the target item to be predicted (In Next Item Prediction task) or some features from other user-level or sequence-level features.
+    This block leverages the Latent Cross [1] technique to provide contextual
+    information that is not suitable to be fed as input for the sequential module.
+    For example, it might be features about the target item to be predicted
+    (In Next Item Prediction task) or some features from other user-level or
+    sequence-level features.
     In other terms, contextual information  is merged with the output of
     the sequential module right before the prediction step.
     This technique led to a performance boost in our SIGIR'21 challenge [2]
@@ -34,6 +38,9 @@ class PostContextFusion(TabularBlock):
         The sequential module that returns a 3-D hidden representation of the raw input sequence.
     post_context_module: Block
         The block that encodes contextual information about all input items, including targets.
+        The block can returns a 3-D vector (sequence-level context ) or
+         a 2-D vector (user-level context)
+
 
     References:
     -----------
@@ -60,11 +67,7 @@ class PostContextFusion(TabularBlock):
 
         _, seq_length, hidden_dim = sequential_module[-1].output_size()
 
-        post_context_size = post_context_module.output_size()
-        if isinstance(post_context_size, dict):
-            post_context_last_dim = list(post_context_size.values())[0][-1]
-        else:
-            post_context_last_dim = post_context_size[-1]
+        post_context_last_dim = post_context_module.output_size()[-1]
 
         self.seq_length = seq_length
         self.inputs = self.sequential_module.inputs
@@ -80,6 +83,10 @@ class PostContextFusion(TabularBlock):
             inputs, training=training, ignore_masking=ignore_masking, **kwargs
         )
         context_rep = self.post_context_module(inputs, training=training)
+
+        if len(context_rep.size()) == 2:
+            # repeat the context vector for each position in the sequence
+            context_rep = context_rep.unsqueeze(dim=1).repeat(1, self.sequence_length, 1)
 
         if self.fusion_aggregation.startswith("elementwise"):
             context_rep = self.context_projection(context_rep)
