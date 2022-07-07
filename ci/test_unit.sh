@@ -25,7 +25,9 @@ container=$1
 
 ## Tensorflow container
 if [ "$container" == "merlin-tensorflow" ]; then
-    pytest -rsx tests/tf
+    :
+    # Do nothing, since the tensorflow code is now on a separate branch
+    # pytest -rsx tests/tf
 # Pytorch container
 elif [ "$container" == "merlin-pytorch" ]; then
     pytest -rsx tests/torch
