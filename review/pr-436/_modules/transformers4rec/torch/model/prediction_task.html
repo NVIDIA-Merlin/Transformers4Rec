@@ -186,7 +186,10 @@
 
 
 <div class="viewcode-block" id="NextItemPredictionTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask">[docs]</a><span class="k">class</span> <span class="nc">NextItemPredictionTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Next-item prediction task.</span>
+    <span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
+<span class="sd">    It requires a body containing a masking schema to use for training and target generation.</span>
+<span class="sd">    For the supported masking schemes, please refers to:</span>
+<span class="sd">    https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -272,11 +275,13 @@
                 <span class="c1"># project input tensors to same dimension as item-id embeddings</span>
                 <span class="n">task_block</span> <span class="o">=</span> <span class="n">MLPBlock</span><span class="p">([</span><span class="n">item_dim</span><span class="p">])</span>
 
-        <span class="c1"># Retrieve the masking if used in the model block</span>
+        <span class="c1"># Retrieve the masking from the input block</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masking</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="o">.</span><span class="n">padding_idx</span>
-
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The input block should contain a masking schema for training and evaluation&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="o">.</span><span class="n">padding_idx</span>
         <span class="n">pre</span> <span class="o">=</span> <span class="n">NextItemPredictionPrepareBlock</span><span class="p">(</span>
             <span class="n">target_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span><span class="p">,</span>
             <span class="n">weight_tying</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span><span class="p">,</span>
@@ -295,9 +300,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">:</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
-        <span class="c1"># Retrieve labels either from masking or input module</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ignore_masking</span><span class="p">:</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="o">.</span><span class="n">masked_targets</span>
+        <span class="c1"># Retrieve labels from masking</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_masking</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="o">.</span><span class="n">masked_targets</span>  <span class="c1"># type: ignore</span>
             <span class="n">trg_flat</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
             <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">trg_flat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
             <span class="n">labels_all</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span><span class="n">trg_flat</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">)</span>
