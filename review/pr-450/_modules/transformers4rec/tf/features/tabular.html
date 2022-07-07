@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.tf.features.tabular &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.tf.features.tabular</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.tf.features.tabular</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.schema.tag</span> <span class="kn">import</span> <span class="n">TagsType</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.doc_utils</span> <span class="kn">import</span> <span class="n">docstring_parameter</span>
+
+<span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">SequentialBlock</span>
+<span class="kn">from</span> <span class="nn">..block.mlp</span> <span class="kn">import</span> <span class="n">MLPBlock</span>
+<span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">AsTabular</span><span class="p">,</span>
+    <span class="n">MergeTabular</span><span class="p">,</span>
+    <span class="n">TabularAggregationType</span><span class="p">,</span>
+    <span class="n">TabularBlock</span><span class="p">,</span>
+    <span class="n">TabularTransformationType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">tf_utils</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">InputBlock</span>
+<span class="kn">from</span> <span class="nn">.continuous</span> <span class="kn">import</span> <span class="n">ContinuousFeatures</span>
+<span class="kn">from</span> <span class="nn">.embedding</span> <span class="kn">import</span> <span class="n">EmbeddingFeatures</span>
+<span class="kn">from</span> <span class="nn">.text</span> <span class="kn">import</span> <span class="n">TextEmbeddingFeaturesWithTransformers</span>
+
+<span class="n">TABULAR_FEATURES_PARAMS_DOCSTRING</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    continuous_layer: TabularBlock, optional</span>
+<span class="s2">        Block used to process continuous features.</span>
+<span class="s2">    categorical_layer: TabularBlock, optional</span>
+<span class="s2">        Block used to process categorical features.</span>
+<span class="s2">    text_embedding_layer: TabularBlock, optional</span>
+<span class="s2">        Block used to process text features.</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="TabularFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+    <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+    <span class="n">tabular_features_parameters</span><span class="o">=</span><span class="n">TABULAR_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="nd">@tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">register_keras_serializable</span><span class="p">(</span><span class="n">package</span><span class="o">=</span><span class="s2">&quot;transformers4rec&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TabularFeatures</span><span class="p">(</span><span class="n">InputBlock</span><span class="p">,</span> <span class="n">MergeTabular</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Input block that combines different types of features: continuous, categorical &amp; text.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    {tabular_features_parameters}</span>
+<span class="sd">    {tabular_module_parameters}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">CONTINUOUS_MODULE_CLASS</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="n">ContinuousFeatures</span>
+    <span class="n">EMBEDDING_MODULE_CLASS</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="n">EmbeddingFeatures</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">continuous_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">categorical_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">text_embedding_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularBlock</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">continuous_projection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Schema</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="n">to_merge</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">continuous_layer</span><span class="p">:</span>
+            <span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;continuous_layer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">continuous_layer</span>
+        <span class="k">if</span> <span class="n">categorical_layer</span><span class="p">:</span>
+            <span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;categorical_layer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">categorical_layer</span>
+        <span class="k">if</span> <span class="n">text_embedding_layer</span><span class="p">:</span>
+            <span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;text_embedding_layer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">text_embedding_layer</span>
+
+        <span class="k">assert</span> <span class="n">to_merge</span> <span class="o">!=</span> <span class="p">[],</span> <span class="s2">&quot;Please provide at least one input layer&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TabularFeatures</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">to_merge</span><span class="p">,</span>
+            <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
+            <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
+            <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">continuous_projection</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">project_continuous_features</span><span class="p">(</span><span class="n">continuous_projection</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TabularFeatures.project_continuous_features"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularFeatures.project_continuous_features">[docs]</a>    <span class="k">def</span> <span class="nf">project_continuous_features</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">mlp_layers_dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TabularFeatures&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Combine all concatenated continuous features with stacked MLP layers</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mlp_layers_dims : Union[List[int], int]</span>
+<span class="sd">            The MLP layer dimensions</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        TabularFeatures</span>
+<span class="sd">            Returns the same ``TabularFeatures`` object with the continuous features projected</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mlp_layers_dims</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">mlp_layers_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">mlp_layers_dims</span><span class="p">]</span>
+
+        <span class="n">continuous</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_layer</span><span class="p">)</span>
+        <span class="n">continuous</span><span class="o">.</span><span class="n">set_aggregation</span><span class="p">(</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
+
+        <span class="n">continuous</span> <span class="o">=</span> <span class="n">SequentialBlock</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">continuous</span><span class="p">,</span> <span class="n">MLPBlock</span><span class="p">(</span><span class="n">mlp_layers_dims</span><span class="p">),</span> <span class="n">AsTabular</span><span class="p">(</span><span class="s2">&quot;continuous_projection&quot;</span><span class="p">)]</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">[</span><span class="s2">&quot;continuous_layer&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">continuous</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="TabularFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
+        <span class="n">continuous_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TagsType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tag</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">,),</span>
+        <span class="n">categorical_tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">TagsType</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tag</span><span class="p">]]]</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">,),</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">continuous_projection</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">text_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">text_tags</span><span class="o">=</span><span class="n">Tag</span><span class="o">.</span><span class="n">TEXT_TOKENIZED</span><span class="p">,</span>
+        <span class="n">max_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">max_text_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="n">maybe_continuous_layer</span><span class="p">,</span> <span class="n">maybe_categorical_layer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">continuous_tags</span><span class="p">:</span>
+            <span class="n">maybe_continuous_layer</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">CONTINUOUS_MODULE_CLASS</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+                <span class="n">schema</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="n">continuous_tags</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">categorical_tags</span><span class="p">:</span>
+            <span class="n">maybe_categorical_layer</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">EMBEDDING_MODULE_CLASS</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+                <span class="n">schema</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="n">categorical_tags</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">text_model</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text_model</span><span class="p">,</span> <span class="n">TextEmbeddingFeaturesWithTransformers</span><span class="p">):</span>
+            <span class="n">text_model</span> <span class="o">=</span> <span class="n">TextEmbeddingFeaturesWithTransformers</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+                <span class="n">schema</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="n">text_tags</span><span class="p">,</span>
+                <span class="n">transformer_model</span><span class="o">=</span><span class="n">text_model</span><span class="p">,</span>
+                <span class="n">max_text_length</span><span class="o">=</span><span class="n">max_text_length</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">continuous_layer</span><span class="o">=</span><span class="n">maybe_continuous_layer</span><span class="p">,</span>
+            <span class="n">categorical_layer</span><span class="o">=</span><span class="n">maybe_categorical_layer</span><span class="p">,</span>
+            <span class="n">text_embedding_layer</span><span class="o">=</span><span class="n">text_model</span><span class="p">,</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
+            <span class="n">continuous_projection</span><span class="o">=</span><span class="n">continuous_projection</span><span class="p">,</span>
+            <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">continuous_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot;continuous_layer&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">[</span><span class="s2">&quot;continuous_layer&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">categorical_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot;categorical_layer&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">[</span><span class="s2">&quot;categorical_layer&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">text_embedding_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Layer</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="s2">&quot;text_embedding_layer&quot;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_merge_dict</span><span class="p">[</span><span class="s2">&quot;text_embedding_layer&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="TabularFeatures.get_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularFeatures.get_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">transformers4rec.tf</span> <span class="kn">import</span> <span class="n">TabularBlock</span> <span class="k">as</span> <span class="n">_TabularBlock</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="n">tf_utils</span><span class="o">.</span><span class="n">maybe_serialize_keras_objects</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">_TabularBlock</span><span class="o">.</span><span class="n">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span>
+            <span class="p">[</span><span class="s2">&quot;continuous_layer&quot;</span><span class="p">,</span> <span class="s2">&quot;categorical_layer&quot;</span><span class="p">,</span> <span class="s2">&quot;text_embedding_layer&quot;</span><span class="p">],</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="TabularFeatures.from_config"><a class="viewcode-back" href="../../../../api/transformers4rec.tf.features.html#transformers4rec.tf.TabularFeatures.from_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">tf_utils</span><span class="o">.</span><span class="n">maybe_deserialize_keras_objects</span><span class="p">(</span>
+            <span class="n">config</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;continuous_layer&quot;</span><span class="p">,</span> <span class="s2">&quot;categorical_layer&quot;</span><span class="p">,</span> <span class="s2">&quot;text_embedding_layer&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
