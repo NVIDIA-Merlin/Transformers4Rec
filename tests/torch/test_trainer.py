@@ -176,15 +176,15 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
 
     assert isinstance(eval_metrics, dict)
     default_metric = [
-        "eval/next-item/ndcg_at_10",
-        "eval/next-item/ndcg_at_20",
-        "eval/next-item/avg_precision_at_10",
-        "eval/next-item/avg_precision_at_20",
-        "eval/next-item/recall_at_10",
-        "eval/next-item/recall_at_20",
+        "eval_next-item/ndcg_at_10",
+        "eval_next-item/ndcg_at_20",
+        "eval_next-item/avg_precision_at_10",
+        "eval_next-item/avg_precision_at_20",
+        "eval_next-item/recall_at_10",
+        "eval_next-item/recall_at_20",
     ]
     assert set(default_metric).issubset(set(eval_metrics.keys()))
-    assert eval_metrics["eval/loss"] is not None
+    assert eval_metrics["eval_loss"] is not None
 
     assert predictions is not None
 
@@ -263,11 +263,11 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
         compute_metrics=True,
     )
     default_metric = [
-        "eval/next-item/ndcg_at_10",
-        "eval/next-item/ndcg_at_20",
-        "eval/next-item/recall_at_10",
-        "eval/next-item/recall_at_20",
-        "eval/loss",
+        "eval_next-item/ndcg_at_10",
+        "eval_next-item/ndcg_at_20",
+        "eval_next-item/recall_at_10",
+        "eval_next-item/recall_at_20",
+        "eval_loss",
     ]
 
     result_1 = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
