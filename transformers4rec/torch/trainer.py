@@ -95,8 +95,10 @@ class Trainer(BaseTrainer):
         schema: Schema = None,
         train_dataset_or_path=None,
         eval_dataset_or_path=None,
+        test_dataset_or_path=None,
         train_dataloader: Optional[DataLoader] = None,
         eval_dataloader: Optional[DataLoader] = None,
+        test_dataloader: Optional[DataLoader] = None,
         callbacks: Optional[List[TrainerCallback]] = [],
         compute_metrics=None,
         incremental_logging: bool = False,
@@ -124,8 +126,10 @@ class Trainer(BaseTrainer):
         self.compute_metrics = compute_metrics
         self.train_dataset_or_path = train_dataset_or_path
         self.eval_dataset_or_path = eval_dataset_or_path
+        self.test_dataset_or_path = test_dataset_or_path
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
+        self.test_dataloader = test_dataloader
         self.schema = schema
         self.incremental_logging = incremental_logging
 
@@ -167,6 +171,30 @@ class Trainer(BaseTrainer):
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
             self.eval_dataset_or_path,
+            self.args.per_device_eval_batch_size,
+            max_sequence_length=self.args.max_sequence_length,
+            drop_last=self.args.dataloader_drop_last,
+            shuffle=False,
+            shuffle_buffer_size=self.args.shuffle_buffer_size,
+        )
+
+    def get_test_dataloader(self, test_dataset=None):
+        """
+        Set the test dataloader to use by Trainer.
+        It supports user defined data-loader set as an attribute in the constructor.
+        When the attribute is None, The data-loader is defined using test_dataset
+        and the `data_loader_engine` specified in Training Arguments.
+        """
+        if self.test_dataloader is not None:
+            return self.test_dataloader
+
+        if test_dataset is None and self.test_dataset is None:
+            raise ValueError("Trainer: test requires an test_dataset.")
+        test_dataset = test_dataset if test_dataset is not None else self.test_dataset
+        assert self.schema is not None, "schema is required to generate Test Dataloader"
+        return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
+            self.schema,
+            self.test_dataset_or_path,
             self.args.per_device_eval_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
@@ -276,6 +304,7 @@ class Trainer(BaseTrainer):
         inputs: Dict[str, torch.Tensor],
         prediction_loss_only: bool,
         ignore_keys: Optional[List[str]] = None,
+        ignore_masking: bool = False,
     ) -> Tuple[
         Optional[float],
         Optional[torch.Tensor],
@@ -292,9 +321,9 @@ class Trainer(BaseTrainer):
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
-                    outputs = model(inputs, training=False)
+                    outputs = model(inputs, training=False, ignore_masking=ignore_masking)
             else:
-                outputs = model(inputs, training=False)
+                outputs = model(inputs, training=False, ignore_masking=ignore_masking)
 
             loss = outputs["loss"].mean().detach()
 
@@ -354,6 +383,11 @@ class Trainer(BaseTrainer):
             else self.args.prediction_loss_only
         )
 
+        if description == "Prediction":
+            ignore_masking = True
+        else:
+            ignore_masking = False
+
         # set the model
         model = self.model.module
         # reset metrics for the dataset (Train, Valid or Test)
@@ -410,7 +444,11 @@ class Trainer(BaseTrainer):
                 break
 
             loss, preds, labels, outputs = self.prediction_step(
-                model, inputs, prediction_loss_only, ignore_keys=ignore_keys
+                model,
+                inputs,
+                prediction_loss_only,
+                ignore_keys=ignore_keys,
+                ignore_masking=ignore_masking,
             )
 
             # Updates metrics
