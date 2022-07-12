@@ -17,9 +17,7 @@
 #!/bin/bash
 set -e
 
-# Get latest Transformers4Rec version
 cd /transformers4rec/
-git pull origin main
 
 container=$1
 
