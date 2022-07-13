@@ -584,12 +584,12 @@ class Trainer(BaseTrainer):
         if self.compute_metrics:
             streaming_metrics_results = model.compute_metrics(mode=metric_key_prefix)
             streaming_metrics_results_flattened = process_metrics(
-                streaming_metrics_results, prefix=metric_key_prefix + "_"
+                streaming_metrics_results, prefix=metric_key_prefix + "_/"
             )
 
             metrics = {**metrics, **streaming_metrics_results_flattened}
 
-        metrics[f"{metric_key_prefix}_loss"] = all_losses.mean().item()
+        metrics[f"{metric_key_prefix}_/loss"] = all_losses.mean().item()
 
         return EvalLoopOutput(
             predictions=all_preds_item_ids_scores,
@@ -762,7 +762,6 @@ class Trainer(BaseTrainer):
 
 
 def process_metrics(metrics, prefix="", to_cpu=True):
-    prefix = prefix.replace("/", "_")
     metrics_proc = {}
     for root_key, root_value in metrics.items():
         if isinstance(root_value, dict):
