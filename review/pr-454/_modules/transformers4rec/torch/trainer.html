@@ -662,12 +662,12 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">:</span>
             <span class="n">streaming_metrics_results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">metric_key_prefix</span><span class="p">)</span>
             <span class="n">streaming_metrics_results_flattened</span> <span class="o">=</span> <span class="n">process_metrics</span><span class="p">(</span>
-                <span class="n">streaming_metrics_results</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">metric_key_prefix</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span>
+                <span class="n">streaming_metrics_results</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">metric_key_prefix</span> <span class="o">+</span> <span class="s2">&quot;_/&quot;</span>
             <span class="p">)</span>
 
             <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">metrics</span><span class="p">,</span> <span class="o">**</span><span class="n">streaming_metrics_results_flattened</span><span class="p">}</span>
 
-        <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_losses</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_/loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_losses</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">EvalLoopOutput</span><span class="p">(</span>
             <span class="n">predictions</span><span class="o">=</span><span class="n">all_preds_item_ids_scores</span><span class="p">,</span>
@@ -840,7 +840,6 @@
 
 
 <div class="viewcode-block" id="process_metrics"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.process_metrics">[docs]</a><span class="k">def</span> <span class="nf">process_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">to_cpu</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
     <span class="n">metrics_proc</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">root_key</span><span class="p">,</span> <span class="n">root_value</span> <span class="ow">in</span> <span class="n">metrics</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">root_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
