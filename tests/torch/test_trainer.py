@@ -33,6 +33,8 @@ def test_set_train_eval_loaders_attributes(
     train_loader._batch_size = batch_size
     eval_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
     eval_loader._batch_size = batch_size // 2
+    test_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
+    test_loader._batch_size = batch_size // 2
 
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
@@ -46,10 +48,12 @@ def test_set_train_eval_loaders_attributes(
         args=args,
         train_dataloader=train_loader,
         eval_dataloader=eval_loader,
+        test_dataloader=test_loader,
     )
 
     assert recsys_trainer.get_train_dataloader() == train_loader
     assert recsys_trainer.get_eval_dataloader() == eval_loader
+    assert recsys_trainer.get_test_dataloader() == test_loader
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
@@ -163,22 +167,26 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
         schema=data.schema,
         train_dataset_or_path=data.path,
         eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
         compute_metrics=True,
     )
 
     eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+    predictions = recsys_trainer.predict(data.path)
 
     assert isinstance(eval_metrics, dict)
     default_metric = [
-        "eval/next-item/ndcg_at_10",
-        "eval/next-item/ndcg_at_20",
-        "eval/next-item/avg_precision_at_10",
-        "eval/next-item/avg_precision_at_20",
-        "eval/next-item/recall_at_10",
-        "eval/next-item/recall_at_20",
+        "eval_/next-item/ndcg_at_10",
+        "eval_/next-item/ndcg_at_20",
+        "eval_/next-item/avg_precision_at_10",
+        "eval_/next-item/avg_precision_at_20",
+        "eval_/next-item/recall_at_10",
+        "eval_/next-item/recall_at_20",
     ]
     assert set(default_metric).issubset(set(eval_metrics.keys()))
-    assert eval_metrics["eval/loss"] is not None
+    assert eval_metrics["eval_/loss"] is not None
+
+    assert predictions is not None
 
 
 def test_saves_checkpoints(torch_yoochoose_next_item_prediction_model):
@@ -228,6 +236,43 @@ def test_saves_checkpoints(torch_yoochoose_next_item_prediction_model):
             assert os.path.isfile(os.path.join(checkpoint, filename))
 
 
+def test_saves_checkpoints_best_metric(torch_yoochoose_next_item_prediction_model):
+    pytest.importorskip("pyarrow")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        batch_size = 16
+        args = trainer.T4RecTrainingArguments(
+            output_dir=tmpdir,
+            num_train_epochs=3,
+            per_device_train_batch_size=batch_size,
+            per_device_eval_batch_size=batch_size // 2,
+            data_loader_engine="pyarrow",
+            max_sequence_length=20,
+            fp16=False,
+            no_cuda=True,
+            report_to=[],
+            debug=["r"],
+            save_total_limit=2,
+            save_steps=100,
+            eval_steps=100,
+            evaluation_strategy="steps",
+            save_strategy="steps",
+            load_best_model_at_end=True,
+            metric_for_best_model="/next-item/recall_at_10",
+        )
+        data = tr.data.tabular_sequence_testing_data
+        recsys_trainer = tr.Trainer(
+            model=torch_yoochoose_next_item_prediction_model,
+            args=args,
+            schema=data.schema,
+            train_dataset_or_path=data.path,
+            eval_dataset_or_path=data.path,
+            compute_metrics=True,
+        )
+        recsys_trainer.train()
+        assert len(os.listdir(tmpdir)) == 1
+        assert "checkpoint-100" in os.listdir(tmpdir)
+
+
 def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
     pytest.importorskip("pyarrow")
     batch_size = 16
@@ -255,11 +300,11 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
         compute_metrics=True,
     )
     default_metric = [
-        "eval/next-item/ndcg_at_10",
-        "eval/next-item/ndcg_at_20",
-        "eval/next-item/recall_at_10",
-        "eval/next-item/recall_at_20",
-        "eval/loss",
+        "eval_/next-item/ndcg_at_10",
+        "eval_/next-item/ndcg_at_20",
+        "eval_/next-item/recall_at_10",
+        "eval_/next-item/recall_at_20",
+        "eval_/loss",
     ]
 
     result_1 = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")

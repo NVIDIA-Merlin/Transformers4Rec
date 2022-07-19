@@ -1,0 +1,11 @@
+name: triage_issues
+on:
+  issues:
+    types: [opened, reopened]
+
+jobs:
+  triage_issue:
+    uses: nvidia-merlin/.github/.github/workflows/triage.yaml@main
+    secrets:
+      TRIAGE_APP_ID: ${{ secrets.TRIAGE_APP_ID }}
+      TRIAGE_APP_PEM: ${{ secrets.TRIAGE_APP_PEM }}

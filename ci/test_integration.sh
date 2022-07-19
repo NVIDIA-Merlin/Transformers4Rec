@@ -1,23 +1,31 @@
-#!/bin/bash
+#
+# Copyright (c) 2022, NVIDIA CORPORATION.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
-# Get latest Transformers4Rec version
+#!/bin/bash
+set -e
+
 cd /transformers4rec/
-git pull origin main
 
 container=$1
 devices=$2
 
-# Training container
-if [ "$container" == "merlin-training" ]; then
-   echo "Transformers4Rec not installed in Training container"
-   exit 0
-# Tensorflow container
-elif [ "$container" == "merlin-tensorflow-training" ]; then
-   echo "There are not integration tests for TensorFlow container yet"
+# Run only for Merlin PyTorch Container
+if [ "$container" != "merlin-pytorch" ]; then
    exit 0
 fi
-
-# Run integration tests for PyTorch and Inference containers
 
 ## Install requirements
 cd examples/t4rec_paper_experiments
