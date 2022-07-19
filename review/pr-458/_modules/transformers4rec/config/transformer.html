@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.config.transformer &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.config.transformer</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.config.transformer</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">transformers</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Registry</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">tf</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">transformer_registry</span><span class="p">:</span> <span class="n">Registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;transformers&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="T4RecConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig">[docs]</a><span class="k">class</span> <span class="nc">T4RecConfig</span><span class="p">:</span>
+<div class="viewcode-block" id="T4RecConfig.to_huggingface_torch_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_torch_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_huggingface_torch_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">model_cls</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">MODEL_MAPPING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transformers_config_cls</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">model_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="T4RecConfig.to_torch_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_torch_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_torch_model</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">input_features</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">prediction_task</span><span class="p">,</span>
+        <span class="n">task_blocks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">task_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">loss_reduction</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">torch4rec</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">torch4rec</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`input_features` must an instance of SequentialTabularFeatures&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">torch4rec</span><span class="o">.</span><span class="n">PredictionTask</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">prediction_task</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;`task` is of the wrong type, please provide one or multiple &quot;</span>
+                <span class="s2">&quot;instance(s) of PredictionTask&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">torch4rec</span><span class="o">.</span><span class="n">SequentialBlock</span><span class="p">(</span>
+            <span class="n">input_features</span><span class="p">,</span> <span class="n">torch4rec</span><span class="o">.</span><span class="n">TransformerBlock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">input_features</span><span class="o">.</span><span class="n">masking</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">torch4rec</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
+            <span class="n">body</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">prediction_task</span><span class="p">,</span>
+            <span class="n">task_blocks</span><span class="o">=</span><span class="n">task_blocks</span><span class="p">,</span>
+            <span class="n">task_weights</span><span class="o">=</span><span class="n">task_weights</span><span class="p">,</span>
+            <span class="n">loss_reduction</span><span class="o">=</span><span class="n">loss_reduction</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to_model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">if</span> <span class="n">tf</span><span class="p">:</span>
+
+<div class="viewcode-block" id="T4RecConfig.to_tf_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_tf_model">[docs]</a>        <span class="k">def</span> <span class="nf">to_tf_model</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">input_features</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">prediction_task</span><span class="p">,</span>
+            <span class="n">task_blocks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">task_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">loss_reduction</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">):</span>
+            <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">tf</span> <span class="k">as</span> <span class="n">tf4rec</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`input_features` must an instance of SequentialTabularFeatures&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">PredictionTask</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">prediction_task</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;`task` is of the wrong type, please provide one or multiple &quot;</span>
+                    <span class="s2">&quot;instance(s) of PredictionTask&quot;</span>
+                <span class="p">)</span>
+
+            <span class="n">body</span> <span class="o">=</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">SequentialBlock</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">input_features</span><span class="p">,</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">TransformerBlock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">input_features</span><span class="o">.</span><span class="n">masking</span><span class="p">)]</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
+                <span class="n">tf4rec</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
+                    <span class="n">body</span><span class="p">,</span>
+                    <span class="o">*</span><span class="n">prediction_task</span><span class="p">,</span>
+                    <span class="n">task_blocks</span><span class="o">=</span><span class="n">task_blocks</span><span class="p">,</span>
+                    <span class="n">task_weights</span><span class="o">=</span><span class="n">task_weights</span><span class="p">,</span>
+                    <span class="n">loss_reduction</span><span class="o">=</span><span class="n">loss_reduction</span><span class="p">,</span>
+                    <span class="n">inputs</span><span class="o">=</span><span class="n">input_features</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="T4RecConfig.to_huggingface_tf_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_tf_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_huggingface_tf_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">model_cls</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TF_MODEL_MAPPING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transformers_config_cls</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">model_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">transformers_config_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<div class="viewcode-block" id="T4RecConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="ReformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ReformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;reformer&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ReformerConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">ReformerConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="ReformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ReformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">axial_pos_shape_first_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">attention_head_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">attn_layers</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;local&quot;</span><span class="p">,</span> <span class="s2">&quot;lsh&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n_layer</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span> <span class="k">if</span> <span class="n">n_layer</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="p">[</span><span class="s2">&quot;local&quot;</span><span class="p">],</span>
+            <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">feed_forward_size</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">num_attention_heads</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">hidden_act</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">hidden_dropout_prob</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">lsh_attention_probs_dropout_prob</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">max_position_embeddings</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
+            <span class="n">axial_pos_embds_dim</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">d_model</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="n">d_model</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">axial_pos_shape</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">axial_pos_shape_first_dim</span><span class="p">,</span>
+                <span class="n">total_seq_length</span> <span class="o">//</span> <span class="n">axial_pos_shape_first_dim</span><span class="p">,</span>
+            <span class="p">],</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="GPT2Config"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.GPT2Config">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;gtp2&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">GPT2Config</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">GPT2Config</span><span class="p">):</span>
+<div class="viewcode-block" id="GPT2Config.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.GPT2Config.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">n_embd</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">n_inner</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">n_layer</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">n_head</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">activation_function</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">resid_pdrop</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">embd_pdrop</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">attn_pdrop</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">n_positions</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
+            <span class="n">n_ctx</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="LongformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.LongformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;longformer&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LongformerConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">LongformerConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="LongformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.LongformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">num_attention_heads</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">hidden_act</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">attention_window</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ElectraConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ElectraConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;electra&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">ElectraConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">ElectraConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="ElectraConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ElectraConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">embedding_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">num_attention_heads</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">intermediate_size</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">hidden_act</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">hidden_dropout_prob</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">max_position_embeddings</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="AlbertConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.AlbertConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;albert&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">AlbertConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AlbertConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="AlbertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.AlbertConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">num_attention_heads</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">hidden_act</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">intermediate_size</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">hidden_dropout_prob</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">attention_probs_dropout_prob</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">max_position_embeddings</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
+            <span class="n">embedding_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>  <span class="c1"># should be same as dimension of the input to ALBERT</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="XLNetConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.XLNetConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;xlnet&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">XLNetConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="XLNetConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.XLNetConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">attn_type</span><span class="o">=</span><span class="s2">&quot;bi&quot;</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mem_len</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">d_inner</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">n_layer</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">n_head</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">attn_type</span><span class="o">=</span><span class="n">attn_type</span><span class="p">,</span>
+            <span class="n">ff_activation</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">mem_len</span><span class="o">=</span><span class="n">mem_len</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BertConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.BertConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;bert&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">BertConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">BertConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="BertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.BertConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">num_attention_heads</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">hidden_act</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RobertaConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.RobertaConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;roberta&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">RobertaConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">RobertaConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="RobertaConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.RobertaConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">num_attention_heads</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">hidden_act</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TransfoXLConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.TransfoXLConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;transfo-xl&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">TransfoXLConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TransfoXLConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="TransfoXLConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.TransfoXLConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">d_model</span><span class="p">,</span>
+        <span class="n">n_head</span><span class="p">,</span>
+        <span class="n">n_layer</span><span class="p">,</span>
+        <span class="n">total_seq_length</span><span class="p">,</span>
+        <span class="n">hidden_act</span><span class="o">=</span><span class="s2">&quot;gelu&quot;</span><span class="p">,</span>
+        <span class="n">initializer_range</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
+        <span class="n">layer_norm_eps</span><span class="o">=</span><span class="mf">0.03</span><span class="p">,</span>
+        <span class="n">dropout</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+        <span class="n">pad_token</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">d_embed</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+            <span class="n">n_layer</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
+            <span class="n">n_head</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
+            <span class="n">d_inner</span><span class="o">=</span><span class="n">d_model</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="n">hidden_act</span><span class="o">=</span><span class="n">hidden_act</span><span class="p">,</span>
+            <span class="n">untie_r</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">attn_type</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">initializer_range</span><span class="o">=</span><span class="n">initializer_range</span><span class="p">,</span>
+            <span class="n">layer_norm_eps</span><span class="o">=</span><span class="n">layer_norm_eps</span><span class="p">,</span>
+            <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
+            <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># As the input_embeds will be fed in the forward function, limits the memory reserved by the internal input embedding table, which will not be used</span>
+            <span class="n">mem_len</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># We do not use mems, because we feed the full sequence to the Transformer models and not sliding segments (which is useful for the long sequences in NLP. As setting mem_len to 0 leads to NaN in loss, we set it to one, to minimize the computing overhead)</span>
+            <span class="n">div_val</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># Disables adaptative input (embeddings), because the embeddings are managed by TabularFeatures</span>
+            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
