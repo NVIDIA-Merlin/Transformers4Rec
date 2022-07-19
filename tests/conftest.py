@@ -52,10 +52,6 @@ def tabular_schema() -> Schema:
     return tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
 
-tf = importlib.util.find_spec("tensorflow")
-if tf is not None:
-    from tests.tf.conftest import *  # noqa
-
 torch = importlib.util.find_spec("torch")
 if torch is not None:
     from tests.torch.conftest import *  # noqa

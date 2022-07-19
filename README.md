@@ -106,12 +106,9 @@ Differently from Transformers4Rec, existing frameworks for such tasks are genera
 
 ## Installation
 
-
-
-
 ### Installing with pip
 
-Transformers4Rec comes in two flavors: PyTorch and Tensorflow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended.
+Transformers4Rec comes in two flavors: PyTorch and TensorFlow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended.
 Those components can be installed as optional args for the pip install package. Note that installation NVTabular with `pip` supports only CPU version of NVTabular for now.
 
 - All
@@ -123,21 +120,16 @@ Those components can be installed as optional args for the pip install package. 
 
 
 ### Installing with conda
-`conda install -c nvidia transformers4rec`
+
+```sh
+conda install -c nvidia -c conda-forge transformers4rec
+```
 
 ### Installing with Docker
 
-Transformers4Rec library is pre-installed in the NVIDIA Merlin Docker containers, that are available in the [NVIDIA container repository](https://ngc.nvidia.com/catalog/containers/nvidia:merlin) in three different containers:
+Transformers4Rec library is pre-installed in the NVIDIA Merlin Docker containers.
 
-
-| Container Name             | Container Location | Functionality |
-| -------------------------- | ------------------ | ------------- |
-| merlin-tensorflow-training | [https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-tensorflow-training](https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-tensorflow-training) | Transformers4Rec, NVTabular, TensorFlow, and HugeCTR Tensorflow Embedding plugin |
-| merlin-pytorch-training    | [https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-pytorch-training](https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-pytorch-training)    | Transformers4Rec, NVTabular and PyTorch
-| merlin-inference           | [https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-inference](https://ngc.nvidia.com/catalog/containers/nvidia:merlin:merlin-inference)           | Transformers4Rec, NVTabular, PyTorch, and Triton Inference |  |
-
-To use these Docker containers, you'll first need to install the [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) to provide GPU support for Docker. You can use the NGC links referenced in the table above to obtain more information about how to launch and run these containers.
-
+Refer to the [Merlin Containers](https://nvidia-merlin.github.io/Merlin/main/containers.html) documentation page for information about the Merlin container names, URLs to the container images on the NVIDIA GPU Cloud catalog, and key Merlin components.
 
 ### Feedback and Support
 

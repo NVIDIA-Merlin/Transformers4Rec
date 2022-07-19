@@ -17,16 +17,16 @@
 #!/bin/bash
 set -e
 
-# Get latest Transformers4Rec version
 cd /transformers4rec/
-git pull origin main
 
 container=$1
 
 ## Tensorflow container
-if [ "$container" == "merlin-tensorflow-training" ]; then
-    pytest -rsx tests/tf
+if [ "$container" == "merlin-tensorflow" ]; then
+    :
+    # Do nothing, since the tensorflow code is now on a separate branch
+    # pytest -rsx tests/tf
 # Pytorch container
-elif [ "$container" == "merlin-pytorch-training" ]; then
+elif [ "$container" == "merlin-pytorch" ]; then
     pytest -rsx tests/torch
 fi

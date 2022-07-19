@@ -17,15 +17,13 @@
 #!/bin/bash
 set -e
 
-# Get latest Transformers4Rec version
 cd /transformers4rec/
-git pull origin main
 
 container=$1
 devices=$2
 
 # Run only for Merlin PyTorch Container
-if [ "$container" != "merlin-pytorch-training" ]; then
+if [ "$container" != "merlin-pytorch" ]; then
    exit 0
 fi
 
