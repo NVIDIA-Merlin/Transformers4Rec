@@ -5,7 +5,6 @@ black==20.8b1
 flake8
 isort
 bandit
-nbsphinx>=0.6
 mypy==0.930
 tensorflow-metadata
 tensorflow-estimator==2.6.*
@@ -16,7 +15,6 @@ click<8.1.0
 # docs
 Sphinx<3.6
 sphinx_rtd_theme==1.0.0
-sphinx_markdown_tables==0.0.15
 sphinx-multiversion@git+https://github.com/mikemckiernan/sphinx-multiversion.git
 sphinxcontrib-copydirs@git+https://github.com/mikemckiernan/sphinxcontrib-copydirs.git
 sphinx-external-toc<0.4

@@ -56,7 +56,6 @@ extensions = [
     "sphinx_external_toc",
     "sphinx_multiversion",
     "sphinx_rtd_theme",
-    "sphinx_markdown_tables",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.coverage",
