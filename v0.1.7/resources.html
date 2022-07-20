@@ -109,150 +109,131 @@
 <div class="section" id="supported-huggingface-architectures-and-pre-training-approaches">
 <h2>Supported HuggingFace architectures and pre-training approaches<a class="headerlink" href="#supported-huggingface-architectures-and-pre-training-approaches" title="Permalink to this headline"></a></h2>
 <p>Transformers4Rec supports the four following <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking">masking tasks</a>:</p>
-<table border="1" class="docutils">
+<table class="colwidths-auto docutils align-default">
 <thead>
-<tr>
-<th>Acronym</th>
-<th>Definition</th>
+<tr class="row-odd"><th class="head"><p>Acronym</p></th>
+<th class="head"><p>Definition</p></th>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td>CLM</td>
-<td>Causal Language Modeling</td>
+<tr class="row-even"><td><p>CLM</p></td>
+<td><p>Causal Language Modeling</p></td>
 </tr>
-<tr>
-<td>MLM</td>
-<td>Masked Language Modeling</td>
+<tr class="row-odd"><td><p>MLM</p></td>
+<td><p>Masked Language Modeling</p></td>
 </tr>
-<tr>
-<td>PLM</td>
-<td>Permutation Language Modeling</td>
+<tr class="row-even"><td><p>PLM</p></td>
+<td><p>Permutation Language Modeling</p></td>
 </tr>
-<tr>
-<td>RTD</td>
-<td>Replacement Token Detection</td>
+<tr class="row-odd"><td><p>RTD</p></td>
+<td><p>Replacement Token Detection</p></td>
 </tr>
 </tbody>
 </table>
 <p>In Transformers4Rec, we decouple the pre-training approaches from transformers architectures and provide <code class="docutils literal notranslate"><span class="pre">TransformerBlock</span></code> module that links the config class of the transformer architecture to the masking task. Transformers4Rec also defines a <code class="docutils literal notranslate"><span class="pre">transformer_registry</span></code> including pre-defined <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig"><code class="docutils literal notranslate"><span class="pre">T4RecConfig</span></code></a> constructors that automatically set the arguments of the related HuggingFace Transformers’ configuration classes.
 The table below represents the current supported architectures in Transformers4Rec and links them to the possible masking tasks. It also lists the pre-registered <code class="docutils literal notranslate"><span class="pre">T4RecConfig</span></code> classes in the column <code class="docutils literal notranslate"><span class="pre">Registered</span></code>.
 Tip: Registering HF Transformers config classes into Transformers4Rec is a good opportunity for your first contributions to the library ;)</p>
-<table border="1" class="docutils">
+<table class="colwidths-auto docutils align-default">
 <thead>
-<tr>
-<th>Model</th>
-<th>CLM</th>
-<th>MLM</th>
-<th>PLM</th>
-<th>RTD</th>
-<th>Registered</th>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>CLM</p></th>
+<th class="head"><p>MLM</p></th>
+<th class="head"><p>PLM</p></th>
+<th class="head"><p>RTD</p></th>
+<th class="head"><p>Registered</p></th>
 </tr>
 </thead>
 <tbody>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/albert.html#bertconfig">AlBERT</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>✅</td>
+<tr class="row-even"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/albert.html#bertconfig">AlBERT</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/bert.html#bertconfig">BERT</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>✅</td>
+<tr class="row-odd"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/bert.html#bertconfig">BERT</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/convbert.html#convbertconfig">ConvBERT</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
+<tr class="row-even"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/convbert.html#convbertconfig">ConvBERT</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/deberta.html#debertaconfig">DeBERTa</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
+<tr class="row-odd"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/deberta.html#debertaconfig">DeBERTa</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/distilbert.html#distilbertmodel">DistilBERT</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
+<tr class="row-even"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/distilbert.html#distilbertmodel">DistilBERT</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/gpt2.html#gpt2config">GPT-2</a></td>
-<td>✅</td>
-<td>❌</td>
-<td>❌</td>
-<td>❌</td>
-<td>✅</td>
+<tr class="row-odd"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/gpt2.html#gpt2config">GPT-2</a></p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/longformer.html#longformerconfig">Longformer</a></td>
-<td>✅</td>
-<td>✅</td>
-<td>❌</td>
-<td>❌</td>
-<td>✅</td>
+<tr class="row-even"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/longformer.html#longformerconfig">Longformer</a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/megatron_bert.html#megatronbertconfig">MegatronBert</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
+<tr class="row-odd"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/megatron_bert.html#megatronbertconfig">MegatronBert</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/mpnet.html#mpnetconfig">MPNet</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
+<tr class="row-even"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/mpnet.html#mpnetconfig">MPNet</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/roberta.html#robertaconfig">RoBERTa</a></td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>✅</td>
+<tr class="row-odd"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/roberta.html#robertaconfig">RoBERTa</a></p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/roformer.html#roformerconfig">RoFormer</a></td>
-<td>✅</td>
-<td>✅</td>
-<td>❌</td>
-<td>✅</td>
-<td>❌</td>
+<tr class="row-even"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/roformer.html#roformerconfig">RoFormer</a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/transformerxl.html#transfoxlconfig">Transformer-XL</a></td>
-<td>✅</td>
-<td>❌</td>
-<td>❌</td>
-<td>❌</td>
-<td>✅</td>
+<tr class="row-odd"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/transformerxl.html#transfoxlconfig">Transformer-XL</a></p></td>
+<td><p>✅</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>❌</p></td>
+<td><p>✅</p></td>
 </tr>
-<tr>
-<td><a href="https://huggingface.co/transformers/model_doc/xlnet.html#xlnetconfig">XLNet</a></td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
-<td>✅</td>
+<tr class="row-even"><td><p><a class="reference external" href="https://huggingface.co/transformers/model_doc/xlnet.html#xlnetconfig">XLNet</a></p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
+<td><p>✅</p></td>
 </tr>
 </tbody>
 </table>
@@ -309,7 +290,7 @@ Tip: Registering HF Transformers config classes into Transformers4Rec is a good 
     <dl>
       <dt>Tags</dt>
       <dd><a href="../v0.1.10/resources.html">v0.1.10</a></dd>
-      <dd><a href="../v0.1.5/resources.html">v0.1.5</a></dd>
+      <dd><a href="../v0.1.11/resources.html">v0.1.11</a></dd>
       <dd><a href="../v0.1.6/resources.html">v0.1.6</a></dd>
       <dd><a href="resources.html">v0.1.7</a></dd>
       <dd><a href="../v0.1.8/resources.html">v0.1.8</a></dd>
