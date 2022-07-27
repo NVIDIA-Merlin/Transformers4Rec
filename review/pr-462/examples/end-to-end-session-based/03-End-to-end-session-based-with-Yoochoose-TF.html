@@ -543,13 +543,13 @@ Eval results for day 180 are:
 </ul>
 <div class="section" id="pull-and-start-inference-container">
 <h3>4.1. Pull and Start Inference Container<a class="headerlink" href="#pull-and-start-inference-container" title="Permalink to this headline"></a></h3>
-<p>At this point, we launch the Triton Server, and load the ensemble <code class="docutils literal notranslate"><span class="pre">t4r_tf</span></code> to the inference server.</p>
+<p>At this point, we launch the Triton Server, and we will load the ensemble <code class="docutils literal notranslate"><span class="pre">t4r_tf</span></code> to the inference server below.</p>
 <p><strong>Start triton server</strong><br>
 You can start triton server with the command below. You need to provide correct path of the models folder.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tritonserver</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">repository</span><span class="o">=&lt;</span><span class="n">path_to_models</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">backend</span><span class="o">-</span><span class="n">config</span><span class="o">=</span><span class="n">tensorflow</span><span class="p">,</span><span class="n">version</span><span class="o">=</span><span class="mi">2</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">control</span><span class="o">-</span><span class="n">mode</span><span class="o">=</span><span class="n">explicit</span>
 </pre></div>
 </div>
-<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/TF4Rec/models/tf/</span></code>. The models haven’t been loaded, yet. Below, we will request the Triton server to load the saved ensemble model below.</p>
+<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/TF4Rec/models/tf/</span></code>. The models haven’t been loaded, yet. We will request the Triton server to load the saved ensemble model, below.</p>
 </div>
 <div class="section" id="connect-to-the-triton-inference-server-and-check-if-the-server-is-alive">
 <h3>Connect to the Triton Inference Server and check if the server is alive<a class="headerlink" href="#connect-to-the-triton-inference-server-and-check-if-the-server-is-alive" title="Permalink to this headline"></a></h3>
