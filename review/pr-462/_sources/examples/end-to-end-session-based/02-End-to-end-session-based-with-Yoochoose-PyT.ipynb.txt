@@ -876,7 +876,7 @@
     "```\n",
     "tritonserver --model-repository=<path_to_models> --model-control-mode=explicit\n",
     "```\n",
-    "Note: The model-repository path for our example is `/workspace/TF4Rec/models/`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model below."
+    "Note: The model-repository path for our example is `/workspace/TF4Rec/models/`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model."
    ]
   },
   {
