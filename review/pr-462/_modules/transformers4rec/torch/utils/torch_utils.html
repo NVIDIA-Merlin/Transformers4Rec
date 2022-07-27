@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>transformers4rec.torch.utils.torch_utils &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+      <li>transformers4rec.torch.utils.torch_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for transformers4rec.torch.utils.torch_utils</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1">#</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.proto_utils</span> <span class="kn">import</span> <span class="n">has_field</span>
+
+<span class="kn">from</span> <span class="nn">...config.schema</span> <span class="kn">import</span> <span class="n">SchemaMixin</span>
+<span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span>
+
+
+<div class="viewcode-block" id="OutputSizeMixin"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.OutputSizeMixin">[docs]</a><span class="k">class</span> <span class="nc">OutputSizeMixin</span><span class="p">(</span><span class="n">SchemaMixin</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="OutputSizeMixin.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.OutputSizeMixin.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_schema</span><span class="p">(</span><span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
+        <span class="k">if</span> <span class="n">schema</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;schema&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="OutputSizeMixin.output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.OutputSizeMixin.output_size">[docs]</a>    <span class="k">def</span> <span class="nf">output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span> <span class="ow">or</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;input_size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">input_size</span><span class="p">:</span>
+            <span class="c1"># TODO: log warning here</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_output_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OutputSizeMixin.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.OutputSizeMixin.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="fm">__rrshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">right_shift_block</span>
+
+        <span class="k">return</span> <span class="n">right_shift_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LossMixin"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LossMixin">[docs]</a><span class="k">class</span> <span class="nc">LossMixin</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to use for `torch.Module`s that can calculate a loss.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LossMixin.compute_loss"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LossMixin.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">compute_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Compute the loss on a batch of data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs: Union[torch.Tensor, TabularData]</span>
+<span class="sd">            TODO</span>
+<span class="sd">        targets: Union[torch.Tensor, TabularData]</span>
+<span class="sd">            TODO</span>
+<span class="sd">        compute_metrics: bool, default=True</span>
+<span class="sd">            Boolean indicating whether or not to update the state of the metrics</span>
+<span class="sd">            (if they are defined).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="MetricsMixin"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin">[docs]</a><span class="k">class</span> <span class="nc">MetricsMixin</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to use for `torch.Module`s that can calculate metrics.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="MetricsMixin.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
+        <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span>
+        <span class="n">forward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Calculate metrics on a batch of data, each metric is stateful and this updates the state.</span>
+
+<span class="sd">        The state of each metric can be retrieved by calling the `compute_metrics` method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs: Union[torch.Tensor, TabularData]</span>
+<span class="sd">            TODO</span>
+<span class="sd">        targets: Union[torch.Tensor, TabularData]</span>
+<span class="sd">            TODO</span>
+<span class="sd">        forward: bool, default True</span>
+
+<span class="sd">        mode: str, default=&quot;val&quot;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MetricsMixin.compute_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin.compute_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the current state of each metric.</span>
+
+<span class="sd">        The state is typically updated each batch by calling the `calculate_metrics` method.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mode: str, default=&quot;val&quot;</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Dict[str, Union[float, torch.Tensor]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="MetricsMixin.reset_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin.reset_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">reset_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Reset all metrics.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="requires_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.requires_schema">[docs]</a><span class="k">def</span> <span class="nf">requires_schema</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="n">module</span><span class="o">.</span><span class="n">REQUIRES_SCHEMA</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="n">module</span></div>
+
+
+<div class="viewcode-block" id="check_gpu"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.check_gpu">[docs]</a><span class="k">def</span> <span class="nf">check_gpu</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">is_cuda</span>
+    <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="get_output_sizes_from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.get_output_sizes_from_schema">[docs]</a><span class="k">def</span> <span class="nf">get_output_sizes_from_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">feature</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">name</span>
+        <span class="c1"># Sequential or multi-hot feature</span>
+        <span class="k">if</span> <span class="n">has_field</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="s2">&quot;value_count&quot;</span><span class="p">):</span>
+            <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">max_sequence_length</span> <span class="k">if</span> <span class="n">max_sequence_length</span> <span class="k">else</span> <span class="n">feature</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">has_field</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
+            <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">batch_size</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">feature</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dim</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">batch_size</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">sizes</span></div>
+
+
+<div class="viewcode-block" id="calculate_batch_size_from_input_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.calculate_batch_size_from_input_size">[docs]</a><span class="k">def</span> <span class="nf">calculate_batch_size_from_input_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">input_size</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">input_size</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">)][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="check_inputs"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.check_inputs">[docs]</a><span class="k">def</span> <span class="nf">check_inputs</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ks</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ks should be a 1-dimensional tensor&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;scores must be a 2-dimensional tensor&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;labels must be a 2-dimensional tensor&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;scores and labels must be the same shape&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">ks</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
+        <span class="n">scores</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">,</span>  <span class="c1"># .to(dtype=torch.float32, device=scores.device),</span>
+    <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_topk"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.extract_topk">[docs]</a><span class="k">def</span> <span class="nf">extract_topk</span><span class="p">(</span><span class="n">ks</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="n">max_k</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">ks</span><span class="p">))</span>
+    <span class="n">topk_scores</span><span class="p">,</span> <span class="n">topk_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">max_k</span><span class="p">)</span>
+    <span class="n">topk_labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">topk_indices</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">topk_scores</span><span class="p">,</span> <span class="n">topk_indices</span><span class="p">,</span> <span class="n">topk_labels</span></div>
+
+
+<div class="viewcode-block" id="create_output_placeholder"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.create_output_placeholder">[docs]</a><span class="k">def</span> <span class="nf">create_output_placeholder</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">ks</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">ks</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="tranform_label_to_onehot"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.tranform_label_to_onehot">[docs]</a><span class="k">def</span> <span class="nf">tranform_label_to_onehot</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">one_hot_1d</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="one_hot_1d"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.one_hot_1d">[docs]</a><span class="k">def</span> <span class="nf">one_hot_1d</span><span class="p">(</span>
+    <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Coverts a 1d label tensor to one-hot representation</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels (torch.Tensor) : tensor with labels of shape :math:`(N, H, W)`,</span>
+<span class="sd">                                where N is batch siz. Each value is an integer</span>
+<span class="sd">                                representing correct classification.</span>
+<span class="sd">        num_classes (int): number of classes in labels.</span>
+<span class="sd">        device (Optional[torch.device]): the desired device of returned tensor.</span>
+<span class="sd">         Default: if None, uses the current device for the default tensor type</span>
+<span class="sd">         (see torch.set_default_tensor_type()). device will be the CPU for CPU</span>
+<span class="sd">         tensor types and the current CUDA device for CUDA tensor types.</span>
+<span class="sd">        dtype (Optional[torch.dtype]): the desired data type of returned</span>
+<span class="sd">         tensor. Default: torch.float32</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        torch.Tensor: the labels in one hot tensor.</span>
+
+<span class="sd">    Examples::</span>
+<span class="sd">        &gt;&gt;&gt; labels = torch.LongTensor([0, 1, 2, 0])</span>
+<span class="sd">        &gt;&gt;&gt; one_hot_1d(labels, num_classes=3)</span>
+<span class="sd">        tensor([[1., 0., 0.],</span>
+<span class="sd">                [0., 1., 0.],</span>
+<span class="sd">                [0., 0., 1.],</span>
+<span class="sd">                [1., 0., 0.],</span>
+<span class="sd">               ])</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Input labels type is not a torch.Tensor. Got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">labels</span><span class="p">)))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected tensor should have 1 dim. Got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">labels</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;labels must be of the same dtype torch.int64. Got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">num_classes</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;The number of classes must be bigger than one.&quot;</span> <span class="s2">&quot; Got: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">device</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">device</span>
+    <span class="n">labels_size</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">one_hot</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">labels_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">one_hot</span><span class="o">.</span><span class="n">scatter_</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="LambdaModule"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LambdaModule">[docs]</a><span class="k">class</span> <span class="nc">LambdaModule</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lambda_fn</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="kn">import</span> <span class="nn">types</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lambda_fn</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">LambdaType</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lambda_fn</span> <span class="o">=</span> <span class="n">lambda_fn</span>
+
+<div class="viewcode-block" id="LambdaModule.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LambdaModule.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_fn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MappingTransformerMasking"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">MappingTransformerMasking</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">transformers4rec.torch.masking</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">CausalLanguageModeling</span><span class="p">,</span>
+        <span class="n">MaskedLanguageModeling</span><span class="p">,</span>
+        <span class="n">PermutationLanguageModeling</span><span class="p">,</span>
+        <span class="n">ReplacementLanguageModeling</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">DEFAULT_MASKING</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">CausalLanguageModeling</span><span class="p">,</span>
+        <span class="n">MaskedLanguageModeling</span><span class="p">,</span>
+        <span class="n">ReplacementLanguageModeling</span><span class="p">,</span>
+        <span class="n">PermutationLanguageModeling</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">BertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">ConvBertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">DebertaConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">DistilBertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">GPT2Config</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">]</span>
+    <span class="n">LongformerConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">,</span> <span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">MegatronBertConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">MPNetConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">RobertaConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">RoFormerConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">,</span> <span class="n">MaskedLanguageModeling</span><span class="p">,</span> <span class="n">ReplacementLanguageModeling</span><span class="p">]</span>
+    <span class="n">TransfoXLConfig</span> <span class="o">=</span> <span class="p">[</span><span class="n">CausalLanguageModeling</span><span class="p">]</span>
+    <span class="n">XLNetConfig</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">CausalLanguageModeling</span><span class="p">,</span>
+        <span class="n">MaskedLanguageModeling</span><span class="p">,</span>
+        <span class="n">ReplacementLanguageModeling</span><span class="p">,</span>
+        <span class="n">PermutationLanguageModeling</span><span class="p">,</span>
+    <span class="p">]</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

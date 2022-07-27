@@ -1,0 +1,720 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "94181761",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "#\n",
+    "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+    "# you may not use this file except in compliance with the License.\n",
+    "# You may obtain a copy of the License at\n",
+    "#\n",
+    "#     http://www.apache.org/licenses/LICENSE-2.0\n",
+    "#\n",
+    "# Unless required by applicable law or agreed to in writing, software\n",
+    "# distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+    "# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+    "# See the License for the specific language governing permissions and\n",
+    "# limitations under the License.\n",
+    "# =============================================================================="
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "77d36393",
+   "metadata": {},
+   "source": [
+    "# Triton for Recommender Systems"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "172f9e15",
+   "metadata": {},
+   "source": [
+    "NVIDIA [Triton Inference Server (TIS)](https://github.com/triton-inference-server/server) simplifies the deployment of AI models at scale in production. The Triton Inference Server allows us to deploy and serve our model for inference. It supports a number of different machine learning frameworks such as TensorFlow and PyTorch.\n",
+    "\n",
+    "The last step of machine learning (ML)/deep learning (DL) pipeline is to deploy the ETL workflow and saved model to production. In the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the DL model for a prediction. Therefore, we deploy the NVTabular workflow with the PyTorch model as an ensemble model to Triton Inference. The ensemble model guarantees that the same transformation is applied to the raw inputs."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "ae645daa",
+   "metadata": {},
+   "source": [
+    "![](_images/torch_triton.png)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6f85f45d",
+   "metadata": {},
+   "source": [
+    "**Objectives:**\n",
+    "\n",
+    "Learn how to deploy a model to Triton\n",
+    "1. Deploy saved NVTabular and PyTorch models to Triton Inference Server\n",
+    "2. Sent requests for predictions"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "43dc14a8",
+   "metadata": {},
+   "source": [
+    "## Pull and start Inference docker container"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "f22667d0",
+   "metadata": {},
+   "source": [
+    "At this point, before connecing to the Triton Server, we launch the inference docker container and then load the exported ensemble `t4r_pytorch` to the inference server. This is done with the scripts below:\n",
+    "\n",
+    "#### Launch the docker container:\n",
+    "```\n",
+    "docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v <path_to_saved_models>:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:21.09\n",
+    "```\n",
+    "\n",
+    "This script will mount your local model-repository folder that includes your saved models from the previous cell to `/workspace/models` directory in the merlin-inference docker container.\n",
+    "\n",
+    "#### Start triton server\n",
+    "After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.\n",
+    "```\n",
+    "tritonserver --model-repository=<path_to_models> --model-control-mode=explicit\n",
+    "```\n",
+    "Note: The model-repository path for our example is `/workspace/models`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "07499907",
+   "metadata": {},
+   "source": [
+    "## 1. Deploy PyTorch and NVTabular Model to Triton Inference Server"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6b61ed1a",
+   "metadata": {},
+   "source": [
+    "Our Triton server has already been launched and is ready to make requests. Remember we already exported the saved PyTorch model in the previous notebook, and generated the config files for Triton Inference Server."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "6645e40e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Import dependencies\n",
+    "import os\n",
+    "from time import time\n",
+    "\n",
+    "import argparse\n",
+    "import numpy as np\n",
+    "import pandas as pd\n",
+    "import sys\n",
+    "import cudf"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "72c90e93",
+   "metadata": {},
+   "source": [
+    "## 1.2 Review exported files"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6b8b7a4c",
+   "metadata": {},
+   "source": [
+    "Triton expects a specific directory structure for our models as the following format:"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d34dcb28",
+   "metadata": {},
+   "source": [
+    "```\n",
+    "<model-name>/\n",
+    "[config.pbtxt]\n",
+    "<version-name>/\n",
+    "  [model.savedmodel]/\n",
+    "    <pytorch_saved_model_files>/\n",
+    "      ...\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "9d7d3156",
+   "metadata": {},
+   "source": [
+    "Let's check out our model repository layout. You can install tree library with `apt-get install tree`, and then run `!tree /workspace/models/` to print out the model repository layout as below:\n",
+    "\n",
+    "```\n",
+    "├── t4r_pytorch\n",
+    "│   ├── 1\n",
+    "│   └── config.pbtxt\n",
+    "├── t4r_pytorch_nvt\n",
+    "│   ├── 1\n",
+    "│   │   ├── model.py\n",
+    "│   │   ├── __pycache__\n",
+    "│   │   │   └── model.cpython-38.pyc\n",
+    "│   │   └── workflow\n",
+    "│   │       ├── categories\n",
+    "│   │       │   ├── cat_stats.category_id.parquet\n",
+    "│   │       │   ├── unique.brand.parquet\n",
+    "│   │       │   ├── unique.category_code.parquet\n",
+    "│   │       │   ├── unique.category_id.parquet\n",
+    "│   │       │   ├── unique.event_type.parquet\n",
+    "│   │       │   ├── unique.product_id.parquet\n",
+    "│   │       │   ├── unique.user_id.parquet\n",
+    "│   │       │   └── unique.user_session.parquet\n",
+    "│   │       ├── metadata.json\n",
+    "│   │       └── workflow.pkl\n",
+    "│   └── config.pbtxt\n",
+    "└── t4r_pytorch_pt\n",
+    "    ├── 1\n",
+    "    │   ├── model_info.json\n",
+    "    │   ├── model.pkl\n",
+    "    │   ├── model.pth\n",
+    "    │   ├── model.py\n",
+    "    │   └── __pycache__\n",
+    "    │       └── model.cpython-38.pyc\n",
+    "    └── config.pbtxt\n",
+    "```"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "79b1036b",
+   "metadata": {},
+   "source": [
+    "Triton needs a [config file](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md) to understand how to interpret the model. Let's look at the generated config file. It defines the input columns with datatype and dimensions and the output layer. Manually creating this config file can be complicated and NVTabular generates it with the `export_pytorch_ensemble()` function, which we used in the previous notebook.\n",
+    "\n",
+    "The [config file](https://github.com/triton-inference-server/server/blob/main/docs/model_configuration.md) needs the following information:\n",
+    "* `name`: The name of our model. Must be the same name as the parent folder.\n",
+    "* `platform`: The type of framework serving the model.\n",
+    "* `input`: The input our model expects.\n",
+    "  * `name`: Should correspond with the model input name.\n",
+    "  * `data_type`: Should correspond to the input's data type.\n",
+    "  * `dims`: The dimensions of the *request* for the input. For models that support input and output tensors with variable-size dimensions, those dimensions can be listed as -1 in the input and output configuration.\n",
+    "* `output`: The output parameters of our model.\n",
+    "  * `name`: Should correspond with the model output name.\n",
+    "  * `data_type`: Should correspond to the output's data type.\n",
+    "  * `dims`: The dimensions of the output."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "0adbbbf2",
+   "metadata": {},
+   "source": [
+    "## 1.3. Loading Model"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "276a0e31",
+   "metadata": {},
+   "source": [
+    "Next, let's build a client to connect to our server. The `InferenceServerClient` object is what we'll be using to talk to Triton."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "b1e8ac0f",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "client created.\n",
+      "GET /v2/health/live, headers None\n",
+      "<HTTPSocketPoolResponse status=200 headers={'content-length': '0', 'content-type': 'text/plain'}>\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "True"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import tritonhttpclient\n",
+    "\n",
+    "try:\n",
+    "    triton_client = tritonhttpclient.InferenceServerClient(url=\"localhost:8000\", verbose=True)\n",
+    "    print(\"client created.\")\n",
+    "except Exception as e:\n",
+    "    print(\"channel creation failed: \" + str(e))\n",
+    "triton_client.is_server_live()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "f61231d8",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "POST /v2/repository/index, headers None\n",
+      "\n",
+      "<HTTPSocketPoolResponse status=200 headers={'content-type': 'application/json', 'content-length': '201'}>\n",
+      "bytearray(b'[{\"name\":\"t4r_pytorch\",\"version\":\"1\",\"state\":\"UNAVAILABLE\",\"reason\":\"unloaded\"},{\"name\":\"t4r_pytorch_nvt\",\"version\":\"1\",\"state\":\"UNLOADING\"},{\"name\":\"t4r_pytorch_pt\",\"version\":\"1\",\"state\":\"UNLOADING\"}]')\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "[{'name': 't4r_pytorch',\n",
+       "  'version': '1',\n",
+       "  'state': 'UNAVAILABLE',\n",
+       "  'reason': 'unloaded'},\n",
+       " {'name': 't4r_pytorch_nvt', 'version': '1', 'state': 'UNLOADING'},\n",
+       " {'name': 't4r_pytorch_pt', 'version': '1', 'state': 'UNLOADING'}]"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "triton_client.get_model_repository_index()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "3d091905",
+   "metadata": {},
+   "source": [
+    "We load the ensemble model"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "260d063d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "POST /v2/repository/models/t4r_pytorch/load, headers None\n",
+      "\n",
+      "<HTTPSocketPoolResponse status=200 headers={'content-type': 'application/json', 'content-length': '0'}>\n",
+      "Loaded model 't4r_pytorch'\n"
+     ]
+    }
+   ],
+   "source": [
+    "model_name = \"t4r_pytorch\"\n",
+    "triton_client.load_model(model_name=model_name)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "26345f7d",
+   "metadata": {},
+   "source": [
+    "If all models are loaded successfully, you should be seeing successfully loaded status next to each model name on your terminal."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fe1debc7",
+   "metadata": {},
+   "source": [
+    "## 2. Sent Requests for Predictions"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2b2cc71a",
+   "metadata": {},
+   "source": [
+    "Load raw data for inference: We select the first 50 interactions and filter out sessions with less than 2 interactions. For this tutorial, just as an example we use the `Oct-2019` dataset that we used for model training."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "5309a22e",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "INPUT_DATA_DIR = os.environ.get(\"INPUT_DATA_DIR\", \"/workspace/data/\")\n",
+    "df= cudf.read_parquet(os.path.join(INPUT_DATA_DIR, 'Oct-2019.parquet'))\n",
+    "df=df.sort_values('event_time_ts')\n",
+    "batch = df.iloc[:50,:]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "592aad96",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "sessions_to_use = batch.user_session.value_counts()\n",
+    "filtered_batch = batch[batch.user_session.isin(sessions_to_use[sessions_to_use.values>1].index.values)]"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "b860b31c",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>user_session</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>event_time_ts</th>\n",
+       "      <th>prod_first_event_time_ts</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>3562914</th>\n",
+       "      <td>1637332</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1307067</td>\n",
+       "      <td>2053013558920217191</td>\n",
+       "      <td>computers.notebook</td>\n",
+       "      <td>lenovo</td>\n",
+       "      <td>251.74</td>\n",
+       "      <td>550050854</td>\n",
+       "      <td>1569888001</td>\n",
+       "      <td>1569888001</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5173328</th>\n",
+       "      <td>4202155</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1004237</td>\n",
+       "      <td>2053013555631882655</td>\n",
+       "      <td>electronics.smartphone</td>\n",
+       "      <td>apple</td>\n",
+       "      <td>1081.98</td>\n",
+       "      <td>535871217</td>\n",
+       "      <td>1569888004</td>\n",
+       "      <td>1569888004</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3741261</th>\n",
+       "      <td>1808164</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1480613</td>\n",
+       "      <td>2053013561092866779</td>\n",
+       "      <td>computers.desktop</td>\n",
+       "      <td>pulser</td>\n",
+       "      <td>908.62</td>\n",
+       "      <td>512742880</td>\n",
+       "      <td>1569888005</td>\n",
+       "      <td>1569888005</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4996937</th>\n",
+       "      <td>3794756</td>\n",
+       "      <td>view</td>\n",
+       "      <td>31500053</td>\n",
+       "      <td>2053013558031024687</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>luminarc</td>\n",
+       "      <td>41.16</td>\n",
+       "      <td>550978835</td>\n",
+       "      <td>1569888008</td>\n",
+       "      <td>1569888008</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>5589259</th>\n",
+       "      <td>5470852</td>\n",
+       "      <td>view</td>\n",
+       "      <td>28719074</td>\n",
+       "      <td>2053013565480109009</td>\n",
+       "      <td>apparel.shoes.keds</td>\n",
+       "      <td>baden</td>\n",
+       "      <td>102.71</td>\n",
+       "      <td>520571932</td>\n",
+       "      <td>1569888010</td>\n",
+       "      <td>1569888010</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "         user_session event_type  product_id          category_id  \\\n",
+       "3562914       1637332       view     1307067  2053013558920217191   \n",
+       "5173328       4202155       view     1004237  2053013555631882655   \n",
+       "3741261       1808164       view     1480613  2053013561092866779   \n",
+       "4996937       3794756       view    31500053  2053013558031024687   \n",
+       "5589259       5470852       view    28719074  2053013565480109009   \n",
+       "\n",
+       "                  category_code     brand    price    user_id  event_time_ts  \\\n",
+       "3562914      computers.notebook    lenovo   251.74  550050854     1569888001   \n",
+       "5173328  electronics.smartphone     apple  1081.98  535871217     1569888004   \n",
+       "3741261       computers.desktop    pulser   908.62  512742880     1569888005   \n",
+       "4996937                    <NA>  luminarc    41.16  550978835     1569888008   \n",
+       "5589259      apparel.shoes.keds     baden   102.71  520571932     1569888010   \n",
+       "\n",
+       "         prod_first_event_time_ts  \n",
+       "3562914                1569888001  \n",
+       "5173328                1569888004  \n",
+       "3741261                1569888005  \n",
+       "4996937                1569888008  \n",
+       "5589259                1569888010  "
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "filtered_batch.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "fbdb4f72",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import warnings\n",
+    "\n",
+    "warnings.filterwarnings(\"ignore\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "id": "b40c3922",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "output :\n",
+      " [[-12.86381   -13.449438   -9.572359  ... -12.689846  -13.033402\n",
+      "  -13.294905 ]\n",
+      " [-24.320768  -26.130745   -4.3342614 ... -24.07727   -25.470228\n",
+      "  -26.27378  ]\n",
+      " [-22.867298  -24.897617   -6.6269407 ... -23.640343  -23.620872\n",
+      "  -24.977371 ]\n",
+      " [-21.455946  -22.92965    -4.8912797 ... -21.020473  -22.514032\n",
+      "  -22.958193 ]\n",
+      " [-24.569319  -26.149971   -4.223791  ... -24.316437  -25.649946\n",
+      "  -26.920403 ]\n",
+      " [-14.218529  -14.833358   -8.438756  ... -14.013732  -14.700138\n",
+      "  -14.71361  ]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "import nvtabular.inference.triton as nvt_triton\n",
+    "import tritonclient.grpc as grpcclient\n",
+    "\n",
+    "inputs = nvt_triton.convert_df_to_triton_input(filtered_batch.columns, filtered_batch, grpcclient.InferInput)\n",
+    "\n",
+    "output_names = [\"output\"]\n",
+    "\n",
+    "outputs = []\n",
+    "for col in output_names:\n",
+    "    outputs.append(grpcclient.InferRequestedOutput(col))\n",
+    "    \n",
+    "MODEL_NAME_NVT = \"t4r_pytorch\"\n",
+    "\n",
+    "with grpcclient.InferenceServerClient(\"localhost:8001\") as client:\n",
+    "    response = client.infer(MODEL_NAME_NVT, inputs)\n",
+    "    print(col, ':\\n', response.as_numpy(col))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "2f2e07dc",
+   "metadata": {},
+   "source": [
+    "#### Visualise top-k predictions"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "45c64075",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "- Top-5 predictions for session `1167651`: 1045 || 229 || 233 || 1085 || 10\n",
+      "\n",
+      "- Top-5 predictions for session `1637332`: 11 || 7 || 4 || 2 || 3\n",
+      "\n",
+      "- Top-5 predictions for session `1808164`: 162 || 142 || 226 || 80 || 200\n",
+      "\n",
+      "- Top-5 predictions for session `3794756`: 3 || 2 || 26 || 364 || 10\n",
+      "\n",
+      "- Top-5 predictions for session `4202155`: 2 || 57 || 36 || 38 || 10\n",
+      "\n",
+      "- Top-5 predictions for session `5470852`: 1710 || 233 || 805 || 555 || 10\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "from transformers4rec.torch.utils.examples_utils import visualize_response\n",
+    "visualize_response(filtered_batch, response, top_k=5, session_col='user_session')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "1619777f",
+   "metadata": {},
+   "source": [
+    "As you see we first got prediction results (logits) from the trained model head, and then by using a handy util function `visualize_response` we extracted top-k encoded item-ids from logits. Basically, we  generated recommended items for a given session.\n",
+    "\n",
+    "This is the end of the tutorial. You successfully ...\n",
+    "1. performed feature engineering with NVTabular\n",
+    "2. trained transformer architecture based session-based recommendation models with Transformers4Rec \n",
+    "3. deployed a trained model to Triton Inference Server, sent request and got responses from the server."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "6224a7fe",
+   "metadata": {},
+   "source": [
+    "### Unload models and shut down the kernel"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "f481d47f",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "POST /v2/repository/models/t4r_pytorch/unload, headers None\n",
+      "{\"parameters\":{\"unload_dependents\":false}}\n",
+      "<HTTPSocketPoolResponse status=200 headers={'content-type': 'application/json', 'content-length': '0'}>\n",
+      "Loaded model 't4r_pytorch'\n",
+      "POST /v2/repository/models/t4r_pytorch_nvt/unload, headers None\n",
+      "{\"parameters\":{\"unload_dependents\":false}}\n",
+      "<HTTPSocketPoolResponse status=200 headers={'content-type': 'application/json', 'content-length': '0'}>\n",
+      "Loaded model 't4r_pytorch_nvt'\n",
+      "POST /v2/repository/models/t4r_pytorch_pt/unload, headers None\n",
+      "{\"parameters\":{\"unload_dependents\":false}}\n",
+      "<HTTPSocketPoolResponse status=200 headers={'content-type': 'application/json', 'content-length': '0'}>\n",
+      "Loaded model 't4r_pytorch_pt'\n"
+     ]
+    }
+   ],
+   "source": [
+    "triton_client.unload_model(model_name=\"t4r_pytorch\")\n",
+    "triton_client.unload_model(model_name=\"t4r_pytorch_nvt\")\n",
+    "triton_client.unload_model(model_name=\"t4r_pytorch_pt\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 26,
+   "id": "0ae4dee2",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'status': 'ok', 'restart': True}"
+      ]
+     },
+     "execution_count": 26,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import IPython\n",
+    "app = IPython.Application.instance()\n",
+    "app.kernel.do_shutdown(True)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

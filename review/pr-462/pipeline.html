@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>End-to-end pipeline with NVIDIA Merlin &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Transformers4Rec Example Notebooks" href="examples/index.html" />
+    <link rel="prev" title="Training and Evaluation" href="training_eval.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>End-to-end pipeline with NVIDIA Merlin</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="end-to-end-pipeline-with-nvidia-merlin">
+<h1>End-to-end pipeline with NVIDIA Merlin<a class="headerlink" href="#end-to-end-pipeline-with-nvidia-merlin" title="Permalink to this headline"></a></h1>
+<p>Transformers4Rec has a first-class integration with NVIDIA Merlin components, to build end-to-end GPU accelerated pipelines for sequential and session-based recommendation.</p>
+<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig.3 - Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<div class="section" id="integration-with-nvtabular">
+<h2>Integration with NVTabular<a class="headerlink" href="#integration-with-nvtabular" title="Permalink to this headline"></a></h2>
+<p><a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular/">NVTabular</a> is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate terabyte scale datasets and train deep learning (DL) based recommender systems.</p>
+<p>It has some popular <a class="reference external" href="https://nvidia-merlin.github.io/NVTabular/main/api/index.html">techniques</a> to deal with categorical and numerical features like <code class="docutils literal notranslate"><span class="pre">Categorify</span></code>, <code class="docutils literal notranslate"><span class="pre">Normalize</span></code>, <code class="docutils literal notranslate"><span class="pre">Bucketize</span></code>, <code class="docutils literal notranslate"><span class="pre">TargetEncoding</span></code>, <code class="docutils literal notranslate"><span class="pre">DifferenceLag</span></code>, to name a few supported, and also allow for the definition of custom transformations (<code class="docutils literal notranslate"><span class="pre">LambdaOp</span></code>) using cuDF data frame operations.</p>
+<p>Usually the input RecSys datasets contain one example per user interaction. For sequential recommendation, the training example is a sequence of user interactions, and for session-based recommendation it is a sequence of session interactions. In practice, each interaction-level feature needs to be converted to a sequence grouped by user/session and their sequence length must match, as each position of the sequence corresponds to one interaction. You can see in Fig. 4 how the preprocessed parquet should look like.</p>
+<div style="text-align: center; margin: 20pt"><img src="_images/preproc_data_example.png" alt="Example of preprocessed parquet file" style="width:800px;"/><br><figcaption style="font-style: italic;">Example of preprocessed parquet file</figcaption></div>
+<p>NVTabular can easily prepare such data with the <a class="reference external" href="https://nvidia-merlin.github.io/NVTabular/main/api/ops/groupby.html">Groupby</a> op, which allows grouping by a categorical column (e.g. user id, session id), sorting by another column (e.g. timestamp) and aggregating other columns as sequences (<code class="docutils literal notranslate"><span class="pre">list</span></code>) or by taking the <code class="docutils literal notranslate"><span class="pre">first</span></code> or <code class="docutils literal notranslate"><span class="pre">last</span></code> element of the sequence, as exemplified below.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">groupby_features</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;session_id&#39;</span><span class="p">,</span> <span class="s1">&#39;product_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span>
+<span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">ops</span><span class="o">.</span><span class="n">Groupby</span><span class="p">(</span>
+    <span class="n">groupby_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">],</span>
+    <span class="n">sort_cols</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">],</span>
+    <span class="n">aggs</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;product_id&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;category_id&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;timestamp&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;first&#39;</span><span class="p">,</span> <span class="s1">&#39;last&#39;</span><span class="p">],</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="outputs">
+<h3>Outputs<a class="headerlink" href="#outputs" title="Permalink to this headline"></a></h3>
+<p>NVTabular outputs parquet files with the preprocessed data. The parquet files can be (Hive) partitioned by a categorical column (e.g. day, company), as in the following example.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nvt_output_path</span> <span class="o">=</span><span class="s1">&#39;./output&#39;</span>
+<span class="n">partition_col</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">]</span>
+<span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">nvt_output_path</span><span class="p">,</span> <span class="n">partition_on</span><span class="o">=</span><span class="p">[</span><span class="n">partition_col</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>NVTabular also outputs a schema file in the protobuf text format (<code class="docutils literal notranslate"><span class="pre">schema.pbtxt</span></code>) together with the parquet files. The schema file contains statistics obtained during the preprocessing, like the cardinality of categorical features, the max sequence length for sequential features. NVTabular also allows the association of tags for features (e.g. to indicate what is the item id, what are item and user features, what are categorical or continuous features). You can see <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/tests/assets/data_schema/data_seq_schema.pbtxt">here</a> an example of a such schema in Protobuf Text format.</p>
+<p>If you don’t use NVTabular to preprocess your data, you can also instantiate a <code class="docutils literal notranslate"><span class="pre">Schema</span></code> via code manually (see <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/tests/merlin_standard_lib/schema/test_schema.py">examples</a>).</p>
+<p>The NVTabular workflow can be saved after <code class="docutils literal notranslate"><span class="pre">workflow.fit()</span></code> is called, so that the same preproc workflow can be applied to new input data, either in batch or online (via integration with Triton Inference Server), described in the next section.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Instantiates an NVTabular dataset</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">([</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_PATH</span><span class="p">,</span> <span class="s2">&quot;*.parquet&quot;</span><span class="p">)],</span> <span class="n">part_size</span><span class="o">=</span><span class="s2">&quot;100MB&quot;</span><span class="p">)</span>
+<span class="c1"># Perform a single pass over the dataset to collect columns statistics</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="c1"># Applies the transform ops to the dataset</span>
+<span class="n">new_dataset</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="c1"># Saves the preprocessed dataset in parquet files</span>
+<span class="n">new_dataset</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="s2">&quot;/path&quot;</span><span class="p">)</span>
+<span class="c1"># Saves the &quot;fitted&quot; preprocessing workflow</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_PATH</span><span class="p">,</span> <span class="s2">&quot;workflow&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="integration-with-triton-inference-server">
+<h2>Integration with Triton Inference Server<a class="headerlink" href="#integration-with-triton-inference-server" title="Permalink to this headline"></a></h2>
+<p>​
+NVIDIA <a class="reference external" href="https://github.com/triton-inference-server/server">Triton Inference Server (TIS)</a> simplifies the deployment of AI models at scale in production. TIS is a cloud and edge inferencing solution optimized to deploy machine learning models both for GPUs and CPUs and it supports a number of different deep learning frameworks such as TensorFlow and PyTorch.</p>
+<p>​
+An end-to-end ML/DL pipeline consists of preprocessing and feature engineering (ETL), model training, and model deployment for inference. Model deployment in production is the critical step of this pipeline since it enables model inference for practical business decisions. In the production setting, we want to apply to the input data the same transformation ops done during training (ETL). That is, the preprocessing ops, like standardizing continuous features and encoding categorical features, should be compatible with the statistics of the original data, before feeding data to the deep learning model. NVTabular supports such a scenario, allowing the export of the preproc workflow together with a PyTorch or Tensorflow trained model in a single ensemble pipeline to be served on TIS.</p>
+<p>The TIS integration enables the deployment of deep learning recommender models at scale with GPU acceleration. Transformers4Rec currently supports exporting a model trained with the PyTorch API to Triton Inference Server using the Python backend. In the upcoming release of Transformers4Rec, we will support deployment of models trained with Tensorflow to TIS.</p>
+<p>To see how you can deploy a large and complex recommender workflow to production with only a few lines of code, visit our <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/tutorial/examples/end-to-end-session-based">end-to-end-session-based recommendation</a> and <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/tutorial/examples/tutorial">tutorial</a> example notebooks for inference with Triton examples.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="training_eval.html" class="btn btn-neutral float-left" title="Training and Evaluation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples/index.html" class="btn btn-neutral float-right" title="Transformers4Rec Example Notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

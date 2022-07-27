@@ -1,0 +1,1253 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "#\n",
+    "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+    "# you may not use this file except in compliance with the License.\n",
+    "# You may obtain a copy of the License at\n",
+    "#\n",
+    "#     http://www.apache.org/licenses/LICENSE-2.0\n",
+    "#\n",
+    "# Unless required by applicable law or agreed to in writing, software\n",
+    "# distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+    "# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+    "# See the License for the specific language governing permissions and\n",
+    "# limitations under the License.\n",
+    "# =============================================================================="
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Preliminary Preprocessing\n",
+    "## Read and Process E-Commerce data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In this notebook, we are going to use a subset of a publicly available [eCommerce dataset](https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store). The full dataset contains 7 months data (from October 2019 to April 2020) from a large multi-category online store. Each row in the file represents an event. All events are related to products and users. Each event is like many-to-many relation between products and users.\n",
+    "Data collected by Open CDP project and the source of the dataset is [REES46 Marketing Platform](https://rees46.com/)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We use only `2019-Oct.csv` file for training our models, so you can visit this site and download the csv file: https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Import the required libraries"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import os\n",
+    "import numpy as np \n",
+    "import gc\n",
+    "import shutil\n",
+    "import glob\n",
+    "\n",
+    "import cudf\n",
+    "import nvtabular as nvt"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Read Data via cuDF from CSV"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "At this point we expect that you have already downloaded the `2019-Oct.csv` dataset and stored it in the `INPUT_DATA_DIR` as defined below. It is worth mentioning that the raw dataset is ~ 6 GB, therefore a single GPU with 16 GB or less memory might run out of memory. To avoid that, you can directly start from the second notebook, `02-ETL_with_NVTabular`, using `'Oct-2019.parquet` provided in [here](https://drive.google.com/drive/folders/1GjNKerPMvEtQHt9Z37ncF1zFedDXL_RJ)."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# define some information about where to get our data\n",
+    "INPUT_DATA_DIR = os.environ.get(\"INPUT_DATA_DIR\", \"/workspace/data/\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CPU times: user 3.2 s, sys: 1.5 s, total: 4.69 s\n",
+      "Wall time: 5.32 s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>event_time</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>user_session</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2019-10-01 00:00:00 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>44600062</td>\n",
+       "      <td>2103807459595387724</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>shiseido</td>\n",
+       "      <td>35.79</td>\n",
+       "      <td>541312140</td>\n",
+       "      <td>72d76fde-8bb3-4e00-8c23-a032dfed738c</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2019-10-01 00:00:00 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>3900821</td>\n",
+       "      <td>2053013552326770905</td>\n",
+       "      <td>appliances.environment.water_heater</td>\n",
+       "      <td>aqua</td>\n",
+       "      <td>33.20</td>\n",
+       "      <td>554748717</td>\n",
+       "      <td>9333dfbd-b87a-4708-9857-6336556b0fcc</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2019-10-01 00:00:01 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>17200506</td>\n",
+       "      <td>2053013559792632471</td>\n",
+       "      <td>furniture.living_room.sofa</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>543.10</td>\n",
+       "      <td>519107250</td>\n",
+       "      <td>566511c2-e2e3-422b-b695-cf8e6e792ca8</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>2019-10-01 00:00:01 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1307067</td>\n",
+       "      <td>2053013558920217191</td>\n",
+       "      <td>computers.notebook</td>\n",
+       "      <td>lenovo</td>\n",
+       "      <td>251.74</td>\n",
+       "      <td>550050854</td>\n",
+       "      <td>7c90fc70-0e80-4590-96f3-13c02c18c713</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>2019-10-01 00:00:04 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1004237</td>\n",
+       "      <td>2053013555631882655</td>\n",
+       "      <td>electronics.smartphone</td>\n",
+       "      <td>apple</td>\n",
+       "      <td>1081.98</td>\n",
+       "      <td>535871217</td>\n",
+       "      <td>c6bd7419-2748-4c56-95b4-8cec9ff8b80d</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                event_time event_type  product_id          category_id  \\\n",
+       "0  2019-10-01 00:00:00 UTC       view    44600062  2103807459595387724   \n",
+       "1  2019-10-01 00:00:00 UTC       view     3900821  2053013552326770905   \n",
+       "2  2019-10-01 00:00:01 UTC       view    17200506  2053013559792632471   \n",
+       "3  2019-10-01 00:00:01 UTC       view     1307067  2053013558920217191   \n",
+       "4  2019-10-01 00:00:04 UTC       view     1004237  2053013555631882655   \n",
+       "\n",
+       "                         category_code     brand    price    user_id  \\\n",
+       "0                                 <NA>  shiseido    35.79  541312140   \n",
+       "1  appliances.environment.water_heater      aqua    33.20  554748717   \n",
+       "2           furniture.living_room.sofa      <NA>   543.10  519107250   \n",
+       "3                   computers.notebook    lenovo   251.74  550050854   \n",
+       "4               electronics.smartphone     apple  1081.98  535871217   \n",
+       "\n",
+       "                           user_session  \n",
+       "0  72d76fde-8bb3-4e00-8c23-a032dfed738c  \n",
+       "1  9333dfbd-b87a-4708-9857-6336556b0fcc  \n",
+       "2  566511c2-e2e3-422b-b695-cf8e6e792ca8  \n",
+       "3  7c90fc70-0e80-4590-96f3-13c02c18c713  \n",
+       "4  c6bd7419-2748-4c56-95b4-8cec9ff8b80d  "
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "raw_df = cudf.read_csv(os.path.join(INPUT_DATA_DIR, '2019-Oct.csv')) \n",
+    "raw_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "(42448764, 9)"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "raw_df.shape"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Convert timestamp from datetime"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>event_time</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>user_session</th>\n",
+       "      <th>event_time_dt</th>\n",
+       "      <th>event_time_ts</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>2019-10-01 00:00:00 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>44600062</td>\n",
+       "      <td>2103807459595387724</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>shiseido</td>\n",
+       "      <td>35.79</td>\n",
+       "      <td>541312140</td>\n",
+       "      <td>72d76fde-8bb3-4e00-8c23-a032dfed738c</td>\n",
+       "      <td>2019-10-01 00:00:00</td>\n",
+       "      <td>1569888000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>2019-10-01 00:00:00 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>3900821</td>\n",
+       "      <td>2053013552326770905</td>\n",
+       "      <td>appliances.environment.water_heater</td>\n",
+       "      <td>aqua</td>\n",
+       "      <td>33.20</td>\n",
+       "      <td>554748717</td>\n",
+       "      <td>9333dfbd-b87a-4708-9857-6336556b0fcc</td>\n",
+       "      <td>2019-10-01 00:00:00</td>\n",
+       "      <td>1569888000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>2019-10-01 00:00:01 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>17200506</td>\n",
+       "      <td>2053013559792632471</td>\n",
+       "      <td>furniture.living_room.sofa</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>543.10</td>\n",
+       "      <td>519107250</td>\n",
+       "      <td>566511c2-e2e3-422b-b695-cf8e6e792ca8</td>\n",
+       "      <td>2019-10-01 00:00:01</td>\n",
+       "      <td>1569888001</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>2019-10-01 00:00:01 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1307067</td>\n",
+       "      <td>2053013558920217191</td>\n",
+       "      <td>computers.notebook</td>\n",
+       "      <td>lenovo</td>\n",
+       "      <td>251.74</td>\n",
+       "      <td>550050854</td>\n",
+       "      <td>7c90fc70-0e80-4590-96f3-13c02c18c713</td>\n",
+       "      <td>2019-10-01 00:00:01</td>\n",
+       "      <td>1569888001</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>2019-10-01 00:00:04 UTC</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1004237</td>\n",
+       "      <td>2053013555631882655</td>\n",
+       "      <td>electronics.smartphone</td>\n",
+       "      <td>apple</td>\n",
+       "      <td>1081.98</td>\n",
+       "      <td>535871217</td>\n",
+       "      <td>c6bd7419-2748-4c56-95b4-8cec9ff8b80d</td>\n",
+       "      <td>2019-10-01 00:00:04</td>\n",
+       "      <td>1569888004</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "                event_time event_type  product_id          category_id  \\\n",
+       "0  2019-10-01 00:00:00 UTC       view    44600062  2103807459595387724   \n",
+       "1  2019-10-01 00:00:00 UTC       view     3900821  2053013552326770905   \n",
+       "2  2019-10-01 00:00:01 UTC       view    17200506  2053013559792632471   \n",
+       "3  2019-10-01 00:00:01 UTC       view     1307067  2053013558920217191   \n",
+       "4  2019-10-01 00:00:04 UTC       view     1004237  2053013555631882655   \n",
+       "\n",
+       "                         category_code     brand    price    user_id  \\\n",
+       "0                                 <NA>  shiseido    35.79  541312140   \n",
+       "1  appliances.environment.water_heater      aqua    33.20  554748717   \n",
+       "2           furniture.living_room.sofa      <NA>   543.10  519107250   \n",
+       "3                   computers.notebook    lenovo   251.74  550050854   \n",
+       "4               electronics.smartphone     apple  1081.98  535871217   \n",
+       "\n",
+       "                           user_session       event_time_dt  event_time_ts  \n",
+       "0  72d76fde-8bb3-4e00-8c23-a032dfed738c 2019-10-01 00:00:00     1569888000  \n",
+       "1  9333dfbd-b87a-4708-9857-6336556b0fcc 2019-10-01 00:00:00     1569888000  \n",
+       "2  566511c2-e2e3-422b-b695-cf8e6e792ca8 2019-10-01 00:00:01     1569888001  \n",
+       "3  7c90fc70-0e80-4590-96f3-13c02c18c713 2019-10-01 00:00:01     1569888001  \n",
+       "4  c6bd7419-2748-4c56-95b4-8cec9ff8b80d 2019-10-01 00:00:04     1569888004  "
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "raw_df['event_time_dt'] = raw_df['event_time'].astype('datetime64[s]')\n",
+    "raw_df['event_time_ts']= raw_df['event_time_dt'].astype('int')\n",
+    "raw_df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "event_time       False\n",
+       "event_type       False\n",
+       "product_id       False\n",
+       "category_id      False\n",
+       "category_code     True\n",
+       "brand             True\n",
+       "price            False\n",
+       "user_id          False\n",
+       "user_session      True\n",
+       "event_time_dt    False\n",
+       "event_time_ts    False\n",
+       "dtype: bool"
+      ]
+     },
+     "execution_count": 7,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# check out the columns with nulls\n",
+    "raw_df.isnull().any()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "42448762"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# Remove rows where `user_session` is null.\n",
+    "raw_df = raw_df[raw_df['user_session'].isnull()==False]\n",
+    "len(raw_df)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We no longer need `event_time` column."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "raw_df = raw_df.drop(['event_time'],  axis=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Categorify `user_session` column\n",
+    "Although `user_session` is not used as an input feature for the model, it is useful to convert those raw long string to int values to avoid potential failures when grouping interactions by `user_session` in the next notebook."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "['event_type',\n",
+       " 'product_id',\n",
+       " 'category_id',\n",
+       " 'category_code',\n",
+       " 'brand',\n",
+       " 'price',\n",
+       " 'user_id',\n",
+       " 'event_time_dt',\n",
+       " 'event_time_ts']"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "cols = list(raw_df.columns)\n",
+    "cols.remove('user_session')\n",
+    "cols"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# load data \n",
+    "df_event = nvt.Dataset(raw_df) \n",
+    "\n",
+    "# categorify user_session \n",
+    "cat_feats = ['user_session'] >> nvt.ops.Categorify()\n",
+    "\n",
+    "workflow = nvt.Workflow(cols + cat_feats)\n",
+    "workflow.fit(df_event)\n",
+    "df = workflow.transform(df_event).to_ddf().compute()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>user_session</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>event_time_dt</th>\n",
+       "      <th>event_time_ts</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>5126085</td>\n",
+       "      <td>view</td>\n",
+       "      <td>44600062</td>\n",
+       "      <td>2103807459595387724</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>shiseido</td>\n",
+       "      <td>35.79</td>\n",
+       "      <td>541312140</td>\n",
+       "      <td>2019-10-01 00:00:00</td>\n",
+       "      <td>1569888000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>7854470</td>\n",
+       "      <td>view</td>\n",
+       "      <td>3900821</td>\n",
+       "      <td>2053013552326770905</td>\n",
+       "      <td>appliances.environment.water_heater</td>\n",
+       "      <td>aqua</td>\n",
+       "      <td>33.20</td>\n",
+       "      <td>554748717</td>\n",
+       "      <td>2019-10-01 00:00:00</td>\n",
+       "      <td>1569888000</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>730655</td>\n",
+       "      <td>view</td>\n",
+       "      <td>17200506</td>\n",
+       "      <td>2053013559792632471</td>\n",
+       "      <td>furniture.living_room.sofa</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>543.10</td>\n",
+       "      <td>519107250</td>\n",
+       "      <td>2019-10-01 00:00:01</td>\n",
+       "      <td>1569888001</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>1637332</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1307067</td>\n",
+       "      <td>2053013558920217191</td>\n",
+       "      <td>computers.notebook</td>\n",
+       "      <td>lenovo</td>\n",
+       "      <td>251.74</td>\n",
+       "      <td>550050854</td>\n",
+       "      <td>2019-10-01 00:00:01</td>\n",
+       "      <td>1569888001</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>4202155</td>\n",
+       "      <td>view</td>\n",
+       "      <td>1004237</td>\n",
+       "      <td>2053013555631882655</td>\n",
+       "      <td>electronics.smartphone</td>\n",
+       "      <td>apple</td>\n",
+       "      <td>1081.98</td>\n",
+       "      <td>535871217</td>\n",
+       "      <td>2019-10-01 00:00:04</td>\n",
+       "      <td>1569888004</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   user_session event_type  product_id          category_id  \\\n",
+       "0       5126085       view    44600062  2103807459595387724   \n",
+       "1       7854470       view     3900821  2053013552326770905   \n",
+       "2        730655       view    17200506  2053013559792632471   \n",
+       "3       1637332       view     1307067  2053013558920217191   \n",
+       "4       4202155       view     1004237  2053013555631882655   \n",
+       "\n",
+       "                         category_code     brand    price    user_id  \\\n",
+       "0                                 <NA>  shiseido    35.79  541312140   \n",
+       "1  appliances.environment.water_heater      aqua    33.20  554748717   \n",
+       "2           furniture.living_room.sofa      <NA>   543.10  519107250   \n",
+       "3                   computers.notebook    lenovo   251.74  550050854   \n",
+       "4               electronics.smartphone     apple  1081.98  535871217   \n",
+       "\n",
+       "        event_time_dt  event_time_ts  \n",
+       "0 2019-10-01 00:00:00     1569888000  \n",
+       "1 2019-10-01 00:00:00     1569888000  \n",
+       "2 2019-10-01 00:00:01     1569888001  \n",
+       "3 2019-10-01 00:00:01     1569888001  \n",
+       "4 2019-10-01 00:00:04     1569888004  "
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "raw_df = None\n",
+    "del(raw_df)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "145"
+      ]
+     },
+     "execution_count": 14,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "gc.collect()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Removing consecutive repeated (user, item) interactions"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We keep repeated interactions on the same items, removing only consecutive interactions, because it might be due to browser tab refreshes or different interaction types (e.g. click, add-to-card, purchase)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Count with in-session repeated interactions: 42448762\n",
+      "Count after removed in-session repeated interactions: 30733301\n",
+      "CPU times: user 789 ms, sys: 120 ms, total: 909 ms\n",
+      "Wall time: 1.16 s\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "0"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "%%time\n",
+    "df = df.sort_values(['user_session', 'event_time_ts']).reset_index(drop=True)\n",
+    "\n",
+    "print(\"Count with in-session repeated interactions: {}\".format(len(df)))\n",
+    "# Sorts the dataframe by session and timestamp, to remove consecutive repetitions\n",
+    "df['product_id_past'] = df['product_id'].shift(1).fillna(0)\n",
+    "df['session_id_past'] = df['user_session'].shift(1).fillna(0)\n",
+    "#Keeping only no consecutive repeated in session interactions\n",
+    "df = df[~((df['user_session'] == df['session_id_past']) & \\\n",
+    "             (df['product_id'] == df['product_id_past']))]\n",
+    "print(\"Count after removed in-session repeated interactions: {}\".format(len(df)))\n",
+    "del(df['product_id_past'])\n",
+    "del(df['session_id_past'])\n",
+    "\n",
+    "gc.collect()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### Include the item first time seen feature (for recency calculation)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We create `prod_first_event_time_ts` column which indicates the timestamp that an item was seen first time."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0"
+      ]
+     },
+     "execution_count": 16,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "item_first_interaction_df = df.groupby('product_id').agg({'event_time_ts': 'min'}) \\\n",
+    "            .reset_index().rename(columns={'event_time_ts': 'prod_first_event_time_ts'})\n",
+    "item_first_interaction_df.head()\n",
+    "gc.collect()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = df.merge(item_first_interaction_df, on=['product_id'], how='left').reset_index(drop=True)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>user_session</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>event_time_dt</th>\n",
+       "      <th>event_time_ts</th>\n",
+       "      <th>prod_first_event_time_ts</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>94</td>\n",
+       "      <td>view</td>\n",
+       "      <td>26202560</td>\n",
+       "      <td>2053013563693335403</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>388.49</td>\n",
+       "      <td>512892706</td>\n",
+       "      <td>2019-10-15 17:21:59</td>\n",
+       "      <td>1571160119</td>\n",
+       "      <td>1569925682</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>94</td>\n",
+       "      <td>view</td>\n",
+       "      <td>26203994</td>\n",
+       "      <td>2053013563693335403</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>157.79</td>\n",
+       "      <td>512892706</td>\n",
+       "      <td>2019-10-15 17:22:17</td>\n",
+       "      <td>1571160137</td>\n",
+       "      <td>1569941460</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>94</td>\n",
+       "      <td>view</td>\n",
+       "      <td>26204036</td>\n",
+       "      <td>2053013563693335403</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>sokolov</td>\n",
+       "      <td>471.70</td>\n",
+       "      <td>512892706</td>\n",
+       "      <td>2019-10-15 17:22:29</td>\n",
+       "      <td>1571160149</td>\n",
+       "      <td>1569897265</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>94</td>\n",
+       "      <td>view</td>\n",
+       "      <td>26203994</td>\n",
+       "      <td>2053013563693335403</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>157.79</td>\n",
+       "      <td>512892706</td>\n",
+       "      <td>2019-10-15 17:22:58</td>\n",
+       "      <td>1571160178</td>\n",
+       "      <td>1569941460</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>94</td>\n",
+       "      <td>view</td>\n",
+       "      <td>26203727</td>\n",
+       "      <td>2053013563693335403</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>lucente</td>\n",
+       "      <td>317.38</td>\n",
+       "      <td>512892706</td>\n",
+       "      <td>2019-10-15 17:23:19</td>\n",
+       "      <td>1571160199</td>\n",
+       "      <td>1569901056</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   user_session event_type  product_id          category_id category_code  \\\n",
+       "0            94       view    26202560  2053013563693335403          <NA>   \n",
+       "1            94       view    26203994  2053013563693335403          <NA>   \n",
+       "2            94       view    26204036  2053013563693335403          <NA>   \n",
+       "3            94       view    26203994  2053013563693335403          <NA>   \n",
+       "4            94       view    26203727  2053013563693335403          <NA>   \n",
+       "\n",
+       "     brand   price    user_id       event_time_dt  event_time_ts  \\\n",
+       "0     <NA>  388.49  512892706 2019-10-15 17:21:59     1571160119   \n",
+       "1     <NA>  157.79  512892706 2019-10-15 17:22:17     1571160137   \n",
+       "2  sokolov  471.70  512892706 2019-10-15 17:22:29     1571160149   \n",
+       "3     <NA>  157.79  512892706 2019-10-15 17:22:58     1571160178   \n",
+       "4  lucente  317.38  512892706 2019-10-15 17:23:19     1571160199   \n",
+       "\n",
+       "   prod_first_event_time_ts  \n",
+       "0                1569925682  \n",
+       "1                1569941460  \n",
+       "2                1569897265  \n",
+       "3                1569941460  \n",
+       "4                1569901056  "
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "del(item_first_interaction_df)\n",
+    "item_first_interaction_df=None\n",
+    "gc.collect()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "In this tutorial, we only use one week of data from Oct 2019 dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "numpy.datetime64('2019-10-01T00:00:00')"
+      ]
+     },
+     "execution_count": 20,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# check the min date\n",
+    "df['event_time_dt'].min()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# Filters only the first week of the data.\n",
+    "df = df[df['event_time_dt'] < np.datetime64('2019-10-08')].reset_index(drop=True)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We verify that we only have the first week of Oct-2019 dataset."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "numpy.datetime64('2019-10-07T23:59:59')"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df['event_time_dt'].max()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We drop `event_time_dt` column as it will not be used anymore."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 23,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "df = df.drop(['event_time_dt'],  axis=1)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>user_session</th>\n",
+       "      <th>event_type</th>\n",
+       "      <th>product_id</th>\n",
+       "      <th>category_id</th>\n",
+       "      <th>category_code</th>\n",
+       "      <th>brand</th>\n",
+       "      <th>price</th>\n",
+       "      <th>user_id</th>\n",
+       "      <th>event_time_ts</th>\n",
+       "      <th>prod_first_event_time_ts</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300797</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>panasonic</td>\n",
+       "      <td>39.90</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460611</td>\n",
+       "      <td>1569948287</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300798</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>panasonic</td>\n",
+       "      <td>32.18</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460616</td>\n",
+       "      <td>1569934097</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300284</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>rowenta</td>\n",
+       "      <td>30.86</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460621</td>\n",
+       "      <td>1569927253</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300382</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>remington</td>\n",
+       "      <td>28.22</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460636</td>\n",
+       "      <td>1570026747</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>43</td>\n",
+       "      <td>view</td>\n",
+       "      <td>5300366</td>\n",
+       "      <td>2053013563173241677</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>polaris</td>\n",
+       "      <td>26.46</td>\n",
+       "      <td>513903572</td>\n",
+       "      <td>1570460650</td>\n",
+       "      <td>1570097085</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   user_session event_type  product_id          category_id category_code  \\\n",
+       "0            43       view     5300797  2053013563173241677          <NA>   \n",
+       "1            43       view     5300798  2053013563173241677          <NA>   \n",
+       "2            43       view     5300284  2053013563173241677          <NA>   \n",
+       "3            43       view     5300382  2053013563173241677          <NA>   \n",
+       "4            43       view     5300366  2053013563173241677          <NA>   \n",
+       "\n",
+       "       brand  price    user_id  event_time_ts  prod_first_event_time_ts  \n",
+       "0  panasonic  39.90  513903572     1570460611                1569948287  \n",
+       "1  panasonic  32.18  513903572     1570460616                1569934097  \n",
+       "2    rowenta  30.86  513903572     1570460621                1569927253  \n",
+       "3  remington  28.22  513903572     1570460636                1570026747  \n",
+       "4    polaris  26.46  513903572     1570460650                1570097085  "
+      ]
+     },
+     "execution_count": 24,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "df.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Save the data as a single parquet file to be used in the ETL notebook."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "# save df as parquet files on disk\n",
+    "df.to_parquet(os.path.join(INPUT_DATA_DIR, 'Oct-2019.parquet'))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Shut down the kernel"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import IPython\n",
+    "\n",
+    "app = IPython.Application.instance()\n",
+    "app.kernel.do_shutdown(True)"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
