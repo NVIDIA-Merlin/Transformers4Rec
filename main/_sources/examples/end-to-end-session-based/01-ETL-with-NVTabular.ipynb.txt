@@ -25,6 +25,20 @@
   },
   {
    "cell_type": "markdown",
+   "id": "39d3a43a-fab6-4d46-807a-e9232de72bc8",
+   "metadata": {},
+   "source": [
+    "This notebook is created using the latest stable [merlin-pytorch](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch) container. We need to switch to the `merlin-tensorflow:22.XX` container to be able to do model training with Tensorflow.\n",
+    "\n",
+    "**Launch the docker container**\n",
+    "```\n",
+    "docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8888:8888 -v <path_to_data>:/workspace/data/  nvcr.io/nvidia/merlin/merlin-tensorflow:22.XX\n",
+    "```\n",
+    "This script will mount your local data folder that includes your data files to `/workspace/data` directory in the merlin-pytorch docker container."
+   ]
+  },
+  {
+   "cell_type": "markdown",
    "id": "f1e6d7c9",
    "metadata": {},
    "source": [
@@ -195,43 +209,43 @@
        "  <tbody>\n",
        "    <tr>\n",
        "      <th>0</th>\n",
-       "      <td>10962</td>\n",
-       "      <td>1396529065</td>\n",
-       "      <td>214716935</td>\n",
+       "      <td>3111</td>\n",
+       "      <td>1396816833</td>\n",
+       "      <td>214826801</td>\n",
        "      <td>0</td>\n",
-       "      <td>1396321225</td>\n",
+       "      <td>1396321442</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>1</th>\n",
-       "      <td>10962</td>\n",
-       "      <td>1396529088</td>\n",
-       "      <td>214716932</td>\n",
+       "      <td>3111</td>\n",
+       "      <td>1396816865</td>\n",
+       "      <td>214829285</td>\n",
        "      <td>0</td>\n",
-       "      <td>1396323181</td>\n",
+       "      <td>1396325480</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>2</th>\n",
-       "      <td>10963</td>\n",
-       "      <td>1396329338</td>\n",
-       "      <td>214833800</td>\n",
+       "      <td>3111</td>\n",
+       "      <td>1396816868</td>\n",
+       "      <td>214821275</td>\n",
        "      <td>0</td>\n",
-       "      <td>1396327488</td>\n",
+       "      <td>1396322648</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>3</th>\n",
-       "      <td>10963</td>\n",
-       "      <td>1396329372</td>\n",
-       "      <td>214832728</td>\n",
+       "      <td>3111</td>\n",
+       "      <td>1396816875</td>\n",
+       "      <td>214820441</td>\n",
        "      <td>0</td>\n",
-       "      <td>1396327694</td>\n",
+       "      <td>1396322555</td>\n",
        "    </tr>\n",
        "    <tr>\n",
        "      <th>4</th>\n",
-       "      <td>10963</td>\n",
-       "      <td>1396329388</td>\n",
-       "      <td>214833800</td>\n",
+       "      <td>3111</td>\n",
+       "      <td>1396816897</td>\n",
+       "      <td>214684513</td>\n",
        "      <td>0</td>\n",
-       "      <td>1396327488</td>\n",
+       "      <td>1396322393</td>\n",
        "    </tr>\n",
        "  </tbody>\n",
        "</table>\n",
@@ -239,11 +253,11 @@
       ],
       "text/plain": [
        "   session_id   timestamp    item_id  category  itemid_ts_first\n",
-       "0       10962  1396529065  214716935         0       1396321225\n",
-       "1       10962  1396529088  214716932         0       1396323181\n",
-       "2       10963  1396329338  214833800         0       1396327488\n",
-       "3       10963  1396329372  214832728         0       1396327694\n",
-       "4       10963  1396329388  214833800         0       1396327488"
+       "0        3111  1396816833  214826801         0       1396321442\n",
+       "1        3111  1396816865  214829285         0       1396325480\n",
+       "2        3111  1396816868  214821275         0       1396322648\n",
+       "3        3111  1396816875  214820441         0       1396322555\n",
+       "4        3111  1396816897  214684513         0       1396322393"
       ]
      },
      "execution_count": 6,
@@ -284,7 +298,7 @@
     {
      "data": {
       "text/plain": [
-       "15"
+       "0"
       ]
      },
      "execution_count": 8,
@@ -522,7 +536,7 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "/usr/lib/python3.8/site-packages/cudf/core/dataframe.py:1253: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.\n",
+      "/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.\n",
       "  warnings.warn(\n"
      ]
     }
@@ -588,7 +602,7 @@
        "      <td>[2223, 2125, 1800, 123, 3030, 1861, 1076, 1285...</td>\n",
        "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
        "      <td>[1.1285199e-06, 1.1285199e-06, 1.1285199e-06, ...</td>\n",
-       "      <td>[-1.1126340627670288, -0.9665389060974121, -0....</td>\n",
+       "      <td>[-1.1126351356506348, -0.9665398597717285, -0....</td>\n",
        "      <td>27</td>\n",
        "    </tr>\n",
        "    <tr>\n",
@@ -598,7 +612,7 @@
        "      <td>[35137, 19260, 46449, 29027, 39096, 27266, 326...</td>\n",
        "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
        "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
-       "      <td>[0.39331725239753723, 0.5418465733528137, -3.0...</td>\n",
+       "      <td>[0.393317312002182, 0.541846752166748, -3.0278...</td>\n",
        "      <td>58</td>\n",
        "    </tr>\n",
        "    <tr>\n",
@@ -608,7 +622,7 @@
        "      <td>[23212, 30448, 16468, 2052, 22490, 31097, 6243...</td>\n",
        "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
        "      <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>\n",
-       "      <td>[0.6801630854606628, 0.7174695134162903, 0.718...</td>\n",
+       "      <td>[0.6801633834838867, 0.7174698114395142, 0.718...</td>\n",
        "      <td>71</td>\n",
        "    </tr>\n",
        "    <tr>\n",
@@ -618,7 +632,7 @@
        "      <td>[230, 451, 732, 1268, 2014, 567, 497, 439, 338...</td>\n",
        "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, ...</td>\n",
        "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
-       "      <td>[1.3680888414382935, -0.6530480980873108, -0.6...</td>\n",
+       "      <td>[1.3680896759033203, -0.6530488133430481, -0.6...</td>\n",
        "      <td>149</td>\n",
        "    </tr>\n",
        "    <tr>\n",
@@ -628,7 +642,7 @@
        "      <td>[23, 70, 160, 70, 90, 742, 851, 359, 734, 878,...</td>\n",
        "      <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>\n",
        "      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>\n",
-       "      <td>[1.3714823722839355, 1.3715883493423462, 1.371...</td>\n",
+       "      <td>[1.3714832067489624, 1.371589183807373, 1.3715...</td>\n",
        "      <td>149</td>\n",
        "    </tr>\n",
        "  </tbody>\n",
@@ -665,11 +679,11 @@
        "4  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   \n",
        "\n",
        "              product_recency_days_log_norm-list_seq  day_index  \n",
-       "0  [-1.1126340627670288, -0.9665389060974121, -0....         27  \n",
-       "1  [0.39331725239753723, 0.5418465733528137, -3.0...         58  \n",
-       "2  [0.6801630854606628, 0.7174695134162903, 0.718...         71  \n",
-       "3  [1.3680888414382935, -0.6530480980873108, -0.6...        149  \n",
-       "4  [1.3714823722839355, 1.3715883493423462, 1.371...        149  "
+       "0  [-1.1126351356506348, -0.9665398597717285, -0....         27  \n",
+       "1  [0.393317312002182, 0.541846752166748, -3.0278...         58  \n",
+       "2  [0.6801633834838867, 0.7174698114395142, 0.718...         71  \n",
+       "3  [1.3680896759033203, -0.6530488133430481, -0.6...        149  \n",
+       "4  [1.3714832067489624, 1.371589183807373, 1.3715...        149  "
       ]
      },
      "execution_count": 13,
@@ -737,7 +751,7 @@
      "name": "stderr",
      "output_type": "stream",
      "text": [
-      "Creating time-based splits: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00<00:00,  5.91it/s]\n"
+      "Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:01<00:00,  4.75it/s]\n"
      ]
     }
    ],
@@ -781,26 +795,26 @@
      "output_type": "stream",
      "text": [
       "preproc_sessions_by_day/\n",
-      "    181/\n",
-      "        test.parquet\n",
-      "        train.parquet\n",
-      "        valid.parquet\n",
-      "    179/\n",
-      "        test.parquet\n",
-      "        train.parquet\n",
-      "        valid.parquet\n",
-      "    178/\n",
-      "        test.parquet\n",
-      "        train.parquet\n",
-      "        valid.parquet\n",
-      "    180/\n",
-      "        test.parquet\n",
-      "        train.parquet\n",
-      "        valid.parquet\n",
       "    182/\n",
       "        test.parquet\n",
+      "        valid.parquet\n",
       "        train.parquet\n",
-      "        valid.parquet\n"
+      "    179/\n",
+      "        test.parquet\n",
+      "        valid.parquet\n",
+      "        train.parquet\n",
+      "    180/\n",
+      "        test.parquet\n",
+      "        valid.parquet\n",
+      "        train.parquet\n",
+      "    178/\n",
+      "        test.parquet\n",
+      "        valid.parquet\n",
+      "        train.parquet\n",
+      "    181/\n",
+      "        test.parquet\n",
+      "        valid.parquet\n",
+      "        train.parquet\n"
      ]
     }
    ],
@@ -817,7 +831,7 @@
     {
      "data": {
       "text/plain": [
-       "619"
+       "557"
       ]
      },
      "execution_count": 19,

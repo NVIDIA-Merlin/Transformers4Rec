@@ -270,131 +270,11 @@ feature {
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;320&#39; to be equal to the item-id embedding dimension &#39;64&#39;
-</pre></div>
 </div>
-</div>
-</div>
+<p>You can print out the model structure by uncommenting the line below.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Model(
-  (heads): ModuleList(
-    (0): Head(
-      (body): SequentialBlock(
-        (0): TabularSequenceFeatures(
-          (_aggregation): ConcatFeatures()
-          (to_merge): ModuleDict(
-            (continuous_module): SequentialBlock(
-              (0): ContinuousFeatures(
-                (filter_features): FilterFeatures()
-                (_aggregation): ConcatFeatures()
-              )
-              (1): SequentialBlock(
-                (0): DenseBlock(
-                  (0): Linear(in_features=2, out_features=64, bias=True)
-                  (1): ReLU(inplace=True)
-                )
-              )
-              (2): AsTabular()
-            )
-            (categorical_module): SequenceEmbeddingFeatures(
-              (filter_features): FilterFeatures()
-              (embedding_tables): ModuleDict(
-                (item_id-list_seq): Embedding(52743, 64, padding_idx=0)
-                (category-list_seq): Embedding(338, 64, padding_idx=0)
-              )
-            )
-          )
-          (projection_module): SequentialBlock(
-            (0): DenseBlock(
-              (0): Linear(in_features=192, out_features=320, bias=True)
-              (1): ReLU(inplace=True)
-            )
-          )
-          (_masking): MaskedLanguageModeling()
-        )
-        (1): TansformerBlock(
-          (transformer): XLNetModel(
-            (word_embedding): Embedding(1, 320)
-            (layer): ModuleList(
-              (0): XLNetLayer(
-                (rel_attn): XLNetRelativeAttention(
-                  (layer_norm): LayerNorm((320,), eps=0.03, elementwise_affine=True)
-                  (dropout): Dropout(p=0.3, inplace=False)
-                )
-                (ff): XLNetFeedForward(
-                  (layer_norm): LayerNorm((320,), eps=0.03, elementwise_affine=True)
-                  (layer_1): Linear(in_features=320, out_features=1280, bias=True)
-                  (layer_2): Linear(in_features=1280, out_features=320, bias=True)
-                  (dropout): Dropout(p=0.3, inplace=False)
-                )
-                (dropout): Dropout(p=0.3, inplace=False)
-              )
-              (1): XLNetLayer(
-                (rel_attn): XLNetRelativeAttention(
-                  (layer_norm): LayerNorm((320,), eps=0.03, elementwise_affine=True)
-                  (dropout): Dropout(p=0.3, inplace=False)
-                )
-                (ff): XLNetFeedForward(
-                  (layer_norm): LayerNorm((320,), eps=0.03, elementwise_affine=True)
-                  (layer_1): Linear(in_features=320, out_features=1280, bias=True)
-                  (layer_2): Linear(in_features=1280, out_features=320, bias=True)
-                  (dropout): Dropout(p=0.3, inplace=False)
-                )
-                (dropout): Dropout(p=0.3, inplace=False)
-              )
-            )
-            (dropout): Dropout(p=0.3, inplace=False)
-          )
-          (masking): MaskedLanguageModeling()
-        )
-      )
-      (prediction_task_dict): ModuleDict(
-        (next-item): NextItemPredictionTask(
-          (sequence_summary): SequenceSummary(
-            (summary): Identity()
-            (activation): Identity()
-            (first_dropout): Identity()
-            (last_dropout): Identity()
-          )
-          (metrics): ModuleList(
-            (0): NDCGAt()
-            (1): AvgPrecisionAt()
-            (2): RecallAt()
-          )
-          (loss): NLLLoss()
-          (embeddings): SequenceEmbeddingFeatures(
-            (filter_features): FilterFeatures()
-            (embedding_tables): ModuleDict(
-              (item_id-list_seq): Embedding(52743, 64, padding_idx=0)
-              (category-list_seq): Embedding(338, 64, padding_idx=0)
-            )
-          )
-          (item_embedding_table): Embedding(52743, 64, padding_idx=0)
-          (masking): MaskedLanguageModeling()
-          (task_block): SequentialBlock(
-            (0): DenseBlock(
-              (0): Linear(in_features=320, out_features=64, bias=True)
-              (1): ReLU(inplace=True)
-            )
-          )
-          (pre): Block(
-            (module): NextItemPredictionTask(
-              (item_embedding_table): Embedding(52743, 64, padding_idx=0)
-              (log_softmax): LogSoftmax(dim=-1)
-            )
-          )
-        )
-      )
-    )
-  )
-)
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#model</span>
 </pre></div>
 </div>
 </div>
@@ -456,23 +336,27 @@ feature {
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
+***** Running training *****
   Num examples = 28800
   Num Epochs = 10
   Instantaneous batch size per device = 384
   Total train batch size (w. parallel, distributed &amp; accumulation) = 384
   Gradient Accumulation steps = 1
-  Total optimization steps = 750
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Launch training for day 178: *****
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  Total optimization steps = 750
 </pre></div>
 </div>
 <div class="output text_html">
     <div>
 
       <progress value='750' max='750' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [750/750 00:28, Epoch 10/10]
+      [750/750 00:21, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -484,43 +368,39 @@ feature {
   <tbody>
     <tr>
       <td>200</td>
-      <td>7.721300</td>
+      <td>7.704600</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.645300</td>
+      <td>6.607100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>6.346600</td>
+      <td>6.326200</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
 </pre></div>
 </div>
 <div class="output text_html">
 <div>
 
   <progress value='14' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [6/6 00:38]
+  [6/6 00:31]
 </div>
-</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
-
- eval/next-item/avg_precision@10 = 0.08169878274202347
- eval/next-item/avg_precision@20 = 0.08574782311916351
- eval/next-item/ndcg@10 = 0.11046259850263596
- eval/next-item/ndcg@20 = 0.12532013654708862
- eval/next-item/recall@10 = 0.20192678272724152
- eval/next-item/recall@20 = 0.2608863115310669
-
-***** Launch training for day 179: *****
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+</div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 20736
   Num Epochs = 10
   Instantaneous batch size per device = 384
@@ -529,11 +409,23 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   Total optimization steps = 540
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
+
+ eval_/next-item/avg_precision@10 = 0.07544758915901184
+ eval_/next-item/avg_precision@20 = 0.07940652966499329
+ eval_/next-item/ndcg@10 = 0.10325407981872559
+ eval_/next-item/ndcg@20 = 0.11828368902206421
+ eval_/next-item/recall@10 = 0.19306358695030212
+ eval_/next-item/recall@20 = 0.2524084746837616
+
+***** Launch training for day 179: *****
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
       <progress value='540' max='540' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [540/540 00:20, Epoch 10/10]
+      [540/540 00:16, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -545,20 +437,26 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.845400</td>
+      <td>6.860000</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.425500</td>
+      <td>6.483100</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
 
 
+/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
 ***** Running training *****
   Num examples = 16896
   Num Epochs = 10
@@ -570,12 +468,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 180:*****
 
- eval/next-item/avg_precision@10 = 0.06733544170856476
- eval/next-item/avg_precision@20 = 0.07138364017009735
- eval/next-item/ndcg@10 = 0.09150198847055435
- eval/next-item/ndcg@20 = 0.10659514367580414
- eval/next-item/recall@10 = 0.16969697177410126
- eval/next-item/recall@20 = 0.2293706238269806
+ eval_/next-item/avg_precision@10 = 0.06514263898134232
+ eval_/next-item/avg_precision@20 = 0.06934623420238495
+ eval_/next-item/ndcg@10 = 0.08791551738977432
+ eval_/next-item/ndcg@20 = 0.10358742624521255
+ eval_/next-item/recall@10 = 0.1627039611339569
+ eval_/next-item/recall@20 = 0.22470861673355103
 
 ***** Launch training for day 180: *****
 </pre></div>
@@ -584,7 +482,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
     <div>
 
       <progress value='440' max='440' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [440/440 00:17, Epoch 10/10]
+      [440/440 00:13, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -596,11 +494,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.880100</td>
+      <td>6.956000</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.469300</td>
+      <td>6.515100</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -608,12 +506,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 181:*****
 
- eval/next-item/avg_precision@10 = 0.12588053941726685
- eval/next-item/avg_precision@20 = 0.13366079330444336
- eval/next-item/ndcg@10 = 0.17167863249778748
- eval/next-item/ndcg@20 = 0.200278639793396
- eval/next-item/recall@10 = 0.3200370967388153
- eval/next-item/recall@20 = 0.4313543736934662
+ eval_/next-item/avg_precision@10 = 0.13020658493041992
+ eval_/next-item/avg_precision@20 = 0.13737118244171143
+ eval_/next-item/ndcg@10 = 0.17219391465187073
+ eval_/next-item/ndcg@20 = 0.19866836071014404
+ eval_/next-item/recall@10 = 0.30797773599624634
+ eval_/next-item/recall@20 = 0.41187384724617004
 </pre></div>
 </div>
 </div>
@@ -629,24 +527,24 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval/next-item/avg_precision@10&#39;: [0.08169878274202347,
-  0.06733544170856476,
-  0.12588053941726685],
- &#39;indexed_by_time_eval/next-item/avg_precision@20&#39;: [0.08574782311916351,
-  0.07138364017009735,
-  0.13366079330444336],
- &#39;indexed_by_time_eval/next-item/ndcg@10&#39;: [0.11046259850263596,
-  0.09150198847055435,
-  0.17167863249778748],
- &#39;indexed_by_time_eval/next-item/ndcg@20&#39;: [0.12532013654708862,
-  0.10659514367580414,
-  0.200278639793396],
- &#39;indexed_by_time_eval/next-item/recall@10&#39;: [0.20192678272724152,
-  0.16969697177410126,
-  0.3200370967388153],
- &#39;indexed_by_time_eval/next-item/recall@20&#39;: [0.2608863115310669,
-  0.2293706238269806,
-  0.4313543736934662]}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.07544758915901184,
+  0.06514263898134232,
+  0.13020658493041992],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.07940652966499329,
+  0.06934623420238495,
+  0.13737118244171143],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.10325407981872559,
+  0.08791551738977432,
+  0.17219391465187073],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.11828368902206421,
+  0.10358742624521255,
+  0.19866836071014404],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.19306358695030212,
+  0.1627039611339569,
+  0.30797773599624634],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.2524084746837616,
+  0.22470861673355103,
+  0.41187384724617004]}
 </pre></div>
 </div>
 </div>
@@ -662,12 +560,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval/next-item/avg_precision@10 = 0.09163825462261836
- indexed_by_time_eval/next-item/avg_precision@20 = 0.09693075219790141
- indexed_by_time_eval/next-item/ndcg@10 = 0.12454773982365926
- indexed_by_time_eval/next-item/ndcg@20 = 0.1440646400054296
- indexed_by_time_eval/next-item/recall@10 = 0.2305536170800527
- indexed_by_time_eval/next-item/recall@20 = 0.3072037696838379
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.0902656043569247
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.09537464876969655
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.12112117062012355
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.14017982532580694
+ indexed_by_time_eval_/next-item/recall@10 = 0.22124842802683511
+ indexed_by_time_eval_/next-item/recall@20 = 0.2963303128878276
 </pre></div>
 </div>
 </div>
@@ -681,10 +579,20 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-440
+Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="exports-the-preprocessing-workflow-and-model-in-the-format-required-by-triton-server">
-<h4>Exports the preprocessing workflow and model in the format required by Triton server:**<a class="headerlink" href="#exports-the-preprocessing-workflow-and-model-in-the-format-required-by-triton-server" title="Permalink to this headline"></a></h4>
+<h4>Exports the preprocessing workflow and model in the format required by Triton server:<a class="headerlink" href="#exports-the-preprocessing-workflow-and-model-in-the-format-required-by-triton-server" title="Permalink to this headline"></a></h4>
 <p>NVTabular’s <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function enables us to create model files and config files to be served to Triton Inference Server.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -703,6 +611,16 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -718,18 +636,13 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </ul>
 <div class="section" id="pull-and-start-inference-container">
 <h3>4.1. Pull and Start Inference Container<a class="headerlink" href="#pull-and-start-inference-container" title="Permalink to this headline"></a></h3>
-<p>At this point, before connecing to the Triton Server, we launch the inference docker container and then load the ensemble <code class="docutils literal notranslate"><span class="pre">t4r_pytorch</span></code> to the inference server. This is done with the scripts below:</p>
-<p><strong>Launch the docker container</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_saved_models</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">models</span><span class="o">/</span> <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">inference</span><span class="p">:</span><span class="mf">21.09</span>
-</pre></div>
-</div>
-<p>This script will mount your local model-repository folder that includes your saved models from the previous cell to <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code> directory in the merlin-inference docker container.</p>
+<p>At this point, we start the Triton Inference Server (TIS).</p>
 <p><strong>Start triton server</strong><br>
-After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.</p>
+You can start triton server with the command below. You need to provide correct path of the models folder.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tritonserver</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">repository</span><span class="o">=&lt;</span><span class="n">path_to_models</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">control</span><span class="o">-</span><span class="n">mode</span><span class="o">=</span><span class="n">explicit</span>
 </pre></div>
 </div>
-<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code>. The models haven’t been loaded, yet. Below, we will request the Triton server to load the saved ensemble model below.</p>
+<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/TF4Rec/models/</span></code>. The models haven’t been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.</p>
 </div>
 <div class="section" id="connect-to-the-triton-inference-server-and-check-if-the-server-is-alive">
 <h3>Connect to the Triton Inference Server and check if the server is alive<a class="headerlink" href="#connect-to-the-triton-inference-server-and-check-if-the-server-is-alive" title="Permalink to this headline"></a></h3>
@@ -763,11 +676,30 @@ GET /v2/health/live, headers None
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="n">interactions_merged_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="s2">&quot;/raid/data/yoochoose/interactions_merged_df.parquet&quot;</span><span class="p">)</span>
+<span class="n">interactions_merged_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="s2">&quot;/workspace/data/interactions_merged_df.parquet&quot;</span><span class="p">)</span>
 <span class="n">interactions_merged_df</span> <span class="o">=</span> <span class="n">interactions_merged_df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;timestamp&#39;</span><span class="p">)</span>
 <span class="n">batch</span> <span class="o">=</span> <span class="n">interactions_merged_df</span><span class="p">[</span><span class="o">-</span><span class="mi">50</span><span class="p">:]</span>
 <span class="n">sessions_to_use</span> <span class="o">=</span> <span class="n">batch</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">value_counts</span><span class="p">()</span>
 <span class="n">filtered_batch</span> <span class="o">=</span> <span class="n">batch</span><span class="p">[</span><span class="n">batch</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">sessions_to_use</span><span class="p">[</span><span class="n">sessions_to_use</span><span class="o">.</span><span class="n">values</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">values</span><span class="p">)]</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="load-the-ensemble-model-to-triton">
+<h3>Load the ensemble model to triton<a class="headerlink" href="#load-the-ensemble-model-to-triton" title="Permalink to this headline"></a></h3>
+<p>The models should be loaded successfully before we send a request to TIS. If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">successfully</span> <span class="pre">loaded</span></code> status next to each model name on your terminal.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/load, headers None
+{}
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch&#39;
 </pre></div>
 </div>
 </div>
@@ -784,36 +716,18 @@ GET /v2/health/live, headers None
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
 
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;77&#39;}&gt;
-bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;}]&#39;)
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;167&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
 </pre></div>
 </div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;},
- {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;},
- {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;}]
-</pre></div>
-</div>
-</div>
-</div>
-</div>
-<div class="section" id="load-the-ensemble-model-to-triton">
-<h3>Load the ensemble model to triton<a class="headerlink" href="#load-the-ensemble-model-to-triton" title="Permalink to this headline"></a></h3>
-<p>If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">successfully</span> <span class="pre">loaded</span></code> status next to each model name on your terminal.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/load, headers None
-
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch&#39;
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
 </pre></div>
 </div>
 </div>
 </div>
+<p>If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">READY</span></code> status next to each model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nvtabular.inference.triton</span> <span class="k">as</span> <span class="nn">nvt_triton</span>
@@ -837,19 +751,13 @@ Loaded model &#39;t4r_pytorch&#39;
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>output :
- [[-13.53608   -14.02154    -8.15927   ... -13.912806  -14.316951
-  -13.758053 ]
- [-15.546847  -16.178349   -7.881463  ... -16.058243  -17.085182
-  -15.761725 ]
- [-12.496786  -13.111265   -8.736879  ... -13.031836  -13.436075
-  -12.741135 ]
+ [[-16.523573 -17.577486 -10.921707 ... -17.596546 -17.69919  -15.932049]
+ [-16.530544 -14.984111  -8.974278 ... -20.520447 -21.623093 -16.919617]
+ [-17.881346 -17.46621   -9.281072 ... -20.108696 -22.266499 -18.415016]
  ...
- [-14.425283  -14.728777   -7.756508  ... -14.73007   -15.161329
-  -14.437494 ]
- [-15.366516  -15.427296   -7.3262033 ... -15.448423  -15.94982
-  -15.064197 ]
- [-11.908236  -12.42782    -8.78612   ... -12.316145  -12.594669
-  -12.181059 ]]
+ [-18.485788 -18.127209  -8.013737 ... -22.590933 -25.988901 -20.668829]
+ [-18.583862 -16.867874  -9.108355 ... -23.238972 -24.597252 -19.22632 ]
+ [-18.973335 -18.069975  -9.379853 ... -23.59224  -25.913097 -20.5112  ]]
 </pre></div>
 </div>
 </div>
@@ -865,35 +773,35 @@ Loaded model &#39;t4r_pytorch&#39;
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `11257991`: 2365 || 260 || 196 || 33 || 1169
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `11457123`: 281 || 1781 || 953 || 284 || 27
 
-- Top-5 predictions for session `11270119`: 898 || 2214 || 1169 || 958 || 2814
+- Top-5 predictions for session `11467406`: 6510 || 4541 || 1219 || 4136 || 4204
 
-- Top-5 predictions for session `11311424`: 898 || 2214 || 1987 || 958 || 1169
+- Top-5 predictions for session `11528554`: 898 || 1037 || 3299 || 202 || 863
 
-- Top-5 predictions for session `11336059`: 260 || 196 || 1169 || 2365 || 33
+- Top-5 predictions for session `11336059`: 8553 || 4204 || 4541 || 1219 || 4136
 
-- Top-5 predictions for session `11394056`: 863 || 2365 || 196 || 33 || 1169
+- Top-5 predictions for session `11445777`: 1453 || 633 || 4204 || 620 || 1219
 
-- Top-5 predictions for session `11399751`: 1987 || 2214 || 958 || 2814 || 1169
+- Top-5 predictions for session `11493827`: 6510 || 7055 || 4136 || 4541 || 4204
 
-- Top-5 predictions for session `11401481`: 898 || 157 || 2214 || 620 || 2814
+- Top-5 predictions for session `11425751`: 620 || 1453 || 2980 || 1219 || 2031
 
-- Top-5 predictions for session `11421333`: 1126 || 196 || 127 || 1169 || 1987
+- Top-5 predictions for session `11399751`: 1453 || 4204 || 633 || 620 || 1219
 
-- Top-5 predictions for session `11425751`: 196 || 33 || 958 || 1169 || 1987
+- Top-5 predictions for session `11311424`: 8553 || 4136 || 4204 || 4541 || 6488
 
-- Top-5 predictions for session `11445777`: 33 || 196 || 1987 || 1126 || 1169
+- Top-5 predictions for session `11257991`: 1219 || 10893 || 1157 || 13054 || 651
 
-- Top-5 predictions for session `11457123`: 184 || 1169 || 313 || 33 || 863
+- Top-5 predictions for session `11561822`: 9459 || 4204 || 4541 || 6488 || 4136
 
-- Top-5 predictions for session `11467406`: 898 || 958 || 2214 || 1169 || 1987
+- Top-5 predictions for session `11421333`: 1697 || 186 || 898 || 2290 || 202
 
-- Top-5 predictions for session `11493827`: 863 || 2365 || 196 || 33 || 1169
+- Top-5 predictions for session `11270119`: 4136 || 6407 || 4541 || 2789 || 4204
 
-- Top-5 predictions for session `11528554`: 1061 || 33 || 863 || 1020 || 1169
+- Top-5 predictions for session `11401481`: 7055 || 620 || 4204 || 4541 || 4136
 
-- Top-5 predictions for session `11561822`: 127 || 1126 || 196 || 1169 || 1987
+- Top-5 predictions for session `11394056`: 6510 || 7055 || 4136 || 4204 || 4541
 </pre></div>
 </div>
 </div>

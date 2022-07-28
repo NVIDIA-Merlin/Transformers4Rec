@@ -658,22 +658,15 @@
    "source": [
     "### 4.1. Pull and Start Inference Container\n",
     "\n",
-    "At this point, before connecing to the Triton Server, we launch the inference docker container and then load the ensemble `t4r_tf` to the inference server. This is done with the scripts below:\n",
-    "\n",
-    "**Launch the docker container**\n",
-    "```\n",
-    "docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v <path_to_saved_models>:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:21.11\n",
-    "```\n",
-    "This script will mount your local model-repository folder that includes your saved models from the previous cell to `/workspace/models` directory in the merlin-inference docker container.\n",
+    "At this point, we launch the Triton Server, and we will load the ensemble `t4r_tf` to the inference server below. \n",
     "\n",
     "**Start triton server**<br>\n",
-    "After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.\n",
-    "\n",
+    "You can start triton server with the command below. You need to provide correct path of the models folder.\n",
     "\n",
     "```\n",
     "tritonserver --model-repository=<path_to_models> --backend-config=tensorflow,version=2 --model-control-mode=explicit\n",
     "```\n",
-    "Note: The model-repository path for our example is `/workspace/models`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model below."
+    "Note: The model-repository path for our example is `/workspace/TF4Rec/models/tf/`. The models haven't been loaded, yet. We will request the Triton server to load the saved ensemble model, below."
    ]
   },
   {

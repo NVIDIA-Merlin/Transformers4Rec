@@ -109,6 +109,12 @@
 </div>
 </div>
 </div>
+<p>This notebook is created using the latest stable <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch">merlin-pytorch</a> container. We need to switch to the <code class="docutils literal notranslate"><span class="pre">merlin-tensorflow:22.XX</span></code> container to be able to do model training with Tensorflow.</p>
+<p><strong>Launch the docker container</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8888</span><span class="p">:</span><span class="mi">8888</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_data</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">data</span><span class="o">/</span>  <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">tensorflow</span><span class="p">:</span><span class="mf">22.</span><span class="n">XX</span>
+</pre></div>
+</div>
+<p>This script will mount your local data folder that includes your data files to <code class="docutils literal notranslate"><span class="pre">/workspace/data</span></code> directory in the merlin-pytorch docker container.</p>
 <div class="tex2jax_ignore mathjax_ignore section" id="etl-with-nvtabular">
 <h1>ETL with NVTabular<a class="headerlink" href="#etl-with-nvtabular" title="Permalink to this headline"></a></h1>
 <p>This notebook demonstrates how to use NVTabular to perform the feature engineering that is needed to model the Yoochoose data.</p>
@@ -223,43 +229,43 @@ Count after removed in-session repeated interactions: 28971543
   <tbody>
     <tr>
       <th>0</th>
-      <td>10962</td>
-      <td>1396529065</td>
-      <td>214716935</td>
+      <td>3111</td>
+      <td>1396816833</td>
+      <td>214826801</td>
       <td>0</td>
-      <td>1396321225</td>
+      <td>1396321442</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>10962</td>
-      <td>1396529088</td>
-      <td>214716932</td>
+      <td>3111</td>
+      <td>1396816865</td>
+      <td>214829285</td>
       <td>0</td>
-      <td>1396323181</td>
+      <td>1396325480</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>10963</td>
-      <td>1396329338</td>
-      <td>214833800</td>
+      <td>3111</td>
+      <td>1396816868</td>
+      <td>214821275</td>
       <td>0</td>
-      <td>1396327488</td>
+      <td>1396322648</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>10963</td>
-      <td>1396329372</td>
-      <td>214832728</td>
+      <td>3111</td>
+      <td>1396816875</td>
+      <td>214820441</td>
       <td>0</td>
-      <td>1396327694</td>
+      <td>1396322555</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>10963</td>
-      <td>1396329388</td>
-      <td>214833800</td>
+      <td>3111</td>
+      <td>1396816897</td>
+      <td>214684513</td>
       <td>0</td>
-      <td>1396327488</td>
+      <td>1396322393</td>
     </tr>
   </tbody>
 </table>
@@ -282,7 +288,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>15
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
 </pre></div>
 </div>
 </div>
@@ -458,7 +464,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/lib/python3.8/site-packages/cudf/core/dataframe.py:1253: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
   warnings.warn(
 </pre></div>
 </div>
@@ -507,7 +513,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[2223, 2125, 1800, 123, 3030, 1861, 1076, 1285...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[1.1285199e-06, 1.1285199e-06, 1.1285199e-06, ...</td>
-      <td>[-1.1126340627670288, -0.9665389060974121, -0....</td>
+      <td>[-1.1126351356506348, -0.9665398597717285, -0....</td>
       <td>27</td>
     </tr>
     <tr>
@@ -517,7 +523,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[35137, 19260, 46449, 29027, 39096, 27266, 326...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[0.39331725239753723, 0.5418465733528137, -3.0...</td>
+      <td>[0.393317312002182, 0.541846752166748, -3.0278...</td>
       <td>58</td>
     </tr>
     <tr>
@@ -527,7 +533,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[23212, 30448, 16468, 2052, 22490, 31097, 6243...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>
-      <td>[0.6801630854606628, 0.7174695134162903, 0.718...</td>
+      <td>[0.6801633834838867, 0.7174698114395142, 0.718...</td>
       <td>71</td>
     </tr>
     <tr>
@@ -537,7 +543,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[230, 451, 732, 1268, 2014, 567, 497, 439, 338...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[1.3680888414382935, -0.6530480980873108, -0.6...</td>
+      <td>[1.3680896759033203, -0.6530488133430481, -0.6...</td>
       <td>149</td>
     </tr>
     <tr>
@@ -547,7 +553,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[23, 70, 160, 70, 90, 742, 851, 359, 734, 878,...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[1.3714823722839355, 1.3715883493423462, 1.371...</td>
+      <td>[1.3714832067489624, 1.371589183807373, 1.3715...</td>
       <td>149</td>
     </tr>
   </tbody>
@@ -588,7 +594,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00&lt;00:00,  5.91it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:01&lt;00:00,  4.75it/s]
 </pre></div>
 </div>
 </div>
@@ -618,26 +624,26 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>preproc_sessions_by_day/
-    181/
-        test.parquet
-        train.parquet
-        valid.parquet
-    179/
-        test.parquet
-        train.parquet
-        valid.parquet
-    178/
-        test.parquet
-        train.parquet
-        valid.parquet
-    180/
-        test.parquet
-        train.parquet
-        valid.parquet
     182/
         test.parquet
-        train.parquet
         valid.parquet
+        train.parquet
+    179/
+        test.parquet
+        valid.parquet
+        train.parquet
+    180/
+        test.parquet
+        valid.parquet
+        train.parquet
+    178/
+        test.parquet
+        valid.parquet
+        train.parquet
+    181/
+        test.parquet
+        valid.parquet
+        train.parquet
 </pre></div>
 </div>
 </div>
@@ -651,7 +657,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>619
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>557
 </pre></div>
 </div>
 </div>
