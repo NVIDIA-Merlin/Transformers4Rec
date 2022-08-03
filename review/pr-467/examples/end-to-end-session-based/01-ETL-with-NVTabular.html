@@ -229,43 +229,43 @@ Count after removed in-session repeated interactions: 28971543
   <tbody>
     <tr>
       <th>0</th>
-      <td>3111</td>
-      <td>1396816833</td>
-      <td>214826801</td>
+      <td>4993</td>
+      <td>1396727816</td>
+      <td>214835285</td>
       <td>0</td>
-      <td>1396321442</td>
+      <td>1396332436</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>3111</td>
-      <td>1396816865</td>
-      <td>214829285</td>
+      <td>4993</td>
+      <td>1396727863</td>
+      <td>214530703</td>
       <td>0</td>
-      <td>1396325480</td>
+      <td>1396339114</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>3111</td>
-      <td>1396816868</td>
-      <td>214821275</td>
+      <td>4993</td>
+      <td>1396727898</td>
+      <td>214530705</td>
       <td>0</td>
-      <td>1396322648</td>
+      <td>1396330224</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>3111</td>
-      <td>1396816875</td>
-      <td>214820441</td>
+      <td>4993</td>
+      <td>1396728063</td>
+      <td>214835713</td>
       <td>0</td>
-      <td>1396322555</td>
+      <td>1396327474</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>3111</td>
-      <td>1396816897</td>
-      <td>214684513</td>
+      <td>4993</td>
+      <td>1396730097</td>
+      <td>214512611</td>
       <td>0</td>
-      <td>1396322393</td>
+      <td>1396328044</td>
     </tr>
   </tbody>
 </table>
@@ -321,10 +321,10 @@ Count after removed in-session repeated interactions: 28971543
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Encodes categorical features as contiguous integers</span>
-<span class="n">cat_feats</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ColumnSelector</span><span class="p">([</span><span class="s1">&#39;session_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">,</span> <span class="s1">&#39;item_id&#39;</span><span class="p">])</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">(</span><span class="n">start_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">cat_feats</span> <span class="o">=</span> <span class="n">ColumnSelector</span><span class="p">([</span><span class="s1">&#39;session_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">,</span> <span class="s1">&#39;item_id&#39;</span><span class="p">])</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">(</span><span class="n">start_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># create time features</span>
-<span class="n">session_ts</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ColumnSelector</span><span class="p">([</span><span class="s1">&#39;timestamp&#39;</span><span class="p">])</span>
+<span class="n">session_ts</span> <span class="o">=</span> <span class="n">ColumnSelector</span><span class="p">([</span><span class="s1">&#39;timestamp&#39;</span><span class="p">])</span>
 <span class="n">session_time</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">session_ts</span> <span class="o">&gt;&gt;</span> 
     <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LambdaOp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">cudf</span><span class="o">.</span><span class="n">to_datetime</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s1">&#39;s&#39;</span><span class="p">))</span> <span class="o">&gt;&gt;</span> 
@@ -389,7 +389,7 @@ Count after removed in-session repeated interactions: 28971543
     <span class="n">recency_features_norm</span>
 <span class="p">)</span>
 
-<span class="n">features</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ColumnSelector</span><span class="p">([</span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="s1">&#39;session_id&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">cat_feats</span> <span class="o">+</span> <span class="n">time_features</span> 
+<span class="n">features</span> <span class="o">=</span> <span class="n">ColumnSelector</span><span class="p">([</span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="s1">&#39;session_id&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="n">cat_feats</span> <span class="o">+</span> <span class="n">time_features</span> 
 </pre></div>
 </div>
 </div>
@@ -594,7 +594,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:01&lt;00:00,  4.75it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:01&lt;00:00,  4.73it/s]
 </pre></div>
 </div>
 </div>
