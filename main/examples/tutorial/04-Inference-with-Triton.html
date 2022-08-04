@@ -123,22 +123,11 @@
 </ol>
 <div class="section" id="pull-and-start-inference-docker-container">
 <h2>Pull and start Inference docker container<a class="headerlink" href="#pull-and-start-inference-docker-container" title="Permalink to this headline"></a></h2>
-<p>At this point, before connecing to the Triton Server, we launch the inference docker container and then load the exported ensemble <code class="docutils literal notranslate"><span class="pre">t4r_pytorch</span></code> to the inference server. This is done with the scripts below:</p>
-<div class="section" id="launch-the-docker-container">
-<h3>Launch the docker container:<a class="headerlink" href="#launch-the-docker-container" title="Permalink to this headline"></a></h3>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_saved_models</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">models</span><span class="o">/</span> <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">inference</span><span class="p">:</span><span class="mf">21.09</span>
-</pre></div>
-</div>
-<p>This script will mount your local model-repository folder that includes your saved models from the previous cell to <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code> directory in the merlin-inference docker container.</p>
-</div>
-<div class="section" id="start-triton-server">
-<h3>Start triton server<a class="headerlink" href="#start-triton-server" title="Permalink to this headline"></a></h3>
-<p>After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.</p>
+<p>At this point, we start the Triton Inference Server (TIS) and then load the exported ensemble <code class="docutils literal notranslate"><span class="pre">t4r_pytorch</span></code> to the inference server. You can start triton server with the command below. Note that, you need to provide correct path of the models folder.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tritonserver</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">repository</span><span class="o">=&lt;</span><span class="n">path_to_models</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">control</span><span class="o">-</span><span class="n">mode</span><span class="o">=</span><span class="n">explicit</span>
 </pre></div>
 </div>
-<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code>. The models haven’t been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.</p>
-</div>
+<p>The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/models</span></code>. The models haven’t been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.</p>
 </div>
 <div class="section" id="deploy-pytorch-and-nvtabular-model-to-triton-inference-server">
 <h2>1. Deploy PyTorch and NVTabular Model to Triton Inference Server<a class="headerlink" href="#deploy-pytorch-and-nvtabular-model-to-triton-inference-server" title="Permalink to this headline"></a></h2>
@@ -149,9 +138,7 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 
-<span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">cudf</span>
 </pre></div>
@@ -246,6 +233,10 @@ GET /v2/health/live, headers None
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
 </pre></div>
 </div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tritonhttpclient/__init__.py:31: DeprecationWarning: The package `tritonhttpclient` is deprecated and will be removed in a future version. Please use instead `tritonclient.http`
+  warnings.warn(
+</pre></div>
+</div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
 </pre></div>
 </div>
@@ -260,16 +251,13 @@ GET /v2/health/live, headers None
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
 
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;201&#39;}&gt;
-bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNAVAILABLE&quot;,&quot;reason&quot;:&quot;unloaded&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNLOADING&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;UNLOADING&quot;}]&#39;)
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;77&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;}]&#39;)
 </pre></div>
 </div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;,
-  &#39;version&#39;: &#39;1&#39;,
-  &#39;state&#39;: &#39;UNAVAILABLE&#39;,
-  &#39;reason&#39;: &#39;unloaded&#39;},
- {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;UNLOADING&#39;},
- {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;UNLOADING&#39;}]
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;}]
 </pre></div>
 </div>
 </div>
@@ -284,7 +272,7 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/load, headers None
-
+{}
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
 Loaded model &#39;t4r_pytorch&#39;
 </pre></div>
@@ -453,18 +441,18 @@ Loaded model &#39;t4r_pytorch&#39;
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>output :
- [[-12.86381   -13.449438   -9.572359  ... -12.689846  -13.033402
-  -13.294905 ]
- [-24.320768  -26.130745   -4.3342614 ... -24.07727   -25.470228
-  -26.27378  ]
- [-22.867298  -24.897617   -6.6269407 ... -23.640343  -23.620872
-  -24.977371 ]
- [-21.455946  -22.92965    -4.8912797 ... -21.020473  -22.514032
-  -22.958193 ]
- [-24.569319  -26.149971   -4.223791  ... -24.316437  -25.649946
-  -26.920403 ]
- [-14.218529  -14.833358   -8.438756  ... -14.013732  -14.700138
-  -14.71361  ]]
+ [[-12.917275  -13.998102   -9.683803  ... -13.947979  -14.180218
+  -12.8354845]
+ [-20.280272  -23.873571   -5.0763226 ... -25.152992  -26.323795
+  -22.31371  ]
+ [-21.788324  -25.123737   -7.5168085 ... -25.008371  -25.098593
+  -21.587286 ]
+ [-19.229067  -21.751818   -5.5143347 ... -22.60496   -23.740078
+  -20.470545 ]
+ [-19.638445  -22.572128   -6.323636  ... -23.640789  -23.961683
+  -19.857796 ]
+ [-15.302393  -16.56955    -7.9798465 ... -17.170517  -17.792694
+  -15.643038 ]]
 </pre></div>
 </div>
 </div>
@@ -479,17 +467,17 @@ Loaded model &#39;t4r_pytorch&#39;
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `1167651`: 1045 || 229 || 233 || 1085 || 10
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `1167651`: 253 || 583 || 3539 || 510 || 447
 
-- Top-5 predictions for session `1637332`: 11 || 7 || 4 || 2 || 3
+- Top-5 predictions for session `1637332`: 12 || 54 || 146 || 75 || 160
 
-- Top-5 predictions for session `1808164`: 162 || 142 || 226 || 80 || 200
+- Top-5 predictions for session `1808164`: 157 || 142 || 200 || 253 || 80
 
-- Top-5 predictions for session `3794756`: 3 || 2 || 26 || 364 || 10
+- Top-5 predictions for session `3794756`: 404 || 146 || 75 || 54 || 160
 
-- Top-5 predictions for session `4202155`: 2 || 57 || 36 || 38 || 10
+- Top-5 predictions for session `4202155`: 106 || 94 || 57 || 38 || 36
 
-- Top-5 predictions for session `5470852`: 1710 || 233 || 805 || 555 || 10
+- Top-5 predictions for session `5470852`: 540 || 319 || 618 || 495 || 702
 </pre></div>
 </div>
 </div>
