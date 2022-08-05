@@ -1,5 +1,3 @@
-import tempfile
-
 import pytest
 
 from transformers4rec.config import transformer as tconf
@@ -22,7 +20,7 @@ def test_torchsciprt_not_strict(torch_yoochoose_like, yoochoose_schema):
     )
     model = transformer_config.to_torch_model(input_module, prediction_task)
 
-    out = model(torch_yoochoose_like, training=False)
+    _ = model(torch_yoochoose_like, training=False)
 
     model.eval()
 
