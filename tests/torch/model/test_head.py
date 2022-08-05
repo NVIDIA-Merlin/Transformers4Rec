@@ -242,6 +242,4 @@ def test_item_prediction_with_rnn(
         "loss",
         "labels",
         "predictions",
-        "pred_metadata",
-        "model_outputs",
     ]

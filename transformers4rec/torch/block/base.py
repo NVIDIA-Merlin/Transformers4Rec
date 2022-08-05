@@ -143,6 +143,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         # from transformers4rec.torch import TabularSequenceFeatures
 
         for i, module in enumerate(self):
+
             if i == len(self) - 1:
                 filtered_kwargs = filter_kwargs(kwargs, module, filter_positional_or_keyword=False)
                 input = module(input, **filtered_kwargs)

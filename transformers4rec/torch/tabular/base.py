@@ -16,7 +16,7 @@
 
 from abc import ABC
 from functools import reduce
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 
@@ -67,19 +67,28 @@ class TabularAggregation(OutputSizeMixin, torch.nn.Module, ABC):
             if len(fshape) >= 3:
                 seq_features_shapes[fname] = tuple(fshape[:2])
 
-        sequence_length = 0
+        self._check_first_two_dims(seq_features_shapes)
         if len(seq_features_shapes) > 0:
-            if len(set(seq_features_shapes.values())) > 1:
-                raise ValueError(
-                    "All sequential features must share the same shape in the first two dims "
-                    "(batch_size, seq_length): {}".format(seq_features_shapes)
-                )
-
             sequence_length = list(seq_features_shapes.values())[0][1]
+        else:
+            sequence_length = 0
 
         return seq_features_shapes, sequence_length
 
+    def _check_first_two_dims(self, seq_features_shapes: Dict[str, Tuple[int, ...]]):
+        if (
+            not torch.jit.is_tracing()
+            and len(seq_features_shapes) > 0
+            and len(set(seq_features_shapes.values())) > 1
+        ):
+            raise ValueError(
+                "All sequential features must share the same shape in the first two dims "
+                "(batch_size, seq_length): {}".format(seq_features_shapes)
+            )
+
     def _check_concat_shapes(self, inputs: TabularData):
+        if torch.jit.is_tracing():
+            return
         input_sizes = {k: v.shape for k, v in inputs.items()}
         if len(set(list([v[:-1] for v in input_sizes.values()]))) > 1:
             raise Exception(
