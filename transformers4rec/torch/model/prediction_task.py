@@ -250,8 +250,8 @@ class NextItemPredictionTask(PredictionTask):
                 "loss": loss,
                 "labels": labels_all,
                 "predictions": x,
-                "pred_metadata": {},
-                "model_outputs": [],
+                # "pred_metadata": {},
+                # "model_outputs": [],
             }
             # TODO: Add model_outputs and metadata
 
