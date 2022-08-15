@@ -126,6 +126,8 @@
 <span class="kn">import</span> <span class="nn">cudf</span>
 <span class="kn">import</span> <span class="nn">cupy</span> <span class="k">as</span> <span class="nn">cp</span>
 <span class="kn">import</span> <span class="nn">nvtabular</span> <span class="k">as</span> <span class="nn">nvt</span>
+<span class="kn">from</span> <span class="nn">nvtabular.ops</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">merlin.schema.tags</span> <span class="kn">import</span> <span class="n">Tags</span>
 </pre></div>
 </div>
 </div>
@@ -145,11 +147,11 @@
 <h2>Create a Synthetic Input Data<a class="headerlink" href="#create-a-synthetic-input-data" title="Permalink to this headline"></a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_ROWS</span> <span class="o">=</span> <span class="mi">100000</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_ROWS</span> <span class="o">=</span> <span class="mi">10000000</span>
 <span class="n">long_tailed_item_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">lognormal</span><span class="p">(</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">NUM_ROWS</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">50000</span><span class="p">)</span>
 
 <span class="c1"># generate random item interaction features </span>
-<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">70000</span><span class="p">,</span> <span class="mi">80000</span><span class="p">,</span> <span class="n">NUM_ROWS</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">])</span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">70000</span><span class="p">,</span> <span class="mi">90000</span><span class="p">,</span> <span class="n">NUM_ROWS</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">])</span>
 <span class="n">df</span><span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">long_tailed_item_distribution</span>
 
 <span class="c1"># generate category mapping for each item-id</span>
@@ -203,48 +205,48 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>72794</td>
-      <td>25</td>
-      <td>8</td>
-      <td>0.425057</td>
-      <td>0.796974</td>
+      <td>89800</td>
+      <td>19</td>
+      <td>2</td>
+      <td>0.825586</td>
+      <td>0.321923</td>
       <td>9</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>72989</td>
-      <td>57</td>
-      <td>18</td>
-      <td>0.729572</td>
-      <td>0.924252</td>
-      <td>7</td>
+      <td>82414</td>
+      <td>41</td>
+      <td>3</td>
+      <td>0.886040</td>
+      <td>0.434074</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>78236</td>
-      <td>2</td>
+      <td>75162</td>
+      <td>8</td>
       <td>1</td>
-      <td>0.922154</td>
-      <td>0.532076</td>
-      <td>4</td>
+      <td>0.626088</td>
+      <td>0.527030</td>
+      <td>2</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>72766</td>
-      <td>9</td>
-      <td>3</td>
-      <td>0.956614</td>
-      <td>0.567720</td>
-      <td>3</td>
+      <td>87491</td>
+      <td>7</td>
+      <td>1</td>
+      <td>0.966447</td>
+      <td>0.636122</td>
+      <td>2</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>76730</td>
-      <td>9</td>
-      <td>3</td>
-      <td>0.361798</td>
-      <td>0.611959</td>
-      <td>4</td>
+      <td>88795</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.743467</td>
+      <td>0.696318</td>
+      <td>5</td>
     </tr>
   </tbody>
 </table>
@@ -276,11 +278,30 @@
     <span class="n">name_sep</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
 
 <span class="c1"># Select and truncate the sequential features</span>
-<span class="n">sequence_features_truncated</span> <span class="o">=</span> <span class="p">(</span><span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;category-list&#39;</span><span class="p">,</span> <span class="s1">&#39;item_id-list&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp/age_days-list&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp/weekday/sin-list&#39;</span><span class="p">])</span> <span class="o">&gt;&gt;</span><span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">postfix</span> <span class="o">=</span> <span class="s1">&#39;_trim&#39;</span><span class="p">)</span>
+<span class="n">sequence_features_truncated</span> <span class="o">=</span> <span class="p">(</span><span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;category-list&#39;</span><span class="p">])</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">postfix</span> <span class="o">=</span> <span class="s1">&#39;_trim&#39;</span><span class="p">)</span>
+
+<span class="n">sequence_features_truncated_item</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">postfix</span> <span class="o">=</span> <span class="s1">&#39;_trim&#39;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span> <span class="n">TagAsItemID</span><span class="p">()</span>
+<span class="p">)</span>  
+<span class="n">sequence_features_truncated_cont</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;timestamp/age_days-list&#39;</span><span class="p">,</span> <span class="s1">&#39;timestamp/weekday/sin-list&#39;</span><span class="p">]</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">20</span><span class="p">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">postfix</span> <span class="o">=</span> <span class="s1">&#39;_trim&#39;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">])</span>
+<span class="p">)</span>
 
 <span class="c1"># Filter out sessions with length 1 (not valid for next-item prediction training and evaluation)</span>
 <span class="n">MINIMUM_SESSION_LENGTH</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="n">selected_features</span> <span class="o">=</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;item_id-count&#39;</span><span class="p">,</span> <span class="s1">&#39;day-first&#39;</span><span class="p">,</span> <span class="s1">&#39;session_id&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">sequence_features_truncated</span>
+<span class="n">selected_features</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;item_id-count&#39;</span><span class="p">,</span> <span class="s1">&#39;day-first&#39;</span><span class="p">,</span> <span class="s1">&#39;session_id&#39;</span><span class="p">]</span> <span class="o">+</span> 
+    <span class="n">sequence_features_truncated_item</span> <span class="o">+</span>
+    <span class="n">sequence_features_truncated</span> <span class="o">+</span> 
+    <span class="n">sequence_features_truncated_cont</span>
+<span class="p">)</span>
+    
 <span class="n">filtered_sessions</span> <span class="o">=</span> <span class="n">selected_features</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;item_id-count&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MINIMUM_SESSION_LENGTH</span><span class="p">)</span>
 
 
@@ -292,6 +313,12 @@
 <span class="n">sessions_ds</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
 <span class="c1"># Converting the NVTabular dataset to a Dask cuDF dataframe (`to_ddf()`) and then to cuDF dataframe (`.compute()`)</span>
 <span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">sessions_ds</span><span class="o">.</span><span class="n">to_ddf</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -324,8 +351,8 @@
       <th>item_id-count</th>
       <th>day-first</th>
       <th>session_id</th>
-      <th>category-list_trim</th>
       <th>item_id-list_trim</th>
+      <th>category-list_trim</th>
       <th>timestamp/age_days-list_trim</th>
       <th>timestamp/weekday/sin-list_trim</th>
     </tr>
@@ -333,33 +360,33 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>25</td>
-      <td>3</td>
+      <td>592</td>
+      <td>6</td>
       <td>2</td>
-      <td>[24, 12, 6, 3, 3, 6, 9, 2, 8, 15, 9, 5, 6, 8, ...</td>
-      <td>[79, 36, 13, 5, 8, 12, 27, 4, 21, 42, 28, 10, ...</td>
-      <td>[0.4751982727759114, 0.055393015414691105, 0.2...</td>
-      <td>[0.8122129009074556, 0.5284590396837701, 0.041...</td>
+      <td>[26, 27, 143, 3, 22, 9, 108, 56, 56, 8, 13, 3,...</td>
+      <td>[3, 3, 12, 2, 3, 2, 9, 5, 5, 2, 3, 2, 3, 3, 13...</td>
+      <td>[0.9506599613643579, 0.8661212433545066, 0.862...</td>
+      <td>[0.8643551734260801, 0.7689185414062618, 0.464...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>24</td>
-      <td>6</td>
+      <td>587</td>
+      <td>9</td>
       <td>3</td>
-      <td>[3, 12, 16, 14, 13, 10, 13, 9, 24, 19, 32, 68,...</td>
-      <td>[2, 33, 55, 40, 39, 23, 38, 27, 78, 57, 109, 1...</td>
-      <td>[0.5303167840438227, 0.800766191594587, 0.3993...</td>
-      <td>[0.0484016923364502, 0.9895741720728333, 0.020...</td>
+      <td>[16, 11, 184, 20, 36, 7, 18, 15, 26, 34, 16, 7...</td>
+      <td>[3, 2, 15, 3, 4, 2, 3, 3, 3, 4, 3, 2, 10, 2, 2...</td>
+      <td>[0.022174995033433675, 0.8653454468276589, 0.2...</td>
+      <td>[0.6007516253035353, 0.1938075142351966, 0.055...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>23</td>
-      <td>7</td>
+      <td>582</td>
+      <td>5</td>
       <td>4</td>
-      <td>[2, 11, 3, 11, 6, 9, 2, 29, 21, 3, 5, 3, 5, 12...</td>
-      <td>[4, 32, 5, 30, 13, 26, 3, 87, 62, 2, 22, 5, 14...</td>
-      <td>[0.40259610248511546, 0.7994956663950287, 0.11...</td>
-      <td>[0.13638022767099878, 0.5088356162643055, 0.06...</td>
+      <td>[8, 26, 11, 8, 37, 6, 8, 3, 139, 18, 13, 9, 43...</td>
+      <td>[2, 3, 2, 2, 4, 2, 2, 2, 11, 3, 3, 2, 4, 2, 2,...</td>
+      <td>[0.7953279169761096, 0.9153823054868439, 0.374...</td>
+      <td>[0.9989513857881299, 0.06265999360254448, 0.09...</td>
     </tr>
   </tbody>
 </table>
@@ -369,6 +396,20 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;workflow_etl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The following will generate <code class="docutils literal notranslate"><span class="pre">schema.pbtxt</span></code> file in the provided folder.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -397,7 +438,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00&lt;00:00, 10.96it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:01&lt;00:00,  4.57it/s]
 </pre></div>
 </div>
 </div>
@@ -440,8 +481,8 @@
       <th></th>
       <th>item_id-count</th>
       <th>session_id</th>
-      <th>category-list_trim</th>
       <th>item_id-list_trim</th>
+      <th>category-list_trim</th>
       <th>timestamp/age_days-list_trim</th>
       <th>timestamp/weekday/sin-list_trim</th>
     </tr>
@@ -449,48 +490,48 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>22</td>
-      <td>7</td>
-      <td>[6, 9, 5, 2, 7, 8, 5, 2, 6, 16, 2, 10, 35, 5, ...</td>
-      <td>[15, 27, 10, 3, 17, 19, 10, 3, 13, 53, 3, 25, ...</td>
-      <td>[0.05018395805258469, 0.3675245026471312, 0.45...</td>
-      <td>[0.4569657788661693, 0.3016987134228405, 0.444...</td>
+      <td>578</td>
+      <td>12</td>
+      <td>[36, 17, 19, 36, 4, 129, 14, 23, 36, 38, 43, 3...</td>
+      <td>[4, 3, 3, 4, 2, 11, 2, 3, 4, 4, 4, 4, 2, 3, 7,...</td>
+      <td>[0.7020030867767164, 0.05218142932578329, 0.74...</td>
+      <td>[0.9566234317289599, 0.5555797507059802, 0.959...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>20</td>
-      <td>17</td>
-      <td>[3, 3, 3, 2, 29, 3, 4, 3, 17, 2, 21, 16, 8, 4,...</td>
-      <td>[5, 8, 8, 4, 92, 5, 7, 5, 47, 3, 62, 52, 20, 1...</td>
-      <td>[0.6514417831915809, 0.4076816703281344, 0.632...</td>
-      <td>[0.14429839204039463, 0.9164664830523597, 0.28...</td>
+      <td>577</td>
+      <td>14</td>
+      <td>[72, 5, 30, 35, 14, 21, 19, 31, 34, 134, 27, 6...</td>
+      <td>[7, 2, 4, 4, 2, 2, 3, 4, 4, 11, 3, 6, 3, 21, 2...</td>
+      <td>[0.6242846992063864, 0.5450669814496107, 0.681...</td>
+      <td>[0.3541796048690249, 0.9611651587781853, 0.509...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>19</td>
-      <td>45</td>
-      <td>[4, 34, 9, 3, 4, 11, 3, 7, 7, 6, 3, 5, 20, 8, ...</td>
-      <td>[7, 95, 26, 2, 7, 32, 5, 17, 17, 15, 5, 10, 59...</td>
-      <td>[0.8375365213796201, 0.5405179079133022, 0.779...</td>
-      <td>[0.7202554739875682, 0.22750431643945657, 0.22...</td>
+      <td>573</td>
+      <td>20</td>
+      <td>[38, 10, 32, 13, 113, 23, 13, 35, 15, 46, 118,...</td>
+      <td>[4, 2, 4, 3, 9, 3, 3, 4, 3, 5, 10, 4, 3, 2, 2,...</td>
+      <td>[0.014251385895349244, 0.36672181343871213, 0....</td>
+      <td>[0.7040543650872758, 0.8053537473923608, 0.688...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>19</td>
-      <td>62</td>
-      <td>[10, 7, 8, 4, 26, 27, 5, 13, 6, 2, 9, 8, 3, 11...</td>
-      <td>[25, 17, 19, 7, 75, 81, 10, 37, 12, 3, 29, 19,...</td>
-      <td>[0.4649937741449487, 0.5034045853366875, 0.566...</td>
-      <td>[0.05637671244260656, 0.26188954412734744, 0.1...</td>
+      <td>565</td>
+      <td>46</td>
+      <td>[27, 23, 24, 5, 14, 36, 36, 60, 3, 28, 7, 33, ...</td>
+      <td>[3, 3, 3, 2, 2, 4, 4, 6, 2, 3, 2, 2, 4, 2, 3, ...</td>
+      <td>[0.6846272237523431, 0.9391889762492568, 0.728...</td>
+      <td>[0.029763178246406174, 0.07305484545169816, 0....</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>19</td>
-      <td>63</td>
-      <td>[30, 14, 6, 3, 5, 6, 5, 2, 11, 9, 9, 45, 5, 9,...</td>
-      <td>[96, 43, 12, 5, 22, 13, 22, 3, 31, 29, 26, 134...</td>
-      <td>[0.17334992894139045, 0.883403092448823, 0.933...</td>
-      <td>[0.2423479210589905, 0.7296242799474274, 0.335...</td>
+      <td>563</td>
+      <td>60</td>
+      <td>[9, 10, 11, 6, 62, 12, 2, 27, 9, 9, 45, 12, 5,...</td>
+      <td>[2, 2, 2, 2, 6, 2, 2, 3, 2, 2, 5, 2, 2, 6, 2, ...</td>
+      <td>[0.040420930514670106, 0.37013827148679257, 0....</td>
+      <td>[0.5169674268305693, 0.5908212507558208, 0.269...</td>
     </tr>
   </tbody>
 </table>
