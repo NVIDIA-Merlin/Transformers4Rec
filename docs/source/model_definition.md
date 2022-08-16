@@ -4,7 +4,10 @@ Transformers4Rec provides modularized building blocks that can be combined with 
 
 In Fig. 2, we provide a reference architecture for next-item prediction with Transformers, that can be used for both sequential and session-based recommendation. We can divide that reference architecture in four conceptual layers, described next.
 
-<div style="text-align: center; margin: 20pt"><img src="_images/transformers4rec_metaarchitecture.png" alt="Transformers4Rec meta-architecture" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig. 2 - Transformers4Rec meta-architecture</figcaption></div>
+<img src="_images/transformers4rec_metaarchitecture.png" alt="Transformers4Rec meta-architecture" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>
+<div style="text-align: center; margin: 20pt">
+<figcaption style="font-style: italic;">Fig. 2 - Transformers4Rec meta-architecture</figcaption>
+</div>
 
 
 ## Feature Aggregation (Input Block)

@@ -55,7 +55,7 @@ class OutputSizeMixin(SchemaMixin, abc.ABC):
 
 
 class LossMixin:
-    """Mixin to use for `torch.Module`s that can calculate a loss."""
+    """Mixin to use for a `torch.Module` that can calculate a loss."""
 
     def compute_loss(
         self,
@@ -80,7 +80,7 @@ class LossMixin:
 
 
 class MetricsMixin:
-    """Mixin to use for `torch.Module`s that can calculate metrics."""
+    """Mixin to use for a `torch.Module` that can calculate metrics."""
 
     def calculate_metrics(
         self,

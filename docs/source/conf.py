@@ -74,6 +74,7 @@ myst_enable_extensions = [
     "linkify",
     "replacements",
     "tasklist",
+    "dollarmath",
 ]
 myst_linkify_fuzzy_links = False
 myst_heading_anchors = 3
