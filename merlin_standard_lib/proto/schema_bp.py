@@ -619,11 +619,14 @@ class FeaturePresenceWithinGroup(betterproto.Message):
 
 @dataclass
 class InfinityNorm(betterproto.Message):
-    """
+    r"""
     Checks that the L-infinity norm is below a certain threshold between the
     two discrete distributions. Since this is applied to a
-    FeatureNameStatistics, it only considers the top k. L_infty(p,q) = max_i
-    |p_i-q_i|
+    FeatureNameStatistics, it only considers the top K.
+
+    .. math::
+
+       l_{\infty}(p,q) = max_{i} | p_{i} - q_{i} |
     """
 
     # The InfinityNorm is in the interval [0.0, 1.0] so sensible bounds should be

@@ -2,7 +2,10 @@
 
 Transformers4Rec has a first-class integration with NVIDIA Merlin components, to build end-to-end GPU accelerated pipelines for sequential and session-based recommendation.
 
-<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig.3 - Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>
+<div style="text-align: center; margin: 20pt">
+<figcaption style="font-style: italic;">Fig.3 - Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption>
+</div>
 
 ### Integration with NVTabular
 
@@ -12,7 +15,10 @@ It has some popular [techniques](https://nvidia-merlin.github.io/NVTabular/main/
 
 Usually the input RecSys datasets contain one example per user interaction. For sequential recommendation, the training example is a sequence of user interactions, and for session-based recommendation it is a sequence of session interactions. In practice, each interaction-level feature needs to be converted to a sequence grouped by user/session and their sequence length must match, as each position of the sequence corresponds to one interaction. You can see in Fig. 4 how the preprocessed parquet should look like.
 
-<div style="text-align: center; margin: 20pt"><img src="_images/preproc_data_example.png" alt="Example of preprocessed parquet file" style="width:800px;"/><br><figcaption style="font-style: italic;">Example of preprocessed parquet file</figcaption></div>
+<img src="_images/preproc_data_example.png" alt="Example of preprocessed parquet file" style="width:800px;display:block;margin-left:auto;margin-right:auto;"/><br>
+<div style="text-align: center; margin: 20pt">
+<figcaption style="font-style: italic;">Example of preprocessed parquet file</figcaption>
+</div>
 
 NVTabular can easily prepare such data with the [Groupby](https://nvidia-merlin.github.io/NVTabular/main/api/ops/groupby.html) op, which allows grouping by a categorical column (e.g. user id, session id), sorting by another column (e.g. timestamp) and aggregating other columns as sequences (`list`) or by taking the `first` or `last` element of the sequence, as exemplified below.
 

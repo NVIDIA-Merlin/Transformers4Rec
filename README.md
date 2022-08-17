@@ -4,16 +4,16 @@
 [![LICENSE](https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4Rec)](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE)
 [![Documentation](https://img.shields.io/badge/documentation-blue.svg)](https://nvidia-merlin.github.io/Transformers4Rec/main/README.html)
 
-Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation, available for both PyTorch and Tensorflow.
+Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation and can work with PyTorch.
 
 It works as a bridge between NLP and recommender systems by integrating with one the most popular NLP frameworks [HuggingFace Transformers](https://github.com/huggingface/transformers), making state-of-the-art Transformer architectures available for RecSys researchers and industry practitioners.
 
-
-
-<div style="text-align: center; margin: 20pt"><img src="_images/sequential_rec.png" alt="Sequential and Session-based recommendation with Transformers4Rec" style="width:800px;"/><br><figcaption style="font-style: italic;">Sequential and Session-based recommendation with Transformers4Rec</figcaption></div>
+<img src="_images/sequential_rec.png" alt="Sequential and Session-based recommendation with Transformers4Rec" style="width:800px;display:block;margin-left:auto;margin-right:auto;"/><br>
+<div style="text-align: center; margin: 20pt">
+  <figcaption style="font-style: italic;">Sequential and Session-based recommendation with Transformers4Rec</figcaption>
+</div>
 
 Transformers4Rec supports multiple input features and provides configurable building blocks that can be easily combined for custom architectures.
-
 
 You can build a fully GPU-accelerated pipeline for sequential and session-based recommendation with Transformers4Rec and its smooth integration with other components of [NVIDIA Merlin](https://developer.nvidia.com/nvidia-merlin):  [NVTabular](https://github.com/NVIDIA-Merlin/NVTabular) for preprocessing and [Triton Inference Server](https://github.com/triton-inference-server/server).
 
@@ -21,7 +21,7 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 
 - **Winning and SOTA solution**: We have leveraged and evolved the Transformers4Rec library to win two recent session-based recommendation competitions: the [WSDM WebTour Workshop Challenge 2021, organized by Booking.com](https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/), and the [SIGIR eCommerce Workshop Data Challenge 2021, organized by Coveo](https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994). Furthermore, we have also done extensive empirical evaluation on the usage of Transformers4Rec for session-based recommendation, which was able to provide higher accuracy than baselines algorithms, as published in our [ACM RecSys'21 paper](https://dl.acm.org/doi/10.1145/3460231.3474255).
 
-- **Flexibility**: The building blocks are modularized and are compatible with vanilla PyTorch modules and TF Keras layers. You can create custom architectures, e.g. with multiple towers, multiple heads/tasks and losses.
+- **Flexibility**: The building blocks are modularized and are compatible with standard PyTorch modules. You can create custom architectures such as multiple towers, multiple heads/tasks, and losses.
 
 - **Production-ready**: Exports trained models to serve with Triton Inference Server in a single pipeline that includes online features preprocessing and model inference.
 
@@ -31,8 +31,10 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 
 - **Seamless preprocessing and feature engineering**: The integration with NVTabular has common preprocessing ops for session-based recommendation and exports a dataset schema compatible with Transformers4Rec, so that input features can be configured automatically.
 
-
-<div style="text-align: center; margin: 20pt"><img src="_images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;"/><br><figcaption style="font-style: italic;">GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption></div>
+<img src="_images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>
+<div style="text-align: center; margin: 20pt">
+  <figcaption style="font-style: italic;">GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption>
+</div>
 
 
 ## Quick tour
@@ -42,7 +44,8 @@ merges context features with sequential features. Next, we need to provide the p
 (the tasks we provide out of the box can be found [here](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.model.html#module-transformers4rec.torch.model.prediction_task)).
 Then all that's left is to construct a transformer-body and convert this to a model.
 
-Here is the PyTorch version:
+The following sample code works with PyTorch:
+
 ```python
 from transformers4rec import torch as tr
 
@@ -68,32 +71,6 @@ transformer_config = tr.XLNetConfig.build(
 model: tr.Model = transformer_config.to_torch_model(input_module, prediction_tasks)
 ```
 
-And here is the equivalent code for TensorFlow:
-```python
-from transformers4rec import tf as tr
-
-schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
-# Or read schema from disk: tr.Schema().from_json(SCHEMA_PATH)
-max_sequence_length, d_model = 20, 64
-
-# Define input module to process tabular input-features
-input_module = tr.TabularSequenceFeatures.from_schema(
-    schema,
-    max_sequence_length=max_sequence_length,
-    continuous_projection=d_model,
-    aggregation="concat",
-    masking="causal",
-)
-# Define one or multiple prediction-tasks
-prediction_tasks = tr.NextItemPredictionTask()
-
-# Define a transformer-config, like the XLNet architecture
-transformer_config = tr.XLNetConfig.build(
-    d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
-)
-model: tr.Model = transformer_config.to_tf_model(input_module, prediction_tasks)
-```
-
 ## Use cases
 ### Sequential and Session-based recommendation
 Traditional recommendation algorithms usually ignore the temporal dynamics and the sequence of interactions when trying to model user behaviour. Generally, the next user interaction is related to the sequence of the user's previous choices. In some cases, it might be even a repeated purchase or song play. User interests might also suffer from the interest drift, as preferences might change over time. Those challenges are addressed by the **sequential recommendation** task.
@@ -108,16 +85,12 @@ Differently from Transformers4Rec, existing frameworks for such tasks are genera
 
 ### Installing with pip
 
-Transformers4Rec comes in two flavors: PyTorch and TensorFlow. It can optionally use the GPU-accelerated NVTabular dataloader, which is highly recommended.
+You can install Transformers4Rec with the functionality to use the GPU-accelerated NVTabular dataloader.
+Installation with the dataloader is highly recommended for better performance.
 Those components can be installed as optional args for the pip install package. Note that installation NVTabular with `pip` supports only CPU version of NVTabular for now.
 
-- All
-`pip install transformers4rec[all]`
 - PyTorch
 `pip install transformers4rec[pytorch,nvtabular]`
-- Tensorflow:
-`pip install transformers4rec[tensorflow,nvtabular]`
-
 
 ### Installing with conda
 

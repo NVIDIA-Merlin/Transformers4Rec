@@ -16,12 +16,10 @@ subtrees:
                 entries:
                   - file: examples/getting-started-session-based/01-ETL-with-NVTabular.ipynb
                   - file: examples/getting-started-session-based/02-session-based-XLNet-with-PyT.ipynb
-                  - file: examples/getting-started-session-based/03-session-based-XLNet-with-TF.ipynb
               - file: examples/end-to-end-session-based/index
                 entries:
                   - file: examples/end-to-end-session-based/01-ETL-with-NVTabular.ipynb
                   - file: examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb
-                  - file: examples/end-to-end-session-based/03-End-to-end-session-based-with-Yoochoose-TF.ipynb
               - file: examples/tutorial/index
                 entries:
                   - file: examples/tutorial/01-preprocess.ipynb

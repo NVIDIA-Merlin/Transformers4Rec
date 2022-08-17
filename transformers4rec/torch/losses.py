@@ -5,15 +5,15 @@ from torch.nn.modules.loss import _WeightedLoss
 class LabelSmoothCrossEntropyLoss(_WeightedLoss):
     """Constructor for cross-entropy loss with label smoothing
 
-    Parameters:
+    Parameters
     ----------
     smoothing: float
-        The label smoothing factor. it should be between 0 and 1.
+        The label smoothing factor. Specify a value between 0 and 1.
     weight: torch.Tensor
         The tensor of weights given to each class.
     reduction: str
-        Specifies the reduction to apply to the output,
-        possible values are `none` | `sum` | `mean`
+        Specifies the reduction to apply to the output.
+        Specify one of `none`, `sum`, or `mean`.
 
     Adapted from https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch
     """
