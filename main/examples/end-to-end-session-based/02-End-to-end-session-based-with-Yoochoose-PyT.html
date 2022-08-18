@@ -19,10 +19,12 @@
         <script >let toggleOpenOnPrint = 'true';</script>
         <script src="../../_static/togglebutton.js"></script>
         <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="End-to-end session-based recommendation with TensorFlow" href="03-End-to-end-session-based-with-Yoochoose-TF.html" />
+    <link rel="next" title="Tutorial: End-to-end Session-based Recommendation" href="../tutorial/index.html" />
     <link rel="prev" title="ETL with NVTabular" href="01-ETL-with-NVTabular.html" /> 
 </head>
 
@@ -53,7 +55,6 @@
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">End-to-end session-based recommendation</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="01-ETL-with-NVTabular.html">ETL with NVTabular</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">End-to-end session-based recommendations with PyTorch</a></li>
-<li class="toctree-l3"><a class="reference internal" href="03-End-to-end-session-based-with-Yoochoose-TF.html">End-to-end session-based recommendation with TensorFlow</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../tutorial/index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
@@ -327,7 +328,7 @@ feature {
 </div>
 <div class="section" id="launches-daily-training-and-evaluation">
 <h4>Launches daily Training and Evaluation<a class="headerlink" href="#launches-daily-training-and-evaluation" title="Permalink to this headline"></a></h4>
-<p>In this demo, we will use the <code class="docutils literal notranslate"><span class="pre">fit_and_evaluate</span></code> method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use training data of a specific time index $t$ to train the model then we evaluate on the validation data of next index $t + 1$. Particularly, we set start time to 178 and end time to 180.</p>
+<p>In this demo, we will use the <code class="docutils literal notranslate"><span class="pre">fit_and_evaluate</span></code> method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use training data of a specific time index <span class="math notranslate nohighlight">\(t\)</span> to train the model then we evaluate on the validation data of next index <span class="math notranslate nohighlight">\(t + 1\)</span>. Particularly, we set start time to 178 and end time to 180.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">fit_and_evaluate</span>
@@ -840,7 +841,7 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="01-ETL-with-NVTabular.html" class="btn btn-neutral float-left" title="ETL with NVTabular" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="03-End-to-end-session-based-with-Yoochoose-TF.html" class="btn btn-neutral float-right" title="End-to-end session-based recommendation with TensorFlow" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../tutorial/index.html" class="btn btn-neutral float-right" title="Tutorial: End-to-end Session-based Recommendation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

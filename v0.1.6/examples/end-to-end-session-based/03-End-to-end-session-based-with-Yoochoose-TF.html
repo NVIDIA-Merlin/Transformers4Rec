@@ -19,6 +19,8 @@
         <script >let toggleOpenOnPrint = 'true';</script>
         <script src="../../_static/togglebutton.js"></script>
         <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+        <script type="text/x-mathjax-config">MathJax.Hub.Config({"tex2jax": {"processClass": "tex2jax_process|mathjax_process|math|output_area"}})</script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -336,7 +338,7 @@ feature {
 </div>
 <div class="section" id="daily-fine-tuning-training-over-a-time-window">
 <h3>3.3. Daily Fine-Tuning: Training over a time window¶<a class="headerlink" href="#daily-fine-tuning-training-over-a-time-window" title="Permalink to this headline"></a></h3>
-<p>Now that the model is defined, we are now going to launch training. In this example, we will conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use training data of a specific time index $t$ to train the model then we evaluate on the validation data of next index $t + 1$. Particularly, we set start time to 178 and end time to 180. Note that, we are using tf.keras’ <code class="docutils literal notranslate"><span class="pre">model.fit()</span></code> and <code class="docutils literal notranslate"><span class="pre">model.evaluate()</span></code> methods, where we train the model with model.fit(), and evaluate it with model.evaluate().</p>
+<p>Now that the model is defined, we are now going to launch training. In this example, we will conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use training data of a specific time index <span class="math notranslate nohighlight">\(t\)</span> to train the model then we evaluate on the validation data of next index <span class="math notranslate nohighlight">\(t + 1\)</span>. Particularly, we set start time to 178 and end time to 180. Note that, we are using tf.keras’ <code class="docutils literal notranslate"><span class="pre">model.fit()</span></code> and <code class="docutils literal notranslate"><span class="pre">model.evaluate()</span></code> methods, where we train the model with model.fit(), and evaluate it with model.evaluate().</p>
 <div class="section" id="sets-dataloader">
 <h4>Sets DataLoader<a class="headerlink" href="#sets-dataloader" title="Permalink to this headline"></a></h4>
 <p>We use the NVTabular <code class="docutils literal notranslate"><span class="pre">KerasSequenceLoader</span></code> Dataloader for optimized loading of multiple features from input parquet files. In our experiments, we see a speed-up by 9x of the same training workflow with NVTabular dataloader. You can learn more about this data loader <a class="reference external" href="https://nvidia-merlin.github.io/NVTabular/main/training/tensorflow.html">here</a> and <a class="reference external" href="https://medium.com/nvidia-merlin/training-deep-learning-based-recommender-systems-9x-faster-with-tensorflow-cc5a2572ea49">here</a>.</p>

@@ -80,7 +80,10 @@
 <h1>Model Architectures<a class="headerlink" href="#model-architectures" title="Permalink to this headline"></a></h1>
 <p>Transformers4Rec provides modularized building blocks that can be combined with plain PyTorch modules and Keras layers. This provides a great flexibility in the model definition, as you can use the blocks to build custom architectures, e.g., with multiple towers, multiple heads and losses (multi-task).</p>
 <p>In Fig. 2, we provide a reference architecture for next-item prediction with Transformers, that can be used for both sequential and session-based recommendation. We can divide that reference architecture in four conceptual layers, described next.</p>
-<div style="text-align: center; margin: 20pt"><img src="_images/transformers4rec_metaarchitecture.png" alt="Transformers4Rec meta-architecture" style="width:600px;"/><br><figcaption style="font-style: italic;">Fig. 2 - Transformers4Rec meta-architecture</figcaption></div>
+<p><img alt="Transformers4Rec meta-architecture" src="_images/transformers4rec_metaarchitecture.png" /><br></p>
+<div style="text-align: center; margin: 20pt">
+<figcaption style="font-style: italic;">Fig. 2 - Transformers4Rec meta-architecture</figcaption>
+</div>
 <div class="section" id="feature-aggregation-input-block">
 <h2>Feature Aggregation (Input Block)<a class="headerlink" href="#feature-aggregation-input-block" title="Permalink to this headline"></a></h2>
 <p>In order to be fed into a transformer block the sequences of input features (user_ids, user metadata, item_ids, item metadata) must be aggregated into a single vector representation per element in the sequence which we call the <em>interaction embedding</em>.</p>

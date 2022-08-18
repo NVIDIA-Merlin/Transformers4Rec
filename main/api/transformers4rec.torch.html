@@ -23,7 +23,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="transformers4rec.torch.block package" href="transformers4rec.torch.block.html" />
-    <link rel="prev" title="transformers4rec.tf.utils package" href="transformers4rec.tf.utils.html" /> 
+    <link rel="prev" title="transformers4rec.config package" href="transformers4rec.config.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -52,7 +52,6 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="reference internal" href="transformers4rec.html">transformers4rec package</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="transformers4rec.config.html">transformers4rec.config package</a></li>
-<li class="toctree-l3"><a class="reference internal" href="transformers4rec.tf.html">transformers4rec.tf package</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">transformers4rec.torch package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html">transformers4rec.torch.block package</a></li>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html">transformers4rec.torch.features package</a></li>
@@ -2825,16 +2824,17 @@ with resume_from_checkpoint argument for a complete load)</p>
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.</span></code><code class="sig-name descname"><span class="pre">LabelSmoothCrossEntropyLoss</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><span class="pre">torch.Tensor</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/losses.html#LabelSmoothCrossEntropyLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.LabelSmoothCrossEntropyLoss" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.loss._WeightedLoss</span></code></p>
 <p>Constructor for cross-entropy loss with label smoothing</p>
-<dl class="simple">
-<dt>smoothing: float</dt><dd><p>The label smoothing factor. it should be between 0 and 1.</p>
-</dd>
-<dt>weight: torch.Tensor</dt><dd><p>The tensor of weights given to each class.</p>
-</dd>
-<dt>reduction: str</dt><dd><p>Specifies the reduction to apply to the output,
-possible values are <cite>none</cite> | <cite>sum</cite> | <cite>mean</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>smoothing</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.10)"><em>float</em></a>) – The label smoothing factor. Specify a value between 0 and 1.</p></li>
+<li><p><strong>weight</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.12)"><em>torch.Tensor</em></a>) – The tensor of weights given to each class.</p></li>
+<li><p><strong>reduction</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><em>str</em></a>) – Specifies the reduction to apply to the output.
+Specify one of <cite>none</cite>, <cite>sum</cite>, or <cite>mean</cite>.</p></li>
+<li><p><strong>from https</strong> (<em>Adapted</em>) – </p></li>
+</ul>
 </dd>
 </dl>
-<p>Adapted from <a class="reference external" href="https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch">https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch</a></p>
 <dl class="py attribute">
 <dt id="transformers4rec.torch.LabelSmoothCrossEntropyLoss.reduction">
 <code class="sig-name descname"><span class="pre">reduction</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.10)"><span class="pre">str</span></a></em><a class="headerlink" href="#transformers4rec.torch.LabelSmoothCrossEntropyLoss.reduction" title="Permalink to this definition"></a></dt>
@@ -2854,7 +2854,7 @@ possible values are <cite>none</cite> | <cite>sum</cite> | <cite>mean</cite></p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="transformers4rec.tf.utils.html" class="btn btn-neutral float-left" title="transformers4rec.tf.utils package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="transformers4rec.config.html" class="btn btn-neutral float-left" title="transformers4rec.config package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="transformers4rec.torch.block.html" class="btn btn-neutral float-right" title="transformers4rec.torch.block package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
