@@ -3,7 +3,7 @@
 Many examples of data preparation, training and deployment of models using Transformers4Rec are available in our [examples](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples) directory.
 
 ## Data loading
-Transformers4Rec leverages by default the NVTabular dataloader for GPU-accelerated loading of preprocessed data stored in Parquet format, which is a suitable format for being structured and queryable. 
+Transformers4Rec leverages by default the NVTabular dataloader for GPU-accelerated loading of preprocessed data stored in Parquet format, which is a suitable format for being structured and queryable.
 The data in Parquet files are directly loaded to GPU memory as feature tensors. CPUs are also supported when GPUs are not available.
 
 The following example uses the NVTabular data loader, wrapped by the `DataLoader` that automatically sets some options from the dataset schema. Optionally the `PyarrowDataLoader` can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
@@ -19,7 +19,7 @@ train_loader = transformers4rec.torch.utils.data_utils.DataLoader.from_schema(
 ```
 
 
-## PyTorch 
+## PyTorch
 
 ### Training
 For PyTorch we extend the HF Transformers `Trainer` class, but keep its `train()` method. That means that we leverage the efficient training implementation from that library, which manages for example half-precision (FP16) and multi-GPU training.
@@ -33,7 +33,7 @@ from transformers4rec.torch import Trainer
 
 training_args = T4RecTrainingArguments(
             output_dir="./tmp",
-            num_train_epochs=3,            
+            num_train_epochs=3,
             fp16=True,
         )
 
@@ -42,7 +42,7 @@ recsys_trainer = Trainer(
     args=training_args,
     train_dataloader=train_loader,
     eval_dataloader=eval_loader,
-)     
+)
 
 recsys_trainer.train()
 ```
@@ -55,7 +55,7 @@ training_args = T4RecTrainingArguments(
             ...,
             data_loader_engine="nvtabular",
             per_device_train_batch_size=256,
-            per_device_eval_batch_size=512,            
+            per_device_eval_batch_size=512,
         )
 
 # Instantiates the train and eval dataloader
@@ -63,9 +63,9 @@ Trainer(
     model=model,
     args=training_args,
     train_dataset_or_path=train_path,
-    eval_dataset_or_path=eval_path,   
-)     
-```        
+    eval_dataset_or_path=eval_path,
+)
+```
 
 ### Evaluation
 For the Item Prediction head, top-N metrics comonly used in [Information Retrieval](https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)) and RecSys are supported for evaluation:
@@ -88,10 +88,10 @@ Here is an example which assumes daily data is split in folders. There is a loop
 
 ```python
 # Iterates over parquet files with daily data
-for time_index in range(1, 7):    
+for time_index in range(1, 7):
     train_paths = glob.glob(f"./data/day-{time_index}/data.parquet")
     eval_paths = glob.glob(f"./data/day-{time_index+1}/data.parquet")
-    
+
     print('Training with day {}'.format(time_index))
     trainer.train_dataset = train_paths
     trainer.reset_lr_scheduler()
@@ -104,7 +104,3 @@ for time_index in range(1, 7):
     trainer.wipe_memory()
 
 ```
-
-
-## TF Training and Evaluation
-Training and evaluation with the Tensorflow API is coming soon!
