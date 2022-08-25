@@ -259,7 +259,7 @@ class Trainer(BaseTrainer):
         optimizer: (:obj:`torch.optim.Optimizer`)
             The optimizer that will be used during training.
         num_warmup_steps: (:obj:`int`, `optional`)
-            The number of warm up steps to do. This is not required by all schedulers
+            The number of warm-up steps to perform. This is not required by all schedulers
             (hence the argument being optional),
             the function will raise an error if it's unset and the scheduler type requires it.
         num_training_steps: (:obj:`int`, `optional`)
