@@ -46,7 +46,7 @@ class T4RecTrainingArguments(TrainingArguments):
     log_attention_weights : Optional[bool], bool
         Logs the inputs and attention weights
         each --eval_steps (only test set)"
-        bu default False
+        by default False
     learning_rate_num_cosine_cycles_by_epoch : Optional[int], int
         Number of cycles for by epoch when --lr_scheduler_type = cosine_with_warmup.
         The number of waves in the cosine schedule

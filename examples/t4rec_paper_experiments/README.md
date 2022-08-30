@@ -57,7 +57,7 @@ This example script was implemented using the released PyTorch API of the Transf
 
 To reproduce the paper experiments with this example, you just need to perform two replacements in the [original scripts command lines](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md):
 1. Replace the Python package name and script  `hf4rec.recsys_main` by `t4r_paper_repro.transf_exp_main`
-2. Replace the argument `--feature_config [.yaml file path]` by `--features_schema_path [schema file path]`, as previoulsy we used an YAML file to configure dataset features and now we use a features schema protobuf text file for the same purpose.
+2. Replace the argument `--feature_config [.yaml file path]` by `--features_schema_path [schema file path]`, as previously we used an YAML file to configure dataset features and now we use a features schema protobuf text file for the same purpose.
 3. For experiments using multiple features (RQ3), include the `--use_side_information_features` argument
 
 Below is the updated command to reproduce the experiment [TRANSFORMERS WITH MULTIPLE FEATURES - XLNet (MLM)](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/experiments_reproducibility_commands.md#xlnet-mlm) for the REES46 ECOMMERCE DATASET.
