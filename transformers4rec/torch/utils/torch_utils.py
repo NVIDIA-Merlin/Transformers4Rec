@@ -212,7 +212,7 @@ def one_hot_1d(
 
     Args:
         labels (torch.Tensor) : tensor with labels of shape :math:`(N, H, W)`,
-                                where N is batch siz. Each value is an integer
+                                where N is batch size. Each value is an integer
                                 representing correct classification.
         num_classes (int): number of classes in labels.
         device (Optional[torch.device]): the desired device of returned tensor.
