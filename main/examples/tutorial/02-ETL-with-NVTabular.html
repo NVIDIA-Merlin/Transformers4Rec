@@ -170,7 +170,7 @@
 </div>
 <div class="section" id="read-the-input-parquet-file">
 <h2>4. Read the Input Parquet file<a class="headerlink" href="#read-the-input-parquet-file" title="Permalink to this headline"></a></h2>
-<p>We already performed certain preprocessing steps on the first month (Oct-2019) of the raw dataset in the <code class="docutils literal notranslate"><span class="pre">01-preprocess</span></code> notebook: <br></p>
+<p>Even though the original dataset contains 7 months data files, we are going to use the first seven days of the <code class="docutils literal notranslate"><span class="pre">Oct-2019.csv</span></code> ecommerce dataset. We already performed certain preprocessing steps on the first month (Oct-2019) of the raw dataset in the <code class="docutils literal notranslate"><span class="pre">01-preprocess</span></code> notebook: <br></p>
 <ul class="simple">
 <li><p>we created <code class="docutils literal notranslate"><span class="pre">event_time_ts</span></code> column from <code class="docutils literal notranslate"><span class="pre">event_time</span></code> column which shows the time when event happened at (in UTC).</p></li>
 <li><p>we created <code class="docutils literal notranslate"><span class="pre">prod_first_event_time_ts</span></code> column which indicates the timestamp that an item was seen first time.</p></li>
@@ -178,7 +178,7 @@
 <li><p>we categorified the <code class="docutils literal notranslate"><span class="pre">user_session</span></code> column, so that it now has only integer values.</p></li>
 <li><p>we removed consequetively repeated (user, item) interactions. For example, an original session with <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3]</span></code> product interactions has become <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code> after removing the repeated interactions on the same item within the same session.</p></li>
 </ul>
-<p>Even though the original dataset contains 7 months data files, we are going to use the first seven days of the <code class="docutils literal notranslate"><span class="pre">Oct-2019.csv</span></code> ecommerce dataset. We use cuDF to read the parquet file.</p>
+<p>Below, we start by reading in <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code>with cuDF. In order to create and save <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code> file, please run <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/tutorial">01-preprocess.ipynb</a> notebook first.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
