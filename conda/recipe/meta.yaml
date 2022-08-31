@@ -33,4 +33,4 @@ requirements:
 about:
   home: https://github.com/NVIDIA-Merlin/Transformers4Rec
   license_file: LICENSE
-  summary: Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation, available for both PyTorch and Tensorflow.
+  summary: Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation and can work with PyTorch.
