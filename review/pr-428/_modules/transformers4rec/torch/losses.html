@@ -83,15 +83,15 @@
 <div class="viewcode-block" id="LabelSmoothCrossEntropyLoss"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.LabelSmoothCrossEntropyLoss">[docs]</a><span class="k">class</span> <span class="nc">LabelSmoothCrossEntropyLoss</span><span class="p">(</span><span class="n">_WeightedLoss</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Constructor for cross-entropy loss with label smoothing</span>
 
-<span class="sd">    Parameters:</span>
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    smoothing: float</span>
-<span class="sd">        The label smoothing factor. it should be between 0 and 1.</span>
+<span class="sd">        The label smoothing factor. Specify a value between 0 and 1.</span>
 <span class="sd">    weight: torch.Tensor</span>
 <span class="sd">        The tensor of weights given to each class.</span>
 <span class="sd">    reduction: str</span>
-<span class="sd">        Specifies the reduction to apply to the output,</span>
-<span class="sd">        possible values are `none` | `sum` | `mean`</span>
+<span class="sd">        Specifies the reduction to apply to the output.</span>
+<span class="sd">        Specify one of `none`, `sum`, or `mean`.</span>
 
 <span class="sd">    Adapted from https://github.com/NingAnMe/Label-Smoothing-for-CrossEntropyLoss-PyTorch</span>
 <span class="sd">    &quot;&quot;&quot;</span>

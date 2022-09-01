@@ -697,11 +697,14 @@
 
 <div class="viewcode-block" id="InfinityNorm"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.InfinityNorm">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">InfinityNorm</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks that the L-infinity norm is below a certain threshold between the</span>
 <span class="sd">    two discrete distributions. Since this is applied to a</span>
-<span class="sd">    FeatureNameStatistics, it only considers the top k. L_infty(p,q) = max_i</span>
-<span class="sd">    |p_i-q_i|</span>
+<span class="sd">    FeatureNameStatistics, it only considers the top K.</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">       l_{\infty}(p,q) = max_{i} | p_{i} - q_{i} |</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># The InfinityNorm is in the interval [0.0, 1.0] so sensible bounds should be</span>

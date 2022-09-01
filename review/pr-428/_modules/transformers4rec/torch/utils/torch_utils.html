@@ -133,7 +133,7 @@
 
 
 <div class="viewcode-block" id="LossMixin"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LossMixin">[docs]</a><span class="k">class</span> <span class="nc">LossMixin</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Mixin to use for `torch.Module`s that can calculate a loss.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to use for a `torch.Module` that can calculate a loss.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="LossMixin.compute_loss"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LossMixin.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -158,7 +158,7 @@
 
 
 <div class="viewcode-block" id="MetricsMixin"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin">[docs]</a><span class="k">class</span> <span class="nc">MetricsMixin</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Mixin to use for `torch.Module`s that can calculate metrics.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Mixin to use for a `torch.Module` that can calculate metrics.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MetricsMixin.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -290,7 +290,7 @@
 
 <span class="sd">    Args:</span>
 <span class="sd">        labels (torch.Tensor) : tensor with labels of shape :math:`(N, H, W)`,</span>
-<span class="sd">                                where N is batch siz. Each value is an integer</span>
+<span class="sd">                                where N is batch size. Each value is an integer</span>
 <span class="sd">                                representing correct classification.</span>
 <span class="sd">        num_classes (int): number of classes in labels.</span>
 <span class="sd">        device (Optional[torch.device]): the desired device of returned tensor.</span>

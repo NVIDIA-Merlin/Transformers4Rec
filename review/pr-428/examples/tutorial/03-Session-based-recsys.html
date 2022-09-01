@@ -1168,6 +1168,62 @@ information for meaningful predictions. With that motivation, in this section, w
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (NDCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (DCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (AvgPrecisionAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (PrecisionAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (RecallAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+</pre></div>
+</div>
+</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -1223,7 +1279,37 @@ information for meaningful predictions. With that motivation, in this section, w
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;192&#39; to be equal to the item-id embedding dimension &#39;64&#39;
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (NDCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (DCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (RecallAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_no_full_state`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;192&#39; to be equal to the item-id embedding dimension &#39;64&#39;
 </pre></div>
 </div>
 </div>
@@ -1312,7 +1398,9 @@ Launch training for day 1 are:
 ********************
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
+***** Running training *****
   Num examples = 112128
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -1325,7 +1413,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:51, Epoch 3/3]
+      [1314/1314 00:38, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1337,64 +1425,57 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.836900</td>
+      <td>9.800100</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.937700</td>
+      <td>8.901500</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.665200</td>
+      <td>8.605100</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.518700</td>
+      <td>8.488700</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.411900</td>
+      <td>8.400200</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.371200</td>
+      <td>8.316600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
 </pre></div>
 </div>
 <div class="output text_html">
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 02:11]
+  [415/415 01:37]
 </div>
-</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 2 are:	
-
-********************
-
- epoch = 3.0
- eval/loss = 8.605655670166016
- eval/next-item/ndcg_at_10 = 0.0545700266957283
- eval/next-item/ndcg_at_20 = 0.06626961380243301
- eval/next-item/recall_at_10 = 0.10270718485116959
- eval/next-item/recall_at_20 = 0.14915919303894043
- eval_runtime = 9.5026
- eval_samples_per_second = 1397.507
- eval_steps_per_second = 43.672
-********************
-Launch training for day 2 are:
-********************
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+</div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 106240
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -1403,11 +1484,29 @@ Launch training for day 2 are:
   Total optimization steps = 1245
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 2 are:	
+
+********************
+
+ eval_/loss = 8.571016311645508
+ eval_/next-item/ndcg_at_10 = 0.056183043867349625
+ eval_/next-item/ndcg_at_20 = 0.06743346154689789
+ eval_/next-item/recall_at_10 = 0.10519568622112274
+ eval_/next-item/recall_at_20 = 0.14983786642551422
+ eval_runtime = 5.9015
+ eval_samples_per_second = 2250.265
+ eval_steps_per_second = 70.321
+********************
+Launch training for day 2 are:
+********************
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 00:50, Epoch 3/3]
+      [1245/1245 00:38, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1419,58 +1518,49 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.466200</td>
+      <td>8.467400</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.315800</td>
+      <td>8.309900</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.120000</td>
+      <td>8.158200</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.036200</td>
+      <td>8.031100</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.920700</td>
+      <td>7.945800</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>7.883900</td>
+      <td>7.903200</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 3 are:	
 
-********************
 
- epoch = 3.0
- eval/loss = 8.162181854248047
- eval/next-item/ndcg_at_10 = 0.0733010321855545
- eval/next-item/ndcg_at_20 = 0.08980806171894073
- eval/next-item/recall_at_10 = 0.13904747366905212
- eval/next-item/recall_at_20 = 0.20428968966007233
- eval_runtime = 9.1126
- eval_samples_per_second = 1348.468
- eval_steps_per_second = 42.14
-********************
-Launch training for day 3 are:
-********************
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
+***** Running training *****
   Num examples = 97792
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -1479,11 +1569,29 @@ Launch training for day 3 are:
   Total optimization steps = 1146
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 3 are:	
+
+********************
+
+ eval_/loss = 8.15834903717041
+ eval_/next-item/ndcg_at_10 = 0.07294631749391556
+ eval_/next-item/ndcg_at_20 = 0.08888539671897888
+ eval_/next-item/recall_at_10 = 0.13961833715438843
+ eval_/next-item/recall_at_20 = 0.20274017751216888
+ eval_runtime = 6.0052
+ eval_samples_per_second = 2046.222
+ eval_steps_per_second = 63.944
+********************
+Launch training for day 3 are:
+********************
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
       <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1146/1146 00:47, Epoch 3/3]
+      [1146/1146 00:36, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1495,32 +1603,44 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.016800</td>
+      <td>8.022800</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>7.900500</td>
+      <td>7.885300</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>7.740200</td>
+      <td>7.731600</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>7.691500</td>
+      <td>7.658300</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.583600</td>
+      <td>7.579400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+  warnings.warn(
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
@@ -1528,17 +1648,16 @@ Eval results for day 4 are:
 
 ********************
 
- epoch = 3.0
- eval/loss = 7.774728775024414
- eval/next-item/ndcg_at_10 = 0.09089759737253189
- eval/next-item/ndcg_at_20 = 0.10928591340780258
- eval/next-item/recall_at_10 = 0.16947951912879944
- eval/next-item/recall_at_20 = 0.24214120209217072
- eval_runtime = 11.8897
- eval_samples_per_second = 1308.02
- eval_steps_per_second = 40.876
-CPU times: user 7min 29s, sys: 16.9 s, total: 7min 45s
-Wall time: 3min 10s
+ eval_/loss = 7.776895999908447
+ eval_/next-item/ndcg_at_10 = 0.08828220516443253
+ eval_/next-item/ndcg_at_20 = 0.10635553300380707
+ eval_/next-item/recall_at_10 = 0.16612987220287323
+ eval_/next-item/recall_at_20 = 0.23788972198963165
+ eval_runtime = 7.7023
+ eval_samples_per_second = 2019.133
+ eval_steps_per_second = 63.098
+CPU times: user 8min 27s, sys: 8.55 s, total: 8min 35s
+Wall time: 2min 21s
 </pre></div>
 </div>
 </div>
@@ -1578,7 +1697,7 @@ Wall time: 3min 10s
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># dictionary representing max sequence length for the sequential (list) columns</span>
 <span class="n">sparse_features_max</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">fname</span><span class="p">:</span> <span class="n">sequence_length</span>
-    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span>
+    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;category_code-list_seq&#39;</span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="n">sparse_features_max</span>
@@ -1593,7 +1712,8 @@ Wall time: 3min 10s
  &#39;et_dayofweek_sin-list_seq&#39;: 20,
  &#39;et_dayofweek_cos-list_seq&#39;: 20,
  &#39;price_log_norm-list_seq&#39;: 20,
- &#39;relative_price_to_avg_categ_id-list_seq&#39;: 20}
+ &#39;relative_price_to_avg_categ_id-list_seq&#39;: 20,
+ &#39;category_code-list_seq&#39;: 20}
 </pre></div>
 </div>
 </div>
@@ -1610,6 +1730,14 @@ Wall time: 3min 10s
     <span class="n">model_path</span><span class="o">=</span> <span class="s2">&quot;/workspace/models&quot;</span><span class="p">,</span>
     <span class="n">label_columns</span> <span class="o">=</span><span class="p">[],</span>
 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+  warnings.warn(
 </pre></div>
 </div>
 </div>

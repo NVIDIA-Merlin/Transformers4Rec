@@ -84,7 +84,7 @@
              
   <div class="tex2jax_ignore mathjax_ignore section" id="transformers4rec-example-notebooks">
 <h1>Transformers4Rec Example Notebooks<a class="headerlink" href="#transformers4rec-example-notebooks" title="Permalink to this headline"></a></h1>
-<p>We have collection of example Jupyter notebooks using different datasets to demonstrate how to use Transformers4Rec with PyTorch and TensorFlow APIs. Each example notebook provides incremental information about Transformers4Rec features and modules.</p>
+<p>We have collection of example Jupyter notebooks using different datasets to demonstrate how to use Transformers4Rec with the PyTorch API. Each example notebook provides incremental information about Transformers4Rec features and modules.</p>
 <div class="section" id="inventory">
 <h2>Inventory<a class="headerlink" href="#inventory" title="Permalink to this headline"></a></h2>
 <div class="section" id="getting-started-session-based-recommendation-with-synthetic-data">
@@ -103,7 +103,7 @@
 <ul class="simple">
 <li><p>Preprocessing the Yoochoose e-commerce dataset</p></li>
 <li><p>Generating session features with on GPU</p></li>
-<li><p>Using the NVTabular dataloader with the Pytorch</p></li>
+<li><p>Using the NVTabular dataloader with PyTorch</p></li>
 <li><p>Training a session-based recommendation model with a Transformer architecture (XLNET)</p></li>
 <li><p>Exporting the preprocessing workflow and trained model to Triton Inference Server (TIS)</p></li>
 <li><p>Sending request to TIS and generating next-item predictions for each session</p></li>
@@ -129,13 +129,11 @@
 <p>You can run the examples with Docker containers.
 Docker containers are available from the NVIDIA GPU Cloud.
 Access the catalog of containers at <a class="reference external" href="http://ngc.nvidia.com/catalog/containers">http://ngc.nvidia.com/catalog/containers</a>.</p>
-<p>Depending on which example you want to run, you should use any one of these Docker containers:</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-tensorflow-training">Merlin-Tensorflow-Training</a> (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular and TensorFlow)</p></li>
-<li><p><a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch-inference">Merlin-PyTorch-Training</a> (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular and PyTorch)</p></li>
-<li><p><a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-inference">Merlin-Inference</a> (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular, TensorFlow, PyTorch, HugeCTR and Triton Inference Server)</p></li>
-</ul>
-<p>To run the example notebooks using Docker containers, perform the following steps:</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">merlin-pytorch</span></code> container is suited to running the Transformers4Rec notebooks.
+The container is available from the NGC catalog at the following URL:</p>
+<p><a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch">https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch</a></p>
+<p>This container includes the Merlin Core, Merlin Models, Merlin Systems, NVTabular and PyTorch libraries.</p>
+<p>To run the example notebooks using the container, perform the following steps:</p>
 <ol>
 <li><p>If you haven’t already created a Docker volume to share models and datasets
 between containers, create the volume by running the following command:</p>
