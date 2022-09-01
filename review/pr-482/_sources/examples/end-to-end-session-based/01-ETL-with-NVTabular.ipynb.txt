@@ -7,7 +7,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "# Copyright 2022 NVIDIA Corporation. All Rights Reserved.\n",
     "#\n",
     "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
     "# you may not use this file except in compliance with the License.\n",
@@ -25,9 +25,13 @@
   },
   {
    "cell_type": "markdown",
-   "id": "39d3a43a-fab6-4d46-807a-e9232de72bc8",
+   "id": "4f5dc27e-daac-4529-9b76-826a4de4818a",
    "metadata": {},
    "source": [
+    "<img src=\"https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-01-etl-with-nvtabular/nvidia_logo.png\" style=\"width: 90px; float: right;\">\n",
+    "\n",
+    "# ETL with NVTabular\n",
+    "\n",
     "This notebook is created using the latest stable [merlin-pytorch](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch) container.\n",
     "\n",
     "**Launch the docker container**\n",
@@ -39,12 +43,20 @@
   },
   {
    "cell_type": "markdown",
+   "id": "af23729e-c01e-4cd4-bd06-2e68ac5f61fb",
+   "metadata": {},
+   "source": [
+    "## Overview"
+   ]
+  },
+  {
+   "cell_type": "markdown",
    "id": "f1e6d7c9",
    "metadata": {},
    "source": [
-    "# ETL with NVTabular\n",
+    "This notebook demonstrates how to use NVTabular to perform the feature engineering that is needed to model the `YOOCHOOSE` dataset which contains a collection of sessions from a retailer. Each session  encapsulates the click events that the user performed in that session.\n",
     "\n",
-    "This notebook demonstrates how to use NVTabular to perform the feature engineering that is needed to model the Yoochoose data.\n",
+    "The dataset is available on [Kaggle](https://www.kaggle.com/chadgostopp/recsys-challenge-2015). You need to download it and copy to the `DATA_FOLDER` path. Note that we are only using the `yoochoose-clicks.dat` file.\n",
     "\n",
     "First, let's start by importing several libraries:"
    ]
@@ -89,24 +101,6 @@
     "\n",
     "OUTPUT_FOLDER = \"./yoochoose_transformed\"\n",
     "OVERWRITE = False"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "c0ffb719",
-   "metadata": {},
-   "source": [
-    "#### Download the data"
-   ]
-  },
-  {
-   "cell_type": "markdown",
-   "id": "6fefbc6d",
-   "metadata": {},
-   "source": [
-    "In this notebook we are using the `YOOCHOOSE` dataset which contains a collection of sessions from a retailer. Each session  encapsulates the click events that the user performed in that session.\n",
-    "\n",
-    "The dataset is available on [Kaggle](https://www.kaggle.com/chadgostopp/recsys-challenge-2015). You need to download it and copy to the `DATA_FOLDER` path. Note that we are only using the `yoochoose-clicks.dat` file."
    ]
   },
   {
