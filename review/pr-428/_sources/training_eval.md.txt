@@ -15,9 +15,9 @@ Parquet enables this preprocessed data to be easily structured and queryable.
 The data in these parquet files are directly loaded to the GPU memory as feature tensors.
 CPUs are also supported when GPUs are not available.
 
-The following example uses the dataloader that is wrapped by the `DataLoader` class.
+The following example uses the dataloader that is wrapped by the {class}`DataLoader <transformers4rec.torch.utils.data_utils.DataLoader>` class.
 The class automatically sets some options from the dataset schema.
-Optionally, you can use the `PyarrowDataLoader` as a basic option, but it is slower and works only for small datasets since the full data is loaded to CPU memory.
+Optionally, you can use the {class}`PyarrowDataLoader <transformers4rec.torch.utils.data_utils.PyarrowDataLoader>` as a basic option, but it is slower and works only for small datasets since the full data is loaded to CPU memory.
 
 ```python
 train_loader = transformers4rec.torch.utils.data_utils.DataLoader.from_schema(
@@ -65,7 +65,7 @@ recsys_trainer = Trainer(
 recsys_trainer.train()
 ```
 
-You can instantiate the dataloader when you create the `Trainer` instance by specifying the arguments shown in the following code block when you create an instance of the {func}`T4RecTrainingArguments <transformers4rec.config.trainer.T4RecTrainingArguments>` class:
+You can instantiate the dataloader when you create the {class}`Trainer <transformers4rec.torch.trainer.Trainer>` instance by specifying the arguments shown in the following code block when you create an instance of the {class}`T4RecTrainingArguments <transformers4rec.config.trainer.T4RecTrainingArguments>` class:
 
 ```python
 training_args = T4RecTrainingArguments(

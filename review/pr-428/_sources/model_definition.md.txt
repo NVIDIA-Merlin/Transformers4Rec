@@ -12,7 +12,7 @@ backlinks: none
 
 Transformers4Rec provides modularized building blocks that you can combine with standard PyTorch modules.
 This provides a great flexibility in the model definition so that you can use these blocks to build custom architectures with multiple towers, multiple heads, and losses (multi-task).
-For more information about the available options for each building block, refer to our [API Documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/api/modules.html).
+For more information about the available options for each building block, refer to our [API Documentation](./api/modules).
 
 The following figure shows a reference architecture for next-item prediction with Transformers.
 The model can be used for both sequential and session-based recommendation.
@@ -26,7 +26,7 @@ This architecture can be divided into four conceptual layers:
 <img src="_images/transformers4rec_metaarchitecture.png" alt="Transformers4Rec meta-architecture" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>
 
 <div style="text-align: center; margin: 20pt">
-<figcaption style="font-style: italic;">Fig. 2 - Transformers4Rec meta-architecture</figcaption>
+<figcaption style="font-style: italic;">Transformers4Rec meta-architecture</figcaption>
 </div>
 
 ## Feature Aggregation (Input Block)
@@ -49,9 +49,9 @@ For more information, refer to the online [appendix](https://github.com/NVIDIA-M
 Categorical input features are optionally normalized (with layer normalization) before aggregation.
 Continuous features should be normalized during feature engineering of the dataset.
 
-`TabularSequenceFeatures` is the core class of this module.
+{class}`TabularSequenceFeatures <transformers4rec.torch.features.sequence.TabularSequenceFeatures>` is the core class of this module.
 This class processes and aggregates all features and outputs a sequence of *interaction embeddings* to be fed into transformer blocks.
-You can create an instance of `TabularSequenceFeatures` automatically from a dataset schema that is generated from NVTabular by using the [`from_schema()`](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.from_schema) method.
+You can create an instance of `TabularSequenceFeatures` automatically from a dataset schema that is generated from NVTabular by using the {func}`from_schema() <transformers4rec.torch.features.sequence.TabularSequenceFeatures.from_schema>` method.
 This method creates the layers that are required to represent the categorical and continuous features in the dataset.
 In addition, you can specify the `aggregation` option of this method to aggregate the sequential features and to prepare masked labels according to the specified sequence masking approach.
 
@@ -97,7 +97,7 @@ Transformers4Rec raises an exception if you attempt to use an invalid combinatio
 The Transformer block processes the input sequences of *interaction embeddings* created by the input block using Transformer architectures like XLNet, GPT-2, and so on--or RNN architectures like LSTM or GRU.
 The created block is a standard Torch block and is compatible with and substitutable by other Torch blocks that support the input of a sequence.
 
-In the following example, a `SequentialBlock` module is used to build the model body.
+In the following example, a {class}`SequentialBlock <transformers4rec.torch.block.base.SequentialBlock>` module is used to build the model body.
 The model contains a `TabularSequenceFeatures` object (`tabular_inputs` defined in the previous code snippet), followed by an MLP projection layer to 64 dim (to match the Transformer `d_model`), and then is followed by an XLNet transformer block with two layers (four heads each).
 
 ```python
@@ -132,10 +132,10 @@ In the context of recommendation, you can use classification to predict the user
 
 - **Regression**: Predicts a continuous feature using the whole sequence, such as the elapsed time until the user returns to a service.
 
-In the following example, a head is instantiated with the predefined `model_body` for the `NextItemPredictionTask`.
+In the following example, a head is instantiated with the predefined `model_body` for the {class}`NextItemPredictionTask <transformers4rec.torch.NextItemPredictionTask>`.
 This head enables the `weight_tying` option.
 Decoupling the model bodies and heads provides a flexible architecture that enables you to define a model with features like multiple towers and multiple heads.
-Lastly, the `Model` class combines the heads and wraps the whole model.
+Lastly, the {class}`Model <transformers4rec.torch.Model>` class combines the heads and wraps the whole model.
 
 ```python
 from transformers4rec.torch import Head, Model
@@ -154,7 +154,7 @@ model = Model(head)
 
 ### Tying Embeddings
 
-For the `NextItemPredictionTask` class, we recommend *tying embeddings*.
+For the {class}`NextItemPredictionTask <transformers4rec.torch.NextItemPredictionTask>` class, we recommend *tying embeddings*.
 The tying embeddings concept was initially proposed by the NLP community to tie the weights of the input (item ID) embedding matrix with the output projection layer.
 Not only do tied embeddings reduce the memory requirements significantly, but our own experimentation during [recent competitions](https://resources.nvidia.com/en-us-merlin/recommendation-syste?lx=97GH0Q) and empirical analysis detailed in our [Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation](https://dl.acm.org/doi/10.1145/3460231.3474255) paper and online [appendix](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md) demonstrate that this method is very effective.
 Tying embeddings is enabled by default, but can be disabled by setting `weight_tying` to `False`.
