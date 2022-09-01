@@ -1,6 +1,16 @@
 # Model Architectures
 
-Transformers4Rec provides modularized building blocks that you can combined with standard PyTorch modules.
+```{contents}
+---
+depth: 2
+local: true
+backlinks: none
+---
+```
+
+## Modular Building-Block Design
+
+Transformers4Rec provides modularized building blocks that you can combine with standard PyTorch modules.
 This provides a great flexibility in the model definition so that you can use these blocks to build custom architectures with multiple towers, multiple heads, and losses (multi-task).
 For more information about the available options for each building block, refer to our [API Documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/api/modules.html).
 
@@ -122,7 +132,7 @@ In the context of recommendation, you can use classification to predict the user
 
 - **Regression**: Predicts a continuous feature using the whole sequence, such as the elapsed time until the user returns to a service.
 
-In the following example, a head is instantiated with the pre-defined `model_body` for the `NextItemPredictionTask`.
+In the following example, a head is instantiated with the predefined `model_body` for the `NextItemPredictionTask`.
 This head enables the `weight_tying` option.
 Decoupling the model bodies and heads provides a flexible architecture that enables you to define a model with features like multiple towers and multiple heads.
 Lastly, the `Model` class combines the heads and wraps the whole model.

@@ -78,7 +78,23 @@
              
   <div class="tex2jax_ignore mathjax_ignore section" id="model-architectures">
 <h1>Model Architectures<a class="headerlink" href="#model-architectures" title="Permalink to this headline"></a></h1>
-<p>Transformers4Rec provides modularized building blocks that you can combined with standard PyTorch modules.
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#modular-building-block-design" id="id1">Modular Building-Block Design</a></p></li>
+<li><p><a class="reference internal" href="#feature-aggregation-input-block" id="id2">Feature Aggregation (Input Block)</a></p></li>
+<li><p><a class="reference internal" href="#sequence-masking" id="id3">Sequence Masking</a></p></li>
+<li><p><a class="reference internal" href="#sequence-processing-transformer-rnn-block" id="id4">Sequence Processing (Transformer/RNN Block)</a></p></li>
+<li><p><a class="reference internal" href="#prediction-head-output-block" id="id5">Prediction Head (Output Block)</a></p>
+<ul>
+<li><p><a class="reference internal" href="#tying-embeddings" id="id6">Tying Embeddings</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#regularization" id="id7">Regularization</a></p></li>
+</ul>
+</div>
+<div class="section" id="modular-building-block-design">
+<h2>Modular Building-Block Design<a class="headerlink" href="#modular-building-block-design" title="Permalink to this headline"></a></h2>
+<p>Transformers4Rec provides modularized building blocks that you can combine with standard PyTorch modules.
 This provides a great flexibility in the model definition so that you can use these blocks to build custom architectures with multiple towers, multiple heads, and losses (multi-task).
 For more information about the available options for each building block, refer to our <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/modules.html">API Documentation</a>.</p>
 <p>The following figure shows a reference architecture for next-item prediction with Transformers.
@@ -93,6 +109,7 @@ This architecture can be divided into four conceptual layers:</p>
 <p><img alt="Transformers4Rec meta-architecture" src="_images/transformers4rec_metaarchitecture.png" /><br></p>
 <div style="text-align: center; margin: 20pt">
 <figcaption style="font-style: italic;">Fig. 2 - Transformers4Rec meta-architecture</figcaption>
+</div>
 </div>
 <div class="section" id="feature-aggregation-input-block">
 <h2>Feature Aggregation (Input Block)<a class="headerlink" href="#feature-aggregation-input-block" title="Permalink to this headline"></a></h2>
@@ -183,7 +200,7 @@ Cross-entropy and pairwise losses are supported.</p></li>
 In the context of recommendation, you can use classification to predict the user’s next action such as whether the user will abandon a product in their cart or proceed with the purchase.</p></li>
 <li><p><strong>Regression</strong>: Predicts a continuous feature using the whole sequence, such as the elapsed time until the user returns to a service.</p></li>
 </ul>
-<p>In the following example, a head is instantiated with the pre-defined <code class="docutils literal notranslate"><span class="pre">model_body</span></code> for the <code class="docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code>.
+<p>In the following example, a head is instantiated with the predefined <code class="docutils literal notranslate"><span class="pre">model_body</span></code> for the <code class="docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code>.
 This head enables the <code class="docutils literal notranslate"><span class="pre">weight_tying</span></code> option.
 Decoupling the model bodies and heads provides a flexible architecture that enables you to define a model with features like multiple towers and multiple heads.
 Lastly, the <code class="docutils literal notranslate"><span class="pre">Model</span></code> class combines the heads and wraps the whole model.</p>

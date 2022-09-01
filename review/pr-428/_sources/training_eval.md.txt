@@ -1,5 +1,15 @@
 # Training and Evaluation
 
+```{contents}
+---
+depth: 2
+local: true
+backlinks: none
+---
+```
+
+## Data Loading
+
 By default, Transformers4Rec leverages the Merlin dataloader for GPU-accelerated loading of preprocessed data that is stored as Parquet files.
 Parquet enables this preprocessed data to be easily structured and queryable.
 The data in these parquet files are directly loaded to the GPU memory as feature tensors.

@@ -78,23 +78,43 @@
              
   <div class="tex2jax_ignore mathjax_ignore section" id="why-transformers4rec">
 <h1>Why Transformers4Rec?<a class="headerlink" href="#why-transformers4rec" title="Permalink to this headline"></a></h1>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#the-relationship-between-nlp-and-recsys" id="id1">The relationship between NLP and RecSys</a></p></li>
+<li><p><a class="reference internal" href="#integration-with-huggingface-transformers" id="id2">Integration with HuggingFace Transformers</a></p></li>
+</ul>
+</div>
 <div class="section" id="the-relationship-between-nlp-and-recsys">
 <h2>The relationship between NLP and RecSys<a class="headerlink" href="#the-relationship-between-nlp-and-recsys" title="Permalink to this headline"></a></h2>
-<p>Over the past decade there has been a trend toward leveraging and adapting approaches proposed by Natural Language Processing (NLP) research like Word2Vec, GRU, and Attention for recommender systems (RecSys). The phenomena is especially noticeable for sequential and session-based recommendation where the sequential processing of users interactions is analogous to the language modeling (LM) task and many key RecSys architectures have been adapted from NLP, like GRU4Rec – the seminal Recurrent Neural Network (RNN)-based architecture for session-based recommendation.</p>
-<p>More recently, Transformer architectures have become the dominant technique over convolutional and recurrent neural networks for language modeling tasks. Because of their efficient parallel training, these architectures scale well with training data and model size, and are effective at modeling long-range sequences.</p>
-<p>Transformers have similarly been applied to sequential recommendation in architectures like <a class="reference external" href="https://arxiv.org/abs/1808.09781">SASRec</a>, <a class="reference external" href="https://arxiv.org/abs/1904.06690">BERT4Rec</a> and <a class="reference external" href="https://arxiv.org/pdf/1905.06874.pdf%C2%A0">BST</a>, providing higher accuracy than architectures based on CNN and RNNs, as can be seen in their reported experiments and also in our [ACM RecSys’21 paper](Updated references do paper URL in docs).</p>
-<p>You can read more about this relationship between NLP and RecSys and the evolution of the architectures for sequential and session-based recommendation towards Transformers in our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">paper</a> too.</p>
+<p>Over the past decade, proposed approaches based on NLP research, such as Word2Vec, GRU, and Attention for RecSys, have gained popularity with RecSys researchers and industry practitioners.
+This phenomena is especially noticeable for sequential and session-based recommendation where the sequential processing of user interactions is analogous to the language modeling (LM) task.
+Many key RecSys architectures have been adopted based on NLP research such as GRU4Rec.
+GRU4Rec is the seminal recurrent neural network (RNN) based architecture for session-based recommendation.</p>
+<p>Transformer architectures have become the dominant technique over convolutional neural networks (CNNs) and recurrent neural networks (RNNs) for language modeling tasks.
+Because of their efficient parallel training, these architectures can scale training data and model sizes.
+Transformer architectures are also effective at modeling long-range sequences.</p>
+<p>Transformers have also been applied to sequential recommendation in architectures such as <a class="reference external" href="https://arxiv.org/abs/1808.09781">SASRec</a>, <a class="reference external" href="https://arxiv.org/abs/1904.06690">BERT4Rec</a>, and <a class="reference external" href="https://arxiv.org/pdf/1905.06874.pdf%C2%A0">BST</a>.
+These architectures can provide higher accuracy than CNN and RNN-based architectures.
+For more information, see our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">ACM RecSys 2021 paper</a>.
+For more information about the evolution of Transformer architectures and bridging the gap between NLP and sequential and session-based recommendation, see our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation paper</a>.</p>
 <p><img alt="A timeline illustrating the influence of NLP research in Recommender Systems" src="_images/nlp_x_recsys.png" /><br></p>
 <div style="text-align: center; margin: 20pt">
-<figcaption style="font-style: italic;">Fig. 1 - A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://dl.acm.org/doi/10.1145/3460231.3474255)">Transformers4Rec paper</a></figcaption>
+<figcaption style="font-style: italic;">A timeline illustrating the influence of NLP research in Recommender Systems, from the <a href="https://dl.acm.org/doi/10.1145/3460231.3474255)">Transformers4Rec paper</a></figcaption>
 </div>
 </div>
 <div class="section" id="integration-with-huggingface-transformers">
 <h2>Integration with HuggingFace Transformers<a class="headerlink" href="#integration-with-huggingface-transformers" title="Permalink to this headline"></a></h2>
 <p>Transformers4Rec integrates with the <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace (HF) Transformers</a> library, allowing RecSys researchers and practitioners to easily experiment with the latest and state-of-the-art NLP Transformer architectures for sequential and session-based recommendation tasks and deploy those models into production.</p>
 <p>The HF Transformers was <em>“established with the goal of opening up advancements in NLP to the wider machine learning community”</em>. It has become very popular among NLP researchers and practitioners (more than 900 contributors), providing standardized implementations of the state-of-the-art Transformer architectures (more than 68 and counting) produced by the research community, often within days or weeks of their publication.</p>
-<p>HF Transformers is designed for both research and production. Models are composed of three building blocks: (a) a tokenizer, which converts raw text to sparse index encodings; (b) a transformer architecture; and © a head for NLP tasks, like Text Classification, Generation, Sentiment Analysis, Translation, Summarization, among others.</p>
-<p>In Transformers4Rec we leverage from HF Transformers only the transformer architectures building block (b) and their configuration classes. Transformers4Rec provides additional blocks necessary for recommendation, e.g., input features normalization and aggregation, and heads for recommendation and sequence classification/prediction. We also extend their <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class to allow for the evaluation with RecSys metrics.</p>
+<p>HF Transformers is designed for both research and production. Models are composed of three building blocks:</p>
+<ul class="simple">
+<li><p>A <em>tokenizer</em> that converts raw text to sparse index encodings.</p></li>
+<li><p>A <em>Transformer architecture</em>.</p></li>
+<li><p>A <em>head</em> for NLP tasks such as text classification, generation, sentiment analysis, translation, summarization, among others.</p></li>
+</ul>
+<p>Transformers4Rec leverages the Transformer architectures building block and configuration classes from Hugging Face.
+Transformers4Rec provides additional blocks that are necessary for recommendation, such as input features normalization and aggregation, and heads for recommendation and sequence classification and prediction.
+The library also extends the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer" title="transformers4rec.torch.trainer.Trainer"><code class="xref py py-func docutils literal notranslate"><span class="pre">Trainer</span></code></a> class to allow for the evaluation with RecSys metrics.</p>
 </div>
 </div>
 

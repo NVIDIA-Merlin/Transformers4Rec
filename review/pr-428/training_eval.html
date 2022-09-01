@@ -78,6 +78,19 @@
              
   <div class="tex2jax_ignore mathjax_ignore section" id="training-and-evaluation">
 <h1>Training and Evaluation<a class="headerlink" href="#training-and-evaluation" title="Permalink to this headline"></a></h1>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><p><a class="reference internal" href="#data-loading" id="id1">Data Loading</a></p></li>
+<li><p><a class="reference internal" href="#pytorch" id="id2">PyTorch</a></p>
+<ul>
+<li><p><a class="reference internal" href="#training" id="id3">Training</a></p></li>
+<li><p><a class="reference internal" href="#evaluation" id="id4">Evaluation</a></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="data-loading">
+<h2>Data Loading<a class="headerlink" href="#data-loading" title="Permalink to this headline"></a></h2>
 <p>By default, Transformers4Rec leverages the Merlin dataloader for GPU-accelerated loading of preprocessed data that is stored as Parquet files.
 Parquet enables this preprocessed data to be easily structured and queryable.
 The data in these parquet files are directly loaded to the GPU memory as feature tensors.
@@ -93,6 +106,7 @@ Optionally, you can use the <code class="docutils literal notranslate"><span cla
         <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
 </pre></div>
+</div>
 </div>
 <div class="section" id="pytorch">
 <h2>PyTorch<a class="headerlink" href="#pytorch" title="Permalink to this headline"></a></h2>

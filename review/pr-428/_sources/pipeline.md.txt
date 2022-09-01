@@ -1,5 +1,15 @@
 # End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin
 
+```{contents}
+---
+depth: 2
+local: true
+backlinks: none
+---
+```
+
+## Overview of the Pipeline
+
 Transformers4Rec has a first-class integration with Hugging Face (HF) Transformers, NVTabular, and Triton Inference Server, making it easy to build end-to-end GPU accelerated pipelines for sequential and session-based recommendation.
 
 <img src="_images/pipeline.png" alt="Pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>

@@ -1,5 +1,13 @@
 # Additional Resources
 
+```{contents}
+---
+depth: 2
+local: true
+backlinks: none
+---
+```
+
 ## Transformers4Rec and Session-Based Recommendation
 - [Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation](https://dl.acm.org/doi/10.1145/3460231.3474255) - Paper presented at the [ACM RecSys'21](https://recsys.acm.org/recsys21/) where we discuss the relationship between NLP and RecSys and introduce Transformers4Rec along with its core features. We also provide a comprehensive empirical analysis comparing Transformer architectures with session-based recommendation algorithms. To obtain the **Online Appendices of the Paper** and **Experiments Reproducibility**, refer to this [README](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/README.md).
 - [Blog post](https://medium.com/nvidia-merlin/transformers4rec-4523cc7d8fa8) - Briefly introduces Transformers4Rec.
