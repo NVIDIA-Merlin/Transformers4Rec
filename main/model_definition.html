@@ -78,7 +78,7 @@
              
   <div class="tex2jax_ignore mathjax_ignore section" id="model-architectures">
 <h1>Model Architectures<a class="headerlink" href="#model-architectures" title="Permalink to this headline"></a></h1>
-<p>Transformers4Rec provides modularized building blocks that can be combined with plain PyTorch modules and Keras layers. This provides a great flexibility in the model definition, as you can use the blocks to build custom architectures, e.g., with multiple towers, multiple heads and losses (multi-task).</p>
+<p>Transformers4Rec provides modularized building blocks that can be combined with standard PyTorch modules. This provides a great flexibility in the model definition, as you can use the blocks to build custom architectures, e.g., with multiple towers, multiple heads and losses (multi-task).</p>
 <p>In Fig. 2, we provide a reference architecture for next-item prediction with Transformers, that can be used for both sequential and session-based recommendation. We can divide that reference architecture in four conceptual layers, described next.</p>
 <p><img alt="Transformers4Rec meta-architecture" src="_images/transformers4rec_metaarchitecture.png" /><br></p>
 <div style="text-align: center; margin: 20pt">
@@ -119,7 +119,7 @@
 </div>
 <div class="section" id="sequence-processing-transformer-rnn-block">
 <h2>Sequence Processing (Transformer/RNN Block)<a class="headerlink" href="#sequence-processing-transformer-rnn-block" title="Permalink to this headline"></a></h2>
-<p>The Transformer block processes the input sequences of <em>interaction embeddings</em> created by the input block using Transformer architectures like XLNet, GPT-2, etc, or RNN architectures like LSTM or GRU.  The created block is a standard keras layer or torch block depending on the underlying framework and is compatible with and substitutable by other blocks of the same type which support the input of a sequence.</p>
+<p>The Transformer block processes the input sequences of <em>interaction embeddings</em> created by the input block using Transformer architectures like XLNet, GPT-2, etc, or RNN architectures like LSTM or GRU.  The created block is a standard  Torch block and is compatible with and substitutable by other Torch blocks that support the input of a sequence.</p>
 <p>In the following example, a <code class="docutils literal notranslate"><span class="pre">SequentialBlock</span></code> module is used to build the model body: a <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> object (<code class="docutils literal notranslate"><span class="pre">tabular_inputs</span></code> defined in the previous code snippet), followed by an MLP projection layer to 64 dim (to match the Transformer <code class="docutils literal notranslate"><span class="pre">d_model</span></code>), followed by an XLNet transformer block with 2 layers (4 heads each).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.config</span> <span class="kn">import</span> <span class="n">transformer</span>
 <span class="kn">from</span> <span class="nn">transformers4rec.torch</span> <span class="kn">import</span> <span class="n">MLPBlock</span><span class="p">,</span> <span class="n">SequentialBlock</span><span class="p">,</span> <span class="n">TransformerBlock</span>

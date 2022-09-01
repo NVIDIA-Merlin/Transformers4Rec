@@ -108,7 +108,7 @@
 </div>
 </div>
 </div>
-<p>This notebook is created using the latest stable <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch">merlin-pytorch</a> container. We need to switch to the <code class="docutils literal notranslate"><span class="pre">merlin-tensorflow:22.XX</span></code> container to be able to do model training with Tensorflow.</p>
+<p>This notebook is created using the latest stable <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch">merlin-pytorch</a> container.</p>
 <p><strong>Launch the docker container</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8888</span><span class="p">:</span><span class="mi">8888</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_data</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">data</span><span class="o">/</span>  <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">pytorch</span><span class="p">:</span><span class="mf">22.</span><span class="n">XX</span>
 </pre></div>
@@ -661,7 +661,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 </div>
-<p>That’s it! We created our sequential features, now we can go to next notebook to train a PyTorch or Tensorflow session-based model.</p>
+<p>That’s it! We created our sequential features, now we can go to next notebook to train a PyTorch session-based model.</p>
 </div>
 </div>
 </div>

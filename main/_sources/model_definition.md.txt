@@ -1,6 +1,6 @@
 # Model Architectures
 
-Transformers4Rec provides modularized building blocks that can be combined with plain PyTorch modules and Keras layers. This provides a great flexibility in the model definition, as you can use the blocks to build custom architectures, e.g., with multiple towers, multiple heads and losses (multi-task).
+Transformers4Rec provides modularized building blocks that can be combined with standard PyTorch modules. This provides a great flexibility in the model definition, as you can use the blocks to build custom architectures, e.g., with multiple towers, multiple heads and losses (multi-task).
 
 In Fig. 2, we provide a reference architecture for next-item prediction with Transformers, that can be used for both sequential and session-based recommendation. We can divide that reference architecture in four conceptual layers, described next.
 
@@ -45,7 +45,7 @@ Transformer architectures can be trained in different ways. Depending on the tra
 Note that not all transformer architectures support all of these training approaches.  Transformers4Rec will raise an exception when you attempt to use an invalid combination and will provide suggestions as to the appropriate masking techniques for that architecture.
 
 ## Sequence Processing (Transformer/RNN Block)
-The Transformer block processes the input sequences of *interaction embeddings* created by the input block using Transformer architectures like XLNet, GPT-2, etc, or RNN architectures like LSTM or GRU.  The created block is a standard keras layer or torch block depending on the underlying framework and is compatible with and substitutable by other blocks of the same type which support the input of a sequence.
+The Transformer block processes the input sequences of *interaction embeddings* created by the input block using Transformer architectures like XLNet, GPT-2, etc, or RNN architectures like LSTM or GRU.  The created block is a standard  Torch block and is compatible with and substitutable by other Torch blocks that support the input of a sequence.
 
 In the following example, a `SequentialBlock` module is used to build the model body: a `TabularSequenceFeatures` object (`tabular_inputs` defined in the previous code snippet), followed by an MLP projection layer to 64 dim (to match the Transformer `d_model`), followed by an XLNet transformer block with 2 layers (4 heads each).
 

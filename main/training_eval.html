@@ -105,7 +105,7 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
 
 <span class="n">training_args</span> <span class="o">=</span> <span class="n">T4RecTrainingArguments</span><span class="p">(</span>
             <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./tmp&quot;</span><span class="p">,</span>
-            <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>            
+            <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
             <span class="n">fp16</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="p">)</span>
 
@@ -114,7 +114,7 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
     <span class="n">args</span><span class="o">=</span><span class="n">training_args</span><span class="p">,</span>
     <span class="n">train_dataloader</span><span class="o">=</span><span class="n">train_loader</span><span class="p">,</span>
     <span class="n">eval_dataloader</span><span class="o">=</span><span class="n">eval_loader</span><span class="p">,</span>
-<span class="p">)</span>     
+<span class="p">)</span>
 
 <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
@@ -124,7 +124,7 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
             <span class="o">...</span><span class="p">,</span>
             <span class="n">data_loader_engine</span><span class="o">=</span><span class="s2">&quot;nvtabular&quot;</span><span class="p">,</span>
             <span class="n">per_device_train_batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-            <span class="n">per_device_eval_batch_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>            
+            <span class="n">per_device_eval_batch_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
         <span class="p">)</span>
 
 <span class="c1"># Instantiates the train and eval dataloader</span>
@@ -132,8 +132,8 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
     <span class="n">args</span><span class="o">=</span><span class="n">training_args</span><span class="p">,</span>
     <span class="n">train_dataset_or_path</span><span class="o">=</span><span class="n">train_path</span><span class="p">,</span>
-    <span class="n">eval_dataset_or_path</span><span class="o">=</span><span class="n">eval_path</span><span class="p">,</span>   
-<span class="p">)</span>     
+    <span class="n">eval_dataset_or_path</span><span class="o">=</span><span class="n">eval_path</span><span class="p">,</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -156,10 +156,10 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
 <p>You can implement incremental evaluation by splitting your data into time windows (e.g. week, day or hour). Then you can have a loop that trains (or fine-tune a pre-trained model) with sessions of time window T and evaluates on sessions of time window T+1.</p>
 <p>Here is an example which assumes daily data is split in folders. There is a loop that iterates over the days, trains the model (or fine-tunes the model pre-trained in the previous day) and evaluates with data of the next day.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Iterates over parquet files with daily data</span>
-<span class="k">for</span> <span class="n">time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>    
+<span class="k">for</span> <span class="n">time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">):</span>
     <span class="n">train_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;./data/day-</span><span class="si">{</span><span class="n">time_index</span><span class="si">}</span><span class="s2">/data.parquet&quot;</span><span class="p">)</span>
     <span class="n">eval_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;./data/day-</span><span class="si">{</span><span class="n">time_index</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">/data.parquet&quot;</span><span class="p">)</span>
-    
+
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Training with day </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_index</span><span class="p">))</span>
     <span class="n">trainer</span><span class="o">.</span><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_paths</span>
     <span class="n">trainer</span><span class="o">.</span><span class="n">reset_lr_scheduler</span><span class="p">()</span>
@@ -175,10 +175,6 @@ The data in Parquet files are directly loaded to GPU memory as feature tensors. 
 </div>
 </div>
 </div>
-</div>
-<div class="section" id="tf-training-and-evaluation">
-<h2>TF Training and Evaluation<a class="headerlink" href="#tf-training-and-evaluation" title="Permalink to this headline"></a></h2>
-<p>Training and evaluation with the Tensorflow API is coming soon!</p>
 </div>
 </div>
 

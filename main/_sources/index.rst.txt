@@ -2,7 +2,7 @@ Merlin Transformers4Rec
 =======================
 
 NVIDIA Merlin Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation.
-Transformers4Rec works with the PyTorch and TensorFlow libraries.
+Transformers4Rec works with PyTorch.
 
 To learn more, start with the `Introduction <README.html>`_.
 

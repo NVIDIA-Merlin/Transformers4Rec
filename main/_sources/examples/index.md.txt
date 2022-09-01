@@ -1,6 +1,6 @@
 # Transformers4Rec Example Notebooks
 
-We have collection of example Jupyter notebooks using different datasets to demonstrate how to use Transformers4Rec with PyTorch and TensorFlow APIs. Each example notebook provides incremental information about Transformers4Rec features and modules.
+We have collection of example Jupyter notebooks using different datasets to demonstrate how to use Transformers4Rec with the PyTorch API. Each example notebook provides incremental information about Transformers4Rec features and modules.
 
 ## Inventory
 
@@ -19,7 +19,7 @@ This end-to-end example notebook is focuses on:
 
 - Preprocessing the Yoochoose e-commerce dataset
 - Generating session features with on GPU
-- Using the NVTabular dataloader with the Pytorch
+- Using the NVTabular dataloader with PyTorch
 - Training a session-based recommendation model with a Transformer architecture (XLNET)
 - Exporting the preprocessing workflow and trained model to Triton Inference Server (TIS)
 - Sending request to TIS and generating next-item predictions for each session
@@ -43,13 +43,14 @@ You can run the examples with Docker containers.
 Docker containers are available from the NVIDIA GPU Cloud.
 Access the catalog of containers at <http://ngc.nvidia.com/catalog/containers>.
 
-Depending on which example you want to run, you should use any one of these Docker containers:
+The `merlin-pytorch` container is suited to running the Transformers4Rec notebooks.
+The container is available from the NGC catalog at the following URL:
 
-- [Merlin-Tensorflow-Training](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-tensorflow-training) (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular and TensorFlow)
-- [Merlin-PyTorch-Training](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch-inference) (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular and PyTorch)
-- [Merlin-Inference](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-inference) (contains Merlin Core, Merlin Models, Merlin Systems, NVTabular, TensorFlow, PyTorch, HugeCTR and Triton Inference Server)
+<https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch>
 
-To run the example notebooks using Docker containers, perform the following steps:
+This container includes the Merlin Core, Merlin Models, Merlin Systems, NVTabular and PyTorch libraries.
+
+To run the example notebooks using the container, perform the following steps:
 
 1. If you haven't already created a Docker volume to share models and datasets
    between containers, create the volume by running the following command:
