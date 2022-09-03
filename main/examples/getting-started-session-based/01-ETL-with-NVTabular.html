@@ -90,7 +90,7 @@
              
   <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2022 NVIDIA Corporation. All Rights Reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -108,6 +108,7 @@
 </div>
 </div>
 </div>
+<img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-01-etl-with-nvtabular/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-01-etl-with-nvtabular/nvidia_logo.png" />
 <div class="tex2jax_ignore mathjax_ignore section" id="etl-with-nvtabular">
 <h1>ETL with NVTabular<a class="headerlink" href="#etl-with-nvtabular" title="Permalink to this headline"></a></h1>
 <p>In this notebook we are going to generate synthetic data and then create sequential features with <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular">NVTabular</a>. Such data will be used in the next notebook to train a session-based recommendation model.</p>
@@ -204,48 +205,48 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>89800</td>
-      <td>19</td>
-      <td>2</td>
-      <td>0.825586</td>
-      <td>0.321923</td>
-      <td>9</td>
+      <td>79895</td>
+      <td>72</td>
+      <td>7</td>
+      <td>0.575559</td>
+      <td>0.463627</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>82414</td>
-      <td>41</td>
-      <td>3</td>
-      <td>0.886040</td>
-      <td>0.434074</td>
-      <td>4</td>
+      <td>72384</td>
+      <td>8</td>
+      <td>1</td>
+      <td>0.423588</td>
+      <td>0.439379</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>75162</td>
-      <td>8</td>
-      <td>1</td>
-      <td>0.626088</td>
-      <td>0.527030</td>
-      <td>2</td>
+      <td>80895</td>
+      <td>26</td>
+      <td>3</td>
+      <td>0.257796</td>
+      <td>0.793980</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>87491</td>
-      <td>7</td>
-      <td>1</td>
-      <td>0.966447</td>
-      <td>0.636122</td>
+      <td>70485</td>
+      <td>17</td>
+      <td>2</td>
+      <td>0.354155</td>
+      <td>0.121522</td>
       <td>2</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>88795</td>
-      <td>2</td>
-      <td>1</td>
-      <td>0.743467</td>
-      <td>0.696318</td>
-      <td>5</td>
+      <td>87857</td>
+      <td>142</td>
+      <td>12</td>
+      <td>0.930029</td>
+      <td>0.894743</td>
+      <td>8</td>
     </tr>
   </tbody>
 </table>
@@ -359,33 +360,33 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>592</td>
-      <td>6</td>
+      <td>591</td>
       <td>2</td>
-      <td>[26, 27, 143, 3, 22, 9, 108, 56, 56, 8, 13, 3,...</td>
-      <td>[3, 3, 12, 2, 3, 2, 9, 5, 5, 2, 3, 2, 3, 3, 13...</td>
-      <td>[0.9506599613643579, 0.8661212433545066, 0.862...</td>
-      <td>[0.8643551734260801, 0.7689185414062618, 0.464...</td>
+      <td>2</td>
+      <td>[36, 64, 32, 46, 2, 52, 8, 39, 11, 34, 86, 9, ...</td>
+      <td>[4, 7, 4, 5, 2, 6, 2, 5, 3, 4, 9, 2, 3, 2, 3, ...</td>
+      <td>[0.21271311423191075, 0.47673105314236597, 0.6...</td>
+      <td>[0.053377759448017814, 0.13143816418738208, 0....</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>587</td>
-      <td>9</td>
+      <td>591</td>
       <td>3</td>
-      <td>[16, 11, 184, 20, 36, 7, 18, 15, 26, 34, 16, 7...</td>
-      <td>[3, 2, 15, 3, 4, 2, 3, 3, 3, 4, 3, 2, 10, 2, 2...</td>
-      <td>[0.022174995033433675, 0.8653454468276589, 0.2...</td>
-      <td>[0.6007516253035353, 0.1938075142351966, 0.055...</td>
+      <td>3</td>
+      <td>[9, 29, 15, 2, 3, 32, 18, 57, 29, 17, 38, 20, ...</td>
+      <td>[2, 4, 3, 2, 2, 4, 3, 6, 4, 3, 5, 3, 5, 5, 2, ...</td>
+      <td>[0.5194944043984934, 0.7865161467150079, 0.516...</td>
+      <td>[0.2768566421516725, 0.8165712246233945, 0.052...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>582</td>
-      <td>5</td>
+      <td>590</td>
+      <td>1</td>
       <td>4</td>
-      <td>[8, 26, 11, 8, 37, 6, 8, 3, 139, 18, 13, 9, 43...</td>
-      <td>[2, 3, 2, 2, 4, 2, 2, 2, 11, 3, 3, 2, 4, 2, 2,...</td>
-      <td>[0.7953279169761096, 0.9153823054868439, 0.374...</td>
-      <td>[0.9989513857881299, 0.06265999360254448, 0.09...</td>
+      <td>[16, 2, 3, 93, 36, 19, 25, 115, 3, 9, 49, 4, 2...</td>
+      <td>[3, 2, 2, 9, 4, 3, 4, 11, 2, 2, 5, 2, 4, 6, 4,...</td>
+      <td>[0.22325654804391093, 0.4402565281570716, 0.38...</td>
+      <td>[0.15944257060229772, 0.013476143111235905, 0....</td>
     </tr>
   </tbody>
 </table>
@@ -437,7 +438,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:01&lt;00:00,  4.57it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:02&lt;00:00,  4.22it/s]
 </pre></div>
 </div>
 </div>
@@ -455,7 +456,7 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">gdf</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">TRAIN_PATHS</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-<span class="n">gdf</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+<span class="n">gdf</span>
 </pre></div>
 </div>
 </div>
@@ -489,51 +490,106 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>578</td>
-      <td>12</td>
-      <td>[36, 17, 19, 36, 4, 129, 14, 23, 36, 38, 43, 3...</td>
-      <td>[4, 3, 3, 4, 2, 11, 2, 3, 4, 4, 4, 4, 2, 3, 7,...</td>
-      <td>[0.7020030867767164, 0.05218142932578329, 0.74...</td>
-      <td>[0.9566234317289599, 0.5555797507059802, 0.959...</td>
+      <td>590</td>
+      <td>4</td>
+      <td>[16, 2, 3, 93, 36, 19, 25, 115, 3, 9, 49, 4, 2...</td>
+      <td>[3, 2, 2, 9, 4, 3, 4, 11, 2, 2, 5, 2, 4, 6, 4,...</td>
+      <td>[0.22325654804391093, 0.4402565281570716, 0.38...</td>
+      <td>[0.15944257060229772, 0.013476143111235905, 0....</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>577</td>
-      <td>14</td>
-      <td>[72, 5, 30, 35, 14, 21, 19, 31, 34, 134, 27, 6...</td>
-      <td>[7, 2, 4, 4, 2, 2, 3, 4, 4, 11, 3, 6, 3, 21, 2...</td>
-      <td>[0.6242846992063864, 0.5450669814496107, 0.681...</td>
-      <td>[0.3541796048690249, 0.9611651587781853, 0.509...</td>
+      <td>582</td>
+      <td>8</td>
+      <td>[3, 34, 81, 12, 19, 48, 10, 15, 18, 19, 61, 33...</td>
+      <td>[2, 4, 8, 3, 3, 5, 2, 3, 3, 3, 7, 2, 4, 2, 5, ...</td>
+      <td>[0.01301034794234468, 0.8975850168095207, 0.11...</td>
+      <td>[0.37244707643279873, 0.6430649865767125, 0.84...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>573</td>
-      <td>20</td>
-      <td>[38, 10, 32, 13, 113, 23, 13, 35, 15, 46, 118,...</td>
-      <td>[4, 2, 4, 3, 9, 3, 3, 4, 3, 5, 10, 4, 3, 2, 2,...</td>
-      <td>[0.014251385895349244, 0.36672181343871213, 0....</td>
-      <td>[0.7040543650872758, 0.8053537473923608, 0.688...</td>
+      <td>579</td>
+      <td>10</td>
+      <td>[7, 5, 96, 36, 12, 10, 81, 54, 36, 120, 3, 69,...</td>
+      <td>[2, 2, 9, 4, 3, 2, 8, 6, 4, 12, 2, 7, 4, 6, 3,...</td>
+      <td>[0.2608925140795695, 0.7891122184433232, 0.302...</td>
+      <td>[0.8785835481938361, 0.7364014617152856, 0.896...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>565</td>
-      <td>46</td>
-      <td>[27, 23, 24, 5, 14, 36, 36, 60, 3, 28, 7, 33, ...</td>
-      <td>[3, 3, 3, 2, 2, 4, 4, 6, 2, 3, 2, 2, 4, 2, 3, ...</td>
-      <td>[0.6846272237523431, 0.9391889762492568, 0.728...</td>
-      <td>[0.029763178246406174, 0.07305484545169816, 0....</td>
+      <td>569</td>
+      <td>30</td>
+      <td>[20, 56, 38, 14, 24, 34, 9, 26, 28, 14, 32, 9,...</td>
+      <td>[3, 6, 5, 2, 3, 4, 2, 4, 4, 2, 4, 2, 3, 4, 3, ...</td>
+      <td>[0.15751497487991506, 0.016492940806796086, 0....</td>
+      <td>[0.15627788549590182, 0.9837698990155679, 0.11...</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>563</td>
-      <td>60</td>
-      <td>[9, 10, 11, 6, 62, 12, 2, 27, 9, 9, 45, 12, 5,...</td>
-      <td>[2, 2, 2, 2, 6, 2, 2, 3, 2, 2, 5, 2, 2, 6, 2, ...</td>
-      <td>[0.040420930514670106, 0.37013827148679257, 0....</td>
-      <td>[0.5169674268305693, 0.5908212507558208, 0.269...</td>
+      <td>568</td>
+      <td>33</td>
+      <td>[31, 50, 36, 86, 4, 28, 35, 7, 133, 10, 36, 2,...</td>
+      <td>[4, 6, 4, 9, 2, 4, 4, 2, 13, 2, 4, 2, 2, 4, 3,...</td>
+      <td>[0.6335526717564155, 0.7895328077124247, 0.803...</td>
+      <td>[0.18652468074823958, 0.8376901269790153, 0.59...</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2226</th>
+      <td>441</td>
+      <td>19927</td>
+      <td>[134, 94, 11, 47, 92, 277, 3, 6, 34, 4, 212, 1...</td>
+      <td>[13, 9, 3, 5, 9, 25, 2, 2, 4, 2, 19, 12, 3, 3,...</td>
+      <td>[0.07049606626554561, 0.6801535673513188, 0.25...</td>
+      <td>[0.15023170301789446, 0.6831186301779653, 0.80...</td>
+    </tr>
+    <tr>
+      <th>2227</th>
+      <td>441</td>
+      <td>19928</td>
+      <td>[6, 17, 9, 31, 42, 34, 21, 16, 39, 16, 42, 26,...</td>
+      <td>[2, 3, 2, 4, 5, 4, 2, 3, 5, 3, 5, 4, 2, 3, 3, ...</td>
+      <td>[0.943628011644158, 0.35946685478883145, 0.881...</td>
+      <td>[0.3740112539329261, 0.6214578812223325, 0.379...</td>
+    </tr>
+    <tr>
+      <th>2228</th>
+      <td>441</td>
+      <td>19929</td>
+      <td>[19, 14, 19, 98, 17, 5, 13, 26, 18, 2, 35, 3, ...</td>
+      <td>[3, 2, 3, 10, 3, 2, 3, 4, 3, 2, 4, 2, 2, 2, 6,...</td>
+      <td>[0.11114081502978823, 0.8287223990056634, 0.04...</td>
+      <td>[0.22701859646654832, 0.46340023643004713, 0.8...</td>
+    </tr>
+    <tr>
+      <th>2229</th>
+      <td>439</td>
+      <td>19942</td>
+      <td>[101, 14, 8, 30, 36, 41, 13, 9, 10, 82, 6, 195...</td>
+      <td>[10, 2, 2, 4, 4, 5, 3, 2, 2, 8, 2, 18, 3, 2, 4...</td>
+      <td>[0.9677378334614682, 0.005930902643004221, 0.0...</td>
+      <td>[0.29683409646692904, 0.3718404566751601, 0.03...</td>
+    </tr>
+    <tr>
+      <th>2230</th>
+      <td>438</td>
+      <td>19954</td>
+      <td>[164, 120, 34, 16, 7, 20, 49, 13, 74, 4, 33, 1...</td>
+      <td>[15, 12, 4, 3, 2, 3, 5, 3, 8, 2, 2, 3, 5, 3, 1...</td>
+      <td>[0.7573636520838789, 0.8658570560696931, 0.758...</td>
+      <td>[0.1346140801544553, 0.3068511774606606, 0.674...</td>
     </tr>
   </tbody>
 </table>
+<p>1786 rows × 6 columns</p>
 </div></div></div>
 </div>
 <p>You have  just created session-level features to train a session-based recommendation model using NVTabular. Now you can move to the the next notebook,<code class="docutils literal notranslate"><span class="pre">02-session-based-XLNet-with-PyT.ipynb</span></code> to train a session-based recommendation model using <a class="reference external" href="https://arxiv.org/abs/1906.08237">XLNet</a>, one of the state-of-the-art NLP model.</p>
