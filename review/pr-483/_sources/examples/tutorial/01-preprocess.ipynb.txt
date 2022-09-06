@@ -6,7 +6,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "# Copyright 2022 NVIDIA Corporation. All Rights Reserved.\n",
     "#\n",
     "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
     "# you may not use this file except in compliance with the License.\n",
@@ -26,8 +26,11 @@
    "cell_type": "markdown",
    "metadata": {},
    "source": [
+    "<img src=\"https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-01-preprocess/nvidia_logo.png\" style=\"width: 90px; float: right;\">\n",
+    "\n",
     "# Preliminary Preprocessing\n",
-    "## Read and Process E-Commerce data"
+    "\n",
+    "**Read and Process E-Commerce data**"
    ]
   },
   {

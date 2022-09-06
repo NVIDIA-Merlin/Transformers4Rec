@@ -92,7 +92,7 @@
              
   <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2022 NVIDIA Corporation. All Rights Reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -110,15 +110,15 @@
 </div>
 </div>
 </div>
+<img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-01-preprocess/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-01-preprocess/nvidia_logo.png" />
 <div class="tex2jax_ignore mathjax_ignore section" id="preliminary-preprocessing">
 <h1>Preliminary Preprocessing<a class="headerlink" href="#preliminary-preprocessing" title="Permalink to this headline"></a></h1>
-<div class="section" id="read-and-process-e-commerce-data">
-<h2>Read and Process E-Commerce data<a class="headerlink" href="#read-and-process-e-commerce-data" title="Permalink to this headline"></a></h2>
+<p><strong>Read and Process E-Commerce data</strong></p>
 <p>In this notebook, we are going to use a subset of a publicly available <a class="reference external" href="https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store">eCommerce dataset</a>. The full dataset contains 7 months data (from October 2019 to April 2020) from a large multi-category online store. Each row in the file represents an event. All events are related to products and users. Each event is like many-to-many relation between products and users.
 Data collected by Open CDP project and the source of the dataset is <a class="reference external" href="https://rees46.com/">REES46 Marketing Platform</a>.</p>
 <p>We use only <code class="docutils literal notranslate"><span class="pre">2019-Oct.csv</span></code> file for training our models, so you can visit this site and download the csv file: <a class="reference external" href="https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store">https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store</a>.</p>
 <div class="section" id="import-the-required-libraries">
-<h3>Import the required libraries<a class="headerlink" href="#import-the-required-libraries" title="Permalink to this headline"></a></h3>
+<h2>Import the required libraries<a class="headerlink" href="#import-the-required-libraries" title="Permalink to this headline"></a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -135,7 +135,7 @@ Data collected by Open CDP project and the source of the dataset is <a class="re
 </div>
 </div>
 <div class="section" id="read-data-via-cudf-from-csv">
-<h3>Read Data via cuDF from CSV<a class="headerlink" href="#read-data-via-cudf-from-csv" title="Permalink to this headline"></a></h3>
+<h2>Read Data via cuDF from CSV<a class="headerlink" href="#read-data-via-cudf-from-csv" title="Permalink to this headline"></a></h2>
 <p>At this point we expect that you have already downloaded the <code class="docutils literal notranslate"><span class="pre">2019-Oct.csv</span></code> dataset and stored it in the <code class="docutils literal notranslate"><span class="pre">INPUT_DATA_DIR</span></code> as defined below. It is worth mentioning that the raw dataset is ~ 6 GB, therefore a single GPU with 16 GB or less memory might run out of memory.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -266,7 +266,7 @@ Wall time: 5.32 s
 </div>
 </div>
 <div class="section" id="convert-timestamp-from-datetime">
-<h3>Convert timestamp from datetime<a class="headerlink" href="#convert-timestamp-from-datetime" title="Permalink to this headline"></a></h3>
+<h2>Convert timestamp from datetime<a class="headerlink" href="#convert-timestamp-from-datetime" title="Permalink to this headline"></a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">raw_df</span><span class="p">[</span><span class="s1">&#39;event_time_dt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_df</span><span class="p">[</span><span class="s1">&#39;event_time&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;datetime64[s]&#39;</span><span class="p">)</span>
@@ -430,7 +430,7 @@ dtype: bool
 </div>
 </div>
 <div class="section" id="categorify-user-session-column">
-<h3>Categorify <code class="docutils literal notranslate"><span class="pre">user_session</span></code> column<a class="headerlink" href="#categorify-user-session-column" title="Permalink to this headline"></a></h3>
+<h2>Categorify <code class="docutils literal notranslate"><span class="pre">user_session</span></code> column<a class="headerlink" href="#categorify-user-session-column" title="Permalink to this headline"></a></h2>
 <p>Although <code class="docutils literal notranslate"><span class="pre">user_session</span></code> is not used as an input feature for the model, it is useful to convert those raw long string to int values to avoid potential failures when grouping interactions by <code class="docutils literal notranslate"><span class="pre">user_session</span></code> in the next notebook.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -598,7 +598,7 @@ dtype: bool
 </div>
 </div>
 <div class="section" id="removing-consecutive-repeated-user-item-interactions">
-<h3>Removing consecutive repeated (user, item) interactions<a class="headerlink" href="#removing-consecutive-repeated-user-item-interactions" title="Permalink to this headline"></a></h3>
+<h2>Removing consecutive repeated (user, item) interactions<a class="headerlink" href="#removing-consecutive-repeated-user-item-interactions" title="Permalink to this headline"></a></h2>
 <p>We keep repeated interactions on the same items, removing only consecutive interactions, because it might be due to browser tab refreshes or different interaction types (e.g. click, add-to-card, purchase)</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -634,7 +634,7 @@ Wall time: 1.16 s
 </div>
 </div>
 <div class="section" id="include-the-item-first-time-seen-feature-for-recency-calculation">
-<h3>Include the item first time seen feature (for recency calculation)<a class="headerlink" href="#include-the-item-first-time-seen-feature-for-recency-calculation" title="Permalink to this headline"></a></h3>
+<h2>Include the item first time seen feature (for recency calculation)<a class="headerlink" href="#include-the-item-first-time-seen-feature-for-recency-calculation" title="Permalink to this headline"></a></h2>
 <p>We create <code class="docutils literal notranslate"><span class="pre">prod_first_event_time_ts</span></code> column which indicates the timestamp that an item was seen first time.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -954,7 +954,6 @@ Wall time: 1.16 s
 <span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
 <span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
-</div>
 </div>
 </div>
 </div>

@@ -7,7 +7,7 @@
    "metadata": {},
    "outputs": [],
    "source": [
-    "# Copyright 2021 NVIDIA Corporation. All Rights Reserved.\n",
+    "# Copyright 2022 NVIDIA Corporation. All Rights Reserved.\n",
     "#\n",
     "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
     "# you may not use this file except in compliance with the License.\n",
@@ -28,6 +28,8 @@
    "id": "0a2228da",
    "metadata": {},
    "source": [
+    "<img src=\"https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-02-session-based-xlnet-with-pyt/nvidia_logo.png\" style=\"width: 90px; float: right;\">\n",
+    "\n",
     "# Session-based Recommendation with XLNET"
    ]
   },
