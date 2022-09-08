@@ -389,7 +389,7 @@ class Trainer(BaseTrainer):
             ignore_masking = False
 
         # set the model
-        model = self.model.module
+        model = self.model.wrapper_module
         # reset metrics for the dataset (Train, Valid or Test)
         if self.compute_metrics:
             model.reset_metrics()
@@ -629,7 +629,7 @@ class Trainer(BaseTrainer):
                 raise ValueError("cloudpickle is required to save model class")
 
             with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
-                cloudpickle.dump(self.model.module, out)
+                cloudpickle.dump(self.model.wrapper_module, out)
 
     def load_model_trainer_states_from_checkpoint(self, checkpoint_path, model=None):
         """
@@ -819,8 +819,8 @@ class HFWrapper(torch.nn.Module):
 
     def __init__(self, model):
         super().__init__()
-        self.module = model
+        self.wrapper_module = model
 
     def forward(self, *args, **kwargs):
         inputs = kwargs
-        return self.module(inputs, *args)
+        return self.wrapper_module(inputs, *args)
