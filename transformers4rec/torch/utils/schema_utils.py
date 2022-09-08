@@ -30,6 +30,7 @@ def random_data_from_schema(
     num_rows: int,
     max_session_length: Optional[int] = None,
     min_session_length: int = 5,
+    device=None,
 ) -> TabularData:
     data: Dict[str, Any] = {}
 
@@ -49,16 +50,16 @@ def random_data_from_schema(
                 max_num = feature.int_domain.max
                 if is_list_feature:
                     list_length = session_length or feature.value_count.max
-                    row = torch.randint(1, max_num, (list_length,))
+                    row = torch.randint(1, max_num, (list_length,), device=device)
 
                 else:
-                    row = torch.randint(1, max_num, tuple(shape))
+                    row = torch.randint(1, max_num, tuple(shape), device=device)
             else:
                 if is_list_feature:
                     list_length = session_length or feature.value_count.max
-                    row = torch.rand((list_length,))
+                    row = torch.rand((list_length,), device=device)
                 else:
-                    row = torch.rand(tuple(shape))
+                    row = torch.rand(tuple(shape), device=device)
 
             if is_list_feature:
                 row = (row, [len(row)])  # type: ignore
@@ -88,9 +89,9 @@ def random_data_from_schema(
             offsets = [0]
             for length in val[1][:-1]:
                 offsets.append(offsets[-1] + length)
-            vals = (val[0], torch.tensor(offsets).unsqueeze(dim=1))
-            values, offsets, diff_offsets, num_rows = _pull_values_offsets(vals)
-            indices = _get_indices(offsets, diff_offsets)
+            vals = (val[0], torch.tensor(offsets, device=device).unsqueeze(dim=1))
+            values, offsets, diff_offsets, num_rows = _pull_values_offsets(vals, device=device)
+            indices = _get_indices(offsets, diff_offsets, device=device)
             seq_limit = max_session_length or val[1][0]
             outputs[key] = _get_sparse_tensor(values, indices, num_rows, seq_limit)
         else:
@@ -99,25 +100,25 @@ def random_data_from_schema(
     return outputs
 
 
-def _pull_values_offsets(values_offset):
+def _pull_values_offsets(values_offset, device=None):
     # pull_values_offsets, return values offsets diff_offsets
     if isinstance(values_offset, tuple):
         values = values_offset[0].flatten()
         offsets = values_offset[1].flatten()
     else:
         values = values_offset.flatten()
-        offsets = torch.arange(values.size()[0])
+        offsets = torch.arange(values.size()[0], device=device)
     num_rows = len(offsets)
-    offsets = torch.cat([offsets, torch.tensor([len(values)])])
+    offsets = torch.cat([offsets, torch.tensor([len(values)], device=device)])
     diff_offsets = offsets[1:] - offsets[:-1]
     return values, offsets, diff_offsets, num_rows
 
 
-def _get_indices(offsets, diff_offsets):
-    row_ids = torch.arange(len(offsets) - 1)
+def _get_indices(offsets, diff_offsets, device=None):
+    row_ids = torch.arange(len(offsets) - 1, device=device)
     row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
     row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
-    col_ids = torch.arange(len(row_offset_repeated)) - row_offset_repeated
+    col_ids = torch.arange(len(row_offset_repeated), device=device) - row_offset_repeated
     indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1)
     return indices
 
