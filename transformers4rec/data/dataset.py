@@ -33,7 +33,9 @@ class Dataset:
     def schema(self) -> Schema:
         return self._schema
 
-    def torch_synthetic_data(self, num_rows=100, min_session_length=5, max_session_length=20):
+    def torch_synthetic_data(
+        self, num_rows=100, min_session_length=5, max_session_length=20, device=None
+    ):
         from transformers4rec.torch.utils import schema_utils
 
         return schema_utils.random_data_from_schema(
@@ -41,6 +43,7 @@ class Dataset:
             num_rows=num_rows,
             min_session_length=min_session_length,
             max_session_length=max_session_length,
+            device=device,
         )
 
     def tf_synthetic_data(self, num_rows=100, min_session_length=5, max_session_length=20):
