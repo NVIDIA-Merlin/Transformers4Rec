@@ -19,11 +19,11 @@ from abc import abstractmethod
 
 import torch
 import torchmetrics as tm
+from torchmetrics.utilities.data import dim_zero_cat
 
 from merlin_standard_lib import Registry
 
 from .utils import torch_utils
-from torchmetrics.utilities.data import dim_zero_cat
 
 ranking_metrics_registry = Registry.class_registry("torch.ranking_metrics")
 

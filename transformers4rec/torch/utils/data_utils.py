@@ -226,7 +226,7 @@ if dependencies.is_gpu_dataloader_available():
 
             self.set_dataset(buffer_size, engine, reader_kwargs)
 
-            if ((global_rank is not None) and (self.dataset.npartitions < global_size)):
+            if (global_rank is not None) and (self.dataset.npartitions < global_size):
                 self.dataset = self.dataset.repartition(npartitions=global_size)
 
             loader = DataLoader(
