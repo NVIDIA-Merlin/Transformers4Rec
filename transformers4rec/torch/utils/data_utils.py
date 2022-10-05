@@ -227,6 +227,12 @@ if dependencies.is_gpu_dataloader_available():
             self.set_dataset(buffer_size, engine, reader_kwargs)
 
             if (global_rank is not None) and (self.dataset.npartitions < global_size):
+                print(
+                    "UserWarning: User is advised to repartition the parquet file before training "
+                    "so npartitions>=global_size. Cudf or pandas can be used for repartitioning "
+                    "e.g.: df.to_parquet('file.parquet', row_group_size=N_ROWS/NPARTITIONS, engine"
+                    "='pyarrow') as npartitions=nr_rows/row_group_size."
+                )
                 self.dataset = self.dataset.repartition(npartitions=global_size)
 
             loader = DataLoader(
