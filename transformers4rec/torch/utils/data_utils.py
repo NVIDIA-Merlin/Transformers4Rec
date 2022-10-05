@@ -22,7 +22,6 @@ from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
 from merlin_standard_lib import Registry, Schema, Tag
-import merlin.core
 
 from ...utils import dependencies
 
@@ -227,8 +226,8 @@ if dependencies.is_gpu_dataloader_available():
 
             self.set_dataset(buffer_size, engine, reader_kwargs)
 
-            if(global_rank!=None and self.dataset.npartitions<global_size):
-                self.dataset=self.dataset.repartition(npartitions=global_size)
+            if ((global_rank is not None) and (self.dataset.npartitions < global_size)):
+                self.dataset = self.dataset.repartition(npartitions=global_size)
 
             loader = DataLoader(
                 self.dataset,
