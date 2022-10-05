@@ -176,16 +176,19 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         targets: Union[torch.Tensor, TabularData],
         compute_metrics: bool = True,
         training: bool = False,
+        ignore_masking: bool = False,
         **kwargs,
     ) -> torch.Tensor:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
-        predictions = self(inputs, training=training)
+        predictions = self(inputs, training=training, ignore_masking=ignore_masking)
         loss = self.loss(predictions, targets)
 
         if compute_metrics:
-            self.calculate_metrics(predictions, targets, mode="train", forward=False)
+            self.calculate_metrics(
+                predictions, targets, mode="train", ignore_masking=ignore_masking, forward=False
+            )
 
             return loss
 
@@ -197,6 +200,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
         forward: bool = True,
+        ignore_masking: bool = False,
         **kwargs,
     ) -> Dict[str, torch.Tensor]:
         if isinstance(targets, dict) and self.target_name:
@@ -204,7 +208,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
         outputs = {}
         if forward:
-            predictions = self(predictions)
+            predictions = self(predictions, ignore_masking=ignore_masking)
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -381,7 +385,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         training: bool = True,
         call_body: bool = False,
         always_output_dict: bool = False,
-        ignore_masking: bool = False,
+        ignore_masking: bool = True,
         **kwargs,
     ) -> Union[torch.Tensor, TabularData]:
         outputs = {}
@@ -404,16 +408,21 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         training: bool = True,
         compute_metrics: bool = True,
         call_body: bool = False,
+        ignore_masking: bool = True,
         **kwargs,
     ) -> torch.Tensor:
         losses = []
 
         if call_body:
-            body_outputs = self.body(body_outputs, training=training)
+            body_outputs = self.body(body_outputs, training=training, ignore_masking=ignore_masking)
 
         for name, task in self.prediction_task_dict.items():
             loss = task.compute_loss(
-                body_outputs, targets, compute_metrics=compute_metrics, **kwargs
+                body_outputs,
+                targets,
+                compute_metrics=compute_metrics,
+                ignore_masking=ignore_masking,
+                **kwargs,
             )
             losses.append(loss * self._task_weights[name])
 
@@ -428,16 +437,24 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         mode: str = "val",
         forward=True,
         call_body=False,
+        ignore_masking=True,
         **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
 
         if call_body:
-            body_outputs = self.body(body_outputs, training=False)
+            body_outputs = self.body(body_outputs, training=False, ignore_masking=ignore_masking)
 
         for name, task in self.prediction_task_dict.items():
             metrics.update(
-                task.calculate_metrics(body_outputs, targets, mode=mode, forward=forward, **kwargs)
+                task.calculate_metrics(
+                    body_outputs,
+                    targets,
+                    mode=mode,
+                    forward=forward,
+                    ignore_masking=ignore_masking,
+                    **kwargs,
+                )
             )
 
         return _output_metrics(metrics)
