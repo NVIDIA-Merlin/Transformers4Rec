@@ -51,4 +51,4 @@ We trained and evaluated a number of models using single GPU, `DataParallel` and
 
 <img src="_images/DP_DDP_perf.png" alt="Performance comparison of diffrerent training modes" style="width:800px;display:block;margin-left:auto;margin-right:auto;"/><br>
 
-These experiments used a node with 2 <i>Tesla V100-SXM2-32GB-LS</i> GPUs.
+These experiments used a machine with 2 <i>Tesla V100-SXM2-32GB-LS</i> GPUs.
