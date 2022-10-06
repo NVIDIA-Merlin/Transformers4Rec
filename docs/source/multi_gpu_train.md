@@ -31,7 +31,7 @@ This is the suggested and more efficient method. When a model is trained using t
 - On each step each GPU will consume the separate mini-batch produced for it by the dataloader
 - On the backward pass the gradient from GPUs will be averaged for accumulation
 
-To learn more about `DistibutedDataParallel` see the [PyTorch Documentation](https://pytorch.org/docs/master/generated/torch.nn.parallel.DistributedDataParallel.html#torch.nn.parallel.DistributedDataParallel).
+To learn more about `DistributedDataParallel` see the [PyTorch Documentation](https://pytorch.org/docs/master/generated/torch.nn.parallel.DistributedDataParallel.html#torch.nn.parallel.DistributedDataParallel).
 
 To train using the `DistributedDataParallel` mode user should use PyTorch distributed launcher to run the script:
 
