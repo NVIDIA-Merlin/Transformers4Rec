@@ -8,7 +8,7 @@ The `Trainer` class supports both `DataParallel` and `DistributedDataParallel` b
 When the `DataParallel` mode is used, the following happens for each training step:
 - GPU0 reads the full batch then evenly distributes it between available GPUs
 - The latest model will be copied to all GPUs
-- A Python thread will be assigned to running `forward()` on each GPU and thepartial loss will be sent to GPU0 to compute total loss
+- A Python thread is created for each GPU to run `forward()` step and the partial loss will be sent to GPU-0 to compute the global loss
 - Computed total loss will be scattered between GPUs and threads will run `backward()`
 - Gradients from each GPU will be sent to GPU0 and their average will be computed
 
