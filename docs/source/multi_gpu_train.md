@@ -39,7 +39,7 @@ To train using the `DistributedDataParallel` mode user should use PyTorch distri
 
 To have one process per GPU replace `N_GPU` with the number of GPUs you want to use and make sure `CUDA_VISIBLE_DEVICES` is set accordingly.
 
-<b>Note:</b> When using `DistributedDataParallel` number of partitions of the dataset must be equal or larger than number of processes. If a parquet file with small number of partitions is used, try repartitioning it using cudf or pandas before training. The dataloader checks `dataloader.dataset.npartitions` and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:
+<b>Note:</b> When using `DistributedDataParallel`, our data loader splits data between the GPUs based on dataset partitions. For that reason, the number of partitions of the dataset must be equal or larger than number of processes. If the parquet file has a small number of row groups (partitions) is used, try repartitioning and saving it again with using cudf or pandas before training. The dataloader checks `dataloader.dataset.npartitions` and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:
 
 ```df.to_parquet("filename.parquet", row_group_size=10000, engine="pyarrow"```
 
