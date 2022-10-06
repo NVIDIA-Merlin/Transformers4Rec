@@ -49,6 +49,6 @@ Choose `row_group_size` such that `nr_rows/row_group_size>=n_proc` because `n_ro
 
 We trained and evaluated a number of models using single GPU, `DataParallel` and `DistributedDataParallel` training mode and the results are shown in the table below. To reproduce, use the models included in [ci/test_integration.sh](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/ci/test_integration.sh).
 
-![Alt text](_images/DP_DDP.png?raw=true "Performance comparison of diffrerent training modes")
+<img src="_images/DP_DDP_perf.png" alt="Performance comparison of diffrerent training modes" style="width:800px;display:block;margin-left:auto;margin-right:auto;"/><br>
 
 These experiments used a node with 2 <i>Tesla V100-SXM2-32GB-LS</i> GPUs.
