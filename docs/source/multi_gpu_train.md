@@ -9,7 +9,7 @@ When the `DataParallel` mode is used, the following happens for each training st
 - GPU-0 reads a batch, that is evenly distributed among the available GPUs
 - The latest model will be copied to all GPUs
 - A Python thread is created for each GPU to run `forward()` step and the partial loss will be sent to GPU-0 to compute the global loss
-- Computed total loss will be scattered between GPUs and threads will run `backward()`
+- Computed global loss is broadcast to all GPUs threads run `backward()`
 - Gradients from each GPU will be sent to GPU0 and their average will be computed
 
 As we see, parallelism in `DataParallel` mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so `DataParallel` is not the preferred method. Users are advised to use `DistributedDataParallel` instead as it uses multi-processing instead of multi-threading and is better maintained. Also, some models types such as `transfoxl` can not be used with `DataParallel`. To learn more about `DataParalle` refer to [PyTorch documentations](https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html).
