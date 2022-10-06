@@ -5,7 +5,7 @@ To train models faster, users can use Data-Parallel training when using `transfo
 The `Trainer` class supports both `DataParallel` and `DistributedDataParallel` built-in features of PyTorch. in this documentation we will explain how each of these built-in features work and how they can be used.
 
 ### DataParallel
-When the DataParallel mode is used for training on each training step:
+When the `DataParallel` mode is used, the following happens for each training step:
 - GPU0 reads the full batch then evenly distributes it between available GPUs
 - The latest model will be copied to all GPUs
 - A Python thread will be assigned to running `forward()` on each GPU and thepartial loss will be sent to GPU0 to compute total loss
