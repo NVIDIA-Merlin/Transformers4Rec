@@ -304,6 +304,15 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">(</span><span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">)</span>
 
+            <span class="k">if</span> <span class="p">(</span><span class="n">global_rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span> <span class="o">&lt;</span> <span class="n">global_size</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;UserWarning: User is advised to repartition the parquet file before training &quot;</span>
+                    <span class="s2">&quot;so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning &quot;</span>
+                    <span class="s2">&quot;e.g.: df.to_parquet(&#39;file.parquet&#39;, row_group_size=N_ROWS/NPARTITIONS, engine&quot;</span>
+                    <span class="s2">&quot;=&#39;pyarrow&#39;) as npartitions=nr_rows/row_group_size.&quot;</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">npartitions</span><span class="o">=</span><span class="n">global_size</span><span class="p">)</span>
+
             <span class="n">loader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
                 <span class="n">cats</span><span class="p">,</span>
