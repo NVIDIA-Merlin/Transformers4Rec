@@ -2,17 +2,17 @@
 
 To train models faster, users can use Data-Parallel training when using `transformers4rec.Trainer` class for training. When using the data-parallel approach for multi-GPU training, the training data will be distributed between the GPUs to speedup training and support larger batch sizes within each step of training.
 
-The `Trainer` class supports both `DataParallel` and `DistributedDataParallel` built-in features of PyTorch. in this documentation we will explain how each of these built-in features work and how they can be used.
+The `Trainer` class supports both `DataParallel` and `DistributedDataParallel` built-in features of PyTorch. in this documentation we explain how each of these Data Parallel training can be used in Transformers4Rec.
 
 ### DataParallel
 When the `DataParallel` mode is used, the following happens for each training step:
-- GPU0 reads the full batch then evenly distributes it between available GPUs
+- GPU-0 reads a batch, that is evenly distributed among the available GPUs
 - The latest model will be copied to all GPUs
 - A Python thread is created for each GPU to run `forward()` step and the partial loss will be sent to GPU-0 to compute the global loss
-- Computed total loss will be scattered between GPUs and threads will run `backward()`
-- Gradients from each GPU will be sent to GPU0 and their average will be computed
+- Computed global loss is broadcast to all GPUs threads run `backward()`
+- Gradients from each GPU are sent to GPU-0 and their average is computed
 
-As we see, parallelism in `DataParallel` mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so `DataParallel` is not the preferred method. Users are advised to use `DistributedDataParallel` instead as it uses multi-processing instead of multi-threading and is better maintained. Also, some models types such as `transfoxl` can not be used with `DataParallel`. To learn more about `DataParalle` refer to [PyTorch documentations](https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html).
+As we see, parallelism in `DataParallel` mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so `DataParallel` is not the preferred method. Users are advised to use `DistributedDataParallel` instead as it uses multi-processing instead of multi-threading and is better maintained. Also, some models types such as `transfoxl` can not be used with `DataParallel`. To learn more about `DataParallel` refer to [PyTorch documentation](https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html).
 
 To use the `DataParallel` mode training user just needs to make sure `CUDA_VISIBLE_DEVICES` is set. For example when 2 GPUs are available:
 - Add ```os.environ["CUDA_VISIBLE_DEVICES"]="0,1"``` to the script 
@@ -27,7 +27,7 @@ Do not try wrapping the model with ```torch.nn.DataParallel``` yourself because 
 ### DistributedDataParallel
 
 This is the suggested and more efficient method. When a model is trained using the `DistributedDataParallel` mode:
-- A eparate process will be assigned to each GPU in the beginning and GPU0 will replicate the model on each GPU
+- A separate process will be assigned to each GPU in the beginning and GPU-0 will replicate the model on each GPU
 - On each step each GPU receives a different mini-batch produced by the dataloader
 - On the backward pass the gradient from GPUs will be averaged for accumulation
 

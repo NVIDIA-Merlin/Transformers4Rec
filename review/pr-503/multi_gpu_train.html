@@ -77,18 +77,18 @@
   <div class="section" id="multi-gpu-data-parallel-training-using-the-trainer-class">
 <h1>Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class<a class="headerlink" href="#multi-gpu-data-parallel-training-using-the-trainer-class" title="Permalink to this headline"></a></h1>
 <p>To train models faster, users can use Data-Parallel training when using <code class="docutils literal notranslate"><span class="pre">transformers4rec.Trainer</span></code> class for training. When using the data-parallel approach for multi-GPU training, the training data will be distributed between the GPUs to speedup training and support larger batch sizes within each step of training.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class supports both <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> and <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> built-in features of PyTorch. in this documentation we will explain how each of these built-in features work and how they can be used.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class supports both <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> and <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> built-in features of PyTorch. in this documentation we explain how each of these Data Parallel training can be used in Transformers4Rec.</p>
 <div class="section" id="dataparallel">
 <h2>DataParallel<a class="headerlink" href="#dataparallel" title="Permalink to this headline"></a></h2>
 <p>When the <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode is used, the following happens for each training step:</p>
 <ul class="simple">
-<li><p>GPU0 reads the full batch then evenly distributes it between available GPUs</p></li>
+<li><p>GPU-0 reads a batch, that is evenly distributed among the available GPUs</p></li>
 <li><p>The latest model will be copied to all GPUs</p></li>
 <li><p>A Python thread is created for each GPU to run <code class="docutils literal notranslate"><span class="pre">forward()</span></code> step and the partial loss will be sent to GPU-0 to compute the global loss</p></li>
-<li><p>Computed total loss will be scattered between GPUs and threads will run <code class="docutils literal notranslate"><span class="pre">backward()</span></code></p></li>
-<li><p>Gradients from each GPU will be sent to GPU0 and their average will be computed</p></li>
+<li><p>Computed global loss is broadcast to all GPUs threads run <code class="docutils literal notranslate"><span class="pre">backward()</span></code></p></li>
+<li><p>Gradients from each GPU are sent to GPU-0 and their average is computed</p></li>
 </ul>
-<p>As we see, parallelism in <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> is not the preferred method. Users are advised to use <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> instead as it uses multi-processing instead of multi-threading and is better maintained. Also, some models types such as <code class="docutils literal notranslate"><span class="pre">transfoxl</span></code> can not be used with <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code>. To learn more about <code class="docutils literal notranslate"><span class="pre">DataParalle</span></code> refer to <a class="reference external" href="https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html">PyTorch documentations</a>.</p>
+<p>As we see, parallelism in <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> is not the preferred method. Users are advised to use <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> instead as it uses multi-processing instead of multi-threading and is better maintained. Also, some models types such as <code class="docutils literal notranslate"><span class="pre">transfoxl</span></code> can not be used with <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code>. To learn more about <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> refer to <a class="reference external" href="https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html">PyTorch documentation</a>.</p>
 <p>To use the <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode training user just needs to make sure <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> is set. For example when 2 GPUs are available:</p>
 <ul class="simple">
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">os.environ[&quot;CUDA_VISIBLE_DEVICES&quot;]=&quot;0,1&quot;</span></code> to the script</p></li>
@@ -104,7 +104,7 @@
 <h2>DistributedDataParallel<a class="headerlink" href="#distributeddataparallel" title="Permalink to this headline"></a></h2>
 <p>This is the suggested and more efficient method. When a model is trained using the <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> mode:</p>
 <ul class="simple">
-<li><p>A eparate process will be assigned to each GPU in the beginning and GPU0 will replicate the model on each GPU</p></li>
+<li><p>A separate process will be assigned to each GPU in the beginning and GPU-0 will replicate the model on each GPU</p></li>
 <li><p>On each step each GPU receives a different mini-batch produced by the dataloader</p></li>
 <li><p>On the backward pass the gradient from GPUs will be averaged for accumulation</p></li>
 </ul>
