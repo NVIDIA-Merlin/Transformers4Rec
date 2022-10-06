@@ -144,6 +144,15 @@ class Trainer(BaseTrainer):
             return self.train_dataloader
 
         assert self.schema is not None, "schema is required to generate Train Dataloader"
+
+        # Set global_rank and global_size if DDP is used
+        if self.args.local_rank != -1:
+            local_rank = self.args.local_rank
+            global_size = self.args.world_size
+        else:
+            local_rank = None
+            global_size = None
+
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
             self.train_dataset_or_path,
@@ -152,6 +161,8 @@ class Trainer(BaseTrainer):
             drop_last=self.args.dataloader_drop_last,
             shuffle=True,
             shuffle_buffer_size=self.args.shuffle_buffer_size,
+            global_rank=local_rank,
+            global_size=global_size,
         )
 
     def get_eval_dataloader(self, eval_dataset=None):
