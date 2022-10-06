@@ -222,6 +222,15 @@
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dataloader</span>
 
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;schema is required to generate Train Dataloader&quot;</span>
+
+        <span class="c1"># Set global_rank and global_size if DDP is used</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">local_rank</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">local_rank</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">local_rank</span>
+            <span class="n">global_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">world_size</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">local_rank</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">global_size</span> <span class="o">=</span> <span class="kc">None</span>
+
         <span class="k">return</span> <span class="n">T4RecDataLoader</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">data_loader_engine</span><span class="p">)</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">train_dataset_or_path</span><span class="p">,</span>
@@ -230,6 +239,8 @@
             <span class="n">drop_last</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">dataloader_drop_last</span><span class="p">,</span>
             <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">shuffle_buffer_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">shuffle_buffer_size</span><span class="p">,</span>
+            <span class="n">global_rank</span><span class="o">=</span><span class="n">local_rank</span><span class="p">,</span>
+            <span class="n">global_size</span><span class="o">=</span><span class="n">global_size</span><span class="p">,</span>
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.get_eval_dataloader"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.get_eval_dataloader">[docs]</a>    <span class="k">def</span> <span class="nf">get_eval_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

@@ -1,6 +1,6 @@
 ## Multi-GPU data-parallel training using the `Trainer` class
 
-To train models faster, users can use Data-Parallel training when using `transformers4rec.Trainer` class for training. When using the data-parallel approach for multi-GPU training, the training data will be distributed between workers to speedup training and support larger batch sizes within each step of training.
+To train models faster, users can use Data-Parallel training when using `transformers4rec.Trainer` class for training. When using the data-parallel approach for multi-GPU training, the training data will be distributed between the GPUs to speedup training and support larger batch sizes within each step of training.
 
 The `Trainer` class supports both `DataParallel` and `DistributedDataParallel` built-in features of PyTorch. in this documentation we will explain how each of these built-in features work and how they can be used.
 
