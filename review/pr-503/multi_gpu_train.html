@@ -21,7 +21,9 @@
         <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Transformers4Rec Example Notebooks" href="examples/index.html" />
+    <link rel="prev" title="End-to-end pipeline with NVIDIA Merlin" href="pipeline.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -40,12 +42,13 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption"><span class="caption-text">Contents</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
 <li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
@@ -85,10 +88,10 @@
 <li><p>GPU-0 reads a batch, that is evenly distributed among the available GPUs</p></li>
 <li><p>The latest model will be copied to all GPUs</p></li>
 <li><p>A Python thread is created for each GPU to run <code class="docutils literal notranslate"><span class="pre">forward()</span></code> step and the partial loss will be sent to GPU-0 to compute the global loss</p></li>
-<li><p>Computed total loss will be scattered between GPUs and threads will run <code class="docutils literal notranslate"><span class="pre">backward()</span></code></p></li>
-<li><p>Gradients from each GPU will be sent to GPU0 and their average will be computed</p></li>
+<li><p>Computed global loss is broadcast to all GPUs threads run <code class="docutils literal notranslate"><span class="pre">backward()</span></code></p></li>
+<li><p>Gradients from each GPU are sent to GPU-0 and their average is computed</p></li>
 </ul>
-<p>As we see, parallelism in <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> is not the preferred method. Users are advised to use <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> instead as it uses multi-processing instead of multi-threading and is better maintained. Also, some models types such as <code class="docutils literal notranslate"><span class="pre">transfoxl</span></code> can not be used with <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code>. To learn more about <code class="docutils literal notranslate"><span class="pre">DataParalle</span></code> refer to <a class="reference external" href="https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html">PyTorch documentations</a>.</p>
+<p>As we see, parallelism in <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> is not the preferred method. Users are advised to use <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> instead as it uses multi-processing instead of multi-threading and is better maintained. Also, some models types such as <code class="docutils literal notranslate"><span class="pre">transfoxl</span></code> can not be used with <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code>. To learn more about <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> refer to <a class="reference external" href="https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html">PyTorch documentation</a>.</p>
 <p>To use the <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode training user just needs to make sure <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> is set. For example when 2 GPUs are available:</p>
 <ul class="simple">
 <li><p>Add <code class="docutils literal notranslate"><span class="pre">os.environ[&quot;CUDA_VISIBLE_DEVICES&quot;]=&quot;0,1&quot;</span></code> to the script</p></li>
@@ -127,7 +130,10 @@
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pipeline.html" class="btn btn-neutral float-left" title="End-to-end pipeline with NVIDIA Merlin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples/index.html" class="btn btn-neutral float-right" title="Transformers4Rec Example Notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
