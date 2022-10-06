@@ -19,6 +19,7 @@ from abc import abstractmethod
 
 import torch
 import torchmetrics as tm
+from torchmetrics.utilities.data import dim_zero_cat
 
 from merlin_standard_lib import Registry
 
@@ -55,7 +56,7 @@ class RankingMetric(tm.Metric):
 
     def compute(self):
         # Computing the mean of the batch metrics (for each cut-off at topk)
-        return torch.cat(self.metric_mean, axis=0).mean(0)
+        return dim_zero_cat(self.metric_mean).mean(0)
 
     @abstractmethod
     def _metric(self, ks: torch.Tensor, preds: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
