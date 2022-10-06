@@ -28,7 +28,7 @@ Do not try wrapping the model with ```torch.nn.DataParallel``` yourself because 
 
 This is the suggested and more efficient method. When a model is trained using the `DistributedDataParallel` mode:
 - A eparate process will be assigned to each GPU in the beginning and GPU0 will replicate the model on each GPU
-- On each step each GPU will consume the separate mini-batch produced for it by the dataloader
+- On each step each GPU receives a different mini-batch produced by the dataloader
 - On the backward pass the gradient from GPUs will be averaged for accumulation
 
 To learn more about `DistributedDataParallel` see the [PyTorch Documentation](https://pytorch.org/docs/master/generated/torch.nn.parallel.DistributedDataParallel.html#torch.nn.parallel.DistributedDataParallel).
