@@ -214,7 +214,7 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, ignore_masking=False, **kwargs):
+    def forward(self, inputs: torch.Tensor, ignore_masking=True, **kwargs):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -274,7 +274,7 @@ class NextItemPredictionTask(PredictionTask):
 
         outputs = {}
         if forward:
-            predictions = self(predictions)
+            predictions = self(predictions, ignore_masking=False)
             if self.hf_format:
                 targets = predictions["labels"]
                 predictions = predictions["predictions"]
