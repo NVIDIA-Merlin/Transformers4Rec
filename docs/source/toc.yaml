@@ -8,6 +8,7 @@ subtrees:
       - file: model_definition
       - file: training_eval
       - file: pipeline
+      - file: multi_gpu_train
       - file: examples/index
         title: Example Notebooks
         subtrees:
