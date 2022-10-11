@@ -139,7 +139,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         # pylint: disable=arguments-out-of-order
         return right_shift_block(other, self)
 
-    def forward(self, input, training=True, ignore_masking=False, **kwargs):
+    def forward(self, input, training=True, ignore_masking=True, **kwargs):
         # from transformers4rec.torch import TabularSequenceFeatures
 
         for i, module in enumerate(self):

@@ -19,12 +19,12 @@ def test_item_prediction_with_label_smoothing_ce_loss(
         body, tr.NextItemPredictionTask(weight_tying=True, loss=custom_loss), inputs=input_module
     )
 
-    body_outputs = body(torch_yoochoose_like)
+    body_outputs = body(torch_yoochoose_like, ignore_masking=False)
 
     trg_flat = input_module.masking.masked_targets.flatten()
     non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
-    predictions = head(body_outputs)
+    predictions = head(body_outputs, ignore_masking=False)
 
     loss = head.prediction_task_dict["next-item"].compute_loss(
         inputs=body_outputs,
