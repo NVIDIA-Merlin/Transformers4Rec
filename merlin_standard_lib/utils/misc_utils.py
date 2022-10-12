@@ -196,7 +196,7 @@ def validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_k
         Additional arguments of the specified reader.
     """
     try:
-        from nvtabular.io import Dataset
+        from merlin.io.dataset import Dataset
     except ImportError:
         raise ValueError("NVTabular is necessary for this function, please install: " "nvtabular.")
 
