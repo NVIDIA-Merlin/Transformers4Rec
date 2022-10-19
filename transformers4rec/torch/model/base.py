@@ -141,7 +141,10 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
                 metric.to(device)
         self.built = True
 
-    def forward(self, inputs, **kwargs):
+    def forward(self, inputs, targets=None, training=False, **kwargs):
+        if isinstance(targets, dict) and self.target_name:
+            targets = targets[self.target_name]
+
         x = inputs
 
         if len(x.size()) == 3 and self.summary_type:
@@ -152,6 +155,12 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
         if self.pre:
             x = self.pre(x)
+
+        if training:
+            # add support of computing the loss inside the forward
+            # and return a dictionary as expected by HF to support Trainer class too
+            loss = self.loss(inputs, targets)
+            return {"loss": loss, "labels": targets, "predictions": x}
 
         return x
 
@@ -181,8 +190,8 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     ) -> torch.Tensor:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
-
-        predictions = self(inputs, training=training, ignore_masking=ignore_masking)
+        # make sure here we get only the prediction scores from the forward method
+        predictions = self(inputs, training=False, ignore_masking=ignore_masking)
         loss = self.loss(predictions, targets)
 
         if compute_metrics:
@@ -208,7 +217,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
         outputs = {}
         if forward:
-            predictions = self(predictions, ignore_masking=ignore_masking)
+            predictions = self(predictions, ignore_masking=ignore_masking, training=False)
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -382,22 +391,39 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(
         self,
         body_outputs: Union[torch.Tensor, TabularData],
-        training: bool = True,
+        targets: Union[torch.Tensor, TabularData] = None,
+        training: bool = False,
         call_body: bool = False,
         always_output_dict: bool = False,
         ignore_masking: bool = True,
         **kwargs,
     ) -> Union[torch.Tensor, TabularData]:
         outputs = {}
-
+        # The head should support returning a dictionary with the loss,
+        # predictions and labels during training
         if call_body:
             body_outputs = self.body(body_outputs, training=training, ignore_masking=ignore_masking)
 
         for name, task in self.prediction_task_dict.items():
-            outputs[name] = task(body_outputs, ignore_masking=ignore_masking, **kwargs)
+            outputs[name] = task(
+                body_outputs, targets, ignore_masking=ignore_masking, training=training, **kwargs
+            )
+
+        # The head should support returning a dictionary with the loss,
+        # predictions and labels during training
+        if training:
+            losses = []
+            for name, task in self.prediction_task_dict.items():
+                loss = outputs[name]["loss"]
+                losses.append(loss * self._task_weights[name])
+
+            loss_tensor = torch.stack(losses)
+            loss = getattr(loss_tensor, self.loss_reduction)()
+
+            return {"loss": loss, "labels": targets, "predictions": outputs}
 
         if len(outputs) == 1 and not always_output_dict:
-            return outputs[list(outputs.keys())[0]]
+            outputs = outputs[list(outputs.keys())[0]]
 
         return outputs
 
@@ -405,7 +431,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         self,
         body_outputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
-        training: bool = True,
+        training: bool = False,
         compute_metrics: bool = True,
         call_body: bool = False,
         ignore_masking: bool = True,
@@ -422,6 +448,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
                 targets,
                 compute_metrics=compute_metrics,
                 ignore_masking=ignore_masking,
+                training=training,
                 **kwargs,
             )
             losses.append(loss * self._task_weights[name])
@@ -534,14 +561,54 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_reduction = head_reduction
         self.optimizer = optimizer
 
-    def forward(self, inputs: TensorOrTabularData, training=True, **kwargs):
+    def forward(
+        self,
+        inputs: TensorOrTabularData,
+        targets: TensorOrTabularData = None,
+        training=False,
+        **kwargs,
+    ):
         # TODO: Optimize this
+
+        # The model should support returning a dictionary with the loss,
+        # predictions and labels during training
+        if training:
+            head_outputs = []
+            for i, head in enumerate(self.heads):
+                head_outputs.append(
+                    head(
+                        inputs,
+                        targets,
+                        call_body=True,
+                        training=training,
+                        always_output_dict=True,
+                        **kwargs,
+                    )
+                )
+
+            losses = []
+            predictions = {}
+            for i, head in enumerate(self.heads):
+                loss = head_outputs[i]["loss"]
+                losses.append(loss * self.head_weights[i])
+                predictions.update(head_outputs[i]["predictions"])
+
+            loss_tensor = torch.stack(losses)
+            loss = getattr(loss_tensor, self.loss_reduction)()
+
+            return {"loss": loss, "labels": targets, "predictions": predictions}
+
         outputs = {}
         for head in self.heads:
             outputs.update(
-                head(inputs, call_body=True, training=training, always_output_dict=True, **kwargs)
+                head(
+                    inputs,
+                    call_body=True,
+                    training=False,
+                    always_output_dict=True,
+                    **kwargs,
+                )
             )
-
         if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]
 
@@ -639,9 +706,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 for batch_idx, (x, y) in batch_iterator:
                     if amp:
                         with torch.cuda.amp.autocast():
-                            loss = self.compute_loss(x, y)
+                            loss = self(x, y, training=True)["loss"]
                     else:
-                        loss = self.compute_loss(x, y)
+                        loss = self(x, y, training=True)["loss"]
 
                     losses.append(float(loss))
 
