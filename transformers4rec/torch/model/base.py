@@ -159,7 +159,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         if training:
             # add support of computing the loss inside the forward
             # and return a dictionary as expected by HF to support Trainer class too
-            loss = self.loss(inputs, targets)
+            loss = self.loss(x, targets)
             return {"loss": loss, "labels": targets, "predictions": x}
 
         return x
@@ -594,7 +594,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 predictions.update(head_outputs[i]["predictions"])
 
             loss_tensor = torch.stack(losses)
-            loss = getattr(loss_tensor, self.loss_reduction)()
+            loss = getattr(loss_tensor, self.head_reduction)()
 
             return {"loss": loss, "labels": targets, "predictions": predictions}
 
