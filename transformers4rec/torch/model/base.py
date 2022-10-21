@@ -768,10 +768,12 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                         "value_count": {"min": max_sequence_length, "max": max_sequence_length},
                         "int_domain": int_domain,
                     }
+                    is_list = True
                 else:
                     properties = {"value_count": {"min": 1, "max": 1}, "int_domain": int_domain}
+                    is_list = False
                 col_schema = ColumnSchema(
-                    name, dtype=np.float32, properties=properties, is_list=False, is_ragged=False
+                    name, dtype=np.float32, properties=properties, is_list=is_list, is_ragged=False
                 )
                 output_cols.append(col_schema)
 
