@@ -60,6 +60,7 @@ class BinaryClassificationTask(PredictionTask):
         metrics=DEFAULT_METRICS,
         summary_type="first",
     ):
+        self.target_dim = 1
         super().__init__(
             loss=loss,
             metrics=metrics,
@@ -96,6 +97,7 @@ class RegressionTask(PredictionTask):
         metrics=DEFAULT_METRICS,
         summary_type="first",
     ):
+        self.target_dim = 1
         super().__init__(
             loss=loss,
             metrics=metrics,
@@ -214,7 +216,10 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, ignore_masking=True, **kwargs):
+    def forward(self, inputs: torch.Tensor, ignore_masking=True, hf_format=None, **kwargs):
+        if hf_format is not None:
+            self.hf_format = hf_format
+
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()

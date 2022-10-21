@@ -621,11 +621,6 @@ class Trainer(BaseTrainer):
         """
         import os
 
-        try:
-            import cloudpickle
-        except ImportError:
-            cloudpickle = None
-
         logger.info("Saving model...")
         output_dir = os.path.join(
             self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.state.global_step}"
@@ -636,11 +631,7 @@ class Trainer(BaseTrainer):
         # save the serialized model
         if save_model_class:
             # TODO : fix serialization of DatasetSchema object
-            if cloudpickle is None:
-                raise ValueError("cloudpickle is required to save model class")
-
-            with open(os.path.join(output_dir, "model_class.pkl"), "wb") as out:
-                cloudpickle.dump(self.model.wrapper_module, out)
+            self.model.wrapper_module.save(output_dir)
 
     def load_model_trainer_states_from_checkpoint(self, checkpoint_path, model=None):
         """
@@ -664,7 +655,9 @@ class Trainer(BaseTrainer):
             except ImportError:
                 raise ImportError("cloudpickle is required to load model class")
             logger.info("Loading model class")
-            model = cloudpickle.load(open(os.path.join(checkpoint_path, "model_class.pkl"), "rb"))
+            model = cloudpickle.load(
+                open(os.path.join(checkpoint_path, "t4rec_model_class.pkl"), "rb")
+            )
 
         self.model = HFWrapper(model)
         logger.info("Loading weights of previously trained model")
