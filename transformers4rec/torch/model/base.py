@@ -15,6 +15,8 @@
 #
 import copy
 import inspect
+import os
+import pathlib
 from collections import defaultdict
 from types import SimpleNamespace
 from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
@@ -22,6 +24,8 @@ from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
 import numpy as np
 import torch
 import torchmetrics as tm
+from merlin.schema import ColumnSchema
+from merlin.schema import Schema as Core_Schema
 from tqdm import tqdm
 from transformers.modeling_utils import SequenceSummary
 
@@ -516,6 +520,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         head_reduction: str = "mean",
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name=None,
+        hf_format=True,
     ):
         """
         #TODO
@@ -535,6 +540,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_weights = head_weights or [1.0] * len(head)
         self.head_reduction = head_reduction
         self.optimizer = optimizer
+        self.hf_format = hf_format
 
     def forward(self, inputs: TensorOrTabularData, training=True, **kwargs):
         # TODO: Optimize this
@@ -545,7 +551,17 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             )
 
         if len(outputs) == 1:
-            return outputs[list(outputs.keys())[0]]
+            outputs = outputs[list(outputs.keys())[0]]
+            if isinstance(outputs, dict):
+                # next-item prediction task with `hf_format = True``  returns a dictionary
+                # with three tensors: loss, predictions, labels. This needed for training
+                # and evaluation using the Trainer class.
+                # At inference, we just need the predictions tensors.
+                # TODO: We are simplifying the logic around `hf_format` in the multi-gpu
+                # support work.
+                if not training and not self.hf_format:
+                    return outputs["predictions"]
+            return outputs
 
         return outputs
 
@@ -679,6 +695,135 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             return self.name
 
         return super(Model, self)._get_name()
+
+    def input_schema(self, max_sequence_length=None):
+        # return the input schema given by the model
+        # loop over the heads to get input schemas
+        schemas = []
+        for head in self.heads:
+            schemas.append(head.body.inputs.schema)
+        model_schema = sum(schemas, Schema())
+
+        # TODO: rework T4R to use Merlin Schemas.
+        # In the meantime, we convert model_schema to merlin core schema
+        core_schema = Core_Schema()
+        for column in model_schema:
+            name = column.name
+
+            dtype = {0: np.float32, 2: np.int64, 3: np.float32}[column.type]
+            tags = column.tags
+            is_list = column.value_count.max > 0
+            # T4Rec is only supporting padded dense input tensors with a fixed max_sequence_length
+            if is_list and not max_sequence_length:
+                raise ValueError(
+                    f"You should specify the `max_sequence_length` of your list input {name}"
+                )
+            value_count = (
+                {"min": max_sequence_length, "max": max_sequence_length}
+                if is_list
+                else {"min": 1, "max": 1}
+            )
+            is_ragged = is_list and value_count.get("min", 0) != value_count.get("max", 0)
+            int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
+            properties = {"value_count": value_count, "int_domain": int_domain}
+            col_schema = ColumnSchema(
+                name,
+                dtype=dtype,
+                tags=tags,
+                properties=properties,
+                is_list=is_list,
+                is_ragged=is_ragged,
+            )
+            core_schema[name] = col_schema
+        return core_schema
+
+    def output_schema(self, max_sequence_length: int = None):
+        """Method to return the output schema describing the output
+        tensors return by the model.
+
+        Parameters
+        ----------
+        max_sequence_length : int, optional
+            by default None
+
+        """
+        from .prediction_task import BinaryClassificationTask, RegressionTask
+
+        # if the model has one head with one task, the output is a tensor
+        # if multiple heads and/or multiple prediction task, the output is a dictionary
+        output_cols = []
+        for head in self.heads:
+            for name, task in head.prediction_task_dict.items():
+                target_dim = task.target_dim
+                int_domain = {"min": target_dim, "max": target_dim}
+                if (
+                    isinstance(task, (BinaryClassificationTask, RegressionTask))
+                    and not task.summary_type
+                ):
+                    # in this case the prediction is computed for each item in the input sequence
+                    if not max_sequence_length:
+                        raise ValueError(
+                            "You should specify the `max_sequence_length` for "
+                            "item-level binary or regression tasks"
+                        )
+                    properties = {
+                        "value_count": {"min": max_sequence_length, "max": max_sequence_length},
+                        "int_domain": int_domain,
+                    }
+                else:
+                    properties = {"value_count": {"min": 1, "max": 1}, "int_domain": int_domain}
+                col_schema = ColumnSchema(
+                    name, dtype=np.float32, properties=properties, is_list=False, is_ragged=False
+                )
+                output_cols.append(col_schema)
+
+        return Core_Schema(output_cols)
+
+    def save(self, path: Union[str, os.PathLike], model_name="t4rec_model_class"):
+        """Saves the model to f"{export_path}/{model_name}.pkl" using `cloudpickle`
+
+        Parameters
+        ----------
+        path : Union[str, os.PathLike]
+            Path to the directory where the T4Rec model should be saved.
+        model_name : str, optional
+           the name given to the pickle file storing the T4Rec model,
+            by default 't4rec_model_class'
+        """
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ValueError("cloudpickle is required to save model class")
+
+        export_path = pathlib.Path(path)
+        export_path.mkdir(exist_ok=True)
+
+        model_name = model_name + ".pkl"
+        export_path = export_path / model_name
+        with open(export_path, "wb") as out:
+            cloudpickle.dump(self, out)
+
+    @classmethod
+    def load(cls, path: Union[str, os.PathLike], model_name="t4rec_model_class") -> "Model":
+        """Loads a T4Rec model that was saved with `model.save()`.
+
+        Parameters
+        ----------
+        path : Union[str, os.PathLike]
+            Path to the directory where the T4Rec model is saved.
+        model_name : str, optional
+           the name given to the pickle file storing the T4Rec model,
+            by default 't4rec_model_class'.
+        """
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ValueError("cloudpickle is required to load T4Rec model")
+
+        export_path = pathlib.Path(path)
+        model_name = model_name + ".pkl"
+        export_path = export_path / model_name
+        return cloudpickle.load(open(export_path, "rb"))
 
 
 def _output_metrics(metrics):
