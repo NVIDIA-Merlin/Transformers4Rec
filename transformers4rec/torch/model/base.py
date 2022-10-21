@@ -562,7 +562,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 # At inference, we just need the predictions tensors.
                 # TODO: We are simplifying the logic around `hf_format` in the multi-gpu
                 # support work.
-                if not self.hf_format:
+                if not training and not self.hf_format:
                     return outputs["predictions"]
             return outputs
 
@@ -699,8 +699,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         return super(Model, self)._get_name()
 
-    @property
-    def input_schema(self):
+    def input_schema(self, max_sequence_length=None):
         # return the input schema given by the model
         # loop over the heads to get input schemas
         schemas = []
@@ -717,24 +716,40 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             dtype = {0: np.float32, 2: np.int64, 3: np.float32}[column.type]
             tags = column.tags
             is_list = column.value_count.max > 0
+            # T4Rec is only supporting padded dense input tensors with a fixed max_sequence_length
+            if is_list and not max_sequence_length:
+                raise ValueError(
+                    f"You should specify the `max_sequence_length` of your list input {name}"
+                )
+            value_count = (
+                {"min": max_sequence_length, "max": max_sequence_length}
+                if is_list
+                else {"min": 1, "max": 1}
+            )
+            is_ragged = is_list and value_count.get("min", 0) != value_count.get("max", 0)
             int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
-            properties = {
-                "int_domain": int_domain,
-            }
-
+            properties = {"value_count": value_count, "int_domain": int_domain}
             col_schema = ColumnSchema(
                 name,
                 dtype=dtype,
                 tags=tags,
                 properties=properties,
                 is_list=is_list,
-                is_ragged=False,
+                is_ragged=is_ragged,
             )
             core_schema[name] = col_schema
         return core_schema
 
-    @property
-    def output_schema(self):
+    def output_schema(self, max_sequence_length: int = None):
+        """Method to return the output schema describing the output
+        tensors return by the model.
+
+        Parameters
+        ----------
+        max_sequence_length : int, optional
+            by default None
+
+        """
         from .prediction_task import BinaryClassificationTask, RegressionTask
 
         # if the model has one head with one task, the output is a tensor
@@ -748,14 +763,20 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     isinstance(task, (BinaryClassificationTask, RegressionTask))
                     and not task.summary_type
                 ):
-                    is_list = True
+                    # in this case the prediction is computed for each item in the input sequence
+                    if not max_sequence_length:
+                        raise ValueError(
+                            "You should specify the `max_sequence_length` for "
+                            "item-level binary or regression tasks"
+                        )
+                    properties = {
+                        "value_count": {"min": max_sequence_length, "max": max_sequence_length},
+                        "int_domain": int_domain,
+                    }
                 else:
-                    is_list = False
-                properties = {
-                    "int_domain": int_domain,
-                }
+                    properties = {"value_count": {"min": 1, "max": 1}, "int_domain": int_domain}
                 col_schema = ColumnSchema(
-                    name, dtype=np.float32, properties=properties, is_list=is_list, is_ragged=False
+                    name, dtype=np.float32, properties=properties, is_list=False, is_ragged=False
                 )
                 output_cols.append(col_schema)
 
