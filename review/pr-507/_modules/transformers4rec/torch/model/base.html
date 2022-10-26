@@ -574,33 +574,36 @@
 
 
 <div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Model class that can aggregate one of multiple heads.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    head: Head</span>
-<span class="sd">        One or more heads of the model.</span>
-<span class="sd">    head_weights: List[float], optional</span>
-<span class="sd">        Weight-value to use for each head.</span>
-<span class="sd">    head_reduction: str, optional</span>
-<span class="sd">        How to reduce the losses into a single tensor when multiple heads are used.</span>
-<span class="sd">    optimizer: Type[torch.optim.Optimizer]</span>
-<span class="sd">        Optimizer-class to use during fitting</span>
-<span class="sd">    name: str, optional</span>
-<span class="sd">        Name of the model.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="n">head</span><span class="p">:</span> <span class="n">Head</span><span class="p">,</span>
         <span class="n">head_weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">head_reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
-        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hf_format</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        #TODO</span>
+        <span class="sd">&quot;&quot;&quot;Model class that can aggregate one or multiple heads.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        head: Head</span>
+<span class="sd">            One or more heads of the model.</span>
+<span class="sd">        head_weights: List[float], optional</span>
+<span class="sd">            Weight-value to use for each head.</span>
+<span class="sd">        head_reduction: str, optional</span>
+<span class="sd">            How to reduce the losses into a single tensor when multiple heads are used.</span>
+<span class="sd">        optimizer: Type[torch.optim.Optimizer]</span>
+<span class="sd">            Optimizer-class to use during fitting</span>
+<span class="sd">        name: str, optional</span>
+<span class="sd">            Name of the model.</span>
+<span class="sd">        hf_format: bool, optional</span>
+<span class="sd">            This parameter is specific to NextItemPredictionTask class and controls the format of</span>
+<span class="sd">            the output returned by the task. If `True`, the task returns a dictionary</span>
+<span class="sd">            with three tensors: loss, predictions, labels. Otherwise, it returns the tensor of</span>
+<span class="sd">            `predictions` scores.</span>
+<span class="sd">            Usually, hf_format is set to True during training and False during inference</span>
+<span class="sd">            By default True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">head_weights</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_weights</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -802,7 +805,8 @@
             <span class="p">)</span>
             <span class="n">is_ragged</span> <span class="o">=</span> <span class="n">is_list</span> <span class="ow">and</span> <span class="n">value_count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">value_count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="n">int_domain</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">max</span><span class="p">}</span>
-            <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="n">value_count</span><span class="p">,</span> <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">}</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">max_sequence_length</span> <span class="k">if</span> <span class="n">is_list</span> <span class="k">else</span> <span class="mi">1</span>
+            <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="n">value_count</span><span class="p">,</span> <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">shape</span><span class="p">}</span>
             <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
                 <span class="n">name</span><span class="p">,</span>
                 <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
@@ -846,10 +850,15 @@
                     <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
                         <span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">max_sequence_length</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">max_sequence_length</span><span class="p">},</span>
                         <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
+                        <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">max_sequence_length</span><span class="p">,</span> <span class="n">target_dim</span><span class="p">),</span>
                     <span class="p">}</span>
                     <span class="n">is_list</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">}</span>
+                    <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+                        <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
+                        <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">target_dim</span><span class="p">),</span>
+                    <span class="p">}</span>
                     <span class="n">is_list</span> <span class="o">=</span> <span class="kc">False</span>
                 <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
                     <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">is_list</span><span class="o">=</span><span class="n">is_list</span><span class="p">,</span> <span class="n">is_ragged</span><span class="o">=</span><span class="kc">False</span>
