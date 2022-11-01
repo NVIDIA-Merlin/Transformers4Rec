@@ -728,8 +728,14 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             )
             is_ragged = is_list and value_count.get("min", 0) != value_count.get("max", 0)
             int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
-            shape = max_sequence_length if is_list else 1
-            properties = {"value_count": value_count, "int_domain": int_domain, "shape": shape}
+            batch_dim = [-1]
+            column_dim = [max_sequence_length] if is_list else [1]
+            properties = {
+                "value_count": value_count,
+                "int_domain": int_domain,
+                "shape": batch_dim + column_dim,
+            }
+
             col_schema = ColumnSchema(
                 name,
                 dtype=dtype,
@@ -773,14 +779,14 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     properties = {
                         "value_count": {"min": max_sequence_length, "max": max_sequence_length},
                         "int_domain": int_domain,
-                        "shape": (max_sequence_length, target_dim),
+                        "shape": (-1, max_sequence_length, target_dim),
                     }
                     is_list = True
                 else:
                     properties = {
                         "value_count": {"min": 1, "max": 1},
                         "int_domain": int_domain,
-                        "shape": (target_dim),
+                        "shape": (-1, target_dim),
                     }
                     is_list = False
                 col_schema = ColumnSchema(
