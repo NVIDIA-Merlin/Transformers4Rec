@@ -43,10 +43,10 @@ def test_simple_model(torch_tabular_features, torch_tabular_data):
     losses = model.fit(dataset, num_epochs=5)
     metrics = model.evaluate(dataset, mode="eval")
 
-    in_schema = model.input_schema(max_sequence_length=20)
+    in_schema = model.input_schema
     assert isinstance(in_schema, Core_Schema)
     assert set(in_schema.column_names) == set(inputs.schema.column_names)
-    out_schema = model.output_schema()
+    out_schema = model.output_schema
     assert isinstance(out_schema, Core_Schema)
     assert len(out_schema) == 1
     assert out_schema.column_names[0] == "target/binary_classification_task"
@@ -149,21 +149,14 @@ def test_model_with_multiple_heads_and_tasks(
     assert len(losses) == 5
     assert all(loss is not None for loss in losses)
 
-    # Get input schema
-    with pytest.raises(ValueError) as exc_info:
-        model.input_schema()
-        assert "You should specify the `max_sequence_length` of your list input" in str(
-            exc_info.value
-        )
-
-    in_schema = model.input_schema(max_sequence_length=20)
+    in_schema = model.input_schema
     assert isinstance(in_schema, Core_Schema)
     assert set(in_schema.column_names) == set(
         non_sequential_features_schema.column_names
         + torch_yoochoose_tabular_transformer_features.schema.column_names
     )
     # Get output schema
-    out_schema = model.output_schema()
+    out_schema = model.output_schema
     assert isinstance(out_schema, Core_Schema)
     assert set(out_schema.column_names) == set(output.keys())
 
@@ -234,11 +227,11 @@ def test_item_prediction_transformer_torch_model_from_config(
     assert out.size()[1] == task.target_dim
     assert len(out.size()) == 2
 
-    in_schema = model.input_schema(max_sequence_length=20)
+    in_schema = model.input_schema
     assert isinstance(in_schema, Core_Schema)
     assert set(in_schema.column_names).issubset(yoochoose_schema.column_names)
     # Get output schema
-    out_schema = model.output_schema()
+    out_schema = model.output_schema
     assert isinstance(out_schema, Core_Schema)
     assert len(out_schema) == 1
     assert out_schema.column_names[0] == "next-item"
@@ -331,12 +324,12 @@ def test_save_next_item_prediction_model(
     output = loaded_model(torch_yoochoose_like, training=False)
     assert isinstance(output, torch.Tensor)
 
-    in_schema = loaded_model.input_schema(max_sequence_length=20)
+    in_schema = loaded_model.input_schema
 
     assert isinstance(in_schema, Core_Schema)
     assert set(in_schema.column_names) == set(inputs.schema.column_names)
 
-    out_schema = loaded_model.output_schema()
+    out_schema = loaded_model.output_schema
     assert isinstance(out_schema, Core_Schema)
     assert len(out_schema) == 1
     assert out_schema.column_names[0] == "next-item"
