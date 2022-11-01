@@ -280,9 +280,9 @@ class NDCGAt(RankingMetric):
 
 
 @ranking_metrics_registry.register_with_multiple_names("mrr_at", "mrr")
-class MeanRecipricolRankAt(RankingMetric):
+class MeanReciprocalRankAt(RankingMetric):
     def __init__(self, top_ks=None, labels_onehot=False):
-        super(MeanRecipricolRankAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
+        super(MeanReciprocalRankAt, self).__init__(top_ks=top_ks, labels_onehot=labels_onehot)
 
     def _metric(
         self, ks: torch.Tensor, scores: torch.Tensor, labels: torch.Tensor, log_base: int = 2
@@ -310,6 +310,7 @@ class MeanRecipricolRankAt(RankingMetric):
             device=scores.device, dtype=torch.float32
         )
         for index, k in enumerate(ks):
-            values, _ = (topk_labels[:, :k] / (torch.arange(k) + 1)).max(dim=1)
+            values, _ = (topk_labels[:, :k] / (torch.arange(k) + 1).to(
+                device=scores.device)).max(dim=1)
             results[:, index] = values
         return results
