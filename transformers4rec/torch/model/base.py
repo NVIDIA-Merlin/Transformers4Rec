@@ -26,6 +26,7 @@ import torch
 import torchmetrics as tm
 from merlin.schema import ColumnSchema
 from merlin.schema import Schema as Core_Schema
+from merlin.schema import Tags
 from tqdm import tqdm
 from transformers.modeling_utils import SequenceSummary
 
@@ -699,7 +700,8 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         return super(Model, self)._get_name()
 
-    def input_schema(self, max_sequence_length=None):
+    @property
+    def input_schema(self):
         # return the input schema given by the model
         # loop over the heads to get input schemas
         schemas = []
@@ -716,16 +718,14 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             dtype = {0: np.float32, 2: np.int64, 3: np.float32}[column.type]
             tags = column.tags
             is_list = column.value_count.max > 0
-            # T4Rec is only supporting padded dense input tensors with a fixed max_sequence_length
-            if is_list and not max_sequence_length:
-                raise ValueError(
-                    f"You should specify the `max_sequence_length` of your list input {name}"
-                )
-            value_count = (
-                {"min": max_sequence_length, "max": max_sequence_length}
-                if is_list
-                else {"min": 1, "max": 1}
-            )
+            if is_list:
+                # T4Rec is only supporting padded dense input tensors with a
+                # fixed max_sequence_length
+                max_sequence_length = column.value_count.max
+            else:
+                max_sequence_length = 1
+
+            value_count = {"min": max_sequence_length, "max": max_sequence_length}
             is_ragged = is_list and value_count.get("min", 0) != value_count.get("max", 0)
             int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
             batch_dim = [-1]
@@ -747,17 +747,11 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             core_schema[name] = col_schema
         return core_schema
 
-    def output_schema(self, max_sequence_length: int = None):
-        """Method to return the output schema describing the output
-        tensors return by the model.
-
-        Parameters
-        ----------
-        max_sequence_length : int, optional
-            by default None
-
-        """
+    @property
+    def output_schema(self):
         from .prediction_task import BinaryClassificationTask, RegressionTask
+
+        max_sequence_length = self.input_schema.select_by_tag(Tags.LIST).first.value_count.max
 
         # if the model has one head with one task, the output is a tensor
         # if multiple heads and/or multiple prediction task, the output is a dictionary
@@ -770,12 +764,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     isinstance(task, (BinaryClassificationTask, RegressionTask))
                     and not task.summary_type
                 ):
-                    # in this case the prediction is computed for each item in the input sequence
-                    if not max_sequence_length:
-                        raise ValueError(
-                            "You should specify the `max_sequence_length` for "
-                            "item-level binary or regression tasks"
-                        )
                     properties = {
                         "value_count": {"min": max_sequence_length, "max": max_sequence_length},
                         "int_domain": int_domain,
