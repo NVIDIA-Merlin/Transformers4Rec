@@ -26,7 +26,6 @@ import torch
 import torchmetrics as tm
 from merlin.schema import ColumnSchema
 from merlin.schema import Schema as Core_Schema
-from merlin.schema import Tags
 from tqdm import tqdm
 from transformers.modeling_utils import SequenceSummary
 
@@ -561,7 +560,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 # At inference, we just need the predictions tensors.
                 # TODO: We are simplifying the logic around `hf_format` in the multi-gpu
                 # support work.
-                if not training and not self.hf_format:
+                if not self.hf_format:
                     return outputs["predictions"]
             return outputs
 
@@ -716,22 +715,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             dtype = {0: np.float32, 2: np.int64, 3: np.float32}[column.type]
             tags = column.tags
             is_list = column.value_count.max > 0
-            if is_list:
-                # T4Rec is only supporting padded dense input tensors with a
-                # fixed max_sequence_length
-                max_sequence_length = column.value_count.max
-            else:
-                max_sequence_length = 1
-
-            value_count = {"min": max_sequence_length, "max": max_sequence_length}
-            is_ragged = is_list and value_count.get("min", 0) != value_count.get("max", 0)
             int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
-            batch_dim = [-1]
-            column_dim = [max_sequence_length] if is_list else [1]
             properties = {
-                "value_count": value_count,
                 "int_domain": int_domain,
-                "shape": batch_dim + column_dim,
             }
 
             col_schema = ColumnSchema(
@@ -740,7 +726,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 tags=tags,
                 properties=properties,
                 is_list=is_list,
-                is_ragged=is_ragged,
+                is_ragged=False,
             )
             core_schema[name] = col_schema
         return core_schema
@@ -748,8 +734,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
     @property
     def output_schema(self):
         from .prediction_task import BinaryClassificationTask, RegressionTask
-
-        max_sequence_length = self.input_schema.select_by_tag(Tags.LIST).first.value_count.max
 
         # if the model has one head with one task, the output is a tensor
         # if multiple heads and/or multiple prediction task, the output is a dictionary
@@ -762,19 +746,12 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     isinstance(task, (BinaryClassificationTask, RegressionTask))
                     and not task.summary_type
                 ):
-                    properties = {
-                        "value_count": {"min": max_sequence_length, "max": max_sequence_length},
-                        "int_domain": int_domain,
-                        "shape": (-1, max_sequence_length, target_dim),
-                    }
                     is_list = True
                 else:
-                    properties = {
-                        "value_count": {"min": 1, "max": 1},
-                        "int_domain": int_domain,
-                        "shape": (-1, target_dim),
-                    }
                     is_list = False
+                properties = {
+                    "int_domain": int_domain,
+                }
                 col_schema = ColumnSchema(
                     name, dtype=np.float32, properties=properties, is_list=is_list, is_ragged=False
                 )
