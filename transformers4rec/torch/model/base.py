@@ -394,8 +394,9 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             body_outputs = self.body(body_outputs, training=training, ignore_masking=ignore_masking)
 
         for name, task in self.prediction_task_dict.items():
-            outputs[name] = task(body_outputs, ignore_masking=ignore_masking,
-                training=training, **kwargs)
+            outputs[name] = task(
+                body_outputs, ignore_masking=ignore_masking, training=training, **kwargs
+            )
 
         if len(outputs) == 1 and not always_output_dict:
             return outputs[list(outputs.keys())[0]]
