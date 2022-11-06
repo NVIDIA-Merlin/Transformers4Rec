@@ -342,8 +342,8 @@ class Trainer(BaseTrainer):
         if prediction_loss_only:
             return (loss, None, None, None)
 
-        predictions = outputs["predictions"].detach()
-        labels = outputs["labels"].detach()
+        predictions = outputs["predictions"]    #.detach()
+        labels = outputs["labels"]  #.detach()
 
         # TODO: define metadata dict in the model for logging
         # other_outputs = {
@@ -482,14 +482,17 @@ class Trainer(BaseTrainer):
             if labels is not None:
                 labels = self._pad_across_processes(labels)
                 labels = self._nested_gather(labels)
-                labels_host = (
-                    labels
-                    if labels_host is None
-                    else nested_concat(labels_host, labels, padding_index=0)
-                )
+                if labels_host is None:
+                    labels_host=labels
+                else:
+                    if torch.is_tensor(labels_host):
+                        labels_host = nested_concat(labels_host , list(labels.values())[0], padding_index=0)
+                    else:
+                        labels_host = nested_concat(list(labels_host.values())[0] , 
+                                                    list(labels.values())[0], padding_index=0)
             if preds is not None and self.args.predict_top_k > 0:
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(
-                    preds, k=self.args.predict_top_k, dim=-1
+                    list(preds.values())[0], k=self.args.predict_top_k, dim=-1
                 )
                 self._maybe_log_predictions(
                     labels,
