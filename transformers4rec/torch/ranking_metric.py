@@ -50,8 +50,9 @@ class RankingMetric(tm.Metric):
     def update(self, preds: torch.Tensor, target: torch.Tensor, **kwargs):  # type: ignore
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
-            target = torch_utils.tranform_label_to_onehot(target, preds.size(-1))
-        metric = self._metric(torch.LongTensor(self.top_ks), preds.view(-1, preds.size(-1)), target)
+            target = torch_utils.tranform_label_to_onehot(target, list(preds.values())[0].size(-1))
+        metric = self._metric(torch.LongTensor(self.top_ks), 
+                              list(preds.values())[0].view(-1, list(preds.values())[0].size(-1)), target)
         self.metric_mean.append(metric)  # type: ignore
 
     def compute(self):

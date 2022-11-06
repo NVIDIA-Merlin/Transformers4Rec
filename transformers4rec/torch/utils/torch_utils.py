@@ -199,7 +199,7 @@ def create_output_placeholder(scores, ks):
 
 
 def tranform_label_to_onehot(labels, vocab_size):
-    return one_hot_1d(labels.reshape(-1), vocab_size, dtype=torch.float32).detach()
+    return one_hot_1d(list(labels.values())[0].reshape(-1), vocab_size, dtype=torch.float32).detach()
 
 
 def one_hot_1d(
