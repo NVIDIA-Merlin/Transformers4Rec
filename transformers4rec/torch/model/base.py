@@ -577,7 +577,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 predictions.update(head_output["predictions"])
                 losses.append(head_output["loss"] * self.head_weights[i])
             loss_tensor = torch.stack(losses)
-            loss = getattr(loss_tensor, self.loss_reduction)()
+            loss = getattr(loss_tensor, self.head_reduction)()
             outputs={"loss":loss, "labels":labels, "predictions":predictions}
 
         else:
