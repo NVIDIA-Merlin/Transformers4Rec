@@ -101,6 +101,7 @@ exclude_patterns = ["_build", "**.ipynb_checkpoints"]
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "titles_only": True,
+    "analytics_id": "G-NVJ1Y1YJHK",
 }
 html_copy_source = False
 html_show_sourcelink = False
@@ -129,6 +130,7 @@ smv_branch_whitelist = "^main$"
 smv_refs_override_suffix = "-docs"
 
 html_sidebars = {"**": ["versions.html"]}
+html_baseurl = "https://nvidia-merlin.github.io/Transformers4Rec/main"
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
