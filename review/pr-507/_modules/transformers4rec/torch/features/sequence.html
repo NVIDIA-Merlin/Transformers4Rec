@@ -335,7 +335,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_module</span><span class="p">:</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_module</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">ignore_masking</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">ignore_masking</span> <span class="ow">or</span> <span class="n">training</span><span class="p">):</span>
             <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">(</span>
                 <span class="n">outputs</span><span class="p">,</span> <span class="n">item_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">to_merge</span><span class="p">[</span><span class="s2">&quot;categorical_module&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item_seq</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span>
             <span class="p">)</span>

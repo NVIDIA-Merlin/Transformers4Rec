@@ -295,7 +295,9 @@
             <span class="n">body</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="n">task_block</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="n">pre</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="NextItemPredictionTask.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NextItemPredictionTask.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
         <span class="k">if</span> <span class="n">hf_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span> <span class="o">=</span> <span class="n">hf_format</span>
 
@@ -307,7 +309,7 @@
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="c1"># Retrieve labels from masking</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_masking</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">training</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">ignore_masking</span><span class="p">:</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="o">.</span><span class="n">masked_targets</span>  <span class="c1"># type: ignore</span>
             <span class="n">trg_flat</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
             <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">trg_flat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
