@@ -214,7 +214,7 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, ignore_masking=True, **kwargs):
+    def forward(self, inputs: torch.Tensor, ignore_masking=True, training=False, **kwargs):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -223,7 +223,7 @@ class NextItemPredictionTask(PredictionTask):
             x = self.task_block(x)  # type: ignore
 
         # Retrieve labels from masking
-        if not ignore_masking:
+        if training or not ignore_masking:
             labels = self.masking.masked_targets  # type: ignore
             trg_flat = labels.flatten()
             non_pad_mask = trg_flat != self.padding_idx
