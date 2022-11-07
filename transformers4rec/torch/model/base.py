@@ -422,6 +422,9 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             for name, task in self.prediction_task_dict.items():
                 outputs[name] = task(body_outputs, training=training, testing=testing, targets=targets, **kwargs)
 
+        if len(outputs) == 1:
+            return outputs[list(outputs.keys())[0]]
+
         return outputs
 
     """ def compute_loss(  # type: ignore
@@ -586,6 +589,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     head(inputs, call_body=True, training=training, testing=testing, **kwargs)
                 )
 
+        if len(outputs) == 1:
+            return outputs[list(outputs.keys())[0]]
+            
         return outputs
 
     """ def compute_loss(self, inputs, targets, training=True, testing=False, compute_metrics=True, **kwargs) -> torch.Tensor:
