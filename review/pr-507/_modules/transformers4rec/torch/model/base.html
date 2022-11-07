@@ -639,7 +639,7 @@
                 <span class="c1"># At inference, we just need the predictions tensors.</span>
                 <span class="c1"># TODO: We are simplifying the logic around `hf_format` in the multi-gpu</span>
                 <span class="c1"># support work.</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">training</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">outputs</span>
 
@@ -776,7 +776,8 @@
 
         <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_name</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Model.input_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.input_schema">[docs]</a>    <span class="k">def</span> <span class="nf">input_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># return the input schema given by the model</span>
         <span class="c1"># loop over the heads to get input schemas</span>
         <span class="n">schemas</span> <span class="o">=</span> <span class="p">[]</span>
@@ -793,41 +794,24 @@
             <span class="n">dtype</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">}[</span><span class="n">column</span><span class="o">.</span><span class="n">type</span><span class="p">]</span>
             <span class="n">tags</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">tags</span>
             <span class="n">is_list</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="c1"># T4Rec is only supporting padded dense input tensors with a fixed max_sequence_length</span>
-            <span class="k">if</span> <span class="n">is_list</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">max_sequence_length</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;You should specify the `max_sequence_length` of your list input </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="p">)</span>
-            <span class="n">value_count</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">max_sequence_length</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">max_sequence_length</span><span class="p">}</span>
-                <span class="k">if</span> <span class="n">is_list</span>
-                <span class="k">else</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
-            <span class="p">)</span>
-            <span class="n">is_ragged</span> <span class="o">=</span> <span class="n">is_list</span> <span class="ow">and</span> <span class="n">value_count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;min&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">value_count</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;max&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="n">int_domain</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">max</span><span class="p">}</span>
-            <span class="n">shape</span> <span class="o">=</span> <span class="n">max_sequence_length</span> <span class="k">if</span> <span class="n">is_list</span> <span class="k">else</span> <span class="mi">1</span>
-            <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="n">value_count</span><span class="p">,</span> <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">shape</span><span class="p">}</span>
+            <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
+            <span class="p">}</span>
+
             <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
                 <span class="n">name</span><span class="p">,</span>
                 <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
                 <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
                 <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
                 <span class="n">is_list</span><span class="o">=</span><span class="n">is_list</span><span class="p">,</span>
-                <span class="n">is_ragged</span><span class="o">=</span><span class="n">is_ragged</span><span class="p">,</span>
+                <span class="n">is_ragged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="n">core_schema</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_schema</span>
-        <span class="k">return</span> <span class="n">core_schema</span></div>
+        <span class="k">return</span> <span class="n">core_schema</span>
 
-<div class="viewcode-block" id="Model.output_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.output_schema">[docs]</a>    <span class="k">def</span> <span class="nf">output_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Method to return the output schema describing the output</span>
-<span class="sd">        tensors return by the model.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        max_sequence_length : int, optional</span>
-<span class="sd">            by default None</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="kn">from</span> <span class="nn">.prediction_task</span> <span class="kn">import</span> <span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span>
 
         <span class="c1"># if the model has one head with one task, the output is a tensor</span>
@@ -841,31 +825,18 @@
                     <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="p">(</span><span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span><span class="p">))</span>
                     <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">summary_type</span>
                 <span class="p">):</span>
-                    <span class="c1"># in this case the prediction is computed for each item in the input sequence</span>
-                    <span class="k">if</span> <span class="ow">not</span> <span class="n">max_sequence_length</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                            <span class="s2">&quot;You should specify the `max_sequence_length` for &quot;</span>
-                            <span class="s2">&quot;item-level binary or regression tasks&quot;</span>
-                        <span class="p">)</span>
-                    <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">max_sequence_length</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">max_sequence_length</span><span class="p">},</span>
-                        <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
-                        <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">max_sequence_length</span><span class="p">,</span> <span class="n">target_dim</span><span class="p">),</span>
-                    <span class="p">}</span>
                     <span class="n">is_list</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
-                        <span class="s2">&quot;value_count&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
-                        <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
-                        <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">target_dim</span><span class="p">),</span>
-                    <span class="p">}</span>
                     <span class="n">is_list</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
+                <span class="p">}</span>
                 <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
                     <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">is_list</span><span class="o">=</span><span class="n">is_list</span><span class="p">,</span> <span class="n">is_ragged</span><span class="o">=</span><span class="kc">False</span>
                 <span class="p">)</span>
                 <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">Core_Schema</span><span class="p">(</span><span class="n">output_cols</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">Core_Schema</span><span class="p">(</span><span class="n">output_cols</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Model.save"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4rec_model_class&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Saves the model to f&quot;{export_path}/{model_name}.pkl&quot; using `cloudpickle`</span>
