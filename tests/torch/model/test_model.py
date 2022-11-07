@@ -14,7 +14,12 @@
 # limitations under the License.
 #
 
+import os
+import tempfile
+
 import pytest
+import torch
+from merlin.schema import Schema as Core_Schema
 
 from transformers4rec.config import transformer as tconf
 
@@ -37,6 +42,14 @@ def test_simple_model(torch_tabular_features, torch_tabular_data):
     dataset = [(torch_tabular_data, targets)]
     losses = model.fit(dataset, num_epochs=5)
     metrics = model.evaluate(dataset, mode="eval")
+
+    in_schema = model.input_schema
+    assert isinstance(in_schema, Core_Schema)
+    assert set(in_schema.column_names) == set(inputs.schema.column_names)
+    out_schema = model.output_schema
+    assert isinstance(out_schema, Core_Schema)
+    assert len(out_schema) == 1
+    assert out_schema.column_names[0] == "target/binary_classification_task"
 
     # assert list(metrics.keys()) == ["precision", "recall", "accuracy"]
     assert len(metrics) == 3
@@ -118,6 +131,9 @@ def test_model_with_multiple_heads_and_tasks(
     # Final model with two heads
     model = tr.Model(head_1, head_2)
 
+    # get output of the model
+    output = model(torch_yoochoose_like)
+
     # launch training
     targets.update(targets_2)
     dataset = [(torch_yoochoose_like, targets)]
@@ -132,6 +148,17 @@ def test_model_with_multiple_heads_and_tasks(
     ]
     assert len(losses) == 5
     assert all(loss is not None for loss in losses)
+
+    in_schema = model.input_schema
+    assert isinstance(in_schema, Core_Schema)
+    assert set(in_schema.column_names) == set(
+        non_sequential_features_schema.column_names
+        + torch_yoochoose_tabular_transformer_features.schema.column_names
+    )
+    # Get output schema
+    out_schema = model.output_schema
+    assert isinstance(out_schema, Core_Schema)
+    assert set(out_schema.column_names) == set(output.keys())
 
 
 def test_multi_head_model_wrong_weights(torch_tabular_features, torch_yoochoose_like):
@@ -200,6 +227,15 @@ def test_item_prediction_transformer_torch_model_from_config(
     assert out.size()[1] == task.target_dim
     assert len(out.size()) == 2
 
+    in_schema = model.input_schema
+    assert isinstance(in_schema, Core_Schema)
+    assert set(in_schema.column_names).issubset(yoochoose_schema.column_names)
+    # Get output schema
+    out_schema = model.output_schema
+    assert isinstance(out_schema, Core_Schema)
+    assert len(out_schema) == 1
+    assert out_schema.column_names[0] == "next-item"
+
 
 @pytest.mark.parametrize("device", devices)
 def test_set_model_to_device(
@@ -249,7 +285,7 @@ def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_sc
     assert model(torch_yoochoose_like)
 
 
-@pytest.mark.parametrize("masking", ["causal", "mlm", "rtd", "plm"])
+@pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
 def test_output_shape_mode_eval(torch_yoochoose_like, yoochoose_schema, masking):
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
@@ -265,3 +301,35 @@ def test_output_shape_mode_eval(torch_yoochoose_like, yoochoose_schema, masking)
 
     out = model(torch_yoochoose_like, training=False)
     assert out["predictions"].shape[0] == torch_yoochoose_like["item_id/list"].size(0)
+
+
+def test_save_next_item_prediction_model(
+    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like
+):
+    inputs = torch_yoochoose_tabular_transformer_features
+    transformer_config = tconf.XLNetConfig.build(100, 4, 2, 20)
+    task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    model = transformer_config.to_torch_model(inputs, task)
+    output = model(torch_yoochoose_like, training=False)
+    assert isinstance(output, dict)
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        model.save(tmpdir)
+        assert "t4rec_model_class.pkl" in os.listdir(tmpdir)
+        loaded_model = model.load(tmpdir)
+        # deactivate the hf_format model to get the tensor of predictions as output
+        # instead of a dictionary of three tensors `loss, labels, and predictions`
+        loaded_model.hf_format = False
+
+    output = loaded_model(torch_yoochoose_like, training=False)
+    assert isinstance(output, torch.Tensor)
+
+    in_schema = loaded_model.input_schema
+
+    assert isinstance(in_schema, Core_Schema)
+    assert set(in_schema.column_names) == set(inputs.schema.column_names)
+
+    out_schema = loaded_model.output_schema
+    assert isinstance(out_schema, Core_Schema)
+    assert len(out_schema) == 1
+    assert out_schema.column_names[0] == "next-item"

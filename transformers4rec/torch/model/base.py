@@ -15,6 +15,8 @@
 #
 import copy
 import inspect
+import os
+import pathlib
 from collections import defaultdict
 from types import SimpleNamespace
 from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
@@ -22,6 +24,8 @@ from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
 import numpy as np
 import torch
 import torchmetrics as tm
+from merlin.schema import ColumnSchema
+from merlin.schema import Schema as Core_Schema
 from tqdm import tqdm
 from transformers.modeling_utils import SequenceSummary
 
@@ -493,32 +497,36 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
 
 class Model(torch.nn.Module, LossMixin, MetricsMixin):
-    """Model class that can aggregate one of multiple heads.
-
-    Parameters
-    ----------
-    head: Head
-        One or more heads of the model.
-    head_weights: List[float], optional
-        Weight-value to use for each head.
-    head_reduction: str, optional
-        How to reduce the losses into a single tensor when multiple heads are used.
-    optimizer: Type[torch.optim.Optimizer]
-        Optimizer-class to use during fitting
-    name: str, optional
-        Name of the model.
-    """
-
     def __init__(
         self,
         *head: Head,
         head_weights: Optional[List[float]] = None,
         head_reduction: str = "mean",
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
-        name=None,
+        name: str = None,
+        hf_format: bool = True,
     ):
-        """
-        #TODO
+        """Model class that can aggregate one or multiple heads.
+
+        Parameters
+        ----------
+        head: Head
+            One or more heads of the model.
+        head_weights: List[float], optional
+            Weight-value to use for each head.
+        head_reduction: str, optional
+            How to reduce the losses into a single tensor when multiple heads are used.
+        optimizer: Type[torch.optim.Optimizer]
+            Optimizer-class to use during fitting
+        name: str, optional
+            Name of the model.
+        hf_format: bool, optional
+            This parameter is specific to NextItemPredictionTask class and controls the format of
+            the output returned by the task. If `True`, the task returns a dictionary
+            with three tensors: loss, predictions, labels. Otherwise, it returns the tensor of
+            `predictions` scores.
+            Usually, hf_format is set to True during training and False during inference
+            By default True.
         """
         if head_weights:
             if not isinstance(head_weights, list):
@@ -535,6 +543,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_weights = head_weights or [1.0] * len(head)
         self.head_reduction = head_reduction
         self.optimizer = optimizer
+        self.hf_format = hf_format
 
     def forward(self, inputs: TensorOrTabularData, training=True, **kwargs):
         # TODO: Optimize this
@@ -545,7 +554,17 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             )
 
         if len(outputs) == 1:
-            return outputs[list(outputs.keys())[0]]
+            outputs = outputs[list(outputs.keys())[0]]
+            if isinstance(outputs, dict):
+                # next-item prediction task with `hf_format = True``  returns a dictionary
+                # with three tensors: loss, predictions, labels. This needed for training
+                # and evaluation using the Trainer class.
+                # At inference, we just need the predictions tensors.
+                # TODO: We are simplifying the logic around `hf_format` in the multi-gpu
+                # support work.
+                if not self.hf_format:
+                    return outputs["predictions"]
+            return outputs
 
         return outputs
 
@@ -679,6 +698,114 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             return self.name
 
         return super(Model, self)._get_name()
+
+    @property
+    def input_schema(self):
+        # return the input schema given by the model
+        # loop over the heads to get input schemas
+        schemas = []
+        for head in self.heads:
+            schemas.append(head.body.inputs.schema)
+        model_schema = sum(schemas, Schema())
+
+        # TODO: rework T4R to use Merlin Schemas.
+        # In the meantime, we convert model_schema to merlin core schema
+        core_schema = Core_Schema()
+        for column in model_schema:
+            name = column.name
+
+            dtype = {0: np.float32, 2: np.int64, 3: np.float32}[column.type]
+            tags = column.tags
+            is_list = column.value_count.max > 0
+            int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
+            properties = {
+                "int_domain": int_domain,
+            }
+
+            col_schema = ColumnSchema(
+                name,
+                dtype=dtype,
+                tags=tags,
+                properties=properties,
+                is_list=is_list,
+                is_ragged=False,
+            )
+            core_schema[name] = col_schema
+        return core_schema
+
+    @property
+    def output_schema(self):
+        from .prediction_task import BinaryClassificationTask, RegressionTask
+
+        # if the model has one head with one task, the output is a tensor
+        # if multiple heads and/or multiple prediction task, the output is a dictionary
+        output_cols = []
+        for head in self.heads:
+            for name, task in head.prediction_task_dict.items():
+                target_dim = task.target_dim
+                int_domain = {"min": target_dim, "max": target_dim}
+                if (
+                    isinstance(task, (BinaryClassificationTask, RegressionTask))
+                    and not task.summary_type
+                ):
+                    is_list = True
+                else:
+                    is_list = False
+                properties = {
+                    "int_domain": int_domain,
+                }
+                col_schema = ColumnSchema(
+                    name, dtype=np.float32, properties=properties, is_list=is_list, is_ragged=False
+                )
+                output_cols.append(col_schema)
+
+        return Core_Schema(output_cols)
+
+    def save(self, path: Union[str, os.PathLike], model_name="t4rec_model_class"):
+        """Saves the model to f"{export_path}/{model_name}.pkl" using `cloudpickle`
+
+        Parameters
+        ----------
+        path : Union[str, os.PathLike]
+            Path to the directory where the T4Rec model should be saved.
+        model_name : str, optional
+           the name given to the pickle file storing the T4Rec model,
+            by default 't4rec_model_class'
+        """
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ValueError("cloudpickle is required to save model class")
+
+        export_path = pathlib.Path(path)
+        export_path.mkdir(exist_ok=True)
+
+        model_name = model_name + ".pkl"
+        export_path = export_path / model_name
+        with open(export_path, "wb") as out:
+            cloudpickle.dump(self, out)
+
+    @classmethod
+    def load(cls, path: Union[str, os.PathLike], model_name="t4rec_model_class") -> "Model":
+        """Loads a T4Rec model that was saved with `model.save()`.
+
+        Parameters
+        ----------
+        path : Union[str, os.PathLike]
+            Path to the directory where the T4Rec model is saved.
+        model_name : str, optional
+           the name given to the pickle file storing the T4Rec model,
+            by default 't4rec_model_class'.
+        """
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ValueError("cloudpickle is required to load T4Rec model")
+
+        export_path = pathlib.Path(path)
+        model_name = model_name + ".pkl"
+        export_path = export_path / model_name
+        return cloudpickle.load(open(export_path, "rb"))
 
 
 def _output_metrics(metrics):
