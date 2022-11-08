@@ -17,7 +17,7 @@
 import pytest
 import torch
 
-from transformers4rec.torch.ranking_metric import MeanRecipricolRankAt
+from transformers4rec.torch.ranking_metric import MeanReciprocalRankAt
 
 tr = pytest.importorskip("transformers4rec.torch")
 
@@ -47,7 +47,7 @@ def test_score_with_transform_onehot(torch_ranking_metrics_inputs, metric):
 
 
 def test_mean_recipricol_rank():
-    metric = MeanRecipricolRankAt()
+    metric = MeanReciprocalRankAt()
     metric.top_ks = [1, 2, 3, 4]
     metric.labels_onehot = False
     result = metric(
