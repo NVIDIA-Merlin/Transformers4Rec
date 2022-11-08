@@ -98,11 +98,12 @@
 <img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" />
 <div class="tex2jax_ignore mathjax_ignore section" id="multi-gpu-training-for-session-based-recommendations-with-pytorch">
 <h1>Multi-GPU training for session-based recommendations with PyTorch<a class="headerlink" href="#multi-gpu-training-for-session-based-recommendations-with-pytorch" title="Permalink to this headline"></a></h1>
+<p>This notebook was prepared by using the latest <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch/tags">merlin-pytorch:22.XX</a> container.</p>
 <p>In the previous two notebooks, we have first created sequential features and saved our processed data frames as parquet files. Then we used these processed parquet files in training a session-based recommendation model with XLNet architecture on a single GPU. We will now expand this exercise to perform a multi-GPU training with the same dataset using PyTorch.</p>
 <p>There are multiple ways to scale a training pipeline to multiple GPUs:</p>
 <ul class="simple">
 <li><p><b>Model Parallel</b>: If the model is too large to fit on a single GPU, the parameters are distributed over multiple GPUs. This is usually the case for the RecSys domain since the embedding tables can be exceptionally large and memory intensive.</p></li>
-<li><p><b>Data Parallel</b>: Every GPU has a copy of all model parameters and runs the forward/backward pass for its batch. This is used when the model can fit in one GPU memory, but the dataset is too large and must be distributed over multiple GPUs.</p></li>
+<li><p><b>Data Parallel</b>: Every GPU has a copy of all model parameters and runs the forward/backward pass for its batch. Data parallel is useful when you want to speed-up the training/evaluation of data leveraging multiple GPUs in parallel (as typically data won’t fit into GPU memory, that is why models are trained on batches).</p></li>
 </ul>
 <p>In this example, we demonstrate how to scale a training pipeline to multi-GPU, single node. The goal is to maximize throughput and reduce training time. In that way, models can be trained more frequently and researches can run more experiments in a shorter time duration.</p>
 <p>This is equivalent to training with a larger batch-size. As we are using more GPUs, we have more computational resources and can achieve higher throughput. In data parallel training, it is often required that all model parameters fit into a single GPU. Every worker (each GPU) has a copy of the model parameters and runs the forward pass on their local batch. The workers synchronize the gradients with each other, which can introduce an overhead.</p>
@@ -131,7 +132,7 @@
 <p>All of these steps were covered in the previous two notebooks; feel free to visit the two notebooks to refresh the concepts for each step of the script.</p>
 <p>Please note these <b>important points</b> that are relevant to multi-gpu training:</p>
 <ul class="simple">
-<li><p><b>specifying multiple GPUs</b>: we added the setting CUDA_VISIBLE_DEVICES to “0,1” at the top of our script to indicate that we will be using 2 GPUs. PyTorch distributed launch environment will recognize this and perform the training loop on multiple GPUs (2 in this case) using different batches of the data in a data-parallel fashion.</p></li>
+<li><p><b>specifying multiple GPUs</b>: PyTorch distributed launch environment will recognize that we have two GPUs, since the <code class="docutils literal notranslate"><span class="pre">--nproc_per_node</span></code> arg of <code class="docutils literal notranslate"><span class="pre">torch.distributed.launch</span></code> takes care of assigning one GPU per process and performs the training loop on multiple GPUs (2 in this case) using different batches of the data in a data-parallel fashion.</p></li>
 <li><p><b>data repartitioning</b>: when training on multiple GPUs, data must be re-partitioned into &gt;1 partitions where the number of partitions must be at least equal to the number of GPUs. The torch utility library in Transformers4Rec does this automatically and outputs a UserWarning message. If you would like to avoid this warning message, you may choose to manually re-partition your data files before you launch the training loop or function. See <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html#distributeddataparallel">this document</a> for further information on how to do manual re-partitioning.</p></li>
 <li><p><b>training and evaluation batch sizes</b>: in the default DistributedDataParallel mode we will be running, keeping the batch size unchanged means each worker will receive the same-size batch despite the fact that you are now using multiple GPUs. If you would like to keep the total batch size constant, you may want to divide the training and evaluation batch sizes by the number of GPUs you are running on, which is expected to reduce time it takes train and evaluate on each batch.</p></li>
 </ul>
@@ -140,9 +141,6 @@
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%writefile</span> &#39;./pyt_trainer.py&#39;
 
 <span class="kn">import</span> <span class="nn">os</span>
-
-<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;0,1&quot;</span>
-
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">torch</span> 
 
@@ -277,7 +275,7 @@
 </div>
 </div>
 </div>
-<p><b>Congratulations!!!</b> You successfully trained your model using 2 GPUs with a data-parallel approach. If you choose, you may now go back and experiment with some of the hyperparameters (eg. learning rate, batch sizes, number of GPUs) to collect information on various accuracy metrics as well as total training time, to see what fits best into your workflow.</p>
+<p><b>Congratulations!!!</b> You successfully trained your model using 2 GPUs with a <code class="docutils literal notranslate"><span class="pre">distributed</span> <span class="pre">data</span> <span class="pre">parallel</span></code> approach. If you choose, you may now go back and experiment with some of the hyperparameters (eg. learning rate, batch sizes, number of GPUs) to collect information on various accuracy metrics as well as total training time, to see what fits best into your workflow.</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
