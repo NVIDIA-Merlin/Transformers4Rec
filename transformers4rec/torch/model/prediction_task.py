@@ -60,6 +60,7 @@ class BinaryClassificationTask(PredictionTask):
         metrics=DEFAULT_METRICS,
         summary_type="first",
     ):
+        self.target_dim = 1
         super().__init__(
             loss=loss,
             metrics=metrics,
@@ -96,6 +97,7 @@ class RegressionTask(PredictionTask):
         metrics=DEFAULT_METRICS,
         summary_type="first",
     ):
+        self.target_dim = 1
         super().__init__(
             loss=loss,
             metrics=metrics,
@@ -214,7 +216,12 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, ignore_masking=True, **kwargs):
+    def forward(
+        self, inputs: torch.Tensor, ignore_masking=True, training=False, hf_format=None, **kwargs
+    ):
+        if hf_format is not None:
+            self.hf_format = hf_format
+
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -223,7 +230,7 @@ class NextItemPredictionTask(PredictionTask):
             x = self.task_block(x)  # type: ignore
 
         # Retrieve labels from masking
-        if not ignore_masking:
+        if training or not ignore_masking:
             labels = self.masking.masked_targets  # type: ignore
             trg_flat = labels.flatten()
             non_pad_mask = trg_flat != self.padding_idx
