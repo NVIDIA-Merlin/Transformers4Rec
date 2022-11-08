@@ -94,6 +94,8 @@
 <span class="c1">#</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pathlib</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">SimpleNamespace</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">cast</span>
@@ -101,6 +103,8 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torchmetrics</span> <span class="k">as</span> <span class="nn">tm</span>
+<span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">ColumnSchema</span>
+<span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span> <span class="k">as</span> <span class="n">Core_Schema</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">transformers.modeling_utils</span> <span class="kn">import</span> <span class="n">SequenceSummary</span>
 
@@ -473,7 +477,9 @@
             <span class="n">body_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="n">ignore_masking</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="n">ignore_masking</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span>
+                <span class="n">body_outputs</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="n">ignore_masking</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">always_output_dict</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">outputs</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
@@ -570,32 +576,36 @@
 
 
 <div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Model class that can aggregate one of multiple heads.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    head: Head</span>
-<span class="sd">        One or more heads of the model.</span>
-<span class="sd">    head_weights: List[float], optional</span>
-<span class="sd">        Weight-value to use for each head.</span>
-<span class="sd">    head_reduction: str, optional</span>
-<span class="sd">        How to reduce the losses into a single tensor when multiple heads are used.</span>
-<span class="sd">    optimizer: Type[torch.optim.Optimizer]</span>
-<span class="sd">        Optimizer-class to use during fitting</span>
-<span class="sd">    name: str, optional</span>
-<span class="sd">        Name of the model.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="o">*</span><span class="n">head</span><span class="p">:</span> <span class="n">Head</span><span class="p">,</span>
         <span class="n">head_weights</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">head_reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
-        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hf_format</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        #TODO</span>
+        <span class="sd">&quot;&quot;&quot;Model class that can aggregate one or multiple heads.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        head: Head</span>
+<span class="sd">            One or more heads of the model.</span>
+<span class="sd">        head_weights: List[float], optional</span>
+<span class="sd">            Weight-value to use for each head.</span>
+<span class="sd">        head_reduction: str, optional</span>
+<span class="sd">            How to reduce the losses into a single tensor when multiple heads are used.</span>
+<span class="sd">        optimizer: Type[torch.optim.Optimizer]</span>
+<span class="sd">            Optimizer-class to use during fitting</span>
+<span class="sd">        name: str, optional</span>
+<span class="sd">            Name of the model.</span>
+<span class="sd">        hf_format: bool, optional</span>
+<span class="sd">            This parameter is specific to NextItemPredictionTask class and controls the format of</span>
+<span class="sd">            the output returned by the task. If `True`, the task returns a dictionary</span>
+<span class="sd">            with three tensors: loss, predictions, labels. Otherwise, it returns the tensor of</span>
+<span class="sd">            `predictions` scores.</span>
+<span class="sd">            Usually, hf_format is set to True during training and False during inference</span>
+<span class="sd">            By default True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">head_weights</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_weights</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -612,6 +622,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">head_weights</span> <span class="o">=</span> <span class="n">head_weights</span> <span class="ow">or</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">head_reduction</span> <span class="o">=</span> <span class="n">head_reduction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span> <span class="o">=</span> <span class="n">hf_format</span>
 
 <div class="viewcode-block" id="Model.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TensorOrTabularData</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># TODO: Optimize this</span>
@@ -622,7 +633,17 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">outputs</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="c1"># next-item prediction task with `hf_format = True``  returns a dictionary</span>
+                <span class="c1"># with three tensors: loss, predictions, labels. This needed for training</span>
+                <span class="c1"># and evaluation using the Trainer class.</span>
+                <span class="c1"># At inference, we just need the predictions tensors.</span>
+                <span class="c1"># TODO: We are simplifying the logic around `hf_format` in the multi-gpu</span>
+                <span class="c1"># support work.</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">outputs</span>
 
         <span class="k">return</span> <span class="n">outputs</span></div>
 
@@ -755,7 +776,115 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
-        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_name</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Model</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_get_name</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">input_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># return the input schema given by the model</span>
+        <span class="c1"># loop over the heads to get input schemas</span>
+        <span class="n">schemas</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
+            <span class="n">schemas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">head</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+        <span class="n">model_schema</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">schemas</span><span class="p">,</span> <span class="n">Schema</span><span class="p">())</span>
+
+        <span class="c1"># TODO: rework T4R to use Merlin Schemas.</span>
+        <span class="c1"># In the meantime, we convert model_schema to merlin core schema</span>
+        <span class="n">core_schema</span> <span class="o">=</span> <span class="n">Core_Schema</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">model_schema</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">name</span>
+
+            <span class="n">dtype</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">}[</span><span class="n">column</span><span class="o">.</span><span class="n">type</span><span class="p">]</span>
+            <span class="n">tags</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">tags</span>
+            <span class="n">is_list</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="n">int_domain</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">max</span><span class="p">}</span>
+            <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
+            <span class="p">}</span>
+
+            <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+                <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+                <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
+                <span class="n">is_list</span><span class="o">=</span><span class="n">is_list</span><span class="p">,</span>
+                <span class="n">is_ragged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">core_schema</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_schema</span>
+        <span class="k">return</span> <span class="n">core_schema</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">output_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">.prediction_task</span> <span class="kn">import</span> <span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span>
+
+        <span class="c1"># if the model has one head with one task, the output is a tensor</span>
+        <span class="c1"># if multiple heads and/or multiple prediction task, the output is a dictionary</span>
+        <span class="n">output_cols</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">head</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">target_dim</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">target_dim</span>
+                <span class="n">int_domain</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">target_dim</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">target_dim</span><span class="p">}</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="p">(</span><span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span><span class="p">))</span>
+                    <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">summary_type</span>
+                <span class="p">):</span>
+                    <span class="n">is_list</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">is_list</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
+                <span class="p">}</span>
+                <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                    <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">is_list</span><span class="o">=</span><span class="n">is_list</span><span class="p">,</span> <span class="n">is_ragged</span><span class="o">=</span><span class="kc">False</span>
+                <span class="p">)</span>
+                <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Core_Schema</span><span class="p">(</span><span class="n">output_cols</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Model.save"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4rec_model_class&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saves the model to f&quot;{export_path}/{model_name}.pkl&quot; using `cloudpickle`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : Union[str, os.PathLike]</span>
+<span class="sd">            Path to the directory where the T4Rec model should be saved.</span>
+<span class="sd">        model_name : str, optional</span>
+<span class="sd">           the name given to the pickle file storing the T4Rec model,</span>
+<span class="sd">            by default &#39;t4rec_model_class&#39;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">cloudpickle</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cloudpickle is required to save model class&quot;</span><span class="p">)</span>
+
+        <span class="n">export_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">export_path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span> <span class="o">+</span> <span class="s2">&quot;.pkl&quot;</span>
+        <span class="n">export_path</span> <span class="o">=</span> <span class="n">export_path</span> <span class="o">/</span> <span class="n">model_name</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
+            <span class="n">cloudpickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Model.load"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.load">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4rec_model_class&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Model&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Loads a T4Rec model that was saved with `model.save()`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : Union[str, os.PathLike]</span>
+<span class="sd">            Path to the directory where the T4Rec model is saved.</span>
+<span class="sd">        model_name : str, optional</span>
+<span class="sd">           the name given to the pickle file storing the T4Rec model,</span>
+<span class="sd">            by default &#39;t4rec_model_class&#39;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">cloudpickle</span>
+        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cloudpickle is required to load T4Rec model&quot;</span><span class="p">)</span>
+
+        <span class="n">export_path</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span> <span class="o">+</span> <span class="s2">&quot;.pkl&quot;</span>
+        <span class="n">export_path</span> <span class="o">=</span> <span class="n">export_path</span> <span class="o">/</span> <span class="n">model_name</span>
+        <span class="k">return</span> <span class="n">cloudpickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">export_path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span></div></div>
 
 
 <span class="k">def</span> <span class="nf">_output_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
