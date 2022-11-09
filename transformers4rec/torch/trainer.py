@@ -488,11 +488,14 @@ class Trainer(BaseTrainer):
                     if torch.is_tensor(labels):
                         if torch.is_tensor(labels_host):
                             labels_host = nested_concat(labels_host, labels, padding_index=0)
+                            print("TENSOR!!")
                         else:
                             labels_host = nested_concat(list(labels_host.values())[0], labels, padding_index=0)
+                            print("TENSOR!!")
                     else:
                         if torch.is_tensor(labels_host):
                             labels_host = nested_concat(labels_host, list(labels.values())[0], padding_index=0)
+                            print("TENSOR!!")
                         else:
                             labels_host = nested_concat(list(labels_host.values())[0], list(labels.values())[0], padding_index=0)
                 

@@ -51,6 +51,8 @@ class RankingMetric(tm.Metric):
         # Computing the metrics at different cut-offs
         if not torch.is_tensor(target):
             target=list(target.values())[0]
+        else:
+            print("TENSOR!!")
         if self.labels_onehot:
             target = torch_utils.tranform_label_to_onehot(target, list(preds.values())[0].size(-1))
         metric = self._metric(torch.LongTensor(self.top_ks), 

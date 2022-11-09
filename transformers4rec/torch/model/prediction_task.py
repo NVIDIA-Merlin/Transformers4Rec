@@ -272,8 +272,7 @@ class NextItemPredictionTask(PredictionTask):
 
         outputs = {}
         if forward:
-            predictions = self(predictions, ignore_masking=False)
-            #if self.hf_format:
+            predictions = self(predictions, training=False, testing=True)
             targets = predictions["labels"]
             predictions = predictions["predictions"]
         predictions = self.forward_to_prediction_fn(predictions)
