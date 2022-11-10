@@ -9,4 +9,3 @@ tensorflow-estimator==2.6.*
 tensorflow-ranking>=0.4
 codespell
 click<8.1.0
-interrogate
