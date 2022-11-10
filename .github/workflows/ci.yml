@@ -37,24 +37,24 @@ jobs:
         run: |
           pip install check-manifest
           check-manifest .
-      - name: Build
-        run: |
-          python setup.py develop
-      - name: Run unittests
-        run: |
-          tox -e test-cpu
-      - name: Generate package for pypi
-        run: |
-          python setup.py sdist
-      - name: Upload artifacts to github
-        uses: actions/upload-artifact@v2
-        with:
-          name: dist
-          path: dist
+      # - name: Build
+      #   run: |
+      #     python setup.py develop
+      # - name: Run unittests
+      #   run: |
+      #     tox -e test-cpu
+      # - name: Generate package for pypi
+      #   run: |
+      #     python setup.py sdist
+      # - name: Upload artifacts to github
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: dist
+      #     path: dist
       # Build docs, treat warnings as errors (TODO SPHINXOPTS="-W -q")
       - name: Building docs
         run: |
-          make -C docs html
+          tox -e docs
       - name: Upload HTML
         uses: actions/upload-artifact@v2
         with:
