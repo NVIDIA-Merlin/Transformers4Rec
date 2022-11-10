@@ -35,6 +35,7 @@ jobs:
           tox -e lint
       - name: Checking Manifest
         run: |
+          pip install check-manifest
           check-manifest .
       - name: Build
         run: |
