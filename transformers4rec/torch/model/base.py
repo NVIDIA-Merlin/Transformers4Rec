@@ -417,13 +417,14 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
                 losses.append(task_output["loss"] * self._task_weights[name])
             loss_tensor = torch.stack(losses)
             loss = getattr(loss_tensor, self.loss_reduction)()
+            """ if len(labels)==1:
+                labels=list(labels.values())[0]
+                predictions=list(predictions.values())[0] """
             outputs={"loss":loss, "labels":labels, "predictions":predictions}
         else:
             for name, task in self.prediction_task_dict.items():
                 outputs[name] = task(body_outputs, training=training, testing=testing, targets=targets, **kwargs)
 
-        if len(outputs) == 1:
-            return outputs[list(outputs.keys())[0]]
 
         return outputs
 
@@ -581,6 +582,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 losses.append(head_output["loss"] * self.head_weights[i])
             loss_tensor = torch.stack(losses)
             loss = getattr(loss_tensor, self.head_reduction)()
+            if len(labels)==1:
+                labels=list(labels.values())[0]
+                predictions=list(predictions.values())[0]
             outputs={"loss":loss, "labels":labels, "predictions":predictions}
 
         else:
@@ -588,9 +592,10 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 outputs.update(
                     head(inputs, call_body=True, training=training, testing=testing, **kwargs)
                 )
+                if len(outputs) == 1:
+                    return outputs[list(outputs.keys())[0]]
 
-        if len(outputs) == 1:
-            return outputs[list(outputs.keys())[0]]
+        
             
         return outputs
 
