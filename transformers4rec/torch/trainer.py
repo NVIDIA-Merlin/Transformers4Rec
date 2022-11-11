@@ -335,15 +335,15 @@ class Trainer(BaseTrainer):
                 with autocast():
                     outputs = model(inputs, training=False, testing=True)
             else:
-                outputs = model(inputs, training=False, ignore_masking=ignore_masking)
+                outputs = model(inputs, training=False)
 
-            loss = outputs['loss'].mean().detach()
+            loss = outputs["loss"].mean().detach()
 
         if prediction_loss_only:
             return (loss, None, None, None)
 
-        predictions = outputs["predictions"]    #.detach()
-        labels = outputs["labels"]  #.detach()
+        predictions = outputs["predictions"]  # .detach()
+        labels = outputs["labels"]  # .detach()
 
         # TODO: define metadata dict in the model for logging
         # other_outputs = {
@@ -394,11 +394,6 @@ class Trainer(BaseTrainer):
             if prediction_loss_only is not None
             else self.args.prediction_loss_only
         )
-
-        if description == "Prediction":
-            ignore_masking = True
-        else:
-            ignore_masking = False
 
         # set the model
         model = self.model.wrapper_module
@@ -483,11 +478,10 @@ class Trainer(BaseTrainer):
                 labels = self._pad_across_processes(labels)
                 labels = self._nested_gather(labels)
                 if labels_host is None:
-                    labels_host=labels
+                    labels_host = labels
                 else:
                     labels_host = nested_concat(labels_host, labels, padding_index=0)
-                            
-                
+
             if preds is not None and self.args.predict_top_k > 0:
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(
                     preds, k=self.args.predict_top_k, dim=-1

@@ -241,7 +241,7 @@ class NextItemPredictionTask(PredictionTask):
                 "predictions": x,
                 # "pred_metadata": {},
                 # "model_outputs": [],
-            }   # TODO: Add model_outputs and metadata
+            }  # TODO: Add model_outputs and metadata
         else:
             # keep only last non-padded position for the 'Prediction step'
             labels = self.embeddings.item_seq
