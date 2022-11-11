@@ -137,7 +137,6 @@ def main():
 
     # Configures the next-item prediction-task
     prediction_task = t4r.NextItemPredictionTask(
-        hf_format=True,
         weight_tying=model_args.mf_constrained_embeddings,
         softmax_temperature=model_args.softmax_temperature,
         metrics=metrics,
