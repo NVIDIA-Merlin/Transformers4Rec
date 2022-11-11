@@ -6,7 +6,6 @@ flake8
 isort
 bandit
 mypy==0.971
-tensorflow-metadata
 tensorflow-estimator==2.6.*
 tensorflow-ranking>=0.4
 codespell
