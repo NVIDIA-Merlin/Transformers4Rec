@@ -51,8 +51,7 @@ class RankingMetric(tm.Metric):
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
             target = torch_utils.tranform_label_to_onehot(target, preds.size(-1))
-        metric = self._metric(torch.LongTensor(self.top_ks), 
-                              preds.view(-1, preds.size(-1)), target)
+        metric = self._metric(torch.LongTensor(self.top_ks), preds.view(-1, preds.size(-1)), target)
         self.metric_mean.append(metric)  # type: ignore
 
     def compute(self):
