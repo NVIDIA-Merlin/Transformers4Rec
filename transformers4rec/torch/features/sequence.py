@@ -256,7 +256,7 @@ class TabularSequenceFeatures(TabularFeatures):
         if self.projection_module:
             outputs = self.projection_module(outputs)
 
-        if self.masking and (not ignore_masking or training):
+        if self.masking and (testing or training):
             outputs = self.masking(
                 outputs, item_ids=self.to_merge["categorical_module"].item_seq, training=training
             )
