@@ -210,7 +210,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         if forward:
             fwd_output = self(predictions, training=training, testing=testing)
         predictions=fwd_output["predictions"]
-        labels=fwd_output["labels"]
+        targets=fwd_output["labels"]
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
