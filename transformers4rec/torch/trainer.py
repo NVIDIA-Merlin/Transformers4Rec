@@ -333,7 +333,7 @@ class Trainer(BaseTrainer):
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
-                    outputs = model(inputs, training=False, testing=True)
+                    outputs = model(inputs, training=training, testing=testing)
             else:
                 outputs = model(inputs, training=False)
 
