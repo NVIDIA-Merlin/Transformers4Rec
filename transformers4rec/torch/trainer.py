@@ -335,7 +335,7 @@ class Trainer(BaseTrainer):
                 with autocast():
                     outputs = model(inputs, training=training, testing=testing)
             else:
-                outputs = model(inputs, training=False)
+                outputs = model(inputs, training=training, testing=testing)
 
             loss = outputs["loss"].mean().detach()
 
