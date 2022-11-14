@@ -102,6 +102,7 @@ html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "titles_only": True,
 }
+html_copy_source = False
 html_show_sourcelink = False
 
 # Add any paths that contain custom static files (such as style sheets) here,

@@ -38,7 +38,11 @@ jobs:
           sphinx-multiversion --dump-metadata docs/source docs/build/html | jq "keys"
       - name: Building docs (multiversion)
         run: |
-          sphinx-multiversion docs/source docs/build/html
+          sphinx-multiversion -d /tmp docs/source docs/build/html
+      - name: Delete unnecessary files
+        run: |
+          find docs/build/html -name .doctrees -exec rm -rf {} \;
+          find docs/build/html -name .buildinfo -exec rm -rf {} \;
       - name: Upload HTML
         uses: actions/upload-artifact@v2
         with:
