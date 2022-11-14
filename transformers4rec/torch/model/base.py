@@ -162,7 +162,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         if training or testing:
             # add support of computing the loss inside the forward
             # and return a dictionary as standard output
-            loss = self(x, targets=targets, training=training, testing=testing)["loss"]
+            loss = self.loss(x, targets)
             return {"loss": loss, "labels": targets, "predictions": x}
 
         return x
