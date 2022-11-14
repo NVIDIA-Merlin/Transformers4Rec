@@ -146,8 +146,14 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         self.built = True
 
     def forward(self, inputs, targets=None, training=False, testing=False, **kwargs):
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
+        if isinstance(targets, dict):
+            if self.target_name:
+                targets = targets[self.target_name]
+            else:
+                raise ValueError(
+                    "target_name can not be None, specify a name."
+                )
+
         x = inputs
 
         if len(x.size()) == 3 and self.summary_type:
@@ -182,31 +188,6 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     def set_metrics(self, metrics):
         self.metrics = torch.nn.ModuleList(metrics)
 
-    """ def compute_loss(
-        self,
-        inputs: Union[torch.Tensor, TabularData],
-        targets: Union[torch.Tensor, TabularData],
-        compute_metrics: bool = True,
-        training: bool = False,
-        ignore_masking: bool = False,
-        **kwargs,
-    ) -> torch.Tensor:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        predictions = self(inputs, training=training, ignore_masking=ignore_masking)
-        loss = self.loss(predictions, targets)
-
-        if compute_metrics:
-            self.calculate_metrics(
-                predictions, targets, mode="train", ignore_masking=ignore_masking, forward=False
-            )
-
-            return loss
-
-        return loss
- """
-
     def calculate_metrics(  # type: ignore
         self,
         predictions: Union[torch.Tensor, TabularData],
@@ -217,12 +198,19 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         testing: bool = True,
         **kwargs,
     ) -> Dict[str, torch.Tensor]:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
+         if isinstance(targets, dict):
+            if self.target_name:
+                targets = targets[self.target_name]
+            else:
+                raise ValueError(
+                    "target_name can not be None, specify a name."
+                )
 
         outputs = {}
         if forward:
-            predictions = self(predictions, training=training, testing=testing)
+            fwd_output = self(predictions, training=training, testing=testing)
+        predictions=fwd_output["predictions"]
+        labels=fwd_output["labels"]
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -519,13 +507,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             Optimizer-class to use during fitting
         name: str, optional
             Name of the model.
-        hf_format: bool, optional
-            This parameter is specific to NextItemPredictionTask class and controls the format of
-            the output returned by the task. If `True`, the task returns a dictionary
-            with three tensors: loss, predictions, labels. Otherwise, it returns the tensor of
-            `predictions` scores.
-            Usually, hf_format is set to True during training and False during inference
-            By default True.
         """
         if head_weights:
             if not isinstance(head_weights, list):
@@ -573,7 +554,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     head(inputs, call_body=True, training=training, testing=testing, **kwargs)
                 )
                 if len(outputs) == 1:
-                    return outputs[list(outputs.keys())[0]]
+                    return outputs[list(outputs.values())[0]]
 
         return outputs
 

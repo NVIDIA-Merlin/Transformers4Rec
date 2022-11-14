@@ -342,8 +342,8 @@ class Trainer(BaseTrainer):
         if prediction_loss_only:
             return (loss, None, None, None)
 
-        predictions = outputs["predictions"]  # .detach()
-        labels = outputs["labels"]  # .detach()
+        predictions = outputs["predictions"].detach()
+        labels = outputs["labels"].detach()
 
         # TODO: define metadata dict in the model for logging
         # other_outputs = {
@@ -394,6 +394,12 @@ class Trainer(BaseTrainer):
             if prediction_loss_only is not None
             else self.args.prediction_loss_only
         )
+        training=False
+        if description=="prediction":
+            testing=False
+        else:
+            testing=True
+
 
         # set the model
         model = self.model.wrapper_module
