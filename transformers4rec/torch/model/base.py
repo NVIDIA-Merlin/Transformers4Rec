@@ -198,7 +198,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         testing: bool = True,
         **kwargs,
     ) -> Dict[str, torch.Tensor]:
-         if isinstance(targets, dict):
+        if isinstance(targets, dict):
             if self.target_name:
                 targets = targets[self.target_name]
             else:
@@ -553,8 +553,8 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 outputs.update(
                     head(inputs, call_body=True, training=training, testing=testing, **kwargs)
                 )
-                if len(outputs) == 1:
-                    return outputs[list(outputs.values())[0]]
+            if len(outputs) == 1:
+                return outputs[list(outputs.values())[0]]
 
         return outputs
 
@@ -611,7 +611,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 return self.parent(inputs, *args, **kwargs)
 
             def training_step(self, batch, batch_idx):
-                loss = self.parent(*batch, training=True, testing=False)
+                loss = self.parent(*batch, training=True, testing=False)['loss']
                 self.log("train_loss", loss)
 
                 return loss

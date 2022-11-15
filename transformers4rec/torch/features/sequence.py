@@ -247,7 +247,7 @@ class TabularSequenceFeatures(TabularFeatures):
 
         return None
 
-    def forward(self, inputs, training=True, ignore_masking=True, **kwargs):
+    def forward(self, inputs, training=True, testing=False, **kwargs):
         outputs = super(TabularSequenceFeatures, self).forward(inputs)
 
         if self.masking or self.projection_module:

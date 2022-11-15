@@ -462,7 +462,7 @@ class Trainer(BaseTrainer):
                 prediction_loss_only,
                 ignore_keys=ignore_keys,
                 training=False,
-                testing=True,
+                testing=testing,
             )
 
             # Updates metrics
