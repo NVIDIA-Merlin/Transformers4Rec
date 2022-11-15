@@ -150,9 +150,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
             if self.target_name:
                 targets = targets[self.target_name]
             else:
-                raise ValueError(
-                    "target_name can not be None, specify a name."
-                )
+                raise ValueError("target_name can not be None, specify a name.")
 
         x = inputs
 
@@ -202,15 +200,13 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
             if self.target_name:
                 targets = targets[self.target_name]
             else:
-                raise ValueError(
-                    "target_name can not be None, specify a name."
-                )
+                raise ValueError("target_name can not be None, specify a name.")
 
         outputs = {}
         if forward:
             fwd_output = self(predictions, training=training, testing=testing)
-        predictions=fwd_output["predictions"]
-        targets=fwd_output["labels"]
+        predictions = fwd_output["predictions"]
+        targets = fwd_output["labels"]
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -611,7 +607,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 return self.parent(inputs, *args, **kwargs)
 
             def training_step(self, batch, batch_idx):
-                loss = self.parent(*batch, training=True, testing=False)['loss']
+                loss = self.parent(*batch, training=True, testing=False)["loss"]
                 self.log("train_loss", loss)
 
                 return loss

@@ -394,12 +394,10 @@ class Trainer(BaseTrainer):
             if prediction_loss_only is not None
             else self.args.prediction_loss_only
         )
-        training=False
-        if description=="prediction":
-            testing=False
+        if description == "prediction":
+            testing = False
         else:
-            testing=True
-
+            testing = True
 
         # set the model
         model = self.model.wrapper_module
