@@ -31,7 +31,7 @@ class LabelSmoothCrossEntropyLoss(_WeightedLoss):
             targets = (
                 torch.empty(size=(targets.size(0), n_classes), device=targets.device)
                 .fill_(smoothing / (n_classes - 1))
-                .scatter_(1, targets.data.unsqueeze(1), 1.0 - smoothing)
+                .scatter_(1, targets.data.unsqueeze(1).to(torch.int64), 1.0 - smoothing)
             )
         return targets
 

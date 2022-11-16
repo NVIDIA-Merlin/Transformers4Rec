@@ -35,7 +35,7 @@ pip install -r requirements.txt
 cd t4r_paper_repro
 FEATURE_SCHEMA_PATH=../datasets_configs/ecom_rees46/rees46_schema.pbtxt
 pip install gdown
-gdown https://drive.google.com/uc?id=1payLwuwfa_QG6GvFVg4KT1w7dSkO-jPZ
+gdown https://drive.google.com/uc?id=1NCFZ5ya3zyxPsrmupEoc9UEm4sslAddV
 apt-get update -y
 apt-get install unzip -y
 DATA_PATH=/transformers4rec/examples/t4rec_paper_experiments/t4r_paper_repro/

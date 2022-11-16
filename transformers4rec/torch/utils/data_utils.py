@@ -225,6 +225,7 @@ if dependencies.is_gpu_dataloader_available():
             self.drop_last = drop_last
 
             self.set_dataset(buffer_size, engine, reader_kwargs)
+            self.dataset.schema = self.dataset.schema.select_by_name(conts + cats + labels)
 
             if (global_rank is not None) and (self.dataset.npartitions < global_size):
                 logger.warning(
