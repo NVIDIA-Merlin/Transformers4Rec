@@ -273,6 +273,7 @@ def test_set_model_to_device(
     assert next(model.parameters()).device.type == device
 
     inputs = {k: v.to(device) for k, v in torch_yoochoose_like.items()}
+    #TODO: inputs type has changed
     assert model(inputs)
 
 
@@ -289,6 +290,7 @@ def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, maski
     task = tr.NextItemPredictionTask()
     model = transformer_config.to_torch_model(input_module, task)
     out = model(torch_yoochoose_like)
+    #TODO: expected output of model()?
     result = model.calculate_metrics(
         inputs=out["predictions"], targets=out["labels"], call_body=False, forward=False
     )
@@ -307,6 +309,7 @@ def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_sc
     )
     task = tr.NextItemPredictionTask(weight_tying=True)
     model = transformer_config.to_torch_model(input_module, task)
+    #TODO: expected model() output?
     assert model(torch_yoochoose_like)
 
 
@@ -325,6 +328,7 @@ def test_output_shape_mode_eval(torch_yoochoose_like, yoochoose_schema, masking)
     model = transformer_config.to_torch_model(input_module, prediction_task)
 
     out = model(torch_yoochoose_like, training=False)
+    #TODO: Expected output?
     assert out["predictions"].shape[0] == torch_yoochoose_like["item_id/list"].size(0)
 
 
@@ -337,6 +341,7 @@ def test_save_next_item_prediction_model(
     model = transformer_config.to_torch_model(inputs, task)
     output = model(torch_yoochoose_like, training=False)
     assert isinstance(output, dict)
+    #TODO: still expect dict?
 
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir)

@@ -146,7 +146,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         self.built = True
 
     def forward(
-        self, inputs, targets, training=False, testing=False, compute_metrics=True, **kwargs
+        self, inputs, targets, training=False, testing=False, **kwargs
         ):
         if isinstance(targets, dict):
             if self.target_name:
@@ -166,10 +166,6 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
             x = self.pre(x)
 
         if training or testing:
-            if compute_metrics:
-                self.calculate_metrics(
-                    x, targets, mode="train", testing=testing, training=training, forward=False
-                )
             # add support of computing the loss inside the forward
             # and return a dictionary as standard output
             loss = self.loss(x, target=targets)
