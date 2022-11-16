@@ -193,7 +193,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         mode: str = "val",
         forward: bool = True,
         training: bool = False,
-        testing: bool = True,
+        testing: bool = False,
         **kwargs,
     ) -> Dict[str, torch.Tensor]:
         if isinstance(targets, dict):
@@ -218,7 +218,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
         return outputs
 
-    def compute_metrics(self, **kwargs):
+    def compute_metrics(self, mode, **kwargs):
         return {self.metric_name(metric): metric.compute() for metric in self.metrics}
 
     def metric_name(self, metric: tm.Metric) -> str:
@@ -423,7 +423,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         forward=True,
         call_body=False,
         training=False,
-        testing=True,
+        testing=False,
         **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         metrics = {}
@@ -451,7 +451,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             return "_".join([mode, x]) if mode else x
 
         metrics = {
-            name_fn(name): task.compute_metrics()
+            name_fn(name): task.compute_metrics(mode=mode)
             for name, task in self.prediction_task_dict.items()
         }
 
@@ -518,7 +518,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.optimizer = optimizer
 
     def forward(
-        self, inputs: TensorOrTabularData, training=True, testing=False, targets=None, **kwargs
+        self, inputs: TensorOrTabularData, training=False, testing=False, targets=None, **kwargs
     ):
         # TODO: Optimize this
         outputs = {}
@@ -558,7 +558,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         mode="val",
         call_body=True,
         training=False,
-        testing=True,
+        testing=False,
         forward=True,
         **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:

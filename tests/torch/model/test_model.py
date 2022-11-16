@@ -152,11 +152,14 @@ def test_model_with_multiple_heads_and_tasks(
             logging_steps=200
         )
     recsys_trainer = tr.Trainer(
-    model=model,
-    args=training_args,
-    schema=non_sequential_features_schema,
-    compute_metrics=True)
-
+        model=model,
+        args=training_args,
+        schema=non_sequential_features_schema,
+        compute_metrics=True,
+        train_dataset_or_path=dataset,
+        eval_dataset_or_path=dataset,
+        )
+    #TODO:give correct data path
     recsys_trainer.train()
     metrics = recsys_trainer.evaluate(metric_key_prefix='eval')
     #losses = model.fit(dataset, num_epochs=5)
@@ -246,8 +249,8 @@ def test_item_prediction_transformer_torch_model_from_config(
 
     out = model(torch_yoochoose_like)
 
-    assert list((out.values()))[0].size()[1] == task.target_dim
-    assert len(list((out.values()))[0].size()) == 2
+    assert out.size()[1] == task.target_dim
+    assert len(out.size()) == 2
 
     in_schema = model.input_schema
     assert isinstance(in_schema, Core_Schema)

@@ -48,7 +48,9 @@ class BinaryClassificationTask(PredictionTask):
         tm.Precision(num_classes=2),
         tm.Recall(num_classes=2),
         tm.Accuracy(),
+        # TODO: add accuracy mode.
         # TODO: Fix this: tm.AUC()
+
     )
 
     def __init__(

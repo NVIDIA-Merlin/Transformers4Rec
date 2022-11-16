@@ -4,7 +4,7 @@ rootdir: /mnt/Transformers4Rec-refactor
 plugins: anyio-3.6.2
 collected 27 items
 
-test_model.py FFFF.FFFFFFFF.........FFFFF                                                                                                              [100%]
+test_model.py F..F.........FFFFFFFFFFFFFF                                                                                                              [100%]
 
 ========================================================================== FAILURES ==========================================================================
 _____________________________________________________________________ test_simple_model ______________________________________________________________________
@@ -18,11 +18,11 @@ torch_tabular_features = TabularFeatures(
     )
   )
 )
-torch_tabular_data = {'categories': tensor([[274, 121, 122,  ...,   0,   0,   0],
-        [319, 178, 286,  ..., 137, 210, 244],
-        [ 2... 0.6654, 0.3741,
-        0.3815, 0.0204, 0.2540, 0.0560, 0.1772, 0.6748, 0.8673, 0.2714, 0.5815,
-        0.7994]), ...}
+torch_tabular_data = {'categories': tensor([[236,  14, 256,  ...,   0,   0,   0],
+        [205,  89,  36,  ...,   0,   0,   0],
+        [12... 0.0420, 0.7020,
+        0.9199, 0.2935, 0.3351, 0.9686, 0.1185, 0.3018, 0.2741, 0.0442, 0.8873,
+        0.9423]), ...}
 
     def test_simple_model(torch_tabular_features, torch_tabular_data):
         targets = {"target": pytorch.randint(2, (100,)).float()}
@@ -43,7 +43,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 ../../../transformers4rec/torch/model/base.py:453: in compute_metrics
     metrics = {
 ../../../transformers4rec/torch/model/base.py:454: in <dictcomp>
-    name_fn(name): task.compute_metrics()
+    name_fn(name): task.compute_metrics(mode=mode)
 ../../../transformers4rec/torch/model/base.py:222: in compute_metrics
     return {self.metric_name(metric): metric.compute() for metric in self.metrics}
 ../../../transformers4rec/torch/model/base.py:222: in <dictcomp>
@@ -62,220 +62,7 @@ E           RuntimeError: You have to have determined mode.
 
 /usr/local/lib/python3.8/dist-packages/torchmetrics/classification/accuracy.py:616: RuntimeError
 -------------------------------------------------------------------- Captured stderr call --------------------------------------------------------------------
-0it [00:00, ?it/s]1it [00:03,  3.14s/it]1it [00:03,  3.14s/it]
-_________________________________________________ test_sequential_prediction_model[BinaryClassificationTask] _________________________________________________
-
-torch_yoochoose_tabular_transformer_features = TabularSequenceFeatures(
-  (to_merge): ModuleDict(
-    (continuous_module): SequentialBlock(
-      (0): ContinuousFeat...ures=256, out_features=100, bias=True)
-      (1): ReLU(inplace=True)
-    )
-  )
-  (_masking): CausalLanguageModeling()
-)
-torch_yoochoose_like = {'category/list': tensor([[ 15,  44, 129,  ..., 139,  69, 266],
-        [317, 134, 111,  ..., 261, 199,   0],
-        ...81851,
-         7984136,  5047850, 10607691,  7841404,  3004632,  8194274,  7319796,
-         6590390, 10294088]), ...}
-task = <class 'transformers4rec.torch.model.prediction_task.BinaryClassificationTask'>
-
-    @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
-    def test_sequential_prediction_model(
-        torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, task
-    ):
-        inputs = torch_yoochoose_tabular_transformer_features
-    
-        transformer_config = tconf.XLNetConfig.build(
-            d_model=64, n_head=4, n_layer=2, total_seq_length=20
-        )
-        body = tr.SequentialBlock(inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config))
-    
-        head_1 = tr.Head(
-            body,
-            tr.NextItemPredictionTask(weight_tying=True),
-            inputs=inputs,
-        )
-        head_2 = task("target", summary_type="mean").to_head(body, inputs)
-    
-        model = tr.Model(head_1, head_2)
->       output = model(torch_yoochoose_like)
-
-test_model.py:80: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:531: in forward
-    head_output = head(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:401: in forward
-    task_output = task(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:169: in forward
-    loss = self.loss(x, target=targets)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/loss.py:618: in forward
-    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-input = tensor([0.5565, 0.6271, 0.5289, 0.5748, 0.5023, 0.6026, 0.4780, 0.4994, 0.5733,
-        0.5373, 0.5538, 0.5452, 0.4821...      0.5804, 0.5086, 0.5684, 0.5223, 0.5596, 0.4864, 0.5031, 0.5091, 0.5468,
-        0.5679], grad_fn=<ViewBackward0>)
-target = None, weight = None, size_average = None, reduce = None, reduction = 'mean'
-
-    def binary_cross_entropy(
-        input: Tensor,
-        target: Tensor,
-        weight: Optional[Tensor] = None,
-        size_average: Optional[bool] = None,
-        reduce: Optional[bool] = None,
-        reduction: str = "mean",
-    ) -> Tensor:
-        r"""Function that measures the Binary Cross Entropy between the target and input
-        probabilities.
-    
-        See :class:`~torch.nn.BCELoss` for details.
-    
-        Args:
-            input: Tensor of arbitrary shape as probabilities.
-            target: Tensor of the same shape as input with values between 0 and 1.
-            weight (Tensor, optional): a manual rescaling weight
-                    if provided it's repeated to match input tensor shape
-            size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,
-                the losses are averaged over each loss element in the batch. Note that for
-                some losses, there multiple elements per sample. If the field :attr:`size_average`
-                is set to ``False``, the losses are instead summed for each minibatch. Ignored
-                when reduce is ``False``. Default: ``True``
-            reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the
-                losses are averaged or summed over observations for each minibatch depending
-                on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per
-                batch element instead and ignores :attr:`size_average`. Default: ``True``
-            reduction (string, optional): Specifies the reduction to apply to the output:
-                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,
-                ``'mean'``: the sum of the output will be divided by the number of
-                elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`
-                and :attr:`reduce` are in the process of being deprecated, and in the meantime,
-                specifying either of those two args will override :attr:`reduction`. Default: ``'mean'``
-    
-        Examples::
-    
-            >>> input = torch.randn(3, 2, requires_grad=True)
-            >>> target = torch.rand(3, 2, requires_grad=False)
-            >>> loss = F.binary_cross_entropy(torch.sigmoid(input), target)
-            >>> loss.backward()
-        """
-        if has_torch_function_variadic(input, target, weight):
-            return handle_torch_function(
-                binary_cross_entropy,
-                (input, target, weight),
-                input,
-                target,
-                weight=weight,
-                size_average=size_average,
-                reduce=reduce,
-                reduction=reduction,
-            )
-        if size_average is not None or reduce is not None:
-            reduction_enum = _Reduction.legacy_get_enum(size_average, reduce)
-        else:
-            reduction_enum = _Reduction.get_enum(reduction)
->       if target.size() != input.size():
-E       AttributeError: 'NoneType' object has no attribute 'size'
-
-/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py:3079: AttributeError
---------------------------------------------------------------------- Captured log call ----------------------------------------------------------------------
-WARNING  transformers4rec:base.py:87 Masking is set in the input module but not in the TransformerBlock, provide this through the masking argument
-______________________________________________________ test_sequential_prediction_model[RegressionTask] ______________________________________________________
-
-torch_yoochoose_tabular_transformer_features = TabularSequenceFeatures(
-  (to_merge): ModuleDict(
-    (continuous_module): SequentialBlock(
-      (0): ContinuousFeat...ures=256, out_features=100, bias=True)
-      (1): ReLU(inplace=True)
-    )
-  )
-  (_masking): CausalLanguageModeling()
-)
-torch_yoochoose_like = {'category/list': tensor([[305,  53,  80,  ...,   0,   0,   0],
-        [169, 110, 303,  ..., 108, 147, 172],
-        ...07354,
-         3216934,  3760958,  6070522,  7356741,   493182,  5733334,  9737439,
-         8761906,  9058231]), ...}
-task = <class 'transformers4rec.torch.model.prediction_task.RegressionTask'>
-
-    @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
-    def test_sequential_prediction_model(
-        torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, task
-    ):
-        inputs = torch_yoochoose_tabular_transformer_features
-    
-        transformer_config = tconf.XLNetConfig.build(
-            d_model=64, n_head=4, n_layer=2, total_seq_length=20
-        )
-        body = tr.SequentialBlock(inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config))
-    
-        head_1 = tr.Head(
-            body,
-            tr.NextItemPredictionTask(weight_tying=True),
-            inputs=inputs,
-        )
-        head_2 = task("target", summary_type="mean").to_head(body, inputs)
-    
-        model = tr.Model(head_1, head_2)
->       output = model(torch_yoochoose_like)
-
-test_model.py:80: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:531: in forward
-    head_output = head(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:401: in forward
-    task_output = task(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:169: in forward
-    loss = self.loss(x, target=targets)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/loss.py:535: in forward
-    return F.mse_loss(input, target, reduction=self.reduction)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-input = tensor([-0.7198, -1.2293, -0.5134, -0.8641, -0.6847, -0.6654, -0.4419, -1.0963,
-        -0.5509, -0.5048, -0.4346, -0....613, -0.9567, -0.4272, -0.6960, -0.7229, -0.5458,
-        -0.9515, -1.2042, -0.5151, -0.8455], grad_fn=<ViewBackward0>)
-target = None, size_average = None, reduce = None, reduction = 'mean'
-
-    def mse_loss(
-        input: Tensor,
-        target: Tensor,
-        size_average: Optional[bool] = None,
-        reduce: Optional[bool] = None,
-        reduction: str = "mean",
-    ) -> Tensor:
-        r"""mse_loss(input, target, size_average=None, reduce=None, reduction='mean') -> Tensor
-    
-        Measures the element-wise mean squared error.
-    
-        See :class:`~torch.nn.MSELoss` for details.
-        """
-        if has_torch_function_variadic(input, target):
-            return handle_torch_function(
-                mse_loss, (input, target), input, target, size_average=size_average, reduce=reduce, reduction=reduction
-            )
->       if not (target.size() == input.size()):
-E       AttributeError: 'NoneType' object has no attribute 'size'
-
-/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py:3275: AttributeError
---------------------------------------------------------------------- Captured log call ----------------------------------------------------------------------
-WARNING  transformers4rec:base.py:87 Masking is set in the input module but not in the TransformerBlock, provide this through the masking argument
+0it [00:00, ?it/s]1it [00:03,  3.08s/it]1it [00:03,  3.08s/it]
 __________________________________________________________ test_model_with_multiple_heads_and_tasks __________________________________________________________
 
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
@@ -288,11 +75,11 @@ torch_yoochoose_tabular_transformer_features = TabularSequenceFeatures(
   )
   (_masking): CausalLanguageModeling()
 )
-torch_yoochoose_like = {'category/list': tensor([[307,  47,  87,  ...,   0,   0,   0],
-        [258, 125,  62,  ...,   0,   0,   0],
-        ...64217,
-         8671731, 11266506,  9022927,  3775857,  4053563,  9028045,  1850975,
-         6731114,   815917]), ...}
+torch_yoochoose_like = {'category/list': tensor([[ 95, 297,  87,  ...,   0,   0,   0],
+        [101, 251, 288,  ...,   0,   0,   0],
+        ...43855,
+        11013118,  8756821,  2270287,  6761018,  3567838, 11361474,  4069951,
+         6787162,  1738605]), ...}
 
     def test_model_with_multiple_heads_and_tasks(
         yoochoose_schema,
@@ -344,678 +131,359 @@ torch_yoochoose_like = {'category/list': tensor([[307,  47,  87,  ...,   0,   0,
         model = tr.Model(head_1, head_2)
     
         # get output of the model
->       output = model(torch_yoochoose_like)
-
-test_model.py:136: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:531: in forward
-    head_output = head(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:401: in forward
-    task_output = task(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:169: in forward
-    loss = self.loss(x, target=targets)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/loss.py:618: in forward
-    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-input = tensor([0.5235, 0.5240, 0.5236, 0.5205, 0.5233, 0.5207, 0.5219, 0.5195, 0.5250,
-        0.5199, 0.5188, 0.5210, 0.5198...      0.5204, 0.5239, 0.5243, 0.5224, 0.5185, 0.5230, 0.5264, 0.5237, 0.5261,
-        0.5224], grad_fn=<ViewBackward0>)
-target = None, weight = None, size_average = None, reduce = None, reduction = 'mean'
-
-    def binary_cross_entropy(
-        input: Tensor,
-        target: Tensor,
-        weight: Optional[Tensor] = None,
-        size_average: Optional[bool] = None,
-        reduce: Optional[bool] = None,
-        reduction: str = "mean",
-    ) -> Tensor:
-        r"""Function that measures the Binary Cross Entropy between the target and input
-        probabilities.
+        output = model(torch_yoochoose_like)
     
-        See :class:`~torch.nn.BCELoss` for details.
-    
-        Args:
-            input: Tensor of arbitrary shape as probabilities.
-            target: Tensor of the same shape as input with values between 0 and 1.
-            weight (Tensor, optional): a manual rescaling weight
-                    if provided it's repeated to match input tensor shape
-            size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,
-                the losses are averaged over each loss element in the batch. Note that for
-                some losses, there multiple elements per sample. If the field :attr:`size_average`
-                is set to ``False``, the losses are instead summed for each minibatch. Ignored
-                when reduce is ``False``. Default: ``True``
-            reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the
-                losses are averaged or summed over observations for each minibatch depending
-                on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per
-                batch element instead and ignores :attr:`size_average`. Default: ``True``
-            reduction (string, optional): Specifies the reduction to apply to the output:
-                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,
-                ``'mean'``: the sum of the output will be divided by the number of
-                elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`
-                and :attr:`reduce` are in the process of being deprecated, and in the meantime,
-                specifying either of those two args will override :attr:`reduction`. Default: ``'mean'``
-    
-        Examples::
-    
-            >>> input = torch.randn(3, 2, requires_grad=True)
-            >>> target = torch.rand(3, 2, requires_grad=False)
-            >>> loss = F.binary_cross_entropy(torch.sigmoid(input), target)
-            >>> loss.backward()
-        """
-        if has_torch_function_variadic(input, target, weight):
-            return handle_torch_function(
-                binary_cross_entropy,
-                (input, target, weight),
-                input,
-                target,
-                weight=weight,
-                size_average=size_average,
-                reduce=reduce,
-                reduction=reduction,
+        # launch training
+        targets.update(targets_2)
+        dataset = [(torch_yoochoose_like, targets)]
+        training_args = t4rec.trainer.T4RecTrainingArguments(
+                output_dir="./tmp",
+                max_sequence_length=20,
+                data_loader_engine='nvtabular',
+                num_train_epochs=1,
+                dataloader_drop_last=False,
+                per_device_train_batch_size = 384,
+                per_device_eval_batch_size = 512,
+                learning_rate=0.0005,
+                fp16=True,
+                report_to = [],
+                logging_steps=200
             )
-        if size_average is not None or reduce is not None:
-            reduction_enum = _Reduction.legacy_get_enum(size_average, reduce)
-        else:
-            reduction_enum = _Reduction.get_enum(reduction)
->       if target.size() != input.size():
-E       AttributeError: 'NoneType' object has no attribute 'size'
+        recsys_trainer = tr.Trainer(
+            model=model,
+            args=training_args,
+            schema=non_sequential_features_schema,
+            compute_metrics=True,
+            train_dataset_or_path=dataset,
+            eval_dataset_or_path=dataset,
+            )
+        #TODO:give correct data path
+>       recsys_trainer.train()
 
-/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py:3079: AttributeError
+test_model.py:163: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+/usr/local/lib/python3.8/dist-packages/transformers/trainer.py:1115: in train
+    train_dataloader = self.get_train_dataloader()
+../../../transformers4rec/torch/trainer.py:156: in get_train_dataloader
+    return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
+../../../transformers4rec/torch/utils/data_utils.py:319: in from_schema
+    nvt_loader = cls(
+../../../transformers4rec/torch/utils/data_utils.py:227: in __init__
+    self.set_dataset(buffer_size, engine, reader_kwargs)
+../../../transformers4rec/torch/utils/data_utils.py:267: in set_dataset
+    dataset = validate_dataset(
+../../../merlin_standard_lib/utils/misc_utils.py:239: in validate_dataset
+    return Dataset(files, engine=engine, **reader_kwargs)
+/usr/local/lib/python3.8/dist-packages/merlin/io/dataset.py:295: in __init__
+    paths = sorted(paths, key=natural_sort_key)
+/usr/local/lib/python3.8/dist-packages/dask/utils.py:1387: in natural_sort_key
+    return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", s)]
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+pattern = '(\\d+)'
+string = ({'category/list': tensor([[ 95, 297,  87,  ...,   0,   0,   0],
+        [101, 251, 288,  ...,   0,   0,   0],
+       ... 0., 1., 1., 0., 1., 0., 1., 0., 0., 0., 0., 1., 1., 0., 1., 1., 1.,
+        1., 0., 0., 1., 0., 1., 0., 0., 0., 1.])})
+maxsplit = 0, flags = 0
+
+    def split(pattern, string, maxsplit=0, flags=0):
+        """Split the source string by the occurrences of the pattern,
+        returning a list containing the resulting substrings.  If
+        capturing parentheses are used in pattern, then the text of all
+        groups in the pattern are also returned as part of the resulting
+        list.  If maxsplit is nonzero, at most maxsplit splits occur,
+        and the remainder of the string is returned as the final element
+        of the list."""
+>       return _compile(pattern, flags).split(string, maxsplit)
+E       TypeError: expected string or bytes-like object
+
+/usr/lib/python3.8/re.py:231: TypeError
+-------------------------------------------------------------------- Captured stderr call --------------------------------------------------------------------
+Using amp fp16 backend
 --------------------------------------------------------------------- Captured log call ----------------------------------------------------------------------
 WARNING  transformers4rec:base.py:87 Masking is set in the input module but not in the TransformerBlock, provide this through the masking argument
-___________________________________________________ test_transformer_torch_model_from_config[XLNetConfig] ____________________________________________________
+_______________________________________________________________ test_set_model_to_device[cpu] ________________________________________________________________
 
-yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[210, 316,  48,  ...,   0,   0,   0],
-        [113, 152, 116,  ...,   0,   0,   0],
-        ...06443,
-         9702485,   409174, 10092927,  1022247,  8950317,  3397643,  1152096,
-         1381802,  8396520]), ...}
-config_cls = <class 'transformers4rec.config.transformer.XLNetConfig'>
-
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_like, config_cls):
-        transformer_config = config_cls.build(128, 4, 2, 20)
-    
-        input_module = tr.TabularSequenceFeatures.from_schema(
-            yoochoose_schema,
-            max_sequence_length=20,
-            continuous_projection=64,
-            d_output=128,
-            masking="causal",
-        )
-        task = tr.BinaryClassificationTask("classification")
-        model = transformer_config.to_torch_model(input_module, task)
-    
->       out = model(torch_yoochoose_like)
-
-test_model.py:224: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:531: in forward
-    head_output = head(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:401: in forward
-    task_output = task(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:169: in forward
-    loss = self.loss(x, target=targets)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/loss.py:618: in forward
-    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-input = tensor([0.4879, 0.4967, 0.6443, 0.5627, 0.2894, 0.7345, 0.6917, 0.6019, 0.7014,
-        0.4916, 0.7823, 0.5783, 0.6594...      0.6818, 0.3928, 0.7300, 0.7792, 0.7030, 0.6065, 0.6856, 0.7697, 0.6223,
-        0.5781], grad_fn=<ViewBackward0>)
-target = None, weight = None, size_average = None, reduce = None, reduction = 'mean'
-
-    def binary_cross_entropy(
-        input: Tensor,
-        target: Tensor,
-        weight: Optional[Tensor] = None,
-        size_average: Optional[bool] = None,
-        reduce: Optional[bool] = None,
-        reduction: str = "mean",
-    ) -> Tensor:
-        r"""Function that measures the Binary Cross Entropy between the target and input
-        probabilities.
-    
-        See :class:`~torch.nn.BCELoss` for details.
-    
-        Args:
-            input: Tensor of arbitrary shape as probabilities.
-            target: Tensor of the same shape as input with values between 0 and 1.
-            weight (Tensor, optional): a manual rescaling weight
-                    if provided it's repeated to match input tensor shape
-            size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,
-                the losses are averaged over each loss element in the batch. Note that for
-                some losses, there multiple elements per sample. If the field :attr:`size_average`
-                is set to ``False``, the losses are instead summed for each minibatch. Ignored
-                when reduce is ``False``. Default: ``True``
-            reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the
-                losses are averaged or summed over observations for each minibatch depending
-                on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per
-                batch element instead and ignores :attr:`size_average`. Default: ``True``
-            reduction (string, optional): Specifies the reduction to apply to the output:
-                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,
-                ``'mean'``: the sum of the output will be divided by the number of
-                elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`
-                and :attr:`reduce` are in the process of being deprecated, and in the meantime,
-                specifying either of those two args will override :attr:`reduction`. Default: ``'mean'``
-    
-        Examples::
-    
-            >>> input = torch.randn(3, 2, requires_grad=True)
-            >>> target = torch.rand(3, 2, requires_grad=False)
-            >>> loss = F.binary_cross_entropy(torch.sigmoid(input), target)
-            >>> loss.backward()
-        """
-        if has_torch_function_variadic(input, target, weight):
-            return handle_torch_function(
-                binary_cross_entropy,
-                (input, target, weight),
-                input,
-                target,
-                weight=weight,
-                size_average=size_average,
-                reduce=reduce,
-                reduction=reduction,
+torch_yoochoose_like = {'category/list': tensor([[209,  70,  60,  ...,   0,   0,   0],
+        [ 20,  45, 165,  ...,   0,   0,   0],
+        ...03164,
+        10151174, 10888025,  2804073, 10865882,  4934621,  9928980, 11119436,
+         5378603,  2343296]), ...}
+torch_yoochoose_next_item_prediction_model = Model(
+  (heads): ModuleList(
+    (0): Head(
+      (body): SequentialBlock(
+        (0): TabularSequenceFeatures(
+    ... padding_idx=0)
+              (log_softmax): LogSoftmax(dim=-1)
             )
-        if size_average is not None or reduce is not None:
-            reduction_enum = _Reduction.legacy_get_enum(size_average, reduce)
-        else:
-            reduction_enum = _Reduction.get_enum(reduction)
->       if target.size() != input.size():
-E       AttributeError: 'NoneType' object has no attribute 'size'
-
-/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py:3079: AttributeError
-___________________________________________________ test_transformer_torch_model_from_config[AlbertConfig] ___________________________________________________
-
-yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[ 18, 244, 149,  ...,   0,   0,   0],
-        [281, 164, 130,  ..., 140, 288,   0],
-        ...37934,
-        10962165,  1612163, 10158842,   324187,  7154697,   366098,  2452700,
-         7021675,  8564105]), ...}
-config_cls = <class 'transformers4rec.config.transformer.AlbertConfig'>
-
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_like, config_cls):
-        transformer_config = config_cls.build(128, 4, 2, 20)
-    
-        input_module = tr.TabularSequenceFeatures.from_schema(
-            yoochoose_schema,
-            max_sequence_length=20,
-            continuous_projection=64,
-            d_output=128,
-            masking="causal",
+          )
         )
-        task = tr.BinaryClassificationTask("classification")
-        model = transformer_config.to_torch_model(input_module, task)
-    
->       out = model(torch_yoochoose_like)
+      )
+    )
+  )
+)
+device = 'cpu'
 
-test_model.py:224: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:531: in forward
-    head_output = head(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:401: in forward
-    task_output = task(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:169: in forward
-    loss = self.loss(x, target=targets)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/loss.py:618: in forward
-    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-input = tensor([0.5206, 0.6399, 0.5322, 0.5163, 0.3810, 0.6496, 0.6607, 0.6692, 0.6864,
-        0.7656, 0.5239, 0.5793, 0.6579...      0.6528, 0.5277, 0.5112, 0.5508, 0.5572, 0.6513, 0.5814, 0.5123, 0.6741,
-        0.6404], grad_fn=<ViewBackward0>)
-target = None, weight = None, size_average = None, reduce = None, reduction = 'mean'
-
-    def binary_cross_entropy(
-        input: Tensor,
-        target: Tensor,
-        weight: Optional[Tensor] = None,
-        size_average: Optional[bool] = None,
-        reduce: Optional[bool] = None,
-        reduction: str = "mean",
-    ) -> Tensor:
-        r"""Function that measures the Binary Cross Entropy between the target and input
-        probabilities.
-    
-        See :class:`~torch.nn.BCELoss` for details.
-    
-        Args:
-            input: Tensor of arbitrary shape as probabilities.
-            target: Tensor of the same shape as input with values between 0 and 1.
-            weight (Tensor, optional): a manual rescaling weight
-                    if provided it's repeated to match input tensor shape
-            size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,
-                the losses are averaged over each loss element in the batch. Note that for
-                some losses, there multiple elements per sample. If the field :attr:`size_average`
-                is set to ``False``, the losses are instead summed for each minibatch. Ignored
-                when reduce is ``False``. Default: ``True``
-            reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the
-                losses are averaged or summed over observations for each minibatch depending
-                on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per
-                batch element instead and ignores :attr:`size_average`. Default: ``True``
-            reduction (string, optional): Specifies the reduction to apply to the output:
-                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,
-                ``'mean'``: the sum of the output will be divided by the number of
-                elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`
-                and :attr:`reduce` are in the process of being deprecated, and in the meantime,
-                specifying either of those two args will override :attr:`reduction`. Default: ``'mean'``
-    
-        Examples::
-    
-            >>> input = torch.randn(3, 2, requires_grad=True)
-            >>> target = torch.rand(3, 2, requires_grad=False)
-            >>> loss = F.binary_cross_entropy(torch.sigmoid(input), target)
-            >>> loss.backward()
-        """
-        if has_torch_function_variadic(input, target, weight):
-            return handle_torch_function(
-                binary_cross_entropy,
-                (input, target, weight),
-                input,
-                target,
-                weight=weight,
-                size_average=size_average,
-                reduce=reduce,
-                reduction=reduction,
-            )
-        if size_average is not None or reduce is not None:
-            reduction_enum = _Reduction.legacy_get_enum(size_average, reduce)
-        else:
-            reduction_enum = _Reduction.get_enum(reduction)
->       if target.size() != input.size():
-E       AttributeError: 'NoneType' object has no attribute 'size'
-
-/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py:3079: AttributeError
-_________________________________________________ test_transformer_torch_model_from_config[LongformerConfig] _________________________________________________
-
-yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[ 69, 308, 293,  ...,   0,   0,   0],
-        [215, 169, 112,  ...,  95,   0,   0],
-        ...45999,
-         8338369,  9823380,  7089589, 10242457,  4055870,   523334,  8440783,
-         5842539,  4234812]), ...}
-config_cls = <class 'transformers4rec.config.transformer.LongformerConfig'>
-
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_like, config_cls):
-        transformer_config = config_cls.build(128, 4, 2, 20)
-    
-        input_module = tr.TabularSequenceFeatures.from_schema(
-            yoochoose_schema,
-            max_sequence_length=20,
-            continuous_projection=64,
-            d_output=128,
-            masking="causal",
-        )
-        task = tr.BinaryClassificationTask("classification")
-        model = transformer_config.to_torch_model(input_module, task)
-    
->       out = model(torch_yoochoose_like)
-
-test_model.py:224: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:531: in forward
-    head_output = head(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:401: in forward
-    task_output = task(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:169: in forward
-    loss = self.loss(x, target=targets)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/loss.py:618: in forward
-    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-input = tensor([0.3701, 0.2879, 0.4297, 0.4706, 0.3668, 0.3426, 0.4559, 0.4378, 0.4467,
-        0.3572, 0.2479, 0.4725, 0.3165...      0.3591, 0.3203, 0.4014, 0.5056, 0.4700, 0.4328, 0.1637, 0.4288, 0.4563,
-        0.4343], grad_fn=<ViewBackward0>)
-target = None, weight = None, size_average = None, reduce = None, reduction = 'mean'
-
-    def binary_cross_entropy(
-        input: Tensor,
-        target: Tensor,
-        weight: Optional[Tensor] = None,
-        size_average: Optional[bool] = None,
-        reduce: Optional[bool] = None,
-        reduction: str = "mean",
-    ) -> Tensor:
-        r"""Function that measures the Binary Cross Entropy between the target and input
-        probabilities.
-    
-        See :class:`~torch.nn.BCELoss` for details.
-    
-        Args:
-            input: Tensor of arbitrary shape as probabilities.
-            target: Tensor of the same shape as input with values between 0 and 1.
-            weight (Tensor, optional): a manual rescaling weight
-                    if provided it's repeated to match input tensor shape
-            size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,
-                the losses are averaged over each loss element in the batch. Note that for
-                some losses, there multiple elements per sample. If the field :attr:`size_average`
-                is set to ``False``, the losses are instead summed for each minibatch. Ignored
-                when reduce is ``False``. Default: ``True``
-            reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the
-                losses are averaged or summed over observations for each minibatch depending
-                on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per
-                batch element instead and ignores :attr:`size_average`. Default: ``True``
-            reduction (string, optional): Specifies the reduction to apply to the output:
-                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,
-                ``'mean'``: the sum of the output will be divided by the number of
-                elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`
-                and :attr:`reduce` are in the process of being deprecated, and in the meantime,
-                specifying either of those two args will override :attr:`reduction`. Default: ``'mean'``
-    
-        Examples::
-    
-            >>> input = torch.randn(3, 2, requires_grad=True)
-            >>> target = torch.rand(3, 2, requires_grad=False)
-            >>> loss = F.binary_cross_entropy(torch.sigmoid(input), target)
-            >>> loss.backward()
-        """
-        if has_torch_function_variadic(input, target, weight):
-            return handle_torch_function(
-                binary_cross_entropy,
-                (input, target, weight),
-                input,
-                target,
-                weight=weight,
-                size_average=size_average,
-                reduce=reduce,
-                reduction=reduction,
-            )
-        if size_average is not None or reduce is not None:
-            reduction_enum = _Reduction.legacy_get_enum(size_average, reduce)
-        else:
-            reduction_enum = _Reduction.get_enum(reduction)
->       if target.size() != input.size():
-E       AttributeError: 'NoneType' object has no attribute 'size'
-
-/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py:3079: AttributeError
-____________________________________________________ test_transformer_torch_model_from_config[GPT2Config] ____________________________________________________
-
-yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[294, 101, 194,  ...,   0,   0,   0],
-        [ 30, 323, 195,  ...,   0,   0,   0],
-        ...77362,
-         6423128, 11283798,  8844975,  6284092, 10917205,  3394917, 10802451,
-         5269599,  3205466]), ...}
-config_cls = <class 'transformers4rec.config.transformer.GPT2Config'>
-
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_transformer_torch_model_from_config(yoochoose_schema, torch_yoochoose_like, config_cls):
-        transformer_config = config_cls.build(128, 4, 2, 20)
-    
-        input_module = tr.TabularSequenceFeatures.from_schema(
-            yoochoose_schema,
-            max_sequence_length=20,
-            continuous_projection=64,
-            d_output=128,
-            masking="causal",
-        )
-        task = tr.BinaryClassificationTask("classification")
-        model = transformer_config.to_torch_model(input_module, task)
-    
->       out = model(torch_yoochoose_like)
-
-test_model.py:224: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:531: in forward
-    head_output = head(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:401: in forward
-    task_output = task(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-../../../transformers4rec/torch/model/base.py:169: in forward
-    loss = self.loss(x, target=targets)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1186: in _call_impl
-    return forward_call(*input, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/loss.py:618: in forward
-    return F.binary_cross_entropy(input, target, weight=self.weight, reduction=self.reduction)
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-input = tensor([0.7616, 0.7636, 0.7325, 0.6118, 0.6333, 0.6547, 0.7717, 0.6860, 0.5294,
-        0.6973, 0.6670, 0.7117, 0.8060...      0.7662, 0.7736, 0.7308, 0.7854, 0.8044, 0.4966, 0.6094, 0.7315, 0.5163,
-        0.5665], grad_fn=<ViewBackward0>)
-target = None, weight = None, size_average = None, reduce = None, reduction = 'mean'
-
-    def binary_cross_entropy(
-        input: Tensor,
-        target: Tensor,
-        weight: Optional[Tensor] = None,
-        size_average: Optional[bool] = None,
-        reduce: Optional[bool] = None,
-        reduction: str = "mean",
-    ) -> Tensor:
-        r"""Function that measures the Binary Cross Entropy between the target and input
-        probabilities.
-    
-        See :class:`~torch.nn.BCELoss` for details.
-    
-        Args:
-            input: Tensor of arbitrary shape as probabilities.
-            target: Tensor of the same shape as input with values between 0 and 1.
-            weight (Tensor, optional): a manual rescaling weight
-                    if provided it's repeated to match input tensor shape
-            size_average (bool, optional): Deprecated (see :attr:`reduction`). By default,
-                the losses are averaged over each loss element in the batch. Note that for
-                some losses, there multiple elements per sample. If the field :attr:`size_average`
-                is set to ``False``, the losses are instead summed for each minibatch. Ignored
-                when reduce is ``False``. Default: ``True``
-            reduce (bool, optional): Deprecated (see :attr:`reduction`). By default, the
-                losses are averaged or summed over observations for each minibatch depending
-                on :attr:`size_average`. When :attr:`reduce` is ``False``, returns a loss per
-                batch element instead and ignores :attr:`size_average`. Default: ``True``
-            reduction (string, optional): Specifies the reduction to apply to the output:
-                ``'none'`` | ``'mean'`` | ``'sum'``. ``'none'``: no reduction will be applied,
-                ``'mean'``: the sum of the output will be divided by the number of
-                elements in the output, ``'sum'``: the output will be summed. Note: :attr:`size_average`
-                and :attr:`reduce` are in the process of being deprecated, and in the meantime,
-                specifying either of those two args will override :attr:`reduction`. Default: ``'mean'``
-    
-        Examples::
-    
-            >>> input = torch.randn(3, 2, requires_grad=True)
-            >>> target = torch.rand(3, 2, requires_grad=False)
-            >>> loss = F.binary_cross_entropy(torch.sigmoid(input), target)
-            >>> loss.backward()
-        """
-        if has_torch_function_variadic(input, target, weight):
-            return handle_torch_function(
-                binary_cross_entropy,
-                (input, target, weight),
-                input,
-                target,
-                weight=weight,
-                size_average=size_average,
-                reduce=reduce,
-                reduction=reduction,
-            )
-        if size_average is not None or reduce is not None:
-            reduction_enum = _Reduction.legacy_get_enum(size_average, reduce)
-        else:
-            reduction_enum = _Reduction.get_enum(reduction)
->       if target.size() != input.size():
-E       AttributeError: 'NoneType' object has no attribute 'size'
-
-/usr/local/lib/python3.8/dist-packages/torch/nn/functional.py:3079: AttributeError
-___________________________________________ test_item_prediction_transformer_torch_model_from_config[XLNetConfig] ____________________________________________
-
-yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[301, 299, 119,  ...,   0,   0,   0],
-        [ 68, 172, 185,  ...,   0,   0,   0],
-        ...17360,
-         9706083,  8044533,  5173562,  5795641,  9356778,  1632291,  3578651,
-         4208582,  2067695]), ...}
-config_cls = <class 'transformers4rec.config.transformer.XLNetConfig'>
-
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_item_prediction_transformer_torch_model_from_config(
-        yoochoose_schema, torch_yoochoose_like, config_cls
+    @pytest.mark.parametrize("device", devices)
+    def test_set_model_to_device(
+        torch_yoochoose_like, torch_yoochoose_next_item_prediction_model, device
     ):
-        transformer_config = config_cls.build(128, 4, 2, 20)
+        model = torch_yoochoose_next_item_prediction_model
+        model.to(device)
     
+        assert model.heads[0].body.inputs.masking.masked_item_embedding.device.type == device
+        assert next(model.parameters()).device.type == device
+    
+        inputs = {k: v.to(device) for k, v in torch_yoochoose_like.items()}
+>       assert model(inputs)
+E       RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+
+test_model.py:276: RuntimeError
+_______________________________________________________________ test_set_model_to_device[cuda] _______________________________________________________________
+
+torch_yoochoose_like = {'category/list': tensor([[216, 331, 163,  ...,   0,   0,   0],
+        [160,  95, 265,  ...,   0,   0,   0],
+        ...37194,
+          504295,  7520761,  5601010,  7163300, 10987729,  8041138,  9266754,
+         2977214,  1035965]), ...}
+torch_yoochoose_next_item_prediction_model = Model(
+  (heads): ModuleList(
+    (0): Head(
+      (body): SequentialBlock(
+        (0): TabularSequenceFeatures(
+    ... padding_idx=0)
+              (log_softmax): LogSoftmax(dim=-1)
+            )
+          )
+        )
+      )
+    )
+  )
+)
+device = 'cuda'
+
+    @pytest.mark.parametrize("device", devices)
+    def test_set_model_to_device(
+        torch_yoochoose_like, torch_yoochoose_next_item_prediction_model, device
+    ):
+        model = torch_yoochoose_next_item_prediction_model
+        model.to(device)
+    
+        assert model.heads[0].body.inputs.masking.masked_item_embedding.device.type == device
+        assert next(model.parameters()).device.type == device
+    
+        inputs = {k: v.to(device) for k, v in torch_yoochoose_like.items()}
+>       assert model(inputs)
+E       RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+
+test_model.py:276: RuntimeError
+___________________________________________________________ test_eval_metrics_with_masking[causal] ___________________________________________________________
+
+torch_yoochoose_like = {'category/list': tensor([[ 65, 137, 275,  ...,   0,   0,   0],
+        [144, 331, 151,  ...,   0,   0,   0],
+        ...57677,
+         1086422,  8658045,  7724495,  9906659,  9461550,  9775567,  8406967,
+         1155855, 10063007]), ...}
+yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
+masking = 'causal'
+
+    @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
+    def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, masking):
+        transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
         input_module = tr.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
-            d_output=128,
-            masking="causal",
+            d_output=64,
+            masking=masking,
         )
-    
         task = tr.NextItemPredictionTask()
         model = transformer_config.to_torch_model(input_module, task)
-    
         out = model(torch_yoochoose_like)
-    
->       assert list((out.values()))[0].size()[1] == task.target_dim
-E       IndexError: tuple index out of range
+        result = model.calculate_metrics(
+>           inputs=out["predictions"], targets=out["labels"], call_body=False, forward=False
+        )
+E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:249: IndexError
-___________________________________________ test_item_prediction_transformer_torch_model_from_config[AlbertConfig] ___________________________________________
+test_model.py:293: IndexError
+____________________________________________________________ test_eval_metrics_with_masking[mlm] _____________________________________________________________
 
+torch_yoochoose_like = {'category/list': tensor([[119,  89, 211,  ..., 221,   0,   0],
+        [234, 226, 117,  ...,   0,   0,   0],
+        ...84183,
+         9725483,  6987470, 11231711,  8898907,  5745734, 10249287,  2008326,
+         4413956, 10383378]), ...}
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[ 39, 235, 273,  ..., 155, 302, 160],
-        [218, 321, 229,  ...,   0,   0,   0],
-        ...31794,
-         4317499,  8890376,  3055290,  9907033,   499823,  1349870,  1763590,
-         7265678, 10766015]), ...}
-config_cls = <class 'transformers4rec.config.transformer.AlbertConfig'>
+masking = 'mlm'
 
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_item_prediction_transformer_torch_model_from_config(
-        yoochoose_schema, torch_yoochoose_like, config_cls
-    ):
-        transformer_config = config_cls.build(128, 4, 2, 20)
-    
+    @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
+    def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, masking):
+        transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
         input_module = tr.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
-            d_output=128,
-            masking="causal",
+            d_output=64,
+            masking=masking,
         )
-    
         task = tr.NextItemPredictionTask()
         model = transformer_config.to_torch_model(input_module, task)
-    
         out = model(torch_yoochoose_like)
-    
->       assert list((out.values()))[0].size()[1] == task.target_dim
-E       IndexError: tuple index out of range
+        result = model.calculate_metrics(
+>           inputs=out["predictions"], targets=out["labels"], call_body=False, forward=False
+        )
+E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:249: IndexError
-_________________________________________ test_item_prediction_transformer_torch_model_from_config[LongformerConfig] _________________________________________
+test_model.py:293: IndexError
+____________________________________________________________ test_eval_metrics_with_masking[plm] _____________________________________________________________
 
+torch_yoochoose_like = {'category/list': tensor([[117, 227, 232,  ...,   0,   0,   0],
+        [123,  52,  36,  ...,   0,   0,   0],
+        ...93154,
+         5080700,  8337806,  4577159,  6948070,  8632449,  5830146,   810075,
+        11544789, 11177580]), ...}
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[129, 149,  62,  ...,   0,   0,   0],
-        [299, 301, 118,  ...,   0,   0,   0],
-        ...69252,
-         1604912,   740463,  9088118,  9733598,  4406119, 10891286, 11077209,
-         4451275,  1755114]), ...}
-config_cls = <class 'transformers4rec.config.transformer.LongformerConfig'>
+masking = 'plm'
 
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_item_prediction_transformer_torch_model_from_config(
-        yoochoose_schema, torch_yoochoose_like, config_cls
-    ):
-        transformer_config = config_cls.build(128, 4, 2, 20)
-    
+    @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
+    def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, masking):
+        transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
         input_module = tr.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
-            d_output=128,
-            masking="causal",
+            d_output=64,
+            masking=masking,
         )
-    
         task = tr.NextItemPredictionTask()
         model = transformer_config.to_torch_model(input_module, task)
-    
         out = model(torch_yoochoose_like)
-    
->       assert list((out.values()))[0].size()[1] == task.target_dim
-E       IndexError: tuple index out of range
+        result = model.calculate_metrics(
+>           inputs=out["predictions"], targets=out["labels"], call_body=False, forward=False
+        )
+E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:249: IndexError
-____________________________________________ test_item_prediction_transformer_torch_model_from_config[GPT2Config] ____________________________________________
+test_model.py:293: IndexError
+____________________________________________________________ test_eval_metrics_with_masking[rtd] _____________________________________________________________
 
+torch_yoochoose_like = {'category/list': tensor([[254, 197, 243,  ...,   0,   0,   0],
+        [321,  92,  24,  ...,  47, 140, 270],
+        ...88861,
+         6940720,  8841606,  4370491,  9636417, 11037352,  1805523,  9063036,
+        10008772,  7417966]), ...}
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
-torch_yoochoose_like = {'category/list': tensor([[310, 180, 256,  ..., 193, 206,   0],
-        [299,  62, 290,  ...,   0,   0,   0],
-        ...71776,
-         2808932,  8552461,  2881492,  5307050,  7451643, 10192730,  1810432,
-        10873130,   434231]), ...}
-config_cls = <class 'transformers4rec.config.transformer.GPT2Config'>
+masking = 'rtd'
 
-    @pytest.mark.parametrize("config_cls", config_classes)
-    def test_item_prediction_transformer_torch_model_from_config(
-        yoochoose_schema, torch_yoochoose_like, config_cls
-    ):
-        transformer_config = config_cls.build(128, 4, 2, 20)
-    
+    @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
+    def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, masking):
+        transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
         input_module = tr.TabularSequenceFeatures.from_schema(
             yoochoose_schema,
             max_sequence_length=20,
             continuous_projection=64,
-            d_output=128,
-            masking="causal",
+            d_output=64,
+            masking=masking,
         )
-    
         task = tr.NextItemPredictionTask()
         model = transformer_config.to_torch_model(input_module, task)
-    
         out = model(torch_yoochoose_like)
-    
->       assert list((out.values()))[0].size()[1] == task.target_dim
-E       IndexError: tuple index out of range
+        result = model.calculate_metrics(
+>           inputs=out["predictions"], targets=out["labels"], call_body=False, forward=False
+        )
+E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:249: IndexError
+test_model.py:293: IndexError
+_______________________________________________________ test_with_d_model_different_from_item_dim[32] ________________________________________________________
+
+torch_yoochoose_like = {'category/list': tensor([[188, 140, 214,  ...,   0,   0,   0],
+        [ 88, 162,   2,  ...,   0,   0,   0],
+        ...33164,
+        10562935,  9261291,  9725925, 10770441,  1375602, 11386263,  8934249,
+         4365906,  8167984]), ...}
+yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
+d_model = 32
+
+    @pytest.mark.parametrize("d_model", [32, 64, 128])
+    def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_schema, d_model):
+        transformer_config = tconf.XLNetConfig.build(d_model, 4, 2, 20)
+        input_module = tr.TabularSequenceFeatures.from_schema(
+            yoochoose_schema,
+            max_sequence_length=20,
+            continuous_projection=64,
+            d_output=d_model,
+            masking="mlm",
+        )
+        task = tr.NextItemPredictionTask(weight_tying=True)
+        model = transformer_config.to_torch_model(input_module, task)
+>       assert model(torch_yoochoose_like)
+E       RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+
+test_model.py:310: RuntimeError
+--------------------------------------------------------------------- Captured log call ----------------------------------------------------------------------
+WARNING  transformers4rec:prediction_task.py:194 Projecting inputs of NextItemPredictionTask to'64' As weight tying requires the input dimension '32' to be equal to the item-id embedding dimension '64'
+_______________________________________________________ test_with_d_model_different_from_item_dim[64] ________________________________________________________
+
+torch_yoochoose_like = {'category/list': tensor([[114, 277, 212,  ...,   0,   0,   0],
+        [145, 261,  69,  ...,   0,   0,   0],
+        ...83586,
+        10950377,  6710981,  2951007,  5673063,  7743868, 11492189, 10207866,
+         1084276, 11198688]), ...}
+yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
+d_model = 64
+
+    @pytest.mark.parametrize("d_model", [32, 64, 128])
+    def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_schema, d_model):
+        transformer_config = tconf.XLNetConfig.build(d_model, 4, 2, 20)
+        input_module = tr.TabularSequenceFeatures.from_schema(
+            yoochoose_schema,
+            max_sequence_length=20,
+            continuous_projection=64,
+            d_output=d_model,
+            masking="mlm",
+        )
+        task = tr.NextItemPredictionTask(weight_tying=True)
+        model = transformer_config.to_torch_model(input_module, task)
+>       assert model(torch_yoochoose_like)
+E       RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+
+test_model.py:310: RuntimeError
+_______________________________________________________ test_with_d_model_different_from_item_dim[128] _______________________________________________________
+
+torch_yoochoose_like = {'category/list': tensor([[289,  72, 231,  ...,   0,   0,   0],
+        [237, 291, 193,  ..., 288, 292, 187],
+        ...60673,
+         2996333,  7469160,  7785203,  5478241,  9740876,  2277348, 10898197,
+         2598702,   465083]), ...}
+yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
+d_model = 128
+
+    @pytest.mark.parametrize("d_model", [32, 64, 128])
+    def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_schema, d_model):
+        transformer_config = tconf.XLNetConfig.build(d_model, 4, 2, 20)
+        input_module = tr.TabularSequenceFeatures.from_schema(
+            yoochoose_schema,
+            max_sequence_length=20,
+            continuous_projection=64,
+            d_output=d_model,
+            masking="mlm",
+        )
+        task = tr.NextItemPredictionTask(weight_tying=True)
+        model = transformer_config.to_torch_model(input_module, task)
+>       assert model(torch_yoochoose_like)
+E       RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+
+test_model.py:310: RuntimeError
+--------------------------------------------------------------------- Captured log call ----------------------------------------------------------------------
+WARNING  transformers4rec:prediction_task.py:194 Projecting inputs of NextItemPredictionTask to'64' As weight tying requires the input dimension '128' to be equal to the item-id embedding dimension '64'
 ____________________________________________________________ test_output_shape_mode_eval[causal] _____________________________________________________________
 
-torch_yoochoose_like = {'category/list': tensor([[153, 256, 250,  ...,   0,   0,   0],
-        [223,   8, 105,  ..., 238,   0,   0],
-        ...34066,
-         1542006, 10577696,  4290714,   340834,  1601478, 11543511,  5453548,
-         5367098,  4376860]), ...}
+torch_yoochoose_like = {'category/list': tensor([[199,  76, 147,  ...,   0,   0,   0],
+        [151, 254, 276,  ...,   0,   0,   0],
+        ...44899,
+         6322940,  4566426,  9257042,  2811213, 10261896,  7155283,  7312102,
+         1177582,   891361]), ...}
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
 masking = 'causal'
 
@@ -1037,14 +505,14 @@ masking = 'causal'
 >       assert out["predictions"].shape[0] == torch_yoochoose_like["item_id/list"].size(0)
 E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:325: IndexError
+test_model.py:328: IndexError
 ______________________________________________________________ test_output_shape_mode_eval[mlm] ______________________________________________________________
 
-torch_yoochoose_like = {'category/list': tensor([[286, 148, 155,  ...,   0,   0,   0],
-        [128, 136, 216,  ...,   0,   0,   0],
-        ...96002,
-         2078011,  8511503,  5620011,  3378463,  7528213,  6322206,  5340233,
-         7066952, 10519887]), ...}
+torch_yoochoose_like = {'category/list': tensor([[ 65, 110, 147,  ...,   0,   0,   0],
+        [ 38, 117, 280,  ...,  60,  23, 329],
+        ...98640,
+         7351364,  6803955,  3477018,  5581723,  3577299,  9869113,  5447139,
+        10088356,  1681984]), ...}
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
 masking = 'mlm'
 
@@ -1066,14 +534,14 @@ masking = 'mlm'
 >       assert out["predictions"].shape[0] == torch_yoochoose_like["item_id/list"].size(0)
 E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:325: IndexError
+test_model.py:328: IndexError
 ______________________________________________________________ test_output_shape_mode_eval[plm] ______________________________________________________________
 
-torch_yoochoose_like = {'category/list': tensor([[273,  90, 233,  ...,   0,   0,   0],
-        [  5,  49, 105,  ..., 321, 254,   0],
-        ...63638,
-         8301957,  9262485,  4080877,  8955552,  1697773,   623934,  5065350,
-         8192554,   602764]), ...}
+torch_yoochoose_like = {'category/list': tensor([[168,  45,  42,  ...,   0,   0,   0],
+        [288,  43, 174,  ..., 288, 110, 162],
+        ...25654,
+         2468836,  9668183,   467847,   995949,  3911354,  4206847,  3375374,
+         2700013,  6277962]), ...}
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
 masking = 'plm'
 
@@ -1095,14 +563,14 @@ masking = 'plm'
 >       assert out["predictions"].shape[0] == torch_yoochoose_like["item_id/list"].size(0)
 E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:325: IndexError
+test_model.py:328: IndexError
 ______________________________________________________________ test_output_shape_mode_eval[rtd] ______________________________________________________________
 
-torch_yoochoose_like = {'category/list': tensor([[ 64,  56, 199,  ...,   0,   0,   0],
-        [324, 236, 106,  ..., 210, 290,   0],
-        ...88586,
-         9100384,   480043,  1120070,  7634515,  8364040,  1517353, 10989869,
-        10695043,  5996599]), ...}
+torch_yoochoose_like = {'category/list': tensor([[318, 160, 307,  ...,   0,   0,   0],
+        [ 43, 148, 165,  ...,   0,   0,   0],
+        ...57115,
+        11311926,  1316468, 10350507, 11442892,  7753894,  7538651,  5934226,
+         5616004,  9385786]), ...}
 yoochoose_schema = [{'name': 'session_id', 'type': 'INT', 'int_domain': {'name': 'session_id', 'min': '1', 'max': '11562158'}, 'annotatio...ype': 'FLOAT', 'float_domain': {'name': 'user_age', 'max': 0.4079650044441223}, 'annotation': {'tag': ['continuous']}}]
 masking = 'rtd'
 
@@ -1124,7 +592,7 @@ masking = 'rtd'
 >       assert out["predictions"].shape[0] == torch_yoochoose_like["item_id/list"].size(0)
 E       IndexError: too many indices for tensor of dimension 2
 
-test_model.py:325: IndexError
+test_model.py:328: IndexError
 ____________________________________________________________ test_save_next_item_prediction_model ____________________________________________________________
 
 torch_yoochoose_tabular_transformer_features = TabularSequenceFeatures(
@@ -1136,11 +604,11 @@ torch_yoochoose_tabular_transformer_features = TabularSequenceFeatures(
   )
   (_masking): CausalLanguageModeling()
 )
-torch_yoochoose_like = {'category/list': tensor([[251, 172, 178,  ...,   0,   0,   0],
-        [185, 152,  68,  ...,   0,   0,   0],
-        ...56293,
-         2205685, 10587361,  8099449,  1584613,  3238691,  1050667,  7392958,
-         8957862,  7766961]), ...}
+torch_yoochoose_like = {'category/list': tensor([[ 38, 108, 292,  ..., 200, 145,   0],
+        [302, 201, 243,  ...,   0,   0,   0],
+        ...66119,
+         9968101,  2629057,  9679119,  9256068,  2828910,  2425823,  7597517,
+         3992448,  7743949]), ...}
 
     def test_save_next_item_prediction_model(
         torch_yoochoose_tabular_transformer_features, torch_yoochoose_like
@@ -1152,11 +620,11 @@ torch_yoochoose_like = {'category/list': tensor([[251, 172, 178,  ...,   0,   0,
         output = model(torch_yoochoose_like, training=False)
 >       assert isinstance(output, dict)
 E       assert False
-E        +  where False = isinstance(tensor([[-10.6567, -10.5724, -10.6308,  ..., -10.4873, -11.0897, -10.8721],\n        [-10.4392, -10.3145, -10.7841,  .....64],\n        [-10.6759, -10.7502, -10.8985,  ..., -10.7739, -11.1507, -10.8326]],\n       grad_fn=<LogSoftmaxBackward0>), dict)
+E        +  where False = isinstance(tensor([[-10.7595, -10.7622, -10.6539,  ..., -11.0835, -11.2931, -10.8045],\n        [-10.7888, -10.7378, -10.7701,  .....17],\n        [-10.7031, -10.8597, -10.8620,  ..., -10.8657, -11.2464, -10.7707]],\n       grad_fn=<LogSoftmaxBackward0>), dict)
 
-test_model.py:336: AssertionError
+test_model.py:339: AssertionError
 --------------------------------------------------------------------- Captured log call ----------------------------------------------------------------------
-WARNING  transformers4rec:prediction_task.py:192 Projecting inputs of NextItemPredictionTask to'64' As weight tying requires the input dimension '100' to be equal to the item-id embedding dimension '64'
+WARNING  transformers4rec:prediction_task.py:194 Projecting inputs of NextItemPredictionTask to'64' As weight tying requires the input dimension '100' to be equal to the item-id embedding dimension '64'
 ====================================================================== warnings summary ======================================================================
 tests/torch/model/test_model.py::test_simple_model
   /usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: The ``compute`` method of metric Precision was called before the ``update`` method which may lead to errors, as metric states have not yet been updated.
@@ -1170,23 +638,33 @@ tests/torch/model/test_model.py::test_simple_model
   /usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: The ``compute`` method of metric Accuracy was called before the ``update`` method which may lead to errors, as metric states have not yet been updated.
     warnings.warn(*args, **kwargs)
 
+tests/torch/model/test_model.py::test_model_with_multiple_heads_and_tasks
+  /usr/local/lib/python3.8/dist-packages/nvtabular/io.py:23: DeprecationWarning: The `nvtabular.io` module has moved to `merlin.io`. Support for importing from `nvtabular.io` is deprecated, and will be removed in a future version. Please update your imports to refer to `merlin.io`.
+    warnings.warn(
+
+tests/torch/model/test_model.py::test_item_prediction_transformer_torch_model_from_config[XLNetConfig]
+tests/torch/model/test_model.py::test_item_prediction_transformer_torch_model_from_config[AlbertConfig]
+tests/torch/model/test_model.py::test_item_prediction_transformer_torch_model_from_config[LongformerConfig]
+tests/torch/model/test_model.py::test_item_prediction_transformer_torch_model_from_config[GPT2Config]
+  /usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:148: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [<Tags.ITEM: 'item'>, <Tags.ID: 'id'>].
+    warnings.warn(
+
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 ================================================================== short test summary info ===================================================================
 FAILED test_model.py::test_simple_model - RuntimeError: You have to have determined mode.
-FAILED test_model.py::test_sequential_prediction_model[BinaryClassificationTask] - AttributeError: 'NoneType' object has no attribute 'size'
-FAILED test_model.py::test_sequential_prediction_model[RegressionTask] - AttributeError: 'NoneType' object has no attribute 'size'
-FAILED test_model.py::test_model_with_multiple_heads_and_tasks - AttributeError: 'NoneType' object has no attribute 'size'
-FAILED test_model.py::test_transformer_torch_model_from_config[XLNetConfig] - AttributeError: 'NoneType' object has no attribute 'size'
-FAILED test_model.py::test_transformer_torch_model_from_config[AlbertConfig] - AttributeError: 'NoneType' object has no attribute 'size'
-FAILED test_model.py::test_transformer_torch_model_from_config[LongformerConfig] - AttributeError: 'NoneType' object has no attribute 'size'
-FAILED test_model.py::test_transformer_torch_model_from_config[GPT2Config] - AttributeError: 'NoneType' object has no attribute 'size'
-FAILED test_model.py::test_item_prediction_transformer_torch_model_from_config[XLNetConfig] - IndexError: tuple index out of range
-FAILED test_model.py::test_item_prediction_transformer_torch_model_from_config[AlbertConfig] - IndexError: tuple index out of range
-FAILED test_model.py::test_item_prediction_transformer_torch_model_from_config[LongformerConfig] - IndexError: tuple index out of range
-FAILED test_model.py::test_item_prediction_transformer_torch_model_from_config[GPT2Config] - IndexError: tuple index out of range
+FAILED test_model.py::test_model_with_multiple_heads_and_tasks - TypeError: expected string or bytes-like object
+FAILED test_model.py::test_set_model_to_device[cpu] - RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+FAILED test_model.py::test_set_model_to_device[cuda] - RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+FAILED test_model.py::test_eval_metrics_with_masking[causal] - IndexError: too many indices for tensor of dimension 2
+FAILED test_model.py::test_eval_metrics_with_masking[mlm] - IndexError: too many indices for tensor of dimension 2
+FAILED test_model.py::test_eval_metrics_with_masking[plm] - IndexError: too many indices for tensor of dimension 2
+FAILED test_model.py::test_eval_metrics_with_masking[rtd] - IndexError: too many indices for tensor of dimension 2
+FAILED test_model.py::test_with_d_model_different_from_item_dim[32] - RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+FAILED test_model.py::test_with_d_model_different_from_item_dim[64] - RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+FAILED test_model.py::test_with_d_model_different_from_item_dim[128] - RuntimeError: Boolean value of Tensor with more than one value is ambiguous
 FAILED test_model.py::test_output_shape_mode_eval[causal] - IndexError: too many indices for tensor of dimension 2
 FAILED test_model.py::test_output_shape_mode_eval[mlm] - IndexError: too many indices for tensor of dimension 2
 FAILED test_model.py::test_output_shape_mode_eval[plm] - IndexError: too many indices for tensor of dimension 2
 FAILED test_model.py::test_output_shape_mode_eval[rtd] - IndexError: too many indices for tensor of dimension 2
 FAILED test_model.py::test_save_next_item_prediction_model - assert False
-========================================================= 17 failed, 10 passed, 3 warnings in 20.37s =========================================================
+========================================================= 16 failed, 11 passed, 8 warnings in 14.71s =========================================================
