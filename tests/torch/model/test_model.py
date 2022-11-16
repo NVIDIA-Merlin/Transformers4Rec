@@ -22,6 +22,7 @@ import torch
 from merlin.schema import Schema as Core_Schema
 
 from transformers4rec.config import transformer as tconf
+from transformers4rec import torch as t4rec
 
 pytorch = pytest.importorskip("torch")
 tr = pytest.importorskip("transformers4rec.torch")
@@ -70,7 +71,7 @@ def test_sequential_prediction_model(
 
     head_1 = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=inputs,
     )
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
@@ -137,8 +138,29 @@ def test_model_with_multiple_heads_and_tasks(
     # launch training
     targets.update(targets_2)
     dataset = [(torch_yoochoose_like, targets)]
-    losses = model.fit(dataset, num_epochs=5)
-    metrics = model.evaluate(dataset)
+    training_args = t4rec.trainer.T4RecTrainingArguments(
+            output_dir="./tmp",
+            max_sequence_length=20,
+            data_loader_engine='nvtabular',
+            num_train_epochs=1, 
+            dataloader_drop_last=False,
+            per_device_train_batch_size = 384,
+            per_device_eval_batch_size = 512,
+            learning_rate=0.0005,
+            fp16=True,
+            report_to = [],
+            logging_steps=200
+        )
+    recsys_trainer = tr.Trainer(
+    model=model,
+    args=training_args,
+    schema=non_sequential_features_schema,
+    compute_metrics=True)
+
+    recsys_trainer.train()
+    metrics = recsys_trainer.evaluate(metric_key_prefix='eval')
+    #losses = model.fit(dataset, num_epochs=5)
+    #metrics = model.evaluate(dataset)
 
     assert list(metrics.keys()) == [
         "eval_classification/binary_classification_task",
@@ -224,8 +246,8 @@ def test_item_prediction_transformer_torch_model_from_config(
 
     out = model(torch_yoochoose_like)
 
-    assert out.size()[1] == task.target_dim
-    assert len(out.size()) == 2
+    assert list((out.values()))[0].size()[1] == task.target_dim
+    assert len(list((out.values()))[0].size()) == 2
 
     in_schema = model.input_schema
     assert isinstance(in_schema, Core_Schema)
@@ -261,7 +283,7 @@ def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, maski
         d_output=64,
         masking=masking,
     )
-    task = tr.NextItemPredictionTask(hf_format=True)
+    task = tr.NextItemPredictionTask()
     model = transformer_config.to_torch_model(input_module, task)
     out = model(torch_yoochoose_like)
     result = model.calculate_metrics(
@@ -280,7 +302,7 @@ def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_sc
         d_output=d_model,
         masking="mlm",
     )
-    task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    task = tr.NextItemPredictionTask(weight_tying=True)
     model = transformer_config.to_torch_model(input_module, task)
     assert model(torch_yoochoose_like)
 
@@ -293,7 +315,7 @@ def test_output_shape_mode_eval(torch_yoochoose_like, yoochoose_schema, masking)
         d_output=64,
         masking=masking,
     )
-    prediction_task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    prediction_task = tr.NextItemPredictionTask(weight_tying=True)
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=8, n_layer=2, total_seq_length=20
     )
@@ -308,7 +330,7 @@ def test_save_next_item_prediction_model(
 ):
     inputs = torch_yoochoose_tabular_transformer_features
     transformer_config = tconf.XLNetConfig.build(100, 4, 2, 20)
-    task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    task = tr.NextItemPredictionTask(weight_tying=True)
     model = transformer_config.to_torch_model(inputs, task)
     output = model(torch_yoochoose_like, training=False)
     assert isinstance(output, dict)
@@ -317,9 +339,6 @@ def test_save_next_item_prediction_model(
         model.save(tmpdir)
         assert "t4rec_model_class.pkl" in os.listdir(tmpdir)
         loaded_model = model.load(tmpdir)
-        # deactivate the hf_format model to get the tensor of predictions as output
-        # instead of a dictionary of three tensors `loss, labels, and predictions`
-        loaded_model.hf_format = False
 
     output = loaded_model(torch_yoochoose_like, training=False)
     assert isinstance(output, torch.Tensor)

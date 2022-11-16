@@ -161,7 +161,7 @@ def test_item_prediction_HF_output(
     body = tr.SequentialBlock(input_module, tr.MLPBlock([64]))
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
@@ -209,7 +209,7 @@ def test_item_prediction_head_with_input_size(
     )
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
@@ -231,7 +231,7 @@ def test_item_prediction_with_rnn(
     )
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 

@@ -14,7 +14,7 @@ def test_torchsciprt_not_strict(torch_yoochoose_like, yoochoose_schema):
         d_output=64,
         masking="causal",
     )
-    prediction_task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    prediction_task = tr.NextItemPredictionTask(weight_tying=True)
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=8, n_layer=2, total_seq_length=20
     )
