@@ -195,7 +195,9 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 
         return MaskingInfo(mask_labels, labels)
 
-    def forward(self, inputs: torch.Tensor, item_ids: torch.Tensor, training=False, testing=False) -> torch.Tensor:
+    def forward(
+        self, inputs: torch.Tensor, item_ids: torch.Tensor, training=False, testing=False
+    ) -> torch.Tensor:
         _ = self.compute_masked_targets(item_ids=item_ids, training=training)
         if self.mask_schema is None:
             raise ValueError("`mask_schema must be set.`")
