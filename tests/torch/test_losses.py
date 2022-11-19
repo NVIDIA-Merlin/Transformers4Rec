@@ -34,6 +34,8 @@ def test_item_prediction_with_label_smoothing_ce_loss(
     n_classes = 51997
     manuall_loss = pytorch.nn.NLLLoss(reduction="mean")
     target_with_smoothing = labels_all * (1 - label_smoothing) + label_smoothing / n_classes
-    manual_output_loss = manuall_loss(head_output["predictions"], target_with_smoothing.to(pytorch.long))
+    manual_output_loss = manuall_loss(
+        head_output["predictions"], target_with_smoothing.to(pytorch.long)
+    )
 
     assert np.allclose(manual_output_loss.detach().numpy(), loss.detach().numpy(), rtol=1e-3)
