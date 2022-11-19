@@ -24,7 +24,6 @@ from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
 tr = pytest.importorskip("transformers4rec.torch")
-pytest.importorskip("pyarrow")
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
@@ -324,6 +323,7 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
 )
 def test_trainer_music_streaming(task):
     # TODO: Add binary and regression tasks
+    pytest.importorskip("pyarrow")
     data = tr.data.music_streaming_testing_data
     batch_size = 16
 
