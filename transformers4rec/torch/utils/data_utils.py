@@ -314,7 +314,7 @@ if dependencies.is_gpu_dataloader_available():
                 continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
             )
             targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
-
+            schema = schema.select_by_name(categorical_features + continuous_features + targets)
             sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
             sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
             nvt_loader = cls(
