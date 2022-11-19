@@ -135,9 +135,6 @@ class NextItemPredictionTask(PredictionTask):
         pad token id.
     target_dim: int
         vocabulary size of item ids
-    hf_format: bool
-        Output the dictionary of outputs needed by RecSysTrainer, if set to False,
-        return the predictions tensor.
     """
 
     DEFAULT_METRICS = (
@@ -157,14 +154,12 @@ class NextItemPredictionTask(PredictionTask):
         softmax_temperature: float = 1,
         padding_idx: int = 0,
         target_dim: int = None,
-        hf_format=False,
     ):
         super().__init__(loss=loss, metrics=metrics, task_block=task_block, task_name=task_name)
         self.softmax_temperature = softmax_temperature
         self.weight_tying = weight_tying
         self.padding_idx = padding_idx
         self.target_dim = target_dim
-        self.hf_format = hf_format
 
         self.item_embedding_table = None
         self.masking = None
@@ -216,12 +211,7 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(
-        self, inputs: torch.Tensor, ignore_masking=True, training=False, hf_format=None, **kwargs
-    ):
-        if hf_format is not None:
-            self.hf_format = hf_format
-
+    def forward(self, inputs: torch.Tensor, training=False, testing=False, **kwargs):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -230,28 +220,14 @@ class NextItemPredictionTask(PredictionTask):
             x = self.task_block(x)  # type: ignore
 
         # Retrieve labels from masking
-        if training or not ignore_masking:
+        if training or testing:
             labels = self.masking.masked_targets  # type: ignore
             trg_flat = labels.flatten()
             non_pad_mask = trg_flat != self.padding_idx
             labels_all = torch.masked_select(trg_flat, non_pad_mask)
             # remove padded items, keep only masked positions
             x = self.remove_pad_3d(x, non_pad_mask)
-        else:
-            # keep only last non-padded position for the 'Prediction step'
-            labels = self.embeddings.item_seq
-            non_pad_mask = labels != self.padding_idx
-            last_item_sessions = non_pad_mask.sum(dim=1) - 1
-            rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=labels.device)
-            labels_all = labels[rows_ids, last_item_sessions]
-            labels_all = labels_all.flatten()
-            x = x[rows_ids, last_item_sessions]
-
-        # Compute predictions probs
-        x = self.pre(x)  # type: ignore
-
-        # prepare outputs for HF trainer
-        if self.hf_format:
+            x = self.pre(x)
             loss = self.loss(x, labels_all)
             return {
                 "loss": loss,
@@ -260,7 +236,16 @@ class NextItemPredictionTask(PredictionTask):
                 # "pred_metadata": {},
                 # "model_outputs": [],
             }
-            # TODO: Add model_outputs and metadata
+        else:
+            # keep only last non-padded position for the 'Prediction step'
+            labels = self.embeddings.item_seq
+            non_pad_mask = labels != self.padding_idx
+            last_item_sessions = non_pad_mask.sum(dim=1) - 1
+            rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=labels.device)
+            x = x[rows_ids, last_item_sessions]
+
+        # Compute predictions probs
+        x = self.pre(x)  # type: ignore
 
         return x
 
@@ -274,17 +259,16 @@ class NextItemPredictionTask(PredictionTask):
         return out_tensor
 
     def calculate_metrics(  # type: ignore
-        self, predictions, targets, mode="val", forward=True, **kwargs
+        self, predictions, targets, mode="val", training=False, testing=True, forward=True, **kwargs
     ) -> Dict[str, torch.Tensor]:
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
         outputs = {}
         if forward:
-            predictions = self(predictions, ignore_masking=False)
-            if self.hf_format:
-                targets = predictions["labels"]
-                predictions = predictions["predictions"]
+            predictions = self(predictions, testing=testing)
+            targets = predictions["labels"]
+            predictions = predictions["predictions"]
         predictions = self.forward_to_prediction_fn(predictions)
 
         for metric in self.metrics:

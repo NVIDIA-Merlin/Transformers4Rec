@@ -119,13 +119,13 @@ def test_sequential_tabular_features_ignore_masking(yoochoose_schema, torch_yooc
     input_module._masking = CausalLanguageModeling(hidden_size=100)
 
     output_ignore_masking = (
-        input_module(torch_yoochoose_like, training=False, ignore_masking=True)
+        input_module(torch_yoochoose_like, training=False, testing=False)
         .detach()
         .cpu()
         .numpy()
     )
     output_masking = (
-        input_module(torch_yoochoose_like, training=False, ignore_masking=False)
+        input_module(torch_yoochoose_like, training=False, testing=True)
         .detach()
         .cpu()
         .numpy()
