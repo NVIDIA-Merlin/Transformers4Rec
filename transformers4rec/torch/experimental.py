@@ -79,9 +79,7 @@ class PostContextFusion(TabularBlock):
             self.last_dim = hidden_dim + post_context_last_dim
 
     def forward(self, inputs, training=False, testing=False, **kwargs):
-        seq_rep = self.sequential_module(
-            inputs, training=training, testing=testing, **kwargs
-        )
+        seq_rep = self.sequential_module(inputs, training=training, testing=testing, **kwargs)
         context_rep = self.post_context_module(inputs, training=training)
 
         if len(context_rep.size()) == 2:
