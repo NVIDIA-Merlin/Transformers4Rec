@@ -21,7 +21,7 @@ known_third_party = ["cudf", "cupy", "dask", "dask_cuda", "dask_cudf", "numba", 
 skip = ["build",".eggs"]
 
 [tool.mypy]
-packages = transformers4rec
+packages = "transformers4rec"
 ignore_missing_imports = true
 show_traceback = true
 strict_optional = false
