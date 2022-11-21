@@ -76,6 +76,7 @@ def test_sequential_prediction_model(
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
 
     model = tr.Model(head_1, head_2)
+    #TODO: how to get targets?
     output = model(torch_yoochoose_like, training=True)
 
     assert isinstance(output, dict)

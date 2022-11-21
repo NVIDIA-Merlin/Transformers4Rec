@@ -34,7 +34,7 @@ def test_simple_heads(torch_tabular_features, torch_tabular_data, task):
     head = task("target").to_head(body, torch_tabular_features)
 
     body_out = body(torch_tabular_data)
-    loss = head.compute_loss(body_out, targets)
+    loss = head(body_out, targets=targets, training=True)["loss"]
 
     assert loss.min() >= 0 and loss.max() <= 1
 
@@ -55,7 +55,7 @@ def test_simple_heads_on_sequence(
     head = task("target", task_block=task_block, summary_type=summary).to_head(body, inputs)
 
     body_out = body(torch_yoochoose_like)
-    loss = head.compute_loss(body_out, targets)
+    loss = head(body_out, targets=targets, training=True)["loss"]
 
     assert loss.min() >= 0 and loss.max() <= 1
 
@@ -80,13 +80,14 @@ def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, ta
         tr.BinaryClassificationTask("classification", task_name="classification"),
         tr.RegressionTask("regression", task_name="regression"),
     ]
+    # TODO: how to get targets with no dataloader?
     head = tr.Head(body, tasks, task_blocks=task_blocks)
     optimizer = pytorch.optim.Adam(head.parameters())
 
     with pytorch.set_grad_enabled(mode=True):
         body_out = body(torch_tabular_data)
-        loss = head.compute_loss(body_out, targets)
-        metrics = head.calculate_metrics(body_out, targets, call_body=False)
+        loss = head(body_out, targets=targets, training=True)["loss"]
+        metrics = head.calculate_metrics(body_out, targets=targets, training=True, call_body=False)
 
         optimizer.zero_grad()
         loss.backward()
@@ -108,7 +109,7 @@ def test_item_prediction_head(torch_yoochoose_tabular_transformer_features, torc
     body = tr.SequentialBlock(input_module, tr.MLPBlock([64]))
     head = tr.Head(body, tr.NextItemPredictionTask(), inputs=input_module)
 
-    outputs = head(body(torch_yoochoose_like))
+    outputs = head(body(torch_yoochoose_like, training=True))
 
     assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
 
@@ -140,11 +141,11 @@ def test_item_prediction_loss_and_metrics(
     non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
 
-    loss = head.prediction_task_dict["next-item"].compute_loss(
+    loss = head.prediction_task_dict["next-item"](
         inputs=body_outputs,
         targets=labels_all,
         testing=True,
-    )
+    )["loss"]
 
     metrics = head.prediction_task_dict["next-item"].calculate_metrics(
         predictions=body_outputs, targets=labels_all, testing=True
