@@ -15,7 +15,7 @@
 #
 
 import pytest
-from transformers import PreTrainedModel, TFPreTrainedModel
+from transformers import PreTrainedModel
 
 from transformers4rec.config import transformer as tconf
 
@@ -35,12 +35,3 @@ def test_to_hugginface_torch_model(config_cls):
     model = config.to_huggingface_torch_model()
 
     assert isinstance(model, PreTrainedModel)
-
-
-@pytest.mark.parametrize("config_cls", list(set(config_classes) - {tconf.ReformerConfig}))
-def test_to_hugginface_tf_model(config_cls):
-    config = config_cls.build(100, 4, 2, 20)
-
-    model = config.to_huggingface_tf_model()
-
-    assert isinstance(model, TFPreTrainedModel)
