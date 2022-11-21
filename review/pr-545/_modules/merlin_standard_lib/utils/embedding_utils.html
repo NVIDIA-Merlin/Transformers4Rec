@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>merlin_standard_lib.schema.tag &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <title>merlin_standard_lib.utils.embedding_utils &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
@@ -67,7 +67,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>merlin_standard_lib.schema.tag</li>
+      <li>merlin_standard_lib.utils.embedding_utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -76,7 +76,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <h1>Source code for merlin_standard_lib.schema.tag</h1><div class="highlight"><pre>
+  <h1>Source code for merlin_standard_lib.utils.embedding_utils</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright (c) 2021, NVIDIA CORPORATION.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
@@ -93,42 +93,25 @@
 <span class="c1">#</span>
 
 
-<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">math</span>
+
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
 
 
-<div class="viewcode-block" id="Tag"><a class="viewcode-back" href="../../../api/merlin_standard_lib.schema.html#merlin_standard_lib.Tag">[docs]</a><span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="c1"># Feature types</span>
-    <span class="n">CATEGORICAL</span> <span class="o">=</span> <span class="s2">&quot;categorical&quot;</span>
-    <span class="n">CONTINUOUS</span> <span class="o">=</span> <span class="s2">&quot;continuous&quot;</span>
-    <span class="n">LIST</span> <span class="o">=</span> <span class="s2">&quot;list&quot;</span>
-    <span class="n">TEXT</span> <span class="o">=</span> <span class="s2">&quot;text&quot;</span>
-    <span class="n">TEXT_TOKENIZED</span> <span class="o">=</span> <span class="s2">&quot;text_tokenized&quot;</span>
-    <span class="n">TIME</span> <span class="o">=</span> <span class="s2">&quot;time&quot;</span>
+<div class="viewcode-block" id="get_embedding_sizes_from_schema"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.embedding_utils.get_embedding_sizes_from_schema">[docs]</a><span class="k">def</span> <span class="nf">get_embedding_sizes_from_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">):</span>
+    <span class="n">cardinalities</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">categorical_cardinalities</span><span class="p">()</span>
 
-    <span class="c1"># Feature context</span>
-    <span class="n">USER</span> <span class="o">=</span> <span class="s2">&quot;user&quot;</span>
-    <span class="n">USER_ID</span> <span class="o">=</span> <span class="s2">&quot;user_id&quot;</span>
-    <span class="n">ITEM</span> <span class="o">=</span> <span class="s2">&quot;item&quot;</span>
-    <span class="n">ITEM_ID</span> <span class="o">=</span> <span class="s2">&quot;item_id&quot;</span>
-    <span class="n">SESSION</span> <span class="o">=</span> <span class="s2">&quot;session&quot;</span>
-    <span class="n">SESSION_ID</span> <span class="o">=</span> <span class="s2">&quot;session_id&quot;</span>
-    <span class="n">CONTEXT</span> <span class="o">=</span> <span class="s2">&quot;context&quot;</span>
-
-    <span class="c1"># Target related</span>
-    <span class="n">TARGETS</span> <span class="o">=</span> <span class="s2">&quot;target&quot;</span>
-    <span class="n">BINARY_CLASSIFICATION</span> <span class="o">=</span> <span class="s2">&quot;binary_classification&quot;</span>
-    <span class="n">MULTI_CLASS_CLASSIFICATION</span> <span class="o">=</span> <span class="s2">&quot;multi_class&quot;</span>
-    <span class="n">REGRESSION</span> <span class="o">=</span> <span class="s2">&quot;regression&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
-
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">o</span><span class="p">)</span> <span class="o">==</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="n">key</span><span class="p">:</span> <span class="n">get_embedding_size_from_cardinality</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">cardinalities</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">}</span></div>
 
 
-<span class="n">TagsType</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Tag</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Tag</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span>
+<div class="viewcode-block" id="get_embedding_size_from_cardinality"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.embedding_utils.get_embedding_size_from_cardinality">[docs]</a><span class="k">def</span> <span class="nf">get_embedding_size_from_cardinality</span><span class="p">(</span><span class="n">cardinality</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">):</span>
+    <span class="c1"># A rule-of-thumb from Google.</span>
+    <span class="n">embedding_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="n">cardinality</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span> <span class="o">*</span> <span class="n">multiplier</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">embedding_size</span></div>
 </pre></div>
 
            </div>
