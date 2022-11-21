@@ -1,5 +1,2 @@
 check-manifest
 bandit
-tensorflow-metadata
-tensorflow-estimator==2.6.*
-tensorflow-ranking>=0.4
