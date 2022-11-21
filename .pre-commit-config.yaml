@@ -5,21 +5,21 @@ repos:
       - id: isort
         additional_dependencies: [toml]
   - repo: https://github.com/python/black
-    rev: 22.8.0
+    rev: 22.10.0
     hooks:
       - id: black
   - repo: https://github.com/pycqa/flake8
-    rev: 3.9.2
+    rev: 5.0.4
     hooks:
       - id: flake8
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v0.971'
+    rev: 'v0.991'
     hooks:
       - id: mypy
         language_version: python3
         args: [--install-types, --non-interactive]
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.1
+    rev: v2.2.2
     hooks:
       - id: codespell
 #      - repo: https://github.com/mgedmin/check-manifest
