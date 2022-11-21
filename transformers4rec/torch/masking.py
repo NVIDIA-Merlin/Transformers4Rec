@@ -259,7 +259,9 @@ class CausalLanguageModeling(MaskSequence):
                 labels.size(0), dtype=torch.long, device=item_ids.device  # type: ignore
             )
             last_item_sessions = mask_labels.sum(dim=1) - 1
-            label_seq_trg_eval = torch.zeros(labels.shape, dtype=torch.long, device=item_ids.device)
+            label_seq_trg_eval = torch.zeros(
+                labels.shape, dtype=labels.dtype, device=item_ids.device
+            )
             label_seq_trg_eval[rows_ids, last_item_sessions] = labels[rows_ids, last_item_sessions]
             # Updating labels and mask
             labels = label_seq_trg_eval
