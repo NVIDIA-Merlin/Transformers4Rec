@@ -51,7 +51,7 @@ setup(
     name="transformers4rec",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    packages=find_packages(),
+    packages=find_packages(include=["transformers4rec", "merlin_standard_lib"]),
     url="https://github.com/NVIDIA-Merlin/Transformers4Rec",
     author="NVIDIA Corporation",
     license="Apache 2.0",
