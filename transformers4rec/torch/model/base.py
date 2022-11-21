@@ -408,7 +408,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
                     body_outputs, targets=targets, training=training, testing=testing, **kwargs
                 )
 
-        if len(outputs) == 1 and not always_output_dict:
+        if len(outputs) == 1:
             return outputs[list(outputs.keys())[0]]
 
         return outputs
@@ -427,7 +427,9 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         metrics = {}
 
         if call_body:
-            body_outputs = self.body(body_outputs, targets=targets, training=training, testing=testing)
+            body_outputs = self.body(
+                body_outputs, targets=targets, training=training, testing=testing
+            )
 
         for name, task in self.prediction_task_dict.items():
             metrics.update(
@@ -515,7 +517,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_reduction = head_reduction
         self.optimizer = optimizer
 
-    def forward(self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs):
+    def forward(
+        self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs
+    ):
         # TODO: Optimize this
         outputs = {}
         if training or testing:
@@ -524,7 +528,12 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             predictions = {}
             for i, head in enumerate(self.heads):
                 head_output = head(
-                    inputs, call_body=True, targets=targets, training=training, testing=testing, **kwargs
+                    inputs,
+                    call_body=True,
+                    targets=targets,
+                    training=training,
+                    testing=testing,
+                    **kwargs,
                 )
                 labels.update(head_output["labels"])
                 predictions.update(head_output["predictions"])
@@ -538,7 +547,14 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         else:
             for head in self.heads:
                 outputs.update(
-                    head(inputs, call_body=True, targets=targets, training=training, testing=testing, **kwargs)
+                    head(
+                        inputs,
+                        call_body=True,
+                        targets=targets,
+                        training=training,
+                        testing=testing,
+                        **kwargs,
+                    )
                 )
             if len(outputs) == 1:
                 return list(outputs.values())[0]
@@ -595,10 +611,14 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 self.parent = parent_self
 
             def forward(self, inputs, targets=None, training=False, testing=False, *args, **kwargs):
-                return self.parent(inputs, targets=targets, training=training, testing=testing, *args, **kwargs)
+                return self.parent(
+                    inputs, targets=targets, training=training, testing=testing, *args, **kwargs
+                )
 
-            def training_step(self, targets=None, training=True, testing=False, batch, batch_idx):
-                loss = self.parent(*batch, targets=targets, training=training, testing=testing)["loss"]
+            def training_step(self, batch, batch_idx, targets=None, training=True, testing=False):
+                loss = self.parent(*batch, targets=targets, training=training, testing=testing)[
+                    "loss"
+                ]
                 self.log("train_loss", loss)
 
                 return loss
@@ -646,12 +666,11 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     losses.append(float(output["loss"]))
                     if compute_metric:
                         self.calculate_metrics(
+                            output["predictions"],
+                            targets=output["labels"],
+                            mode="train",
                             training=True,
                             testing=False,
-                            targets=y,
-                            output["predictions"],
-                            output["labels"],
-                            mode="train",
                             forward=False,
                             call_body=False,
                         )
@@ -667,7 +686,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         return np.array(epoch_losses)
 
-    def evaluate(self, dataloader, targets=None, training=False, testing=True, verbose=True, mode="eval"):
+    def evaluate(
+        self, dataloader, targets=None, training=False, testing=True, verbose=True, mode="eval"
+    ):
         if isinstance(dataloader, torch.utils.data.DataLoader):
             dataset = dataloader.dataset
         else:
@@ -678,7 +699,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             batch_iterator = tqdm(batch_iterator)
         self.reset_metrics()
         for batch_idx, (x, y) in batch_iterator:
-            self.calculate_metrics(x, y, targets=targets, mode=mode, training=training, testing=testing)
+            self.calculate_metrics(
+                x, y, targets=targets, mode=mode, training=training, testing=testing
+            )
 
         return self.compute_metrics(mode=mode)
 
