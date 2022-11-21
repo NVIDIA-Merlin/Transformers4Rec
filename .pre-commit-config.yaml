@@ -17,7 +17,7 @@ repos:
         hooks:
           - id: mypy
             language_version: python3
-            args: [--no-strict-optional, --ignore-missing-imports, --show-traceback, --install-types, --non-interactive]
+            args: [--non-interactive, --install-types]
       - repo: https://github.com/codespell-project/codespell
         rev: v2.2.1
         hooks:
