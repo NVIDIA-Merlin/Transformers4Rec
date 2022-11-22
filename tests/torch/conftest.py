@@ -151,7 +151,7 @@ def torch_yoochoose_next_item_prediction_model(torch_yoochoose_tabular_transform
         tr.MLPBlock([64]),
         tr.TransformerBlock(transformer_config, masking=inputs.masking),
     )
-    model = tr.NextItemPredictionTask(weight_tying=True, hf_format=True).to_model(body, inputs)
+    model = tr.NextItemPredictionTask(weight_tying=True).to_model(body, inputs)
     return model
 
 
