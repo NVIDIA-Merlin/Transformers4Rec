@@ -526,7 +526,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         # TODO: Optimize this
 
         if training or testing:
-            outputs = {}
             losses = []
             labels = {}
             predictions = {}
@@ -547,7 +546,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             if len(labels) == 1:
                 labels = list(labels.values())[0]
                 predictions = list(predictions.values())[0]
-            outputs = {"loss": loss, "labels": labels, "predictions": predictions}
+            return {"loss": loss, "labels": labels, "predictions": predictions}
         else:
             outputs = []
             for head in self.heads:
