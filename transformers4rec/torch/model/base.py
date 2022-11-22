@@ -207,6 +207,8 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
             predictions = self(predictions, targets=targets, training=training, testing=testing)[
                 "predictions"
             ]
+        if isinstance(predictions, dict):
+            predictions = list(predictions.values())[0]
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -576,6 +578,10 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         forward=True,
         **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        if isinstance(targets, dict) and not forward:
+            # extract the targets names from the model's output
+            targets = {name.split("/")[0]: tensor for name, tensor in targets.items()}
+
         outputs = {}
         for head in self.heads:
             outputs.update(
