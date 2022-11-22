@@ -97,11 +97,6 @@
 
 <span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Registry</span>
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
-<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-    <span class="n">tf</span> <span class="o">=</span> <span class="kc">None</span>
-
 <span class="n">transformer_registry</span><span class="p">:</span> <span class="n">Registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;transformers&quot;</span><span class="p">)</span>
 
 
@@ -141,48 +136,6 @@
             <span class="n">task_weights</span><span class="o">=</span><span class="n">task_weights</span><span class="p">,</span>
             <span class="n">loss_reduction</span><span class="o">=</span><span class="n">loss_reduction</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">to_model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-    <span class="k">if</span> <span class="n">tf</span><span class="p">:</span>
-
-<div class="viewcode-block" id="T4RecConfig.to_tf_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_tf_model">[docs]</a>        <span class="k">def</span> <span class="nf">to_tf_model</span><span class="p">(</span>
-            <span class="bp">self</span><span class="p">,</span>
-            <span class="n">input_features</span><span class="p">,</span>
-            <span class="o">*</span><span class="n">prediction_task</span><span class="p">,</span>
-            <span class="n">task_blocks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">task_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">loss_reduction</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">reduce_mean</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">kwargs</span>
-        <span class="p">):</span>
-            <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">tf</span> <span class="k">as</span> <span class="n">tf4rec</span>
-
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`input_features` must an instance of SequentialTabularFeatures&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">PredictionTask</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">prediction_task</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;`task` is of the wrong type, please provide one or multiple &quot;</span>
-                    <span class="s2">&quot;instance(s) of PredictionTask&quot;</span>
-                <span class="p">)</span>
-
-            <span class="n">body</span> <span class="o">=</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">SequentialBlock</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">input_features</span><span class="p">,</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">TransformerBlock</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">input_features</span><span class="o">.</span><span class="n">masking</span><span class="p">)]</span>
-            <span class="p">)</span>
-
-            <span class="k">return</span> <span class="n">tf4rec</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-                <span class="n">tf4rec</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
-                    <span class="n">body</span><span class="p">,</span>
-                    <span class="o">*</span><span class="n">prediction_task</span><span class="p">,</span>
-                    <span class="n">task_blocks</span><span class="o">=</span><span class="n">task_blocks</span><span class="p">,</span>
-                    <span class="n">task_weights</span><span class="o">=</span><span class="n">task_weights</span><span class="p">,</span>
-                    <span class="n">loss_reduction</span><span class="o">=</span><span class="n">loss_reduction</span><span class="p">,</span>
-                    <span class="n">inputs</span><span class="o">=</span><span class="n">input_features</span><span class="p">,</span>
-                <span class="p">),</span>
-                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-            <span class="p">)</span></div>
-
-<div class="viewcode-block" id="T4RecConfig.to_huggingface_tf_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_tf_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_huggingface_tf_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">model_cls</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TF_MODEL_MAPPING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transformers_config_cls</span><span class="p">]</span>
-
-        <span class="k">return</span> <span class="n">model_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">transformers_config_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
