@@ -94,6 +94,12 @@ def session_aggregator(
         session-level dataset with list features.
     """
     try:
+        from merlin.dag import ColumnSelector
+        from merlin.io.dataset import Dataset
+    except ImportError:
+        raise ValueError("merlin-core is necessary for this function, please install it")
+
+    try:
         import nvtabular as nvt
     except ImportError:
         raise ValueError("NVTabular is necessary for this function, please install it")
@@ -128,7 +134,7 @@ def session_aggregator(
     session_column = session_column[0]
 
     # define groupby operator
-    groupby_feats = nvt.ColumnSelector(schema.column_names)
+    groupby_feats = ColumnSelector(schema.column_names)
     groupby_features = groupby_feats >> nvt.ops.Groupby(
         groupby_cols=[session_column.name], aggs=groupby_dict, name_sep="-"
     )
@@ -146,7 +152,7 @@ def session_aggregator(
     selected_features = groupby_features[non_list_variable] + groupby_features_trim
 
     workflow = nvt.Workflow(selected_features)
-    dataset = nvt.Dataset(data, cpu=False)
+    dataset = Dataset(data, cpu=False)
     workflow.fit(dataset)
     session_data = workflow.transform(dataset).to_ddf().compute()
 
@@ -176,7 +182,7 @@ def save_time_based_splits(
 
     Parameters
     -----
-    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+    data: Union[merlin.io.dataset.Dataset, dask_cudf.DataFrame]
         Dataset to split into time-based splits.
     output_dir: str
         Output path the save the time-based splits.
@@ -230,7 +236,7 @@ def _save_time_based_splits_gpu(
     cudf, cupy and dask_cudf
     Parameters
     -----
-    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+    data: Union[merlin.io.dataset.Dataset, dask_cudf.DataFrame]
         Dataset to split into time-based splits.
     output_dir: str
         Output path the save the time-based splits.
@@ -250,15 +256,15 @@ def _save_time_based_splits_gpu(
         import cudf
         import cupy
         import dask_cudf
-        import nvtabular as nvt
+        from merlin.io.dataset import Dataset
     except ImportError:
         raise ValueError(
             "Rapids is necessary for this function, please install: "
-            "cudf, cupy, dask_cudf & nvtabular."
+            "cudf, cupy, dask_cudf, & merlin-core."
         )
 
     if isinstance(data, dask_cudf.DataFrame):
-        data = nvt.Dataset(data)
+        data = Dataset(data)
     if not isinstance(partition_col, list):
         partition_col = [partition_col]
 
@@ -312,7 +318,7 @@ def _save_time_based_splits_cpu(
 
     Parameters
     -----
-    data: Union[nvtabular.Dataset, dask_cudf.DataFrame]
+    data: Union[merlin.io.dataset.Dataset, dask_cudf.DataFrame]
         Dataset to split into time-based splits.
     output_dir: str
         Output path the save the time-based splits.
@@ -331,16 +337,16 @@ def _save_time_based_splits_cpu(
     try:
         import dask
         import numpy as np
-        import nvtabular as nvt
         import pandas as pd
+        from merlin.io.dataset import Dataset
     except ImportError:
         raise ValueError(
             "Rapids is necessary for this function, please install: "
-            "cudf, cupy, dask_cudf & nvtabular."
+            "cudf, cupy, dask_cudf & merlin-core."
         )
 
     if isinstance(data, dask.DataFrame):
-        data = nvt.Dataset(data)
+        data = Dataset(data)
     if not isinstance(partition_col, list):
         partition_col = [partition_col]
 

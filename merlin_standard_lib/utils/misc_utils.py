@@ -177,12 +177,12 @@ def get_object_size(obj, seen=None):
 
 def validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs):
     """
-    Util function to load NVTabular Dataset from disk
+    Util function to load merlin.io.Dataset from disk
 
     Parameters
     ----------
-    paths_or_dataset: Union[nvtabular.Dataset, str]
-        Path  to dataset to load of nvtabular Dataset,
+    paths_or_dataset: Union[merlin.io.dataset.Dataset, str]
+        Path to dataset to load or Merlin Dataset,
         if Dataset, return the object.
     batch_size: int
         batch size for Dataloader.
@@ -196,9 +196,9 @@ def validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_k
         Additional arguments of the specified reader.
     """
     try:
-        from nvtabular.io import Dataset
+        from merlin.io.dataset import Dataset
     except ImportError:
-        raise ValueError("NVTabular is necessary for this function, please install: " "nvtabular.")
+        raise ValueError("Merlin Core is necessary for this function, please install: merlin-core.")
 
     # TODO: put this in parent class and allow
     # torch dataset to leverage as well?
@@ -236,4 +236,42 @@ def validate_dataset(paths_or_dataset, batch_size, buffer_size, engine, reader_k
             reader_kwargs["batch_size"] = buffer_size
     else:
         reader_kwargs["part_mem_fraction"] = buffer_size
+
     return Dataset(files, engine=engine, **reader_kwargs)
+
+
+def _augment_schema(
+    schema,
+    cats=None,
+    conts=None,
+    labels=None,
+    sparse_names=None,
+    sparse_max=None,
+    sparse_as_dense=False,
+):
+    from merlin.schema import ColumnSchema, Tags
+
+    labels = [labels] if isinstance(labels, str) else labels
+    for label in labels or []:
+        schema[label] = schema[label].with_tags(Tags.TARGET)
+    for label in cats or []:
+        schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
+    for label in conts or []:
+        schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
+
+    # Set the appropriate properties for the sparse_names/sparse_max/sparse_as_dense
+    for col in sparse_names or []:
+        cs = schema[col]
+        properties = cs.properties
+        if sparse_max and col in sparse_max:
+            properties["value_count"] = {"min": sparse_max[col], "max": sparse_max[col]}
+        schema[col] = ColumnSchema(
+            name=cs.name,
+            tags=cs.tags,
+            dtype=cs.dtype,
+            is_list=True,
+            is_ragged=not sparse_as_dense,
+            properties=properties,
+        )
+
+    return schema

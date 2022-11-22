@@ -44,6 +44,7 @@ requirements = {
     "tensorflow": read_requirements("requirements/tensorflow.txt"),
     "pytorch": read_requirements("requirements/pytorch.txt"),
     "nvtabular": read_requirements("requirements/nvtabular.txt"),
+    "dataloader": read_requirements("requirements/dataloader.txt"),
     "docs": read_requirements("requirements/docs.txt"),
     "dev": read_requirements("requirements/dev.txt"),
 }

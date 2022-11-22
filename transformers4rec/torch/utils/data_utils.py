@@ -171,17 +171,21 @@ if dependencies.is_pyarrow_available():
 
 
 if dependencies.is_gpu_dataloader_available():
-    from nvtabular.loader.torch import DLDataLoader
-    from nvtabular.loader.torch import TorchAsyncItr as DataLoader
+    import torch
+    from merlin.loader.torch import Loader
+    from torch.utils.data import DataLoader
 
-    from merlin_standard_lib.utils.misc_utils import validate_dataset
+    from merlin_standard_lib.utils.misc_utils import _augment_schema, validate_dataset
 
-    class DLDataLoaderWrapper(DLDataLoader):
+    class DLDataLoader(DataLoader):
         """
+        This class is an extension of the torch dataloader.
+        It is required to support the FastAI framework.
+
         Setting the batch size directly to DLDataLoader makes it 3x slower.
         So we set as an alternative attribute and use it within
         T4Rec Trainer during evaluation
-        # TODO : run experiments with new nvt dataloader
+        # TODO : run experiments with new merlin-dataloader
         """
 
         def __init__(self, *args, **kwargs) -> None:
@@ -189,8 +193,17 @@ if dependencies.is_gpu_dataloader_available():
                 self._batch_size = kwargs.pop("batch_size")
                 super().__init__(*args, **kwargs)
 
-    @dataloader_registry.register_with_multiple_names("nvtabular_dataloader", "nvtabular")
-    class NVTabularDataLoader(T4RecDataLoader, DLDataLoaderWrapper):
+        @property
+        def device(self):
+            return torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        def __len__(self):
+            return len(self.dataset)
+
+    @dataloader_registry.register_with_multiple_names(
+        "merlin_dataloader", "merlin", "nvtabular_dataloader", "nvtabular"
+    )
+    class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         def __init__(
             self,
             paths_or_dataset,
@@ -225,7 +238,12 @@ if dependencies.is_gpu_dataloader_available():
             self.drop_last = drop_last
 
             self.set_dataset(buffer_size, engine, reader_kwargs)
+
             self.dataset.schema = self.dataset.schema.select_by_name(conts + cats + labels)
+
+            self.dataset.schema = _augment_schema(
+                self.dataset.schema, cats, conts, labels, sparse_names, sparse_max, sparse_as_dense
+            )
 
             if (global_rank is not None) and (self.dataset.npartitions < global_size):
                 logger.warning(
@@ -236,11 +254,8 @@ if dependencies.is_gpu_dataloader_available():
                 )
                 self.dataset = self.dataset.repartition(npartitions=global_size)
 
-            loader = DataLoader(
+            loader = Loader(
                 self.dataset,
-                cats,
-                conts,
-                labels,
                 self.batch_size,
                 shuffle,
                 seed_fn=seed_fn,
@@ -249,12 +264,9 @@ if dependencies.is_gpu_dataloader_available():
                 global_size=global_size,
                 global_rank=global_rank,
                 drop_last=drop_last,
-                sparse_names=sparse_names,
-                sparse_max=sparse_max,
-                sparse_as_dense=sparse_as_dense,
             )
 
-            DLDataLoaderWrapper.__init__(
+            DLDataLoader.__init__(
                 self,
                 loader,
                 collate_fn=collate_fn,
@@ -317,7 +329,7 @@ if dependencies.is_gpu_dataloader_available():
             schema = schema.select_by_name(categorical_features + continuous_features + targets)
             sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
             sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
-            nvt_loader = cls(
+            loader = cls(
                 paths_or_dataset,
                 batch_size=batch_size,
                 max_sequence_length=max_sequence_length,
@@ -335,7 +347,7 @@ if dependencies.is_gpu_dataloader_available():
                 **kwargs,
             )
 
-            return nvt_loader
+            return loader
 
 
 class ParquetDataset(Dataset):
