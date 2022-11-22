@@ -1,8 +1,2 @@
 check-manifest
-black==20.8b1
-flake8
-isort
 bandit
-mypy==0.971
-codespell
-click<8.1.0
