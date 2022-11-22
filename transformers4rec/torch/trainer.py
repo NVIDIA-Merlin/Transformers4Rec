@@ -315,7 +315,8 @@ class Trainer(BaseTrainer):
         inputs: Dict[str, torch.Tensor],
         prediction_loss_only: bool,
         ignore_keys: Optional[List[str]] = None,
-        ignore_masking: bool = False,
+        training: bool = False,
+        testing: bool = True,
     ) -> Tuple[
         Optional[float],
         Optional[torch.Tensor],
@@ -332,9 +333,9 @@ class Trainer(BaseTrainer):
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
-                    outputs = model(inputs, training=False, ignore_masking=ignore_masking)
+                    outputs = model(inputs, training=training, testing=True)
             else:
-                outputs = model(inputs, training=False, ignore_masking=ignore_masking)
+                outputs = model(inputs, training=training, testing=True)
 
             loss = outputs["loss"].mean().detach()
 
@@ -395,9 +396,9 @@ class Trainer(BaseTrainer):
         )
 
         if description == "Prediction":
-            ignore_masking = True
+            testing = False
         else:
-            ignore_masking = False
+            testing = True
 
         # set the model
         model = self.model.wrapper_module
@@ -459,7 +460,7 @@ class Trainer(BaseTrainer):
                 inputs,
                 prediction_loss_only,
                 ignore_keys=ignore_keys,
-                ignore_masking=ignore_masking,
+                testing=testing,
             )
 
             # Updates metrics
@@ -827,4 +828,4 @@ class HFWrapper(torch.nn.Module):
 
     def forward(self, *args, **kwargs):
         inputs = kwargs
-        return self.wrapper_module(inputs, *args)
+        return self.wrapper_module(inputs, training=True, *args)

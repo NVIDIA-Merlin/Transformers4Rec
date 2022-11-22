@@ -78,10 +78,8 @@ class PostContextFusion(TabularBlock):
         elif fusion_aggregation == "concat":
             self.last_dim = hidden_dim + post_context_last_dim
 
-    def forward(self, inputs, training=False, ignore_masking=True, **kwargs):
-        seq_rep = self.sequential_module(
-            inputs, training=training, ignore_masking=ignore_masking, **kwargs
-        )
+    def forward(self, inputs, training=False, testing=False, **kwargs):
+        seq_rep = self.sequential_module(inputs, training=training, testing=testing, **kwargs)
         context_rep = self.post_context_module(inputs, training=training)
 
         if len(context_rep.size()) == 2:

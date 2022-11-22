@@ -139,7 +139,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         # pylint: disable=arguments-out-of-order
         return right_shift_block(other, self)
 
-    def forward(self, input, training=True, ignore_masking=True, **kwargs):
+    def forward(self, input, training=False, testing=False, **kwargs):
         # from transformers4rec.torch import TabularSequenceFeatures
 
         for i, module in enumerate(self):
@@ -148,8 +148,8 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
                 input = module(input, **filtered_kwargs)
 
             elif "training" in inspect.signature(module.forward).parameters:
-                if "ignore_masking" in inspect.signature(module.forward).parameters:
-                    input = module(input, training=training, ignore_masking=ignore_masking)
+                if "testing" in inspect.signature(module.forward).parameters:
+                    input = module(input, training=training, testing=testing)
                 else:
                     input = module(input, training=training)
             else:
