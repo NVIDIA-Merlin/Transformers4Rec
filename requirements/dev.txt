@@ -1,11 +1,2 @@
 check-manifest
-black==20.8b1
-flake8
-isort
 bandit
-mypy==0.971
-tensorflow-metadata
-tensorflow-estimator==2.6.*
-tensorflow-ranking>=0.4
-codespell
-click<8.1.0
