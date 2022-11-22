@@ -513,7 +513,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         head_reduction: str = "mean",
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name: str = None,
-        hf_format: bool = True,
     ):
         """Model class that can aggregate one or multiple heads.
 
@@ -529,13 +528,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             Optimizer-class to use during fitting
         name: str, optional
             Name of the model.
-        hf_format: bool, optional
-            This parameter is specific to NextItemPredictionTask class and controls the format of
-            the output returned by the task. If `True`, the task returns a dictionary
-            with three tensors: loss, predictions, labels. Otherwise, it returns the tensor of
-            `predictions` scores.
-            Usually, hf_format is set to True during training and False during inference
-            By default True.
         """
         if head_weights:
             if not isinstance(head_weights, list):
@@ -552,7 +544,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_weights = head_weights or [1.0] * len(head)
         self.head_reduction = head_reduction
         self.optimizer = optimizer
-        self.hf_format = hf_format
 
     def forward(self, inputs: TensorOrTabularData, training=False, testing=False, **kwargs):
         # TODO: Optimize this
@@ -571,16 +562,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         if len(outputs) == 1:
             outputs = outputs[list(outputs.keys())[0]]
-            if isinstance(outputs, dict):
-                # next-item prediction task with `hf_format = True``  returns a dictionary
-                # with three tensors: loss, predictions, labels. This needed for training
-                # and evaluation using the Trainer class.
-                # At inference, we just need the predictions tensors.
-                # TODO: We are simplifying the logic around `hf_format` in the multi-gpu
-                # support work.
-                if not self.hf_format:
-                    return outputs["predictions"]
-            return outputs
 
         return outputs
 
