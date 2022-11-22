@@ -162,7 +162,7 @@ def test_model_with_multiple_heads_and_tasks(
     # Get output schema
     out_schema = model.output_schema
     assert isinstance(out_schema, Core_Schema)
-    #assert set(out_schema.column_names) == set(output.keys())
+    assert set(out_schema.column_names) == set(output.keys())
 
 
 def test_multi_head_model_wrong_weights(torch_tabular_features, torch_yoochoose_like):

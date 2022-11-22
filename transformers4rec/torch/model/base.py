@@ -413,9 +413,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
                     body_outputs, targets=targets, training=training, testing=testing, **kwargs
                 )
 
-        if len(outputs) == 1:
-            return outputs[list(outputs.keys())[0]]
-
         return outputs
 
     def calculate_metrics(  # type: ignore
@@ -550,9 +547,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 predictions = list(predictions.values())[0]
             return {"loss": loss, "labels": labels, "predictions": predictions}
         else:
-            outputs = []
+            outputs = {}
             for head in self.heads:
-                outputs.append(
+                outputs.update(
                     head(
                         inputs,
                         call_body=True,
@@ -563,7 +560,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     )
                 )
             if len(outputs) == 1:
-                return outputs[0]
+                return list(outputs.values())[0]
 
         return outputs
 
