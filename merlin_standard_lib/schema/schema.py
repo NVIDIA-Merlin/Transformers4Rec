@@ -27,7 +27,7 @@ except ImportError:
     # polyfill cached_property for python <= 3.7 (using lru_cache which was introduced in python3.2)
     from functools import lru_cache
 
-    cached_property = lambda func: property(lru_cache()(func))  # noqa
+    cached_property = lambda func: property(lru_cache()(func))  # type: ignore  # noqa
 
 import betterproto  # noqa
 

@@ -78,7 +78,6 @@ def test_sequential_prediction_model(
     bc_targets = pytorch.randint(2, (100,)).float()
 
     model = tr.Model(head_1, head_2)
-    # TODO: how to get targets?
     output = model(torch_yoochoose_like, training=True, targets=bc_targets)
 
     assert isinstance(output, dict)
