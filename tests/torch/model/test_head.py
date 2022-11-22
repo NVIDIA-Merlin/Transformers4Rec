@@ -111,7 +111,7 @@ def test_item_prediction_head(torch_yoochoose_tabular_transformer_features, torc
 
     outputs = head(body(torch_yoochoose_like, training=True))
 
-    assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
+    assert list(outputs.values())[0].size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
 
 
 def test_item_prediction_head_weight_tying(
@@ -123,7 +123,7 @@ def test_item_prediction_head_weight_tying(
 
     outputs = head(body(torch_yoochoose_like))
 
-    assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
+    assert list(outputs.values())[0].size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
 
 
 # Test loss and metrics outputs
