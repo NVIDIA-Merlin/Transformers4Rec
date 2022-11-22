@@ -76,7 +76,7 @@ def test_sequential_prediction_model(
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
 
     model = tr.Model(head_1, head_2)
-    #TODO: how to get targets?
+    # TODO: how to get targets?
     output = model(torch_yoochoose_like, training=True)
 
     assert isinstance(output, dict)
@@ -324,7 +324,7 @@ def test_save_next_item_prediction_model(
         loaded_model = model.load(tmpdir)
         # instead of a dictionary of three tensors `loss, labels, and predictions`
 
-    output = loaded_model(torch_yoochoose_like, training=False)
+    output = loaded_model(torch_yoochoose_like)
     assert isinstance(output, torch.Tensor)
 
     in_schema = loaded_model.input_schema

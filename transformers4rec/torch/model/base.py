@@ -196,14 +196,17 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         testing: bool = False,
         **kwargs,
     ) -> Dict[str, torch.Tensor]:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-        else:
-            raise ValueError("target_name can not be None, specify a name.")
+        if isinstance(targets, dict):
+            if self.target_name:
+                targets = targets[self.target_name]
+            else:
+                raise ValueError("target_name can not be None, specify a name.")
 
         outputs = {}
         if forward:
-            predictions = self(predictions, training=training, testing=testing)
+            predictions = self(predictions, targets=targets, training=training, testing=testing)[
+                "predictions"
+            ]
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -521,8 +524,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs
     ):
         # TODO: Optimize this
-        outputs = {}
+
         if training or testing:
+            outputs = {}
             losses = []
             labels = {}
             predictions = {}
@@ -545,8 +549,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 predictions = list(predictions.values())[0]
             outputs = {"loss": loss, "labels": labels, "predictions": predictions}
         else:
+            outputs = []
             for head in self.heads:
-                outputs.update(
+                outputs.append(
                     head(
                         inputs,
                         call_body=True,
@@ -557,7 +562,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     )
                 )
             if len(outputs) == 1:
-                return list(outputs.values())[0]
+                return outputs[0]
 
         return outputs
 
@@ -676,7 +681,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                         )
                     if train:
                         optimizer.zero_grad()
-                        loss.backward()
+                        output["loss"].backward()
                         optimizer.step()
                 if verbose:
                     print(self.compute_metrics(mode="train"))
@@ -699,9 +704,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             batch_iterator = tqdm(batch_iterator)
         self.reset_metrics()
         for batch_idx, (x, y) in batch_iterator:
-            self.calculate_metrics(
-                x, y, targets=targets, mode=mode, training=training, testing=testing
-            )
+            self.calculate_metrics(x, targets=y, mode=mode, training=training, testing=testing)
 
         return self.compute_metrics(mode=mode)
 
