@@ -134,7 +134,7 @@ def test_item_prediction_loss_and_metrics(
     body = tr.SequentialBlock(input_module, tr.MLPBlock([64]))
     head = tr.Head(body, tr.NextItemPredictionTask(weight_tying=weight_tying), inputs=input_module)
 
-    body_outputs = body(torch_yoochoose_like, ignore_masking=False)
+    body_outputs = body(torch_yoochoose_like, testing=True)
 
     trg_flat = input_module.masking.masked_targets.flatten()
     non_pad_mask = trg_flat != input_module.masking.padding_idx
@@ -143,10 +143,11 @@ def test_item_prediction_loss_and_metrics(
     loss = head.prediction_task_dict["next-item"].compute_loss(
         inputs=body_outputs,
         targets=labels_all,
+        testing=True,
     )
 
     metrics = head.prediction_task_dict["next-item"].calculate_metrics(
-        predictions=body_outputs, targets=labels_all
+        predictions=body_outputs, targets=labels_all, testing=True
     )
     assert all(len(m) == 2 for m in metrics.values())
     assert loss != 0
@@ -161,11 +162,11 @@ def test_item_prediction_HF_output(
     body = tr.SequentialBlock(input_module, tr.MLPBlock([64]))
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
-    outputs = head(body(torch_yoochoose_like))
+    outputs = head(body(torch_yoochoose_like, training=True), training=True)
 
     assert isinstance(outputs, dict)
     assert [
@@ -209,11 +210,11 @@ def test_item_prediction_head_with_input_size(
     )
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
-    outputs = head(body(torch_yoochoose_like))
+    outputs = head(body(torch_yoochoose_like, training=True), training=True)
 
     assert outputs
 
@@ -231,11 +232,11 @@ def test_item_prediction_with_rnn(
     )
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
-    outputs = head(body(torch_yoochoose_like))
+    outputs = head(body(torch_yoochoose_like, training=True), training=True)
 
     assert isinstance(outputs, dict)
     assert list(outputs.keys()) == [
