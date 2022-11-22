@@ -227,7 +227,7 @@ class NextItemPredictionTask(PredictionTask):
             labels_all = torch.masked_select(trg_flat, non_pad_mask)
             # remove padded items, keep only masked positions
             x = self.remove_pad_3d(x, non_pad_mask)
-            x = self.pre(x)
+            x = self.pre(x)  # type: ignore
             loss = self.loss(x, labels_all)
             return {
                 "loss": loss,
