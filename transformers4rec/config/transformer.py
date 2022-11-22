@@ -18,11 +18,6 @@ import transformers
 
 from merlin_standard_lib import Registry
 
-try:
-    import tensorflow as tf
-except ImportError:
-    tf = None
-
 transformer_registry: Registry = Registry("transformers")
 
 
@@ -62,48 +57,6 @@ class T4RecConfig:
             task_weights=task_weights,
             loss_reduction=loss_reduction,
         ).to_model(**kwargs)
-
-    if tf:
-
-        def to_tf_model(
-            self,
-            input_features,
-            *prediction_task,
-            task_blocks=None,
-            task_weights=None,
-            loss_reduction=tf.reduce_mean,
-            **kwargs
-        ):
-            from .. import tf as tf4rec
-
-            if not isinstance(input_features, tf4rec.TabularSequenceFeatures):
-                raise ValueError("`input_features` must an instance of SequentialTabularFeatures")
-            if not all(isinstance(t, tf4rec.PredictionTask) for t in prediction_task):
-                raise ValueError(
-                    "`task` is of the wrong type, please provide one or multiple "
-                    "instance(s) of PredictionTask"
-                )
-
-            body = tf4rec.SequentialBlock(
-                [input_features, tf4rec.TransformerBlock(self, masking=input_features.masking)]
-            )
-
-            return tf4rec.Model(
-                tf4rec.Head(
-                    body,
-                    *prediction_task,
-                    task_blocks=task_blocks,
-                    task_weights=task_weights,
-                    loss_reduction=loss_reduction,
-                    inputs=input_features,
-                ),
-                **kwargs,
-            )
-
-    def to_huggingface_tf_model(self):
-        model_cls = transformers.TF_MODEL_MAPPING[self.transformers_config_cls]
-
-        return model_cls(self)
 
     @property
     def transformers_config_cls(self):
