@@ -333,17 +333,20 @@ class Trainer(BaseTrainer):
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
-                    outputs = model(inputs, training=training, testing=True)
+                    outputs = model(inputs, training=training, testing=testing)
             else:
-                outputs = model(inputs, training=training, testing=True)
+                outputs = model(inputs, training=training, testing=testing)
 
+        if testing:
             loss = outputs["loss"].mean().detach()
+            labels = outputs["labels"].detach()
+            predictions = outputs["predictions"].detach()
+        else:
+            loss, labels = None, None
+            predictions = outputs.detach()
 
         if prediction_loss_only:
             return (loss, None, None, None)
-
-        predictions = outputs["predictions"].detach()
-        labels = outputs["labels"].detach()
 
         # TODO: define metadata dict in the model for logging
         # other_outputs = {
@@ -466,7 +469,7 @@ class Trainer(BaseTrainer):
             # Updates metrics
             # TODO: compute metrics each N eval_steps to speedup evaluation
             metrics_results_detailed = None
-            if self.compute_metrics:
+            if self.compute_metrics is not None and testing:
                 if step % self.args.compute_metrics_each_n_steps == 0:
                     metrics_results_detailed = model.calculate_metrics(
                         preds, labels, mode=metric_key_prefix, forward=False, call_body=False
@@ -593,7 +596,7 @@ class Trainer(BaseTrainer):
         # Get metrics :
         metrics = {}
         # Computing the metrics results as the average of all steps
-        if self.compute_metrics:
+        if self.compute_metrics and testing:
             streaming_metrics_results = model.compute_metrics(mode=metric_key_prefix)
             streaming_metrics_results_flattened = process_metrics(
                 streaming_metrics_results, prefix=metric_key_prefix + "_/"
@@ -601,7 +604,8 @@ class Trainer(BaseTrainer):
 
             metrics = {**metrics, **streaming_metrics_results_flattened}
 
-        metrics[f"{metric_key_prefix}_/loss"] = all_losses.mean().item()
+        if testing:
+            metrics[f"{metric_key_prefix}_/loss"] = all_losses.mean().item()
 
         return EvalLoopOutput(
             predictions=all_preds_item_ids_scores,
