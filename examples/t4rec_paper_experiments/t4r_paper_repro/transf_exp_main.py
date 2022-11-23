@@ -30,6 +30,7 @@ from exp_outputs import (
     log_metric_results,
     log_parameters,
 )
+from merlin.io import Dataset
 from transf_exp_args import DataArguments, ModelArguments, TrainingArguments
 from transformers import HfArgumentParser, set_seed
 from transformers.trainer_utils import is_main_process
@@ -37,10 +38,8 @@ from transformers.trainer_utils import is_main_process
 import transformers4rec.torch as t4r
 from merlin_standard_lib import Schema, Tag
 from transformers4rec.torch import Trainer
-from transformers4rec.torch.utils.examples_utils import wipe_memory
-import numpy as np
 from transformers4rec.torch.utils.data_utils import NVTabularDataLoader
-from merlin.io import Dataset
+from transformers4rec.torch.utils.examples_utils import wipe_memory
 
 logger = logging.getLogger(__name__)
 
@@ -185,8 +184,8 @@ def main():
         trainer.log(results_avg_time)
 
         log_aot_metric_results(training_args.output_dir, results_avg_time)
-    
-    # Mimic the inference by manually computing recall@10
+
+    # Mimic the inference by manually computing recall@10 of the last time-index data
     eval_paths = glob.glob(
         os.path.join(
             data_args.data_path,
@@ -196,26 +195,15 @@ def main():
             "test.parquet" if training_args.eval_on_test_set else "valid.parquet",
         )
     )
-    prediction_data = pd.read_parquet(eval_paths[0])
-    prediction_data = prediction_data.iloc[:, 2:]
-    # Create label
-    labels = torch.tensor(prediction_data["sess_pid_seq"].apply(lambda x: x[-1]).values)
+    prediction_data = pd.read_parquet(eval_paths[0]).iloc[:, 2:]
+    # Extract label
+    labels = prediction_data["sess_pid_seq"].apply(lambda x: x[-1]).values
 
-    # Truncate input sequences to mimic inference
+    # Truncate input sequences up to last item - 1 to mimic the inference
     def mask_last_interaction(x):
         return list(x[:-1])
 
     list_columns = schema.select_by_tag("list").column_names
-    for col in list_columns:
-        prediction_data[col] = prediction_data[col].apply(mask_last_interaction)
-
-    prediction_data = pd.read_parquet(eval_paths[0]).iloc[:, 2:]
-    # Extract label
-    labels = prediction_data['sess_pid_seq'].apply(lambda x: x[-1]).values
-    # Truncate input sequences up to last item to mimic the inference
-    def mask_last_interaction(x):
-        return list(x[:-1])
-    list_columns = schema.select_by_tag('list').column_names
     for col in list_columns:
         prediction_data[col] = prediction_data[col].apply(mask_last_interaction)
     # Get top-10 predictions
@@ -230,14 +218,13 @@ def main():
     topk_preds = trainer.predict(test_loader).predictions[0]
     # compute recall@10
     recall_10 = recall(topk_preds, labels)
-    logger.info("Recall@10 of manually masked test data  = %s", str(recall_10))
-    output_file = os.path.join(training_args.output_dir, f"eval_results_over_time.txt")
+    logger.info(f"Recall@10 of manually masked test data = {str(recall_10)}")
+    output_file = os.path.join(training_args.output_dir, "eval_results_over_time.txt")
     with open(output_file, "a") as writer:
         writer.write(f"\n***** Recall@10 of simulated inference  = {recall_10} *****\n")
     if not isinstance(input_module.masking, t4r.masking.PermutationLanguageModeling):
-        #TODO fix inference discrepancy for permutation language modeling
-        assert np.isclose(recall_10, results_over_time[2]['eval_/next-item/recall_at_10'], rtol=0.1)
-
+        # TODO fix inference discrepancy for permutation language modeling
+        assert np.isclose(recall_10, results_over_time[2]["eval_/next-item/recall_at_10"], rtol=0.1)
 
 
 def recall(predicted_items: np.ndarray, real_items: np.ndarray) -> float:
@@ -403,7 +390,7 @@ def get_model_config(training_args, model_args):
         model_build_fn = t4r.TransfoXLConfig.build
 
     model_config = model_build_fn(
-        total_seq_length=training_args.max_sequence_length+2,
+        total_seq_length=training_args.max_sequence_length + 2,
         d_model=model_args.d_model,
         n_head=model_args.n_head,
         n_layer=model_args.n_layer,
