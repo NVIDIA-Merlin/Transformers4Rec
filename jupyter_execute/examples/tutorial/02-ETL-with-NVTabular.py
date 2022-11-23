@@ -4,7 +4,7 @@
 # In[1]:
 
 
-# Copyright 2021 NVIDIA Corporation. All Rights Reserved.
+# Copyright 2022 NVIDIA Corporation. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +20,20 @@
 # ==============================================================================
 
 
+# <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-02-etl-with-nvtabular/nvidia_logo.png" style="width: 90px; float: right;">
+# 
 # # ETL with NVTabular
+# 
+# You can execute these tutorial notebooks using the latest stable [merlin-pytorch](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch) container. 
+# 
+# **Launch the docker container**
+# ```
+# docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8888:8888 -v <path_to_data>:/workspace/data/  nvcr.io/nvidia/merlin/merlin-pytorch:22.XX
+# ```
+# 
+# This script will mount your local data folder that includes your data files to `/workspace/data` directory in the merlin-pytorch docker container.
+# 
+
 # ## 1. Introduction
 
 # In this notebook, we will create a preprocessing and feature engineering pipeline with [Rapids cuDF](https://github.com/rapidsai/cudf) and [Merlin NVTabular](https://github.com/NVIDIA-Merlin/NVTabular) libraries to prepare our dataset for session-based recommendation model training. 
@@ -54,7 +67,10 @@ import glob
 
 import cudf
 import nvtabular as nvt
-from nvtabular import ColumnSelector
+
+from nvtabular.ops import Operator
+from merlin.dag import ColumnSelector
+from merlin.schema import Schema, Tags
 
 
 # ## 3. Set up Input and Output Data Paths
@@ -68,7 +84,7 @@ INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
 
 # ## 4. Read the Input Parquet file
 
-# We already performed certain preprocessing steps on the first month (Oct-2019) of the raw dataset in the `01-preprocess` notebook: <br>
+# Even though the original dataset contains 7 months data files, we are going to use the first seven days of the `Oct-2019.csv` ecommerce dataset. We already performed certain preprocessing steps on the first month (Oct-2019) of the raw dataset in the `01-preprocess` notebook: <br>
 # 
 # - we created `event_time_ts` column from `event_time` column which shows the time when event happened at (in UTC).
 # - we created `prod_first_event_time_ts` column which indicates the timestamp that an item was seen first time.
@@ -76,7 +92,7 @@ INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
 # - we categorified the `user_session` column, so that it now has only integer values.
 # - we removed consequetively repeated (user, item) interactions. For example, an original session with `[1, 2, 4, 1, 2, 2, 3, 3, 3]` product interactions has become `[1, 2, 4, 1, 2, 3]` after removing the repeated interactions on the same item within the same session.
 
-# Even though the original dataset contains 7 months data files, we are going to use the first seven days of the `Oct-2019.csv` ecommerce dataset. We use cuDF to read the parquet file. 
+# Below, we start by reading in `Oct-2019.parquet`with cuDF. In order to create and save `Oct-2019.parquet` file, please run [01-preprocess.ipynb](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/tutorial) notebook first.
 
 # In[4]:
 
@@ -162,9 +178,8 @@ weekday_cos= sessiontime_weekday >> (lambda col: get_cycled_feature_value_cos(co
 # In[11]:
 
 
-from nvtabular.ops import Operator
-
-class ItemRecency(Operator):
+# Compute Item recency: Define a custom Op 
+class ItemRecency(nvt.ops.Operator):
     def transform(self, columns, gdf):
         for column in columns.names:
             col = gdf[column]
@@ -172,19 +187,40 @@ class ItemRecency(Operator):
             delta_days = (col - item_first_timestamp) / (60*60*24)
             gdf[column + "_age_days"] = delta_days * (delta_days >=0)
         return gdf
-            
-    def output_column_names(self, columns):
-        return ColumnSelector([column + "_age_days" for column in columns.names])
 
+    def compute_selector(
+        self,
+        input_schema: Schema,
+        selector: ColumnSelector,
+        parents_selector: ColumnSelector,
+        dependencies_selector: ColumnSelector,
+    ) -> ColumnSelector:
+        self._validate_matching_cols(input_schema, parents_selector, "computing input selector")
+        return parents_selector
+
+    def column_mapping(self, col_selector):
+        column_mapping = {}
+        for col_name in col_selector.names:
+            column_mapping[col_name + "_age_days"] = [col_name]
+        return column_mapping
+
+    @property
     def dependencies(self):
         return ["prod_first_event_time_ts"]
-    
-    
-recency_features = ['event_time_ts'] >> ItemRecency() 
-recency_features_norm = recency_features >> nvt.ops.LogOp() >> nvt.ops.Normalize() >> nvt.ops.Rename(name='product_recency_days_log_norm')
+
+    @property
+    def output_dtype(self):
+        return np.float64
 
 
 # In[12]:
+
+
+recency_features = ['event_time_ts'] >> ItemRecency() 
+recency_features_norm = recency_features >> nvt.ops.LogOp() >> nvt.ops.Normalize(out_dtype=np.float32) >> nvt.ops.Rename(name='product_recency_days_log_norm')
+
+
+# In[13]:
 
 
 time_features = (
@@ -198,14 +234,14 @@ time_features = (
 
 # ### 5.3. Normalize Continuous Features¶
 
-# In[13]:
+# In[14]:
 
 
 # Smoothing price long-tailed distribution and applying standardization
-price_log = ['price'] >> nvt.ops.LogOp() >> nvt.ops.Normalize() >> nvt.ops.Rename(name='price_log_norm')
+price_log = ['price'] >> nvt.ops.LogOp() >> nvt.ops.Normalize(out_dtype=np.float32) >> nvt.ops.Rename(name='price_log_norm')
 
 
-# In[14]:
+# In[15]:
 
 
 # Relative price to the average price for the category_id
@@ -222,13 +258,13 @@ relative_price_to_avg_category = avg_category_id_pr >> nvt.ops.LambdaOp(relative
 
 # #### Aggregate by session id and creates the sequential features
 
-# In[15]:
+# In[16]:
 
 
 groupby_feats = ['event_time_ts', 'user_session'] + cat_feats + time_features + price_log + relative_price_to_avg_category
 
 
-# In[16]:
+# In[17]:
 
 
 # Define Groupby Workflow
@@ -239,7 +275,6 @@ groupby_features = groupby_feats >> nvt.ops.Groupby(
         'user_id': ['first'],
         'product_id': ["list", "count"],
         'category_code': ["list"],  
-        'event_type': ["list"], 
         'brand': ["list"], 
         'category_id': ["list"], 
         'event_time_ts': ["first"],
@@ -250,17 +285,16 @@ groupby_features = groupby_feats >> nvt.ops.Groupby(
         'relative_price_to_avg_categ_id': ["list"],
         'product_recency_days_log_norm': ["list"]
         },
-    name_sep="-")
+    name_sep="-") >> nvt.ops.AddMetadata(tags=[Tags.CATEGORICAL])
 
 
 # - Select columns which are list
 
-# In[17]:
+# In[18]:
 
 
 groupby_features_list = groupby_features['product_id-list',
         'category_code-list',  
-        'event_type-list', 
         'brand-list', 
         'category_id-list', 
         'et_dayofweek_sin-list',
@@ -270,7 +304,7 @@ groupby_features_list = groupby_features['product_id-list',
         'product_recency_days_log_norm-list']
 
 
-# In[18]:
+# In[19]:
 
 
 SESSIONS_MAX_LENGTH = 20 
@@ -279,15 +313,15 @@ MINIMUM_SESSION_LENGTH = 2
 
 # We truncate the sequence features in length according to sessions_max_length param, which is set as 20 in our example.
 
-# In[19]:
+# In[20]:
 
 
-groupby_features_trim = groupby_features_list >> nvt.ops.ListSlice(0,SESSIONS_MAX_LENGTH) >> nvt.ops.Rename(postfix = '_seq')
+groupby_features_trim = groupby_features_list >> nvt.ops.ListSlice(0, SESSIONS_MAX_LENGTH, pad=True) >> nvt.ops.Rename(postfix = '_seq')
 
 
 # - Create a `day_index` column in order to partition sessions by day when saving the parquet files.
 
-# In[20]:
+# In[21]:
 
 
 # calculate session day index based on 'timestamp-first' column
@@ -299,7 +333,7 @@ day_index = ((groupby_features['event_time_dt-first'])  >>
 
 # - Select certain columns to be used in model training
 
-# In[21]:
+# In[22]:
 
 
 selected_features = groupby_features['user_session', 'product_id-count'] + groupby_features_trim + day_index
@@ -307,13 +341,13 @@ selected_features = groupby_features['user_session', 'product_id-count'] + group
 
 # - Filter out the session that have less than 2 interactions.
 
-# In[22]:
+# In[23]:
 
 
 filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df["product_id-count"] >= MINIMUM_SESSION_LENGTH)
 
 
-# In[23]:
+# In[24]:
 
 
 # avoid numba warnings
@@ -325,7 +359,7 @@ config.CUDA_LOW_OCCUPANCY_WARNINGS = 0
 
 # NVTabular's preprocessing and feature engineering workflows are directed graphs of operators. When we initialize a Workflow with our pipeline, workflow organizes the input and output columns.
 
-# In[24]:
+# In[25]:
 
 
 dataset = nvt.Dataset(df)
@@ -339,32 +373,17 @@ sessions_gdf = workflow.transform(dataset).to_ddf()
 
 # Let's print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.
 
-# In[25]:
-
-
-sessions_gdf.head(3)
-
-
 # In[26]:
 
 
-workflow.output_schema.column_names
-
-
-# - Save NVTabular workflow to load at the inference step.
-
-# In[27]:
-
-
-workflow_path = os.path.join(INPUT_DATA_DIR, 'workflow_etl')
-workflow.save(workflow_path)
+sessions_gdf.head(3)
 
 
 # ## 6. Exporting data
 
 # We export dataset to parquet partitioned by the session `day_index` column.
 
-# In[28]:
+# In[27]:
 
 
 # define partition column
@@ -392,7 +411,7 @@ get_ipython().system('mkdir -p $OUTPUT_FOLDER')
 
 # `gpu_preprocessing` function converts the process df to a Dataset object and write out hive-partitioned data to disk.
 
-# In[29]:
+# In[28]:
 
 
 from transformers4rec.data.preprocessing import save_time_based_splits
@@ -403,18 +422,33 @@ save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                       )
 
 
-# In[30]:
+# In[29]:
 
 
 # check out the OUTPUT_FOLDER
 get_ipython().system('ls $OUTPUT_FOLDER')
 
 
+# Save NVTabular workflow to load at the inference step.
+
+# In[30]:
+
+
+workflow.output_schema.column_names
+
+
+# In[31]:
+
+
+workflow_path = os.path.join(INPUT_DATA_DIR, 'workflow_etl')
+workflow.save(workflow_path)
+
+
 # ## 7. Wrap Up 
 
 # That's it! We finished our first task. We reprocessed our dataset and created new features to train a session-based recommendation model. Please run the cell below to shut down the kernel before moving on to the next notebook.
 
-# In[31]:
+# In[32]:
 
 
 import IPython

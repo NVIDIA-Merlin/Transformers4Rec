@@ -274,7 +274,9 @@
 
         <span class="k">return</span> <span class="n">MaskingInfo</span><span class="p">(</span><span class="n">mask_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="MaskSequence.forward"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<div class="viewcode-block" id="MaskSequence.forward"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_masked_targets</span><span class="p">(</span><span class="n">item_ids</span><span class="o">=</span><span class="n">item_ids</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask_schema</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`mask_schema must be set.`&quot;</span><span class="p">)</span>
@@ -887,7 +889,7 @@
       <dd><a href="../../../../v0.1.12/index.html">v0.1.12</a></dd>
       <dd><a href="../../../../v0.1.13/index.html">v0.1.13</a></dd>
       <dd><a href="../../../../v0.1.14/index.html">v0.1.14</a></dd>
-      <dd><a href="../../../../v0.1.9/index.html">v0.1.9</a></dd>
+      <dd><a href="../../../../v0.1.15/index.html">v0.1.15</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

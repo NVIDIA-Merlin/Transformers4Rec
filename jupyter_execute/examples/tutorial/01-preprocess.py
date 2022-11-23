@@ -4,7 +4,7 @@
 # In[1]:
 
 
-# Copyright 2021 NVIDIA Corporation. All Rights Reserved.
+# Copyright 2022 NVIDIA Corporation. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,8 +20,11 @@
 # ==============================================================================
 
 
+# <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-01-preprocess/nvidia_logo.png" style="width: 90px; float: right;">
+# 
 # # Preliminary Preprocessing
-# ## Read and Process E-Commerce data
+# 
+# **Read and Process E-Commerce data**
 
 # In this notebook, we are going to use a subset of a publicly available [eCommerce dataset](https://www.kaggle.com/mkechinov/ecommerce-behavior-data-from-multi-category-store). The full dataset contains 7 months data (from October 2019 to April 2020) from a large multi-category online store. Each row in the file represents an event. All events are related to products and users. Each event is like many-to-many relation between products and users.
 # Data collected by Open CDP project and the source of the dataset is [REES46 Marketing Platform](https://rees46.com/).
@@ -45,7 +48,7 @@ import nvtabular as nvt
 
 # ### Read Data via cuDF from CSV
 
-# At this point we expect that you have already downloaded the `2019-Oct.csv` dataset and stored it in the `INPUT_DATA_DIR` as defined below. It is worth mentioning that the raw dataset is ~ 6 GB, therefore a single GPU with 16 GB or less memory might run out of memory. To avoid that, you can directly start from the second notebook, `02-ETL_with_NVTabular`, using `'Oct-2019.parquet` provided in [here](https://drive.google.com/drive/folders/1GjNKerPMvEtQHt9Z37ncF1zFedDXL_RJ).
+# At this point we expect that you have already downloaded the `2019-Oct.csv` dataset and stored it in the `INPUT_DATA_DIR` as defined below. It is worth mentioning that the raw dataset is ~ 6 GB, therefore a single GPU with 16 GB or less memory might run out of memory.
 
 # In[3]:
 

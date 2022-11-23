@@ -218,7 +218,7 @@
         <span class="c1"># pylint: disable=arguments-out-of-order</span>
         <span class="k">return</span> <span class="n">right_shift_block</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SequentialBlock.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="SequentialBlock.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.SequentialBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># from transformers4rec.torch import TabularSequenceFeatures</span>
 
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">module</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -227,8 +227,8 @@
                 <span class="nb">input</span> <span class="o">=</span> <span class="n">module</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">filtered_kwargs</span><span class="p">)</span>
 
             <span class="k">elif</span> <span class="s2">&quot;training&quot;</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                <span class="k">if</span> <span class="s2">&quot;ignore_masking&quot;</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
-                    <span class="nb">input</span> <span class="o">=</span> <span class="n">module</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="n">ignore_masking</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s2">&quot;testing&quot;</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">forward</span><span class="p">)</span><span class="o">.</span><span class="n">parameters</span><span class="p">:</span>
+                    <span class="nb">input</span> <span class="o">=</span> <span class="n">module</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="nb">input</span> <span class="o">=</span> <span class="n">module</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -395,7 +395,7 @@
       <dd><a href="../../../../../v0.1.12/index.html">v0.1.12</a></dd>
       <dd><a href="../../../../../v0.1.13/index.html">v0.1.13</a></dd>
       <dd><a href="../../../../../v0.1.14/index.html">v0.1.14</a></dd>
-      <dd><a href="../../../../../v0.1.9/index.html">v0.1.9</a></dd>
+      <dd><a href="../../../../../v0.1.15/index.html">v0.1.15</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

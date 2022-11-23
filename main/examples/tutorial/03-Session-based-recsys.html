@@ -269,7 +269,7 @@ feature {
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">head</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
     <span class="n">body</span><span class="p">,</span>
-    <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+    <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                               <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>  
                                        <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]),</span>
 <span class="p">)</span>
@@ -783,7 +783,7 @@ retrieval metrics are used to compute the Top-20 accuracy of recommendation list
 <span class="c1"># Define the head for to next item prediction task </span>
 <span class="n">head</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
     <span class="n">body</span><span class="p">,</span>
-    <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+    <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                               <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>  
                                        <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]),</span>
 <span class="p">)</span>
@@ -1270,7 +1270,7 @@ information for meaningful predictions. With that motivation, in this section, w
 <span class="c1"># Define the head related to next item prediction task </span>
 <span class="n">head</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
     <span class="n">body</span><span class="p">,</span>
-    <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+    <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                                      <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>  
                                               <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]),</span>
 <span class="p">)</span>
@@ -1859,7 +1859,7 @@ next-item/recall_at_20:0.2324143350124359
       <dd><a href="../../../v0.1.12/index.html">v0.1.12</a></dd>
       <dd><a href="../../../v0.1.13/index.html">v0.1.13</a></dd>
       <dd><a href="../../../v0.1.14/index.html">v0.1.14</a></dd>
-      <dd><a href="../../../v0.1.9/index.html">v0.1.9</a></dd>
+      <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>

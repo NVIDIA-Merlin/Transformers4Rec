@@ -4,7 +4,7 @@
 # In[1]:
 
 
-# Copyright 2021 NVIDIA Corporation. All Rights Reserved.
+# Copyright 2022 NVIDIA Corporation. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 # ==============================================================================
 
 
+# <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-03-session-based-recsys/nvidia_logo.png" style="width: 90px; float: right;">
+# 
 # # Session-based recommendation with Transformers4Rec
 # ## 1. Introduction
 
@@ -498,7 +500,7 @@ import transformers4rec.torch as tr
 from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
 
 
-# In[2]:
+# In[3]:
 
 
 # Define categorical and continuous columns to fed to training model
@@ -516,7 +518,7 @@ schema = schema.select_by_name(x_cat_names + x_cont_names)
 
 # Here we set `aggregation="concat"`, so that all categorical and continuous features are concatenated to form an interaction representation.
 
-# In[3]:
+# In[4]:
 
 
 # Define input block
@@ -553,7 +555,7 @@ model = tr.Model(head)
 
 # ##### Training and Evaluation
 
-# In[4]:
+# In[5]:
 
 
 from transformers4rec.config.trainer import T4RecTrainingArguments
@@ -576,7 +578,7 @@ training_args = T4RecTrainingArguments(
 )
 
 
-# In[5]:
+# In[6]:
 
 
 # Instantiate the T4Rec Trainer, which manages training and evaluation
@@ -590,13 +592,13 @@ trainer = Trainer(
 
 # Define the output folder of the processed parquet files
 
-# In[6]:
+# In[7]:
 
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/sessions_by_day")
 
 
-# In[7]:
+# In[8]:
 
 
 get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_time_window_index = 4\nfor time_index in range(start_time_window_index, final_time_window_index):\n    # Set data \n    time_index_train = time_index\n    time_index_eval = time_index + 1\n    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))\n    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))\n    # Train on day related to time_index \n    print(\'*\'*20)\n    print("Launch training for day %s are:" %time_index)\n    print(\'*\'*20 + \'\\n\')\n    trainer.train_dataset_or_path = train_paths\n    trainer.reset_lr_scheduler()\n    trainer.train()\n    trainer.state.global_step +=1\n    # Evaluate on the following day\n    trainer.eval_dataset_or_path = eval_paths\n    train_metrics = trainer.evaluate(metric_key_prefix=\'eval\')\n    print(\'*\'*20)\n    print("Eval results for day %s are:\\t" %time_index_eval)\n    print(\'\\n\' + \'*\'*20 + \'\\n\')\n    for key in sorted(train_metrics.keys()):\n        print(" %s = %s" % (key, str(train_metrics[key]))) \n    wipe_memory()\n')
@@ -621,7 +623,7 @@ with open("results.txt", 'a') as f:
 
 # Load the preproc workflow that we saved in the ETL notebook.
 
-# In[9]:
+# In[14]:
 
 
 import nvtabular as nvt
@@ -632,13 +634,13 @@ workflow_path = os.path.join(INPUT_DATA_DIR, 'workflow_etl')
 workflow = nvt.Workflow.load(workflow_path)
 
 
-# In[10]:
+# In[15]:
 
 
 # dictionary representing max sequence length for the sequential (list) columns
 sparse_features_max = {
     fname: sequence_length
-    for fname in x_cat_names + x_cont_names
+    for fname in x_cat_names + x_cont_names + ['category_code-list_seq']
 }
 
 sparse_features_max
@@ -646,7 +648,7 @@ sparse_features_max
 
 # It is time to export the proc workflow and model in the format required by Triton Inference Server, by using the NVTabular’s `export_pytorch_ensemble()` function.
 
-# In[11]:
+# In[16]:
 
 
 from nvtabular.inference.triton import export_pytorch_ensemble

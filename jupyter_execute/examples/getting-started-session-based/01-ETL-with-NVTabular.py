@@ -4,7 +4,7 @@
 # In[1]:
 
 
-# Copyright 2021 NVIDIA Corporation. All Rights Reserved.
+# Copyright 2022 NVIDIA Corporation. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 # =======
 
 
+# <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-01-etl-with-nvtabular/nvidia_logo.png" style="width: 90px; float: right;">
+# 
 # # ETL with NVTabular
 
 # In this notebook we are going to generate synthetic data and then create sequential features with [NVTabular](https://github.com/NVIDIA-Merlin/NVTabular). Such data will be used in the next notebook to train a session-based recommendation model.
@@ -40,6 +42,8 @@ import pandas as pd
 import cudf
 import cupy as cp
 import nvtabular as nvt
+from nvtabular.ops import *
+from merlin.schema.tags import Tags
 
 
 # ### Define Input/Output Path
@@ -55,17 +59,17 @@ INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
 # In[4]:
 
 
-NUM_ROWS = 100000
+NUM_ROWS = 10000000
 long_tailed_item_distribution = np.clip(np.random.lognormal(3., 1., NUM_ROWS).astype(np.int32), 1, 50000)
 
 # generate random item interaction features 
-df = pd.DataFrame(np.random.randint(70000, 80000, NUM_ROWS), columns=['session_id'])
+df = pd.DataFrame(np.random.randint(70000, 90000, NUM_ROWS), columns=['session_id'])
 df['item_id'] = long_tailed_item_distribution
 
 # generate category mapping for each item-id
 df['category'] = pd.cut(df['item_id'], bins=334, labels=np.arange(1, 335)).astype(np.int32)
-df['timestamp/age_days'] = np.random.uniform(0, 1, NUM_ROWS)
-df['timestamp/weekday/sin']= np.random.uniform(0, 1, NUM_ROWS)
+df['timestamp/age_days'] = np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
+df['timestamp/weekday/sin']= np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
 
 # generate day mapping for each session 
 map_day = dict(zip(df.session_id.unique(), np.random.randint(1, 10, size=(df.session_id.nunique()))))
@@ -108,11 +112,30 @@ groupby_features = groupby_feats >> nvt.ops.Groupby(
     name_sep="-")
 
 # Select and truncate the sequential features
-sequence_features_truncated = (groupby_features['category-list', 'item_id-list', 'timestamp/age_days-list', 'timestamp/weekday/sin-list']) >>nvt.ops.ListSlice(0,20) >> nvt.ops.Rename(postfix = '_trim')
+sequence_features_truncated = (groupby_features['category-list']) >> nvt.ops.ListSlice(0,20) >> nvt.ops.Rename(postfix = '_trim')
+
+sequence_features_truncated_item = (
+    groupby_features['item_id-list']
+    >> nvt.ops.ListSlice(0,20) 
+    >> nvt.ops.Rename(postfix = '_trim')
+    >> TagAsItemID()
+)  
+sequence_features_truncated_cont = (
+    groupby_features['timestamp/age_days-list', 'timestamp/weekday/sin-list'] 
+    >> nvt.ops.ListSlice(0,20) 
+    >> nvt.ops.Rename(postfix = '_trim')
+    >> nvt.ops.AddMetadata(tags=[Tags.CONTINUOUS])
+)
 
 # Filter out sessions with length 1 (not valid for next-item prediction training and evaluation)
 MINIMUM_SESSION_LENGTH = 2
-selected_features = groupby_features['item_id-count', 'day-first', 'session_id'] + sequence_features_truncated
+selected_features = (
+    groupby_features['item_id-count', 'day-first', 'session_id'] + 
+    sequence_features_truncated_item +
+    sequence_features_truncated + 
+    sequence_features_truncated_cont
+)
+    
 filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df["item_id-count"] >= MINIMUM_SESSION_LENGTH)
 
 
@@ -140,23 +163,31 @@ sessions_gdf.head(3)
 workflow.save('workflow_etl')
 
 
+# The following will generate `schema.pbtxt` file in the provided folder.
+
+# In[12]:
+
+
+workflow.fit_transform(dataset).to_parquet(os.path.join(INPUT_DATA_DIR, "processed_nvt"))
+
+
 # ## Export pre-processed data by day
 
 # In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day folder: train.parquet, validation.parquet and test.parquet
 
-# In[9]:
+# In[13]:
 
 
-OUTPUT_FOLDER = os.environ.get("OUTPUT_FOLDER",os.path.join(INPUT_DATA_DIR, "sessions_by_day"))
-get_ipython().system('mkdir -p $OUTPUT_FOLDER')
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR",os.path.join(INPUT_DATA_DIR, "sessions_by_day"))
+get_ipython().system('mkdir -p $OUTPUT_DIR')
 
 
-# In[10]:
+# In[14]:
 
 
 from transformers4rec.data.preprocessing import save_time_based_splits
 save_time_based_splits(data=nvt.Dataset(sessions_gdf),
-                       output_dir= OUTPUT_FOLDER,
+                       output_dir= OUTPUT_DIR,
                        partition_col='day-first',
                        timestamp_col='session_id', 
                       )
@@ -164,17 +195,17 @@ save_time_based_splits(data=nvt.Dataset(sessions_gdf),
 
 # ## Checking the preprocessed outputs
 
-# In[11]:
+# In[16]:
 
 
-TRAIN_PATHS = sorted(glob.glob(os.path.join(OUTPUT_FOLDER, "1", "train.parquet")))
+TRAIN_PATHS = sorted(glob.glob(os.path.join(OUTPUT_DIR, "1", "train.parquet")))
 
 
-# In[12]:
+# In[17]:
 
 
 gdf = cudf.read_parquet(TRAIN_PATHS[0])
-gdf.head()
+gdf
 
 
 # You have  just created session-level features to train a session-based recommendation model using NVTabular. Now you can move to the the next notebook,`02-session-based-XLNet-with-PyT.ipynb` to train a session-based recommendation model using [XLNet](https://arxiv.org/abs/1906.08237), one of the state-of-the-art NLP model.

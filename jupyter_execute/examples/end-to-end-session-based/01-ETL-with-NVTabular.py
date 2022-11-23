@@ -4,7 +4,7 @@
 # In[1]:
 
 
-# Copyright 2021 NVIDIA Corporation. All Rights Reserved.
+# Copyright 2022 NVIDIA Corporation. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,9 +20,23 @@
 # ==============================================================================
 
 
+# <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-01-etl-with-nvtabular/nvidia_logo.png" style="width: 90px; float: right;">
+# 
 # # ETL with NVTabular
 # 
-# This notebook demonstrates how to use NVTabular to perform the feature engineering that is needed to model the Yoochoose data.
+# This notebook is created using the latest stable [merlin-pytorch](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch) container.
+# 
+# **Launch the docker container**
+# ```
+# docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -p 8888:8888 -v <path_to_data>:/workspace/data/  nvcr.io/nvidia/merlin/merlin-pytorch:22.XX
+# ```
+# This script will mount your local data folder that includes your data files to `/workspace/data` directory in the merlin-pytorch docker container.
+
+# ## Overview
+
+# This notebook demonstrates how to use NVTabular to perform the feature engineering that is needed to model the `YOOCHOOSE` dataset which contains a collection of sessions from a retailer. Each session  encapsulates the click events that the user performed in that session.
+# 
+# The dataset is available on [Kaggle](https://www.kaggle.com/chadgostopp/recsys-challenge-2015). You need to download it and copy to the `DATA_FOLDER` path. Note that we are only using the `yoochoose-clicks.dat` file.
 # 
 # First, let's start by importing several libraries:
 
@@ -53,12 +67,6 @@ DATA_PATH = os.path.join(DATA_FOLDER, FILENAME_PATTERN)
 OUTPUT_FOLDER = "./yoochoose_transformed"
 OVERWRITE = False
 
-
-# #### Download the data
-
-# In this notebook we are using the `YOOCHOOSE` dataset which contains a collection of sessions from a retailer. Each session  encapsulates the click events that the user performed in that session.
-# 
-# The dataset is available on [Kaggle](https://www.kaggle.com/chadgostopp/recsys-challenge-2015). You need to download it and copy to the `DATA_FOLDER` path. Note that we are only using the `yoochoose-clicks.dat` file.
 
 # ## Load and clean raw data
 
@@ -134,10 +142,10 @@ gc.collect()
 
 
 # Encodes categorical features as contiguous integers
-cat_feats = nvt.ColumnSelector(['session_id', 'category', 'item_id']) >> nvt.ops.Categorify(start_index=1)
+cat_feats = ColumnSelector(['session_id', 'category', 'item_id']) >> nvt.ops.Categorify(start_index=1)
 
 # create time features
-session_ts = nvt.ColumnSelector(['timestamp'])
+session_ts = ColumnSelector(['timestamp'])
 session_time = (
     session_ts >> 
     nvt.ops.LambdaOp(lambda col: cudf.to_datetime(col, unit='s')) >> 
@@ -193,7 +201,7 @@ class ItemRecency(nvt.ops.Operator):
     
 recency_features = session_ts >> ItemRecency() 
 # Apply standardization to this continuous feature
-recency_features_norm = recency_features >> nvt.ops.LogOp() >> nvt.ops.Normalize() >> nvt.ops.Rename(name='product_recency_days_log_norm')
+recency_features_norm = recency_features >> nvt.ops.LogOp() >> nvt.ops.Normalize(out_dtype=np.float32) >> nvt.ops.Rename(name='product_recency_days_log_norm')
 
 time_features = (
     session_time +
@@ -202,7 +210,7 @@ time_features = (
     recency_features_norm
 )
 
-features = nvt.ColumnSelector(['timestamp', 'session_id']) + cat_feats + time_features 
+features = ColumnSelector(['timestamp', 'session_id']) + cat_feats + time_features 
 
 
 # ### Define the preprocessing of sequential features
@@ -340,4 +348,4 @@ del  sessions_gdf
 gc.collect()
 
 
-# That's it! We created our sequential features, now we can go to next notebook to train a PyTorch or Tensorflow session-based model.
+# That's it! We created our sequential features, now we can go to next notebook to train a PyTorch session-based model.

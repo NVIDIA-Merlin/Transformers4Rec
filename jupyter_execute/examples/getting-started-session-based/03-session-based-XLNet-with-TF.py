@@ -202,7 +202,8 @@ def get_dataloader(paths_or_dataset, batch_size=128):
 # In[9]:
 
 
-OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/sessions_by_day")
+INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/sessions_by_day")
 
 
 # ### Train the model

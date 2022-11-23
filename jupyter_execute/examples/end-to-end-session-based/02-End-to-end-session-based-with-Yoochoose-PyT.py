@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
-# Copyright 2021 NVIDIA Corporation. All Rights Reserved.
+# Copyright 2022 NVIDIA Corporation. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 # ==============================================================================
 
 
+# <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" style="width: 90px; float: right;">
+# 
 # # End-to-end session-based recommendations with PyTorch
 
 # In recent years, several deep learning-based algorithms have been proposed for recommendation systems while its adoption in industry deployments have been steeply growing. In particular, NLP inspired approaches have been successfully adapted for sequential and session-based recommendation problems, which are important for many domains like e-commerce, news and streaming media. Session-Based Recommender Systems (SBRS) have been proposed to model the sequence of interactions within the current user session, where a session is a short sequence of user interactions typically bounded by user inactivity. They have recently gained popularity due to their ability to capture short-term or contextual user preferences towards items. 
@@ -36,7 +38,7 @@
 
 # The library uses a schema format to configure the input features and automatically creates the necessary layers. This *protobuf* text file contains the description of each input feature by defining: the name, the type, the number of elements of a list column,  the cardinality of a categorical feature and the min and max values of each feature. In addition, the annotation field contains the tags such as specifying `continuous` and `categorical` features, the `target` column or the `item_id` feature, among others.
 
-# In[ ]:
+# In[2]:
 
 
 from merlin_standard_lib import Schema
@@ -47,7 +49,7 @@ get_ipython().system('cat $SCHEMA_PATH')
 
 # We can select the subset of features we want to use for training the model by their tags or their names.
 
-# In[ ]:
+# In[3]:
 
 
 schema = schema.select_by_name(
@@ -97,10 +99,12 @@ transformer_config = tr.XLNetConfig.build(
 model = transformer_config.to_torch_model(input_module, prediction_task)
 
 
+# You can print out the model structure by uncommenting the line below.
+
 # In[ ]:
 
 
-model
+#model
 
 
 # ### 3.3. Daily Fine-Tuning: Training over a time window¶
@@ -111,7 +115,7 @@ model
 
 # An additional argument `data_loader_engine` is defined to automatically load the features needed for training using the schema. The default value is `nvtabular` for optimized GPU-based data-loading.  Optionally a `PyarrowDataLoader` (`pyarrow`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
 
-# In[ ]:
+# In[6]:
 
 
 training_args = tr.trainer.T4RecTrainingArguments(
@@ -131,7 +135,7 @@ training_args = tr.trainer.T4RecTrainingArguments(
 
 # #### Instantiate the trainer
 
-# In[ ]:
+# In[7]:
 
 
 recsys_trainer = tr.Trainer(
@@ -145,7 +149,7 @@ recsys_trainer = tr.Trainer(
 
 # In this demo, we will use the `fit_and_evaluate` method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use training data of a specific time index $t$ to train the model then we evaluate on the validation data of next index $t + 1$. Particularly, we set start time to 178 and end time to 180.
 
-# In[ ]:
+# In[8]:
 
 
 from transformers4rec.torch.utils.examples_utils import fit_and_evaluate
@@ -156,13 +160,13 @@ OT_results = fit_and_evaluate(recsys_trainer, start_time_index=178, end_time_ind
 
 # `OT_results` is a list of scores (accuracy metrics) for evaluation based on given start and end time_index. Since in this example we do evaluation on days 179, 180 and 181, we get three metrics in the list one for each day.
 
-# In[ ]:
+# In[9]:
 
 
 OT_results
 
 
-# In[ ]:
+# In[10]:
 
 
 import numpy as np
@@ -174,17 +178,17 @@ for key in sorted(avg_results.keys()):
 
 # #### Saves the model
 
-# In[ ]:
+# In[11]:
 
 
 recsys_trainer._save_model_and_checkpoint(save_model_class=True)
 
 
-# #### Exports the preprocessing workflow and model in the format required by Triton server:** 
+# #### Exports the preprocessing workflow and model in the format required by Triton server:
 # 
 # NVTabular’s `export_pytorch_ensemble()` function enables us to create model files and config files to be served to Triton Inference Server. 
 
-# In[ ]:
+# In[12]:
 
 
 from nvtabular.inference.triton import export_pytorch_ensemble
@@ -214,26 +218,19 @@ export_pytorch_ensemble(
 
 # ### 4.1. Pull and Start Inference Container
 # 
-# At this point, before connecing to the Triton Server, we launch the inference docker container and then load the ensemble `t4r_pytorch` to the inference server. This is done with the scripts below:
-# 
-# **Launch the docker container**
-# ```
-# docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v <path_to_saved_models>:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:21.09
-# ```
-# This script will mount your local model-repository folder that includes your saved models from the previous cell to `/workspace/models` directory in the merlin-inference docker container.
+# At this point, we start the Triton Inference Server (TIS). 
 # 
 # **Start triton server**<br>
-# After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.
-# 
+# You can start triton server with the command below. You need to provide correct path of the models folder.
 # 
 # ```
 # tritonserver --model-repository=<path_to_models> --model-control-mode=explicit
 # ```
-# Note: The model-repository path for our example is `/workspace/models`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model below.
+# Note: The model-repository path for our example is `/workspace/TF4Rec/models/`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.
 
 # ### Connect to the Triton Inference Server and check if the server is alive
 
-# In[ ]:
+# In[20]:
 
 
 import tritonhttpclient
@@ -248,35 +245,38 @@ triton_client.is_server_live()
 # ### Load raw data for inference
 # We select the last 50 interactions and filter out sessions with less than 2 interactions. 
 
-# In[ ]:
+# In[21]:
 
 
 import pandas as pd
-interactions_merged_df = pd.read_parquet("/raid/data/yoochoose/interactions_merged_df.parquet")
+interactions_merged_df = pd.read_parquet("/workspace/data/interactions_merged_df.parquet")
 interactions_merged_df = interactions_merged_df.sort_values('timestamp')
 batch = interactions_merged_df[-50:]
 sessions_to_use = batch.session_id.value_counts()
 filtered_batch = batch[batch.session_id.isin(sessions_to_use[sessions_to_use.values>1].index.values)]
 
 
-# ### Send the request to triton server
-
-# In[ ]:
-
-
-triton_client.get_model_repository_index()
-
-
 # ### Load the ensemble model to triton
-# If all models are loaded successfully, you should be seeing `successfully loaded` status next to each model name on your terminal.
 
-# In[ ]:
+# The models should be loaded successfully before we send a request to TIS. If all models are loaded successfully, you should be seeing `successfully loaded` status next to each model name on your terminal.
+
+# In[22]:
 
 
 triton_client.load_model(model_name="t4r_pytorch")
 
 
-# In[ ]:
+# ### Send the request to triton server
+
+# In[23]:
+
+
+triton_client.get_model_repository_index()
+
+
+# If all models are loaded successfully, you should be seeing `READY` status next to each model.
+
+# In[24]:
 
 
 import nvtabular.inference.triton as nvt_triton
@@ -299,7 +299,7 @@ with grpcclient.InferenceServerClient("localhost:8001") as client:
 
 # - Visualise top-k predictions
 
-# In[ ]:
+# In[25]:
 
 
 from transformers4rec.torch.utils.examples_utils import visualize_response

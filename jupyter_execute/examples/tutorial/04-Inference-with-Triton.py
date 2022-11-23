@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[14]:
+# In[1]:
 
 
-# Copyright 2021 NVIDIA Corporation. All Rights Reserved.
+# Copyright 2022 NVIDIA Corporation. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 # ==============================================================================
 
 
+# <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-04-inference-with-triton/nvidia_logo.png" style="width: 90px; float: right;">
+# 
 # # Triton for Recommender Systems
 
 # NVIDIA [Triton Inference Server (TIS)](https://github.com/triton-inference-server/server) simplifies the deployment of AI models at scale in production. The Triton Inference Server allows us to deploy and serve our model for inference. It supports a number of different machine learning frameworks such as TensorFlow and PyTorch.
@@ -36,36 +38,25 @@
 
 # ## Pull and start Inference docker container
 
-# At this point, before connecing to the Triton Server, we launch the inference docker container and then load the exported ensemble `t4r_pytorch` to the inference server. This is done with the scripts below:
+# At this point, we start the Triton Inference Server (TIS) and then load the exported ensemble `t4r_pytorch` to the inference server. You can start triton server with the command below. Note that, you need to provide correct path of the models folder.
 # 
-# #### Launch the docker container:
-# ```
-# docker run -it --gpus device=0 -p 8000:8000 -p 8001:8001 -p 8002:8002 -v <path_to_saved_models>:/workspace/models/ nvcr.io/nvidia/merlin/merlin-inference:21.09
-# ```
-# 
-# This script will mount your local model-repository folder that includes your saved models from the previous cell to `/workspace/models` directory in the merlin-inference docker container.
-# 
-# #### Start triton server
-# After you started the merlin-inference container, you can start triton server with the command below. You need to provide correct path of the models folder.
 # ```
 # tritonserver --model-repository=<path_to_models> --model-control-mode=explicit
 # ```
-# Note: The model-repository path for our example is `/workspace/models`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.
+# The model-repository path for our example is `/workspace/models`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.
 
 # ## 1. Deploy PyTorch and NVTabular Model to Triton Inference Server
 
 # Our Triton server has already been launched and is ready to make requests. Remember we already exported the saved PyTorch model in the previous notebook, and generated the config files for Triton Inference Server.
 
-# In[1]:
+# In[2]:
 
 
 # Import dependencies
 import os
 from time import time
 
-import argparse
 import numpy as np
-import pandas as pd
 import sys
 import cudf
 
@@ -136,7 +127,7 @@ import cudf
 
 # Next, let's build a client to connect to our server. The `InferenceServerClient` object is what we'll be using to talk to Triton.
 
-# In[16]:
+# In[3]:
 
 
 import tritonhttpclient
@@ -149,7 +140,7 @@ except Exception as e:
 triton_client.is_server_live()
 
 
-# In[17]:
+# In[4]:
 
 
 triton_client.get_model_repository_index()
@@ -157,7 +148,7 @@ triton_client.get_model_repository_index()
 
 # We load the ensemble model
 
-# In[18]:
+# In[5]:
 
 
 model_name = "t4r_pytorch"
@@ -170,7 +161,7 @@ triton_client.load_model(model_name=model_name)
 
 # Load raw data for inference: We select the first 50 interactions and filter out sessions with less than 2 interactions. For this tutorial, just as an example we use the `Oct-2019` dataset that we used for model training.
 
-# In[2]:
+# In[6]:
 
 
 INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
@@ -179,20 +170,20 @@ df=df.sort_values('event_time_ts')
 batch = df.iloc[:50,:]
 
 
-# In[3]:
+# In[7]:
 
 
 sessions_to_use = batch.user_session.value_counts()
 filtered_batch = batch[batch.user_session.isin(sessions_to_use[sessions_to_use.values>1].index.values)]
 
 
-# In[4]:
+# In[8]:
 
 
 filtered_batch.head()
 
 
-# In[22]:
+# In[9]:
 
 
 import warnings
@@ -200,7 +191,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-# In[23]:
+# In[10]:
 
 
 import nvtabular.inference.triton as nvt_triton
@@ -223,7 +214,7 @@ with grpcclient.InferenceServerClient("localhost:8001") as client:
 
 # #### Visualise top-k predictions
 
-# In[24]:
+# In[11]:
 
 
 from transformers4rec.torch.utils.examples_utils import visualize_response
@@ -239,7 +230,7 @@ visualize_response(filtered_batch, response, top_k=5, session_col='user_session'
 
 # ### Unload models and shut down the kernel
 
-# In[25]:
+# In[12]:
 
 
 triton_client.unload_model(model_name="t4r_pytorch")
@@ -247,7 +238,7 @@ triton_client.unload_model(model_name="t4r_pytorch_nvt")
 triton_client.unload_model(model_name="t4r_pytorch_pt")
 
 
-# In[26]:
+# In[13]:
 
 
 import IPython
