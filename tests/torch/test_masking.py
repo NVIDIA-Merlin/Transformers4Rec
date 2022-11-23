@@ -71,7 +71,9 @@ def test_mask_all_next_item_for_eval(torch_masking_inputs, task):
         padding_idx=torch_masking_inputs["padding_idx"],
         eval_on_last_item_seq_only=False,
     )
-    masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=False)
+    masking_info = lm.compute_masked_targets(
+        torch_masking_inputs["labels"], training=False, testing=True
+    )
     # get the labels from output
     trgt_pad = masking_info.targets != torch_masking_inputs["padding_idx"]
     labels = masking_info.targets[trgt_pad].flatten().numpy()
