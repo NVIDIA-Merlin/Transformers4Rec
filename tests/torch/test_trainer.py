@@ -319,7 +319,7 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
 
 @pytest.mark.parametrize(
     "task",
-    [tr.NextItemPredictionTask(hf_format=True, weight_tying=True)],
+    [tr.NextItemPredictionTask(weight_tying=True)],
 )
 def test_trainer_music_streaming(task):
     # TODO: Add binary and regression tasks
