@@ -112,9 +112,9 @@
 <img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-02-session-based-xlnet-with-pyt/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-02-session-based-xlnet-with-pyt/nvidia_logo.png" />
 <div class="tex2jax_ignore mathjax_ignore section" id="session-based-recommendation-with-xlnet">
 <h1>Session-based Recommendation with XLNET<a class="headerlink" href="#session-based-recommendation-with-xlnet" title="Permalink to this headline"></a></h1>
-<p>In this notebook we introduce the <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">Transformers4Rec</a> library for sequential and session-based recommendation. This notebook uses the PyTorch API. Transformers4Rec integrates with the popular <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace’s Transformers</a> and make it possible to experiment with cutting-edge implementation of the latest NLP Transformer architectures.</p>
+<p>In this notebook we introduce the <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">Transformers4Rec</a> library for sequential and session-based recommendation. This notebook uses the PyTorch API. Transformers4Rec integrates with the popular <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace’s Transformers</a> and makes it possible to experiment with a cutting-edge implementation of the latest NLP Transformer architectures.</p>
 <p>We demonstrate how to build a session-based recommendation model with the <a class="reference external" href="https://arxiv.org/abs/1906.08237">XLNET</a> Transformer architecture. The XLNet architecture was designed to leverage the best of both auto-regressive language modeling and auto-encoding with its Permutation Language Modeling training method. In this example we will use XLNET with masked language modeling (MLM) training method, which showed very promising results in the experiments conducted in our <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf">ACM RecSys’21 paper</a>.</p>
-<p>In the previous notebook we went through our ETL pipeline with NVTabular library, and created sequential features to be used in training a session-based recommendation model. In this notebook we will learn:</p>
+<p>In the previous notebook we went through our ETL pipeline with the NVTabular library, and created sequential features to be used in training a session-based recommendation model. In this notebook we will learn:</p>
 <ul class="simple">
 <li><p>Accelerating data loading of parquet files with multiple features on PyTorch using NVTabular library</p></li>
 <li><p>Training and evaluating a Transformer-based (XLNET-MLM) session-based recommendation model with multiple features</p></li>
@@ -134,8 +134,8 @@
 <p>You can check the <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/index.html">full documentation</a> of Transformers4Rec if needed.</p>
 <p>Figure 1 illustrates Transformers4Rec meta-architecture and how each module/block interacts with each other.</p>
 <p><img alt="tf4rec_meta" src="../../_images/tf4rec_meta2.png" /></p>
-<div class="section" id="imports-required-libraries">
-<h3>Imports required libraries<a class="headerlink" href="#imports-required-libraries" title="Permalink to this headline"></a></h3>
+<div class="section" id="import-required-libraries">
+<h3>Import required libraries<a class="headerlink" href="#import-required-libraries" title="Permalink to this headline"></a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
@@ -211,7 +211,7 @@ feature {
 </div>
 <div class="section" id="define-the-sequential-input-module">
 <h3>Define the sequential input module<a class="headerlink" href="#define-the-sequential-input-module" title="Permalink to this headline"></a></h3>
-<p>Below we define our <code class="docutils literal notranslate"><span class="pre">input</span></code> block using the <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/features/sequence.py#L97">class</a>. The <code class="docutils literal notranslate"><span class="pre">from_schema()</span></code> method processes the schema and creates the necessary layers to represent features and aggregate them. It keeps only features tagged as <code class="docutils literal notranslate"><span class="pre">categorical</span></code> and <code class="docutils literal notranslate"><span class="pre">continuous</span></code> and supports data aggregation methods like <code class="docutils literal notranslate"><span class="pre">concat</span></code> and <code class="docutils literal notranslate"><span class="pre">elementwise-sum</span></code> techniques. It also support data augmentation techniques like stochastic swap noise. It outputs an interaction representation after combining all features and also the input mask according to the training task (more on this later).</p>
+<p>Below we define our <code class="docutils literal notranslate"><span class="pre">input</span></code> block using the <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/features/sequence.py#L97">class</a>. The <code class="docutils literal notranslate"><span class="pre">from_schema()</span></code> method processes the schema and creates the necessary layers to represent features and aggregate them. It keeps only features tagged as <code class="docutils literal notranslate"><span class="pre">categorical</span></code> and <code class="docutils literal notranslate"><span class="pre">continuous</span></code> and supports data aggregation methods like <code class="docutils literal notranslate"><span class="pre">concat</span></code> and <code class="docutils literal notranslate"><span class="pre">elementwise-sum</span></code>. It also supports data augmentation techniques like stochastic swap noise. It outputs an interaction representation after combining all features and also the input mask according to the training task (more on this later).</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">max_sequence_length</span></code> argument defines the maximum sequence length of our sequential input, and if <code class="docutils literal notranslate"><span class="pre">continuous_projection</span></code> argument is set, all numerical features are concatenated and projected by an MLP block so that continuous features are represented by a vector of size defined by user, which is <code class="docutils literal notranslate"><span class="pre">64</span></code> in this example.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -226,10 +226,10 @@ feature {
 </div>
 </div>
 </div>
-<p>The output of the <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> module is the sequence of interactions embeddings vectors defined in the following steps:</p>
+<p>The output of the <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> module is the sequence of interactions embedding vectors defined in the following steps:</p>
 <ul class="simple">
 <li><ol class="simple">
-<li><p>Create sequence inputs: If the schema contains non sequential features, expand each feature to a sequence by repeating the value as many as the <code class="docutils literal notranslate"><span class="pre">max_sequence_length</span></code> value.</p></li>
+<li><p>Create sequence inputs: If the schema contains non sequential features, expand each feature to a sequence by repeating the value as many times as the <code class="docutils literal notranslate"><span class="pre">max_sequence_length</span></code> value.</p></li>
 </ol>
 </li>
 <li><ol class="simple">
@@ -245,17 +245,17 @@ feature {
 </ol>
 </li>
 <li><ol class="simple">
-<li><p>If masking schema is set (needed only for the NextItemPredictionTask training), the masked labels are derived from the sequence of raw item-ids and the sequence of interactions embeddings are processed to mask information about the masked positions.</p></li>
+<li><p>If masking schema is set (needed only for the <code class="docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code> training), the masked labels are derived from the sequence of raw item-ids and the sequence of interactions embeddings are processed to mask information about the masked positions.</p></li>
 </ol>
 </li>
 </ul>
 </div>
 <div class="section" id="define-the-transformer-block">
-<h3>Define the Transformer Block<a class="headerlink" href="#define-the-transformer-block" title="Permalink to this headline"></a></h3>
+<h3>Define the Transformer block<a class="headerlink" href="#define-the-transformer-block" title="Permalink to this headline"></a></h3>
 <p>In the next cell, the whole model is build with a few lines of code.
 Here is a brief explanation of the main classes:</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/config/transformer.py#L261">XLNetConfig</a> - We have injected in the HF transformers config classes like <code class="docutils literal notranslate"><span class="pre">XLNetConfig</span></code>the <code class="docutils literal notranslate"><span class="pre">build()</span></code> method, that provides default configuration to Transformer architectures for session-based recommendation. Here we use it to instantiate and configure an XLNET architecture.</p></li>
+<li><p><a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/config/transformer.py#L261">XLNetConfig</a> - We have injected in the HF transformers config classes like <code class="docutils literal notranslate"><span class="pre">XLNetConfig</span></code>the <code class="docutils literal notranslate"><span class="pre">build()</span></code> method that provides default configuration to Transformer architectures for session-based recommendation. Here we use it to instantiate and configure an XLNET architecture.</p></li>
 <li><p><a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/block/transformer.py#L57">TransformerBlock</a> class integrates with HF Transformers, which are made available as a sequence processing module for session-based and sequential-based recommendation models.</p></li>
 <li><p><a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/model/prediction_task.py#L110">NextItemPredictionTask</a> supports the next-item prediction task. We also support other predictions <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/model/prediction_task.py">tasks</a>, like classification and regression for the whole sequence.</p></li>
 </ul>
@@ -270,7 +270,7 @@ Here is a brief explanation of the main classes:</p>
     <span class="n">inputs</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">MLPBlock</span><span class="p">([</span><span class="mi">64</span><span class="p">]),</span> <span class="n">tr</span><span class="o">.</span><span class="n">TransformerBlock</span><span class="p">(</span><span class="n">transformer_config</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">inputs</span><span class="o">.</span><span class="n">masking</span><span class="p">)</span>
 <span class="p">)</span>
 
-<span class="c1"># Defines the evaluation top-N metrics and the cut-offs</span>
+<span class="c1"># Define the evaluation top-N metrics and the cut-offs</span>
 <span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>  
            <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
 
@@ -319,12 +319,12 @@ Here is a brief explanation of the main classes:</p>
 </div>
 </div>
 </div>
-<p>Note that we add an argument <code class="docutils literal notranslate"><span class="pre">data_loader_engine='nvtabular'</span></code> to automatically load the features needed for training using the schema. The default value is nvtabular for optimized GPU-based data-loading. Optionally a PyarrowDataLoader (pyarrow) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
+<p>Note that we add an argument <code class="docutils literal notranslate"><span class="pre">data_loader_engine='nvtabular'</span></code> to automatically load the features needed for training using the schema. The default value is nvtabular for optimized GPU-based data-loading. Optionally a <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> (pyarrow) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
 </div>
 </div>
 <div class="section" id="daily-fine-tuning-training-over-a-time-window">
 <h2>Daily Fine-Tuning: Training over a time window<a class="headerlink" href="#daily-fine-tuning-training-over-a-time-window" title="Permalink to this headline"></a></h2>
-<p>Here we do daily fine-tuning meaning that we use the first day to train and second day to evaluate, then we use the second day data to train the model by resuming from the first step, and evaluate on the third day, so on so forth.</p>
+<p>Here we do daily fine-tuning meaning that we use the first day to train and second day to evaluate, then we use the second day data to train the model by resuming from the first step, and evaluate on the third day, so on and so forth.</p>
 <p>We have extended the HuggingFace transformers <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class (PyTorch only) to support evaluation of RecSys metrics. In this example, the evaluation of the session-based recommendation model is performed using traditional Top-N ranking metrics such as Normalized Discounted Cumulative Gain (NDCG&#64;20) and Hit Rate (HR&#64;20). NDCG accounts for rank of the relevant item in the recommendation list and is a more fine-grained metric than HR, which only verifies whether the relevant item is among the top-n items. HR&#64;n is equivalent to Recall&#64;n when there is only one relevant item in the recommendation list.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -339,9 +339,7 @@ Here is a brief explanation of the main classes:</p>
 </div>
 </div>
 </div>
-<ul class="simple">
-<li><p>Define the output folder of the processed parquet files</p></li>
-</ul>
+<p>Define the output folder of the processed parquet files:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data&quot;</span><span class="p">)</span>
@@ -713,8 +711,8 @@ Wall time: 11.6 s
 </div>
 </div>
 </div>
-<div class="section" id="saves-the-model">
-<h3>Saves the model<a class="headerlink" href="#saves-the-model" title="Permalink to this headline"></a></h3>
+<div class="section" id="save-the-model">
+<h3>Save the model<a class="headerlink" href="#save-the-model" title="Permalink to this headline"></a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">_save_model_and_checkpoint</span><span class="p">(</span><span class="n">save_model_class</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -729,8 +727,8 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 </div>
 </div>
 </div>
-<div class="section" id="reloads-the-model">
-<h3>Reloads the model<a class="headerlink" href="#reloads-the-model" title="Permalink to this headline"></a></h3>
+<div class="section" id="reload-the-model">
+<h3>Reload the model<a class="headerlink" href="#reload-the-model" title="Permalink to this headline"></a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">load_model_trainer_states_from_checkpoint</span><span class="p">(</span><span class="s1">&#39;./tmp/checkpoint-</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="k">trainer</span>.state.global_step)
@@ -739,8 +737,8 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 </div>
 </div>
 </div>
-<div class="section" id="re-compute-eval-metrics-of-validation-data">
-<h3>Re-compute eval metrics of validation data<a class="headerlink" href="#re-compute-eval-metrics-of-validation-data" title="Permalink to this headline"></a></h3>
+<div class="section" id="re-compute-evaluation-metrics-of-the-validation-data">
+<h3>Re-compute evaluation metrics of the validation data<a class="headerlink" href="#re-compute-evaluation-metrics-of-the-validation-data" title="Permalink to this headline"></a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_data_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">time_index_eval</span><span class="si">}</span><span class="s2">/valid.parquet&quot;</span><span class="p">))</span>
@@ -776,7 +774,7 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 </div>
 <p>That’s it!<br />
 You have just trained your session-based recommendation model using Transformers4Rec.</p>
-<p>Tip: We can easily log and visualize model training and evaluation on <a class="reference external" href="https://wandb.ai/home">Weights &amp; Biases (W&amp;B)</a>, <a class="reference external" href="https://www.tensorflow.org/tensorboard">TensorBoard</a>, or <a class="reference external" href="https://github.com/NVIDIA/dllogger">NVIDIA DLLogger</a>. By default, the HuggingFace transformers <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> (which we extend) uses Weights &amp; Biases (W&amp;B) to log training and evaluation metrics, which provides nice results visualization and comparison between different runs.</p>
+<p>Tip: We can easily log and visualize model training and evaluation on <a class="reference external" href="https://wandb.ai/home">Weights &amp; Biases (W&amp;B)</a>, <a class="reference external" href="https://www.tensorflow.org/tensorboard">TensorBoard</a>, or <a class="reference external" href="https://github.com/NVIDIA/dllogger">NVIDIA DLLogger</a>. By default, the HuggingFace transformers <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> (which we extend) uses Weights &amp; Biases (W&amp;B) to log training and evaluation metrics, which provides nice visualization results and comparison between different runs.</p>
 </div>
 </div>
 </div>
