@@ -26,14 +26,10 @@ def test_item_prediction_with_label_smoothing_ce_loss(
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
     head_output = head(body_outputs, training=True)
 
-    loss = head.prediction_task_dict["next-item"](
-        inputs=body_outputs,
-        targets=labels_all,
-        training=True,
-    )["loss"]
+    loss = head_output["loss"]
 
     n_classes = 51997
-    head_predictions = list(head_output["predictions"].values())[0]
+    head_predictions = head_output["predictions"]["next-item"]
     manuall_loss = pytorch.nn.NLLLoss(reduction="mean")
     target_with_smoothing = labels_all * (1 - label_smoothing) + label_smoothing / n_classes
     manual_output_loss = manuall_loss(head_predictions, target_with_smoothing.to(pytorch.long))

@@ -83,6 +83,7 @@ def test_sequential_prediction_model(
     assert isinstance(output, dict)
     assert len(list(output.keys())) == 3
     assert len(list(output["predictions"])) == 2
+    assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
 
 
 def test_model_with_multiple_heads_and_tasks(

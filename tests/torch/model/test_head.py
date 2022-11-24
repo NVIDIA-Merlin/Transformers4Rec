@@ -109,10 +109,10 @@ def test_item_prediction_head(torch_yoochoose_tabular_transformer_features, torc
     body = tr.SequentialBlock(input_module, tr.MLPBlock([64]))
     head = tr.Head(body, tr.NextItemPredictionTask(), inputs=input_module)
 
-    outputs = head(body(torch_yoochoose_like, training=True))
+    outputs = head(body(torch_yoochoose_like))
 
     assert (
-        list(outputs.values())[0].size()[-1]
+        outputs["next-item"].size()[-1]
         == input_module.categorical_module.item_embedding_table.num_embeddings
     )
 
