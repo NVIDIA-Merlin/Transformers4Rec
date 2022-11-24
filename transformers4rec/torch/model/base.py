@@ -208,7 +208,7 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
                 "predictions"
             ]
         if isinstance(predictions, dict):
-            predictions = list(predictions.values())[0]
+            predictions = predictions[self.task_name]
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -672,6 +672,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                         output = self(x, targets=y, training=True)
                     losses.append(float(output["loss"]))
                     if compute_metric:
+                        # TODO: analyzing the logic following call
                         self.calculate_metrics(
                             output["predictions"],
                             targets=output["labels"],
