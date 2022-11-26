@@ -109,8 +109,18 @@
 <dd></dd></dl>
 
 </div>
-<div class="section" id="merlin-standard-lib-utils-embedding-utils-module">
-<h2>merlin_standard_lib.utils.embedding_utils module<a class="headerlink" href="#merlin-standard-lib-utils-embedding-utils-module" title="Permalink to this headline"></a></h2>
+<div class="section" id="module-merlin_standard_lib.utils.embedding_utils">
+<span id="merlin-standard-lib-utils-embedding-utils-module"></span><h2>merlin_standard_lib.utils.embedding_utils module<a class="headerlink" href="#module-merlin_standard_lib.utils.embedding_utils" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt id="merlin_standard_lib.utils.embedding_utils.get_embedding_sizes_from_schema">
+<code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.utils.embedding_utils.</span></code><code class="sig-name descname"><span class="pre">get_embedding_sizes_from_schema</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema" title="merlin_standard_lib.schema.schema.Schema"><span class="pre">merlin_standard_lib.schema.schema.Schema</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplier</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/utils/embedding_utils.html#get_embedding_sizes_from_schema"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.utils.embedding_utils.get_embedding_sizes_from_schema" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="merlin_standard_lib.utils.embedding_utils.get_embedding_size_from_cardinality">
+<code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.utils.embedding_utils.</span></code><code class="sig-name descname"><span class="pre">get_embedding_size_from_cardinality</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cardinality</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">multiplier</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><span class="pre">float</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/utils/embedding_utils.html#get_embedding_size_from_cardinality"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.utils.embedding_utils.get_embedding_size_from_cardinality" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="module-merlin_standard_lib.utils.misc_utils">
 <span id="merlin-standard-lib-utils-misc-utils-module"></span><h2>merlin_standard_lib.utils.misc_utils module<a class="headerlink" href="#module-merlin_standard_lib.utils.misc_utils" title="Permalink to this headline"></a></h2>
@@ -180,8 +190,28 @@ possible values are: [“parquet”, “csv”, “csv-no-header”].</p></li>
 </dd></dl>
 
 </div>
-<div class="section" id="merlin-standard-lib-utils-proto-utils-module">
-<h2>merlin_standard_lib.utils.proto_utils module<a class="headerlink" href="#merlin-standard-lib-utils-proto-utils-module" title="Permalink to this headline"></a></h2>
+<div class="section" id="module-merlin_standard_lib.utils.proto_utils">
+<span id="merlin-standard-lib-utils-proto-utils-module"></span><h2>merlin_standard_lib.utils.proto_utils module<a class="headerlink" href="#module-merlin_standard_lib.utils.proto_utils" title="Permalink to this headline"></a></h2>
+<dl class="py function">
+<dt id="merlin_standard_lib.utils.proto_utils.has_field">
+<code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.utils.proto_utils.</span></code><code class="sig-name descname"><span class="pre">has_field</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/utils/proto_utils.html#has_field"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.utils.proto_utils.has_field" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="merlin_standard_lib.utils.proto_utils.copy_better_proto_message">
+<code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.utils.proto_utils.</span></code><code class="sig-name descname"><span class="pre">copy_better_proto_message</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">better_proto_message</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">ProtoMessageType</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">ProtoMessageType</span><a class="reference internal" href="../_modules/merlin_standard_lib/utils/proto_utils.html#copy_better_proto_message"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.utils.proto_utils.copy_better_proto_message" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="merlin_standard_lib.utils.proto_utils.better_proto_to_proto_text">
+<code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.utils.proto_utils.</span></code><code class="sig-name descname"><span class="pre">better_proto_to_proto_text</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">better_proto_message</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">betterproto.Message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">google.protobuf.message.Message</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a><a class="reference internal" href="../_modules/merlin_standard_lib/utils/proto_utils.html#better_proto_to_proto_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.utils.proto_utils.better_proto_to_proto_text" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="merlin_standard_lib.utils.proto_utils.proto_text_to_better_proto">
+<code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.utils.proto_utils.</span></code><code class="sig-name descname"><span class="pre">proto_text_to_better_proto</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">better_proto_message</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">ProtoMessageType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path_proto_text</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">google.protobuf.message.Message</span></span></em><span class="sig-paren">)</span> &#x2192; <span class="pre">ProtoMessageType</span><a class="reference internal" href="../_modules/merlin_standard_lib/utils/proto_utils.html#proto_text_to_better_proto"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.utils.proto_utils.proto_text_to_better_proto" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 </div>
 <div class="section" id="module-merlin_standard_lib.utils">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-merlin_standard_lib.utils" title="Permalink to this headline"></a></h2>

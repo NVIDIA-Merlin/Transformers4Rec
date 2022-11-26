@@ -189,7 +189,7 @@
 <span class="p">)</span>
 
 <span class="c1"># Define Next item prediction-task </span>
-<span class="n">prediction_task</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">hf_format</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">prediction_task</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># Define the config of the XLNet Transformer architecture</span>
 <span class="n">transformer_config</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
