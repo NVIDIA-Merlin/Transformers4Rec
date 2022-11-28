@@ -185,17 +185,16 @@ def main():
 
         log_aot_metric_results(training_args.output_dir, results_avg_time)
 
-    # Mimic the inference by manually computing recall@10 of the last time-index data
-    eval_paths = glob.glob(
-        os.path.join(
-            data_args.data_path,
-            str(
-                data_args.final_time_window_index,
-            ).zfill(data_args.time_window_folder_pad_digits),
-            "test.parquet" if training_args.eval_on_test_set else "valid.parquet",
-        )
+    # Mimic the inference by manually computing recall@10 using the evaluation data
+    # of the last time-index.
+    eval_path = os.path.join(
+        data_args.data_path,
+        str(
+            data_args.final_time_window_index,
+        ).zfill(data_args.time_window_folder_pad_digits),
+        "test.parquet" if training_args.eval_on_test_set else "valid.parquet",
     )
-    prediction_data = pd.read_parquet(eval_paths[0]).iloc[:, 2:]
+    prediction_data = pd.read_parquet(eval_path)
     # Extract label
     labels = prediction_data["sess_pid_seq"].apply(lambda x: x[-1]).values
 
@@ -216,12 +215,13 @@ def main():
     )
     trainer.test_dataloader = test_loader
     topk_preds = trainer.predict(test_loader).predictions[0]
-    # compute recall@10
+    # Compute recall@10
     recall_10 = recall(topk_preds, labels)
     logger.info(f"Recall@10 of manually masked test data = {str(recall_10)}")
     output_file = os.path.join(training_args.output_dir, "eval_results_over_time.txt")
     with open(output_file, "a") as writer:
         writer.write(f"\n***** Recall@10 of simulated inference  = {recall_10} *****\n")
+    # Verify that the recall@10 from train.evaluate() matches the recall@10 calculated manually
     if not isinstance(input_module.masking, t4r.masking.PermutationLanguageModeling):
         # TODO fix inference discrepancy for permutation language modeling
         assert np.isclose(recall_10, results_over_time[2]["eval_/next-item/recall_at_10"], rtol=0.1)
@@ -390,7 +390,7 @@ def get_model_config(training_args, model_args):
         model_build_fn = t4r.TransfoXLConfig.build
 
     model_config = model_build_fn(
-        total_seq_length=training_args.max_sequence_length + 2,
+        total_seq_length=training_args.max_sequence_length,
         d_model=model_args.d_model,
         n_head=model_args.n_head,
         n_layer=model_args.n_layer,
