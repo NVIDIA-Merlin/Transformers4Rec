@@ -46,6 +46,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API Documentation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../resources.html">Additional Resources</a></li>
@@ -144,7 +145,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_item_ids_from_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span> <span class="o">!=</span> <span class="n">pad_token</span></div></div>
 
 
-<div class="viewcode-block" id="requires_schema"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.schema.requires_schema">[docs]</a><span class="k">def</span> <span class="nf">requires_schema</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+<div class="viewcode-block" id="requires_schema"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.schema.requires_schema">[docs]</a><span class="k">def</span> <span class="nf">requires_schema</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
     <span class="n">module</span><span class="o">.</span><span class="n">REQUIRES_SCHEMA</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">return</span> <span class="n">module</span></div>

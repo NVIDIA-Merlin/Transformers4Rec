@@ -48,6 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="index.html">End-to-end session-based recommendation</a><ul class="current">
@@ -90,7 +91,7 @@
              
   <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2021 NVIDIA Corporation. All Rights Reserved.</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2022 NVIDIA Corporation. All Rights Reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
@@ -108,15 +109,19 @@
 </div>
 </div>
 </div>
+<img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-01-etl-with-nvtabular/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-01-etl-with-nvtabular/nvidia_logo.png" />
+<div class="tex2jax_ignore mathjax_ignore section" id="etl-with-nvtabular">
+<h1>ETL with NVTabular<a class="headerlink" href="#etl-with-nvtabular" title="Permalink to this headline"></a></h1>
 <p>This notebook is created using the latest stable <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch">merlin-pytorch</a> container.</p>
 <p><strong>Launch the docker container</strong></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8888</span><span class="p">:</span><span class="mi">8888</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_data</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">data</span><span class="o">/</span>  <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">pytorch</span><span class="p">:</span><span class="mf">22.</span><span class="n">XX</span>
 </pre></div>
 </div>
 <p>This script will mount your local data folder that includes your data files to <code class="docutils literal notranslate"><span class="pre">/workspace/data</span></code> directory in the merlin-pytorch docker container.</p>
-<div class="tex2jax_ignore mathjax_ignore section" id="etl-with-nvtabular">
-<h1>ETL with NVTabular<a class="headerlink" href="#etl-with-nvtabular" title="Permalink to this headline"></a></h1>
-<p>This notebook demonstrates how to use NVTabular to perform the feature engineering that is needed to model the Yoochoose data.</p>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline"></a></h2>
+<p>This notebook demonstrates how to use NVTabular to perform the feature engineering that is needed to model the <code class="docutils literal notranslate"><span class="pre">YOOCHOOSE</span></code> dataset which contains a collection of sessions from a retailer. Each session  encapsulates the click events that the user performed in that session.</p>
+<p>The dataset is available on <a class="reference external" href="https://www.kaggle.com/chadgostopp/recsys-challenge-2015">Kaggle</a>. You need to download it and copy to the <code class="docutils literal notranslate"><span class="pre">DATA_FOLDER</span></code> path. Note that we are only using the <code class="docutils literal notranslate"><span class="pre">yoochoose-clicks.dat</span></code> file.</p>
 <p>First, let’s start by importing several libraries:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -135,7 +140,7 @@
 </div>
 </div>
 <div class="section" id="define-data-input-and-output-paths">
-<h2>Define Data Input and Output Paths<a class="headerlink" href="#define-data-input-and-output-paths" title="Permalink to this headline"></a></h2>
+<h3>Define Data Input and Output Paths<a class="headerlink" href="#define-data-input-and-output-paths" title="Permalink to this headline"></a></h3>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">DATA_FOLDER</span> <span class="o">=</span> <span class="s2">&quot;/workspace/data/&quot;</span>
@@ -149,10 +154,6 @@
 </div>
 </div>
 </div>
-<div class="section" id="download-the-data">
-<h2>Download the data<a class="headerlink" href="#download-the-data" title="Permalink to this headline"></a></h2>
-<p>In this notebook we are using the <code class="docutils literal notranslate"><span class="pre">YOOCHOOSE</span></code> dataset which contains a collection of sessions from a retailer. Each session  encapsulates the click events that the user performed in that session.</p>
-<p>The dataset is available on <a class="reference external" href="https://www.kaggle.com/chadgostopp/recsys-challenge-2015">Kaggle</a>. You need to download it and copy to the <code class="docutils literal notranslate"><span class="pre">DATA_FOLDER</span></code> path. Note that we are only using the <code class="docutils literal notranslate"><span class="pre">yoochoose-clicks.dat</span></code> file.</p>
 </div>
 <div class="section" id="load-and-clean-raw-data">
 <h2>Load and clean raw data<a class="headerlink" href="#load-and-clean-raw-data" title="Permalink to this headline"></a></h2>
@@ -287,7 +288,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>518
 </pre></div>
 </div>
 </div>
@@ -304,7 +305,7 @@ Count after removed in-session repeated interactions: 28971543
 <p>In this cell, we are defining three transformations ops:</p>
 <ul class="simple">
 <li><ol class="simple">
-<li><p>Encoding categorical variables using <code class="docutils literal notranslate"><span class="pre">Categorify()</span></code> op. We set <code class="docutils literal notranslate"><span class="pre">start_index</span></code> to 1, so that encoded null values start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p></li>
+<li><p>Encoding categorical variables using <code class="docutils literal notranslate"><span class="pre">Categorify()</span></code> op. We set <code class="docutils literal notranslate"><span class="pre">start_index</span></code> to 1 so that encoded null values start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p></li>
 </ol>
 </li>
 <li><ol class="simple">
@@ -312,7 +313,7 @@ Count after removed in-session repeated interactions: 28971543
 </ol>
 </li>
 <li><ol class="simple">
-<li><p>Computing the item recency in days using a custom Op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction.</p></li>
+<li><p>Computing the item recency in days using a custom op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction.</p></li>
 </ol>
 </li>
 </ul>
@@ -335,7 +336,7 @@ Count after removed in-session repeated interactions: 28971543
     <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span><span class="s1">&#39;et_dayofweek&#39;</span><span class="p">)</span>
 <span class="p">)</span>
 
-<span class="c1"># Derive cyclical features: Defines a custom lambda function </span>
+<span class="c1"># Derive cyclical features: Define a custom lambda function </span>
 <span class="k">def</span> <span class="nf">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_value</span><span class="p">):</span>
     <span class="n">value_scaled</span> <span class="o">=</span> <span class="p">(</span><span class="n">col</span> <span class="o">+</span> <span class="mf">0.000001</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_value</span>
     <span class="n">value_sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">value_scaled</span><span class="p">)</span>
@@ -379,7 +380,7 @@ Count after removed in-session repeated interactions: 28971543
     
 <span class="n">recency_features</span> <span class="o">=</span> <span class="n">session_ts</span> <span class="o">&gt;&gt;</span> <span class="n">ItemRecency</span><span class="p">()</span> 
 <span class="c1"># Apply standardization to this continuous feature</span>
-<span class="n">recency_features_norm</span> <span class="o">=</span> <span class="n">recency_features</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LogOp</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Normalize</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;product_recency_days_log_norm&#39;</span><span class="p">)</span>
+<span class="n">recency_features_norm</span> <span class="o">=</span> <span class="n">recency_features</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LogOp</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">out_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;product_recency_days_log_norm&#39;</span><span class="p">)</span>
 
 <span class="n">time_features</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">session_time</span> <span class="o">+</span>
@@ -396,7 +397,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="section" id="define-the-preprocessing-of-sequential-features">
 <h3>Define the preprocessing of sequential features<a class="headerlink" href="#define-the-preprocessing-of-sequential-features" title="Permalink to this headline"></a></h3>
-<p>Once the item features are generated, the objective of this cell is grouping interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.</p>
+<p>Once the item features are generated, the objective of this cell is to group interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define Groupby Operator</span>
@@ -436,9 +437,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 </div>
-<ul class="simple">
-<li><p>Avoid Numba low occupancy warnings</p></li>
-</ul>
+<p>Avoid Numba low occupancy warnings:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">config</span>
@@ -450,21 +449,15 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="section" id="execute-nvtabular-workflow">
 <h3>Execute NVTabular workflow<a class="headerlink" href="#execute-nvtabular-workflow" title="Permalink to this headline"></a></h3>
-<p>Once we have defined the general workflow (<code class="docutils literal notranslate"><span class="pre">filtered_sessions</span></code>), we provide our cudf dataset to nvt.Dataset class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.</p>
+<p>Once we have defined the general workflow (<code class="docutils literal notranslate"><span class="pre">filtered_sessions</span></code>), we provide our cudf dataset to <code class="docutils literal notranslate"><span class="pre">nvt.Dataset</span></code> class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">interactions_merged_df</span><span class="p">)</span>
 <span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">filtered_sessions</span><span class="p">)</span>
-<span class="c1"># Learns features statistics necessary of the preprocessing workflow</span>
+<span class="c1"># Learn features statistics necessary of the preprocessing workflow</span>
 <span class="n">workflow</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
-<span class="c1"># Apply the preprocessing workflow in the dataset and converts the resulting Dask cudf dataframe to a cudf dataframe</span>
+<span class="c1"># Apply the preprocessing workflow in the dataset and convert the resulting Dask cudf dataframe to a cudf dataframe</span>
 <span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -512,17 +505,17 @@ Count after removed in-session repeated interactions: 28971543
       <td>[2223, 2125, 1800, 123, 3030, 1861, 1076, 1285...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[1.1285199e-06, 1.1285199e-06, 1.1285199e-06, ...</td>
-      <td>[-1.1126351356506348, -0.9665398597717285, -0....</td>
+      <td>[-1.1126341, -0.9665389, -0.1350116, -0.127809...</td>
       <td>27</td>
     </tr>
     <tr>
       <th>1</th>
       <td>3</td>
       <td>200</td>
-      <td>[35137, 19260, 46449, 29027, 39096, 27266, 326...</td>
+      <td>[34959, 24004, 32503, 39480, 28132, 47339, 351...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[0.393317312002182, 0.541846752166748, -3.0278...</td>
+      <td>[0.3110803, 0.475488, -3.0278225, -3.0278225, ...</td>
       <td>58</td>
     </tr>
     <tr>
@@ -532,7 +525,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[23212, 30448, 16468, 2052, 22490, 31097, 6243...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>
-      <td>[0.6801633834838867, 0.7174698114395142, 0.718...</td>
+      <td>[0.6801631, 0.7174695, 0.7185285, 0.7204116, 0...</td>
       <td>71</td>
     </tr>
     <tr>
@@ -542,7 +535,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[230, 451, 732, 1268, 2014, 567, 497, 439, 338...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[1.3680896759033203, -0.6530488133430481, -0.6...</td>
+      <td>[1.3680888, -0.6530481, -0.69314253, -0.590593...</td>
       <td>149</td>
     </tr>
     <tr>
@@ -552,7 +545,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[23, 70, 160, 70, 90, 742, 851, 359, 734, 878,...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[1.3714832067489624, 1.371589183807373, 1.3715...</td>
+      <td>[1.3714824, 1.3715883, 1.3715737, 1.3715955, 1...</td>
       <td>149</td>
     </tr>
   </tbody>
@@ -572,8 +565,8 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="section" id="export-pre-processed-data-by-day">
 <h3>Export pre-processed data by day<a class="headerlink" href="#export-pre-processed-data-by-day" title="Permalink to this headline"></a></h3>
-<p>In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day: <code class="docutils literal notranslate"><span class="pre">train.parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">validation.parquet</span></code> and <code class="docutils literal notranslate"><span class="pre">test.parquet</span></code></p>
-<p>P.s. It is worthwhile a note that the dataset have a single categorical feature (category), but it is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.</p>
+<p>In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day: <code class="docutils literal notranslate"><span class="pre">train.parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">validation.parquet</span></code> and <code class="docutils literal notranslate"><span class="pre">test.parquet</span></code>.</p>
+<p>P.s. It is worthwhile to note that the dataset has a single categorical feature (category), which, however, is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">sessions_gdf</span><span class="p">[</span><span class="n">sessions_gdf</span><span class="o">.</span><span class="n">day_index</span><span class="o">&gt;=</span><span class="mi">178</span><span class="p">]</span>
@@ -593,7 +586,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:01&lt;00:00,  4.73it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████| 5/5 [00:00&lt;00:00,  5.99it/s]
 </pre></div>
 </div>
 </div>
@@ -623,25 +616,25 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>preproc_sessions_by_day/
-    182/
-        test.parquet
-        valid.parquet
-        train.parquet
     179/
-        test.parquet
         valid.parquet
+        test.parquet
         train.parquet
     180/
-        test.parquet
         valid.parquet
+        test.parquet
         train.parquet
     178/
-        test.parquet
         valid.parquet
+        test.parquet
+        train.parquet
+    182/
+        valid.parquet
+        test.parquet
         train.parquet
     181/
-        test.parquet
         valid.parquet
+        test.parquet
         train.parquet
 </pre></div>
 </div>
@@ -656,12 +649,12 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>557
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>578
 </pre></div>
 </div>
 </div>
 </div>
-<p>That’s it! We created our sequential features, now we can go to next notebook to train a PyTorch session-based model.</p>
+<p>That’s it! We created our sequential features, now we can go to the next notebook to train a PyTorch session-based model.</p>
 </div>
 </div>
 </div>

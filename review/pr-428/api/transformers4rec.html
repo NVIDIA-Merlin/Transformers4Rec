@@ -48,6 +48,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">transformers4rec package</a><ul>
@@ -104,56 +105,56 @@
 <li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#subpackages">Subpackages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="transformers4rec.torch.block.html">transformers4rec.torch.block package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#module-transformers4rec.torch.block.base">transformers4rec.torch.block.base module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#module-transformers4rec.torch.block.mlp">transformers4rec.torch.block.mlp module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#module-transformers4rec.torch.block.transformer">transformers4rec.torch.block.transformer module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#module-transformers4rec.torch.block">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec-torch-block-base-module">transformers4rec.torch.block.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec-torch-block-mlp-module">transformers4rec.torch.block.mlp module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#transformers4rec-torch-block-transformer-module">transformers4rec.torch.block.transformer module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.block.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="transformers4rec.torch.features.html">transformers4rec.torch.features package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-transformers4rec.torch.features.base">transformers4rec.torch.features.base module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-transformers4rec.torch.features.continuous">transformers4rec.torch.features.continuous module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-transformers4rec.torch.features.embedding">transformers4rec.torch.features.embedding module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-transformers4rec.torch.features.sequence">transformers4rec.torch.features.sequence module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-transformers4rec.torch.features.tabular">transformers4rec.torch.features.tabular module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-transformers4rec.torch.features.text">transformers4rec.torch.features.text module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-transformers4rec.torch.features">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec-torch-features-base-module">transformers4rec.torch.features.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec-torch-features-continuous-module">transformers4rec.torch.features.continuous module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec-torch-features-embedding-module">transformers4rec.torch.features.embedding module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec-torch-features-sequence-module">transformers4rec.torch.features.sequence module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec-torch-features-tabular-module">transformers4rec.torch.features.tabular module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#transformers4rec-torch-features-text-module">transformers4rec.torch.features.text module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.features.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="transformers4rec.torch.model.html">transformers4rec.torch.model package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html#submodules">Submodules</a></li>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html#transformers4rec-torch-model-head-module">transformers4rec.torch.model.head module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html#transformers4rec-torch-model-model-module">transformers4rec.torch.model.model module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html#module-transformers4rec.torch.model.prediction_task">transformers4rec.torch.model.prediction_task module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html#module-transformers4rec.torch.model">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html#transformers4rec-torch-model-prediction-task-module">transformers4rec.torch.model.prediction_task module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.model.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="transformers4rec.torch.tabular.html">transformers4rec.torch.tabular package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#module-transformers4rec.torch.tabular.aggregation">transformers4rec.torch.tabular.aggregation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#transformers4rec-torch-tabular-aggregation-module">transformers4rec.torch.tabular.aggregation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#transformers4rec-torch-tabular-tabular-module">transformers4rec.torch.tabular.tabular module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#module-transformers4rec.torch.tabular.transformations">transformers4rec.torch.tabular.transformations module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#module-transformers4rec.torch.tabular">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#transformers4rec-torch-tabular-transformations-module">transformers4rec.torch.tabular.transformations module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.tabular.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="transformers4rec.torch.utils.html">transformers4rec.torch.utils package</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#module-transformers4rec.torch.utils.data_utils">transformers4rec.torch.utils.data_utils module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#module-transformers4rec.torch.utils.examples_utils">transformers4rec.torch.utils.examples_utils module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#module-transformers4rec.torch.utils.schema_utils">transformers4rec.torch.utils.schema_utils module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#module-transformers4rec.torch.utils.torch_utils">transformers4rec.torch.utils.torch_utils module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#module-transformers4rec.torch.utils">Module contents</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#transformers4rec-torch-utils-data-utils-module">transformers4rec.torch.utils.data_utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#transformers4rec-torch-utils-examples-utils-module">transformers4rec.torch.utils.examples_utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#transformers4rec-torch-utils-schema-utils-module">transformers4rec.torch.utils.schema_utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#transformers4rec-torch-utils-torch-utils-module">transformers4rec.torch.utils.torch_utils module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="transformers4rec.torch.utils.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#module-transformers4rec.torch.masking">transformers4rec.torch.masking module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#module-transformers4rec.torch.ranking_metric">transformers4rec.torch.ranking_metric module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#module-transformers4rec.torch.trainer">transformers4rec.torch.trainer module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#module-transformers4rec.torch.typing">transformers4rec.torch.typing module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#module-transformers4rec.torch">Module contents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#transformers4rec-torch-masking-module">transformers4rec.torch.masking module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#transformers4rec-torch-ranking-metric-module">transformers4rec.torch.ranking_metric module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#transformers4rec-torch-trainer-module">transformers4rec.torch.trainer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#transformers4rec-torch-typing-module">transformers4rec.torch.typing module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="transformers4rec.torch.html#module-contents">Module contents</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="transformers4rec.utils.html">transformers4rec.utils package</a><ul>
