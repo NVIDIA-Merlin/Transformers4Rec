@@ -145,23 +145,23 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
                 metric.to(device)
         self.built = True
 
-    def forward(self, inputs, targets=None, training=False, testing=False, **kwargs):
-        if isinstance(targets, dict):
-            if self.target_name:
-                targets = targets[self.target_name]
-            else:
-                raise ValueError("target_name can not be None, specify a name.")
-
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        targets: torch.Tensor = None,
+        training: bool = False,
+        testing: bool = False,
+    ):
         x = inputs
 
         if len(x.size()) == 3 and self.summary_type:
             x = self.sequence_summary(x)
 
         if self.task_block:
-            x = self.task_block(x)
+            x = self.task_block(x)  # type: ignore
 
         if self.pre:
-            x = self.pre(x)
+            x = self.pre(x)  # type: ignore
 
         if training or testing:
             # add support of computing the loss inside the forward
@@ -189,26 +189,20 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     def calculate_metrics(  # type: ignore
         self,
         predictions: Union[torch.Tensor, TabularData],
-        targets: Union[torch.Tensor, TabularData],
+        targets: torch.Tensor,
         mode: str = "val",
         forward: bool = False,
         training: bool = False,
         testing: bool = False,
         **kwargs,
     ) -> Dict[str, torch.Tensor]:
-        if isinstance(targets, dict):
-            if self.target_name:
-                targets = targets[self.target_name]
-            else:
-                raise ValueError("target_name can not be None, specify a name.")
 
         outputs = {}
         if forward:
-            predictions = self(predictions, targets=targets, training=training, testing=testing)[
-                "predictions"
-            ]
-        if isinstance(predictions, dict):
-            predictions = predictions[self.task_name]
+            output = self(predictions, targets=targets, training=training, testing=testing)
+            predictions = output["predictions"]
+            targets = output["labels"]
+
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -398,8 +392,18 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             labels = {}
             predictions = {}
             for name, task in self.prediction_task_dict.items():
+                if isinstance(targets, dict):
+                    if not task.target_name:
+                        raise ValueError(
+                            f"The `target_name` of the task {type(task)} should be specified,"
+                            "as the head contains multiple tasks."
+                        )
+                    label = targets[task.target_name]
+                else:
+                    label = targets
+
                 task_output = task(
-                    body_outputs, targets=targets, training=training, testing=testing, **kwargs
+                    body_outputs, targets=label, training=training, testing=testing, **kwargs
                 )
                 labels[name] = task_output["labels"]
                 predictions[name] = task_output["predictions"]
@@ -417,7 +421,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
     def calculate_metrics(  # type: ignore
         self,
-        body_outputs: Union[torch.Tensor, TabularData],
+        predictions: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
         mode: str = "val",
         forward=True,
@@ -426,18 +430,66 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         testing=True,
         **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        """Calculate metrics of the task(s) set in the Head instance.
+
+        Parameters
+        ----------
+        forward: bool
+            A boolean flag to control whether to apply the task's forward method on
+            the predictions or not.
+        call_body: bool
+            A boolean flag to control whether to apply the network `self.body`
+            on the `predictions` tensor(s) or not.
+            When `call_body=True`, forward must be set to `True.
+        training: bool
+            A boolean flag to control whether we are on `training` mode or not.
+        testing: bool
+            A boolean flag to control whether we are on `testing` (i.e. evaluation) mode or not.
+        predictions: Union[torch.Tensor, TabularData]
+            The predictions tensors to use for calculate metrics.
+            They can be three expected formats:
+                - `call_body=True`:
+                The predictions is the dictionary of input features.
+                - `call_body=False` and `forward=True`:
+                The predictions is a tensor representation returned
+                by the self.body() network.
+                - `call_body=False` and `forward=False`:
+                The predictions is a tensor or a dictionary of scores returned by the tasks' head.
+        targets: Union[torch.Tensor, TabularData]
+            The tensor or dictionary of targets to use for computing the metrics of
+            one or multiple tasks.
+        """
         metrics = {}
 
+        if call_body and not forward:
+            raise ValueError(
+                "The flag forward cannot be set to False, when `call_body` is set True"
+            )
+
         if call_body:
-            body_outputs = self.body(
-                body_outputs, targets=targets, training=training, testing=testing
+            predictions = self.body(
+                predictions, targets=targets, training=training, testing=testing
             )
 
         for name, task in self.prediction_task_dict.items():
+            label = targets
+            output = predictions
+            if isinstance(targets, dict):
+                if forward:
+                    # The labels are retrieved from the dataloader
+                    # and indexed by the target feature name.
+                    label = targets[name.split("/")[0]]
+                else:
+                    # The labels are retrieved from the task's output
+                    # and indexed by the task name.
+                    label = targets[name]
+            if isinstance(predictions, dict):
+                output = predictions[name]
+
             metrics.update(
                 task.calculate_metrics(
-                    body_outputs,
-                    targets=targets,
+                    predictions=output,
+                    targets=label,
                     mode=mode,
                     forward=forward,
                     training=training,
@@ -575,9 +627,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         forward=True,
         **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
-        if isinstance(targets, dict) and not forward:
-            # extract the targets names from the model's output
-            targets = {name.split("/")[0]: tensor for name, tensor in targets.items()}
 
         outputs = {}
         for head in self.heads:
@@ -672,7 +721,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                         output = self(x, targets=y, training=True)
                     losses.append(float(output["loss"]))
                     if compute_metric:
-                        # TODO: analyzing the logic following call
                         self.calculate_metrics(
                             output["predictions"],
                             targets=output["labels"],
@@ -707,7 +755,15 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             batch_iterator = tqdm(batch_iterator)
         self.reset_metrics()
         for batch_idx, (x, y) in batch_iterator:
-            self.calculate_metrics(x, targets=y, mode=mode, training=training, testing=testing)
+            self.calculate_metrics(
+                x,
+                targets=y,
+                mode=mode,
+                training=training,
+                testing=testing,
+                forward=True,
+                call_body=True,
+            )
 
         return self.compute_metrics(mode=mode)
 
