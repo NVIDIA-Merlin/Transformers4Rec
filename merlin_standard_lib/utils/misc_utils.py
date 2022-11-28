@@ -251,6 +251,8 @@ def _augment_schema(
 ):
     from merlin.schema import ColumnSchema, Tags
 
+    schema = schema.select_by_name(conts + cats + labels)
+
     labels = [labels] if isinstance(labels, str) else labels
     for label in labels or []:
         schema[label] = schema[label].with_tags(Tags.TARGET)
@@ -264,7 +266,7 @@ def _augment_schema(
         cs = schema[col]
         properties = cs.properties
         if sparse_max and col in sparse_max:
-            properties["value_count"] = {"min": sparse_max[col], "max": sparse_max[col]}
+            properties["value_count"] = {"max": sparse_max[col]}
         schema[col] = ColumnSchema(
             name=cs.name,
             tags=cs.tags,

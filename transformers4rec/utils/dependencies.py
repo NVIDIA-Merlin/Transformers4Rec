@@ -33,7 +33,7 @@ def is_pyarrow_available() -> bool:
 
 def is_merlin_dataloader_available() -> bool:
     try:
-        import merlin.loader
+        import merlin.dataloader
     except ImportError:
-        merlin.loader = None
-    return merlin.loader is not None
+        merlin.dataloader = None
+    return merlin.dataloader is not None

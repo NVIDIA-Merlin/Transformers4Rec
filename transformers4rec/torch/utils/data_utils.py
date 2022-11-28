@@ -172,7 +172,7 @@ if dependencies.is_pyarrow_available():
 
 if dependencies.is_gpu_dataloader_available():
     import torch
-    from merlin.loader.torch import Loader
+    from merlin.dataloader.torch import Loader
     from torch.utils.data import DataLoader
 
     from merlin_standard_lib.utils.misc_utils import _augment_schema, validate_dataset
@@ -238,8 +238,6 @@ if dependencies.is_gpu_dataloader_available():
             self.drop_last = drop_last
 
             self.set_dataset(buffer_size, engine, reader_kwargs)
-
-            self.dataset.schema = self.dataset.schema.select_by_name(conts + cats + labels)
 
             self.dataset.schema = _augment_schema(
                 self.dataset.schema, cats, conts, labels, sparse_names, sparse_max, sparse_as_dense
