@@ -20,6 +20,7 @@ import tempfile
 import pytest
 
 from transformers4rec.config import trainer
+from transformers4rec.config import transformer as tconf
 
 pytorch = pytest.importorskip("torch")
 tr = pytest.importorskip("transformers4rec.torch")
@@ -314,3 +315,64 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
     result_2 = {k: result_2[k] for k in default_metric}
 
     assert result_1 == result_2
+
+
+@pytest.mark.parametrize(
+    "task",
+    [tr.NextItemPredictionTask(weight_tying=True)],
+)
+def test_trainer_music_streaming(task):
+    # TODO: Add binary and regression tasks
+    pytest.importorskip("pyarrow")
+    data = tr.data.music_streaming_testing_data
+    batch_size = 16
+
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        data.schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="mlm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+    model = transformer_config.to_torch_model(inputs, task)
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        data_loader_engine="pyarrow",
+        max_sequence_length=20,
+        fp16=False,
+        no_cuda=True,
+        report_to=[],
+        debug=["r"],
+    )
+
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=data.schema,
+        train_dataset_or_path=data.path,
+        eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
+        compute_metrics=True,
+    )
+
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+    predictions = recsys_trainer.predict(data.path)
+
+    assert isinstance(eval_metrics, dict)
+    default_metric = [
+        "eval_/next-item/ndcg_at_10",
+        "eval_/next-item/ndcg_at_20",
+        "eval_/next-item/avg_precision_at_10",
+        "eval_/next-item/avg_precision_at_20",
+        "eval_/next-item/recall_at_10",
+        "eval_/next-item/recall_at_20",
+    ]
+    assert set(default_metric).issubset(set(eval_metrics.keys()))
+    assert eval_metrics["eval_/loss"] is not None
+
+    assert predictions is not None

@@ -30,9 +30,6 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip tox
-      - name: Lint with flake8, black, isort
-        run: |
-          tox -e lint
       - name: Checking Manifest
         run: |
           pip install check-manifest
@@ -42,7 +39,14 @@ jobs:
           python setup.py develop
       - name: Run unittests
         run: |
-          tox -e test-cpu
+          ref_type=${{ github.ref_type }}
+          branch=main
+          if [[ $ref_type == "tag"* ]]
+          then
+            raw=$(git branch -r --contains ${{ github.ref_name }})
+            branch=${raw/origin\/}
+          fi
+          tox -e test-cpu -- $branch
       - name: Generate package for pypi
         run: |
           python setup.py sdist
