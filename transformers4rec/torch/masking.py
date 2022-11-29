@@ -460,7 +460,7 @@ class MaskedLanguageModeling(MaskSequence):
 
     @docstring_parameter(flags_parameters_docstrings=TRAINING_TESTING_FLAGS_DOCSTRING)
     def apply_mask_to_inputs(
-        self, inputs: torch.Tensor, schema: torch.Tensor, training=False, testing=False
+        self, inputs: torch.Tensor, mask_schema: torch.Tensor, training=False, testing=False
     ) -> torch.Tensor:
         """
         Control the masked positions in the inputs by replacing the true interaction
@@ -480,7 +480,7 @@ class MaskedLanguageModeling(MaskSequence):
             # the positional encode of the target
             inputs = torch.cat([inputs, inputs[:, -1, :].unsqueeze(1)], dim=1)
         inputs = torch.where(
-            schema.unsqueeze(-1).bool(),
+            mask_schema.unsqueeze(-1).bool(),
             self.masked_item_embedding.to(inputs.dtype),
             inputs,
         )
