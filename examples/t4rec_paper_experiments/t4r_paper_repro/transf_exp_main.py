@@ -228,25 +228,19 @@ def main():
 
 
 def recall(predicted_items: np.ndarray, real_items: np.ndarray) -> float:
-    idx = 0
-    recalls = np.zeros(len(predicted_items), dtype=np.float64)
-    for real, pred in zip(real_items, predicted_items):
+    bs, top_k = predicted_items.shape
+    valid_rows = real_items != 0
 
-        real = real[real > 0]
-        pred = pred[pred > 0]
+    # reshape predictions and labels to compare
+    # the top-10 predicted item-ids with the label id.
+    real_items = real_items.reshape(bs, 1, -1)
+    predicted_items = predicted_items.reshape(bs, 1, top_k)
 
-        real_found_in_pred = np.isin(pred, real, assume_unique=True)
-
-        if real_found_in_pred.any():
-            recommended = real_found_in_pred.sum()
-            recall = recommended / len(real)
-        else:
-            recall = 0
-
-        recalls[idx] += recall
-        idx += 1
-    mean_recall = recalls.mean()
-    return mean_recall
+    num_relevant = real_items.shape[-1]
+    predicted_correct_sum = (predicted_items == real_items).sum(-1)
+    predicted_correct_sum = predicted_correct_sum[valid_rows]
+    recall_per_row = predicted_correct_sum / num_relevant
+    return np.mean(recall_per_row)
 
 
 def incremental_train_eval(
