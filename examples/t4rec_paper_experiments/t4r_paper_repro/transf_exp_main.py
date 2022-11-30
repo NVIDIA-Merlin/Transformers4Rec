@@ -38,7 +38,7 @@ from transformers.trainer_utils import is_main_process
 import transformers4rec.torch as t4r
 from merlin_standard_lib import Schema, Tag
 from transformers4rec.torch import Trainer
-from transformers4rec.torch.utils.data_utils import NVTabularDataLoader
+from transformers4rec.torch.utils.data_utils import MerlinDataLoader
 from transformers4rec.torch.utils.examples_utils import wipe_memory
 
 logger = logging.getLogger(__name__)
@@ -206,7 +206,7 @@ def main():
     for col in list_columns:
         prediction_data[col] = prediction_data[col].apply(mask_last_interaction)
     # Get top-10 predictions
-    test_loader = NVTabularDataLoader.from_schema(
+    test_loader = MerlinDataLoader.from_schema(
         schema,
         Dataset(prediction_data),
         training_args.per_device_eval_batch_size,
