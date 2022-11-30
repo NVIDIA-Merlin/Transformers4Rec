@@ -105,7 +105,7 @@ def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoocho
 def test_sequential_tabular_features_ignore_masking(yoochoose_schema, torch_yoochoose_like):
     import numpy as np
 
-    from transformers4rec.torch.masking import CausalLanguageModeling
+    from transformers4rec.torch.masking import CausalLanguageModeling, MaskedLanguageModeling
 
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
@@ -118,15 +118,25 @@ def test_sequential_tabular_features_ignore_masking(yoochoose_schema, torch_yooc
 
     input_module._masking = CausalLanguageModeling(hidden_size=100)
 
-    output_ignore_masking = (
+    output_inference_masking = (
         input_module(torch_yoochoose_like, training=False, testing=False).detach().cpu().numpy()
     )
-    output_masking = (
+    output_clm_masking = (
         input_module(torch_yoochoose_like, training=False, testing=True).detach().cpu().numpy()
     )
 
-    assert np.allclose(output_wo_masking, output_ignore_masking, rtol=1e-04, atol=1e-08)
-    assert not np.allclose(output_wo_masking, output_masking, rtol=1e-04, atol=1e-08)
+    assert np.allclose(output_wo_masking, output_inference_masking, rtol=1e-04, atol=1e-08)
+    assert not np.allclose(output_wo_masking, output_clm_masking, rtol=1e-04, atol=1e-08)
+
+    input_module._masking = MaskedLanguageModeling(hidden_size=100)
+    output_inference_masking = (
+        input_module(torch_yoochoose_like, training=False, testing=False).detach().cpu().numpy()
+    )
+    output_eval_masking = (
+        input_module(torch_yoochoose_like, training=False, testing=True).detach().cpu().numpy()
+    )
+    # MLM extends the inputs with one position during inference
+    assert output_inference_masking.shape[1] == output_eval_masking.shape[1] + 1
 
 
 def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_like):
