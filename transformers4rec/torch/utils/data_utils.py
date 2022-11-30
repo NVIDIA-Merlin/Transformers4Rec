@@ -305,7 +305,7 @@ if dependencies.is_gpu_dataloader_available():
             **kwargs,
         ):
             """
-               Instantitates ``NVTabularDataLoader`` from a ``DatasetSchema``.
+               Instantitates `MerlinDataLoader` from a ``DatasetSchema``.
             Parameters
             ----------
                 schema: DatasetSchema
