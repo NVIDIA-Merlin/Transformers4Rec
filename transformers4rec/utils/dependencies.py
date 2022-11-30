@@ -13,16 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
-def is_nvtabular_available() -> bool:
-    try:
-        import nvtabular
-    except ImportError:
-        nvtabular = None
-    return nvtabular is not None
-
-
 def is_gpu_dataloader_available() -> bool:
     try:
         import cudf
@@ -39,3 +29,11 @@ def is_pyarrow_available() -> bool:
     except ImportError:
         pyarrow = None
     return pyarrow is not None
+
+
+def is_merlin_dataloader_available() -> bool:
+    try:
+        import merlin.dataloader
+    except ImportError:
+        merlin.dataloader = None
+    return merlin.dataloader is not None
