@@ -497,7 +497,7 @@ positions.</p></li>
 </dl>
 <dl class="py method">
 <dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling.apply_mask_to_inputs">
-<code class="sig-name descname"><span class="pre">apply_mask_to_inputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling.apply_mask_to_inputs" title="Permalink to this definition"></a></dt>
+<code class="sig-name descname"><span class="pre">apply_mask_to_inputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling.apply_mask_to_inputs" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -524,6 +524,35 @@ learn something with it.</p></li>
 </ul>
 </dd>
 </dl>
+<dl class="py method">
+<dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MaskedLanguageModeling.apply_mask_to_inputs">
+<code class="sig-name descname"><span class="pre">apply_mask_to_inputs</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_schema</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">testing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MaskedLanguageModeling.apply_mask_to_inputs" title="Permalink to this definition"></a></dt>
+<dd><blockquote>
+<div><p>Control the masked positions in the inputs by replacing the true interaction
+by a learnable masked embedding.</p>
+<dl class="simple">
+<dt>inputs: torch.Tensor</dt><dd><p>The 3-D tensor of interaction embeddings resulting from the ops:
+TabularFeatures + aggregation + projection(optional)</p>
+</dd>
+<dt>schema: MaskingSchema</dt><dd><p>The boolean mask indicating masked positions.</p>
+</dd>
+</dl>
+</div></blockquote>
+<dl class="simple">
+<dt>training: bool</dt><dd><p>Flag to indicate whether we are in <cite>Training</cite> mode or not.
+During training, the labels can be any items within the sequence
+based on the selected masking task.</p>
+</dd>
+<dt>testing: bool</dt><dd><p>Flag to indicate whether we are in <cite>Evaluation</cite> (=True)
+or <cite>Inference</cite> (=False) mode.
+During evaluation, we are predicting all next items or last item only
+in the sequence based on the param <cite>eval_on_last_item_seq_only</cite>.
+During inference, we don’t mask the input sequence and use all available
+information to predict the next item.</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -548,7 +577,7 @@ prediction segment of items</p></li>
 </dl>
 <dl class="py method">
 <dt id="transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling.compute_masked_targets">
-<code class="sig-name descname"><span class="pre">compute_masked_targets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskingInfo" title="transformers4rec.torch.masking.MaskingInfo"><span class="pre">transformers4rec.torch.masking.MaskingInfo</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling.compute_masked_targets" title="Permalink to this definition"></a></dt>
+<code class="sig-name descname"><span class="pre">compute_masked_targets</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item_ids</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://pytorch.org/docs/stable/tensors.html#torch.Tensor" title="(in PyTorch v1.13)"><span class="pre">torch.Tensor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">training</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> &#x2192; <a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskingInfo" title="transformers4rec.torch.masking.MaskingInfo"><span class="pre">transformers4rec.torch.masking.MaskingInfo</span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.PermutationLanguageModeling.compute_masked_targets" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

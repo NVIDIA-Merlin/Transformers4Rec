@@ -102,6 +102,7 @@
 
 <span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">BuildableBlock</span><span class="p">,</span> <span class="n">SequentialBlock</span>
 <span class="kn">from</span> <span class="nn">..block.mlp</span> <span class="kn">import</span> <span class="n">MLPBlock</span>
+<span class="kn">from</span> <span class="nn">..masking</span> <span class="kn">import</span> <span class="n">MaskedLanguageModeling</span>
 <span class="kn">from</span> <span class="nn">..ranking_metric</span> <span class="kn">import</span> <span class="n">AvgPrecisionAt</span><span class="p">,</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
 <span class="kn">from</span> <span class="nn">..utils.torch_utils</span> <span class="kn">import</span> <span class="n">LambdaModule</span>
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BlockType</span><span class="p">,</span> <span class="n">PredictionTask</span>
@@ -316,11 +317,14 @@
                 <span class="c1"># &quot;model_outputs&quot;: [],</span>
             <span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># keep only last non-padded position for the &#39;Prediction step&#39;</span>
+            <span class="c1"># Get the hidden position to use for predicting the next item</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">item_seq</span>
             <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
-            <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="n">rows_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">,</span> <span class="n">MaskedLanguageModeling</span><span class="p">):</span>
+                <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
 
         <span class="c1"># Compute predictions probs</span>

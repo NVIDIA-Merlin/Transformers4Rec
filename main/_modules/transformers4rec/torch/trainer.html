@@ -412,17 +412,20 @@
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">:</span>
                 <span class="k">with</span> <span class="n">autocast</span><span class="p">():</span>
-                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">testing</span><span class="p">:</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">loss</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">outputs</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">prediction_loss_only</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
-        <span class="n">predictions</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
 
         <span class="c1"># TODO: define metadata dict in the model for logging</span>
         <span class="c1"># other_outputs = {</span>
@@ -545,7 +548,7 @@
             <span class="c1"># Updates metrics</span>
             <span class="c1"># TODO: compute metrics each N eval_steps to speedup evaluation</span>
             <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">testing</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">compute_metrics_each_n_steps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span>
                         <span class="n">preds</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">metric_key_prefix</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">call_body</span><span class="o">=</span><span class="kc">False</span>
@@ -672,7 +675,7 @@
         <span class="c1"># Get metrics :</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># Computing the metrics results as the average of all steps</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span> <span class="ow">and</span> <span class="n">testing</span><span class="p">:</span>
             <span class="n">streaming_metrics_results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">metric_key_prefix</span><span class="p">)</span>
             <span class="n">streaming_metrics_results_flattened</span> <span class="o">=</span> <span class="n">process_metrics</span><span class="p">(</span>
                 <span class="n">streaming_metrics_results</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">metric_key_prefix</span> <span class="o">+</span> <span class="s2">&quot;_/&quot;</span>
@@ -680,7 +683,8 @@
 
             <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">metrics</span><span class="p">,</span> <span class="o">**</span><span class="n">streaming_metrics_results_flattened</span><span class="p">}</span>
 
-        <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_/loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_losses</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">testing</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_/loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_losses</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">EvalLoopOutput</span><span class="p">(</span>
             <span class="n">predictions</span><span class="o">=</span><span class="n">all_preds_item_ids_scores</span><span class="p">,</span>
