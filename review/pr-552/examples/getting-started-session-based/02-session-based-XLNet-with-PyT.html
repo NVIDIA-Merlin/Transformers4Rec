@@ -236,14 +236,14 @@
   type: INT
   int_domain {
     name: &quot;session_id&quot;
-    max: 19870
+    max: 19875
     is_categorical: true
   }
   annotation {
     tag: &quot;categorical&quot;
     extra_metadata {
       type_url: &quot;type.googleapis.com/google.protobuf.Struct&quot;
-      value: &quot;\n\021\n\013num_buckets\022\002\010\000\n\033\n\016freq_threshold\022\t\021\000\000\000\000\000\000\000\000\n\025\n\010max_size\022\t\021\000\000\000\000\000\000\000\000\n\030\n\013start_index\022\t\021\000\000\000\000\000\000\360?\n5\n\010cat_path\022)\032\&#39;.//categories/unique.session_id.parquet\nG\n\017embedding_sizes\0224*2\n\030\n\013cardinality\022\t\021\000\000\000\000\300g\323@\n\026\n\tdimension\022\t\021\000\000\000\000\000\200y@\n\034\n\017dtype_item_size\022\t\021\000\000\000\000\000\000P@\n\r\n\007is_list\022\002 \000\n\017\n\tis_ragged\022\002 \000&quot;
+      value: &quot;\n\021\n\013num_buckets\022\002\010\000\n\033\n\016freq_threshold\022\t\021\000\000\000\000\000\000\000\000\n\025\n\010max_size\022\t\021\000\000\000\000\000\000\000\000\n\030\n\013start_index\022\t\021\000\000\000\000\000\000\000\000\n5\n\010cat_path\022)\032\&#39;.//categories/unique.session_id.parquet\nG\n\017embedding_sizes\0224*2\n\030\n\013cardinality\022\t\021\000\000\000\000\000i\323@\n\026\n\tdimension\022\t\021\000\000\000\000\000\200y@\n\034\n\017dtype_item_size\022\t\021\000\000\000\000\000\000P@\n\r\n\007is_list\022\002 \000\n\017\n\tis_ragged\022\002 \000&quot;
     }
   }
 }
@@ -277,8 +277,8 @@ feature {
         <span class="n">schema</span><span class="p">,</span>
         <span class="n">max_sequence_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
         <span class="n">continuous_projection</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-        <span class="n">d_output</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">masking</span><span class="o">=</span><span class="s2">&quot;mlm&quot;</span><span class="p">,</span>
+        <span class="n">d_output</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -444,7 +444,7 @@ Here is a brief explanation of the main classes:</p>
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
 <span class="n">start_time_window_index</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">final_time_window_index</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="n">final_time_window_index</span> <span class="o">=</span> <span class="mi">8</span>
 <span class="c1">#Iterating over days of one week</span>
 <span class="k">for</span> <span class="n">time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_time_window_index</span><span class="p">,</span> <span class="n">final_time_window_index</span><span class="p">):</span>
     <span class="c1"># Set data </span>
@@ -508,7 +508,7 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>5.821000</td>
+      <td>5.804900</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -520,22 +520,22 @@ Launch training for day 1 are:
 <div class="output text_html">
 <div>
 
-  <progress value='42' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [6/6 00:10]
+  <progress value='48' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
+  [6/6 00:12]
 </div>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
 Eval results for day 2 are:	
 
 ********************
 
- eval_/loss = 5.006950855255127
- eval_/next-item/ndcg_at_20 = 0.17477868497371674
- eval_/next-item/ndcg_at_40 = 0.24376630783081055
- eval_/next-item/recall_at_20 = 0.421875
- eval_/next-item/recall_at_40 = 0.7552083730697632
- eval_runtime = 0.1473
- eval_samples_per_second = 1303.363
- eval_steps_per_second = 40.73
+ eval_/loss = 4.9857892990112305
+ eval_/next-item/ndcg_at_20 = 0.17793045938014984
+ eval_/next-item/ndcg_at_40 = 0.2293066680431366
+ eval_/next-item/recall_at_20 = 0.4895833432674408
+ eval_/next-item/recall_at_40 = 0.7395833730697632
+ eval_runtime = 0.1585
+ eval_samples_per_second = 1211.104
+ eval_steps_per_second = 37.847
 [&#39;/workspace/data/sessions_by_day/2/train.parquet&#39;]
 ********************
 Launch training for day 2 are:
@@ -567,13 +567,26 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.896300</td>
+      <td>4.859800</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
+********************
+Eval results for day 3 are:	
+
+********************
+
+ eval_/loss = 4.595378398895264
+ eval_/next-item/ndcg_at_20 = 0.18038052320480347
+ eval_/next-item/ndcg_at_40 = 0.23606626689434052
+ eval_/next-item/recall_at_20 = 0.4791666865348816
+ eval_/next-item/recall_at_40 = 0.75
+ eval_runtime = 0.1612
+ eval_samples_per_second = 1190.843
+ eval_steps_per_second = 37.214
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -585,20 +598,7 @@ Launch training for day 2 are:
   Total optimization steps = 65
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 3 are:	
-
-********************
-
- eval_/loss = 4.632648944854736
- eval_/next-item/ndcg_at_20 = 0.18322871625423431
- eval_/next-item/ndcg_at_40 = 0.24265889823436737
- eval_/next-item/recall_at_20 = 0.4427083432674408
- eval_/next-item/recall_at_40 = 0.7291666865348816
- eval_runtime = 0.2087
- eval_samples_per_second = 919.825
- eval_steps_per_second = 28.745
-[&#39;/workspace/data/sessions_by_day/3/train.parquet&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/3/train.parquet&#39;]
 ********************
 Launch training for day 3 are:
 ********************
@@ -620,7 +620,7 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.577600</td>
+      <td>4.569400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -632,14 +632,14 @@ Eval results for day 4 are:
 
 ********************
 
- eval_/loss = 4.358114719390869
- eval_/next-item/ndcg_at_20 = 0.2185230255126953
- eval_/next-item/ndcg_at_40 = 0.2660380005836487
- eval_/next-item/recall_at_20 = 0.578125
- eval_/next-item/recall_at_40 = 0.8072916865348816
- eval_runtime = 0.1733
- eval_samples_per_second = 1107.591
- eval_steps_per_second = 34.612
+ eval_/loss = 4.384099960327148
+ eval_/next-item/ndcg_at_20 = 0.2163243591785431
+ eval_/next-item/ndcg_at_40 = 0.26256000995635986
+ eval_/next-item/recall_at_20 = 0.5364583730697632
+ eval_/next-item/recall_at_40 = 0.7604166865348816
+ eval_runtime = 0.154
+ eval_samples_per_second = 1246.411
+ eval_steps_per_second = 38.95
 [&#39;/workspace/data/sessions_by_day/4/train.parquet&#39;]
 ********************
 Launch training for day 4 are:
@@ -671,7 +671,7 @@ Launch training for day 4 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.497000</td>
+      <td>4.507400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -683,36 +683,34 @@ Eval results for day 5 are:
 
 ********************
 
- eval_/loss = 4.520808696746826
- eval_/next-item/ndcg_at_20 = 0.2083323895931244
- eval_/next-item/ndcg_at_40 = 0.2511211037635803
- eval_/next-item/recall_at_20 = 0.53125
- eval_/next-item/recall_at_40 = 0.7395833730697632
- eval_runtime = 0.173
- eval_samples_per_second = 1109.768
- eval_steps_per_second = 34.68
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 1664
-  Num Epochs = 5
-  Instantaneous batch size per device = 128
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
-  Gradient Accumulation steps = 1
-  Total optimization steps = 65
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/5/train.parquet&#39;]
+ eval_/loss = 4.448643207550049
+ eval_/next-item/ndcg_at_20 = 0.18624266982078552
+ eval_/next-item/ndcg_at_40 = 0.22514502704143524
+ eval_/next-item/recall_at_20 = 0.5364583730697632
+ eval_/next-item/recall_at_40 = 0.7239583730697632
+ eval_runtime = 0.1597
+ eval_samples_per_second = 1202.447
+ eval_steps_per_second = 37.576
+[&#39;/workspace/data/sessions_by_day/5/train.parquet&#39;]
 ********************
 Launch training for day 5 are:
 ********************
 </pre></div>
 </div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 1536
+  Num Epochs = 5
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 60
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
-      <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:01, Epoch 5/5]
+      <progress value='60' max='60' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [60/60 00:01, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -724,7 +722,7 @@ Launch training for day 5 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.491200</td>
+      <td>4.484300</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -736,14 +734,14 @@ Eval results for day 6 are:
 
 ********************
 
- eval_/loss = 4.366371154785156
- eval_/next-item/ndcg_at_20 = 0.21815048158168793
- eval_/next-item/ndcg_at_40 = 0.2546561360359192
- eval_/next-item/recall_at_20 = 0.5885416865348816
+ eval_/loss = 4.46337890625
+ eval_/next-item/ndcg_at_20 = 0.18136751651763916
+ eval_/next-item/ndcg_at_40 = 0.23689508438110352
+ eval_/next-item/recall_at_20 = 0.4947916865348816
  eval_/next-item/recall_at_40 = 0.765625
- eval_runtime = 0.1743
- eval_samples_per_second = 1101.611
- eval_steps_per_second = 34.425
+ eval_runtime = 0.161
+ eval_samples_per_second = 1192.384
+ eval_steps_per_second = 37.262
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -777,7 +775,7 @@ Launch training for day 6 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.488000</td>
+      <td>4.458900</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -789,43 +787,70 @@ Eval results for day 7 are:
 
 ********************
 
- eval_/loss = 4.4079389572143555
- eval_/next-item/ndcg_at_20 = 0.2032829374074936
- eval_/next-item/ndcg_at_40 = 0.24693170189857483
- eval_/next-item/recall_at_20 = 0.5416666865348816
- eval_/next-item/recall_at_40 = 0.75
- eval_runtime = 0.1598
- eval_samples_per_second = 1201.645
- eval_steps_per_second = 37.551
-CPU times: user 44 s, sys: 560 ms, total: 44.6 s
-Wall time: 13.2 s
+ eval_/loss = 4.451930046081543
+ eval_/next-item/ndcg_at_20 = 0.19292211532592773
+ eval_/next-item/ndcg_at_40 = 0.237293541431427
+ eval_/next-item/recall_at_20 = 0.5104166865348816
+ eval_/next-item/recall_at_40 = 0.7291666865348816
+ eval_runtime = 0.1492
+ eval_samples_per_second = 1286.892
+ eval_steps_per_second = 40.215
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="save-the-model">
-<h3>Save the model<a class="headerlink" href="#save-the-model" title="Permalink to this headline"></a></h3>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">_save_model_and_checkpoint</span><span class="p">(</span><span class="n">save_model_class</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 1664
+  Num Epochs = 5
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 65
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-66
-Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/7/train.parquet&#39;]
+********************
+Launch training for day 7 are:
+********************
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="reload-the-model">
-<h3>Reload the model<a class="headerlink" href="#reload-the-model" title="Permalink to this headline"></a></h3>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">load_model_trainer_states_from_checkpoint</span><span class="p">(</span><span class="s1">&#39;./tmp/checkpoint-</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="k">trainer</span>.state.global_step)
+<div class="output text_html">
+    <div>
+
+      <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [65/65 00:01, Epoch 5/5]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>50</td>
+      <td>4.430300</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
+********************
+Eval results for day 8 are:	
+
+********************
+
+ eval_/loss = 4.416452407836914
+ eval_/next-item/ndcg_at_20 = 0.20186899602413177
+ eval_/next-item/ndcg_at_40 = 0.2410435527563095
+ eval_/next-item/recall_at_20 = 0.5520833730697632
+ eval_/next-item/recall_at_40 = 0.7447916865348816
+ eval_runtime = 0.1614
+ eval_samples_per_second = 1189.826
+ eval_steps_per_second = 37.182
+CPU times: user 50.8 s, sys: 731 ms, total: 51.6 s
+Wall time: 15 s
+</pre></div>
 </div>
 </div>
 </div>
@@ -848,20 +873,31 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.4079389572143555
-  eval_/next-item/ndcg_at_20 = 0.2032829374074936
-  eval_/next-item/ndcg_at_40 = 0.24693170189857483
-  eval_/next-item/recall_at_20 = 0.5416666865348816
-  eval_/next-item/recall_at_40 = 0.75
-  eval_runtime = 0.1713
-  eval_samples_per_second = 1121.166
-  eval_steps_per_second = 35.036
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.416452407836914
+  eval_/next-item/ndcg_at_20 = 0.20186899602413177
+  eval_/next-item/ndcg_at_40 = 0.2410435527563095
+  eval_/next-item/recall_at_20 = 0.5520833730697632
+  eval_/next-item/recall_at_40 = 0.7447916865348816
+  eval_runtime = 0.1455
+  eval_samples_per_second = 1319.597
+  eval_steps_per_second = 41.237
 </pre></div>
 </div>
 </div>
 </div>
-<p>That’s it!<br />
-You have just trained your session-based recommendation model using Transformers4Rec.</p>
+</div>
+<div class="section" id="save-the-model">
+<h3>Save the model<a class="headerlink" href="#save-the-model" title="Permalink to this headline"></a></h3>
+<p>Let’s save the model to be able to load it back at inference step. Using <code class="docutils literal notranslate"><span class="pre">model.save()</span></code>, we save the model as a pkl file in the given path.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_path</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/saved_model&quot;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>That’s it! You have just trained your session-based recommendation model using Transformers4Rec. Now you can move on to the next notebook <code class="docutils literal notranslate"><span class="pre">03-serving-session-based-model-torch-backend</span></code>. Please shut down this kernel to free the GPU memory before you start the next one.</p>
 <p>Tip: We can easily log and visualize model training and evaluation on <a class="reference external" href="https://wandb.ai/home">Weights &amp; Biases (W&amp;B)</a>, <a class="reference external" href="https://www.tensorflow.org/tensorboard">TensorBoard</a>, or <a class="reference external" href="https://github.com/NVIDIA/dllogger">NVIDIA DLLogger</a>. By default, the HuggingFace transformers <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> (which we extend) uses Weights &amp; Biases (W&amp;B) to log training and evaluation metrics, which provides nice visualization results and comparison between different runs.</p>
 </div>
 </div>
