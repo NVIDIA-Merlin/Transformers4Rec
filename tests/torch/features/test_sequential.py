@@ -218,17 +218,23 @@ def test_sequential_tabular_features_with_text_module(yoochoose_schema, torch_yo
     from transformers4rec.torch.features.base import InputBlock
 
     class NormalizeTextembeddings(InputBlock):
+        """
+        Instantiate a dummy text-embeddings input module that
+        expects pre-trained text embeddings as inputs and normalize them.
+        """
+
         def __init__(self, features: List[str], **kwargs):
             """
             Parameters:
-                features: Names of text features
+            ----------
+            features: column names of the text input feature
             """
             super().__init__(**kwargs)
             self.filter_features = tr.FilterFeatures(features)
 
         def forward(self, x):
             out = {}
-            x = self.filter_features(x)
+            x = self.filter_features(x)  # x here is the dicrionary of pre-trained vectors
             for name, val in x.items():
                 out[name] = torch.nn.functional.normalize(val, p=2, dim=0)
             return out
