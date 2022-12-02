@@ -165,6 +165,8 @@
         <span class="n">axial_pos_shape_first_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
+        <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">attention_head_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
@@ -246,6 +248,8 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
+        <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
@@ -279,6 +283,8 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
+        <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">embedding_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
@@ -314,6 +320,8 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
+        <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">num_attention_heads</span><span class="o">=</span><span class="n">n_head</span><span class="p">,</span>
@@ -386,6 +394,8 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
+        <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
@@ -396,6 +406,7 @@
             <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
             <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
             <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">max_position_embeddings</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
             <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div></div>
@@ -418,6 +429,8 @@
         <span class="n">log_attention_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">):</span>
+        <span class="c1"># To account for target positions at inference mode, we extend the maximum sequence length.</span>
+        <span class="n">total_seq_length</span> <span class="o">=</span> <span class="n">total_seq_length</span> <span class="o">+</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">hidden_size</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
             <span class="n">num_hidden_layers</span><span class="o">=</span><span class="n">n_layer</span><span class="p">,</span>
@@ -428,6 +441,7 @@
             <span class="n">dropout</span><span class="o">=</span><span class="n">dropout</span><span class="p">,</span>
             <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token</span><span class="p">,</span>
             <span class="n">output_attentions</span><span class="o">=</span><span class="n">log_attention_weights</span><span class="p">,</span>
+            <span class="n">max_position_embeddings</span><span class="o">=</span><span class="n">total_seq_length</span><span class="p">,</span>
             <span class="n">vocab_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">)</span></div></div>

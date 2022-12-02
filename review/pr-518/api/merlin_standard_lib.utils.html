@@ -165,11 +165,11 @@
 <dl class="py function">
 <dt id="merlin_standard_lib.utils.misc_utils.validate_dataset">
 <code class="sig-prename descclassname"><span class="pre">merlin_standard_lib.utils.misc_utils.</span></code><code class="sig-name descname"><span class="pre">validate_dataset</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths_or_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engine</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/merlin_standard_lib/utils/misc_utils.html#validate_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#merlin_standard_lib.utils.misc_utils.validate_dataset" title="Permalink to this definition"></a></dt>
-<dd><p>Util function to load NVTabular Dataset from disk</p>
+<dd><p>Util function to load merlin.io.Dataset from disk</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>paths_or_dataset</strong> (<em>Union</em><em>[</em><em>nvtabular.Dataset</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – Path  to dataset to load of nvtabular Dataset,
+<li><p><strong>paths_or_dataset</strong> (<em>Union</em><em>[</em><em>merlin.io.dataset.Dataset</em><em>, </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em>) – Path to dataset to load or Merlin Dataset,
 if Dataset, return the object.</p></li>
 <li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – batch size for Dataloader.</p></li>
 <li><p><strong>buffer_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.11)"><em>float</em></a>) – parameter, which refers to the fraction of batches
