@@ -85,6 +85,8 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
         axial_pos_shape_first_dim=4,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             attention_head_size=d_model,
@@ -166,6 +168,8 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_hidden_layers=n_layer,
@@ -199,6 +203,8 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             embedding_size=d_model,
@@ -234,6 +240,8 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_attention_heads=n_head,
@@ -306,6 +314,8 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_hidden_layers=n_layer,
@@ -316,6 +326,7 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
             dropout=dropout,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
+            max_position_embeddings=total_seq_length,
             vocab_size=1,
             **kwargs,
         )
@@ -338,6 +349,8 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_hidden_layers=n_layer,
@@ -348,6 +361,7 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
             dropout=dropout,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
+            max_position_embeddings=total_seq_length,
             vocab_size=1,
             **kwargs,
         )

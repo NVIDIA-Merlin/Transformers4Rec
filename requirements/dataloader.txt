@@ -1,0 +1,2 @@
+merlin-core>=0.2.0
+merlin-dataloader>=0.0.2

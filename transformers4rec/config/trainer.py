@@ -71,10 +71,10 @@ class T4RecTrainingArguments(TrainingArguments):
     )
 
     data_loader_engine: str = field(
-        default="nvtabular",
+        default="merlin",
         metadata={
             "help": "Parquet data loader engine. "
-            "'nvtabular': GPU-accelerated parquet data loader from NVTabular, 'pyarrow': read whole parquet into memory."
+            "'merlin': GPU-accelerated parquet data loader from Merlin, 'pyarrow': read whole parquet into memory."
         },
     )
 

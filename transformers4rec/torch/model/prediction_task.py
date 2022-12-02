@@ -23,6 +23,7 @@ import torchmetrics as tm
 
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
+from ..masking import MaskedLanguageModeling
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..utils.torch_utils import LambdaModule
 from .base import BlockType, PredictionTask
@@ -237,11 +238,14 @@ class NextItemPredictionTask(PredictionTask):
                 # "model_outputs": [],
             }
         else:
-            # keep only last non-padded position for the 'Prediction step'
+            # Get the hidden position to use for predicting the next item
             labels = self.embeddings.item_seq
             non_pad_mask = labels != self.padding_idx
-            last_item_sessions = non_pad_mask.sum(dim=1) - 1
             rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=labels.device)
+            if isinstance(self.masking, MaskedLanguageModeling):
+                last_item_sessions = non_pad_mask.sum(dim=1)
+            else:
+                last_item_sessions = non_pad_mask.sum(dim=1) - 1
             x = x[rows_ids, last_item_sessions]
 
         # Compute predictions probs
