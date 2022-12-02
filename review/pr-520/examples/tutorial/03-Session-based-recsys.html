@@ -305,8 +305,8 @@ feature {
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># import NVTabular dependencies</span>
-<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">NVTabularDataLoader</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># import Merlin Data Loader dependencies</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">MerlinDataLoader</span>
 
 <span class="n">x_cat_names</span><span class="p">,</span> <span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id-list_seq&#39;</span><span class="p">],</span> <span class="p">[]</span>
 
@@ -319,7 +319,7 @@ feature {
 <span class="c1"># Define a `get_dataloader` function to call in the training loop</span>
 <span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
 
-    <span class="k">return</span> <span class="n">NVTabularDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+    <span class="k">return</span> <span class="n">MerlinDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
         <span class="n">schema</span><span class="p">,</span>
         <span class="n">path</span><span class="p">,</span> 
         <span class="n">batch_size</span><span class="p">,</span>
