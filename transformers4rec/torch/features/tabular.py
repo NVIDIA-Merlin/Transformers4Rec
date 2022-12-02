@@ -175,7 +175,7 @@ class TabularFeatures(MergeTabular):
         output = cls(
             continuous_module=maybe_continuous_module,
             categorical_module=maybe_categorical_module,
-            text_embedding_module=None,
+            text_embedding_module=kwargs.pop("text_embedding_module", None),
             aggregation=aggregation,
         )
 

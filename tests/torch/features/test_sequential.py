@@ -208,3 +208,46 @@ def test_sequential_and_non_sequential_tabular_features(yoochoose_schema, torch_
     outputs = tab_module(torch_yoochoose_like)
 
     assert list(outputs.shape) == [100, 20, 203]
+
+
+def test_sequential_tabular_features_with_text_module(yoochoose_schema, torch_yoochoose_like):
+    from typing import List
+
+    import torch
+
+    from transformers4rec.torch.features.base import InputBlock
+
+    class NormalizeTextembeddings(InputBlock):
+        def __init__(self, features: List[str], **kwargs):
+            """
+            Parameters:
+                features: Names of text features
+            """
+            super().__init__(**kwargs)
+            self.filter_features = tr.FilterFeatures(features)
+
+        def forward(self, x):
+            out = {}
+            x = self.filter_features(x)
+            for name, val in x.items():
+                out[name] = torch.nn.functional.normalize(val, p=2, dim=0)
+            return out
+
+        def forward_output_size(self, input_sizes):
+            return self.filter_features.forward_output_size(input_sizes)
+
+    schema = yoochoose_schema
+    # Add a text feature to the inputs
+    torch_yoochoose_like["text"] = torch.rand((100, 20, 16))
+
+    # Define the input block
+    tab_module = tr.TabularSequenceFeatures.from_schema(
+        schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        text_embedding_module=NormalizeTextembeddings(features=["text"]),
+    )
+
+    outputs = tab_module(torch_yoochoose_like)
+    assert "text" in outputs
+    assert list(outputs["text"].shape)[1:] == [20, 16]
