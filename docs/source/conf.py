@@ -83,6 +83,8 @@ jupyter_execute_notebooks = "off"
 # The API documents are RST and include `.. toctree::` directives.
 suppress_warnings = ["etoc.toctree", "myst.header", "misc.highlighting_failure"]
 
+html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
