@@ -262,17 +262,11 @@ class NextItemPredictionTask(PredictionTask):
         out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
         return out_tensor
 
-    def calculate_metrics(  # type: ignore
-        self, predictions, targets, mode="val", training=False, testing=True, forward=True, **kwargs
-    ) -> Dict[str, torch.Tensor]:
+    def calculate_metrics(self, predictions, targets) -> Dict[str, torch.Tensor]:  # type: ignore
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
         outputs = {}
-        if forward:
-            out = self(predictions, testing=testing)
-            targets = out["labels"]
-            predictions = out["predictions"]
         predictions = self.forward_to_prediction_fn(predictions)
 
         for metric in self.metrics:

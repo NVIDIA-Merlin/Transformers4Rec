@@ -86,8 +86,9 @@ def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, ta
 
     with pytorch.set_grad_enabled(mode=True):
         body_out = body(torch_tabular_data)
-        loss = head(body_out, targets=targets, training=True)["loss"]
-        metrics = head.calculate_metrics(body_out, targets=targets, training=True, call_body=False)
+        output = head(body_out, targets=targets, training=True)
+        loss = output["loss"]
+        metrics = head.calculate_metrics(output["predictions"], targets=output["labels"])
 
         optimizer.zero_grad()
         loss.backward()
@@ -147,14 +148,15 @@ def test_item_prediction_loss_and_metrics(
     non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
 
-    loss = head.prediction_task_dict["next-item"](
+    output = head.prediction_task_dict["next-item"](
         inputs=body_outputs,
         targets=labels_all,
         testing=True,
-    )["loss"]
+    )
+    loss = output["loss"]
 
     metrics = head.prediction_task_dict["next-item"].calculate_metrics(
-        predictions=body_outputs, targets=labels_all, testing=True
+        predictions=output["predictions"], targets=output["labels"]
     )
     assert all(len(m) == 2 for m in metrics.values())
     assert loss != 0

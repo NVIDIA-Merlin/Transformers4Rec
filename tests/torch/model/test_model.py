@@ -269,11 +269,8 @@ def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, maski
     model = transformer_config.to_torch_model(input_module, task)
     out = model(torch_yoochoose_like, training=True)
     result = model.calculate_metrics(
-        inputs=out["predictions"],
+        predictions=out["predictions"],
         targets=out["labels"],
-        call_body=False,
-        forward=False,
-        testing=True,
     )
     assert result is not None
 

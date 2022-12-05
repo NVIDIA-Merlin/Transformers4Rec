@@ -188,20 +188,11 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
     def calculate_metrics(  # type: ignore
         self,
-        predictions: Union[torch.Tensor, TabularData],
+        predictions: torch.Tensor,
         targets: torch.Tensor,
-        mode: str = "val",
-        forward: bool = False,
-        training: bool = False,
-        testing: bool = False,
-        **kwargs,
     ) -> Dict[str, torch.Tensor]:
 
         outputs = {}
-        if forward:
-            output = self(predictions, targets=targets, training=training, testing=testing)
-            predictions = output["predictions"]
-            targets = output["labels"]
 
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
@@ -423,66 +414,29 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         self,
         predictions: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
-        mode: str = "val",
-        forward=True,
-        call_body=False,
-        training=False,
-        testing=True,
-        **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         """Calculate metrics of the task(s) set in the Head instance.
 
         Parameters
         ----------
-        forward: bool
-            A boolean flag to control whether to apply the task's forward method on
-            the predictions or not.
-        call_body: bool
-            A boolean flag to control whether to apply the network `self.body`
-            on the `predictions` tensor(s) or not.
-            When `call_body=True`, forward must be set to `True.
-        training: bool
-            A boolean flag to control whether we are on `training` mode or not.
-        testing: bool
-            A boolean flag to control whether we are on `testing` (i.e. evaluation) mode or not.
         predictions: Union[torch.Tensor, TabularData]
             The predictions tensors to use for calculate metrics.
-            They can be three expected formats:
-                - `call_body=True`:
-                The predictions is the dictionary of input features.
-                - `call_body=False` and `forward=True`:
-                The predictions is a tensor representation returned
-                by the self.body() network.
-                - `call_body=False` and `forward=False`:
-                The predictions is a tensor or a dictionary of scores returned by the tasks' head.
-        targets: Union[torch.Tensor, TabularData]
+            They can be either a torch.Tensor if a single task is used or
+            a dictionary of torch.Tensor if multiple tasks are used. In the
+            second case, the dictionary is indexed by the tasks names.
+        targets:
             The tensor or dictionary of targets to use for computing the metrics of
             one or multiple tasks.
         """
         metrics = {}
 
-        if call_body and not forward:
-            raise ValueError(
-                "The flag forward cannot be set to False, when `call_body` is set True"
-            )
-
-        if call_body:
-            predictions = self.body(
-                predictions, targets=targets, training=training, testing=testing
-            )
-
         for name, task in self.prediction_task_dict.items():
             label = targets
             output = predictions
             if isinstance(targets, dict):
-                if forward:
-                    # The labels are retrieved from the dataloader
-                    # and indexed by the target feature name.
-                    label = targets[name.split("/")[0]]
-                else:
-                    # The labels are retrieved from the task's output
-                    # and indexed by the task name.
-                    label = targets[name]
+                # The labels are retrieved from the task's output
+                # and indexed by the task name.
+                label = targets[name]
             if isinstance(predictions, dict):
                 output = predictions[name]
 
@@ -490,11 +444,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
                 task.calculate_metrics(
                     predictions=output,
                     targets=label,
-                    mode=mode,
-                    forward=forward,
-                    training=training,
-                    testing=testing,
-                    **kwargs,
                 )
             )
 
@@ -618,28 +567,28 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
     def calculate_metrics(  # type: ignore
         self,
-        inputs,
-        targets,
-        mode="val",
-        call_body=True,
-        training=False,
-        testing=False,
-        forward=True,
-        **kwargs,
+        predictions: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        """Calculate metrics of the task(s) set in the Head instance.
 
+        Parameters
+        ----------
+        predictions: Union[torch.Tensor, TabularData]
+            The predictions tensors returned by the model.
+            They can be either a torch.Tensor if a single task is used or
+            a dictionary of torch.Tensor if multiple heads/tasks are used. In the
+            second case, the dictionary is indexed by the tasks names.
+        targets:
+            The tensor or dictionary of targets returned by the model.
+            They are used for computing the metrics of one or multiple tasks.
+        """
         outputs = {}
         for head in self.heads:
             outputs.update(
                 head.calculate_metrics(
-                    inputs,
+                    predictions,
                     targets,
-                    mode=mode,
-                    call_body=call_body,
-                    training=training,
-                    testing=testing,
-                    forward=forward,
-                    **kwargs,
                 )
             )
 
@@ -724,11 +673,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                         self.calculate_metrics(
                             output["predictions"],
                             targets=output["labels"],
-                            mode="train",
-                            training=True,
-                            testing=False,
-                            forward=False,
-                            call_body=False,
                         )
                     if train:
                         optimizer.zero_grad()
@@ -755,14 +699,10 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             batch_iterator = tqdm(batch_iterator)
         self.reset_metrics()
         for batch_idx, (x, y) in batch_iterator:
+            output = self(x, targets=y, training=training, testing=testing)
             self.calculate_metrics(
-                x,
-                targets=y,
-                mode=mode,
-                training=training,
-                testing=testing,
-                forward=True,
-                call_body=True,
+                output["predictions"],
+                targets=output["labels"],
             )
 
         return self.compute_metrics(mode=mode)
