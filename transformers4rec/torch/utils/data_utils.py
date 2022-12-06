@@ -15,6 +15,7 @@
 #
 
 import logging
+import warnings
 from abc import ABC
 
 import numpy as np
@@ -64,6 +65,7 @@ if dependencies.is_pyarrow_available():
             batch_size,
             max_sequence_length,
             cols_to_read=None,
+            target_names=None,
             shuffle=False,
             shuffle_buffer_size=0,
             num_workers=1,
@@ -72,6 +74,11 @@ if dependencies.is_pyarrow_available():
             **kwargs,
         ):
             T4RecDataLoader.__init__(self)
+            warnings.warn(
+                "The `pyarrow` data loader is deprecated and should be replaced "
+                "by `merlin_dataloader`",
+                DeprecationWarning,
+            )
             self.paths_or_dataset = paths_or_dataset
             self.batch_size = batch_size
             self.shuffle = shuffle
@@ -81,7 +88,7 @@ if dependencies.is_pyarrow_available():
             self.max_sequence_length = max_sequence_length
             self.drop_last = drop_last
 
-            self.set_dataset(cols_to_read=cols_to_read)
+            self.set_dataset(cols_to_read=cols_to_read, target_names=target_names)
 
             PyTorchDataLoader.__init__(
                 self,
@@ -94,7 +101,7 @@ if dependencies.is_pyarrow_available():
             # set _batch_size attribute needed by HF trainer
             self._batch_size = self.batch_size
 
-        def set_dataset(self, cols_to_read):
+        def set_dataset(self, cols_to_read, target_names):
             """
             set the Parquet dataset
 
@@ -110,6 +117,7 @@ if dependencies.is_pyarrow_available():
                 self.paths_or_dataset,
                 cols_to_read,
                 seq_features_len_pad_trim=self.max_sequence_length,
+                target_names=target_names,
             )
             if self.shuffle and self.shuffle_buffer_size > 0:
                 dataset = ShuffleDataset(dataset, buffer_size=self.shuffle_buffer_size)
@@ -162,6 +170,7 @@ if dependencies.is_pyarrow_available():
                 batch_size,
                 max_sequence_length,
                 cols_to_read=cols_to_read,
+                target_names=targets,
                 shuffle=shuffle,
                 shuffle_buffer_size=shuffle_buffer_size,
                 num_workers=num_workers,
@@ -212,7 +221,7 @@ if dependencies.is_gpu_dataloader_available():
             conts=None,
             cats=None,
             labels=None,
-            collate_fn=lambda x: x[0][0],
+            collate_fn=lambda x: x[0],
             engine=None,
             buffer_size=0.1,
             reader_kwargs=None,
@@ -294,12 +303,10 @@ if dependencies.is_gpu_dataloader_available():
             continuous_features=None,
             categorical_features=None,
             targets=None,
-            collate_fn=lambda x: x[0][0],
+            collate_fn=lambda x: x[0],
             shuffle=True,
             buffer_size=0.06,
             parts_per_chunk=1,
-            separate_labels=True,
-            named_labels=False,
             sparse_names=None,
             sparse_max=None,
             **kwargs,
@@ -331,8 +338,8 @@ if dependencies.is_gpu_dataloader_available():
                 paths_or_dataset,
                 batch_size=batch_size,
                 max_sequence_length=max_sequence_length,
-                labels=targets if separate_labels else [],
-                cats=categorical_features if separate_labels else categorical_features + targets,
+                labels=targets,
+                cats=categorical_features,
                 conts=continuous_features,
                 collate_fn=collate_fn,
                 engine="parquet",
@@ -349,8 +356,9 @@ if dependencies.is_gpu_dataloader_available():
 
 
 class ParquetDataset(Dataset):
-    def __init__(self, parquet_file, cols_to_read, seq_features_len_pad_trim):
+    def __init__(self, parquet_file, cols_to_read, target_names, seq_features_len_pad_trim):
         self.cols_to_read = cols_to_read
+        self.target_names = target_names
         self.data = pq.ParquetDataset(parquet_file).read(columns=self.cols_to_read).to_pandas()
         self.seq_features_len_pad_trim = seq_features_len_pad_trim
 
@@ -359,7 +367,10 @@ class ParquetDataset(Dataset):
 
     def __getitem__(self, index):
         df = self.data.loc[index]
-        return {col: self.pad_seq_column_if_needed(df[col]) for col in df.index}
+        input_features = list(set(self.cols_to_read).difference(self.target_names))
+        inputs = {col: self.pad_seq_column_if_needed(df[col]) for col in input_features}
+        targets = {col: self.pad_seq_column_if_needed(df[col]) for col in self.target_names}
+        return inputs, targets
 
     def pad_seq_column_if_needed(self, values):
         if type(values) is np.ndarray:
