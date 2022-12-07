@@ -524,9 +524,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         for name, val in inputs.items():
             if torch.is_floating_point(val):
                 inputs[name] = val.to(torch.float32)
-        # Squeeze second dimension `1` of non-list inputs  
+        # Squeeze second dimension `1` of non-list inputs
         for name, val in input.items():
-                inputs[name] = torch.squeeze(val, -1)
+            inputs[name] = torch.squeeze(val, -1)
 
         if isinstance(targets, dict) and len(targets) == 0:
             # `pyarrow`` dataloader is returning {} instead of None
