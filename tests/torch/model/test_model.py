@@ -75,11 +75,15 @@ def test_sequential_prediction_model(
     )
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
 
+    bc_targets = pytorch.randint(2, (100,)).float()
+
     model = tr.Model(head_1, head_2)
-    output = model(torch_yoochoose_like, training=True)
+    output = model(torch_yoochoose_like, training=True, targets=bc_targets)
 
     assert isinstance(output, dict)
-    assert len(list(output.keys())) == 2
+    assert len(list(output.keys())) == 3
+    assert len(list(output["predictions"])) == 2
+    assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
 
 
 def test_model_with_multiple_heads_and_tasks(
@@ -265,11 +269,8 @@ def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, maski
     model = transformer_config.to_torch_model(input_module, task)
     out = model(torch_yoochoose_like, training=True)
     result = model.calculate_metrics(
-        inputs=out["predictions"],
+        predictions=out["predictions"],
         targets=out["labels"],
-        call_body=False,
-        forward=False,
-        testing=True,
     )
     assert result is not None
 
@@ -323,7 +324,7 @@ def test_save_next_item_prediction_model(
         loaded_model = model.load(tmpdir)
         # instead of a dictionary of three tensors `loss, labels, and predictions`
 
-    output = loaded_model(torch_yoochoose_like, training=False)
+    output = loaded_model(torch_yoochoose_like)
     assert isinstance(output, torch.Tensor)
 
     in_schema = loaded_model.input_schema

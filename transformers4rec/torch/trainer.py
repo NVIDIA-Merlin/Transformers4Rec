@@ -471,9 +471,7 @@ class Trainer(BaseTrainer):
             metrics_results_detailed = None
             if self.compute_metrics is not None and testing:
                 if step % self.args.compute_metrics_each_n_steps == 0:
-                    metrics_results_detailed = model.calculate_metrics(
-                        preds, labels, mode=metric_key_prefix, forward=False, call_body=False
-                    )
+                    metrics_results_detailed = model.calculate_metrics(preds, labels)
 
             # Update containers on host
             if loss is not None:

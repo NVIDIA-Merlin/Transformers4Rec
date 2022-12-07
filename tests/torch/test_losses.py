@@ -19,23 +19,19 @@ def test_item_prediction_with_label_smoothing_ce_loss(
         body, tr.NextItemPredictionTask(weight_tying=True, loss=custom_loss), inputs=input_module
     )
 
-    body_outputs = body(torch_yoochoose_like, testing=True)
+    body_outputs = body(torch_yoochoose_like, training=True)
 
     trg_flat = input_module.masking.masked_targets.flatten()
     non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
-    head_output = head(body_outputs, testing=True)
+    head_output = head(body_outputs, training=True)
 
-    loss = head.prediction_task_dict["next-item"].compute_loss(
-        inputs=body_outputs,
-        targets=labels_all,
-    )
+    loss = head_output["loss"]
 
     n_classes = 51997
+    head_predictions = head_output["predictions"]["next-item"]
     manuall_loss = pytorch.nn.NLLLoss(reduction="mean")
     target_with_smoothing = labels_all * (1 - label_smoothing) + label_smoothing / n_classes
-    manual_output_loss = manuall_loss(
-        head_output["predictions"], target_with_smoothing.to(pytorch.long)
-    )
+    manual_output_loss = manuall_loss(head_predictions, target_with_smoothing.to(pytorch.long))
 
     assert np.allclose(manual_output_loss.detach().numpy(), loss.detach().numpy(), rtol=1e-3)

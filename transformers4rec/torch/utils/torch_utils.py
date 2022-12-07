@@ -86,9 +86,6 @@ class MetricsMixin:
         self,
         inputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
-        mode: str = "val",
-        forward=True,
-        **kwargs,
     ) -> Dict[str, torch.Tensor]:
         """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
 
@@ -97,12 +94,10 @@ class MetricsMixin:
         Parameters
         ----------
         inputs: Union[torch.Tensor, TabularData]
-            TODO
+            Tensor or dictionary of predictions returned by the T4Rec model
         targets: Union[torch.Tensor, TabularData]
-            TODO
-        forward: bool, default True
+            Tensor or dictionary of true labels returned by the T4Rec model
 
-        mode: str, default="val"
 
         """
         raise NotImplementedError()
