@@ -525,7 +525,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             if torch.is_floating_point(val):
                 inputs[name] = val.to(torch.float32)
         # Squeeze second dimension `1` of non-list inputs
-        for name, val in input.items():
+        for name, val in inputs.items():
             inputs[name] = torch.squeeze(val, -1)
 
         if isinstance(targets, dict) and len(targets) == 0:
