@@ -520,12 +520,12 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(
         self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs
     ):
-        # TODO: Optimize this
         # Convert inputs to float32 which is the default type, expected by PyTorch
         for name, val in inputs.items():
             if torch.is_floating_point(val):
-                inputs[name] = torch.squeeze(val.to(torch.float32), -1)
-            else:
+                inputs[name] = val.to(torch.float32)
+        # Squeeze second dimension `1` of non-list inputs  
+        for name, val in input.items():
                 inputs[name] = torch.squeeze(val, -1)
 
         if isinstance(targets, dict) and len(targets) == 0:
@@ -533,6 +533,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             # TODO remove this code when `PyarraowDataLoader` is dropped
             targets = None
 
+        # TODO: Optimize this
         if training or testing:
             losses = []
             labels = {}
