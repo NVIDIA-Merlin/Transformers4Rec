@@ -33,12 +33,7 @@ from torch.utils.data.dataset import Dataset
 from transformers import Trainer as BaseTrainer
 from transformers.optimization import TYPE_TO_SCHEDULER_FUNCTION
 from transformers.trainer_callback import TrainerCallback
-from transformers.trainer_pt_utils import (
-    find_batch_size,
-    nested_concat,
-    nested_numpify,
-    nested_truncate,
-)
+from transformers.trainer_pt_utils import find_batch_size
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalLoopOutput, SchedulerType
 from transformers.utils import logging
 
@@ -47,6 +42,7 @@ from merlin_standard_lib import Schema
 from ..config.trainer import T4RecTrainingArguments
 from .model.base import Model
 from .utils.data_utils import T4RecDataLoader
+from .utils.torch_utils import nested_concat, nested_detach, nested_numpify, nested_truncate
 
 logger = logging.get_logger(__name__)
 
@@ -364,11 +360,11 @@ class Trainer(BaseTrainer):
 
         if testing:
             loss = outputs["loss"].mean().detach()
-            labels = outputs["labels"].detach()
-            predictions = outputs["predictions"].detach()
+            labels = nested_detach(outputs["labels"])
+            predictions = nested_detach(outputs["predictions"])
         else:
             loss, labels = None, None
-            predictions = outputs.detach()
+            predictions = nested_detach(outputs)
 
         if prediction_loss_only:
             return (loss, None, None, None)

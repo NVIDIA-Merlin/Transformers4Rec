@@ -339,7 +339,6 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
     ],
 )
 def test_trainer_music_streaming(task_and_metrics):
-    # TODO: Add binary and regression tasks
     data = tr.data.music_streaming_testing_data
     schema = data.schema
     batch_size = 16
@@ -384,6 +383,78 @@ def test_trainer_music_streaming(task_and_metrics):
 
     assert isinstance(eval_metrics, dict)
     assert set(default_metric).issubset(set(eval_metrics.keys()))
+    assert eval_metrics["eval_/loss"] is not None
+
+    assert predictions is not None
+
+
+def test_trainer_with_multiple_task():
+    data = tr.data.music_streaming_testing_data
+    schema = data.schema
+    batch_size = 16
+    tasks = [
+        tr.NextItemPredictionTask(weight_tying=True),
+        tr.BinaryClassificationTask("click", summary_type="mean"),
+        tr.RegressionTask("play_percentage", summary_type="mean"),
+    ]
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="mlm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+
+    body = tr.SequentialBlock(
+        inputs,
+        tr.MLPBlock([64]),
+        tr.TransformerBlock(transformer_config),
+    )
+    model = tr.Model(tr.Head(body, tasks))
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        data_loader_engine="merlin_dataloader",
+        max_sequence_length=20,
+        predict_top_k=0,
+        fp16=False,
+        report_to=[],
+        debug=["r"],
+    )
+
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataset_or_path=data.path,
+        eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
+        compute_metrics=True,
+    )
+
+    recsys_trainer.train()
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+    predictions = recsys_trainer.predict(data.path)
+
+    default_metrics = [
+        "eval_/next-item/ndcg_at_10",
+        "eval_/next-item/ndcg_at_20",
+        "eval_/next-item/avg_precision_at_10",
+        "eval_/next-item/avg_precision_at_20",
+        "eval_/next-item/recall_at_10",
+        "eval_/next-item/recall_at_20",
+        "eval_/click/binary_classification_task/accuracy",
+        "eval_/click/binary_classification_task/precision",
+        "eval_/click/binary_classification_task/recall",
+        "eval_/play_percentage/regression_task/mean_squared_error",
+    ]
+
+    assert isinstance(eval_metrics, dict)
+    assert set(default_metrics).issubset(set(eval_metrics.keys()))
     assert eval_metrics["eval_/loss"] is not None
 
     assert predictions is not None
