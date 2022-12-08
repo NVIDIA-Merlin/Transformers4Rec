@@ -497,3 +497,15 @@ class SoftEmbedding(torch.nn.Module):
         soft_one_hot_embeddings = (weights.unsqueeze(-1) * self.embedding_table.weight).sum(-2)
 
         return soft_one_hot_embeddings
+
+
+class PretrainedEmbeddingsInitializer(torch.nn.Module):
+    def __init__(self, weights_matrix, trainable=False, **kwargs):
+        super().__init__(**kwargs)
+        self.weights_matrix = torch.tensor(weights_matrix)
+        self.trainable = trainable
+
+    def forward(self, x):
+        with torch.no_grad():
+            x.copy_(self.weights_matrix)
+        x.requires_grad = self.trainable
