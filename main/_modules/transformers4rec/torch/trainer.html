@@ -559,9 +559,7 @@
             <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">testing</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">compute_metrics_each_n_steps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span>
-                        <span class="n">preds</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">metric_key_prefix</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">call_body</span><span class="o">=</span><span class="kc">False</span>
-                    <span class="p">)</span>
+                    <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 
             <span class="c1"># Update containers on host</span>
             <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
