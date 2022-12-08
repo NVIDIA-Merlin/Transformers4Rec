@@ -199,13 +199,13 @@ class Trainer(BaseTrainer):
         if self.test_dataloader is not None:
             return self.test_dataloader
 
-        if test_dataset is None and self.test_dataset is None:
+        if test_dataset is None and self.test_dataset_or_path is None:
             raise ValueError("Trainer: test requires an test_dataset.")
-        test_dataset = test_dataset if test_dataset is not None else self.test_dataset
+        test_dataset = test_dataset if test_dataset is not None else self.test_dataset_or_path
         assert self.schema is not None, "schema is required to generate Test Dataloader"
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
-            self.test_dataset_or_path,
+            test_dataset,
             self.args.per_device_eval_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
