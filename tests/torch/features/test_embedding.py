@@ -176,7 +176,6 @@ def test_pre_trained_embeddings_initializer(yoochoose_schema, torch_yoochoose_li
     )
 
     assert emb_module.embedding_tables["item_id/list"].weight.requires_grad == trainable
-
     _ = emb_module(torch_yoochoose_like)
 
 

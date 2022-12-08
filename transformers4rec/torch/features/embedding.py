@@ -500,12 +500,12 @@ class SoftEmbedding(torch.nn.Module):
 
 
 class PretrainedEmbeddingsInitializer(torch.nn.Module):
-    def __init__(self, weights_matrix, trainable=False, **kwargs):
+    def __init__(self, weight_matrix, trainable=False, **kwargs):
         super().__init__(**kwargs)
-        self.weights_matrix = torch.tensor(weights_matrix)
+        self.weight_matrix = torch.tensor(weight_matrix)
         self.trainable = trainable
 
     def forward(self, x):
         with torch.no_grad():
-            x.copy_(self.weights_matrix)
+            x.copy_(self.weight_matrix)
         x.requires_grad = self.trainable
