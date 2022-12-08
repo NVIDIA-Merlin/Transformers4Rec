@@ -361,7 +361,6 @@ def test_trainer_music_streaming(task_and_metrics):
         per_device_eval_batch_size=batch_size // 2,
         data_loader_engine="merlin_dataloader",
         max_sequence_length=20,
-        predict_top_k=0,
         fp16=False,
         report_to=[],
         debug=["r"],
