@@ -92,7 +92,10 @@
 <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4Rec" /></a>
 <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/README.html"><img alt="Documentation" src="https://img.shields.io/badge/documentation-blue.svg" /></a></p>
 <p>Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation and can work with PyTorch.</p>
-<p>It works as a bridge between NLP and recommender systems by integrating with one the most popular NLP frameworks <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace Transformers</a>, making state-of-the-art Transformer architectures available for RecSys researchers and industry practitioners.</p>
+<p>The library works as a bridge between NLP and recommender systems by integrating with one the most popular NLP frameworks <a class="reference external" href="https://github.com/huggingface/transformers">HuggingFace Transformers</a>, making state-of-the-art Transformer architectures available for RecSys researchers and industry practitioners.</p>
+<p>The following figure shows the use of the library in a recommender system.
+Input data is typically a sequence of interactions such as items that are browsed in a web session or items put in a cart.
+The library helps you process and model the interactions so that you can output better recommendations for the next item.</p>
 <p><img alt="Sequential and Session-based recommendation with Transformers4Rec" src="_images/sequential_rec.png" /><br></p>
 <div style="text-align: center; margin: 20pt">
   <figcaption style="font-style: italic;">Sequential and Session-based recommendation with Transformers4Rec</figcaption>
@@ -180,6 +183,18 @@ Those components can be installed as optional args for the pip install package. 
 <p>Transformers4Rec library is pre-installed in the NVIDIA Merlin Docker containers.</p>
 <p>Refer to the <a class="reference external" href="https://nvidia-merlin.github.io/Merlin/main/containers.html">Merlin Containers</a> documentation page for information about the Merlin container names, URLs to the container images on the NVIDIA GPU Cloud catalog, and key Merlin components.</p>
 </div>
+</div>
+<div class="section" id="notebook-examples-and-tutorials">
+<h2>Notebook Examples and Tutorials<a class="headerlink" href="#notebook-examples-and-tutorials" title="Permalink to this headline"></a></h2>
+<p>The <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html">End-to-end pipeline with NVIDIA Merlin</a> page
+shows how to use Transformers4Rec and other Merlin libraries like NVTabular to build a complete recommender system.</p>
+<p>We have several <a class="reference internal" href="examples/index.html"><span class="xref myst">example</span></a> notebooks to help you build a recommender system or integrate Transformers4Rec into your system:</p>
+<ul class="simple">
+<li><p>A getting started example that includes training a session-based model with an XLNET transformer architecture.</p></li>
+<li><p>An end-to-end example that trains a model and takes the next step to serve inference with Triton Inference Server.</p></li>
+<li><p>Another end-to-end example that trains and evaluates a session-based model on RNN and also serves inference with Triton Inference Server.</p></li>
+<li><p>A notebook and scripts that reproduce the experiments presented in a paper for RecSys 2021.</p></li>
+</ul>
 <div class="section" id="feedback-and-support">
 <h3>Feedback and Support<a class="headerlink" href="#feedback-and-support" title="Permalink to this headline"></a></h3>
 <p>If you’d like to contribute to the library directly, see the <a class="reference internal" href="CONTRIBUTING.html"><span class="doc std std-doc">CONTRIBUTING.md</span></a>. We’re particularly interested in contributions or feature requests for our feature engineering and preprocessing operations. To further advance our Merlin Roadmap, we encourage you to share all the details regarding your recommender system pipeline in this <a class="reference external" href="https://developer.nvidia.com/merlin-devzone-survey">survey</a>.</p>
