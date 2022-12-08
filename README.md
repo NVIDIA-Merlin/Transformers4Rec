@@ -6,7 +6,11 @@
 
 Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation and can work with PyTorch.
 
-It works as a bridge between NLP and recommender systems by integrating with one the most popular NLP frameworks [HuggingFace Transformers](https://github.com/huggingface/transformers), making state-of-the-art Transformer architectures available for RecSys researchers and industry practitioners.
+The library works as a bridge between NLP and recommender systems by integrating with one the most popular NLP frameworks [HuggingFace Transformers](https://github.com/huggingface/transformers), making state-of-the-art Transformer architectures available for RecSys researchers and industry practitioners.
+
+The following figure shows the use of the library in a recommender system.
+Input data is typically a sequence of interactions such as items that are browsed in a web session or items put in a cart.
+The library helps you process and model the interactions so that you can output better recommendations for the next item.
 
 <img src="_images/sequential_rec.png" alt="Sequential and Session-based recommendation with Transformers4Rec" style="width:800px;display:block;margin-left:auto;margin-right:auto;"/><br>
 <div style="text-align: center; margin: 20pt">
@@ -35,7 +39,6 @@ You can build a fully GPU-accelerated pipeline for sequential and session-based 
 <div style="text-align: center; margin: 20pt">
   <figcaption style="font-style: italic;">GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption>
 </div>
-
 
 ## Quick tour
 To train a model on a dataset, the first step is to provide the [schema](https://nvidia-merlin.github.io/Transformers4Rec/main/api/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema) and use this to construct an input-module.
@@ -104,8 +107,21 @@ Transformers4Rec library is pre-installed in the NVIDIA Merlin Docker containers
 
 Refer to the [Merlin Containers](https://nvidia-merlin.github.io/Merlin/main/containers.html) documentation page for information about the Merlin container names, URLs to the container images on the NVIDIA GPU Cloud catalog, and key Merlin components.
 
-### Feedback and Support
+## Notebook Examples and Tutorials
 
+The [End-to-end pipeline with NVIDIA Merlin](https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html) page
+shows how to use Transformers4Rec and other Merlin libraries like NVTabular to build a complete recommender system.
+
+We have several [example](./examples) notebooks to help you build a recommender system or integrate Transformers4Rec into your system:
+
+- A getting started example that includes training a session-based model with an XLNET transformer architecture.
+- An end-to-end example that trains a model and takes the next step to serve inference with Triton Inference Server.
+- Another end-to-end example that trains and evaluates a session-based model on RNN and also serves inference with Triton Inference Server.
+- A notebook and scripts that reproduce the experiments presented in a paper for RecSys 2021.
+
+
+### Feedback and Support
+ 
 If you'd like to contribute to the library directly, see the [CONTRIBUTING.md](CONTRIBUTING.md). We're particularly interested in contributions or feature requests for our feature engineering and preprocessing operations. To further advance our Merlin Roadmap, we encourage you to share all the details regarding your recommender system pipeline in this [survey](https://developer.nvidia.com/merlin-devzone-survey).
 
 If you're interested in learning more about how NVTabular works, see
