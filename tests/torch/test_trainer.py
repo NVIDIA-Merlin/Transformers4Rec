@@ -388,7 +388,7 @@ def test_trainer_music_streaming(task_and_metrics):
     assert predictions is not None
 
 
-def test_trainer_with_multiple_task():
+def test_trainer_with_multiple_tasks():
     data = tr.data.music_streaming_testing_data
     schema = data.schema
     batch_size = 16
@@ -420,7 +420,7 @@ def test_trainer_with_multiple_task():
         per_device_eval_batch_size=batch_size // 2,
         data_loader_engine="merlin_dataloader",
         max_sequence_length=20,
-        predict_top_k=0,
+        predict_top_k=20,
         fp16=False,
         report_to=[],
         debug=["r"],
