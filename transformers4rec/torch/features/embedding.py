@@ -500,7 +500,29 @@ class SoftEmbedding(torch.nn.Module):
 
 
 class PretrainedEmbeddingsInitializer(torch.nn.Module):
-    def __init__(self, weight_matrix, trainable=False, **kwargs):
+    """
+    Initializer of embedding tables with pre-trained embeddings
+
+    Parameters
+    ----------
+    weight_matrix : Union[torch.Tensor, List[List[float]]]
+        A 2D torch or numpy tensor or lists of lists with the pre-trained
+        weights for embeddings. The expect dims are
+        (embedding_cardinality,embedding_dim). The embedding_cardinality
+        can be inferred from the column schema, for example,
+        `schema.select_by_name("item_id").feature[0].int_domain.max + 1`.
+        The first position of the embedding table is reserved for padded
+        items (id=0).
+    trainable : bool
+        Whether the embedding table should be trainable or not
+    """
+
+    def __init__(
+        self,
+        weight_matrix: Union[torch.Tensor, List[List[float]]],
+        trainable: bool = False,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.weight_matrix = torch.tensor(weight_matrix)
         self.trainable = trainable
