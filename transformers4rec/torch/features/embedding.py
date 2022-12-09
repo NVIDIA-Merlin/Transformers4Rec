@@ -524,7 +524,10 @@ class PretrainedEmbeddingsInitializer(torch.nn.Module):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        self.weight_matrix = torch.tensor(weight_matrix)
+        # The weight matrix is kept in CPU, but when forward() is called
+        # to initialize the embedding table weight will be copied to
+        # the embedding table device (e.g. cuda)
+        self.weight_matrix = torch.tensor(weight_matrix, device="cpu")
         self.trainable = trainable
 
     def forward(self, x):
