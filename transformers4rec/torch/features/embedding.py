@@ -202,7 +202,9 @@ class EmbeddingFeatures(InputBlock):
         if automatic_build and schema:
             output.build(
                 get_output_sizes_from_schema(
-                    schema, kwargs.get("batch_size", -1), max_sequence_length=max_sequence_length,
+                    schema,
+                    kwargs.get("batch_size", -1),
+                    max_sequence_length=max_sequence_length,
                 ),
                 schema=schema,
             )
@@ -382,7 +384,9 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         if automatic_build and schema:
             output.build(
                 get_output_sizes_from_schema(
-                    schema, kwargs.get("batch_size", -1), max_sequence_length=max_sequence_length,
+                    schema,
+                    kwargs.get("batch_size", -1),
+                    max_sequence_length=max_sequence_length,
                 )
             )
 
@@ -497,14 +501,14 @@ class SoftEmbedding(torch.nn.Module):
 
 class PretrainedEmbeddingsInitializer(torch.nn.Module):
     """
-    Initializer of embedding tables with pre-trained embeddings
+    Initializer of embedding tables with pre-trained weights
 
     Parameters
     ----------
     weight_matrix : Union[torch.Tensor, List[List[float]]]
         A 2D torch or numpy tensor or lists of lists with the pre-trained
         weights for embeddings. The expect dims are
-        (embedding_cardinality,embedding_dim). The embedding_cardinality
+        (embedding_cardinality, embedding_dim). The embedding_cardinality
         can be inferred from the column schema, for example,
         `schema.select_by_name("item_id").feature[0].int_domain.max + 1`.
         The first position of the embedding table is reserved for padded
