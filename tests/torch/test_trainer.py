@@ -83,7 +83,7 @@ def test_set_train_eval_loaders_pyarrow(torch_yoochoose_next_item_prediction_mod
     assert resys_trainer.get_eval_dataloader().batch_size == batch_size // 2
 
 
-def test_set_train_eval_loaders_pyarrow_no_schema(torch_yoochoose_next_item_prediction_model):
+def test_set_train_eval_loaders_no_schema(torch_yoochoose_next_item_prediction_model):
     with pytest.raises(AssertionError) as excinfo:
         batch_size = 16
         args = trainer.T4RecTrainingArguments(
@@ -92,9 +92,8 @@ def test_set_train_eval_loaders_pyarrow_no_schema(torch_yoochoose_next_item_pred
             num_train_epochs=1,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size // 2,
-            data_loader_engine="pyarrow",
+            data_loader_engine="merlin_dataloader",
             fp16=False,
-            no_cuda=True,
         )
         recsys_trainer = tr.Trainer(
             model=torch_yoochoose_next_item_prediction_model,
@@ -112,7 +111,6 @@ def test_set_train_eval_loaders_pyarrow_no_schema(torch_yoochoose_next_item_pred
     ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"],
 )
 def test_create_scheduler(torch_yoochoose_next_item_prediction_model, scheduler):
-    pytest.importorskip("pyarrow")
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
@@ -120,10 +118,9 @@ def test_create_scheduler(torch_yoochoose_next_item_prediction_model, scheduler)
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
-        data_loader_engine="pyarrow",
-        max_sequence_length=20,
+        data_loader_engine="merlin_dataloader",
+        max_sequence_length=100,
         fp16=False,
-        no_cuda=True,
         learning_rate_num_cosine_cycles_by_epoch=1.5,
         lr_scheduler_type=scheduler,
         report_to=[],
@@ -154,7 +151,7 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
         data_loader_engine="pyarrow",
-        max_sequence_length=20,
+        max_sequence_length=100,
         fp16=False,
         no_cuda=True,
         report_to=[],
@@ -191,7 +188,6 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
 
 
 def test_saves_checkpoints(torch_yoochoose_next_item_prediction_model):
-    pytest.importorskip("pyarrow")
     with tempfile.TemporaryDirectory() as tmpdir:
         batch_size = 16
         args = trainer.T4RecTrainingArguments(
@@ -200,10 +196,9 @@ def test_saves_checkpoints(torch_yoochoose_next_item_prediction_model):
             num_train_epochs=1,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size // 2,
-            data_loader_engine="pyarrow",
-            max_sequence_length=20,
+            data_loader_engine="merlin_dataloader",
+            max_sequence_length=100,
             fp16=False,
-            no_cuda=True,
             report_to=[],
             debug=["r"],
         )
@@ -238,7 +233,6 @@ def test_saves_checkpoints(torch_yoochoose_next_item_prediction_model):
 
 
 def test_saves_checkpoints_best_metric(torch_yoochoose_next_item_prediction_model):
-    pytest.importorskip("pyarrow")
     with tempfile.TemporaryDirectory() as tmpdir:
         batch_size = 16
         args = trainer.T4RecTrainingArguments(
@@ -246,10 +240,9 @@ def test_saves_checkpoints_best_metric(torch_yoochoose_next_item_prediction_mode
             num_train_epochs=3,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size // 2,
-            data_loader_engine="pyarrow",
-            max_sequence_length=20,
+            data_loader_engine="merlin_dataloader",
+            max_sequence_length=100,
             fp16=False,
-            no_cuda=True,
             report_to=[],
             debug=["r"],
             save_total_limit=2,
@@ -275,7 +268,6 @@ def test_saves_checkpoints_best_metric(torch_yoochoose_next_item_prediction_mode
 
 
 def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
-    pytest.importorskip("pyarrow")
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
@@ -283,10 +275,9 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
-        data_loader_engine="pyarrow",
-        max_sequence_length=20,
+        data_loader_engine="merlin_dataloader",
+        max_sequence_length=100,
         fp16=False,
-        no_cuda=True,
         report_to=[],
         debug=["r"],
     )
@@ -318,17 +309,43 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
 
 
 @pytest.mark.parametrize(
-    "task",
-    [tr.NextItemPredictionTask(weight_tying=True)],
+    "task_and_metrics",
+    [
+        (
+            tr.NextItemPredictionTask(weight_tying=True),
+            [
+                "eval_/next-item/ndcg_at_10",
+                "eval_/next-item/ndcg_at_20",
+                "eval_/next-item/avg_precision_at_10",
+                "eval_/next-item/avg_precision_at_20",
+                "eval_/next-item/recall_at_10",
+                "eval_/next-item/recall_at_20",
+            ],
+        ),
+        (
+            tr.BinaryClassificationTask("click", summary_type="mean"),
+            [
+                "eval_/click/binary_classification_task/accuracy",
+                "eval_/click/binary_classification_task/precision",
+                "eval_/click/binary_classification_task/recall",
+            ],
+        ),
+        (
+            tr.RegressionTask("play_percentage", summary_type="mean"),
+            [
+                "eval_/play_percentage/regression_task/mean_squared_error",
+            ],
+        ),
+    ],
 )
-def test_trainer_music_streaming(task):
-    # TODO: Add binary and regression tasks
-    pytest.importorskip("pyarrow")
+def test_trainer_music_streaming(task_and_metrics):
     data = tr.data.music_streaming_testing_data
+    schema = data.schema
     batch_size = 16
+    task, default_metric = task_and_metrics
 
     inputs = tr.TabularSequenceFeatures.from_schema(
-        data.schema,
+        schema,
         max_sequence_length=20,
         d_output=64,
         masking="mlm",
@@ -342,10 +359,9 @@ def test_trainer_music_streaming(task):
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
-        data_loader_engine="pyarrow",
+        data_loader_engine="merlin_dataloader",
         max_sequence_length=20,
         fp16=False,
-        no_cuda=True,
         report_to=[],
         debug=["r"],
     )
@@ -353,26 +369,91 @@ def test_trainer_music_streaming(task):
     recsys_trainer = tr.Trainer(
         model=model,
         args=args,
-        schema=data.schema,
+        schema=schema,
         train_dataset_or_path=data.path,
         eval_dataset_or_path=data.path,
         test_dataset_or_path=data.path,
         compute_metrics=True,
     )
 
+    recsys_trainer.train()
     eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
     predictions = recsys_trainer.predict(data.path)
 
     assert isinstance(eval_metrics, dict)
-    default_metric = [
+    assert set(default_metric).issubset(set(eval_metrics.keys()))
+    assert eval_metrics["eval_/loss"] is not None
+
+    assert predictions is not None
+
+
+def test_trainer_with_multiple_tasks():
+    data = tr.data.music_streaming_testing_data
+    schema = data.schema
+    batch_size = 16
+    tasks = [
+        tr.NextItemPredictionTask(weight_tying=True),
+        tr.BinaryClassificationTask("click", summary_type="mean"),
+        tr.RegressionTask("play_percentage", summary_type="mean"),
+    ]
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="mlm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+
+    body = tr.SequentialBlock(
+        inputs,
+        tr.MLPBlock([64]),
+        tr.TransformerBlock(transformer_config),
+    )
+    model = tr.Model(tr.Head(body, tasks))
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        data_loader_engine="merlin_dataloader",
+        max_sequence_length=20,
+        predict_top_k=20,
+        fp16=False,
+        report_to=[],
+        debug=["r"],
+    )
+
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataset_or_path=data.path,
+        eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
+        compute_metrics=True,
+    )
+
+    recsys_trainer.train()
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+    predictions = recsys_trainer.predict(data.path)
+
+    default_metrics = [
         "eval_/next-item/ndcg_at_10",
         "eval_/next-item/ndcg_at_20",
         "eval_/next-item/avg_precision_at_10",
         "eval_/next-item/avg_precision_at_20",
         "eval_/next-item/recall_at_10",
         "eval_/next-item/recall_at_20",
+        "eval_/click/binary_classification_task/accuracy",
+        "eval_/click/binary_classification_task/precision",
+        "eval_/click/binary_classification_task/recall",
+        "eval_/play_percentage/regression_task/mean_squared_error",
     ]
-    assert set(default_metric).issubset(set(eval_metrics.keys()))
+
+    assert isinstance(eval_metrics, dict)
+    assert set(default_metrics).issubset(set(eval_metrics.keys()))
     assert eval_metrics["eval_/loss"] is not None
 
     assert predictions is not None
