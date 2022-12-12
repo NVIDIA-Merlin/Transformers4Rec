@@ -15,7 +15,7 @@
 #
 
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Text, Union
+from typing import Any, Callable, Dict, List, Optional, Text, Union
 
 import torch
 
@@ -202,9 +202,7 @@ class EmbeddingFeatures(InputBlock):
         if automatic_build and schema:
             output.build(
                 get_output_sizes_from_schema(
-                    schema,
-                    kwargs.get("batch_size", -1),
-                    max_sequence_length=max_sequence_length,
+                    schema, kwargs.get("batch_size", -1), max_sequence_length=max_sequence_length,
                 ),
                 schema=schema,
             )
@@ -384,9 +382,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         if automatic_build and schema:
             output.build(
                 get_output_sizes_from_schema(
-                    schema,
-                    kwargs.get("batch_size", -1),
-                    max_sequence_length=max_sequence_length,
+                    schema, kwargs.get("batch_size", -1), max_sequence_length=max_sequence_length,
                 )
             )
 
