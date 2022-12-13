@@ -384,15 +384,12 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             predictions = {}
             for name, task in self.prediction_task_dict.items():
                 if isinstance(targets, dict):
-                    if not task.target_name:
-                        raise ValueError(
-                            f"The `target_name` of the task {type(task)} should be specified,"
-                            "as the head contains multiple tasks."
-                        )
-                    label = targets[task.target_name]
+                    label = targets.get(task.target_name, None)
                 else:
                     label = targets
-
+                if label is not None:
+                    # Remove dimension `1` as merlin dataloader returns tensors of shape (-1, 1)
+                    label = torch.squeeze(label.float(), -1)
                 task_output = task(
                     body_outputs, targets=label, training=training, testing=testing, **kwargs
                 )
@@ -523,8 +520,20 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(
         self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs
     ):
-        # TODO: Optimize this
+        # Convert inputs to float32 which is the default type, expected by PyTorch
+        for name, val in inputs.items():
+            if torch.is_floating_point(val):
+                inputs[name] = val.to(torch.float32)
+        # Squeeze second dimension `1` of non-list inputs
+        for name, val in inputs.items():
+            inputs[name] = torch.squeeze(val, -1)
 
+        if isinstance(targets, dict) and len(targets) == 0:
+            # `pyarrow`` dataloader is returning {} instead of None
+            # TODO remove this code when `PyarraowDataLoader` is dropped
+            targets = None
+
+        # TODO: Optimize this
         if training or testing:
             losses = []
             labels = {}

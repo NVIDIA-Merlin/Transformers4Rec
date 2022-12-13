@@ -46,9 +46,9 @@ class BinaryClassificationPrepareBlock(BuildableBlock):
 class BinaryClassificationTask(PredictionTask):
     DEFAULT_LOSS = torch.nn.BCELoss()
     DEFAULT_METRICS = (
-        tm.Precision(num_classes=2),
-        tm.Recall(num_classes=2),
-        tm.Accuracy(),
+        tm.Precision(num_classes=2, task="binary"),
+        tm.Recall(num_classes=2, task="binary"),
+        tm.Accuracy(task="binary"),
         # TODO: Fix this: tm.AUC()
     )
 
