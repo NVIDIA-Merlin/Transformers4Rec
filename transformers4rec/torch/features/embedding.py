@@ -15,7 +15,7 @@
 #
 
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Text, Union
+from typing import Any, Callable, Dict, List, Optional, Text, Union
 
 import torch
 
@@ -497,3 +497,40 @@ class SoftEmbedding(torch.nn.Module):
         soft_one_hot_embeddings = (weights.unsqueeze(-1) * self.embedding_table.weight).sum(-2)
 
         return soft_one_hot_embeddings
+
+
+class PretrainedEmbeddingsInitializer(torch.nn.Module):
+    """
+    Initializer of embedding tables with pre-trained weights
+
+    Parameters
+    ----------
+    weight_matrix : Union[torch.Tensor, List[List[float]]]
+        A 2D torch or numpy tensor or lists of lists with the pre-trained
+        weights for embeddings. The expect dims are
+        (embedding_cardinality, embedding_dim). The embedding_cardinality
+        can be inferred from the column schema, for example,
+        `schema.select_by_name("item_id").feature[0].int_domain.max + 1`.
+        The first position of the embedding table is reserved for padded
+        items (id=0).
+    trainable : bool
+        Whether the embedding table should be trainable or not
+    """
+
+    def __init__(
+        self,
+        weight_matrix: Union[torch.Tensor, List[List[float]]],
+        trainable: bool = False,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        # The weight matrix is kept in CPU, but when forward() is called
+        # to initialize the embedding table weight will be copied to
+        # the embedding table device (e.g. cuda)
+        self.weight_matrix = torch.tensor(weight_matrix, device="cpu")
+        self.trainable = trainable
+
+    def forward(self, x):
+        with torch.no_grad():
+            x.copy_(self.weight_matrix)
+        x.requires_grad = self.trainable
