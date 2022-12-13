@@ -15,12 +15,12 @@ Parquet enables this preprocessed data to be easily structured and queryable.
 The data in these parquet files are directly loaded to the GPU memory as feature tensors.
 CPUs are also supported when GPUs are not available.
 
-The following example uses the dataloader that is wrapped by the {class}`DataLoader <transformers4rec.torch.utils.data_utils.DataLoader>` class.
+The following example uses the Merlin Dataloader that is wrapped by the {class}`MerlinDataLoader <transformers4rec.torch.utils.data_utils.MerlinDataLoader>` class.
 The class automatically sets some options from the dataset schema.
 Optionally, you can use the {class}`PyarrowDataLoader <transformers4rec.torch.utils.data_utils.PyarrowDataLoader>` as a basic option, but it is slower and works only for small datasets since the full data is loaded to CPU memory.
 
 ```python
-train_loader = transformers4rec.torch.utils.data_utils.DataLoader.from_schema(
+train_loader = transformers4rec.torch.utils.data_utils.MerlinDataLoader.from_schema(
         schema,
         paths_or_dataset=train_path,
         batch_size=TrainingArguments.train_batch_size,
@@ -33,7 +33,7 @@ train_loader = transformers4rec.torch.utils.data_utils.DataLoader.from_schema(
 
 To leverage our Transformers4Rec example notebooks that demonstrate how to use Transformers4Rec with PyTorch, refer to [Transformers4Rec Example Notebooks](./examples).
 
-### Training 
+### Training
 
 For PyTorch, the HF transformers `Trainer` class is extended while retaining its `train()` method.
 Essentially, this means the efficient training implementation from that library is leveraged and manages half-precision (FP16) and multi-GPU training.
@@ -65,7 +65,11 @@ recsys_trainer = Trainer(
 recsys_trainer.train()
 ```
 
-You can instantiate the dataloader when you create the {class}`Trainer <transformers4rec.torch.trainer.Trainer>` instance by specifying the arguments shown in the following code block when you create an instance of the {class}`T4RecTrainingArguments <transformers4rec.config.trainer.T4RecTrainingArguments>` class:
+You can automatically instantiate the dataloader when you create the {class}`Trainer <transformers4rec.torch.trainer.Trainer>` instance by specifying the following:
+
+* The path or dataset of the training and evaluation data in the `train_dataset_path` and `eval_dataset_or_path` arguments.
+* Specify the schema for the dataset in the `schema` argument.
+
 
 ```python
 training_args = T4RecTrainingArguments(
@@ -78,6 +82,7 @@ training_args = T4RecTrainingArguments(
 # Instantiates the train and eval dataloader
 Trainer(
     model=model,
+    schema=schema,
     args=training_args,
     train_dataset_or_path=train_path,
     eval_dataset_or_path=eval_path,
@@ -90,7 +95,7 @@ For the item prediction head, top-N metrics and ranking metrics commonly used in
 
 Top-N metrics
 : - **Precision@n** - Computes the percentage of the top-N recommended items, which are relevant (labels).
-  - **Recall@n** - Computes the percentage of elevant items (labels) that are present among the top-N recommended items.
+  - **Recall@n** - Computes the percentage of relevant items (labels) that are present among the top-N recommended items.
 
 Ranking metrics
 : - **NDCG@n** - Normalized Discounted Cumulative Gain at cut-off N of the recommendation list.

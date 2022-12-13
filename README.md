@@ -121,12 +121,12 @@ Those components can be installed as optional arguments for the `pip install` co
 To install Transformers4Rec using Pip, run the following command:
 
 ```shell
-pip install transformers4rec[pytorch,nvtabular]
+pip install transformers4rec[pytorch,nvtabular,dataloader]
 ```
 
-> Be aware that installing Transformers4Rec with `pip` only supports the CPU version of NVTabular because `pip` does not install cuDF.
-> The GPU capabilities of NVTabular are available by using the Docker container or by installing
-> NVTabular with Conda first and then performing the `pip` installation within the Conda environment.
+> Be aware that installing Transformers4Rec with `pip` only supports the CPU version of Merlin Dataloader because `pip` does not install cuDF.
+> The GPU capabilities of the dataloader are available by using the Docker container or by installing
+> the dataloader with Conda first and then performing the `pip` installation within the Conda environment.
 
 ### Installing Transformers4Rec Using Conda
 

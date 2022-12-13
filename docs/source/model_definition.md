@@ -61,12 +61,16 @@ The following code block shows one way the `TabularSequenceFeatures.from_schema(
 from transformers4rec.torch import TabularSequenceFeatures
 tabular_inputs = TabularSequenceFeatures.from_schema(
         schema,
+        embedding_dim_default=128,
         max_sequence_length=20,
         d_output=100,
         aggregation="concat",
         masking="clm"
     )
 ```
+
+> The `embedding_dim_default` argument sets a fixed dimension for all categorical input features.
+> For more information, see the {class}`TabularSequenceFeatures <transformers4rec.torch.features.sequence.TabularSequenceFeatures>` class documentation.
 
 ## Sequence Masking
 
@@ -84,10 +88,6 @@ The Transformer layer is allowed to use positions on the right--future informati
 During inference, all past items are visible for the Transformer layer as it tries to predict the next item.
 
 - **Permutation Language Modeling (`masking="plm"`)**: Uses a permutation factorization at the level of the self-attention layer to define the accessible bi-directional context.
-
-- **Replacement Token Detection (`masking="rtd"`)**: Uses MLM to randomly select some items, but replaces them by random tokens.
-A discriminator model, which can share the weights with the generator, is then requested to identify whether the item at each position belongs to the original sequence.
-The generator-discriminator architecture is jointly trained using MLM and RTD tasks.
 
 **NOTE**: Not all transformer architectures support all of these training approaches.
 Transformers4Rec raises an exception if you attempt to use an invalid combination and provides suggestions for using the appropriate masking techniques for that architecture.
@@ -127,7 +127,7 @@ During training, the prediction can be the next item or randomly selected items 
 For inference, the intended purpose is to always predict the next interacted item.
 Cross-entropy and pairwise losses are supported.
 
-- **Classification**: Predicts a categorical feature using the whole sequence.
+- **Binary Classification**: Predicts a binary feature using the whole sequence.
 In the context of recommendation, you can use classification to predict the user's next action such as whether the user will abandon a product in their cart or proceed with the purchase.
 
 - **Regression**: Predicts a continuous feature using the whole sequence, such as the elapsed time until the user returns to a service.
@@ -144,7 +144,7 @@ from transformers4rec.torch.model.head import NextItemPredictionTask
 # Defines the head related to next item prediction task
 head = Head(
     model_body,
-    NextItemPredictionTask(weight_tying=True, hf_format=True),
+    NextItemPredictionTask(weight_tying=True),
     inputs=inputs,
 )
 
