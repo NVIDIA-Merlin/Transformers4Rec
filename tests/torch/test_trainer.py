@@ -325,9 +325,9 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
         (
             tr.BinaryClassificationTask("click", summary_type="mean"),
             [
-                "eval_/click/binary_classification_task/accuracy",
-                "eval_/click/binary_classification_task/precision",
-                "eval_/click/binary_classification_task/recall",
+                "eval_/click/binary_classification_task/binary_accuracy",
+                "eval_/click/binary_classification_task/binary_precision",
+                "eval_/click/binary_classification_task/binary_recall",
             ],
         ),
         (
@@ -446,9 +446,9 @@ def test_trainer_with_multiple_tasks():
         "eval_/next-item/avg_precision_at_20",
         "eval_/next-item/recall_at_10",
         "eval_/next-item/recall_at_20",
-        "eval_/click/binary_classification_task/accuracy",
-        "eval_/click/binary_classification_task/precision",
-        "eval_/click/binary_classification_task/recall",
+        "eval_/click/binary_classification_task/binary_accuracy",
+        "eval_/click/binary_classification_task/binary_precision",
+        "eval_/click/binary_classification_task/binary_recall",
         "eval_/play_percentage/regression_task/mean_squared_error",
     ]
 
