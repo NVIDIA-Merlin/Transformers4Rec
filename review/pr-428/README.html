@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/README.html" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -26,7 +28,14 @@
     <link rel="prev" title="Merlin Transformers4Rec" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -85,6 +94,9 @@
 <p>Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation and can work with PyTorch.</p>
 <p>The library works as a bridge between natural language processing (NLP) and recommender systems (RecSys) by integrating with one of the most popular NLP frameworks, <a class="reference external" href="https://github.com/huggingface/transformers">Hugging Face Transformers</a> (HF).
 Transformers4Rec makes state-of-the-art transformer architectures available for RecSys researchers and industry practitioners.</p>
+<p>The following figure shows the use of the library in a recommender system.
+Input data is typically a sequence of interactions such as items that are browsed in a web session or items put in a cart.
+The library helps you process and model the interactions so that you can output better recommendations for the next item.</p>
 <p><img alt="Sequential and Session-based recommendation with Transformers4Rec" src="_images/sequential_rec.png" /><br></p>
 <div style="text-align:center;margin:20pt">
   <figcaption style="font-style:italic;">Sequential and Session-based recommendation with Transformers4Rec</figcaption>
@@ -179,13 +191,13 @@ class because it merges context features with sequential features.</p>
 Installation with the dataloader is highly recommended for better performance.
 Those components can be installed as optional arguments for the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> command.</p>
 <p>To install Transformers4Rec using Pip, run the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install transformers4rec<span class="o">[</span>pytorch,nvtabular<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install transformers4rec<span class="o">[</span>pytorch,nvtabular,dataloader<span class="o">]</span>
 </pre></div>
 </div>
 <blockquote>
-<div><p>Be aware that installing Transformers4Rec with <code class="docutils literal notranslate"><span class="pre">pip</span></code> only supports the CPU version of NVTabular because <code class="docutils literal notranslate"><span class="pre">pip</span></code> does not install cuDF.
-The GPU capabilities of NVTabular are available by using the Docker container or by installing
-NVTabular with Conda first and then performing the <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation within the Conda environment.</p>
+<div><p>Be aware that installing Transformers4Rec with <code class="docutils literal notranslate"><span class="pre">pip</span></code> only supports the CPU version of Merlin Dataloader because <code class="docutils literal notranslate"><span class="pre">pip</span></code> does not install cuDF.
+The GPU capabilities of the dataloader are available by using the Docker container or by installing
+the dataloader with Conda first and then performing the <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation within the Conda environment.</p>
 </div></blockquote>
 </div>
 <div class="section" id="installing-transformers4rec-using-conda">
@@ -200,6 +212,18 @@ NVTabular with Conda first and then performing the <code class="docutils literal
 <p>Transformers4Rec is pre-installed in the <code class="docutils literal notranslate"><span class="pre">merlin-pytorch</span></code> container that is available from the NVIDIA GPU Cloud (NGC) catalog.</p>
 <p>Refer to the <a class="reference external" href="https://nvidia-merlin.github.io/Merlin/main/containers.html">Merlin Containers</a> documentation page for information about the Merlin container names, URLs to container images in the catalog, and key Merlin components.</p>
 </div>
+</div>
+<div class="section" id="notebook-examples-and-tutorials">
+<h2>Notebook Examples and Tutorials<a class="headerlink" href="#notebook-examples-and-tutorials" title="Permalink to this headline"></a></h2>
+<p>The <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html">End-to-end pipeline with NVIDIA Merlin</a> page
+shows how to use Transformers4Rec and other Merlin libraries like NVTabular to build a complete recommender system.</p>
+<p>We have several <a class="reference internal" href="examples/index.html"><span class="xref myst">example</span></a> notebooks to help you build a recommender system or integrate Transformers4Rec into your system:</p>
+<ul class="simple">
+<li><p>A getting started example that includes training a session-based model with an XLNET transformer architecture.</p></li>
+<li><p>An end-to-end example that trains a model and takes the next step to serve inference with Triton Inference Server.</p></li>
+<li><p>Another end-to-end example that trains and evaluates a session-based model on RNN and also serves inference with Triton Inference Server.</p></li>
+<li><p>A notebook and scripts that reproduce the experiments presented in a paper for RecSys 2021.</p></li>
+</ul>
 </div>
 <div class="section" id="feedback-and-support">
 <h2>Feedback and Support<a class="headerlink" href="#feedback-and-support" title="Permalink to this headline"></a></h2>
@@ -237,7 +261,18 @@ NVTabular with Conda first and then performing the <code class="docutils literal
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

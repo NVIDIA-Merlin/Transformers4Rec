@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/getting-started-session-based/02-session-based-XLNet-with-PyT.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -26,7 +28,14 @@
     <link rel="prev" title="ETL with NVTabular" href="01-ETL-with-NVTabular.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -151,6 +160,64 @@
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/lib/python3/dist-packages/requests/__init__.py:89: RequestsDependencyWarning: urllib3 (1.26.12) or chardet (3.0.4) doesn&#39;t match a supported version!
+  warnings.warn(&quot;urllib3 ({}) or chardet ({}) doesn&#39;t match a supported &quot;
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (NDCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (DCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (AvgPrecisionAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (PrecisionAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (RecallAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+</pre></div>
+</div>
+</div>
 </div>
 <p>Transformers4Rec library relies on a schema object to automatically build all necessary layers to represent, normalize and aggregate input features. As you can see below, <code class="docutils literal notranslate"><span class="pre">schema.pb</span></code> is a protobuf file that contains metadata including statistics about features such as cardinality, min and max values and also tags features based on their characteristics and dtypes (e.g., categorical, continuous, list, integer).</p>
 </div>
@@ -174,18 +241,18 @@
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>feature {
-  name: &quot;item_id-count&quot;
+  name: &quot;session_id&quot;
   type: INT
   int_domain {
-    name: &quot;item_id&quot;
-    max: 1322
+    name: &quot;session_id&quot;
+    max: 19875
     is_categorical: true
   }
   annotation {
     tag: &quot;categorical&quot;
     extra_metadata {
       type_url: &quot;type.googleapis.com/google.protobuf.Struct&quot;
-      value: &quot;\n\021\n\013num_buckets\022\002\010\000\n\033\n\016freq_threshold\022\t\021\000\000\000\000\000\000\000\000\n\025\n\010max_size\022\t\021\000\000\000\000\000\000\000\000\n\030\n\013start_index\022\t\021\000\000\000\000\000\000\360?\n&lt;\n\010cat_path\0220\032.workflow_etl/categories/unique.item_id.parquet\nG\n\017embedding_sizes\0224*2\n\030\n\013cardinality\022\t\021\000\000\000\000\000\250\224@\n\026\n\tdimension\022\t\021\000\000\000\000\000\200V@\n\034\n\017dtype_item_size\022\t\021\000\000\000\000\000\000@@\n\r\n\007is_list\022\002 \000\n\017\n\tis_ragged\022\002 \000&quot;
+      value: &quot;\n\021\n\013num_buckets\022\002\010\000\n\033\n\016freq_threshold\022\t\021\000\000\000\000\000\000\000\000\n\025\n\010max_size\022\t\021\000\000\000\000\000\000\000\000\n\030\n\013start_index\022\t\021\000\000\000\000\000\000\000\000\n5\n\010cat_path\022)\032\&#39;.//categories/unique.session_id.parquet\nG\n\017embedding_sizes\0224*2\n\030\n\013cardinality\022\t\021\000\000\000\000\000i\323@\n\026\n\tdimension\022\t\021\000\000\000\000\000\200y@\n\034\n\017dtype_item_size\022\t\021\000\000\000\000\000\000P@\n\r\n\007is_list\022\002 \000\n\017\n\tis_ragged\022\002 \000&quot;
     }
   }
 }
@@ -200,10 +267,10 @@ feature {
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># You can select a subset of features for training</span>
-<span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">([</span><span class="s1">&#39;item_id-list_trim&#39;</span><span class="p">,</span> 
-                                <span class="s1">&#39;category-list_trim&#39;</span><span class="p">,</span> 
-                                <span class="s1">&#39;timestamp/weekday/sin-list_trim&#39;</span><span class="p">,</span>
-                                <span class="s1">&#39;timestamp/age_days-list_trim&#39;</span><span class="p">])</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">([</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">,</span> 
+                                <span class="s1">&#39;category-list&#39;</span><span class="p">,</span> 
+                                <span class="s1">&#39;weekday_sin-list&#39;</span><span class="p">,</span>
+                                <span class="s1">&#39;age_days-list&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -219,8 +286,8 @@ feature {
         <span class="n">schema</span><span class="p">,</span>
         <span class="n">max_sequence_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
         <span class="n">continuous_projection</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
-        <span class="n">d_output</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
         <span class="n">masking</span><span class="o">=</span><span class="s2">&quot;mlm&quot;</span><span class="p">,</span>
+        <span class="n">d_output</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -284,6 +351,40 @@ Here is a brief explanation of the main classes:</p>
 
 <span class="c1"># Get the end-to-end Model class </span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (NDCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (DCGAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
+                not been set for this class (RecallAt). The property determines if `update` by
+                default needs access to the full metric state. If this is not the case, significant speedups can be
+                achieved and we recommend setting this to `False`.
+                We provide an checking function
+                `from torchmetrics.utilities import check_forward_full_state_property`
+                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
+                default for now) or if `full_state_update=False` can be used safely.
+                
+  warnings.warn(*args, **kwargs)
 </pre></div>
 </div>
 </div>
@@ -352,7 +453,7 @@ Here is a brief explanation of the main classes:</p>
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
 <span class="n">start_time_window_index</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">final_time_window_index</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="n">final_time_window_index</span> <span class="o">=</span> <span class="mi">8</span>
 <span class="c1">#Iterating over days of one week</span>
 <span class="k">for</span> <span class="n">time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_time_window_index</span><span class="p">,</span> <span class="n">final_time_window_index</span><span class="p">):</span>
     <span class="c1"># Set data </span>
@@ -385,9 +486,7 @@ Here is a brief explanation of the main classes:</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
-***** Running training *****
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 1664
   Num Epochs = 5
   Instantaneous batch size per device = 128
@@ -418,7 +517,7 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>6.715900</td>
+      <td>5.804900</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -427,29 +526,25 @@ Launch training for day 1 are:
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
-</pre></div>
-</div>
 <div class="output text_html">
 <div>
 
-  <progress value='44' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [6/6 00:09]
+  <progress value='48' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
+  [6/6 00:12]
 </div>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
 Eval results for day 2 are:	
 
 ********************
 
- eval_/loss = 5.670037746429443
- eval_/next-item/ndcg_at_20 = 0.14301326870918274
- eval_/next-item/ndcg_at_40 = 0.20679126679897308
- eval_/next-item/recall_at_20 = 0.359375
- eval_/next-item/recall_at_40 = 0.6666666865348816
- eval_runtime = 0.128
- eval_samples_per_second = 1500.117
- eval_steps_per_second = 46.879
+ eval_/loss = 4.9857892990112305
+ eval_/next-item/ndcg_at_20 = 0.17793045938014984
+ eval_/next-item/ndcg_at_40 = 0.2293066680431366
+ eval_/next-item/recall_at_20 = 0.4895833432674408
+ eval_/next-item/recall_at_40 = 0.7395833730697632
+ eval_runtime = 0.1585
+ eval_samples_per_second = 1211.104
+ eval_steps_per_second = 37.847
 [&#39;/workspace/data/sessions_by_day/2/train.parquet&#39;]
 ********************
 Launch training for day 2 are:
@@ -481,7 +576,7 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>5.340300</td>
+      <td>4.859800</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -493,18 +588,14 @@ Eval results for day 3 are:
 
 ********************
 
- eval_/loss = 4.734586238861084
- eval_/next-item/ndcg_at_20 = 0.1766236275434494
- eval_/next-item/ndcg_at_40 = 0.2341984361410141
- eval_/next-item/recall_at_20 = 0.5104166865348816
- eval_/next-item/recall_at_40 = 0.7916666865348816
- eval_runtime = 0.1261
- eval_samples_per_second = 1522.894
- eval_steps_per_second = 47.59
-[&#39;/workspace/data/sessions_by_day/3/train.parquet&#39;]
-********************
-Launch training for day 3 are:
-********************
+ eval_/loss = 4.595378398895264
+ eval_/next-item/ndcg_at_20 = 0.18038052320480347
+ eval_/next-item/ndcg_at_40 = 0.23606626689434052
+ eval_/next-item/recall_at_20 = 0.4791666865348816
+ eval_/next-item/recall_at_40 = 0.75
+ eval_runtime = 0.1612
+ eval_samples_per_second = 1190.843
+ eval_steps_per_second = 37.214
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -514,6 +605,12 @@ Launch training for day 3 are:
   Total train batch size (w. parallel, distributed &amp; accumulation) = 128
   Gradient Accumulation steps = 1
   Total optimization steps = 65
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/3/train.parquet&#39;]
+********************
+Launch training for day 3 are:
+********************
 </pre></div>
 </div>
 <div class="output text_html">
@@ -532,7 +629,7 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.742700</td>
+      <td>4.569400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -544,14 +641,14 @@ Eval results for day 4 are:
 
 ********************
 
- eval_/loss = 4.577661037445068
- eval_/next-item/ndcg_at_20 = 0.187037393450737
- eval_/next-item/ndcg_at_40 = 0.22624635696411133
- eval_/next-item/recall_at_20 = 0.546875
- eval_/next-item/recall_at_40 = 0.7395833730697632
- eval_runtime = 0.1279
- eval_samples_per_second = 1501.392
- eval_steps_per_second = 46.919
+ eval_/loss = 4.384099960327148
+ eval_/next-item/ndcg_at_20 = 0.2163243591785431
+ eval_/next-item/ndcg_at_40 = 0.26256000995635986
+ eval_/next-item/recall_at_20 = 0.5364583730697632
+ eval_/next-item/recall_at_40 = 0.7604166865348816
+ eval_runtime = 0.154
+ eval_samples_per_second = 1246.411
+ eval_steps_per_second = 38.95
 [&#39;/workspace/data/sessions_by_day/4/train.parquet&#39;]
 ********************
 Launch training for day 4 are:
@@ -583,7 +680,7 @@ Launch training for day 4 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.573400</td>
+      <td>4.507400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -595,18 +692,65 @@ Eval results for day 5 are:
 
 ********************
 
- eval_/loss = 4.446651935577393
- eval_/next-item/ndcg_at_20 = 0.19330403208732605
- eval_/next-item/ndcg_at_40 = 0.2473829984664917
- eval_/next-item/recall_at_20 = 0.5208333730697632
- eval_/next-item/recall_at_40 = 0.7864583730697632
- eval_runtime = 0.1305
- eval_samples_per_second = 1471.204
- eval_steps_per_second = 45.975
+ eval_/loss = 4.448643207550049
+ eval_/next-item/ndcg_at_20 = 0.18624266982078552
+ eval_/next-item/ndcg_at_40 = 0.22514502704143524
+ eval_/next-item/recall_at_20 = 0.5364583730697632
+ eval_/next-item/recall_at_40 = 0.7239583730697632
+ eval_runtime = 0.1597
+ eval_samples_per_second = 1202.447
+ eval_steps_per_second = 37.576
 [&#39;/workspace/data/sessions_by_day/5/train.parquet&#39;]
 ********************
 Launch training for day 5 are:
 ********************
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 1536
+  Num Epochs = 5
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 60
+</pre></div>
+</div>
+<div class="output text_html">
+    <div>
+
+      <progress value='60' max='60' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [60/60 00:01, Epoch 5/5]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>50</td>
+      <td>4.484300</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
+********************
+Eval results for day 6 are:	
+
+********************
+
+ eval_/loss = 4.46337890625
+ eval_/next-item/ndcg_at_20 = 0.18136751651763916
+ eval_/next-item/ndcg_at_40 = 0.23689508438110352
+ eval_/next-item/recall_at_20 = 0.4947916865348816
+ eval_/next-item/recall_at_40 = 0.765625
+ eval_runtime = 0.161
+ eval_samples_per_second = 1192.384
+ eval_steps_per_second = 37.262
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -616,6 +760,12 @@ Launch training for day 5 are:
   Total train batch size (w. parallel, distributed &amp; accumulation) = 128
   Gradient Accumulation steps = 1
   Total optimization steps = 65
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/6/train.parquet&#39;]
+********************
+Launch training for day 6 are:
+********************
 </pre></div>
 </div>
 <div class="output text_html">
@@ -634,58 +784,7 @@ Launch training for day 5 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.544500</td>
-    </tr>
-  </tbody>
-</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
-********************
-Eval results for day 6 are:	
-
-********************
-
- eval_/loss = 4.383015155792236
- eval_/next-item/ndcg_at_20 = 0.20541004836559296
- eval_/next-item/ndcg_at_40 = 0.26060688495635986
- eval_/next-item/recall_at_20 = 0.5416666865348816
- eval_/next-item/recall_at_40 = 0.8125
- eval_runtime = 0.126
- eval_samples_per_second = 1523.488
- eval_steps_per_second = 47.609
-[&#39;/workspace/data/sessions_by_day/6/train.parquet&#39;]
-********************
-Launch training for day 6 are:
-********************
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 1792
-  Num Epochs = 5
-  Instantaneous batch size per device = 128
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
-  Gradient Accumulation steps = 1
-  Total optimization steps = 70
-</pre></div>
-</div>
-<div class="output text_html">
-    <div>
-
-      <progress value='70' max='70' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [70/70 00:01, Epoch 5/5]
-    </div>
-    <table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: left;">
-      <th>Step</th>
-      <th>Training Loss</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>50</td>
-      <td>4.511800</td>
+      <td>4.458900</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -697,43 +796,70 @@ Eval results for day 7 are:
 
 ********************
 
- eval_/loss = 4.352958679199219
- eval_/next-item/ndcg_at_20 = 0.19154103100299835
- eval_/next-item/ndcg_at_40 = 0.24716795980930328
- eval_/next-item/recall_at_20 = 0.5223214626312256
- eval_/next-item/recall_at_40 = 0.7901785969734192
- eval_runtime = 0.1382
- eval_samples_per_second = 1620.526
- eval_steps_per_second = 50.641
-CPU times: user 40.2 s, sys: 503 ms, total: 40.7 s
-Wall time: 11.6 s
+ eval_/loss = 4.451930046081543
+ eval_/next-item/ndcg_at_20 = 0.19292211532592773
+ eval_/next-item/ndcg_at_40 = 0.237293541431427
+ eval_/next-item/recall_at_20 = 0.5104166865348816
+ eval_/next-item/recall_at_40 = 0.7291666865348816
+ eval_runtime = 0.1492
+ eval_samples_per_second = 1286.892
+ eval_steps_per_second = 40.215
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="save-the-model">
-<h3>Save the model<a class="headerlink" href="#save-the-model" title="Permalink to this headline"></a></h3>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">_save_model_and_checkpoint</span><span class="p">(</span><span class="n">save_model_class</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 1664
+  Num Epochs = 5
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 65
 </pre></div>
 </div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-71
-Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/7/train.parquet&#39;]
+********************
+Launch training for day 7 are:
+********************
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="reload-the-model">
-<h3>Reload the model<a class="headerlink" href="#reload-the-model" title="Permalink to this headline"></a></h3>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trainer</span><span class="o">.</span><span class="n">load_model_trainer_states_from_checkpoint</span><span class="p">(</span><span class="s1">&#39;./tmp/checkpoint-</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="k">trainer</span>.state.global_step)
+<div class="output text_html">
+    <div>
+
+      <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [65/65 00:01, Epoch 5/5]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>50</td>
+      <td>4.430300</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
+********************
+Eval results for day 8 are:	
+
+********************
+
+ eval_/loss = 4.416452407836914
+ eval_/next-item/ndcg_at_20 = 0.20186899602413177
+ eval_/next-item/ndcg_at_40 = 0.2410435527563095
+ eval_/next-item/recall_at_20 = 0.5520833730697632
+ eval_/next-item/recall_at_40 = 0.7447916865348816
+ eval_runtime = 0.1614
+ eval_samples_per_second = 1189.826
+ eval_steps_per_second = 37.182
+CPU times: user 50.8 s, sys: 731 ms, total: 51.6 s
+Wall time: 15 s
+</pre></div>
 </div>
 </div>
 </div>
@@ -756,24 +882,31 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.352958679199219
-  eval_/next-item/ndcg_at_20 = 0.19154103100299835
-  eval_/next-item/ndcg_at_40 = 0.24716795980930328
-  eval_/next-item/recall_at_20 = 0.5223214626312256
-  eval_/next-item/recall_at_40 = 0.7901785969734192
-  eval_runtime = 0.1481
-  eval_samples_per_second = 1512.78
-  eval_steps_per_second = 47.274
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.416452407836914
+  eval_/next-item/ndcg_at_20 = 0.20186899602413177
+  eval_/next-item/ndcg_at_40 = 0.2410435527563095
+  eval_/next-item/recall_at_20 = 0.5520833730697632
+  eval_/next-item/recall_at_40 = 0.7447916865348816
+  eval_runtime = 0.1455
+  eval_samples_per_second = 1319.597
+  eval_steps_per_second = 41.237
 </pre></div>
 </div>
 </div>
 </div>
-<p>That’s it!<br />
-You have just trained your session-based recommendation model using Transformers4Rec.</p>
+</div>
+<div class="section" id="save-the-model">
+<h3>Save the model<a class="headerlink" href="#save-the-model" title="Permalink to this headline"></a></h3>
+<p>Let’s save the model to be able to load it back at inference step. Using <code class="docutils literal notranslate"><span class="pre">model.save()</span></code>, we save the model as a pkl file in the given path.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_path</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/saved_model&quot;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>That’s it! You have just trained your session-based recommendation model using Transformers4Rec. Now you can move on to the next notebook <code class="docutils literal notranslate"><span class="pre">03-serving-session-based-model-torch-backend</span></code>. Please shut down this kernel to free the GPU memory before you start the next one.</p>
 <p>Tip: We can easily log and visualize model training and evaluation on <a class="reference external" href="https://wandb.ai/home">Weights &amp; Biases (W&amp;B)</a>, <a class="reference external" href="https://www.tensorflow.org/tensorboard">TensorBoard</a>, or <a class="reference external" href="https://github.com/NVIDIA/dllogger">NVIDIA DLLogger</a>. By default, the HuggingFace transformers <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> (which we extend) uses Weights &amp; Biases (W&amp;B) to log training and evaluation metrics, which provides nice visualization results and comparison between different runs.</p>
 </div>
 </div>
@@ -807,7 +940,18 @@ You have just trained your session-based recommendation model using Transformers
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

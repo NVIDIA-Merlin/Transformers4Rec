@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/training_eval.html" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -26,7 +28,14 @@
     <link rel="prev" title="Model Architectures" href="model_definition.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -96,10 +105,10 @@
 Parquet enables this preprocessed data to be easily structured and queryable.
 The data in these parquet files are directly loaded to the GPU memory as feature tensors.
 CPUs are also supported when GPUs are not available.</p>
-<p>The following example uses the dataloader that is wrapped by the <code class="xref py py-class docutils literal notranslate"><span class="pre">DataLoader</span></code> class.
+<p>The following example uses the Merlin Dataloader that is wrapped by the <a class="reference internal" href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader" title="transformers4rec.torch.utils.data_utils.MerlinDataLoader"><code class="xref py py-class docutils literal notranslate"><span class="pre">MerlinDataLoader</span></code></a> class.
 The class automatically sets some options from the dataset schema.
-Optionally, you can use the <code class="xref py py-class docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> as a basic option, but it is slower and works only for small datasets since the full data is loaded to CPU memory.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_loader</span> <span class="o">=</span> <span class="n">transformers4rec</span><span class="o">.</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data_utils</span><span class="o">.</span><span class="n">DataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+Optionally, you can use the <a class="reference internal" href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader" title="transformers4rec.torch.utils.data_utils.PyarrowDataLoader"><code class="xref py py-class docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code></a> as a basic option, but it is slower and works only for small datasets since the full data is loaded to CPU memory.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train_loader</span> <span class="o">=</span> <span class="n">transformers4rec</span><span class="o">.</span><span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data_utils</span><span class="o">.</span><span class="n">MerlinDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
         <span class="n">schema</span><span class="p">,</span>
         <span class="n">paths_or_dataset</span><span class="o">=</span><span class="n">train_path</span><span class="p">,</span>
         <span class="n">batch_size</span><span class="o">=</span><span class="n">TrainingArguments</span><span class="o">.</span><span class="n">train_batch_size</span><span class="p">,</span>
@@ -140,7 +149,11 @@ Transformers4Rec supports the <code class="docutils literal notranslate"><span c
 <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>You can instantiate the dataloader when you create the <code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code> instance by specifying the arguments shown in the following code block when you create an instance of the <a class="reference internal" href="api/transformers4rec.config.html#transformers4rec.config.trainer.T4RecTrainingArguments" title="transformers4rec.config.trainer.T4RecTrainingArguments"><code class="xref py py-class docutils literal notranslate"><span class="pre">T4RecTrainingArguments</span></code></a> class:</p>
+<p>You can automatically instantiate the dataloader when you create the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer" title="transformers4rec.torch.trainer.Trainer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></a> instance by specifying the following:</p>
+<ul class="simple">
+<li><p>The path or dataset of the training and evalation data in the <code class="docutils literal notranslate"><span class="pre">train_dataset_path</span></code> and <code class="docutils literal notranslate"><span class="pre">eval_dataset_or_path</span></code> arguments.</p></li>
+<li><p>Specify the schema for the dataset in the <code class="docutils literal notranslate"><span class="pre">schema</span></code> argument.</p></li>
+</ul>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">training_args</span> <span class="o">=</span> <span class="n">T4RecTrainingArguments</span><span class="p">(</span>
             <span class="o">...</span><span class="p">,</span>
             <span class="n">data_loader_engine</span><span class="o">=</span><span class="s2">&quot;nvtabular&quot;</span><span class="p">,</span>
@@ -151,6 +164,7 @@ Transformers4Rec supports the <code class="docutils literal notranslate"><span c
 <span class="c1"># Instantiates the train and eval dataloader</span>
 <span class="n">Trainer</span><span class="p">(</span>
     <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
     <span class="n">args</span><span class="o">=</span><span class="n">training_args</span><span class="p">,</span>
     <span class="n">train_dataset_or_path</span><span class="o">=</span><span class="n">train_path</span><span class="p">,</span>
     <span class="n">eval_dataset_or_path</span><span class="o">=</span><span class="n">eval_path</span><span class="p">,</span>
@@ -164,7 +178,7 @@ Transformers4Rec supports the <code class="docutils literal notranslate"><span c
 <dl class="simple myst">
 <dt>Top-N metrics</dt><dd><ul class="simple">
 <li><p><strong>Precision&#64;n</strong> - Computes the percentage of the top-N recommended items, which are relevant (labels).</p></li>
-<li><p><strong>Recall&#64;n</strong> - Computes the percentage of elevant items (labels) that are present among the top-N recommended items.</p></li>
+<li><p><strong>Recall&#64;n</strong> - Computes the percentage of relevant items (labels) that are present among the top-N recommended items.</p></li>
 </ul>
 </dd>
 <dt>Ranking metrics</dt><dd><ul class="simple">
@@ -229,7 +243,18 @@ This loop evaluates on sessions of time window T+1.</p>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>
