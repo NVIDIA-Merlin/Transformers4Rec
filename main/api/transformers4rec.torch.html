@@ -500,77 +500,42 @@ over the positive items (masked) of the current batch otherwise</p></li>
 <code class="sig-name descname"><span class="pre">compute</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/ranking_metric.html#RankingMetric.compute"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.ranking_metric.RankingMetric.compute" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
-<dl class="py attribute">
-<dt id="transformers4rec.torch.ranking_metric.RankingMetric.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.ranking_metric.RankingMetric.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt id="transformers4rec.torch.ranking_metric.PrecisionAt">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.ranking_metric.</span></code><code class="sig-name descname"><span class="pre">PrecisionAt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_ks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_onehot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/ranking_metric.html#PrecisionAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.ranking_metric.PrecisionAt" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.ranking_metric.RankingMetric" title="transformers4rec.torch.ranking_metric.RankingMetric"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.ranking_metric.RankingMetric</span></code></a></p>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.ranking_metric.PrecisionAt.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.ranking_metric.PrecisionAt.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt id="transformers4rec.torch.ranking_metric.RecallAt">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.ranking_metric.</span></code><code class="sig-name descname"><span class="pre">RecallAt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_ks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_onehot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/ranking_metric.html#RecallAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.ranking_metric.RecallAt" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.ranking_metric.RankingMetric" title="transformers4rec.torch.ranking_metric.RankingMetric"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.ranking_metric.RankingMetric</span></code></a></p>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.ranking_metric.RecallAt.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.ranking_metric.RecallAt.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt id="transformers4rec.torch.ranking_metric.AvgPrecisionAt">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.ranking_metric.</span></code><code class="sig-name descname"><span class="pre">AvgPrecisionAt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_ks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_onehot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/ranking_metric.html#AvgPrecisionAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.ranking_metric.AvgPrecisionAt" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.ranking_metric.RankingMetric" title="transformers4rec.torch.ranking_metric.RankingMetric"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.ranking_metric.RankingMetric</span></code></a></p>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.ranking_metric.AvgPrecisionAt.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.ranking_metric.AvgPrecisionAt.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt id="transformers4rec.torch.ranking_metric.DCGAt">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.ranking_metric.</span></code><code class="sig-name descname"><span class="pre">DCGAt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_ks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_onehot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/ranking_metric.html#DCGAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.ranking_metric.DCGAt" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.ranking_metric.RankingMetric" title="transformers4rec.torch.ranking_metric.RankingMetric"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.ranking_metric.RankingMetric</span></code></a></p>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.ranking_metric.DCGAt.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.ranking_metric.DCGAt.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt id="transformers4rec.torch.ranking_metric.NDCGAt">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.ranking_metric.</span></code><code class="sig-name descname"><span class="pre">NDCGAt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_ks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_onehot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/ranking_metric.html#NDCGAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.ranking_metric.NDCGAt" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.ranking_metric.RankingMetric" title="transformers4rec.torch.ranking_metric.RankingMetric"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.ranking_metric.RankingMetric</span></code></a></p>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.ranking_metric.NDCGAt.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.ranking_metric.NDCGAt.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 <dl class="py class">
 <dt id="transformers4rec.torch.ranking_metric.MeanReciprocalRankAt">
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.ranking_metric.</span></code><code class="sig-name descname"><span class="pre">MeanReciprocalRankAt</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">top_ks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_onehot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/ranking_metric.html#MeanReciprocalRankAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.ranking_metric.MeanReciprocalRankAt" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#transformers4rec.torch.ranking_metric.RankingMetric" title="transformers4rec.torch.ranking_metric.RankingMetric"><code class="xref py py-class docutils literal notranslate"><span class="pre">transformers4rec.torch.ranking_metric.RankingMetric</span></code></a></p>
-<dl class="py attribute">
-<dt id="transformers4rec.torch.ranking_metric.MeanReciprocalRankAt.training">
-<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.ranking_metric.MeanReciprocalRankAt.training" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 </div>

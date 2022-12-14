@@ -111,7 +111,7 @@
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">TabularAggregation</span><span class="p">,</span> <span class="n">tabular_aggregation_registry</span>
 
 
-<div class="viewcode-block" id="ConcatFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ConcatFeatures">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="ConcatFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ConcatFeatures">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ConcatFeatures</span><span class="p">(</span><span class="n">TabularAggregation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Aggregation by stacking all values in TabularData, all non-sequential values will be</span>
 <span class="sd">    converted to a sequence.</span>
@@ -119,7 +119,7 @@
 <span class="sd">    The output of this concatenation will have 3 dimensions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="ConcatFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ConcatFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+<div class="viewcode-block" id="ConcatFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ConcatFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
@@ -133,13 +133,13 @@
 
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">tensors</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ConcatFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ConcatFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="ConcatFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ConcatFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="n">agg_dim</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">([</span><span class="n">i</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">input_size</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
         <span class="n">output_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_agg_output_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">agg_dim</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">output_size</span></div></div>
 
 
-<div class="viewcode-block" id="StackFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.StackFeatures">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;stack&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="StackFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.StackFeatures">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;stack&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">StackFeatures</span><span class="p">(</span><span class="n">TabularAggregation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Aggregation by stacking all values in input dictionary in the given dimension.</span>
 
@@ -153,7 +153,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
 
-<div class="viewcode-block" id="StackFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.StackFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<div class="viewcode-block" id="StackFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.StackFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_expand_non_sequential_features</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_concat_shapes</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
@@ -163,7 +163,7 @@
 
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">tensors</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="StackFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.StackFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="StackFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.StackFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="n">batch_size</span> <span class="o">=</span> <span class="n">calculate_batch_size_from_input_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
         <span class="n">seq_features_shapes</span><span class="p">,</span> <span class="n">sequence_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_seq_features_shapes</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
 
@@ -184,7 +184,7 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_size</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ElementwiseFeatureAggregation"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseFeatureAggregation">[docs]</a><span class="k">class</span> <span class="nc">ElementwiseFeatureAggregation</span><span class="p">(</span><span class="n">TabularAggregation</span><span class="p">):</span>
+<div class="viewcode-block" id="ElementwiseFeatureAggregation"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseFeatureAggregation">[docs]</a><span class="k">class</span> <span class="nc">ElementwiseFeatureAggregation</span><span class="p">(</span><span class="n">TabularAggregation</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">_check_input_shapes_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
         <span class="n">all_input_shapes_equal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">([</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">()]))</span> <span class="o">==</span> <span class="mi">1</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">all_input_shapes_equal</span><span class="p">:</span>
@@ -202,7 +202,7 @@
             <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ElementwiseSum"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSum">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;element-wise-sum&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="ElementwiseSum"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseSum">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;element-wise-sum&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ElementwiseSum</span><span class="p">(</span><span class="n">ElementwiseFeatureAggregation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Aggregation by first stacking all values in TabularData in the first dimension, and then</span>
 <span class="sd">    summing the result.&quot;&quot;&quot;</span>
@@ -211,19 +211,19 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stack</span> <span class="o">=</span> <span class="n">StackFeatures</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ElementwiseSum.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSum.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<div class="viewcode-block" id="ElementwiseSum.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseSum.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_expand_non_sequential_features</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_input_shapes_equal</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="ElementwiseSum.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSum.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="ElementwiseSum.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseSum.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_inputs_last_dim_equal</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
         <span class="n">agg_dim</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_size</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">output_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_agg_output_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">agg_dim</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">output_size</span></div></div>
 
 
-<div class="viewcode-block" id="ElementwiseSumItemMulti"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSumItemMulti">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;element-wise-sum-item-multi&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="ElementwiseSumItemMulti"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;element-wise-sum-item-multi&quot;</span><span class="p">)</span>
 <span class="nd">@requires_schema</span>
 <span class="k">class</span> <span class="nc">ElementwiseSumItemMulti</span><span class="p">(</span><span class="n">ElementwiseFeatureAggregation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Aggregation by applying the `ElementwiseSum` aggregation to all features except the item-id,</span>
@@ -240,7 +240,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">item_id_col_name</span> <span class="o">=</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="ElementwiseSumItemMulti.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSumItemMulti.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<div class="viewcode-block" id="ElementwiseSumItemMulti.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="n">item_id_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_item_ids_from_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_expand_non_sequential_features</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
@@ -252,7 +252,7 @@
         <span class="n">result</span> <span class="o">=</span> <span class="n">item_id_inputs</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">other_inputs_sum</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
-<div class="viewcode-block" id="ElementwiseSumItemMulti.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSumItemMulti.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="ElementwiseSumItemMulti.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_inputs_last_dim_equal</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span>
         <span class="n">agg_dim</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_size</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">output_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_agg_output_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="n">agg_dim</span><span class="p">)</span>

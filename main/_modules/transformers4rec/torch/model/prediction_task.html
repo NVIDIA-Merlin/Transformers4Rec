@@ -134,9 +134,9 @@
 <div class="viewcode-block" id="BinaryClassificationTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.model.prediction_task.BinaryClassificationTask">[docs]</a><span class="k">class</span> <span class="nc">BinaryClassificationTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
     <span class="n">DEFAULT_LOSS</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BCELoss</span><span class="p">()</span>
     <span class="n">DEFAULT_METRICS</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">tm</span><span class="o">.</span><span class="n">Precision</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-        <span class="n">tm</span><span class="o">.</span><span class="n">Recall</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-        <span class="n">tm</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(),</span>
+        <span class="n">tm</span><span class="o">.</span><span class="n">Precision</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">),</span>
+        <span class="n">tm</span><span class="o">.</span><span class="n">Recall</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">),</span>
+        <span class="n">tm</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">),</span>
         <span class="c1"># TODO: Fix this: tm.AUC()</span>
     <span class="p">)</span>
 

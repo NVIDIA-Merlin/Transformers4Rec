@@ -103,7 +103,7 @@
 <span class="c1">#</span>
 
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
@@ -585,6 +585,43 @@
         <span class="n">soft_one_hot_embeddings</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_table</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">soft_one_hot_embeddings</span></div></div>
+
+
+<div class="viewcode-block" id="PretrainedEmbeddingsInitializer"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingsInitializer">[docs]</a><span class="k">class</span> <span class="nc">PretrainedEmbeddingsInitializer</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initializer of embedding tables with pre-trained weights</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weight_matrix : Union[torch.Tensor, List[List[float]]]</span>
+<span class="sd">        A 2D torch or numpy tensor or lists of lists with the pre-trained</span>
+<span class="sd">        weights for embeddings. The expect dims are</span>
+<span class="sd">        (embedding_cardinality, embedding_dim). The embedding_cardinality</span>
+<span class="sd">        can be inferred from the column schema, for example,</span>
+<span class="sd">        `schema.select_by_name(&quot;item_id&quot;).feature[0].int_domain.max + 1`.</span>
+<span class="sd">        The first position of the embedding table is reserved for padded</span>
+<span class="sd">        items (id=0).</span>
+<span class="sd">    trainable : bool</span>
+<span class="sd">        Whether the embedding table should be trainable or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">weight_matrix</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
+        <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># The weight matrix is kept in CPU, but when forward() is called</span>
+        <span class="c1"># to initialize the embedding table weight will be copied to</span>
+        <span class="c1"># the embedding table device (e.g. cuda)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">weight_matrix</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="n">trainable</span>
+
+<div class="viewcode-block" id="PretrainedEmbeddingsInitializer.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingsInitializer.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_matrix</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span></div></div>
 </pre></div>
 
            </div>

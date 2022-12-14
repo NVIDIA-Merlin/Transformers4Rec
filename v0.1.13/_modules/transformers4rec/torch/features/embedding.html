@@ -128,7 +128,7 @@
 <span class="s2">&quot;&quot;&quot;</span>
 
 
-<div class="viewcode-block" id="EmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+<div class="viewcode-block" id="EmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
     <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
     <span class="n">embedding_features_parameters</span><span class="o">=</span><span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
@@ -177,14 +177,14 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_tables</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">item_id</span><span class="p">]</span>
 
-<div class="viewcode-block" id="EmbeddingFeatures.table_to_embedding_module"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingFeatures.table_to_embedding_module">[docs]</a>    <span class="k">def</span> <span class="nf">table_to_embedding_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="s2">&quot;TableConfig&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<div class="viewcode-block" id="EmbeddingFeatures.table_to_embedding_module"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingFeatures.table_to_embedding_module">[docs]</a>    <span class="k">def</span> <span class="nf">table_to_embedding_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="s2">&quot;TableConfig&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="n">embedding_table</span> <span class="o">=</span> <span class="n">EmbeddingBagWrapper</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">vocabulary_size</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">table</span><span class="o">.</span><span class="n">combiner</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">initializer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">table</span><span class="o">.</span><span class="n">initializer</span><span class="p">(</span><span class="n">embedding_table</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">embedding_table</span></div>
 
-<div class="viewcode-block" id="EmbeddingFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="EmbeddingFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
@@ -298,10 +298,10 @@
 
         <span class="k">return</span> <span class="n">output</span></div>
 
-<div class="viewcode-block" id="EmbeddingFeatures.item_ids"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingFeatures.item_ids">[docs]</a>    <span class="k">def</span> <span class="nf">item_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<div class="viewcode-block" id="EmbeddingFeatures.item_ids"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingFeatures.item_ids">[docs]</a>    <span class="k">def</span> <span class="nf">item_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">inputs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">item_id</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="EmbeddingFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="EmbeddingFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">embedded_outputs</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">filtered_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_features</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">filtered_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -326,7 +326,7 @@
 
         <span class="k">return</span> <span class="n">embedded_outputs</span></div>
 
-<div class="viewcode-block" id="EmbeddingFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_sizes</span><span class="p">):</span>
+<div class="viewcode-block" id="EmbeddingFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_sizes</span><span class="p">):</span>
         <span class="n">sizes</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">batch_size</span> <span class="o">=</span> <span class="n">calculate_batch_size_from_input_size</span><span class="p">(</span><span class="n">input_sizes</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">feature</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -335,15 +335,15 @@
         <span class="k">return</span> <span class="n">sizes</span></div></div>
 
 
-<div class="viewcode-block" id="EmbeddingBagWrapper"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingBagWrapper">[docs]</a><span class="k">class</span> <span class="nc">EmbeddingBagWrapper</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">EmbeddingBag</span><span class="p">):</span>
-<div class="viewcode-block" id="EmbeddingBagWrapper.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingBagWrapper.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="EmbeddingBagWrapper"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingBagWrapper">[docs]</a><span class="k">class</span> <span class="nc">EmbeddingBagWrapper</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">EmbeddingBag</span><span class="p">):</span>
+<div class="viewcode-block" id="EmbeddingBagWrapper.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># EmbeddingBag requires 2D tensors (or offsets)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="nb">input</span> <span class="o">=</span> <span class="nb">input</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="SoftEmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SoftEmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+<div class="viewcode-block" id="SoftEmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.SoftEmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
     <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
     <span class="n">embedding_features_parameters</span><span class="o">=</span><span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
@@ -380,7 +380,7 @@
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">feature_config</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SoftEmbeddingFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SoftEmbeddingFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="SoftEmbeddingFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.SoftEmbeddingFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
@@ -479,11 +479,11 @@
 
         <span class="k">return</span> <span class="n">output</span></div>
 
-<div class="viewcode-block" id="SoftEmbeddingFeatures.table_to_embedding_module"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SoftEmbeddingFeatures.table_to_embedding_module">[docs]</a>    <span class="k">def</span> <span class="nf">table_to_embedding_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="s2">&quot;TableConfig&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SoftEmbedding&quot;</span><span class="p">:</span>
+<div class="viewcode-block" id="SoftEmbeddingFeatures.table_to_embedding_module"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.SoftEmbeddingFeatures.table_to_embedding_module">[docs]</a>    <span class="k">def</span> <span class="nf">table_to_embedding_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="s2">&quot;TableConfig&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SoftEmbedding&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">SoftEmbedding</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">vocabulary_size</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">initializer</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TableConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TableConfig">[docs]</a><span class="k">class</span> <span class="nc">TableConfig</span><span class="p">:</span>
+<div class="viewcode-block" id="TableConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.TableConfig">[docs]</a><span class="k">class</span> <span class="nc">TableConfig</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">vocabulary_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -527,7 +527,7 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="FeatureConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.FeatureConfig">[docs]</a><span class="k">class</span> <span class="nc">FeatureConfig</span><span class="p">:</span>
+<div class="viewcode-block" id="FeatureConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.FeatureConfig">[docs]</a><span class="k">class</span> <span class="nc">FeatureConfig</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="n">TableConfig</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>
@@ -544,7 +544,7 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SoftEmbedding"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SoftEmbedding">[docs]</a><span class="k">class</span> <span class="nc">SoftEmbedding</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="SoftEmbedding"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.SoftEmbedding">[docs]</a><span class="k">class</span> <span class="nc">SoftEmbedding</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Soft-one hot encoding embedding technique, from https://arxiv.org/pdf/1708.00065.pdf</span>
 <span class="sd">    In a nutshell, it represents a continuous feature as a weighted average of embeddings</span>
@@ -578,7 +578,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">projection_layer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_embeddings</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SoftEmbedding.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SoftEmbedding.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_numeric</span><span class="p">):</span>
+<div class="viewcode-block" id="SoftEmbedding.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.SoftEmbedding.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_numeric</span><span class="p">):</span>
         <span class="n">input_numeric</span> <span class="o">=</span> <span class="n">input_numeric</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projection_layer</span><span class="p">(</span><span class="n">input_numeric</span><span class="p">))</span>
         <span class="n">soft_one_hot_embeddings</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_table</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
