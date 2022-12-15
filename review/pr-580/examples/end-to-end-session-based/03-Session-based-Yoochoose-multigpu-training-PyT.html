@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-GPU training for session-based recommendations with PyTorch &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/end-to-end-session-based/03-Session-based-Yoochoose-multigpu-training-PyT.html" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Multi-GPU training for session-based recommendations with PyTorch</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2022 NVIDIA Corporation. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ==============================================================================</span>
+</pre></div>
+</div>
+</div>
+</div>
+<img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" />
+<div class="tex2jax_ignore mathjax_ignore section" id="multi-gpu-training-for-session-based-recommendations-with-pytorch">
+<h1>Multi-GPU training for session-based recommendations with PyTorch<a class="headerlink" href="#multi-gpu-training-for-session-based-recommendations-with-pytorch" title="Permalink to this headline"></a></h1>
+<p>This notebook was prepared by using the latest <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch/tags">merlin-pytorch:22.XX</a> container.</p>
+<p>In the previous two notebooks, we have first created sequential features and saved our processed data frames as parquet files. Then we used these processed parquet files in training a session-based recommendation model with XLNet architecture on a single GPU. We will now expand this exercise to perform a multi-GPU training with the same dataset using PyTorch.</p>
+<p>There are multiple ways to scale a training pipeline to multiple GPUs:</p>
+<ul class="simple">
+<li><p><b>Model Parallel</b>: If the model is too large to fit on a single GPU, the parameters are distributed over multiple GPUs. This is usually the case for the RecSys domain since the embedding tables can be exceptionally large and memory intensive.</p></li>
+<li><p><b>Data Parallel</b>: Every GPU has a copy of all model parameters and runs the forward/backward pass for its batch. Data parallel is useful when you want to speed-up the training/evaluation of data leveraging multiple GPUs in parallel (as typically data won’t fit into GPU memory, that is why models are trained on batches).</p></li>
+</ul>
+<p>In this example, we demonstrate how to scale a training pipeline to multi-GPU, single node. The goal is to maximize throughput and reduce training time. In that way, models can be trained more frequently and researches can run more experiments in a shorter time duration.</p>
+<p>This is equivalent to training with a larger batch-size. As we are using more GPUs, we have more computational resources and can achieve higher throughput. In data parallel training, it is often required that all model parameters fit into a single GPU. Every worker (each GPU) has a copy of the model parameters and runs the forward pass on their local batch. The workers synchronize the gradients with each other, which can introduce an overhead.</p>
+<p><b>Learning objectives</b></p>
+<ul class="simple">
+<li><p>Scaling training pipeline to multiple GPUs</p></li>
+</ul>
+<p><b>Prerequisites</b></p>
+<ul class="simple">
+<li><p>Run the <b>01-ETL-with-NVTabular.ipynb</b> notebook first to generate the dataset and directories that are also needed by this notebook.</p></li>
+</ul>
+<div class="section" id="creating-a-multi-gpu-training-python-script">
+<h2>1. Creating a multi-gpu training python script<a class="headerlink" href="#creating-a-multi-gpu-training-python-script" title="Permalink to this headline"></a></h2>
+<p>In this example, we will be using PyTorch, which expects all code including importing libraries, loading data, building the model and training it, to be in a single python script (.py file). We will then spawn torch.distributed.launch, which will distribute the training and evaluation tasks to 2 GPUs with the default <b>DistributedDataParallel</b> configuration.</p>
+<p>The following cell exports all related code to a <b>pyt_trainer.py</b> file to be created in the same working directory as this notebook. The code is structured as follows:</p>
+<ul class="simple">
+<li><p>importing required libraries</p></li>
+<li><p>specifying and processing command line arguments</p></li>
+<li><p>specifying the schema file to load and filtering the features that will be used in training</p></li>
+<li><p>defining the input module</p></li>
+<li><p>specifying the prediction task</p></li>
+<li><p>defining the XLNet Transformer architecture configuration</p></li>
+<li><p>defining the model object and its training arguments</p></li>
+<li><p>creating a trainer object and running the training loop (over multiple days) with the trainer object</p></li>
+</ul>
+<p>All of these steps were covered in the previous two notebooks; feel free to visit the two notebooks to refresh the concepts for each step of the script.</p>
+<p>Please note these <b>important points</b> that are relevant to multi-gpu training:</p>
+<ul class="simple">
+<li><p><b>specifying multiple GPUs</b>: PyTorch distributed launch environment will recognize that we have two GPUs, since the <code class="docutils literal notranslate"><span class="pre">--nproc_per_node</span></code> arg of <code class="docutils literal notranslate"><span class="pre">torch.distributed.launch</span></code> takes care of assigning one GPU per process and performs the training loop on multiple GPUs (2 in this case) using different batches of the data in a data-parallel fashion.</p></li>
+<li><p><b>data repartitioning</b>: when training on multiple GPUs, data must be re-partitioned into &gt;1 partitions where the number of partitions must be at least equal to the number of GPUs. The torch utility library in Transformers4Rec does this automatically and outputs a UserWarning message. If you would like to avoid this warning message, you may choose to manually re-partition your data files before you launch the training loop or function. See <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html#distributeddataparallel">this document</a> for further information on how to do manual re-partitioning.</p></li>
+<li><p><b>training and evaluation batch sizes</b>: in the default DistributedDataParallel mode we will be running, keeping the batch size unchanged means each worker will receive the same-size batch despite the fact that you are now using multiple GPUs. If you would like to keep the total batch size constant, you may want to divide the training and evaluation batch sizes by the number of GPUs you are running on, which is expected to reduce time it takes train and evaluate on each batch.</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%writefile</span> &#39;./pyt_trainer.py&#39;
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">torch</span> 
+
+<span class="kn">from</span> <span class="nn">transformers4rec</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">tr</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">AvgPrecisionAt</span><span class="p">,</span> <span class="n">RecallAt</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">wipe_memory</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="c1"># define arguments that can be passed to this python script</span>
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Hyperparameters for model training&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--local_rank&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory with training and validation data&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--learning-rate&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Learning rate for training&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--per-device-train-batch-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">384</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Per device batch size for training&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--per-device-eval-batch-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Per device batch size for evaluation&#39;</span><span class="p">)</span>
+<span class="n">sh_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+<span class="c1"># create the schema object by reading the schema.pbtxt file generated by NVTabular pipeline in the previous 01-ETL-with-NVTabular notebook</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="n">SCHEMA_PATH</span> <span class="o">=</span> <span class="s2">&quot;schema_demo.pb&quot;</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">()</span><span class="o">.</span><span class="n">from_proto_text</span><span class="p">(</span><span class="n">SCHEMA_PATH</span><span class="p">)</span>
+
+<span class="c1"># select the subset of features we want to use for training the model by their tags or their names.</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span>
+   <span class="p">[</span><span class="s1">&#39;item_id-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;category-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;product_recency_days_log_norm-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_sin-list_seq&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="n">max_sequence_length</span><span class="p">,</span> <span class="n">d_model</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">320</span>
+<span class="c1"># Define input module to process tabular input-features and to prepare masked inputs</span>
+<span class="n">input_module</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+    <span class="n">schema</span><span class="p">,</span>
+    <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
+    <span class="n">continuous_projection</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;concat&quot;</span><span class="p">,</span>
+    <span class="n">d_output</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+    <span class="n">masking</span><span class="o">=</span><span class="s2">&quot;mlm&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Define Next item prediction-task </span>
+<span class="n">prediction_task</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Define the config of the XLNet Transformer architecture</span>
+<span class="n">transformer_config</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span> <span class="n">n_head</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">n_layer</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">total_seq_length</span><span class="o">=</span><span class="n">max_sequence_length</span>
+<span class="p">)</span>
+
+<span class="c1"># Get the end-to-end model </span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">transformer_config</span><span class="o">.</span><span class="n">to_torch_model</span><span class="p">(</span><span class="n">input_module</span><span class="p">,</span> <span class="n">prediction_task</span><span class="p">)</span>
+
+<span class="c1"># Set training arguments </span>
+<span class="n">training_args</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">T4RecTrainingArguments</span><span class="p">(</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./tmp&quot;</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+            <span class="n">data_loader_engine</span><span class="o">=</span><span class="s1">&#39;merlin&#39;</span><span class="p">,</span>
+            <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+            <span class="n">dataloader_drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">per_device_train_batch_size</span> <span class="o">=</span> <span class="n">sh_args</span><span class="o">.</span><span class="n">per_device_train_batch_size</span><span class="p">,</span>
+            <span class="n">per_device_eval_batch_size</span> <span class="o">=</span> <span class="n">sh_args</span><span class="o">.</span><span class="n">per_device_eval_batch_size</span><span class="p">,</span>
+            <span class="n">learning_rate</span><span class="o">=</span><span class="n">sh_args</span><span class="o">.</span><span class="n">learning_rate</span><span class="p">,</span>
+            <span class="n">report_to</span> <span class="o">=</span> <span class="p">[],</span>
+            <span class="n">logging_steps</span><span class="o">=</span><span class="mi">200</span>
+        <span class="p">)</span>
+
+<span class="c1"># Instantiate the trainer</span>
+<span class="n">recsys_trainer</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Trainer</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">args</span><span class="o">=</span><span class="n">training_args</span><span class="p">,</span>
+    <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
+    <span class="n">compute_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Set input and output directories</span>
+<span class="n">INPUT_DIR</span><span class="o">=</span><span class="n">sh_args</span><span class="o">.</span><span class="n">path</span>
+<span class="n">OUTPUT_DIR</span><span class="o">=</span><span class="n">sh_args</span><span class="o">.</span><span class="n">path</span>
+
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+<span class="c1"># main loop for training</span>
+<span class="n">start_time_window_index</span> <span class="o">=</span> <span class="mi">178</span>
+<span class="n">final_time_window_index</span> <span class="o">=</span> <span class="mi">181</span>
+<span class="c1"># Iterating over days from 178 to 181</span>
+<span class="k">for</span> <span class="n">time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_time_window_index</span><span class="p">,</span> <span class="n">final_time_window_index</span><span class="p">):</span>
+    <span class="c1"># Set data </span>
+    <span class="n">time_index_train</span> <span class="o">=</span> <span class="n">time_index</span>
+    <span class="n">time_index_eval</span> <span class="o">=</span> <span class="n">time_index</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="n">train_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">time_index_train</span><span class="si">}</span><span class="s2">/train.parquet&quot;</span><span class="p">))</span>
+    <span class="n">eval_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">time_index_eval</span><span class="si">}</span><span class="s2">/valid.parquet&quot;</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">train_paths</span><span class="p">)</span>
+    
+    <span class="c1"># Train on day related to time_index </span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="o">*</span><span class="mi">20</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Launch training for day </span><span class="si">%s</span><span class="s2"> are:&quot;</span> <span class="o">%</span><span class="n">time_index</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="o">*</span><span class="mi">20</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">train_dataset_or_path</span> <span class="o">=</span> <span class="n">train_paths</span>
+    <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">reset_lr_scheduler</span><span class="p">()</span>
+    <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">global_step</span> <span class="o">+=</span><span class="mi">1</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;finished&#39;</span><span class="p">)</span>
+    
+    <span class="c1"># Evaluate on the following day</span>
+    <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">eval_dataset_or_path</span> <span class="o">=</span> <span class="n">eval_paths</span>
+    <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">recsys_trainer</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">metric_key_prefix</span><span class="o">=</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="o">*</span><span class="mi">20</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Eval results for day </span><span class="si">%s</span><span class="s2"> are:</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">%</span><span class="n">time_index_eval</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;*&#39;</span><span class="o">*</span><span class="mi">20</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">train_metrics</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; </span><span class="si">%s</span><span class="s2"> = </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">train_metrics</span><span class="p">[</span><span class="n">key</span><span class="p">])))</span> 
+    <span class="n">wipe_memory</span><span class="p">()</span>
+
+<span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total training time:&#39;</span><span class="p">,</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="executing-the-multi-gpu-training">
+<h2>2. Executing the multi-gpu training<a class="headerlink" href="#executing-the-multi-gpu-training" title="Permalink to this headline"></a></h2>
+<p>You are now ready to execute the python script you created. Run the following shell command which will execute the script and perform data loading, model building and training using 2 GPUs.</p>
+<p>Note that there are four arguments you can pass to your python script, and only the first one is required:</p>
+<ul class="simple">
+<li><p><b>path</b>: this argument specifies the directory in which to find the multi-day train and validation files to work on</p></li>
+<li><p><b>learning rate</b>: you can experiment with different learning rates and see the effect of this hyperparameter when multiple GPUs are used in training (versus 1 GPU). Typically, increasing the learning rate (up to a certain level) as the number of GPUs is increased helps with the accuracy metrics.</p></li>
+<li><p><b>per device batch size for training</b>: when using multiple GPUs in DistributedDataParallel mode, you may choose to reduce the batch size in order to keep the total batch size constant. This should help reduce training times.</p></li>
+<li><p><b>per device batch size for evaluation</b>: see above</p></li>
+</ul>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>python -m torch.distributed.launch --nproc_per_node <span class="m">2</span> pyt_trainer.py --path <span class="s2">&quot;./preproc_sessions_by_day&quot;</span> --learning-rate <span class="m">0</span>.0005
+</pre></div>
+</div>
+</div>
+</div>
+<p><b>Congratulations!!!</b> You successfully trained your model using 2 GPUs with a <code class="docutils literal notranslate"><span class="pre">distributed</span> <span class="pre">data</span> <span class="pre">parallel</span></code> approach. If you choose, you may now go back and experiment with some of the hyperparameters (eg. learning rate, batch sizes, number of GPUs) to collect information on various accuracy metrics as well as total training time, to see what fits best into your workflow.</p>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p>Multi-GPU data-parallel training using the Trainer class <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html">https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html</a></p></li>
+<li><p>Merlin Transformers4rec: <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">https://github.com/NVIDIA-Merlin/Transformers4Rec</a></p></li>
+<li><p>Merlin NVTabular: <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular">https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular</a></p></li>
+<li><p>Merlin Dataloader: <a class="reference external" href="https://github.com/NVIDIA-Merlin/dataloader">https://github.com/NVIDIA-Merlin/dataloader</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
