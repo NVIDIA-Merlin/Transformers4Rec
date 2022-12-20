@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -23,10 +25,17 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Transformers4Rec Example Notebooks" href="examples/index.html" />
-    <link rel="prev" title="End-to-end pipeline with NVIDIA Merlin" href="pipeline.html" /> 
+    <link rel="prev" title="End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin" href="pipeline.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -47,7 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
@@ -131,7 +140,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pipeline.html" class="btn btn-neutral float-left" title="End-to-end pipeline with NVIDIA Merlin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipeline.html" class="btn btn-neutral float-left" title="End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="examples/index.html" class="btn btn-neutral float-right" title="Transformers4Rec Example Notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -155,7 +164,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

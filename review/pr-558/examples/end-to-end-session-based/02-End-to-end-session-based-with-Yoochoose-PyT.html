@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -28,7 +30,14 @@
     <link rel="prev" title="ETL with NVTabular" href="01-ETL-with-NVTabular.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -49,7 +58,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
@@ -347,13 +356,13 @@ Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requi
 <p>Now that the model is defined, we are going to launch training. For that, Transfromers4rec extends HF Transformers Trainer class to adapt the evaluation loop for session-based recommendation task and the calculation of ranking metrics. The original <code class="docutils literal notranslate"><span class="pre">train()</span></code> method is not modified meaning that we leverage the efficient training implementation from that library, which manages, for example, half-precision (FP16) training.</p>
 <div class="section" id="set-the-training-arguments">
 <h4>Set the training arguments<a class="headerlink" href="#set-the-training-arguments" title="Permalink to this headline"></a></h4>
-<p>An additional argument <code class="docutils literal notranslate"><span class="pre">data_loader_engine</span></code> is defined to automatically load the features needed for training using the schema. The default value is <code class="docutils literal notranslate"><span class="pre">nvtabular</span></code> for optimized GPU-based data-loading.  Optionally a <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> (<code class="docutils literal notranslate"><span class="pre">pyarrow</span></code>) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
+<p>An additional argument <code class="docutils literal notranslate"><span class="pre">data_loader_engine</span></code> is defined to automatically load the features needed for training using the schema. The default value is <code class="docutils literal notranslate"><span class="pre">merlin</span></code> for optimized GPU-based data-loading.  Optionally a <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> (<code class="docutils literal notranslate"><span class="pre">pyarrow</span></code>) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_args</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">T4RecTrainingArguments</span><span class="p">(</span>
             <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./tmp&quot;</span><span class="p">,</span>
             <span class="n">max_sequence_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
-            <span class="n">data_loader_engine</span><span class="o">=</span><span class="s1">&#39;nvtabular&#39;</span><span class="p">,</span>
+            <span class="n">data_loader_engine</span><span class="o">=</span><span class="s1">&#39;merlin&#39;</span><span class="p">,</span>
             <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
             <span class="n">dataloader_drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">per_device_train_batch_size</span> <span class="o">=</span> <span class="mi">384</span><span class="p">,</span>
@@ -876,6 +885,7 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&
 <ul class="simple">
 <li><p>Merlin Transformers4rec: <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">https://github.com/NVIDIA-Merlin/Transformers4Rec</a></p></li>
 <li><p>Merlin NVTabular: <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular">https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular</a></p></li>
+<li><p>Merlin Dataloader: <a class="reference external" href="https://github.com/NVIDIA-Merlin/dataloader">https://github.com/NVIDIA-Merlin/dataloader</a></p></li>
 <li><p>Triton inference server: <a class="reference external" href="https://github.com/triton-inference-server">https://github.com/triton-inference-server</a></p></li>
 </ul>
 </div>
@@ -909,7 +919,18 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

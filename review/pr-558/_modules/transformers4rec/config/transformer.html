@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/config/transformer.html" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API Documentation</a></li>
@@ -100,13 +109,13 @@
 <span class="n">transformer_registry</span><span class="p">:</span> <span class="n">Registry</span> <span class="o">=</span> <span class="n">Registry</span><span class="p">(</span><span class="s2">&quot;transformers&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="T4RecConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig">[docs]</a><span class="k">class</span> <span class="nc">T4RecConfig</span><span class="p">:</span>
-<div class="viewcode-block" id="T4RecConfig.to_huggingface_torch_model"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_torch_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_huggingface_torch_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="T4RecConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig">[docs]</a><span class="k">class</span> <span class="nc">T4RecConfig</span><span class="p">:</span>
+<div class="viewcode-block" id="T4RecConfig.to_huggingface_torch_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_torch_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_huggingface_torch_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">model_cls</span> <span class="o">=</span> <span class="n">transformers</span><span class="o">.</span><span class="n">MODEL_MAPPING</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">transformers_config_cls</span><span class="p">]</span>
 
         <span class="k">return</span> <span class="n">model_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="T4RecConfig.to_torch_model"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.to_torch_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_torch_model</span><span class="p">(</span>
+<div class="viewcode-block" id="T4RecConfig.to_torch_model"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.to_torch_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_torch_model</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_features</span><span class="p">,</span>
         <span class="o">*</span><span class="n">prediction_task</span><span class="p">,</span>
@@ -141,14 +150,14 @@
     <span class="k">def</span> <span class="nf">transformers_config_cls</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
-<div class="viewcode-block" id="T4RecConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="T4RecConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.T4RecConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
 
 
-<div class="viewcode-block" id="ReformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.ReformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;reformer&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="ReformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ReformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;reformer&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ReformerConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">ReformerConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="ReformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.ReformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ReformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ReformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -194,9 +203,9 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="GPT2Config"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.GPT2Config">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;gtp2&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="GPT2Config"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.GPT2Config">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;gtp2&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">GPT2Config</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">GPT2Config</span><span class="p">):</span>
-<div class="viewcode-block" id="GPT2Config.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.GPT2Config.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="GPT2Config.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.GPT2Config.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -230,9 +239,9 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="LongformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.LongformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;longformer&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="LongformerConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.LongformerConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;longformer&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">LongformerConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">LongformerConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="LongformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.LongformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="LongformerConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.LongformerConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -265,9 +274,9 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ElectraConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.ElectraConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;electra&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="ElectraConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ElectraConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;electra&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ElectraConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">ElectraConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="ElectraConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.ElectraConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="ElectraConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.ElectraConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -302,9 +311,9 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="AlbertConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.AlbertConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;albert&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="AlbertConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.AlbertConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;albert&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">AlbertConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">AlbertConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="AlbertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.AlbertConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AlbertConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.AlbertConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -339,9 +348,9 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="XLNetConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.XLNetConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;xlnet&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="XLNetConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.XLNetConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;xlnet&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">XLNetConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="XLNetConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.XLNetConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="XLNetConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.XLNetConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -446,9 +455,9 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TransfoXLConfig"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.TransfoXLConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;transfo-xl&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="TransfoXLConfig"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.TransfoXLConfig">[docs]</a><span class="nd">@transformer_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;transfo-xl&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">TransfoXLConfig</span><span class="p">(</span><span class="n">T4RecConfig</span><span class="p">,</span> <span class="n">transformers</span><span class="o">.</span><span class="n">TransfoXLConfig</span><span class="p">):</span>
-<div class="viewcode-block" id="TransfoXLConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.transformer.TransfoXLConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TransfoXLConfig.build"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.transformer.TransfoXLConfig.build">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">build</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">d_model</span><span class="p">,</span>
@@ -508,7 +517,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>
