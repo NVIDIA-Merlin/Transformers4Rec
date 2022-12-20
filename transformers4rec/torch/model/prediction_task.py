@@ -46,9 +46,9 @@ class BinaryClassificationPrepareBlock(BuildableBlock):
 class BinaryClassificationTask(PredictionTask):
     DEFAULT_LOSS = torch.nn.BCELoss()
     DEFAULT_METRICS = (
-        tm.Precision(num_classes=2),
-        tm.Recall(num_classes=2),
-        tm.Accuracy(),
+        tm.Precision(num_classes=2, task="binary"),
+        tm.Recall(num_classes=2, task="binary"),
+        tm.Accuracy(task="binary"),
         # TODO: Fix this: tm.AUC()
     )
 
@@ -212,7 +212,7 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, training=False, testing=False, **kwargs):
+    def forward(self, inputs: torch.Tensor, targets=None, training=False, testing=False, **kwargs):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -262,17 +262,11 @@ class NextItemPredictionTask(PredictionTask):
         out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
         return out_tensor
 
-    def calculate_metrics(  # type: ignore
-        self, predictions, targets, mode="val", training=False, testing=True, forward=True, **kwargs
-    ) -> Dict[str, torch.Tensor]:
+    def calculate_metrics(self, predictions, targets) -> Dict[str, torch.Tensor]:  # type: ignore
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
         outputs = {}
-        if forward:
-            predictions = self(predictions, testing=testing)
-            targets = predictions["labels"]
-            predictions = predictions["predictions"]
         predictions = self.forward_to_prediction_fn(predictions)
 
         for metric in self.metrics:

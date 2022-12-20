@@ -214,6 +214,7 @@ def main():
         shuffle=False,
     )
     trainer.test_dataloader = test_loader
+    trainer.args.predict_top_k = 10
     topk_preds = trainer.predict(test_loader).predictions[0]
     # Compute recall@10
     recall_10 = recall(topk_preds, labels)

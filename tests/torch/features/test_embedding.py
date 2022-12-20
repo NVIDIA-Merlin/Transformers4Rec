@@ -151,6 +151,34 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
     )
 
 
+@pytest.mark.parametrize("trainable", [True, False])
+def test_pre_trained_embeddings_initializer(yoochoose_schema, torch_yoochoose_like, trainable):
+    item_id_cardinality = (
+        yoochoose_schema.select_by_name("item_id/list").feature[0].int_domain.max + 1
+    )
+    embedding_dim = 64
+    pre_trained_item_embeddings = np.random.rand(item_id_cardinality, embedding_dim)
+
+    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    emb_module = tr.EmbeddingFeatures.from_schema(
+        schema,
+        embedding_dims={"item_id/list": embedding_dim},
+        embeddings_initializers={
+            "item_id/list": tr.PretrainedEmbeddingsInitializer(
+                pre_trained_item_embeddings, trainable=trainable
+            ),
+        },
+    )
+
+    assert np.allclose(
+        emb_module.embedding_tables["item_id/list"].weight.detach().numpy(),
+        pre_trained_item_embeddings,
+    )
+
+    assert emb_module.embedding_tables["item_id/list"].weight.requires_grad == trainable
+    _ = emb_module(torch_yoochoose_like)
+
+
 def test_soft_embedding_invalid_num_embeddings():
     with pytest.raises(AssertionError) as excinfo:
         tr.SoftEmbedding(num_embeddings=0, embeddings_dim=16)

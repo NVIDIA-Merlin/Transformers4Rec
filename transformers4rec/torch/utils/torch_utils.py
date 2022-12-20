@@ -15,9 +15,11 @@
 #
 
 import abc
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Dict, Optional, Union
 
+import numpy as np
 import torch
 
 from merlin_standard_lib import Schema
@@ -86,9 +88,6 @@ class MetricsMixin:
         self,
         inputs: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
-        mode: str = "val",
-        forward=True,
-        **kwargs,
     ) -> Dict[str, torch.Tensor]:
         """Calculate metrics on a batch of data, each metric is stateful and this updates the state.
 
@@ -97,12 +96,10 @@ class MetricsMixin:
         Parameters
         ----------
         inputs: Union[torch.Tensor, TabularData]
-            TODO
+            Tensor or dictionary of predictions returned by the T4Rec model
         targets: Union[torch.Tensor, TabularData]
-            TODO
-        forward: bool, default True
+            Tensor or dictionary of true labels returned by the T4Rec model
 
-        mode: str, default="val"
 
         """
         raise NotImplementedError()
@@ -200,6 +197,142 @@ def create_output_placeholder(scores, ks):
 
 def tranform_label_to_onehot(labels, vocab_size):
     return one_hot_1d(labels.reshape(-1).to(torch.int64), vocab_size, dtype=torch.float32).detach()
+
+
+def nested_detach(tensors):
+    """Detach `tensors` (even if it's a nested list/tuple/dict of tensors).
+    #TODO this method was copied from the latest version of HF transformers library to support
+    dict outputs. So we should remove it when T4Rec is updated to use the latest version
+    """
+    if isinstance(tensors, (list, tuple)):
+        return type(tensors)(nested_detach(t) for t in tensors)
+    elif isinstance(tensors, Mapping):
+        return type(tensors)({k: nested_detach(t) for k, t in tensors.items()})
+    return tensors.detach()
+
+
+def nested_concat(tensors, new_tensors, padding_index=-100):
+    """
+    Concat the `new_tensors` to `tensors` on the first dim and pad them on the second if needed.
+    Works for tensors or nested list/tuples/dict of tensors.
+    #TODO this method was copied from the latest version of HF transformers library to support
+    dict outputs. So we should remove it when T4Rec is updated to use the latest version
+    """
+    assert type(tensors) == type(
+        new_tensors
+    ), f"Expected `tensors` and `new_tensors` to have the same type but found {type(tensors)}"
+    f" and {type(new_tensors)}."
+    if isinstance(tensors, (list, tuple)):
+        return type(tensors)(
+            nested_concat(t, n, padding_index=padding_index) for t, n in zip(tensors, new_tensors)
+        )
+    elif isinstance(tensors, torch.Tensor):
+        return torch_pad_and_concatenate(tensors, new_tensors, padding_index=padding_index)
+    elif isinstance(tensors, Mapping):
+        return type(tensors)(
+            {
+                k: nested_concat(t, new_tensors[k], padding_index=padding_index)
+                for k, t in tensors.items()
+            }
+        )
+    elif isinstance(tensors, np.ndarray):
+        return numpy_pad_and_concatenate(tensors, new_tensors, padding_index=padding_index)
+    else:
+        raise TypeError(f"Unsupported type for concatenation: got {type(tensors)}")
+
+
+def torch_pad_and_concatenate(tensor1, tensor2, padding_index=-100):
+    """Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second if necessary.
+    #TODO this method was copied from the latest version of HF transformers library to support
+    dict outputs. So we should remove it when T4Rec is updated to use the latest version
+    """
+    tensor1 = atleast_1d(tensor1)
+    tensor2 = atleast_1d(tensor2)
+
+    if len(tensor1.shape) == 1 or tensor1.shape[1] == tensor2.shape[1]:
+        return torch.cat((tensor1, tensor2), dim=0)
+
+    # Let's figure out the new shape
+    new_shape = (
+        tensor1.shape[0] + tensor2.shape[0],
+        max(tensor1.shape[1], tensor2.shape[1]),
+    ) + tensor1.shape[2:]
+
+    # Now let's fill the result tensor
+    result = tensor1.new_full(new_shape, padding_index)
+    result[: tensor1.shape[0], : tensor1.shape[1]] = tensor1
+    result[tensor1.shape[0] :, : tensor2.shape[1]] = tensor2
+    return result
+
+
+def atleast_1d(tensor_or_array: Union[torch.Tensor, np.ndarray]):
+    if isinstance(tensor_or_array, torch.Tensor):
+        if hasattr(torch, "atleast_1d"):
+            tensor_or_array = torch.atleast_1d(tensor_or_array)
+        elif tensor_or_array.ndim < 1:
+            tensor_or_array = tensor_or_array[None]
+    else:
+        tensor_or_array = np.atleast_1d(tensor_or_array)
+    return tensor_or_array
+
+
+def nested_numpify(tensors):
+    """Numpify `tensors` (even if it's a nested list/tuple/dict of tensors).
+    #TODO this method was copied from the latest version of HF transformers library to support
+    dict outputs. So we should remove it when T4Rec is updated to use the latest version
+    """
+    if isinstance(tensors, (list, tuple)):
+        return type(tensors)(nested_numpify(t) for t in tensors)
+    if isinstance(tensors, Mapping):
+        return type(tensors)({k: nested_numpify(t) for k, t in tensors.items()})
+
+    t = tensors.cpu()
+    if t.dtype == torch.bfloat16:
+        """
+        # As of Numpy 1.21.4, NumPy does not support bfloat16 (see
+        # https://github.com/numpy/numpy/blob/a47ecdea856986cd60eabbd53265c2ca5916ad5d/doc/source/user/basics.types.rst).
+        # Until Numpy adds bfloat16, we must convert float32.
+        """
+        t = t.to(torch.float32)
+    return t.numpy()
+
+
+def nested_truncate(tensors, limit):
+    """Truncate `tensors` at `limit` (even if it's a nested list/tuple/dict of tensors).
+    #TODO this method was copied from the latest version of HF transformers library to support
+    dict outputs. So we should remove it when T4Rec is updated to use the latest version
+    """
+    if isinstance(tensors, (list, tuple)):
+        return type(tensors)(nested_truncate(t, limit) for t in tensors)
+    if isinstance(tensors, Mapping):
+        return type(tensors)({k: nested_truncate(t, limit) for k, t in tensors.items()})
+
+    return tensors[:limit]
+
+
+def numpy_pad_and_concatenate(array1, array2, padding_index=-100):
+    """
+    Concatenates `array1` and `array2` on first axis, applying padding on the second if necessary.
+    #TODO this method was copied from the latest version of HF transformers library to support
+    dict outputs. So we should remove it when T4Rec is updated to use the latest version
+    """
+    array1 = atleast_1d(array1)
+    array2 = atleast_1d(array2)
+
+    if len(array1.shape) == 1 or array1.shape[1] == array2.shape[1]:
+        return np.concatenate((array1, array2), axis=0)
+
+    # Let's figure out the new shape
+    new_shape = (
+        array1.shape[0] + array2.shape[0],
+        max(array1.shape[1], array2.shape[1]),
+    ) + array1.shape[2:]
+
+    # Now let's fill the result tensor
+    result = np.full_like(array1, padding_index, shape=new_shape)
+    result[: array1.shape[0], : array1.shape[1]] = array1
+    result[array1.shape[0] :, : array2.shape[1]] = array2
+    return result
 
 
 def one_hot_1d(
