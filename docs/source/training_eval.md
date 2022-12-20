@@ -1,15 +1,26 @@
-
 # Training and Evaluation
-Many examples of data preparation, training and deployment of models using Transformers4Rec are available in our [examples](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples) directory.
 
-## Data loading
-Transformers4Rec leverages by default the NVTabular dataloader for GPU-accelerated loading of preprocessed data stored in Parquet format, which is a suitable format for being structured and queryable.
-The data in Parquet files are directly loaded to GPU memory as feature tensors. CPUs are also supported when GPUs are not available.
+```{contents}
+---
+depth: 2
+local: true
+backlinks: none
+---
+```
 
-The following example uses the NVTabular data loader, wrapped by the `DataLoader` that automatically sets some options from the dataset schema. Optionally the `PyarrowDataLoader` can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
+## Data Loading
+
+By default, Transformers4Rec leverages the Merlin dataloader for GPU-accelerated loading of preprocessed data that is stored as Parquet files.
+Parquet enables this preprocessed data to be easily structured and queryable.
+The data in these parquet files are directly loaded to the GPU memory as feature tensors.
+CPUs are also supported when GPUs are not available.
+
+The following example uses the Merlin Dataloader that is wrapped by the {class}`MerlinDataLoader <transformers4rec.torch.utils.data_utils.MerlinDataLoader>` class.
+The class automatically sets some options from the dataset schema.
+Optionally, you can use the {class}`PyarrowDataLoader <transformers4rec.torch.utils.data_utils.PyarrowDataLoader>` as a basic option, but it is slower and works only for small datasets since the full data is loaded to CPU memory.
 
 ```python
-train_loader = transformers4rec.torch.utils.data_utils.DataLoader.from_schema(
+train_loader = transformers4rec.torch.utils.data_utils.MerlinDataLoader.from_schema(
         schema,
         paths_or_dataset=train_path,
         batch_size=TrainingArguments.train_batch_size,
@@ -18,14 +29,21 @@ train_loader = transformers4rec.torch.utils.data_utils.DataLoader.from_schema(
     )
 ```
 
-
 ## PyTorch
 
+To leverage our Transformers4Rec example notebooks that demonstrate how to use Transformers4Rec with PyTorch, refer to [Transformers4Rec Example Notebooks](./examples).
+
 ### Training
-For PyTorch we extend the HF Transformers `Trainer` class, but keep its `train()` method. That means that we leverage the efficient training implementation from that library, which manages for example half-precision (FP16) and multi-GPU training.
 
-Two [approaches](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) are available for PyTorch multi-GPU training: `DataParallel` and `DistributedDataParallel`. `DataParallel` uses a single process and multiple threads on a single machine. `DistributedDataParallel` is more efficient for assigning separate processes for each GPU. Transformers4Rec supports both training approaches when using the NVTabular Dataloader.
+For PyTorch, the HF transformers `Trainer` class is extended while retaining its `train()` method.
+Essentially, this means the efficient training implementation from that library is leveraged and manages half-precision (FP16) and multi-GPU training.
 
+PyTorch supports two [approaches](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html) for multi-GPU training: `DataParallel` and `DistributedDataParallel`.
+`DataParallel` uses a single process and multiple threads on a single machine.
+`DistributedDataParallel` is more efficient for assigning separate processes for each GPU.
+Transformers4Rec supports the `DataParallel` approach when using the Merlin dataloader.
+
+The following code block shows how to create an instance of the `Trainer` class:
 
 ```python
 from transformers4rec.config.trainer import T4RecTrainingArguments
@@ -47,8 +65,11 @@ recsys_trainer = Trainer(
 recsys_trainer.train()
 ```
 
+You can automatically instantiate the dataloader when you create the {class}`Trainer <transformers4rec.torch.trainer.Trainer>` instance by specifying the following:
 
-You can optionally get the data loaders instantiated by the `Trainer` when the following arguments are provided.
+* The path or dataset of the training and evaluation data in the `train_dataset_path` and `eval_dataset_or_path` arguments.
+* Specify the schema for the dataset in the `schema` argument.
+
 
 ```python
 training_args = T4RecTrainingArguments(
@@ -61,6 +82,7 @@ training_args = T4RecTrainingArguments(
 # Instantiates the train and eval dataloader
 Trainer(
     model=model,
+    schema=schema,
     args=training_args,
     train_dataset_or_path=train_path,
     eval_dataset_or_path=eval_path,
@@ -68,23 +90,25 @@ Trainer(
 ```
 
 ### Evaluation
-For the Item Prediction head, top-N metrics comonly used in [Information Retrieval](https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval)) and RecSys are supported for evaluation:
+
+For the item prediction head, top-N metrics and ranking metrics commonly used in [information retrieval](https://en.wikipedia.org/wiki/Evaluation_measures_(information_retrieval) and RecSys are supported for evaluation:
 
 Top-N metrics
-- **Precision@n** - Computes the percentage of the top-N recommended items which are relevant (labels)
-- **Recall@n** - Computes the percentage of elevant items (labels) are present among the top-N recommended items
+: - **Precision@n** - Computes the percentage of the top-N recommended items, which are relevant (labels).
+  - **Recall@n** - Computes the percentage of relevant items (labels) that are present among the top-N recommended items.
 
 Ranking metrics
-- **NDCG@n** - Normalized Discounted Cumulative Gain at cut-off N of the recommendation list
-- **MAP@n** - Mean Average Precision at cut-off N of the recommendation list
+: - **NDCG@n** - Normalized Discounted Cumulative Gain at cut-off N of the recommendation list.
+  - **MAP@n** - Mean Average Precision at cut-off N of the recommendation list.
 
+During training, the metrics are computed for each N step for both training and evaluation sets.
+During evaluation, the metrics are computed for all evaluation batches and averaged.
 
-During training, the metrics are computed each N steps for both training and evaluation sets. During evaluation, the metrics are computed for all evaluation batches and averaged.
+You can implement incremental evaluation by splitting your data into time windows such as week, day, or hour.
+A loop, which trains a model or fine-tunes a pre-trained model, can be used with sessions of time window T.
+This loop evaluates on sessions of time window T+1.
 
-#### Incremental Evaluation
-You can implement incremental evaluation by splitting your data into time windows (e.g. week, day or hour). Then you can have a loop that trains (or fine-tune a pre-trained model) with sessions of time window T and evaluates on sessions of time window T+1.
-
-Here is an example which assumes daily data is split in folders. There is a loop that iterates over the days, trains the model (or fine-tunes the model pre-trained in the previous day) and evaluates with data of the next day.
+The following example contains a loop that iterates over the days, trains the model or fine-tunes the model pre-trained in the previous day, evaluates with data of the next day, and assumes daily data is split in folders:
 
 ```python
 # Iterates over parquet files with daily data
