@@ -54,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
@@ -132,7 +132,7 @@
 <span class="s2">&quot;&quot;&quot;</span>
 
 
-<div class="viewcode-block" id="TabularFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.tabular.TabularFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+<div class="viewcode-block" id="TabularFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
     <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
     <span class="n">tabular_features_parameters</span><span class="o">=</span><span class="n">TABULAR_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
@@ -173,7 +173,7 @@
             <span class="n">to_merge</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="TabularFeatures.project_continuous_features"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.tabular.TabularFeatures.project_continuous_features">[docs]</a>    <span class="k">def</span> <span class="nf">project_continuous_features</span><span class="p">(</span>
+<div class="viewcode-block" id="TabularFeatures.project_continuous_features"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularFeatures.project_continuous_features">[docs]</a>    <span class="k">def</span> <span class="nf">project_continuous_features</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">mlp_layers_dims</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TabularFeatures&quot;</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Combine all concatenated continuous features with stacked MLP layers</span>
@@ -202,7 +202,7 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="TabularFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.tabular.TabularFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TabularFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
@@ -286,7 +286,7 @@
 
         <span class="k">return</span> <span class="n">output</span></div>
 
-<div class="viewcode-block" id="TabularFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.tabular.TabularFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="TabularFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="n">output_sizes</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">in_layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_values</span><span class="p">:</span>
             <span class="n">output_sizes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">in_layer</span><span class="o">.</span><span class="n">forward_output_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">))</span>

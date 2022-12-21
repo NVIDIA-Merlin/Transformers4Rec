@@ -54,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
@@ -117,18 +117,18 @@
 <span class="n">TransformerBody</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">PreTrainedModel</span><span class="p">,</span> <span class="n">PretrainedConfig</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="TransformerPrepare"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerPrepare">[docs]</a><span class="k">class</span> <span class="nc">TransformerPrepare</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<div class="viewcode-block" id="TransformerPrepare"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.TransformerPrepare">[docs]</a><span class="k">class</span> <span class="nc">TransformerPrepare</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">transformer</span><span class="p">,</span> <span class="n">masking</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span> <span class="o">=</span> <span class="n">transformer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="n">masking</span>
 
-<div class="viewcode-block" id="TransformerPrepare.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerPrepare.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="TransformerPrepare.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.TransformerPrepare.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="GPT2Prepare"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.GPT2Prepare">[docs]</a><span class="k">class</span> <span class="nc">GPT2Prepare</span><span class="p">(</span><span class="n">TransformerPrepare</span><span class="p">):</span>
-<div class="viewcode-block" id="GPT2Prepare.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.GPT2Prepare.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<div class="viewcode-block" id="GPT2Prepare"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.GPT2Prepare">[docs]</a><span class="k">class</span> <span class="nc">GPT2Prepare</span><span class="p">(</span><span class="n">TransformerPrepare</span><span class="p">):</span>
+<div class="viewcode-block" id="GPT2Prepare.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.GPT2Prepare.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
         <span class="n">seq_len</span> <span class="o">=</span> <span class="n">inputs_embeds</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="c1"># head_mask has shape n_layer x batch x n_heads x N x N</span>
         <span class="n">head_mask</span> <span class="o">=</span> <span class="p">(</span>
@@ -142,7 +142,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;inputs_embeds&quot;</span><span class="p">:</span> <span class="n">inputs_embeds</span><span class="p">,</span> <span class="s2">&quot;head_mask&quot;</span><span class="p">:</span> <span class="n">head_mask</span><span class="p">}</span></div></div>
 
 
-<div class="viewcode-block" id="TransformerBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock">[docs]</a><span class="k">class</span> <span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">BlockBase</span><span class="p">):</span>
+<div class="viewcode-block" id="TransformerBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.TransformerBlock">[docs]</a><span class="k">class</span> <span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">BlockBase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to support HF Transformers for session-based and sequential-based recommendation models.</span>
 
@@ -211,7 +211,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">prepare_module</span> <span class="o">=</span> <span class="n">prepare_module</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_fn</span> <span class="o">=</span> <span class="n">output_fn</span>
 
-<div class="viewcode-block" id="TransformerBlock.from_registry"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock.from_registry">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TransformerBlock.from_registry"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.TransformerBlock.from_registry">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_registry</span><span class="p">(</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">transformer</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -247,7 +247,7 @@
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">_transformer</span><span class="p">,</span> <span class="n">masking</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TransformerBlock.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="TransformerBlock.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.TransformerBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transformer Models</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -272,7 +272,7 @@
     <span class="k">def</span> <span class="nf">_get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;TansformerBlock&quot;</span>
 
-<div class="viewcode-block" id="TransformerBlock.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="TransformerBlock.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.TransformerBlock.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">input_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">input_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">transformer</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">])</span></div></div>
 </pre></div>

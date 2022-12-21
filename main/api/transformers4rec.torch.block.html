@@ -56,7 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">API Documentation</a><ul class="current">
@@ -294,6 +294,16 @@
 <code class="sig-name descname"><span class="pre">TRANSFORMER_TO_PREPARE</span></code><em class="property"><span class="pre">:</span> <span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">transformers.modeling_utils.PreTrainedModel</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.torch.block.transformer.TransformerPrepare" title="transformers4rec.torch.block.transformer.TransformerPrepare"><span class="pre">transformers4rec.torch.block.transformer.TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"> <span class="pre">=</span> <span class="pre">{&lt;class</span> <span class="pre">'transformers.models.gpt2.modeling_gpt2.GPT2Model'&gt;:</span> <span class="pre">&lt;class</span> <span class="pre">'transformers4rec.torch.block.transformer.GPT2Prepare'&gt;}</span></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.TRANSFORMER_TO_PREPARE" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.transformer">
+<code class="sig-name descname"><span class="pre">transformer</span></code><em class="property"><span class="pre">:</span> <span class="pre">PreTrainedModel</span></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.transformer" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.prepare_module">
+<code class="sig-name descname"><span class="pre">prepare_module</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#transformers4rec.torch.block.transformer.TransformerPrepare" title="transformers4rec.torch.block.transformer.TransformerPrepare"><span class="pre">TransformerPrepare</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.prepare_module" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt id="transformers4rec.torch.block.transformer.TransformerBlock.from_registry">
 <em class="property"><span class="pre">classmethod</span> </em><code class="sig-name descname"><span class="pre">from_registry</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transformer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><span class="pre">str</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_model</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_head</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_layer</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_seq_length</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence" title="transformers4rec.torch.masking.MaskSequence"><span class="pre">transformers4rec.torch.masking.MaskSequence</span></a><span class="p"><span class="pre">]</span></span></span> <span class="o"><span class="pre">=</span></span> <span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/transformer.html#TransformerBlock.from_registry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.from_registry" title="Permalink to this definition"></a></dt>
@@ -311,6 +321,11 @@
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt id="transformers4rec.torch.block.transformer.TransformerBlock.training">
+<code class="sig-name descname"><span class="pre">training</span></code><em class="property"><span class="pre">:</span> <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><span class="pre">bool</span></a></em><a class="headerlink" href="#transformers4rec.torch.block.transformer.TransformerBlock.training" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt id="transformers4rec.torch.block.transformer.TransformerBlock.forward">
