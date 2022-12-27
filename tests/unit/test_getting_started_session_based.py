@@ -81,7 +81,6 @@ def test_func():
             """
         )
         NUM_OF_CELLS = len(tb3.cells)
-        print(NUM_OF_CELLS)
         tb3.execute_cell(list(range(0, NUM_OF_CELLS - 10)))
         tb3.inject(
             """
@@ -104,7 +103,7 @@ def test_func():
             
             from merlin.systems.triton.utils import run_ensemble_on_tritonserver
             response = run_ensemble_on_tritonserver(
-                "/tmp/data/models", ensemble.graph.input_schema, df[input_schema.column_names], output_schema.column_names,  'ensemble_model'
+                "/tmp/data/models", ensemble.graph.input_schema, df[input_schema.column_names], output_schema.column_names,  'executor_model'
             )
             response_array = [x.tolist()[0] for x in response["next-item"]]
             """
