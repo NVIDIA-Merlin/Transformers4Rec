@@ -3,17 +3,19 @@ from importlib.util import find_spec
 
 import numpy as np
 import pytest
+from merlin.core.dispatch import HAS_GPU
 from testbook import testbook
 
 from tests.conftest import REPO_ROOT
 
 pytest.importorskip("torch")
 pytest.importorskip("transformers")
-pytest.mark.skipif(find_spec("cudf") is None, reason="needs cudf")
 
 # flake8: noqa
 
 
+@pytest.mark.notebook
+@pytest.mark.skipif(not HAS_GPU, reason="No GPU available")
 def test_func():
     with testbook(
         REPO_ROOT / "examples" / "getting-started-session-based" / "01-ETL-with-NVTabular.ipynb",
