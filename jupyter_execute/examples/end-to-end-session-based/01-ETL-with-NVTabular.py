@@ -132,9 +132,9 @@ gc.collect()
 
 # In this cell, we are defining three transformations ops: 
 # 
-# - 1. Encoding categorical variables using `Categorify()` op. We set `start_index` to 1, so that encoded null values start from `1` instead of `0` because we reserve `0` for padding the sequence features.
+# - 1. Encoding categorical variables using `Categorify()` op. We set `start_index` to 1 so that encoded null values start from `1` instead of `0` because we reserve `0` for padding the sequence features.
 # - 2. Deriving temporal features from timestamp and computing their cyclical representation using a custom lambda function. 
-# - 3. Computing the item recency in days using a custom Op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction. 
+# - 3. Computing the item recency in days using a custom op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction. 
 # 
 # For more ETL workflow examples, visit NVTabular [example notebooks](https://github.com/NVIDIA-Merlin/NVTabular/tree/main/examples).
 
@@ -157,7 +157,7 @@ sessiontime_weekday = (
     nvt.ops.Rename(name ='et_dayofweek')
 )
 
-# Derive cyclical features: Defines a custom lambda function 
+# Derive cyclical features: Define a custom lambda function 
 def get_cycled_feature_value_sin(col, max_value):
     value_scaled = (col + 0.000001) / max_value
     value_sin = np.sin(2*np.pi*value_scaled)
@@ -215,7 +215,7 @@ features = ColumnSelector(['timestamp', 'session_id']) + cat_feats + time_featur
 
 # ### Define the preprocessing of sequential features
 
-# Once the item features are generated, the objective of this cell is grouping interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.
+# Once the item features are generated, the objective of this cell is to group interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.
 
 # In[10]:
 
@@ -255,7 +255,7 @@ MINIMUM_SESSION_LENGTH = 2
 filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df["item_id-count"] >= MINIMUM_SESSION_LENGTH) 
 
 
-# - Avoid Numba low occupancy warnings
+# Avoid Numba low occupancy warnings:
 
 # In[11]:
 
@@ -266,16 +266,16 @@ config.CUDA_LOW_OCCUPANCY_WARNINGS = 0
 
 # ### Execute NVTabular workflow
 
-# Once we have defined the general workflow (`filtered_sessions`), we provide our cudf dataset to nvt.Dataset class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.
+# Once we have defined the general workflow (`filtered_sessions`), we provide our cudf dataset to `nvt.Dataset` class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.
 
 # In[12]:
 
 
 dataset = nvt.Dataset(interactions_merged_df)
 workflow = nvt.Workflow(filtered_sessions)
-# Learns features statistics necessary of the preprocessing workflow
+# Learn features statistics necessary of the preprocessing workflow
 workflow.fit(dataset)
-# Apply the preprocessing workflow in the dataset and converts the resulting Dask cudf dataframe to a cudf dataframe
+# Apply the preprocessing workflow in the dataset and convert the resulting Dask cudf dataframe to a cudf dataframe
 sessions_gdf = workflow.transform(dataset).compute()
 
 
@@ -297,9 +297,9 @@ workflow.save('workflow_etl')
 
 # ### Export pre-processed data by day
 
-# In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day: `train.parquet`, `validation.parquet` and `test.parquet`
+# In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day: `train.parquet`, `validation.parquet` and `test.parquet`.
 #   
-# P.s. It is worthwhile a note that the dataset have a single categorical feature (category), but it is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.
+# P.s. It is worthwhile to note that the dataset has a single categorical feature (category), which, however, is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.
 
 # In[15]:
 
@@ -348,4 +348,4 @@ del  sessions_gdf
 gc.collect()
 
 
-# That's it! We created our sequential features, now we can go to next notebook to train a PyTorch session-based model.
+# That's it! We created our sequential features, now we can go to the next notebook to train a PyTorch session-based model.

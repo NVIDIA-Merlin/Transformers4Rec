@@ -32,11 +32,11 @@
 
 # ## 1. Model definition using Transformers4Rec
 
-# In the previous notebook, we have created sequential features and saved our processed data frames as parquet files, and now we use these processed parquet files to train a session-based recommendation model with XLNet architecture.
+# In the previous notebook, we have created sequential features and saved our processed data frames as parquet files. Now we use these processed parquet files to train a session-based recommendation model with the XLNet architecture.
 
 # ### 1.1 Get the schema 
 
-# The library uses a schema format to configure the input features and automatically creates the necessary layers. This *protobuf* text file contains the description of each input feature by defining: the name, the type, the number of elements of a list column,  the cardinality of a categorical feature and the min and max values of each feature. In addition, the annotation field contains the tags such as specifying `continuous` and `categorical` features, the `target` column or the `item_id` feature, among others.
+# The library uses a schema format to configure the input features and automatically creates the necessary layers. This *protobuf* text file contains the description of each input feature by defining: the name, the type, the number of elements of a list column,  the cardinality of a categorical feature and the min and max values of each feature. In addition, the annotation field contains the tags such as specifying the `continuous` and `categorical` features, the `target` column or the `item_id` feature, among others.
 
 # In[2]:
 
@@ -57,13 +57,13 @@ schema = schema.select_by_name(
 )
 
 
-# ### 3.2 Define the end-to-end Session-based Transformer-based recommendation model
+# ### 1.2 Define the end-to-end Session-based Transformer-based recommendation model
 
-# For session-based recommendation model definition, the end-to-end model definition requires four steps:
+# For defining a session-based recommendation model, the end-to-end model definition requires four steps:
 # 
 # 1. Instantiate [TabularSequenceFeatures](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.tf.features.html?highlight=tabularsequence#transformers4rec.tf.features.sequence.TabularSequenceFeatures) input-module from schema to prepare the embedding tables of categorical variables and project continuous features, if specified. In addition, the module provides different aggregation methods (e.g. 'concat', 'elementwise-sum') to merge input features and generate the sequence of interactions embeddings. The module also supports language modeling tasks to prepare masked labels for training and evaluation (e.g: 'mlm' for masked language modeling) 
 # 
-# 2. Next, we need to define one or multiple prediction tasks. For this demo, we are going to use [NextItemPredictionTask](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.tf.model.html?highlight=nextitem#transformers4rec.tf.model.prediction_task.NextItemPredictionTask) with `Masked Language modeling`: during training randomly selected items are masked and predicted using the unmasked sequence items. For inference it is meant to always predict the next item to be interacted with.
+# 2. Next, we need to define one or multiple prediction tasks. For this demo, we are going to use [NextItemPredictionTask](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.tf.model.html?highlight=nextitem#transformers4rec.tf.model.prediction_task.NextItemPredictionTask) with `Masked Language modeling`: during training, randomly selected items are masked and predicted using the unmasked sequence items. For inference, it is meant to always predict the next item to be interacted with.
 # 
 # 3. Then we construct a `transformer_config` based on the architectures provided by [Hugging Face Transformers](https://github.com/huggingface/transformers) framework. </a>
 # 
@@ -71,7 +71,7 @@ schema = schema.select_by_name(
 #     
 # For more details about the features supported by each sub-module, please check out the library [documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/index.html) page.
 
-# In[ ]:
+# In[4]:
 
 
 from transformers4rec import torch as tr
@@ -88,30 +88,30 @@ input_module = tr.TabularSequenceFeatures.from_schema(
 )
 
 # Define Next item prediction-task 
-prediction_task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+prediction_task = tr.NextItemPredictionTask(weight_tying=True)
 
 # Define the config of the XLNet Transformer architecture
 transformer_config = tr.XLNetConfig.build(
     d_model=d_model, n_head=8, n_layer=2, total_seq_length=max_sequence_length
 )
 
-#Get the end-to-end model 
+# Get the end-to-end model 
 model = transformer_config.to_torch_model(input_module, prediction_task)
 
 
 # You can print out the model structure by uncommenting the line below.
 
-# In[ ]:
+# In[5]:
 
 
 #model
 
 
-# ### 3.3. Daily Fine-Tuning: Training over a time window¶
+# ### 1.3. Daily Fine-Tuning: Training over a time window¶
 
-# Now that the model is defined, we are going to launch training. For that, Transfromers4rec extends HF Transformers Trainer class to adapt the evaluation loop for session-based recommendation task and the calculation of ranking metrics. The original `train()` method is not modified meaning that we leverage the efficient training implementation from that library, which manages for example half-precision (FP16) training.
+# Now that the model is defined, we are going to launch training. For that, Transfromers4rec extends HF Transformers Trainer class to adapt the evaluation loop for session-based recommendation task and the calculation of ranking metrics. The original `train()` method is not modified meaning that we leverage the efficient training implementation from that library, which manages, for example, half-precision (FP16) training.
 
-# #### Sets Training arguments
+# #### Set the training arguments
 
 # An additional argument `data_loader_engine` is defined to automatically load the features needed for training using the schema. The default value is `nvtabular` for optimized GPU-based data-loading.  Optionally a `PyarrowDataLoader` (`pyarrow`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
 
@@ -145,9 +145,9 @@ recsys_trainer = tr.Trainer(
     compute_metrics=True)
 
 
-# #### Launches daily Training and Evaluation
+# #### Launch daily training and evaluation
 
-# In this demo, we will use the `fit_and_evaluate` method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use training data of a specific time index $t$ to train the model then we evaluate on the validation data of next index $t + 1$. Particularly, we set start time to 178 and end time to 180.
+# In this demo, we will use the `fit_and_evaluate` method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use the training data of a specific time index $t$ to train the model; then we evaluate on the validation data of the next index $t + 1$. Particularly, we set start time to 178 and end time to 180.
 
 # In[8]:
 
@@ -156,7 +156,7 @@ from transformers4rec.torch.utils.examples_utils import fit_and_evaluate
 OT_results = fit_and_evaluate(recsys_trainer, start_time_index=178, end_time_index=180, input_dir='./preproc_sessions_by_day')
 
 
-# #### Visualize the average over time metrics
+# #### Visualize the average of metrics over time
 
 # `OT_results` is a list of scores (accuracy metrics) for evaluation based on given start and end time_index. Since in this example we do evaluation on days 179, 180 and 181, we get three metrics in the list one for each day.
 
@@ -176,7 +176,7 @@ for key in sorted(avg_results.keys()):
     print(" %s = %s" % (key, str(avg_results[key]))) 
 
 
-# #### Saves the model
+# #### Save the model
 
 # In[11]:
 
@@ -184,7 +184,7 @@ for key in sorted(avg_results.keys()):
 recsys_trainer._save_model_and_checkpoint(save_model_class=True)
 
 
-# #### Exports the preprocessing workflow and model in the format required by Triton server:
+# #### Export the preprocessing workflow and model in the format required by Triton server:
 # 
 # NVTabular’s `export_pytorch_ensemble()` function enables us to create model files and config files to be served to Triton Inference Server. 
 
@@ -205,18 +205,18 @@ export_pytorch_ensemble(
 )
 
 
-# ## 4. Serving Ensemble Model to the Triton Inference Server
+# ## 2. Serving Ensemble Model to the Triton Inference Server
 
 # NVIDIA [Triton Inference Server (TIS)](https://github.com/triton-inference-server/server) simplifies the deployment of AI models at scale in production. TIS provides a cloud and edge inferencing solution optimized for both CPUs and GPUs. It supports a number of different machine learning frameworks such as TensorFlow and PyTorch.
 # 
-# The last step of machine learning (ML)/deep learning (DL) pipeline is to deploy the ETL workflow and saved model to production. In the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the DL model for a prediction. Therefore, we deploy the NVTabular workflow with the PyTorch model as an ensemble model to Triton Inference. The ensemble model guarantees that the same transformation is applied to the raw inputs.
+# The last step of a machine learning (ML)/deep learning (DL) pipeline is to deploy the ETL workflow and saved model to production. In the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the DL model for a prediction. Therefore, we deploy the NVTabular workflow with the PyTorch model as an ensemble model to Triton Inference. The ensemble model guarantees that the same transformation is applied to the raw inputs.
 # 
 # 
 # In this section, you will learn how to
 # - to deploy saved NVTabular and PyTorch models to Triton Inference Server 
 # - send requests for predictions and get responses.
 
-# ### 4.1. Pull and Start Inference Container
+# ### 2.1. Pull and Start Inference Container
 # 
 # At this point, we start the Triton Inference Server (TIS). 
 # 
@@ -226,11 +226,11 @@ export_pytorch_ensemble(
 # ```
 # tritonserver --model-repository=<path_to_models> --model-control-mode=explicit
 # ```
-# Note: The model-repository path for our example is `/workspace/TF4Rec/models/`. The models haven't been loaded, yet. Below, we will request the Triton server to load the saved ensemble model.
+# Note: The model-repository path for our example is `/workspace/TF4Rec/models/`. The models have not been loaded yet. Below, we will request the Triton server to load the saved ensemble model.
 
-# ### Connect to the Triton Inference Server and check if the server is alive
+# ### 2.2. Connect to the Triton Inference Server and check if the server is alive
 
-# In[20]:
+# In[13]:
 
 
 import tritonhttpclient
@@ -242,10 +242,10 @@ except Exception as e:
 triton_client.is_server_live()
 
 
-# ### Load raw data for inference
+# ### 2.3. Load raw data for inference
 # We select the last 50 interactions and filter out sessions with less than 2 interactions. 
 
-# In[21]:
+# In[14]:
 
 
 import pandas as pd
@@ -256,17 +256,17 @@ sessions_to_use = batch.session_id.value_counts()
 filtered_batch = batch[batch.session_id.isin(sessions_to_use[sessions_to_use.values>1].index.values)]
 
 
-# ### Load the ensemble model to triton
+# ### 2.4. Load the ensemble model to triton
 
 # The models should be loaded successfully before we send a request to TIS. If all models are loaded successfully, you should be seeing `successfully loaded` status next to each model name on your terminal.
 
-# In[22]:
+# In[17]:
 
 
 triton_client.load_model(model_name="t4r_pytorch")
 
 
-# ### Send the request to triton server
+# ### 2.5. Send the request to triton server
 
 # In[23]:
 

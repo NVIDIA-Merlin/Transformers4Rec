@@ -59,7 +59,7 @@ INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
 # In[4]:
 
 
-NUM_ROWS = 10000000
+NUM_ROWS = 100000
 long_tailed_item_distribution = np.clip(np.random.lognormal(3., 1., NUM_ROWS).astype(np.int32), 1, 50000)
 
 # generate random item interaction features 
@@ -68,15 +68,15 @@ df['item_id'] = long_tailed_item_distribution
 
 # generate category mapping for each item-id
 df['category'] = pd.cut(df['item_id'], bins=334, labels=np.arange(1, 335)).astype(np.int32)
-df['timestamp/age_days'] = np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
-df['timestamp/weekday/sin']= np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
+df['age_days'] = np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
+df['weekday_sin']= np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
 
 # generate day mapping for each session 
 map_day = dict(zip(df.session_id.unique(), np.random.randint(1, 10, size=(df.session_id.nunique()))))
 df['day'] =  df.session_id.map(map_day)
 
 
-# - Visualize couple of rows of the synthetic dataset
+# Visualize couple of rows of the synthetic dataset:
 
 # In[5]:
 
@@ -86,45 +86,51 @@ df.head()
 
 # ## Feature Engineering with NVTabular
 
-# Deep Learning models require dense input features. Categorical features are sparse, and need to be represented by dense embeddings in the model. To allow for that, categorical features need first to be encoded as contiguous integers `(0, ..., |C|)`, where `|C|` is the feature cardinality (number of unique values), so that their embeddings can be efficiently stored in embedding layers.  We will use NVTabular to preprocess the categorical features, so that all categorical columns are encoded as contiguous integers.  Note that in the `Categorify` op we set `start_index=1`, the reason for that we want the encoded null values to start from `1` instead of `0` because we reserve `0` for padding the sequence features.
+# Deep Learning models require dense input features. Categorical features are sparse, and need to be represented by dense embeddings in the model. To allow for that, categorical features first need to be encoded as contiguous integers `(0, ..., |C|)`, where `|C|` is the feature cardinality (number of unique values), so that their embeddings can be efficiently stored in embedding layers.  We will use NVTabular to preprocess the categorical features, so that all categorical columns are encoded as contiguous integers. Note that the `Categorify` op encodes OOVs or nulls to `0` automatically. In our synthetic dataset we do not have any nulls. On the other hand `0` is also used for padding the sequences in input block, therefore, you can set `start_index=1` arg in the Categorify op if you want the encoded null or OOV values to start from `1` instead of `0` because we reserve `0` for padding the sequence features.
 
 # Here our goal is to create sequential features.  In this cell, we are creating temporal features and grouping them together at the session level, sorting the interactions by time. Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.
 
 # In[6]:
 
 
+SESSIONS_MAX_LENGTH =20
+
 # Categorify categorical features
-categ_feats = ['session_id', 'item_id', 'category'] >> nvt.ops.Categorify(start_index=1)
+categ_feats = ['session_id', 'item_id', 'category'] >> nvt.ops.Categorify()
 
 # Define Groupby Workflow
-groupby_feats = categ_feats + ['day', 'timestamp/age_days', 'timestamp/weekday/sin']
+groupby_feats = categ_feats + ['day', 'age_days', 'weekday_sin']
 
-# Groups interaction features by session and sorted by timestamp
+# Group interaction features by session
 groupby_features = groupby_feats >> nvt.ops.Groupby(
     groupby_cols=["session_id"], 
     aggs={
         "item_id": ["list", "count"],
         "category": ["list"],     
         "day": ["first"],
-        "timestamp/age_days": ["list"],
-        'timestamp/weekday/sin': ["list"],
+        "age_days": ["list"],
+        'weekday_sin': ["list"],
         },
     name_sep="-")
 
 # Select and truncate the sequential features
-sequence_features_truncated = (groupby_features['category-list']) >> nvt.ops.ListSlice(0,20) >> nvt.ops.Rename(postfix = '_trim')
+sequence_features_truncated = (
+    groupby_features['category-list']
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
+    >> nvt.ops.ValueCount()
+)
 
 sequence_features_truncated_item = (
     groupby_features['item_id-list']
-    >> nvt.ops.ListSlice(0,20) 
-    >> nvt.ops.Rename(postfix = '_trim')
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
     >> TagAsItemID()
+    >> nvt.ops.ValueCount()
 )  
 sequence_features_truncated_cont = (
-    groupby_features['timestamp/age_days-list', 'timestamp/weekday/sin-list'] 
-    >> nvt.ops.ListSlice(0,20) 
-    >> nvt.ops.Rename(postfix = '_trim')
+    groupby_features['age_days-list', 'weekday_sin-list'] 
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
     >> nvt.ops.AddMetadata(tags=[Tags.CONTINUOUS])
+    >> nvt.ops.ValueCount()
 )
 
 # Filter out sessions with length 1 (not valid for next-item prediction training and evaluation)
@@ -138,14 +144,17 @@ selected_features = (
     
 filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df["item_id-count"] >= MINIMUM_SESSION_LENGTH)
 
+seq_feats_list = filtered_sessions['item_id-list', 'category-list', 'age_days-list', 'weekday_sin-list'] >>  nvt.ops.ValueCount()
 
-workflow = nvt.Workflow(filtered_sessions)
+
+workflow = nvt.Workflow(filtered_sessions['session_id', 'day-first', 'item_id-count'] + seq_feats_list)
+
 dataset = nvt.Dataset(df, cpu=False)
-# Generating statistics for the features
+# Generate statistics for the features
 workflow.fit(dataset)
-# Applying the preprocessing and returning an NVTabular dataset
+# Apply the preprocessing and return an NVTabular dataset
 sessions_ds = workflow.transform(dataset)
-# Converting the NVTabular dataset to a Dask cuDF dataframe (`to_ddf()`) and then to cuDF dataframe (`.compute()`)
+# Convert the NVTabular dataset to a Dask cuDF dataframe (`to_ddf()`) and then to cuDF dataframe (`.compute()`)
 sessions_gdf = sessions_ds.to_ddf().compute()
 
 
@@ -155,34 +164,46 @@ sessions_gdf = sessions_ds.to_ddf().compute()
 sessions_gdf.head(3)
 
 
-# It is possible to save the preprocessing workflow. That is useful to apply the same preprocessing to other data (with the same schema) and also to deploy the session-based recommendation pipeline to Triton Inference Server.
-
 # In[8]:
 
 
-workflow.save('workflow_etl')
+sessions_gdf.dtypes
+
+
+# It is possible to save the preprocessing workflow. That is useful to apply the same preprocessing to other data (with the same schema) and also to deploy the session-based recommendation pipeline to Triton Inference Server.
+
+# In[9]:
+
+
+workflow.output_schema
 
 
 # The following will generate `schema.pbtxt` file in the provided folder.
 
-# In[12]:
+# In[10]:
 
 
 workflow.fit_transform(dataset).to_parquet(os.path.join(INPUT_DATA_DIR, "processed_nvt"))
 
 
+# In[11]:
+
+
+workflow.save('workflow_etl')
+
+
 # ## Export pre-processed data by day
 
-# In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day folder: train.parquet, validation.parquet and test.parquet
+# In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day folder: `train.parquet`, `validation.parquet` and `test.parquet`.
 
-# In[13]:
+# In[12]:
 
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR",os.path.join(INPUT_DATA_DIR, "sessions_by_day"))
 get_ipython().system('mkdir -p $OUTPUT_DIR')
 
 
-# In[14]:
+# In[13]:
 
 
 from transformers4rec.data.preprocessing import save_time_based_splits
@@ -195,17 +216,17 @@ save_time_based_splits(data=nvt.Dataset(sessions_gdf),
 
 # ## Checking the preprocessed outputs
 
-# In[16]:
+# In[14]:
 
 
 TRAIN_PATHS = sorted(glob.glob(os.path.join(OUTPUT_DIR, "1", "train.parquet")))
 
 
-# In[17]:
+# In[15]:
 
 
 gdf = cudf.read_parquet(TRAIN_PATHS[0])
 gdf
 
 
-# You have  just created session-level features to train a session-based recommendation model using NVTabular. Now you can move to the the next notebook,`02-session-based-XLNet-with-PyT.ipynb` to train a session-based recommendation model using [XLNet](https://arxiv.org/abs/1906.08237), one of the state-of-the-art NLP model.
+# You have  just created session-level features to train a session-based recommendation model using NVTabular. Now you can move to the the next notebook,`02-session-based-XLNet-with-PyT.ipynb` to train a session-based recommendation model using [XLNet](https://arxiv.org/abs/1906.08237), one of the state-of-the-art NLP model. Please shut down this kernel to free the GPU memory before you start the next one.

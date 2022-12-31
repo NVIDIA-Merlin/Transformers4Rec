@@ -24,11 +24,11 @@
 # 
 # # Session-based Recommendation with XLNET
 
-# In this notebook we introduce the [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec) library for sequential and session-based recommendation. This notebook uses the PyTorch API. Transformers4Rec integrates with the popular [HuggingFace’s Transformers](https://github.com/huggingface/transformers) and make it possible to experiment with cutting-edge implementation of the latest NLP Transformer architectures.  
+# In this notebook we introduce the [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec) library for sequential and session-based recommendation. This notebook uses the PyTorch API. Transformers4Rec integrates with the popular [HuggingFace’s Transformers](https://github.com/huggingface/transformers) and makes it possible to experiment with a cutting-edge implementation of the latest NLP Transformer architectures.  
 # 
 # We demonstrate how to build a session-based recommendation model with the [XLNET](https://arxiv.org/abs/1906.08237) Transformer architecture. The XLNet architecture was designed to leverage the best of both auto-regressive language modeling and auto-encoding with its Permutation Language Modeling training method. In this example we will use XLNET with masked language modeling (MLM) training method, which showed very promising results in the experiments conducted in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
 
-# In the previous notebook we went through our ETL pipeline with NVTabular library, and created sequential features to be used in training a session-based recommendation model. In this notebook we will learn:
+# In the previous notebook we went through our ETL pipeline with the NVTabular library, and created sequential features to be used in training a session-based recommendation model. In this notebook we will learn:
 # 
 # - Accelerating data loading of parquet files with multiple features on PyTorch using NVTabular library
 # - Training and evaluating a Transformer-based (XLNET-MLM) session-based recommendation model with multiple features
@@ -51,9 +51,9 @@
 
 # ![tf4rec_meta](images/tf4rec_meta2.png)
 
-# ### Imports required libraries
+# ### Import required libraries
 
-# In[ ]:
+# In[2]:
 
 
 import os
@@ -92,15 +92,15 @@ get_ipython().system('head -20 $SCHEMA_PATH')
 
 
 # You can select a subset of features for training
-schema = schema.select_by_name(['item_id-list_trim', 
-                                'category-list_trim', 
-                                'timestamp/weekday/sin-list_trim',
-                                'timestamp/age_days-list_trim'])
+schema = schema.select_by_name(['item_id-list', 
+                                'category-list', 
+                                'weekday_sin-list',
+                                'age_days-list'])
 
 
 # ### Define the sequential input module
 
-# Below we define our `input` block using the `TabularSequenceFeatures` [class](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/features/sequence.py#L97). The `from_schema()` method processes the schema and creates the necessary layers to represent features and aggregate them. It keeps only features tagged as `categorical` and `continuous` and supports data aggregation methods like `concat` and `elementwise-sum` techniques. It also support data augmentation techniques like stochastic swap noise. It outputs an interaction representation after combining all features and also the input mask according to the training task (more on this later).
+# Below we define our `input` block using the `TabularSequenceFeatures` [class](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/features/sequence.py#L97). The `from_schema()` method processes the schema and creates the necessary layers to represent features and aggregate them. It keeps only features tagged as `categorical` and `continuous` and supports data aggregation methods like `concat` and `elementwise-sum`. It also supports data augmentation techniques like stochastic swap noise. It outputs an interaction representation after combining all features and also the input mask according to the training task (more on this later).
 # 
 
 # The `max_sequence_length` argument defines the maximum sequence length of our sequential input, and if `continuous_projection` argument is set, all numerical features are concatenated and projected by an MLP block so that continuous features are represented by a vector of size defined by user, which is `64` in this example.
@@ -112,27 +112,27 @@ inputs = tr.TabularSequenceFeatures.from_schema(
         schema,
         max_sequence_length=20,
         continuous_projection=64,
-        d_output=100,
         masking="mlm",
+        d_output=100,
 )
 
 
-# The output of the `TabularSequenceFeatures` module is the sequence of interactions embeddings vectors defined in the following steps:
-# - 1. Create sequence inputs: If the schema contains non sequential features, expand each feature to a sequence by repeating the value as many as the `max_sequence_length` value.  
+# The output of the `TabularSequenceFeatures` module is the sequence of interactions embedding vectors defined in the following steps:
+# - 1. Create sequence inputs: If the schema contains non sequential features, expand each feature to a sequence by repeating the value as many times as the `max_sequence_length` value.  
 # - 2. Get a representation vector of categorical features: Project each sequential categorical feature using the related embedding table. The resulting tensor is of shape (bs, max_sequence_length, embed_dim).
 # - 3. Project scalar values if `continuous_projection` is set : Apply an MLP layer with hidden size equal to `continuous_projection` vector size value. The resulting tensor is of shape (batch_size, max_sequence_length, continuous_projection).
 # - 4. Aggregate the list of features vectors to represent each interaction in the sequence with one vector: For example, `concat` will concat all vectors based on the last dimension `-1` and the resulting tensor will be of shape (batch_size, max_sequence_length, D) where D is the sum over all embedding dimensions and the value of continuous_projection. 
-# - 5. If masking schema is set (needed only for the NextItemPredictionTask training), the masked labels are derived from the sequence of raw item-ids and the sequence of interactions embeddings are processed to mask information about the masked positions.
+# - 5. If masking schema is set (needed only for the `NextItemPredictionTask` training), the masked labels are derived from the sequence of raw item-ids and the sequence of interactions embeddings are processed to mask information about the masked positions.
 
-# ### Define the Transformer Block
+# ### Define the Transformer block
 
 # In the next cell, the whole model is build with a few lines of code. 
 # Here is a brief explanation of the main classes:  
-# - [XLNetConfig](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/config/transformer.py#L261) - We have injected in the HF transformers config classes like `XLNetConfig`the `build()` method, that provides default configuration to Transformer architectures for session-based recommendation. Here we use it to instantiate and configure an XLNET architecture.  
+# - [XLNetConfig](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/config/transformer.py#L261) - We have injected in the HF transformers config classes like `XLNetConfig`the `build()` method that provides default configuration to Transformer architectures for session-based recommendation. Here we use it to instantiate and configure an XLNET architecture.  
 # - [TransformerBlock](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/block/transformer.py#L57) class integrates with HF Transformers, which are made available as a sequence processing module for session-based and sequential-based recommendation models.  
 # - [NextItemPredictionTask](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/model/prediction_task.py#L110) supports the next-item prediction task. We also support other predictions [tasks](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/transformers4rec/torch/model/prediction_task.py), like classification and regression for the whole sequence. 
 
-# In[ ]:
+# In[7]:
 
 
 # Define XLNetConfig class and set default parameters for HF XLNet config  
@@ -144,14 +144,14 @@ body = tr.SequentialBlock(
     inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config, masking=inputs.masking)
 )
 
-# Defines the evaluation top-N metrics and the cut-offs
+# Define the evaluation top-N metrics and the cut-offs
 metrics = [NDCGAt(top_ks=[20, 40], labels_onehot=True),  
            RecallAt(top_ks=[20, 40], labels_onehot=True)]
 
 # Define a head related to next item prediction task 
 head = tr.Head(
     body,
-    tr.NextItemPredictionTask(weight_tying=True, hf_format=True, 
+    tr.NextItemPredictionTask(weight_tying=True, 
                               metrics=metrics),
     inputs=inputs,
 )
@@ -190,11 +190,11 @@ train_args = T4RecTrainingArguments(data_loader_engine='nvtabular',
                                     no_cuda=False)
 
 
-# Note that we add an argument `data_loader_engine='nvtabular'` to automatically load the features needed for training using the schema. The default value is nvtabular for optimized GPU-based data-loading. Optionally a PyarrowDataLoader (pyarrow) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
+# Note that we add an argument `data_loader_engine='nvtabular'` to automatically load the features needed for training using the schema. The default value is nvtabular for optimized GPU-based data-loading. Optionally a `PyarrowDataLoader` (pyarrow) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
 
 # ## Daily Fine-Tuning: Training over a time window
 
-# Here we do daily fine-tuning meaning that we use the first day to train and second day to evaluate, then we use the second day data to train the model by resuming from the first step, and evaluate on the third day, so on so forth.
+# Here we do daily fine-tuning meaning that we use the first day to train and second day to evaluate, then we use the second day data to train the model by resuming from the first step, and evaluate on the third day, so on and so forth.
 
 # We have extended the HuggingFace transformers `Trainer` class (PyTorch only) to support evaluation of RecSys metrics. In this example, the evaluation of the session-based recommendation model is performed using traditional Top-N ranking metrics such as Normalized Discounted Cumulative Gain (NDCG@20) and Hit Rate (HR@20). NDCG accounts for rank of the relevant item in the recommendation list and is a more fine-grained metric than HR, which only verifies whether the relevant item is among the top-n items. HR@n is equivalent to Recall@n when there is only one relevant item in the recommendation list.
 
@@ -210,7 +210,7 @@ trainer = Trainer(
 )
 
 
-# - Define the output folder of the processed parquet files
+# Define the output folder of the processed parquet files:
 
 # In[10]:
 
@@ -222,34 +222,18 @@ OUTPUT_DIR = os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/sessions_by_day")
 # In[11]:
 
 
-get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_time_window_index = 7\n#Iterating over days of one week\nfor time_index in range(start_time_window_index, final_time_window_index):\n    # Set data \n    time_index_train = time_index\n    time_index_eval = time_index + 1\n    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))\n    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))\n    print(train_paths)\n    \n    # Train on day related to time_index \n    print(\'*\'*20)\n    print("Launch training for day %s are:" %time_index)\n    print(\'*\'*20 + \'\\n\')\n    trainer.train_dataset_or_path = train_paths\n    trainer.reset_lr_scheduler()\n    trainer.train()\n    trainer.state.global_step +=1\n    print(\'finished\')\n    \n    # Evaluate on the following day\n    trainer.eval_dataset_or_path = eval_paths\n    train_metrics = trainer.evaluate(metric_key_prefix=\'eval\')\n    print(\'*\'*20)\n    print("Eval results for day %s are:\\t" %time_index_eval)\n    print(\'\\n\' + \'*\'*20 + \'\\n\')\n    for key in sorted(train_metrics.keys()):\n        print(" %s = %s" % (key, str(train_metrics[key]))) \n    wipe_memory()\n')
+get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_time_window_index = 8\n#Iterating over days of one week\nfor time_index in range(start_time_window_index, final_time_window_index):\n    # Set data \n    time_index_train = time_index\n    time_index_eval = time_index + 1\n    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))\n    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))\n    print(train_paths)\n    \n    # Train on day related to time_index \n    print(\'*\'*20)\n    print("Launch training for day %s are:" %time_index)\n    print(\'*\'*20 + \'\\n\')\n    trainer.train_dataset_or_path = train_paths\n    trainer.reset_lr_scheduler()\n    trainer.train()\n    trainer.state.global_step +=1\n    print(\'finished\')\n    \n    # Evaluate on the following day\n    trainer.eval_dataset_or_path = eval_paths\n    train_metrics = trainer.evaluate(metric_key_prefix=\'eval\')\n    print(\'*\'*20)\n    print("Eval results for day %s are:\\t" %time_index_eval)\n    print(\'\\n\' + \'*\'*20 + \'\\n\')\n    for key in sorted(train_metrics.keys()):\n        print(" %s = %s" % (key, str(train_metrics[key]))) \n    wipe_memory()\n')
 
 
-# ### Saves the model
+# ### Re-compute evaluation metrics of the validation data
 
 # In[12]:
-
-
-trainer._save_model_and_checkpoint(save_model_class=True)
-
-
-# ### Reloads the model
-
-# In[13]:
-
-
-trainer.load_model_trainer_states_from_checkpoint('./tmp/checkpoint-%s'%trainer.state.global_step)
-
-
-# ### Re-compute eval metrics of validation data
-
-# In[14]:
 
 
 eval_data_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))
 
 
-# In[15]:
+# In[13]:
 
 
 # set new data from day 7
@@ -258,7 +242,17 @@ for key in sorted(eval_metrics.keys()):
     print("  %s = %s" % (key, str(eval_metrics[key])))
 
 
-# That's it!  
-# You have just trained your session-based recommendation model using Transformers4Rec.
+# ### Save the model
 
-# Tip: We can easily log and visualize model training and evaluation on [Weights & Biases (W&B)](https://wandb.ai/home), [TensorBoard](https://www.tensorflow.org/tensorboard), or [NVIDIA DLLogger](https://github.com/NVIDIA/dllogger). By default, the HuggingFace transformers `Trainer` (which we extend) uses Weights & Biases (W&B) to log training and evaluation metrics, which provides nice results visualization and comparison between different runs.
+# Let's save the model to be able to load it back at inference step. Using `model.save()`, we save the model as a pkl file in the given path.
+
+# In[14]:
+
+
+model_path= os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/saved_model")
+model.save(model_path)
+
+
+# That's it! You have just trained your session-based recommendation model using Transformers4Rec. Now you can move on to the next notebook `03-serving-session-based-model-torch-backend`. Please shut down this kernel to free the GPU memory before you start the next one.
+
+# Tip: We can easily log and visualize model training and evaluation on [Weights & Biases (W&B)](https://wandb.ai/home), [TensorBoard](https://www.tensorflow.org/tensorboard), or [NVIDIA DLLogger](https://github.com/NVIDIA/dllogger). By default, the HuggingFace transformers `Trainer` (which we extend) uses Weights & Biases (W&B) to log training and evaluation metrics, which provides nice visualization results and comparison between different runs.

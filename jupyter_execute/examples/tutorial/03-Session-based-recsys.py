@@ -159,7 +159,7 @@ body = tr.SequentialBlock(
 
 head = tr.Head(
     body,
-    tr.NextItemPredictionTask(weight_tying=True, hf_format=True, 
+    tr.NextItemPredictionTask(weight_tying=True, 
                               metrics=[NDCGAt(top_ks=[10, 20], labels_onehot=True),  
                                        RecallAt(top_ks=[10, 20], labels_onehot=True)]),
 )
@@ -392,7 +392,7 @@ body = tr.SequentialBlock(
 # Define the head for to next item prediction task 
 head = tr.Head(
     body,
-    tr.NextItemPredictionTask(weight_tying=True, hf_format=True, 
+    tr.NextItemPredictionTask(weight_tying=True,
                               metrics=[NDCGAt(top_ks=[10, 20], labels_onehot=True),  
                                        RecallAt(top_ks=[10, 20], labels_onehot=True)]),
 )
@@ -544,7 +544,7 @@ body = tr.SequentialBlock(
 # Define the head related to next item prediction task 
 head = tr.Head(
     body,
-    tr.NextItemPredictionTask(weight_tying=True, hf_format=True, 
+    tr.NextItemPredictionTask(weight_tying=True, 
                                      metrics=[NDCGAt(top_ks=[10, 20], labels_onehot=True),  
                                               RecallAt(top_ks=[10, 20], labels_onehot=True)]),
 )
