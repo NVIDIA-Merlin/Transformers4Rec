@@ -134,7 +134,7 @@
 
 <div class="viewcode-block" id="MaskSequence"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">MaskSequence</span><span class="p">(</span><span class="n">OutputSizeMixin</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Base class to prepare masked items inputs/labels for language modeling tasks.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class to prepare masked items inputs/labels for language modeling tasks.</span>
 
 <span class="sd">    Transformer architectures can be trained in different ways. Depending of the training method,</span>
 <span class="sd">    there is a specific masking schema. The masking schema sets the items to be predicted (labels)</span>
@@ -183,7 +183,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to prepare masked labels based on the sequence of item ids.</span>
 <span class="sd">        It returns The true labels of masked positions and the related boolean mask.</span>
 
@@ -203,7 +203,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
 <div class="viewcode-block" id="MaskSequence.compute_masked_targets"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.compute_masked_targets">[docs]</a>    <span class="k">def</span> <span class="nf">compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Method to prepare masked labels based on the sequence of item ids.</span>
 <span class="sd">        It returns The true labels of masked positions and the related boolean mask.</span>
 <span class="sd">        And the attributes of the class `mask_schema` and `masked_targets`</span>
@@ -231,7 +231,7 @@
         <span class="k">return</span> <span class="n">masking_info</span></div>
 
 <div class="viewcode-block" id="MaskSequence.apply_mask_to_inputs"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.apply_mask_to_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">apply_mask_to_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">schema</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Control the masked positions in the inputs by replacing the true interaction</span>
 <span class="sd">        by a learnable masked embedding.</span>
 
@@ -251,7 +251,7 @@
         <span class="k">return</span> <span class="n">inputs</span></div>
 
 <div class="viewcode-block" id="MaskSequence.predict_all"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.predict_all">[docs]</a>    <span class="k">def</span> <span class="nf">predict_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare labels for all next item predictions instead of</span>
 <span class="sd">        last-item predictions in a user&#39;s sequence.</span>
 
@@ -301,7 +301,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">transformer_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare additional arguments to pass to the Transformer forward methods.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer_required_arguments</span><span class="p">(),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">transformer_optional_arguments</span><span class="p">()}</span></div>
@@ -310,7 +310,7 @@
 <div class="viewcode-block" id="CausalLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.CausalLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;clm&quot;</span><span class="p">,</span> <span class="s2">&quot;causal&quot;</span><span class="p">)</span>
 <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">CausalLanguageModeling</span><span class="p">(</span><span class="n">MaskSequence</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    In Causal Language Modeling (clm) you predict the next item based on past positions of the</span>
 <span class="sd">    sequence. Future positions are masked.</span>
 
@@ -381,7 +381,7 @@
 <div class="viewcode-block" id="MaskedLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskedLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;mlm&quot;</span><span class="p">,</span> <span class="s2">&quot;masked&quot;</span><span class="p">)</span>
 <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">MaskedLanguageModeling</span><span class="p">(</span><span class="n">MaskSequence</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    In Masked Language Modeling (mlm) you randomly select some positions of the sequence to be</span>
 <span class="sd">    predicted, which are masked.</span>
 <span class="sd">    During training, the Transformer layer is allowed to use positions on the right (future info).</span>
@@ -414,7 +414,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mlm_probability</span> <span class="o">=</span> <span class="n">mlm_probability</span>
 
     <span class="k">def</span> <span class="nf">_compute_masked_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaskingInfo</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare sequence with mask schema for masked language modeling prediction</span>
 <span class="sd">        the function is based on HuggingFace&#39;s transformers/data/data_collator.py</span>
 
@@ -490,7 +490,7 @@
 <div class="viewcode-block" id="PermutationLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.PermutationLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;plm&quot;</span><span class="p">,</span> <span class="s2">&quot;permutation&quot;</span><span class="p">)</span>
 <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">PermutationLanguageModeling</span><span class="p">(</span><span class="n">MaskSequence</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    In Permutation Language Modeling (plm) you use a permutation factorization at the level of the</span>
 <span class="sd">    self-attention layer to define the accessible bidirectional context.</span>
 
@@ -543,7 +543,7 @@
         <span class="n">item_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare the attention masks needed for permutation language modeling</span>
 <span class="sd">        The function is based on HuggingFace&#39;s transformers/data/data_collator.py</span>
 
@@ -742,7 +742,7 @@
 <div class="viewcode-block" id="ReplacementLanguageModeling"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.ReplacementLanguageModeling">[docs]</a><span class="nd">@masking_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;rtd&quot;</span><span class="p">,</span> <span class="s2">&quot;replacement&quot;</span><span class="p">)</span>
 <span class="nd">@docstring_parameter</span><span class="p">(</span><span class="n">mask_sequence_parameters</span><span class="o">=</span><span class="n">MASK_SEQUENCE_PARAMETERS_DOCSTRING</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ReplacementLanguageModeling</span><span class="p">(</span><span class="n">MaskedLanguageModeling</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Replacement Language Modeling (rtd) you use MLM to randomly select some items, but replace</span>
 <span class="sd">    them by random tokens.</span>
 <span class="sd">    Then, a discriminator model (that can share the weights with the generator or not), is asked</span>
@@ -774,7 +774,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">sample_from_batch</span> <span class="o">=</span> <span class="n">sample_from_batch</span>
 
 <div class="viewcode-block" id="ReplacementLanguageModeling.get_fake_tokens"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.ReplacementLanguageModeling.get_fake_tokens">[docs]</a>    <span class="k">def</span> <span class="nf">get_fake_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">itemid_seq</span><span class="p">,</span> <span class="n">target_flat</span><span class="p">,</span> <span class="n">logits</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Second task of RTD is binary classification to train the discriminator.</span>
 <span class="sd">        The task consists of generating fake data by replacing [MASK] positions with random items,</span>
 <span class="sd">        ELECTRA discriminator learns to detect fake replacements.</span>
@@ -837,7 +837,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="ReplacementLanguageModeling.sample_from_softmax"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.masking.ReplacementLanguageModeling.sample_from_softmax">[docs]</a>    <span class="k">def</span> <span class="nf">sample_from_softmax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sampling method for replacement token modeling (ELECTRA)</span>
 
 <span class="sd">        Parameters</span>

@@ -143,7 +143,7 @@
 
 
 <div class="viewcode-block" id="TransformerBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock">[docs]</a><span class="k">class</span> <span class="nc">TransformerBlock</span><span class="p">(</span><span class="n">BlockBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to support HF Transformers for session-based and sequential-based recommendation models.</span>
 
 <span class="sd">    Parameters</span>
@@ -221,7 +221,7 @@
         <span class="n">total_seq_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">masking</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MaskSequence</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Load the HF transformer architecture based on its name</span>
 
 <span class="sd">        Parameters</span>
@@ -248,7 +248,7 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">_transformer</span><span class="p">,</span> <span class="n">masking</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TransformerBlock.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transformer Models</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">transformer_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs_embeds&quot;</span><span class="p">:</span> <span class="n">inputs_embeds</span><span class="p">}</span>

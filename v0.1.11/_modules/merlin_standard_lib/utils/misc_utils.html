@@ -146,7 +146,7 @@
 
 
 <div class="viewcode-block" id="get_label_feature_name"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.misc_utils.get_label_feature_name">[docs]</a><span class="k">def</span> <span class="nf">get_label_feature_name</span><span class="p">(</span><span class="n">feature_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Analyses the feature map config and returns the name of the label feature (e.g. item_id)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">label_feature_config</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
@@ -162,7 +162,7 @@
 
 
 <div class="viewcode-block" id="get_timestamp_feature_name"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.misc_utils.get_timestamp_feature_name">[docs]</a><span class="k">def</span> <span class="nf">get_timestamp_feature_name</span><span class="p">(</span><span class="n">feature_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Analyses the feature map config and returns the name of the label feature (e.g. item_id)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">timestamp_feature_name</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">k</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">feature_map</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;timestamp&quot;</span><span class="p">)</span>
@@ -204,7 +204,7 @@
 
 
 <div class="viewcode-block" id="Timing"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.misc_utils.Timing">[docs]</a><span class="k">class</span> <span class="nc">Timing</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;A context manager that prints the execution time of the block it manages&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A context manager that prints the execution time of the block it manages&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">logger</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">one_line</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
@@ -242,7 +242,7 @@
 
 
 <div class="viewcode-block" id="get_object_size"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.misc_utils.get_object_size">[docs]</a><span class="k">def</span> <span class="nf">get_object_size</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">seen</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Recursively finds size of objects&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively finds size of objects&quot;&quot;&quot;</span>
     <span class="n">size</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">seen</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
@@ -263,7 +263,7 @@
 
 
 <div class="viewcode-block" id="validate_dataset"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.misc_utils.validate_dataset">[docs]</a><span class="k">def</span> <span class="nf">validate_dataset</span><span class="p">(</span><span class="n">paths_or_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Util function to load NVTabular Dataset from disk</span>
 
 <span class="sd">    Parameters</span>

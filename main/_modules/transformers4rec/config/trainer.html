@@ -110,7 +110,7 @@
 
 <div class="viewcode-block" id="T4RecTrainingArguments"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.config.trainer.T4RecTrainingArguments">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">T4RecTrainingArguments</span><span class="p">(</span><span class="n">TrainingArguments</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class that inherits HF TrainingArguments and add on top of it arguments needed for</span>
 <span class="sd">    session-based and sequential-based recommendation</span>
 
@@ -213,7 +213,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">place_model_on_device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Override the method to allow running training on cpu</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span><span class="p">:</span>
@@ -222,7 +222,7 @@
 
 
 <div class="viewcode-block" id="T4RecTrainingArgumentsTF"><a class="viewcode-back" href="../../../api/transformers4rec.config.html#transformers4rec.config.trainer.T4RecTrainingArgumentsTF">[docs]</a><span class="k">class</span> <span class="nc">T4RecTrainingArgumentsTF</span><span class="p">(</span><span class="n">T4RecTrainingArguments</span><span class="p">,</span> <span class="n">TFTrainingArguments</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Prepare Training arguments for TFTrainer,</span>
 <span class="sd">    Inherit arguments from T4RecTrainingArguments and TFTrainingArguments</span>
 <span class="sd">    &quot;&quot;&quot;</span>

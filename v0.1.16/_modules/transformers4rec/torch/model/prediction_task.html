@@ -199,7 +199,7 @@
 
 
 <div class="viewcode-block" id="NextItemPredictionTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask">[docs]</a><span class="k">class</span> <span class="nc">NextItemPredictionTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
 <span class="sd">    It requires a body containing a masking schema to use for training and target generation.</span>
 <span class="sd">    For the supported masking schemes, please refers to:</span>
 <span class="sd">    https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking</span>
@@ -254,7 +254,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="NextItemPredictionTask.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build method, this is called by the `Head`.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build method, this is called by the `Head`.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;NextItemPredictionTask needs a 3-dim vector as input, found:&quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -407,7 +407,7 @@
 
 
 <span class="k">class</span> <span class="nc">_NextItemPredictionTask</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Predict the interacted item-id probabilities.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Predict the interacted item-id probabilities.</span>
 
 <span class="sd">    - During inference, the task consists of predicting the next item.</span>
 <span class="sd">    - During training, the class supports the following Language modeling tasks:</span>

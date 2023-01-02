@@ -113,7 +113,7 @@
 
 
 <div class="viewcode-block" id="LifecycleStage"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.LifecycleStage">[docs]</a><span class="k">class</span> <span class="nc">LifecycleStage</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LifecycleStage. Only UNKNOWN_STAGE, BETA, and PRODUCTION features are</span>
 <span class="sd">    actually validated. PLANNED, ALPHA, DISABLED, and DEBUG are treated as</span>
 <span class="sd">    DEPRECATED.</span>
@@ -130,7 +130,7 @@
 
 
 <div class="viewcode-block" id="FeatureType"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeatureType">[docs]</a><span class="k">class</span> <span class="nc">FeatureType</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Enum</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Describes the physical representation of a feature. It may be different</span>
 <span class="sd">    than the logical representation, which is represented as a Domain.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -164,7 +164,7 @@
 
 <div class="viewcode-block" id="Path"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Path">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Path</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A path is a more general substitute for the name of a field or feature that</span>
 <span class="sd">    can be used for flat examples as well as structured data. For example, if</span>
 <span class="sd">    we had data in a protocol buffer: message Person {   int age = 1;</span>
@@ -185,7 +185,7 @@
 
 <span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">_Schema</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Message to represent schema information. NextID: 14&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Message to represent schema information. NextID: 14&quot;&quot;&quot;</span>
 
     <span class="c1"># Features described in this schema.</span>
     <span class="n">feature</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="s2">&quot;Feature&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">betterproto</span><span class="o">.</span><span class="n">message_field</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -234,7 +234,7 @@
 
 <div class="viewcode-block" id="Feature"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Feature">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Feature</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Describes schema-level information about a specific feature. NextID: 33</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -306,7 +306,7 @@
 
 <div class="viewcode-block" id="Annotation"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Annotation">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Annotation</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Additional information about the schema or about a feature.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Additional information about the schema or about a feature.&quot;&quot;&quot;</span>
 
     <span class="c1"># Tags can be used to mark features. For example, tag on user_age feature can</span>
     <span class="c1"># be `user_feature`, tag on user_country feature can be `location_feature`,</span>
@@ -329,7 +329,7 @@
 
 <div class="viewcode-block" id="NumericValueComparator"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.NumericValueComparator">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">NumericValueComparator</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks that the ratio of the current value to the previous value is not</span>
 <span class="sd">    below the min_fraction_threshold or above the max_fraction_threshold. That</span>
 <span class="sd">    is, previous value * min_fraction_threshold &lt;= current value &lt;= previous</span>
@@ -343,7 +343,7 @@
 
 <div class="viewcode-block" id="DatasetConstraints"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.DatasetConstraints">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">DatasetConstraints</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Constraints on the entire dataset.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Constraints on the entire dataset.&quot;&quot;&quot;</span>
 
     <span class="c1"># Tests differences in number of examples between the current data and the</span>
     <span class="c1"># previous span.</span>
@@ -359,7 +359,7 @@
 
 <div class="viewcode-block" id="FixedShape"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FixedShape">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">FixedShape</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Specifies a fixed shape for the feature&#39;s values. The immediate implication</span>
 <span class="sd">    is that each feature has a fixed number of values. Moreover, these values</span>
 <span class="sd">    can be parsed in a multi-dimensional tensor using the specified axis sizes.</span>
@@ -378,7 +378,7 @@
 
 <div class="viewcode-block" id="FixedShapeDim"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FixedShapeDim">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">FixedShapeDim</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;An axis in a multi-dimensional feature representation.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;An axis in a multi-dimensional feature representation.&quot;&quot;&quot;</span>
 
     <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">betterproto</span><span class="o">.</span><span class="n">int64_field</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
     <span class="c1"># Optional name of the tensor dimension.</span>
@@ -387,7 +387,7 @@
 
 <div class="viewcode-block" id="ValueCount"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.ValueCount">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">ValueCount</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Limits on maximum and minimum number of values in a single example (when</span>
 <span class="sd">    the feature is present). Use this when the minimum value count can be</span>
 <span class="sd">    different than the maximum value count. Otherwise prefer FixedShape.</span>
@@ -399,7 +399,7 @@
 
 <div class="viewcode-block" id="WeightedFeature"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.WeightedFeature">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">WeightedFeature</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a weighted feature that is encoded as a combination of raw base</span>
 <span class="sd">    features. The `weight_feature` should be a float feature with identical</span>
 <span class="sd">    shape as the `feature`. This is useful for representing weights associated</span>
@@ -423,7 +423,7 @@
 
 <div class="viewcode-block" id="SparseFeature"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.SparseFeature">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SparseFeature</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A sparse feature represents a sparse tensor that is encoded with a</span>
 <span class="sd">    combination of raw features, namely index features and a value feature.</span>
 <span class="sd">    Each index feature defines a list of indices in a different dimension.</span>
@@ -471,7 +471,7 @@
 
 <div class="viewcode-block" id="DistributionConstraints"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.DistributionConstraints">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">DistributionConstraints</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Models constraints on the distribution of a feature&#39;s values.</span>
 <span class="sd">    TODO(martinz): replace min_domain_mass with max_off_domain (but slowly).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -484,7 +484,7 @@
 
 <div class="viewcode-block" id="FeatureCoverageConstraints"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">FeatureCoverageConstraints</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Encodes vocabulary coverage constraints.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Encodes vocabulary coverage constraints.&quot;&quot;&quot;</span>
 
     <span class="c1"># Fraction of feature values that map to a vocab entry (i.e. are not oov).</span>
     <span class="n">min_coverage</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">betterproto</span><span class="o">.</span><span class="n">float_field</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -504,7 +504,7 @@
 
 <div class="viewcode-block" id="SequenceValueConstraints"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.SequenceValueConstraints">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SequenceValueConstraints</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Encodes constraints on specific values in sequences.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Encodes constraints on specific values in sequences.&quot;&quot;&quot;</span>
 
     <span class="n">int_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">betterproto</span><span class="o">.</span><span class="n">int64_field</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
     <span class="n">string_value</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">betterproto</span><span class="o">.</span><span class="n">string_field</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">group</span><span class="o">=</span><span class="s2">&quot;value&quot;</span><span class="p">)</span>
@@ -518,7 +518,7 @@
 
 <div class="viewcode-block" id="SequenceLengthConstraints"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.SequenceLengthConstraints">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SequenceLengthConstraints</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Encodes constraints on sequence lengths.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Encodes constraints on sequence lengths.&quot;&quot;&quot;</span>
 
     <span class="c1"># Token values (int and string) that are excluded when calculating sequence</span>
     <span class="c1"># length.</span>
@@ -531,7 +531,7 @@
 
 <div class="viewcode-block" id="IntDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.IntDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">IntDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encodes information for domains of integer values. Note that FeatureType</span>
 <span class="sd">    could be either INT or BYTES.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -549,7 +549,7 @@
 
 <div class="viewcode-block" id="FloatDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FloatDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">FloatDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encodes information for domains of float values. Note that FeatureType</span>
 <span class="sd">    could be either INT or BYTES.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -572,7 +572,7 @@
 
 <div class="viewcode-block" id="StructDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.StructDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">StructDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Domain for a recursive struct. NOTE: If a feature with a StructDomain is</span>
 <span class="sd">    deprecated, then all the child features (features and sparse_features of</span>
 <span class="sd">    the StructDomain) are also considered to be deprecated.  Similarly child</span>
@@ -585,7 +585,7 @@
 
 <div class="viewcode-block" id="StringDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.StringDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">StringDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Encodes information for domains of string values.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Encodes information for domains of string values.&quot;&quot;&quot;</span>
 
     <span class="c1"># Id of the domain. Required if the domain is defined at the schema level. If</span>
     <span class="c1"># so, then the name must be unique within the schema.</span>
@@ -596,7 +596,7 @@
 
 <div class="viewcode-block" id="BoolDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.BoolDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">BoolDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encodes information about the domain of a boolean attribute that encodes</span>
 <span class="sd">    its TRUE/FALSE values as strings, or 0=false, 1=true. Note that FeatureType</span>
 <span class="sd">    could be either INT or BYTES.</span>
@@ -612,7 +612,7 @@
 
 <div class="viewcode-block" id="NaturalLanguageDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">NaturalLanguageDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Natural language text.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Natural language text.&quot;&quot;&quot;</span>
 
     <span class="c1"># Name of the vocabulary associated with the NaturalLanguageDomain. When</span>
     <span class="c1"># computing and validating stats using TFDV, tfdv.StatsOptions.vocab_paths</span>
@@ -635,7 +635,7 @@
 
 <div class="viewcode-block" id="ImageDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.ImageDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">ImageDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Image data.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Image data.&quot;&quot;&quot;</span>
 
     <span class="c1"># If set, at least this fraction of values should be TensorFlow supported</span>
     <span class="c1"># images.</span>
@@ -646,21 +646,21 @@
 
 <div class="viewcode-block" id="MIDDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.MIDDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">MIDDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Knowledge graph ID, see: https://www.wikidata.org/wiki/Property:P646&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Knowledge graph ID, see: https://www.wikidata.org/wiki/Property:P646&quot;&quot;&quot;</span>
 
     <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="URLDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.URLDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">URLDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A URL, see: https://en.wikipedia.org/wiki/URL&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A URL, see: https://en.wikipedia.org/wiki/URL&quot;&quot;&quot;</span>
 
     <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="TimeDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TimeDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TimeDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Time or date representation.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Time or date representation.&quot;&quot;&quot;</span>
 
     <span class="c1"># Expected format that contains a combination of regular characters and</span>
     <span class="c1"># special format specifiers. Format specifiers are a subset of the strptime</span>
@@ -672,7 +672,7 @@
 
 <div class="viewcode-block" id="TimeOfDayDomain"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TimeOfDayDomain">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TimeOfDayDomain</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Time of day, without a particular date.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Time of day, without a particular date.&quot;&quot;&quot;</span>
 
     <span class="c1"># Expected format that contains a combination of regular characters and</span>
     <span class="c1"># special format specifiers. Format specifiers are a subset of the strptime</span>
@@ -686,7 +686,7 @@
 
 <div class="viewcode-block" id="FeaturePresence"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeaturePresence">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">FeaturePresence</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Describes constraints on the presence of the feature in the data.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Describes constraints on the presence of the feature in the data.&quot;&quot;&quot;</span>
 
     <span class="c1"># Minimum fraction of examples that have this feature.</span>
     <span class="n">min_fraction</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">betterproto</span><span class="o">.</span><span class="n">double_field</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -696,7 +696,7 @@
 
 <div class="viewcode-block" id="FeaturePresenceWithinGroup"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeaturePresenceWithinGroup">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">FeaturePresenceWithinGroup</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Records constraints on the presence of a feature inside a &quot;group&quot; context</span>
 <span class="sd">    (e.g., .presence inside a group of features that define a sequence).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -706,7 +706,7 @@
 
 <div class="viewcode-block" id="InfinityNorm"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.InfinityNorm">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">InfinityNorm</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks that the L-infinity norm is below a certain threshold between the</span>
 <span class="sd">    two discrete distributions. Since this is applied to a</span>
 <span class="sd">    FeatureNameStatistics, it only considers the top K.</span>
@@ -723,7 +723,7 @@
 
 <div class="viewcode-block" id="JensenShannonDivergence"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.JensenShannonDivergence">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">JensenShannonDivergence</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks that the approximate Jensen-Shannon Divergence is below a certain</span>
 <span class="sd">    threshold between the two distributions.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -741,7 +741,7 @@
 
 <div class="viewcode-block" id="UniqueConstraints"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.UniqueConstraints">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">UniqueConstraints</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Checks that the number of unique values is greater than or equal to the</span>
 <span class="sd">    min, and less than or equal to the max.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -752,7 +752,7 @@
 
 <div class="viewcode-block" id="TensorRepresentation"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentation">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TensorRepresentation</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A TensorRepresentation captures the intent for converting columns in a</span>
 <span class="sd">    dataset to TensorFlow Tensors (or more generally, tf.CompositeTensors).</span>
 <span class="sd">    Note that one tf.CompositeTensor may consist of data from multiple columns,</span>
@@ -785,7 +785,7 @@
 
 <div class="viewcode-block" id="TensorRepresentationDenseTensor"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TensorRepresentationDenseTensor</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A tf.Tensor&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A tf.Tensor&quot;&quot;&quot;</span>
 
     <span class="c1"># Identifies the column in the dataset that provides the values of this</span>
     <span class="c1"># Tensor.</span>
@@ -800,7 +800,7 @@
 
 <div class="viewcode-block" id="TensorRepresentationVarLenSparseTensor"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationVarLenSparseTensor">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TensorRepresentationVarLenSparseTensor</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A ragged tf.SparseTensor that models nested lists.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A ragged tf.SparseTensor that models nested lists.&quot;&quot;&quot;</span>
 
     <span class="c1"># Identifies the column in the dataset that should be converted to the</span>
     <span class="c1"># VarLenSparseTensor.</span>
@@ -809,7 +809,7 @@
 
 <div class="viewcode-block" id="TensorRepresentationSparseTensor"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationSparseTensor">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TensorRepresentationSparseTensor</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A tf.SparseTensor whose indices and values come from separate data columns.</span>
 <span class="sd">    This will replace Schema.sparse_feature eventually. The index columns must</span>
 <span class="sd">    be of INT type, and all the columns must co-occur and have the same valency</span>
@@ -828,7 +828,7 @@
 
 <div class="viewcode-block" id="TensorRepresentationRaggedTensor"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TensorRepresentationRaggedTensor</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A tf.RaggedTensor that models nested lists. Currently there is no way for</span>
 <span class="sd">    the user to specify the shape of the leaf value (the innermost value tensor</span>
 <span class="sd">    of the RaggedTensor). The leaf value will always be a 1-D tensor.</span>
@@ -859,7 +859,7 @@
 
 <div class="viewcode-block" id="TensorRepresentationRaggedTensorPartition"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensorPartition">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TensorRepresentationRaggedTensorPartition</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Further partition of the feature values at the leaf level.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Further partition of the feature values at the leaf level.&quot;&quot;&quot;</span>
 
     <span class="c1"># If the final element(s) of partition are uniform_row_lengths [U0, U1, ...]</span>
     <span class="c1"># , then the result RaggedTensor will have  their flat values (a dense</span>
@@ -874,7 +874,7 @@
 
 <div class="viewcode-block" id="TensorRepresentationGroup"><a class="viewcode-back" href="../../../api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationGroup">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TensorRepresentationGroup</span><span class="p">(</span><span class="n">betterproto</span><span class="o">.</span><span class="n">Message</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A TensorRepresentationGroup is a collection of TensorRepresentations with</span>
 <span class="sd">    names. These names may serve as identifiers when converting the dataset to</span>
 <span class="sd">    a collection of Tensors or tf.CompositeTensors. For example, given the</span>
