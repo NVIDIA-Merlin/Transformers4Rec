@@ -128,8 +128,6 @@
 <span class="kn">from</span> <span class="nn">merlin.core.dispatch</span> <span class="kn">import</span> <span class="n">make_df</span>  <span class="c1"># noqa</span>
 <span class="kn">from</span> <span class="nn">merlin.systems.dag</span> <span class="kn">import</span> <span class="n">Ensemble</span>  <span class="c1"># noqa</span>
 <span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.pytorch</span> <span class="kn">import</span> <span class="n">PredictPyTorch</span>  <span class="c1"># noqa</span>
-<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.workflow</span> <span class="kn">import</span> <span class="n">TransformWorkflow</span>
-<span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">run_ensemble_on_tritonserver</span>  <span class="c1"># noqa</span>
 </pre></div>
 </div>
 </div>
@@ -197,7 +195,7 @@
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data&quot;</span><span class="p">)</span>
 <span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/sessions_by_day&quot;</span><span class="p">)</span>
-<span class="n">model_path</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/saved_model&quot;</span><span class="p">)</span>
+<span class="n">model_path</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_path&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/saved_model&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -257,8 +255,8 @@
             (categorical_module): SequenceEmbeddingFeatures(
               (filter_features): FilterFeatures()
               (embedding_tables): ModuleDict(
-                (item_id-list): Embedding(490, 64, padding_idx=0)
-                (category-list): Embedding(177, 64, padding_idx=0)
+                (item_id-list): Embedding(491, 64, padding_idx=0)
+                (category-list): Embedding(159, 64, padding_idx=0)
               )
             )
           )
@@ -329,15 +327,15 @@
           (embeddings): SequenceEmbeddingFeatures(
             (filter_features): FilterFeatures()
             (embedding_tables): ModuleDict(
-              (item_id-list): Embedding(490, 64, padding_idx=0)
-              (category-list): Embedding(177, 64, padding_idx=0)
+              (item_id-list): Embedding(491, 64, padding_idx=0)
+              (category-list): Embedding(159, 64, padding_idx=0)
             )
           )
-          (item_embedding_table): Embedding(490, 64, padding_idx=0)
+          (item_embedding_table): Embedding(491, 64, padding_idx=0)
           (masking): MaskedLanguageModeling()
           (pre): Block(
             (module): NextItemPredictionTask(
-              (item_embedding_table): Embedding(490, 64, padding_idx=0)
+              (item_embedding_table): Embedding(491, 64, padding_idx=0)
               (log_softmax): LogSoftmax(dim=-1)
             )
           )
@@ -398,25 +396,25 @@
 <p>Let’s check out the <code class="docutils literal notranslate"><span class="pre">item_id-list</span></code> column in the <code class="docutils literal notranslate"><span class="pre">train_dict</span></code> dictionary.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_dict</span><span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[ 4, 11, 17,  ..., 30,  0,  0],
-        [36, 49,  9,  ...,  0,  0,  0],
-        [29, 12, 18,  ...,  0,  0,  0],
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[  4,  11,   7,  ...,   0,   0,   0],
+        [ 14,  28,   1,  ...,   0,   0,   0],
+        [ 65,  23,   5,  ...,   0,   0,   0],
         ...,
-        [21, 23, 40,  ...,  0,  0,  0],
-        [13, 67, 32,  ...,  0,  0,  0],
-        [93, 11, 41,  ...,  0,  0,  0]], device=&#39;cuda:0&#39;)
+        [  4,   6,  15,  ...,   0,   0,   0],
+        [  8,  71, 235,  ...,   0,   0,   0],
+        [ 35,  28,  29,  ...,   0,   0,   0]], device=&#39;cuda:0&#39;)
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -494,22 +492,22 @@
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM, Tags.CATEGORICAL, Tags.LIST, Tags....</td>
+      <td>(Tags.ID, Tags.LIST, Tags.CATEGORICAL, Tags.IT...</td>
       <td>int64</td>
       <td>True</td>
       <td>False</td>
       <td>0</td>
-      <td>489</td>
+      <td>490</td>
     </tr>
     <tr>
       <th>3</th>
       <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
       <td>int64</td>
       <td>True</td>
       <td>False</td>
       <td>0</td>
-      <td>176</td>
+      <td>158</td>
     </tr>
   </tbody>
 </table>
@@ -587,11 +585,11 @@
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
 POST /v2/repository/index, headers None
 
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;115&#39;}&gt;
-bytearray(b&#39;[{&quot;name&quot;:&quot;0_predictpytorch&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;ensemble_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;121&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;0_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;ensemble_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
 </pre></div>
 </div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_predictpytorch&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_predictpytorchtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
  {&#39;name&#39;: &#39;ensemble_model&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
 </pre></div>
 </div>
@@ -604,16 +602,16 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 <p>We do not serve the raw dataframe because in the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the deployed DL model for a prediction. Therefore, we use a transformed dataset that is processed similarly as train set.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_paths</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mi">1</span><span class="si">}</span><span class="s2">/valid.parquet&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_batch_size</span> <span class="o">=</span> <span class="mi">32</span>
+<span class="n">eval_paths</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mi">1</span><span class="si">}</span><span class="s2">/valid.parquet&quot;</span><span class="p">)</span>
 <span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">eval_paths</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">eval_loader</span> <span class="o">=</span> <span class="n">generate_dataloader</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">eval_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+<span class="n">eval_loader</span> <span class="o">=</span> <span class="n">generate_dataloader</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">eval_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">eval_batch_size</span><span class="p">)</span>
 <span class="n">test_dict</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">eval_loader</span><span class="p">))</span>
 
 <span class="n">df_cols</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">test_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">test_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
         <span class="n">dtype</span> <span class="o">=</span> <span class="n">input_schema</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
-
         <span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
@@ -655,38 +653,38 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
   <tbody>
     <tr>
       <th>0</th>
-      <td>[0.47162586, 0.9286565, 0.8286713, 0.7888927, ...</td>
-      <td>[0.8412576, 0.4806973, 0.26910275, 0.7267265, ...</td>
-      <td>[82, 2, 69, 101, 2, 26, 25, 20, 32, 5, 1, 5, 0...</td>
-      <td>[21, 1, 19, 27, 1, 7, 7, 5, 4, 2, 1, 2, 0, 0, ...</td>
+      <td>[0.16444656, 0.5225043, 0.028780686, 0.5226429...</td>
+      <td>[0.71557677, 0.9728636, 0.2475986, 0.9576815, ...</td>
+      <td>[21, 42, 21, 61, 8, 59, 23, 2, 8, 152, 24, 76,...</td>
+      <td>[5, 9, 5, 14, 3, 14, 7, 3, 3, 38, 7, 19, 0, 0,...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>[0.3916677, 0.92222315, 0.23826516, 0.7312075,...</td>
-      <td>[0.11462939, 0.5831296, 0.8735699, 0.6819625, ...</td>
-      <td>[10, 1, 2, 67, 15, 64, 193, 41, 16, 15, 0, 0, ...</td>
-      <td>[3, 1, 1, 18, 6, 16, 50, 10, 6, 6, 0, 0, 0, 0,...</td>
+      <td>[0.49890065, 0.040260114, 0.19494252, 0.946124...</td>
+      <td>[0.18057665, 0.032677807, 0.29251397, 0.262859...</td>
+      <td>[10, 1, 46, 25, 25, 38, 14, 81, 1, 2, 0, 0, 0,...</td>
+      <td>[3, 1, 11, 7, 7, 10, 2, 21, 1, 3, 0, 0, 0, 0, ...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>[0.18798462, 0.9052097, 0.63714063, 0.5033676,...</td>
-      <td>[0.43194288, 0.45363078, 0.81598556, 0.8821798...</td>
-      <td>[31, 8, 6, 21, 11, 18, 48, 25, 21, 22, 0, 0, 0...</td>
-      <td>[9, 4, 2, 5, 3, 5, 13, 7, 5, 5, 0, 0, 0, 0, 0,...</td>
+      <td>[0.21874996, 0.469753, 0.17086145, 0.76867926,...</td>
+      <td>[0.5993904, 0.2790737, 0.91060346, 0.2623695, ...</td>
+      <td>[35, 30, 10, 3, 12, 2, 35, 79, 27, 20, 0, 0, 0...</td>
+      <td>[8, 6, 3, 4, 2, 3, 8, 18, 6, 4, 0, 0, 0, 0, 0,...</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>[0.8022848, 0.74478865, 0.25033632, 0.5172018,...</td>
-      <td>[0.4466279, 0.9708794, 0.77920324, 0.11763577,...</td>
-      <td>[9, 7, 24, 3, 2, 17, 36, 58, 7, 6, 0, 0, 0, 0,...</td>
-      <td>[2, 2, 7, 1, 1, 6, 11, 15, 2, 2, 0, 0, 0, 0, 0...</td>
+      <td>[0.30849916, 0.8587687, 0.5086633, 0.10153167,...</td>
+      <td>[0.5235866, 0.00294829, 0.36131513, 0.36315322...</td>
+      <td>[4, 15, 15, 29, 20, 7, 11, 8, 73, 62, 0, 0, 0,...</td>
+      <td>[1, 2, 2, 6, 4, 3, 2, 3, 15, 16, 0, 0, 0, 0, 0...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>[0.37031004, 0.09800986, 0.8980817, 0.9975142,...</td>
-      <td>[0.29334334, 0.11195588, 0.7300642, 0.27448815...</td>
-      <td>[12, 30, 11, 64, 33, 19, 26, 4, 51, 0, 0, 0, 0...</td>
-      <td>[3, 8, 3, 16, 9, 4, 7, 1, 14, 0, 0, 0, 0, 0, 0...</td>
+      <td>[0.5838007, 0.6649669, 0.36846465, 0.15503058,...</td>
+      <td>[0.13625653, 0.44238144, 0.3952307, 0.30201116...</td>
+      <td>[10, 22, 11, 40, 85, 6, 31, 17, 31, 56, 0, 0, ...</td>
+      <td>[3, 7, 2, 9, 21, 1, 8, 5, 8, 12, 0, 0, 0, 0, 0...</td>
     </tr>
   </tbody>
 </table>
@@ -697,30 +695,24 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
 <span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">],</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[ -9.547688 ,  -3.3062646,  -3.5631118, ...,  -9.250848 ,
-          -9.964631 , -10.170028 ],
-        [ -9.54715  ,  -3.306591 ,  -3.5619133, ...,  -9.250428 ,
-          -9.9653635, -10.169994 ],
-        [ -9.547378 ,  -3.306465 ,  -3.562431 , ...,  -9.25062  ,
-          -9.964928 , -10.170043 ],
-        ...,
-        [ -9.54731  ,  -3.306385 ,  -3.5624921, ...,  -9.250595 ,
-          -9.9651   , -10.169995 ],
-        [ -9.54718  ,  -3.3064706,  -3.5621893, ...,  -9.25048  ,
-          -9.965321 , -10.169971 ],
-        [ -9.546991 ,  -3.3065925,  -3.5617704, ...,  -9.25033  ,
-          -9.965618 , -10.169941 ]], dtype=float32)}
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[-9.233524 , -3.4131083, -3.5132837, ..., -9.428043 , -9.324305 ,
+        -9.609962 ],
+       [-9.23428  , -3.412891 , -3.513485 , ..., -9.427843 , -9.324681 ,
+        -9.610075 ],
+       [-9.2349205, -3.41269  , -3.5136623, ..., -9.427677 , -9.3250065,
+        -9.610184 ],
+       ...,
+       [-9.234116 , -3.412993 , -3.5134692, ..., -9.427877 , -9.324525 ,
+        -9.610008 ],
+       [-9.234127 , -3.4129863, -3.513467 , ..., -9.427882 , -9.324532 ,
+        -9.610001 ],
+       [-9.234625 , -3.4128144, -3.5136077, ..., -9.427758 , -9.324816 ,
+        -9.610115 ]], dtype=float32)}
 </pre></div>
 </div>
 </div>
@@ -732,7 +724,7 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(32, 490)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(32, 491)
 </pre></div>
 </div>
 </div>
