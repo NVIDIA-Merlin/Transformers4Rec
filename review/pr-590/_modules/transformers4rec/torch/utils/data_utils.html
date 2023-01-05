@@ -123,7 +123,7 @@
 
 
 <div class="viewcode-block" id="T4RecDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader">[docs]</a><span class="k">class</span> <span class="nc">T4RecDataLoader</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base Helper class to build dataloader from the schema with properties</span>
 <span class="sd">    required by T4Rec Trainer class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -193,7 +193,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
 
 <div class="viewcode-block" id="PyarrowDataLoader.set_dataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.set_dataset">[docs]</a>        <span class="k">def</span> <span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cols_to_read</span><span class="p">,</span> <span class="n">target_names</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            set the Parquet dataset</span>
 
 <span class="sd">            Parameters</span>
@@ -231,7 +231,7 @@
             <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Instantiates ``PyarrowDataLoader`` from a ``DatasetSchema``.</span>
 
 <span class="sd">            Parameters</span>
@@ -271,7 +271,7 @@
 
 
 <div class="viewcode-block" id="DLDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader">[docs]</a><span class="k">class</span> <span class="nc">DLDataLoader</span><span class="p">(</span><span class="n">PyTorchDataLoader</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class is an extension of the torch dataloader.</span>
 <span class="sd">    It is required to support the FastAI framework.</span>
 
@@ -298,7 +298,7 @@
     <span class="s2">&quot;merlin_dataloader&quot;</span><span class="p">,</span> <span class="s2">&quot;merlin&quot;</span><span class="p">,</span> <span class="s2">&quot;nvtabular_dataloader&quot;</span><span class="p">,</span> <span class="s2">&quot;nvtabular&quot;</span>
 <span class="p">)</span>
 <span class="k">class</span> <span class="nc">MerlinDataLoader</span><span class="p">(</span><span class="n">T4RecDataLoader</span><span class="p">,</span> <span class="n">DLDataLoader</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class extends the [Merlin data loader]</span>
 <span class="sd">    (https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py).</span>
 <span class="sd">    The data input requires a merlin.io.Dataset or a path to the data files.</span>
@@ -478,7 +478,7 @@
         <span class="n">sparse_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Instantitates `MerlinDataLoader` from a ``DatasetSchema``.</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

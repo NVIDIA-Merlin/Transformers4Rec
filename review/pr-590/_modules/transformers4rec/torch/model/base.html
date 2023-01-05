@@ -132,7 +132,7 @@
 
 
 <div class="viewcode-block" id="PredictionTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask">[docs]</a><span class="k">class</span> <span class="nc">PredictionTask</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Individual prediction-task of a model.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Individual prediction-task of a model.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -193,7 +193,7 @@
         <span class="n">task_block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BlockType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">pre</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The method will be called when block is converted to a model,</span>
 <span class="sd">        i.e when linked to prediction head.</span>
 
@@ -311,7 +311,7 @@
 
 
 <div class="viewcode-block" id="Head"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head">[docs]</a><span class="k">class</span> <span class="nc">Head</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Head of a Model, a head has a single body but could have multiple prediction-tasks.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Head of a Model, a head has a single body but could have multiple prediction-tasks.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -356,7 +356,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">task_blocks</span><span class="o">=</span><span class="n">task_blocks</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Head.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_blocks</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build each prediction task that&#39;s part of the head.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build each prediction task that&#39;s part of the head.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -393,7 +393,7 @@
         <span class="n">loss_reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularFeaturesType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Head&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Instantiate a Head from a Schema through tagged targets.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate a Head from a Schema through tagged targets.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -435,7 +435,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Head.pop_labels"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.pop_labels">[docs]</a>    <span class="k">def</span> <span class="nf">pop_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TabularData</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Pop the labels from the different prediction_tasks from the inputs.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pop the labels from the different prediction_tasks from the inputs.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -500,7 +500,7 @@
         <span class="n">predictions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Calculate metrics of the task(s) set in the Head instance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate metrics of the task(s) set in the Head instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -546,7 +546,7 @@
         <span class="k">return</span> <span class="n">_output_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Head.reset_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.reset_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">reset_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="n">task</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span></div>
 
@@ -555,7 +555,7 @@
         <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">task</span><span class="o">.</span><span class="n">task_block</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
 <div class="viewcode-block" id="Head.to_model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Head.to_model">[docs]</a>    <span class="k">def</span> <span class="nf">to_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Model&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Convert the head to a Model.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the head to a Model.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -574,7 +574,7 @@
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Model class that can aggregate one or multiple heads.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Model class that can aggregate one or multiple heads.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -667,7 +667,7 @@
         <span class="n">predictions</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Calculate metrics of the task(s) set in the Head instance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate metrics of the task(s) set in the Head instance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -873,7 +873,7 @@
         <span class="k">return</span> <span class="n">Core_Schema</span><span class="p">(</span><span class="n">output_cols</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Model.save"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4rec_model_class&quot;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Saves the model to f&quot;{export_path}/{model_name}.pkl&quot; using `cloudpickle`</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saves the model to f&quot;{export_path}/{model_name}.pkl&quot; using `cloudpickle`</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -898,7 +898,7 @@
 
 <div class="viewcode-block" id="Model.load"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.load">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">PathLike</span><span class="p">],</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4rec_model_class&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Model&quot;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Loads a T4Rec model that was saved with `model.save()`.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Loads a T4Rec model that was saved with `model.save()`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
