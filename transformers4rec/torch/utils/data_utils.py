@@ -253,10 +253,10 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             logger.warning(
                 "UserWarning: User is advised to repartition the parquet file before training "
                 "so npartitions>=global_size. Cudf or pandas can be used for repartitioning "
-                "eg. pdf.to_parquet('file.parquet', row_group_size=N_ROWS/NPARTITIONS) for pandas or "
-                "gdf.to_parquet('file.parquet', row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that "
-                "npartitions=nr_rows/row_group_size. Also make sure npartitions is divisible by "
-                "number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used)."
+                "eg. pdf.to_parquet('file.parquet',row_group_size=N_ROWS/NPARTITIONS) for pandas "
+                "or gdf.to_parquet('file.parquet',row_group_size_rows=N_ROWS/NPARTITIONS) for cudf "
+                "so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible "
+                "by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used)."
             )
             self.dataset = self.dataset.repartition(npartitions=global_size)
 
