@@ -341,8 +341,8 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;UserWarning: User is advised to repartition the parquet file before training &quot;</span>
                 <span class="s2">&quot;so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning &quot;</span>
-                <span class="s2">&quot;eg. pdf.to_parquet(&#39;file.parquet&#39;, row_group_size=N_ROWS/NPARTITIONS) for pandas or &quot;</span>
-                <span class="s2">&quot;gdf.to_parquet(&#39;file.parquet&#39;, row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that &quot;</span>
+                <span class="s2">&quot;eg. df.to_parquet(&#39;file.parquet&#39;, row_group_size=N_ROWS/NPARTITIONS) or &quot;</span>
+                <span class="s2">&quot;cudf.to_parquet(&#39;file.parquet&#39;, row_group_size_rows=N_ROWS/NPARTITIONS) so that &quot;</span>
                 <span class="s2">&quot;npartitions=nr_rows/row_group_size. Also make sure npartitions is divisible by &quot;</span>
                 <span class="s2">&quot;number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).&quot;</span>
             <span class="p">)</span>
