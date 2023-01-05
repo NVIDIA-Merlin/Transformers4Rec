@@ -37,13 +37,17 @@ To train using the `DistributedDataParallel` mode user should use PyTorch distri
 
 ``` python -m torch.distributed.launch --nproc_per_node N_GPU your_script.py --your_arguments```
 
-To have one process per GPU replace `N_GPU` with the number of GPUs you want to use and make sure `CUDA_VISIBLE_DEVICES` is set accordingly.
+To have one process per GPU, replace `N_GPU` with the number of GPUs you want to use. Optionally, you can also set CUDA_VISIBLE_DEVICES accordingly.
 
-<b>Note:</b> When using `DistributedDataParallel`, our data loader splits data between the GPUs based on dataset partitions. For that reason, the number of partitions of the dataset must be equal or larger than number of processes. If the parquet file has a small number of row groups (partitions), try repartitioning and saving it again using cudf or pandas before training. The dataloader checks `dataloader.dataset.npartitions` and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:
+<b>Note:</b> When using `DistributedDataParallel`, our data loader splits data between the GPUs based on dataset partitions. For that reason, the number of partitions of the dataset must be equal to or an integer multiple of the number of processes. If the parquet file has a small number of row groups (partitions), try repartitioning and saving it again using cudf or pandas before training. The dataloader checks `dataloader.dataset.npartitions` and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:
 
-```df.to_parquet("filename.parquet", row_group_size=10000)```
+```gdf.to_parquet("filename.parquet", row_group_size_rows=10000)```
 
-Choose `row_group_size` such that `nr_rows/row_group_size>=n_proc` because `n_rows=npartition*row_group_size`.
+Choose `row_group_size_rows` such that `nr_rows/row_group_size_rows>=n_proc` because `n_rows=npartition*row_group_size_rows`.
+
+With pandas, use the argument as ```row_group_size=10000``` instead.
+
+Please make sure that the resulting number of partitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
 
 ### Performance Comparison
 
