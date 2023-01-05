@@ -41,7 +41,7 @@ To have one process per GPU, replace `N_GPU` with the number of GPUs you want to
 
 <b>Note:</b> When using `DistributedDataParallel`, our data loader splits data between the GPUs based on dataset partitions. For that reason, the number of partitions of the dataset must be equal to or an integer multiple of the number of processes. If the parquet file has a small number of row groups (partitions), try repartitioning and saving it again using cudf or pandas before training. The dataloader checks `dataloader.dataset.npartitions` and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:
 
-```cudf.to_parquet("filename.parquet", row_group_size_rows=10000)```
+```gdf.to_parquet("filename.parquet", row_group_size_rows=10000)```
 
 Choose `row_group_size_rows` such that `nr_rows/row_group_size_rows>=n_proc` because `n_rows=npartition*row_group_size_rows`.
 
