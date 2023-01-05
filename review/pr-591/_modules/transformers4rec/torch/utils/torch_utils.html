@@ -145,7 +145,7 @@
 
 
 <div class="viewcode-block" id="LossMixin"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LossMixin">[docs]</a><span class="k">class</span> <span class="nc">LossMixin</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Mixin to use for a `torch.Module` that can calculate a loss.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin to use for a `torch.Module` that can calculate a loss.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="LossMixin.compute_loss"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LossMixin.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -154,7 +154,7 @@
         <span class="n">compute_metrics</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Compute the loss on a batch of data.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the loss on a batch of data.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -170,14 +170,14 @@
 
 
 <div class="viewcode-block" id="MetricsMixin"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin">[docs]</a><span class="k">class</span> <span class="nc">MetricsMixin</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Mixin to use for a `torch.Module` that can calculate metrics.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mixin to use for a `torch.Module` that can calculate metrics.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MetricsMixin.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Calculate metrics on a batch of data, each metric is stateful and this updates the state.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate metrics on a batch of data, each metric is stateful and this updates the state.</span>
 
 <span class="sd">        The state of each metric can be retrieved by calling the `compute_metrics` method.</span>
 
@@ -193,7 +193,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="MetricsMixin.compute_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin.compute_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">compute_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]:</span>
-        <span class="sd">&quot;&quot;&quot;Returns the current state of each metric.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the current state of each metric.</span>
 
 <span class="sd">        The state is typically updated each batch by calling the `calculate_metrics` method.</span>
 
@@ -208,7 +208,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="MetricsMixin.reset_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MetricsMixin.reset_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">reset_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Reset all metrics.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reset all metrics.&quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
 
 
@@ -288,7 +288,7 @@
 
 
 <div class="viewcode-block" id="nested_detach"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_detach">[docs]</a><span class="k">def</span> <span class="nf">nested_detach</span><span class="p">(</span><span class="n">tensors</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Detach `tensors` (even if it&#39;s a nested list/tuple/dict of tensors).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Detach `tensors` (even if it&#39;s a nested list/tuple/dict of tensors).</span>
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
 <span class="sd">    dict outputs. So we should remove it when T4Rec is updated to use the latest version</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -300,7 +300,7 @@
 
 
 <div class="viewcode-block" id="nested_concat"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_concat">[docs]</a><span class="k">def</span> <span class="nf">nested_concat</span><span class="p">(</span><span class="n">tensors</span><span class="p">,</span> <span class="n">new_tensors</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Concat the `new_tensors` to `tensors` on the first dim and pad them on the second if needed.</span>
 <span class="sd">    Works for tensors or nested list/tuples/dict of tensors.</span>
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
@@ -330,7 +330,7 @@
 
 
 <div class="viewcode-block" id="torch_pad_and_concatenate"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.torch_pad_and_concatenate">[docs]</a><span class="k">def</span> <span class="nf">torch_pad_and_concatenate</span><span class="p">(</span><span class="n">tensor1</span><span class="p">,</span> <span class="n">tensor2</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second if necessary.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second if necessary.</span>
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
 <span class="sd">    dict outputs. So we should remove it when T4Rec is updated to use the latest version</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -365,7 +365,7 @@
 
 
 <div class="viewcode-block" id="nested_numpify"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_numpify">[docs]</a><span class="k">def</span> <span class="nf">nested_numpify</span><span class="p">(</span><span class="n">tensors</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Numpify `tensors` (even if it&#39;s a nested list/tuple/dict of tensors).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Numpify `tensors` (even if it&#39;s a nested list/tuple/dict of tensors).</span>
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
 <span class="sd">    dict outputs. So we should remove it when T4Rec is updated to use the latest version</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -376,7 +376,7 @@
 
     <span class="n">t</span> <span class="o">=</span> <span class="n">tensors</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        # As of Numpy 1.21.4, NumPy does not support bfloat16 (see</span>
 <span class="sd">        # https://github.com/numpy/numpy/blob/a47ecdea856986cd60eabbd53265c2ca5916ad5d/doc/source/user/basics.types.rst).</span>
 <span class="sd">        # Until Numpy adds bfloat16, we must convert float32.</span>
@@ -386,7 +386,7 @@
 
 
 <div class="viewcode-block" id="nested_truncate"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_truncate">[docs]</a><span class="k">def</span> <span class="nf">nested_truncate</span><span class="p">(</span><span class="n">tensors</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Truncate `tensors` at `limit` (even if it&#39;s a nested list/tuple/dict of tensors).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Truncate `tensors` at `limit` (even if it&#39;s a nested list/tuple/dict of tensors).</span>
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
 <span class="sd">    dict outputs. So we should remove it when T4Rec is updated to use the latest version</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -399,7 +399,7 @@
 
 
 <div class="viewcode-block" id="numpy_pad_and_concatenate"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.numpy_pad_and_concatenate">[docs]</a><span class="k">def</span> <span class="nf">numpy_pad_and_concatenate</span><span class="p">(</span><span class="n">array1</span><span class="p">,</span> <span class="n">array2</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Concatenates `array1` and `array2` on first axis, applying padding on the second if necessary.</span>
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
 <span class="sd">    dict outputs. So we should remove it when T4Rec is updated to use the latest version</span>
@@ -429,7 +429,7 @@
     <span class="n">device</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-    <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Coverts a 1d label tensor to one-hot representation</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Coverts a 1d label tensor to one-hot representation</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        labels (torch.Tensor) : tensor with labels of shape :math:`(N, H, W)`,</span>

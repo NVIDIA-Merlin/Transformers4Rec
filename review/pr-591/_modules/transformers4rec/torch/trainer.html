@@ -136,7 +136,7 @@
 
 
 <div class="viewcode-block" id="Trainer"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer">[docs]</a><span class="k">class</span> <span class="nc">Trainer</span><span class="p">(</span><span class="n">BaseTrainer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An :class:`~transformers.Trainer` specialized for sequential recommendation</span>
 <span class="sd">    including (session-based and sequtial recommendation)</span>
 
@@ -217,7 +217,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">incremental_logging</span> <span class="o">=</span> <span class="n">incremental_logging</span>
 
 <div class="viewcode-block" id="Trainer.get_train_dataloader"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.get_train_dataloader">[docs]</a>    <span class="k">def</span> <span class="nf">get_train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the train dataloader to use by Trainer.</span>
 <span class="sd">        It supports user defined data-loader set as an attribute in the constructor.</span>
 <span class="sd">        When the attribute is None, The data-loader is defined using train_dataset</span>
@@ -249,7 +249,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.get_eval_dataloader"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.get_eval_dataloader">[docs]</a>    <span class="k">def</span> <span class="nf">get_eval_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the eval dataloader to use by Trainer.</span>
 <span class="sd">        It supports user defined data-loader set as an attribute in the constructor.</span>
 <span class="sd">        When the attribute is None, The data-loader is defined using eval_dataset</span>
@@ -273,7 +273,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.get_test_dataloader"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.get_test_dataloader">[docs]</a>    <span class="k">def</span> <span class="nf">get_test_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the test dataloader to use by Trainer.</span>
 <span class="sd">        It supports user defined data-loader set as an attribute in the constructor.</span>
 <span class="sd">        When the attribute is None, The data-loader is defined using test_dataset</span>
@@ -297,13 +297,13 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.num_examples"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.num_examples">[docs]</a>    <span class="k">def</span> <span class="nf">num_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overriding :obj:`Trainer.num_examples()` method because</span>
 <span class="sd">        the data loaders for this project do not return the dataset size,</span>
 <span class="sd">        but the number of steps. So we estimate the dataset size here</span>
 <span class="sd">        by multiplying the number of steps * batch size</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        if dataloader == self.get_train_dataloader():</span>
 <span class="sd">            batch_size = self.args.per_device_train_batch_size</span>
 <span class="sd">        else:</span>
@@ -312,7 +312,7 @@
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="p">)</span> <span class="o">*</span> <span class="n">dataloader</span><span class="o">.</span><span class="n">_batch_size</span></div>
 
 <div class="viewcode-block" id="Trainer.reset_lr_scheduler"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.reset_lr_scheduler">[docs]</a>    <span class="k">def</span> <span class="nf">reset_lr_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resets the LR scheduler of the previous :obj:`Trainer.train()` call,</span>
 <span class="sd">        so that a new LR scheduler one is created by the next :obj:`Trainer.train()` call.</span>
 <span class="sd">        This is important for LR schedules like `get_linear_schedule_with_warmup()`</span>
@@ -343,7 +343,7 @@
         <span class="n">num_training_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_cycles</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Unified API to get any scheduler from its name.</span>
 
 <span class="sd">        Parameters</span>
@@ -393,7 +393,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.compute_loss"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">return_outputs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overriding :obj:`Trainer.compute_loss()`</span>
 <span class="sd">        To allow for passing the targets to the model&#39;s forward method</span>
 <span class="sd">        How the loss is computed by Trainer. By default, all Transformers4Rec models return</span>
@@ -431,7 +431,7 @@
         <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overriding :obj:`Trainer.prediction_step()`</span>
 <span class="sd">        to provide more flexibility to unpack results from the model,</span>
 <span class="sd">        like returning labels that are not exactly one input feature</span>
@@ -475,7 +475,7 @@
         <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">metric_key_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;eval&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvalLoopOutput</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overriding :obj:`Trainer.prediction_loop()`</span>
 <span class="sd">        (shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`)</span>
 <span class="sd">        to provide more flexibility to work with streaming metrics</span>
@@ -727,7 +727,7 @@
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_save_model_and_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_model_class</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the serialized model + trainer and random states.</span>
 
 <span class="sd">        Parameters</span>
@@ -751,7 +751,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Trainer.load_model_trainer_states_from_checkpoint"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.load_model_trainer_states_from_checkpoint">[docs]</a>    <span class="k">def</span> <span class="nf">load_model_trainer_states_from_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method loads the checkpoints states of the model, trainer and random states.</span>
 <span class="sd">        If model is None the serialized model class is loaded from checkpoint.</span>
 <span class="sd">        It does not loads the optimizer and LR scheduler states (for that call trainer.train()</span>
@@ -810,7 +810,7 @@
         <span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
         <span class="n">metric_key_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        If --log_predictions is enabled, calls a callback function to</span>
 <span class="sd">        log predicted item ids, scores, metadata and metrics.</span>
 <span class="sd">        Parameters</span>
@@ -895,7 +895,7 @@
 
 
 <div class="viewcode-block" id="IncrementalLoggingCallback"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.IncrementalLoggingCallback">[docs]</a><span class="k">class</span> <span class="nc">IncrementalLoggingCallback</span><span class="p">(</span><span class="n">TrainerCallback</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An :class:`~transformers.TrainerCallback` that changes the state of the Trainer</span>
 <span class="sd">    on specific hooks for the purpose of the incremental logging</span>
 <span class="sd">    Parameters</span>
@@ -920,7 +920,7 @@
 
 
 <div class="viewcode-block" id="DatasetMock"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.DatasetMock">[docs]</a><span class="k">class</span> <span class="nc">DatasetMock</span><span class="p">(</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">Sized</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mock to inform HF Trainer that the dataset is sized,</span>
 <span class="sd">    and can be obtained via the generated/provided data loader</span>
 <span class="sd">    &quot;&quot;&quot;</span>
