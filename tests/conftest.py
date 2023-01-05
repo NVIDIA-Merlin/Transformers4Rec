@@ -14,12 +14,17 @@
 # limitations under the License.
 #
 
+from __future__ import absolute_import
+
 import importlib
+from pathlib import Path
 
 import pytest
 
 from merlin_standard_lib import Schema
 from transformers4rec.data import tabular_sequence_testing_data, tabular_testing_data
+
+REPO_ROOT = Path(__file__).parent.parent
 
 
 @pytest.fixture

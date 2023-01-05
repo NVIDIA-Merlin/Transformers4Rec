@@ -28,7 +28,8 @@ TEST_PATH = dirname(dirname(realpath(__file__)))
 SESSION_PATH = "examples/getting-started-session-based/"
 
 
-@pytest.mark.skipif(find_spec("cudf") is None, reason="needs cudf")
+# @pytest.mark.skipif(find_spec("cudf") is None, reason="needs cudf")
+@pytest.mark.skip(reason="there is a testbook version of this test")
 def test_session(tmpdir):
     BASE_PATH = os.path.join(dirname(TEST_PATH), SESSION_PATH)
     os.environ["INPUT_DATA_DIR"] = "/tmp/data/"
