@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transformers4Rec &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/README.html" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Why Transformers4Rec?" href="why_transformers4rec.html" />
+    <link rel="prev" title="Merlin Transformers4Rec" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Transformers4Rec</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="tex2jax_ignore mathjax_ignore section" id="transformers4rec">
+<h1><a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/">Transformers4Rec</a><a class="headerlink" href="#transformers4rec" title="Permalink to this headline"></a></h1>
+<p><a class="reference external" href="https://pypi.python.org/pypi/Transformers4Rec"><img alt="PyPI" src="https://img.shields.io/pypi/v/Transformers4Rec?color=orange&amp;label=version" /></a>
+<a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE"><img alt="LICENSE" src="https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4Rec" /></a>
+<a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/README.html"><img alt="Documentation" src="https://img.shields.io/badge/documentation-blue.svg" /></a></p>
+<p>Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation and can work with PyTorch.</p>
+<p>The library works as a bridge between natural language processing (NLP) and recommender systems (RecSys) by integrating with one of the most popular NLP frameworks, <a class="reference external" href="https://github.com/huggingface/transformers">Hugging Face Transformers</a> (HF).
+Transformers4Rec makes state-of-the-art transformer architectures available for RecSys researchers and industry practitioners.</p>
+<p>The following figure shows the use of the library in a recommender system.
+Input data is typically a sequence of interactions such as items that are browsed in a web session or items put in a cart.
+The library helps you process and model the interactions so that you can output better recommendations for the next item.</p>
+<p><img alt="Sequential and Session-based recommendation with Transformers4Rec" src="_images/sequential_rec.png" /><br></p>
+<div style="text-align:center;margin:20pt">
+  <figcaption style="font-style:italic;">Sequential and Session-based recommendation with Transformers4Rec</figcaption>
+</div>
+<p>Traditional recommendation algorithms usually ignore the temporal dynamics and the sequence of interactions when trying to model user behavior.
+Generally, the next user interaction is related to the sequence of the user’s previous choices.
+In some cases, it might be a repeated purchase or song play.
+User interests can also suffer from interest drift because preferences can change over time.
+Those challenges are addressed by the <strong>sequential recommendation</strong> task.</p>
+<p>A special use case of sequential-recommendation is the <strong>session-based recommendation</strong> task where you only have access to the short sequence of interactions within the current session.
+This is very common in online services like e-commerce, news, and media portals where the user might choose to browse anonymously due to GDPR compliance that restricts collecting cookies or because the user is new to the site.
+This task is also relevant for scenarios where the users’ interests change a lot over time depending on the user context or intent.
+In this case, leveraging the interactions for the current session is more promising than old interactions to provide relevant recommendations.</p>
+<p>To deal with sequential and session-based recommendation, many sequence learning algorithms previously applied in machine learning and NLP research have been explored for RecSys based on k-Nearest Neighbors, Frequent Pattern Mining, Hidden Markov Models, Recurrent Neural Networks, and more recently neural architectures using the Self-Attention Mechanism and transformer architectures.
+Unlike Transformers4Rec, these frameworks only accept sequences of item IDs as input and do not provide a modularized, scalable implementation for production usage.</p>
+<div class="section" id="benefits-of-transformers4rec">
+<h2>Benefits of Transformers4Rec<a class="headerlink" href="#benefits-of-transformers4rec" title="Permalink to this headline"></a></h2>
+<p>Transformers4Rec offers the following benefits:</p>
+<ul class="simple">
+<li><p><strong>Flexibility</strong>: Transformers4Rec provides modularized building blocks that are configurable and compatible with standard PyTorch modules.
+This building-block design enables you to create custom architectures with multiple towers, multiple heads/tasks, and losses.</p></li>
+<li><p><strong>Access to HF Transformers</strong>: More than 64 different Transformer architectures can be used to evaluate your sequential and session-based recommendation task as a result of the <a class="reference external" href="https://github.com/huggingface/transformers">Hugging Face Transformers</a> integration.</p></li>
+<li><p><strong>Support for multiple input features</strong>: HF Transformers only support sequences of token IDs as input because it was originally designed for NLP.
+Transformers4Rec enables you to use other types of sequential tabular data as input with HF transformers due to the rich features that are available in RecSys datasets.
+Transformers4Rec uses a schema to configure the input features and automatically creates the necessary layers, such as embedding tables, projection layers, and output layers based on the target without requiring code changes to include new features.
+You can normalize and combine interaction and sequence-level input features in configurable ways.</p></li>
+<li><p><strong>Seamless preprocessing and feature engineering</strong>: As part of the Merlin ecosystem, Transformers4Rec is integrated with <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular">NVTabular</a> and <a class="reference external" href="https://github.com/triton-inference-server/server">Triton Inference Server</a>.
+These components enable you to build a fully GPU-accelerated pipeline for sequential and session-based recommendation.
+NVTabular has common preprocessing operations for session-based recommendation and exports a dataset schema.
+The schema is compatible with Transformers4Rec so that input features can be configured automatically.
+You can export your trained models to serve with Triton Inference Server in a single pipeline that includes online feature preprocessing and model inference.
+For more information, refer to <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html">End-to-end pipeline with NVIDIA Merlin</a>.</p></li>
+</ul>
+<p><img alt="GPU-accelerated Sequential and Session-based recommendation" src="_images/pipeline.png" /><br></p>
+<div style="text-align: center; margin: 20pt">
+  <figcaption style="font-style: italic;">GPU-accelerated pipeline for Sequential and Session-based recommendation using NVIDIA Merlin components</figcaption>
+</div>
+</div>
+<div class="section" id="transformers4rec-achievements">
+<h2>Transformers4Rec Achievements<a class="headerlink" href="#transformers4rec-achievements" title="Permalink to this headline"></a></h2>
+<p>Transformers4Rec recently won two session-based recommendation competitions: <a class="reference external" href="https://developer.nvidia.com/blog/how-to-build-a-winning-deep-learning-powered-recommender-system-part-3/">WSDM WebTour Workshop Challenge 2021 (organized by Booking.com)</a> and <a class="reference external" href="https://medium.com/nvidia-merlin/winning-the-sigir-ecommerce-challenge-on-session-based-recommendation-with-transformers-v2-793f6fac2994">SIGIR eCommerce Workshop Data Challenge 2021 (organized by Coveo)</a>.
+The library provides higher accuracy for session-based recommendation than baseline algorithms and we performed extensive empirical analysis about the accuracy.
+These observations are published in our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">ACM RecSys’21 paper</a>.</p>
+</div>
+<div class="section" id="sample-code-defining-and-training-the-model">
+<h2>Sample Code: Defining and Training the Model<a class="headerlink" href="#sample-code-defining-and-training-the-model" title="Permalink to this headline"></a></h2>
+<p>Training a model with Transformers4Rec typically requires performing the following high-level steps:</p>
+<ol>
+<li><p>Provide the <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema">schema</a> and construct an input-module.</p>
+<p>If you encounter session-based recommendation issues, you typically want to use the
+<a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures">TabularSequenceFeatures</a>
+class because it merges context features with sequential features.</p>
+</li>
+<li><p>Provide the prediction-tasks.</p>
+<p>The tasks that are provided right out of the box are available from our <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.model.html#module-transformers4rec.torch.model.prediction_task">API documentation</a>.</p>
+</li>
+<li><p>Construct a transformer-body and convert this into a model.</p></li>
+</ol>
+<p>The following code sample shows how to define and train a model with PyTorch:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">tr</span>
+
+<span class="c1"># Create a schema or read one from disk: tr.Schema().from_json(SCHEMA_PATH).</span>
+<span class="n">schema</span><span class="p">:</span> <span class="n">tr</span><span class="o">.</span><span class="n">Schema</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">tabular_sequence_testing_data</span><span class="o">.</span><span class="n">schema</span>
+
+<span class="n">max_sequence_length</span><span class="p">,</span> <span class="n">d_model</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">64</span>
+
+<span class="c1"># Define the input module to process the tabular input-features.</span>
+<span class="n">input_module</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+    <span class="n">schema</span><span class="p">,</span>
+    <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
+    <span class="n">continuous_projection</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
+    <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;concat&quot;</span><span class="p">,</span>
+    <span class="n">masking</span><span class="o">=</span><span class="s2">&quot;causal&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="c1"># Define one or more prediction-tasks.</span>
+<span class="n">prediction_tasks</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">()</span>
+
+<span class="c1"># Define a transformer-config like the XLNet architecture.</span>
+<span class="n">transformer_config</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+    <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span> <span class="n">n_head</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">n_layer</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">total_seq_length</span><span class="o">=</span><span class="n">max_sequence_length</span>
+<span class="p">)</span>
+<span class="n">model</span><span class="p">:</span> <span class="n">tr</span><span class="o">.</span><span class="n">Model</span> <span class="o">=</span> <span class="n">transformer_config</span><span class="o">.</span><span class="n">to_torch_model</span><span class="p">(</span><span class="n">input_module</span><span class="p">,</span> <span class="n">prediction_tasks</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
+<p>You can install Transformers4Rec with Pip, Conda, or run a Docker container.</p>
+<div class="section" id="installing-transformers4rec-using-pip">
+<h3>Installing Transformers4Rec Using Pip<a class="headerlink" href="#installing-transformers4rec-using-pip" title="Permalink to this headline"></a></h3>
+<p>You can install Transformers4Rec with the functionality to use the GPU-accelerated Merlin dataloader.
+Installation with the dataloader is highly recommended for better performance.
+Those components can be installed as optional arguments for the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> command.</p>
+<p>To install Transformers4Rec using Pip, run the following command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>transformers4rec<span class="o">[</span>pytorch,nvtabular,dataloader<span class="o">]</span>
+</pre></div>
+</div>
+<blockquote>
+<div><p>Be aware that installing Transformers4Rec with <code class="docutils literal notranslate"><span class="pre">pip</span></code> only supports the CPU version of Merlin Dataloader because <code class="docutils literal notranslate"><span class="pre">pip</span></code> does not install cuDF.
+The GPU capabilities of the dataloader are available by using the Docker container or by installing
+the dataloader with Conda first and then performing the <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation within the Conda environment.</p>
+</div></blockquote>
+</div>
+<div class="section" id="installing-transformers4rec-using-conda">
+<h3>Installing Transformers4Rec Using Conda<a class="headerlink" href="#installing-transformers4rec-using-conda" title="Permalink to this headline"></a></h3>
+<p>To install Transformers4Rec using Conda, run the following command:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>transformers4rec
+</pre></div>
+</div>
+</div>
+<div class="section" id="installing-transformers4rec-using-docker">
+<h3>Installing Transformers4Rec Using Docker<a class="headerlink" href="#installing-transformers4rec-using-docker" title="Permalink to this headline"></a></h3>
+<p>Transformers4Rec is pre-installed in the <code class="docutils literal notranslate"><span class="pre">merlin-pytorch</span></code> container that is available from the NVIDIA GPU Cloud (NGC) catalog.</p>
+<p>Refer to the <a class="reference external" href="https://nvidia-merlin.github.io/Merlin/main/containers.html">Merlin Containers</a> documentation page for information about the Merlin container names, URLs to container images in the catalog, and key Merlin components.</p>
+</div>
+</div>
+<div class="section" id="notebook-examples-and-tutorials">
+<h2>Notebook Examples and Tutorials<a class="headerlink" href="#notebook-examples-and-tutorials" title="Permalink to this headline"></a></h2>
+<p>The <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html">End-to-end pipeline with NVIDIA Merlin</a> page
+shows how to use Transformers4Rec and other Merlin libraries like NVTabular to build a complete recommender system.</p>
+<p>We have several <a class="reference internal" href="examples/index.html"><span class="xref myst">example</span></a> notebooks to help you build a recommender system or integrate Transformers4Rec into your system:</p>
+<ul class="simple">
+<li><p>A getting started example that includes training a session-based model with an XLNET transformer architecture.</p></li>
+<li><p>An end-to-end example that trains a model and takes the next step to serve inference with Triton Inference Server.</p></li>
+<li><p>Another end-to-end example that trains and evaluates a session-based model on RNN and also serves inference with Triton Inference Server.</p></li>
+<li><p>A notebook and scripts that reproduce the experiments presented in a paper for RecSys 2021.</p></li>
+</ul>
+</div>
+<div class="section" id="feedback-and-support">
+<h2>Feedback and Support<a class="headerlink" href="#feedback-and-support" title="Permalink to this headline"></a></h2>
+<p>If you’d like to make direct contributions to Transformers4Rec, refer to <a class="reference internal" href="CONTRIBUTING.html"><span class="doc std std-doc">Contributing to Transformers4Rec</span></a>. We’re particularly interested in contributions or feature requests for our feature engineering and preprocessing operations. To further advance our Merlin roadmap, we encourage you to share all the details regarding your recommender system pipeline by going to <a class="reference external" href="https://developer.nvidia.com/merlin-devzone-survey">https://developer.nvidia.com/merlin-devzone-survey</a>.</p>
+<p>If you’re interested in learning more about how Transformers4Rec works, refer to our
+<a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/getting_started.html">Transformers4Rec documentation</a>. We also have <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/modules.html">API documentation</a> that outlines the specifics of the available modules and classes within Transformers4Rec.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Merlin Transformers4Rec" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="why_transformers4rec.html" class="btn btn-neutral float-right" title="Why Transformers4Rec?" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
