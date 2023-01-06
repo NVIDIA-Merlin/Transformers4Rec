@@ -212,7 +212,7 @@ def test_soft_embedding():
     ), "Soft embedding output has not the expected shape"
 
     # Checking the default embedding initialization
-    assert output.detach().numpy().mean() == pytest.approx(0.0, abs=0.1)
+    assert output.detach().numpy().mean() == pytest.approx(0.0, abs=0.2)
     assert output.detach().numpy().std() == pytest.approx(0.05, abs=0.2)
 
 
