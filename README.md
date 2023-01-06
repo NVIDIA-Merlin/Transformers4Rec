@@ -51,7 +51,7 @@ These components enable you to build a fully GPU-accelerated pipeline for sequen
 NVTabular has common preprocessing operations for session-based recommendation and exports a dataset schema.
 The schema is compatible with Transformers4Rec so that input features can be configured automatically.
 You can export your trained models to serve with Triton Inference Server in a single pipeline that includes online feature preprocessing and model inference.
-For more information, refer to [End-to-end pipeline with NVIDIA Merlin](pipeline.md).
+For more information, refer to [End-to-end pipeline with NVIDIA Merlin](https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html).
 
 <img src="_images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>
 <div style="text-align: center; margin: 20pt">
