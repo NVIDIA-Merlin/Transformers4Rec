@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/end-to-end-session-based/01-ETL-with-NVTabular.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -26,7 +28,14 @@
     <link rel="prev" title="End-to-end session-based recommendation" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -47,7 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
@@ -105,6 +114,9 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ==============================================================================</span>
+
+<span class="c1"># Each user is responsible for checking the content of datasets and the</span>
+<span class="c1"># applicable licenses and determining if suitable for the intended use.</span>
 </pre></div>
 </div>
 </div>
@@ -288,7 +300,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>518
 </pre></div>
 </div>
 </div>
@@ -305,7 +317,7 @@ Count after removed in-session repeated interactions: 28971543
 <p>In this cell, we are defining three transformations ops:</p>
 <ul class="simple">
 <li><ol class="simple">
-<li><p>Encoding categorical variables using <code class="docutils literal notranslate"><span class="pre">Categorify()</span></code> op. We set <code class="docutils literal notranslate"><span class="pre">start_index</span></code> to 1, so that encoded null values start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p></li>
+<li><p>Encoding categorical variables using <code class="docutils literal notranslate"><span class="pre">Categorify()</span></code> op. We set <code class="docutils literal notranslate"><span class="pre">start_index</span></code> to 1 so that encoded null values start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p></li>
 </ol>
 </li>
 <li><ol class="simple">
@@ -313,7 +325,7 @@ Count after removed in-session repeated interactions: 28971543
 </ol>
 </li>
 <li><ol class="simple">
-<li><p>Computing the item recency in days using a custom Op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction.</p></li>
+<li><p>Computing the item recency in days using a custom op. Note that item recency is defined as the difference between the first occurrence of the item in dataset and the actual date of item interaction.</p></li>
 </ol>
 </li>
 </ul>
@@ -336,7 +348,7 @@ Count after removed in-session repeated interactions: 28971543
     <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span><span class="s1">&#39;et_dayofweek&#39;</span><span class="p">)</span>
 <span class="p">)</span>
 
-<span class="c1"># Derive cyclical features: Defines a custom lambda function </span>
+<span class="c1"># Derive cyclical features: Define a custom lambda function </span>
 <span class="k">def</span> <span class="nf">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">max_value</span><span class="p">):</span>
     <span class="n">value_scaled</span> <span class="o">=</span> <span class="p">(</span><span class="n">col</span> <span class="o">+</span> <span class="mf">0.000001</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_value</span>
     <span class="n">value_sin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">value_scaled</span><span class="p">)</span>
@@ -397,7 +409,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="section" id="define-the-preprocessing-of-sequential-features">
 <h3>Define the preprocessing of sequential features<a class="headerlink" href="#define-the-preprocessing-of-sequential-features" title="Permalink to this headline"></a></h3>
-<p>Once the item features are generated, the objective of this cell is grouping interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.</p>
+<p>Once the item features are generated, the objective of this cell is to group interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define Groupby Operator</span>
@@ -437,9 +449,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 </div>
-<ul class="simple">
-<li><p>Avoid Numba low occupancy warnings</p></li>
-</ul>
+<p>Avoid Numba low occupancy warnings:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">config</span>
@@ -451,21 +461,15 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="section" id="execute-nvtabular-workflow">
 <h3>Execute NVTabular workflow<a class="headerlink" href="#execute-nvtabular-workflow" title="Permalink to this headline"></a></h3>
-<p>Once we have defined the general workflow (<code class="docutils literal notranslate"><span class="pre">filtered_sessions</span></code>), we provide our cudf dataset to nvt.Dataset class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.</p>
+<p>Once we have defined the general workflow (<code class="docutils literal notranslate"><span class="pre">filtered_sessions</span></code>), we provide our cudf dataset to <code class="docutils literal notranslate"><span class="pre">nvt.Dataset</span></code> class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">interactions_merged_df</span><span class="p">)</span>
 <span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">filtered_sessions</span><span class="p">)</span>
-<span class="c1"># Learns features statistics necessary of the preprocessing workflow</span>
+<span class="c1"># Learn features statistics necessary of the preprocessing workflow</span>
 <span class="n">workflow</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
-<span class="c1"># Apply the preprocessing workflow in the dataset and converts the resulting Dask cudf dataframe to a cudf dataframe</span>
+<span class="c1"># Apply the preprocessing workflow in the dataset and convert the resulting Dask cudf dataframe to a cudf dataframe</span>
 <span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -513,17 +517,17 @@ Count after removed in-session repeated interactions: 28971543
       <td>[2223, 2125, 1800, 123, 3030, 1861, 1076, 1285...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[1.1285199e-06, 1.1285199e-06, 1.1285199e-06, ...</td>
-      <td>[-1.1126351356506348, -0.9665398597717285, -0....</td>
+      <td>[-1.1126341, -0.9665389, -0.1350116, -0.127809...</td>
       <td>27</td>
     </tr>
     <tr>
       <th>1</th>
       <td>3</td>
       <td>200</td>
-      <td>[35137, 19260, 46449, 29027, 39096, 27266, 326...</td>
+      <td>[34959, 24004, 32503, 39480, 28132, 47339, 351...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[0.393317312002182, 0.541846752166748, -3.0278...</td>
+      <td>[0.3110803, 0.475488, -3.0278225, -3.0278225, ...</td>
       <td>58</td>
     </tr>
     <tr>
@@ -533,7 +537,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[23212, 30448, 16468, 2052, 22490, 31097, 6243...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>
-      <td>[0.6801633834838867, 0.7174698114395142, 0.718...</td>
+      <td>[0.6801631, 0.7174695, 0.7185285, 0.7204116, 0...</td>
       <td>71</td>
     </tr>
     <tr>
@@ -543,7 +547,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[230, 451, 732, 1268, 2014, 567, 497, 439, 338...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[1.3680896759033203, -0.6530488133430481, -0.6...</td>
+      <td>[1.3680888, -0.6530481, -0.69314253, -0.590593...</td>
       <td>149</td>
     </tr>
     <tr>
@@ -553,7 +557,7 @@ Count after removed in-session repeated interactions: 28971543
       <td>[23, 70, 160, 70, 90, 742, 851, 359, 734, 878,...</td>
       <td>[2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, ...</td>
       <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[1.3714832067489624, 1.371589183807373, 1.3715...</td>
+      <td>[1.3714824, 1.3715883, 1.3715737, 1.3715955, 1...</td>
       <td>149</td>
     </tr>
   </tbody>
@@ -573,8 +577,8 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="section" id="export-pre-processed-data-by-day">
 <h3>Export pre-processed data by day<a class="headerlink" href="#export-pre-processed-data-by-day" title="Permalink to this headline"></a></h3>
-<p>In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day: <code class="docutils literal notranslate"><span class="pre">train.parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">validation.parquet</span></code> and <code class="docutils literal notranslate"><span class="pre">test.parquet</span></code></p>
-<p>P.s. It is worthwhile a note that the dataset have a single categorical feature (category), but it is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.</p>
+<p>In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day: <code class="docutils literal notranslate"><span class="pre">train.parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">validation.parquet</span></code> and <code class="docutils literal notranslate"><span class="pre">test.parquet</span></code>.</p>
+<p>P.s. It is worthwhile to note that the dataset has a single categorical feature (category), which, however, is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">sessions_gdf</span><span class="p">[</span><span class="n">sessions_gdf</span><span class="o">.</span><span class="n">day_index</span><span class="o">&gt;=</span><span class="mi">178</span><span class="p">]</span>
@@ -594,7 +598,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:01&lt;00:00,  4.73it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████| 5/5 [00:00&lt;00:00,  5.99it/s]
 </pre></div>
 </div>
 </div>
@@ -602,7 +606,7 @@ Count after removed in-session repeated interactions: 28971543
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">list_files</span><span class="p">(</span><span class="n">startpath</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Util function to print the nested structure of a directory</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">startpath</span><span class="p">):</span>
@@ -624,25 +628,25 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>preproc_sessions_by_day/
-    182/
-        test.parquet
-        valid.parquet
-        train.parquet
     179/
-        test.parquet
         valid.parquet
+        test.parquet
         train.parquet
     180/
-        test.parquet
         valid.parquet
+        test.parquet
         train.parquet
     178/
-        test.parquet
         valid.parquet
+        test.parquet
+        train.parquet
+    182/
+        valid.parquet
+        test.parquet
         train.parquet
     181/
-        test.parquet
         valid.parquet
+        test.parquet
         train.parquet
 </pre></div>
 </div>
@@ -657,12 +661,12 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>557
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>578
 </pre></div>
 </div>
 </div>
 </div>
-<p>That’s it! We created our sequential features, now we can go to next notebook to train a PyTorch session-based model.</p>
+<p>That’s it! We created our sequential features, now we can go to the next notebook to train a PyTorch session-based model.</p>
 </div>
 </div>
 </div>
@@ -695,7 +699,18 @@ Count after removed in-session repeated interactions: 28971543
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>
