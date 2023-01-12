@@ -34,7 +34,7 @@ def test_simple_heads(torch_tabular_features, torch_tabular_data, task):
     head = task("target").to_head(body, torch_tabular_features)
 
     body_out = body(torch_tabular_data)
-    loss = head.compute_loss(body_out, targets)
+    loss = head(body_out, targets=targets, training=True)["loss"]
 
     assert loss.min() >= 0 and loss.max() <= 1
 
@@ -55,7 +55,7 @@ def test_simple_heads_on_sequence(
     head = task("target", task_block=task_block, summary_type=summary).to_head(body, inputs)
 
     body_out = body(torch_yoochoose_like)
-    loss = head.compute_loss(body_out, targets)
+    loss = head(body_out, targets=targets, training=True)["loss"]
 
     assert loss.min() >= 0 and loss.max() <= 1
 
@@ -80,13 +80,15 @@ def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, ta
         tr.BinaryClassificationTask("classification", task_name="classification"),
         tr.RegressionTask("regression", task_name="regression"),
     ]
+    # TODO: how to get targets with no dataloader?
     head = tr.Head(body, tasks, task_blocks=task_blocks)
     optimizer = pytorch.optim.Adam(head.parameters())
 
     with pytorch.set_grad_enabled(mode=True):
         body_out = body(torch_tabular_data)
-        loss = head.compute_loss(body_out, targets)
-        metrics = head.calculate_metrics(body_out, targets, call_body=False)
+        output = head(body_out, targets=targets, training=True)
+        loss = output["loss"]
+        metrics = head.calculate_metrics(output["predictions"], targets=output["labels"])
 
         optimizer.zero_grad()
         loss.backward()
@@ -110,7 +112,10 @@ def test_item_prediction_head(torch_yoochoose_tabular_transformer_features, torc
 
     outputs = head(body(torch_yoochoose_like))
 
-    assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
+    assert (
+        outputs["next-item"].size()[-1]
+        == input_module.categorical_module.item_embedding_table.num_embeddings
+    )
 
 
 def test_item_prediction_head_weight_tying(
@@ -122,7 +127,10 @@ def test_item_prediction_head_weight_tying(
 
     outputs = head(body(torch_yoochoose_like))
 
-    assert outputs.size()[-1] == input_module.categorical_module.item_embedding_table.num_embeddings
+    assert (
+        list(outputs.values())[0].size()[-1]
+        == input_module.categorical_module.item_embedding_table.num_embeddings
+    )
 
 
 # Test loss and metrics outputs
@@ -134,19 +142,21 @@ def test_item_prediction_loss_and_metrics(
     body = tr.SequentialBlock(input_module, tr.MLPBlock([64]))
     head = tr.Head(body, tr.NextItemPredictionTask(weight_tying=weight_tying), inputs=input_module)
 
-    body_outputs = body(torch_yoochoose_like, ignore_masking=False)
+    body_outputs = body(torch_yoochoose_like, testing=True)
 
     trg_flat = input_module.masking.masked_targets.flatten()
     non_pad_mask = trg_flat != input_module.masking.padding_idx
     labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
 
-    loss = head.prediction_task_dict["next-item"].compute_loss(
+    output = head.prediction_task_dict["next-item"](
         inputs=body_outputs,
         targets=labels_all,
+        testing=True,
     )
+    loss = output["loss"]
 
     metrics = head.prediction_task_dict["next-item"].calculate_metrics(
-        predictions=body_outputs, targets=labels_all
+        predictions=output["predictions"], targets=output["labels"]
     )
     assert all(len(m) == 2 for m in metrics.values())
     assert loss != 0
@@ -161,11 +171,11 @@ def test_item_prediction_HF_output(
     body = tr.SequentialBlock(input_module, tr.MLPBlock([64]))
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
-    outputs = head(body(torch_yoochoose_like))
+    outputs = head(body(torch_yoochoose_like, training=True), training=True)
 
     assert isinstance(outputs, dict)
     assert [
@@ -209,11 +219,11 @@ def test_item_prediction_head_with_input_size(
     )
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
-    outputs = head(body(torch_yoochoose_like))
+    outputs = head(body(torch_yoochoose_like, training=True), training=True)
 
     assert outputs
 
@@ -231,11 +241,11 @@ def test_item_prediction_with_rnn(
     )
     head = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=input_module,
     )
 
-    outputs = head(body(torch_yoochoose_like))
+    outputs = head(body(torch_yoochoose_like, training=True), training=True)
 
     assert isinstance(outputs, dict)
     assert list(outputs.keys()) == [

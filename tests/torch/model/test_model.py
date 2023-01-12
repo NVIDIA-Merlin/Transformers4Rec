@@ -70,16 +70,20 @@ def test_sequential_prediction_model(
 
     head_1 = tr.Head(
         body,
-        tr.NextItemPredictionTask(weight_tying=True, hf_format=True),
+        tr.NextItemPredictionTask(weight_tying=True),
         inputs=inputs,
     )
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
 
+    bc_targets = pytorch.randint(2, (100,)).float()
+
     model = tr.Model(head_1, head_2)
-    output = model(torch_yoochoose_like)
+    output = model(torch_yoochoose_like, training=True, targets=bc_targets)
 
     assert isinstance(output, dict)
-    assert len(list(output.keys())) == 2
+    assert len(list(output.keys())) == 3
+    assert len(list(output["predictions"])) == 2
+    assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
 
 
 def test_model_with_multiple_heads_and_tasks(
@@ -248,7 +252,7 @@ def test_set_model_to_device(
     assert next(model.parameters()).device.type == device
 
     inputs = {k: v.to(device) for k, v in torch_yoochoose_like.items()}
-    assert model(inputs)
+    assert model(inputs, training=True)
 
 
 @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
@@ -261,11 +265,12 @@ def test_eval_metrics_with_masking(torch_yoochoose_like, yoochoose_schema, maski
         d_output=64,
         masking=masking,
     )
-    task = tr.NextItemPredictionTask(hf_format=True)
+    task = tr.NextItemPredictionTask()
     model = transformer_config.to_torch_model(input_module, task)
-    out = model(torch_yoochoose_like)
+    out = model(torch_yoochoose_like, training=True)
     result = model.calculate_metrics(
-        inputs=out["predictions"], targets=out["labels"], call_body=False, forward=False
+        predictions=out["predictions"],
+        targets=out["labels"],
     )
     assert result is not None
 
@@ -280,9 +285,9 @@ def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_sc
         d_output=d_model,
         masking="mlm",
     )
-    task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    task = tr.NextItemPredictionTask(weight_tying=True)
     model = transformer_config.to_torch_model(input_module, task)
-    assert model(torch_yoochoose_like)
+    assert model(torch_yoochoose_like, training=True)
 
 
 @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
@@ -293,13 +298,13 @@ def test_output_shape_mode_eval(torch_yoochoose_like, yoochoose_schema, masking)
         d_output=64,
         masking=masking,
     )
-    prediction_task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    prediction_task = tr.NextItemPredictionTask(weight_tying=True)
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=8, n_layer=2, total_seq_length=20
     )
     model = transformer_config.to_torch_model(input_module, prediction_task)
 
-    out = model(torch_yoochoose_like, training=False)
+    out = model(torch_yoochoose_like, training=False, testing=True)
     assert out["predictions"].shape[0] == torch_yoochoose_like["item_id/list"].size(0)
 
 
@@ -308,20 +313,18 @@ def test_save_next_item_prediction_model(
 ):
     inputs = torch_yoochoose_tabular_transformer_features
     transformer_config = tconf.XLNetConfig.build(100, 4, 2, 20)
-    task = tr.NextItemPredictionTask(hf_format=True, weight_tying=True)
+    task = tr.NextItemPredictionTask(weight_tying=True)
     model = transformer_config.to_torch_model(inputs, task)
-    output = model(torch_yoochoose_like, training=False)
+    output = model(torch_yoochoose_like, training=False, testing=True)
     assert isinstance(output, dict)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         model.save(tmpdir)
         assert "t4rec_model_class.pkl" in os.listdir(tmpdir)
         loaded_model = model.load(tmpdir)
-        # deactivate the hf_format model to get the tensor of predictions as output
         # instead of a dictionary of three tensors `loss, labels, and predictions`
-        loaded_model.hf_format = False
 
-    output = loaded_model(torch_yoochoose_like, training=False)
+    output = loaded_model(torch_yoochoose_like)
     assert isinstance(output, torch.Tensor)
 
     in_schema = loaded_model.input_schema

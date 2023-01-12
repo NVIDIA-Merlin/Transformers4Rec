@@ -1,0 +1,30 @@
+name: GPU CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    tags:
+      - v*
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  gpu-ci:
+    runs-on: 1GPU
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Run tests
+      run: |
+        ref_type=${{ github.ref_type }}
+        branch=main
+        if [[ $ref_type == "tag"* ]]
+        then
+          raw=$(git branch -r --contains ${{ github.ref_name }})
+          branch=${raw/origin\/}
+        fi
+        cd ${{ github.workspace }}; tox -e test-gpu -- $branch

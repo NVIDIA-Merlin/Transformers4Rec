@@ -18,15 +18,15 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install Ubuntu packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y protobuf-compiler pandoc
+          sudo apt-get install -y protobuf-compiler
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip tox
@@ -39,21 +39,28 @@ jobs:
           python setup.py develop
       - name: Run unittests
         run: |
-          tox -e test-cpu
+          ref_type=${{ github.ref_type }}
+          branch=main
+          if [[ $ref_type == "tag"* ]]
+          then
+            raw=$(git branch -r --contains ${{ github.ref_name }})
+            branch=${raw/origin\/}
+          fi
+          tox -e test-cpu -- $branch
       - name: Generate package for pypi
         run: |
           python setup.py sdist
       - name: Upload artifacts to github
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: dist
           path: dist
       # Build docs, treat warnings as errors (TODO SPHINXOPTS="-W -q")
       - name: Building docs
         run: |
-          tox -e docs
+          tox -vv -e docs
       - name: Upload HTML
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: html-build-artifact
           path: docs/build/html
@@ -66,7 +73,7 @@ jobs:
           echo ${{ github.event.pull_request.merged }} > ./pr/merged.txt
           echo ${{ github.event.action }}              > ./pr/action.txt
       - name: Upload PR information
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: pr
           path: pr/
@@ -77,7 +84,7 @@ jobs:
     if: "startsWith(github.ref, 'refs/tags/')"
     needs: [build]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: dist
       - name: Create GitHub Release
@@ -85,7 +92,7 @@ jobs:
         env:
           GHR_PATH: .
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: 3.9
       - name: Push to PyPi

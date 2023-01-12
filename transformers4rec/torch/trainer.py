@@ -33,12 +33,7 @@ from torch.utils.data.dataset import Dataset
 from transformers import Trainer as BaseTrainer
 from transformers.optimization import TYPE_TO_SCHEDULER_FUNCTION
 from transformers.trainer_callback import TrainerCallback
-from transformers.trainer_pt_utils import (
-    find_batch_size,
-    nested_concat,
-    nested_numpify,
-    nested_truncate,
-)
+from transformers.trainer_pt_utils import find_batch_size
 from transformers.trainer_utils import PREFIX_CHECKPOINT_DIR, EvalLoopOutput, SchedulerType
 from transformers.utils import logging
 
@@ -47,6 +42,7 @@ from merlin_standard_lib import Schema
 from ..config.trainer import T4RecTrainingArguments
 from .model.base import Model
 from .utils.data_utils import T4RecDataLoader
+from .utils.torch_utils import nested_concat, nested_detach, nested_numpify, nested_truncate
 
 logger = logging.get_logger(__name__)
 
@@ -106,7 +102,6 @@ class Trainer(BaseTrainer):
     ):
 
         mock_dataset = DatasetMock()
-        hf_model = HFWrapper(model)
 
         self.incremental_logging = incremental_logging
         if self.incremental_logging:
@@ -115,7 +110,7 @@ class Trainer(BaseTrainer):
             callbacks.append(incremental_logging_callback)
 
         super(Trainer, self).__init__(
-            model=hf_model,
+            model=model,
             args=args,
             train_dataset=mock_dataset,
             eval_dataset=mock_dataset,
@@ -199,13 +194,13 @@ class Trainer(BaseTrainer):
         if self.test_dataloader is not None:
             return self.test_dataloader
 
-        if test_dataset is None and self.test_dataset is None:
+        if test_dataset is None and self.test_dataset_or_path is None:
             raise ValueError("Trainer: test requires an test_dataset.")
-        test_dataset = test_dataset if test_dataset is not None else self.test_dataset
+        test_dataset = test_dataset if test_dataset is not None else self.test_dataset_or_path
         assert self.schema is not None, "schema is required to generate Test Dataloader"
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
-            self.test_dataset_or_path,
+            test_dataset,
             self.args.per_device_eval_batch_size,
             max_sequence_length=self.args.max_sequence_length,
             drop_last=self.args.dataloader_drop_last,
@@ -309,13 +304,39 @@ class Trainer(BaseTrainer):
             optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_training_steps
         )
 
+    def compute_loss(self, model, inputs, return_outputs=False):
+        """
+        Overriding :obj:`Trainer.compute_loss()`
+        To allow for passing the targets to the model's forward method
+        How the loss is computed by Trainer. By default, all Transformers4Rec models return
+        a dictionary of three elements {'loss', 'predictions', and 'labels}
+        """
+        inputs, targets = inputs
+        outputs = model(inputs, targets=targets, training=True)
+        # Save past state if it exists
+        # TODO: this needs to be fixed and made cleaner later.
+        if self.args.past_index >= 0:
+            self._past = outputs[self.args.past_index]
+
+        if "loss" not in outputs:
+            raise ValueError(
+                "The model did not return a loss from the inputs, only the following keys: "
+                f"{','.join(outputs.keys())}. "
+                "For reference, the inputs it received are {','.join(inputs.keys())}."
+            )
+
+        loss = outputs["loss"]
+
+        return (loss, outputs) if return_outputs else loss
+
     def prediction_step(
         self,
         model: torch.nn.Module,
         inputs: Dict[str, torch.Tensor],
         prediction_loss_only: bool,
         ignore_keys: Optional[List[str]] = None,
-        ignore_masking: bool = False,
+        training: bool = False,
+        testing: bool = True,
     ) -> Tuple[
         Optional[float],
         Optional[torch.Tensor],
@@ -329,20 +350,24 @@ class Trainer(BaseTrainer):
         model
         """
         inputs = self._prepare_inputs(inputs)
+        inputs, targets = inputs
         with torch.no_grad():
             if self.use_amp:
                 with autocast():
-                    outputs = model(inputs, training=False, ignore_masking=ignore_masking)
+                    outputs = model(inputs, targets=targets, training=training, testing=testing)
             else:
-                outputs = model(inputs, training=False, ignore_masking=ignore_masking)
+                outputs = model(inputs, targets=targets, training=training, testing=testing)
 
+        if testing:
             loss = outputs["loss"].mean().detach()
+            labels = nested_detach(outputs["labels"])
+            predictions = nested_detach(outputs["predictions"])
+        else:
+            loss, labels = None, None
+            predictions = nested_detach(outputs)
 
         if prediction_loss_only:
             return (loss, None, None, None)
-
-        predictions = outputs["predictions"].detach()
-        labels = outputs["labels"].detach()
 
         # TODO: define metadata dict in the model for logging
         # other_outputs = {
@@ -395,12 +420,12 @@ class Trainer(BaseTrainer):
         )
 
         if description == "Prediction":
-            ignore_masking = True
+            testing = False
         else:
-            ignore_masking = False
+            testing = True
 
         # set the model
-        model = self.model.wrapper_module
+        model = self.model
         # reset metrics for the dataset (Train, Valid or Test)
         if self.compute_metrics:
             model.reset_metrics()
@@ -459,17 +484,15 @@ class Trainer(BaseTrainer):
                 inputs,
                 prediction_loss_only,
                 ignore_keys=ignore_keys,
-                ignore_masking=ignore_masking,
+                testing=testing,
             )
 
             # Updates metrics
             # TODO: compute metrics each N eval_steps to speedup evaluation
             metrics_results_detailed = None
-            if self.compute_metrics:
+            if self.compute_metrics is not None and testing:
                 if step % self.args.compute_metrics_each_n_steps == 0:
-                    metrics_results_detailed = model.calculate_metrics(
-                        preds, labels, mode=metric_key_prefix, forward=False, call_body=False
-                    )
+                    metrics_results_detailed = model.calculate_metrics(preds, labels)
 
             # Update containers on host
             if loss is not None:
@@ -486,6 +509,11 @@ class Trainer(BaseTrainer):
                     else nested_concat(labels_host, labels, padding_index=0)
                 )
             if preds is not None and self.args.predict_top_k > 0:
+                if isinstance(preds, dict):
+                    assert (
+                        "next-item" in preds
+                    ), "Top-k prediction is specific to NextItemPredictionTask"
+                    preds = preds["next-item"]
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(
                     preds, k=self.args.predict_top_k, dim=-1
                 )
@@ -592,7 +620,7 @@ class Trainer(BaseTrainer):
         # Get metrics :
         metrics = {}
         # Computing the metrics results as the average of all steps
-        if self.compute_metrics:
+        if self.compute_metrics and testing:
             streaming_metrics_results = model.compute_metrics(mode=metric_key_prefix)
             streaming_metrics_results_flattened = process_metrics(
                 streaming_metrics_results, prefix=metric_key_prefix + "_/"
@@ -600,7 +628,8 @@ class Trainer(BaseTrainer):
 
             metrics = {**metrics, **streaming_metrics_results_flattened}
 
-        metrics[f"{metric_key_prefix}_/loss"] = all_losses.mean().item()
+        if testing:
+            metrics[f"{metric_key_prefix}_/loss"] = all_losses.mean().item()
 
         return EvalLoopOutput(
             predictions=all_preds_item_ids_scores,
@@ -631,7 +660,7 @@ class Trainer(BaseTrainer):
         # save the serialized model
         if save_model_class:
             # TODO : fix serialization of DatasetSchema object
-            self.model.wrapper_module.save(output_dir)
+            self.model.save(output_dir)
 
     def load_model_trainer_states_from_checkpoint(self, checkpoint_path, model=None):
         """
@@ -659,7 +688,7 @@ class Trainer(BaseTrainer):
                 open(os.path.join(checkpoint_path, "t4rec_model_class.pkl"), "rb")
             )
 
-        self.model = HFWrapper(model)
+        self.model = model
         logger.info("Loading weights of previously trained model")
         # Restoring model weights
         self.model.load_state_dict(
@@ -813,18 +842,3 @@ class DatasetMock(Dataset, Sized):
 
     def __len__(self):
         return self.nsteps
-
-
-class HFWrapper(torch.nn.Module):
-    """
-    Prepare the signature of the forward method
-    as required by HF Trainer
-    """
-
-    def __init__(self, model):
-        super().__init__()
-        self.wrapper_module = model
-
-    def forward(self, *args, **kwargs):
-        inputs = kwargs
-        return self.wrapper_module(inputs, *args)

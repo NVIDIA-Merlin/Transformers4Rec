@@ -43,6 +43,20 @@ MASK_SEQUENCE_PARAMETERS_DOCSTRING = """
         Predict only last item during evaluation
 """
 
+TRAINING_TESTING_FLAGS_DOCSTRING = """
+    training: bool
+        Flag to indicate whether we are in `Training` mode or not.
+        During training, the labels can be any items within the sequence
+        based on the selected masking task.
+    testing: bool
+        Flag to indicate whether we are in `Evaluation` (=True)
+        or `Inference` (=False) mode.
+        During evaluation, we are predicting all next items or last item only
+        in the sequence based on the param `eval_on_last_item_seq_only`.
+        During inference, we don't mask the input sequence and use all available
+        information to predict the next item.
+"""
+
 
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
 class MaskSequence(OutputSizeMixin, torch.nn.Module):
@@ -94,7 +108,10 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
             std=0.001,
         )
 
-    def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
+    @docstring_parameter(flags_parameters_docstrings=TRAINING_TESTING_FLAGS_DOCSTRING)
+    def _compute_masked_targets(
+        self, item_ids: torch.Tensor, training: bool = False, testing: bool = False
+    ) -> MaskingInfo:
         """
         Method to prepare masked labels based on the sequence of item ids.
         It returns The true labels of masked positions and the related boolean mask.
@@ -104,17 +121,14 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         item_ids: torch.Tensor
             The sequence of input item ids used for deriving labels of
             next item prediction task.
-
-        training: bool
-            Flag to indicate whether we are in `Training` mode or not.
-            During training, the labels can be any items within the sequence
-            based on the selected masking task.
-            During evaluation, we are predicting all next items or last item only
-            in the sequence based on the param `eval_on_last_item_seq_only`.
+        {flags_parameters_docstrings}
         """
         raise NotImplementedError
 
-    def compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
+    @docstring_parameter(flags_parameters_docstrings=TRAINING_TESTING_FLAGS_DOCSTRING)
+    def compute_masked_targets(
+        self, item_ids: torch.Tensor, training: bool = False, testing: bool = False
+    ) -> MaskingInfo:
         """
         Method to prepare masked labels based on the sequence of item ids.
         It returns The true labels of masked positions and the related boolean mask.
@@ -126,23 +140,25 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         item_ids: torch.Tensor
             The sequence of input item ids used for deriving labels of
             next item prediction task.
+        {flags_parameters_docstrings}
 
-        training: bool
-            Flag to indicate whether we are in `Training` mode or not.
-            During training, the labels can be any items within the sequence
-            based on the selected masking task.
-            During evaluation, we are predicting the last item in the sequence.
         Returns
         -------
         Tuple[MaskingSchema, MaskedTargets]
         """
         assert item_ids.ndim == 2, "`item_ids` must have 2 dimensions."
-        masking_info = self._compute_masked_targets(item_ids, training=training)
+        masking_info = self._compute_masked_targets(item_ids, training=training, testing=testing)
         self.mask_schema, self.masked_targets = masking_info.schema, masking_info.targets
 
         return masking_info
 
-    def apply_mask_to_inputs(self, inputs: torch.Tensor, schema: torch.Tensor) -> torch.Tensor:
+    def apply_mask_to_inputs(
+        self,
+        inputs: torch.Tensor,
+        schema: torch.Tensor,
+        training: bool = False,
+        testing: bool = False,
+    ) -> torch.Tensor:
         """
         Control the masked positions in the inputs by replacing the true interaction
         by a learnable masked embedding.
@@ -155,6 +171,8 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
         schema: MaskingSchema
             The boolean mask indicating masked positions.
         """
+        if not training and not testing:
+            return inputs
         inputs = torch.where(
             schema.unsqueeze(-1).bool(),
             self.masked_item_embedding.to(inputs.dtype),
@@ -195,12 +213,18 @@ class MaskSequence(OutputSizeMixin, torch.nn.Module):
 
         return MaskingInfo(mask_labels, labels)
 
-    def forward(self, inputs: torch.Tensor, item_ids: torch.Tensor, training=False) -> torch.Tensor:
-        _ = self.compute_masked_targets(item_ids=item_ids, training=training)
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        item_ids: torch.Tensor,
+        training: bool = False,
+        testing: bool = False,
+    ) -> torch.Tensor:
+        _ = self.compute_masked_targets(item_ids=item_ids, training=training, testing=testing)
         if self.mask_schema is None:
             raise ValueError("`mask_schema must be set.`")
         schema: torch.Tensor = self.mask_schema
-        return self.apply_mask_to_inputs(inputs, schema)
+        return self.apply_mask_to_inputs(inputs, schema, training=training, testing=testing)
 
     def forward_output_size(self, input_size):
         return input_size
@@ -248,7 +272,9 @@ class CausalLanguageModeling(MaskSequence):
         )
         self.train_on_last_item_seq_only = train_on_last_item_seq_only
 
-    def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
+    def _compute_masked_targets(
+        self, item_ids: torch.Tensor, training: bool = False, testing: bool = False
+    ) -> MaskingInfo:
         masking_info = self.predict_all(item_ids)
         mask_labels, labels = masking_info.schema, masking_info.targets
 
@@ -269,7 +295,15 @@ class CausalLanguageModeling(MaskSequence):
 
         return MaskingInfo(mask_labels, labels)
 
-    def apply_mask_to_inputs(self, inputs: torch.Tensor, mask_schema: torch.Tensor) -> torch.Tensor:
+    def apply_mask_to_inputs(
+        self,
+        inputs: torch.Tensor,
+        mask_schema: torch.Tensor,
+        training: bool = False,
+        testing: bool = False,
+    ) -> torch.Tensor:
+        if not training and not testing:
+            return inputs
         # shift sequence of interaction embeddings
         pos_emb_inp = inputs[:, :-1]
         # Adding a masked item in the sequence to return to the initial sequence.
@@ -327,7 +361,10 @@ class MaskedLanguageModeling(MaskSequence):
         )
         self.mlm_probability = mlm_probability
 
-    def _compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
+    @docstring_parameter(flags_parameters_docstrings=TRAINING_TESTING_FLAGS_DOCSTRING)
+    def _compute_masked_targets(
+        self, item_ids: torch.Tensor, training: bool = False, testing: bool = False
+    ) -> MaskingInfo:
         """
         Prepare sequence with mask schema for masked language modeling prediction
         the function is based on HuggingFace's transformers/data/data_collator.py
@@ -336,6 +373,7 @@ class MaskedLanguageModeling(MaskSequence):
         ----------
         item_ids: torch.Tensor
             Sequence of input itemid (target) column
+        {flags_parameters_docstrings}
 
         Returns
         -------
@@ -343,14 +381,34 @@ class MaskedLanguageModeling(MaskSequence):
             Sequence of masked item ids.
         mask_labels: torch.Tensor
             Masking schema for masked targets positions.
+        {flags_parameters_docstrings}
+
+        `Note:` During inference, the inputs are extended with one additional
+            [MASK] item embeddings. This position is then used to retrieve
+            the final hidden representation from the transformer block.
+            This is needed to take into account the actual target position
+            when applying the transformer layer.
         """
+        non_padded_mask = item_ids != self.padding_idx
+        rows_ids = torch.arange(item_ids.size(0), dtype=torch.long, device=item_ids.device)
+
+        if not training and not testing:
+            # At inference we extend the input with a [MASK] element at the first padded position
+            # to take into account the positional encoding of the target
+            labels = torch.full(
+                (item_ids.shape[0], item_ids.shape[1] + 1),
+                self.padding_idx,
+                dtype=item_ids.dtype,
+                device=item_ids.device,
+            )
+            last_item_sessions = non_padded_mask.sum(dim=1)
+            labels[rows_ids, last_item_sessions] = item_ids[rows_ids, last_item_sessions - 1]
+            mask_labels = labels != self.padding_idx
+            return MaskingInfo(mask_labels, labels)
 
         labels = torch.full(
             item_ids.shape, self.padding_idx, dtype=item_ids.dtype, device=item_ids.device
         )
-        non_padded_mask = item_ids != self.padding_idx
-
-        rows_ids = torch.arange(item_ids.size(0), dtype=torch.long, device=item_ids.device)
         # During training, masks labels to be predicted according to a probability, ensuring that
         #   each session has at least one label to predict
         if training:
@@ -400,6 +458,34 @@ class MaskedLanguageModeling(MaskSequence):
 
         return MaskingInfo(mask_labels, labels)
 
+    @docstring_parameter(flags_parameters_docstrings=TRAINING_TESTING_FLAGS_DOCSTRING)
+    def apply_mask_to_inputs(
+        self, inputs: torch.Tensor, mask_schema: torch.Tensor, training=False, testing=False
+    ) -> torch.Tensor:
+        """
+        Control the masked positions in the inputs by replacing the true interaction
+        by a learnable masked embedding.
+
+        Parameters
+        ----------
+        inputs: torch.Tensor
+            The 3-D tensor of interaction embeddings resulting from the ops:
+            TabularFeatures + aggregation + projection(optional)
+        schema: MaskingSchema
+            The boolean mask indicating masked positions.
+        {flags_parameters_docstrings}
+        """
+        if not testing and not training:
+            # We extend the inputs with a [MASK] embeddings to take into account
+            # the positional encode of the target
+            inputs = torch.cat([inputs, inputs[:, -1, :].unsqueeze(1)], dim=1)
+        inputs = torch.where(
+            mask_schema.unsqueeze(-1).bool(),
+            self.masked_item_embedding.to(inputs.dtype),
+            inputs,
+        )
+        return inputs
+
 
 @masking_registry.register_with_multiple_names("plm", "permutation")
 @docstring_parameter(mask_sequence_parameters=MASK_SEQUENCE_PARAMETERS_DOCSTRING)
@@ -445,11 +531,7 @@ class PermutationLanguageModeling(MaskSequence):
         self.target_mapping: Optional[torch.Tensor] = None
         self.perm_mask: Optional[torch.Tensor] = None
 
-    def _compute_masked_targets(
-        self,
-        item_ids: torch.Tensor,
-        training=False,
-    ):
+    def _compute_masked_targets(self, item_ids: torch.Tensor, **kwargs):
         pass
 
     def _compute_masked_targets_extended(
@@ -639,7 +721,9 @@ class PermutationLanguageModeling(MaskSequence):
 
         return mask_labels, labels, target_mapping, perm_mask
 
-    def compute_masked_targets(self, item_ids: torch.Tensor, training=False) -> MaskingInfo:
+    def compute_masked_targets(
+        self, item_ids: torch.Tensor, training=False, **kwargs
+    ) -> MaskingInfo:
         (
             self.mask_schema,
             self.masked_targets,

@@ -33,7 +33,7 @@ def test_pyarrow_load(yoochoose_schema, yoochoose_path_file):
         shuffle=False,
         shuffle_buffer_size=0.1,
     )
-    batch = next(iter(loader))
+    batch = next(iter(loader))[0]
 
     assert all(feat.size()[0] == batch_size for feat in batch.values())
     assert all(feat.device == torch.device("cpu") for feat in batch.values())
@@ -63,7 +63,7 @@ def test_features_from_schema(yoochoose_schema, yoochoose_path_file):
         shuffle=False,
         shuffle_buffer_size=0.1,
     )
-    batch = next(iter(loader))
+    batch = next(iter(loader))[0]
     features = yoochoose_schema.column_names
 
     assert set(batch.keys()).issubset(set(features))
@@ -82,6 +82,6 @@ def test_loader_from_registry(yoochoose_schema, yoochoose_path_file):
         shuffle=False,
         shuffle_buffer_size=0,
     )
-    batch = next(iter(loader))
+    batch = next(iter(loader))[0]
     features = yoochoose_schema.column_names
     assert set(batch.keys()).issubset(set(features))

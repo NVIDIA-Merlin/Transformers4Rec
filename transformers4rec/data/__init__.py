@@ -16,6 +16,7 @@
 
 
 from .testing.dataset import tabular_sequence_testing_data
+from .testing.music_streaming.dataset import music_streaming_testing_data
 from .testing.tabular_data.dataset import tabular_testing_data
 
-__all__ = ["tabular_sequence_testing_data", "tabular_testing_data"]
+__all__ = ["tabular_sequence_testing_data", "tabular_testing_data", "music_streaming_testing_data"]
