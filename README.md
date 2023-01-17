@@ -80,7 +80,7 @@ Training a model with Transformers4Rec typically requires performing the followi
 
 3. Construct a transformer-body and convert this into a model.
 
-The following code sample shows how to define and train a model with PyTorch:
+The following code sample shows how to define and train an `XLNet` model with PyTorch for next item prediction task:
 
 ```python
 from transformers4rec import torch as tr
@@ -90,7 +90,7 @@ schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
 
 max_sequence_length, d_model = 20, 64
 
-# Define the input module to process the tabular input-features.
+# Define the input module to process the tabular input features.
 input_module = tr.TabularSequenceFeatures.from_schema(
     schema,
     max_sequence_length=max_sequence_length,
@@ -98,15 +98,78 @@ input_module = tr.TabularSequenceFeatures.from_schema(
     aggregation="concat",
     masking="causal",
 )
-# Define one or more prediction-tasks.
-prediction_tasks = tr.NextItemPredictionTask()
 
 # Define a transformer-config like the XLNet architecture.
 transformer_config = tr.XLNetConfig.build(
     d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
 )
-model: tr.Model = transformer_config.to_torch_model(input_module, prediction_tasks)
+
+# Define the model block including: inputs, masking, projection and transformer block.
+body = tr.SequentialBlock(
+    input_module, 
+    tr.MLPBlock([d_model]), 
+    tr.TransformerBlock(transformer_config, masking=input_module.masking)
+)
+
+# Define the evaluation top-N metrics and the cut-offs
+metrics = [NDCGAt(top_ks=[20, 40], labels_onehot=True),  
+           RecallAt(top_ks=[20, 40], labels_onehot=True)]
+
+# Define a head with NextItemPredictionTask 
+head = tr.Head(
+    body,
+    tr.NextItemPredictionTask(weight_tying=True, metrics=metrics),
+    inputs=input_module,
+)
+
+# Get the end-to-end Model class 
+model = tr.Model(head)
 ```
+
+The following code sample shows how to define and train an `XLNet` model for binary classification prediction task:
+
+```python
+from transformers4rec import torch as tr
+
+# Create a schema or read one from disk: tr.Schema().from_json(SCHEMA_PATH).
+schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
+
+max_sequence_length, d_model = 20, 64
+
+# Define the input module to process the tabular input features.
+input_module = tr.TabularSequenceFeatures.from_schema(
+    schema,
+    max_sequence_length=max_sequence_length,
+    continuous_projection=d_model,
+    aggregation="concat",
+    masking="causal",
+)
+
+# Define XLNetConfig class and set default parameters for HF XLNet config  
+transformer_config = tr.XLNetConfig.build(
+    d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
+)
+# Define the model block including: inputs, masking, projection and transformer block.
+body = tr.SequentialBlock(
+    input_module, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config, masking=input_module.masking)
+)
+
+# Define a head with BinaryClassificationTask
+head = tr.Head(
+    body,
+    tr.BinaryClassificationTask("click", summary_type="mean", 
+                                metrics=[tm.Precision(task='binary'),
+                                         tm.Recall(task='binary'),
+                                         tm.Accuracy(task='binary'),
+                                         tm.F1Score(task='binary')]),
+    inputs=input_module,
+)
+
+# Get the end-to-end Model class 
+model = tr.Model(head)
+
+```
+
 
 ## Installation
 
