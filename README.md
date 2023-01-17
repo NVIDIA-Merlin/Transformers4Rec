@@ -142,7 +142,7 @@ input_module = tr.TabularSequenceFeatures.from_schema(
     max_sequence_length=max_sequence_length,
     continuous_projection=d_model,
     aggregation="concat",
-    masking="causal",
+    masking=None,
 )
 
 # Define XLNetConfig class and set default parameters for HF XLNet config  
