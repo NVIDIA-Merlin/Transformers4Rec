@@ -44,6 +44,85 @@ class BinaryClassificationPrepareBlock(BuildableBlock):
 
 
 class BinaryClassificationTask(PredictionTask):
+    """Returns a ``PredictionTask`` for binary classification.
+
+    Example usage::
+
+        # Define the input module to process the tabular input features.
+        input_module = tr.TabularSequenceFeatures.from_schema(
+            schema,
+            max_sequence_length=max_sequence_length,
+            continuous_projection=d_model,
+            aggregation="concat",
+            masking=None,
+        )
+
+        # Define XLNetConfig class and set default parameters for HF XLNet config.
+        transformer_config = tr.XLNetConfig.build(
+            d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
+        )
+
+        # Define the model block including: inputs, masking, projection and transformer block.
+        body = tr.SequentialBlock(
+            input_module,
+            tr.MLPBlock([64]),
+            tr.TransformerBlock(
+                transformer_config,
+                masking=input_module.masking
+            )
+        )
+
+        # Define a head with BinaryClassificationTask.
+        head = tr.Head(
+            body,
+            tr.BinaryClassificationTask(
+                "click",
+                summary_type="mean",
+                metrics=[
+                    tm.Precision(task='binary'),
+                    tm.Recall(task='binary'),
+                    tm.Accuracy(task='binary'),
+                    tm.F1Score(task='binary')
+                ]
+            ),
+            inputs=input_module,
+        )
+
+        # Get the end-to-end Model class.
+        model = tr.Model(head)
+
+    Parameters
+    ----------
+
+    target_name: Optional[str] = None
+        Specifies the variable name that represents the positive and negative values.
+
+    task_name: Optional[str] = None
+        Specifies the name of the prediction task. If this parameter is not specified,
+        a name is automatically constructed based on ``target_name`` and the Python
+        class name of the model.
+
+    task_block: Optional[BlockType] = None
+        Specifies a module to transform the input tensor before computing predictions.
+
+    loss: torch.nn.Module
+        Specifies the loss function for the task.
+        The default class is ``torch.nn.BCELoss``.
+
+    metrics: Tuple[torch.nn.Module, ...]
+        Specifies the metrics to calculate during training and evaluation.
+        The default metrics are ``Precision``, ``Recall``, and ``Accuracy``.
+
+    summary_type: str
+        Summarizes a sequence into a single tensor. Accepted values are:
+
+            - ``last`` -- Take the last token hidden state (like XLNet)
+            - ``first`` -- Take the first token hidden state (like Bert)
+            - ``mean`` -- Take the mean of all tokens hidden states
+            - ``cls_index`` -- Supply a Tensor of classification token position (GPT/GPT-2)
+            - ``attn`` -- Not implemented now, use multi-head attention
+    """
+
     DEFAULT_LOSS = torch.nn.BCELoss()
     DEFAULT_METRICS = (
         tm.Precision(num_classes=2, task="binary"),
