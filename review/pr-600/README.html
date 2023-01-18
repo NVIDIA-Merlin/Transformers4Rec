@@ -155,7 +155,7 @@ class because it merges context features with sequential features.</p>
 </li>
 <li><p>Construct a transformer-body and convert this into a model.</p></li>
 </ol>
-<p>The following code sample shows how to define and train an <code class="docutils literal notranslate"><span class="pre">XLNet</span></code> model with PyTorch for next item prediction task:</p>
+<p>The following code sample shows how to define and train an XLNet model with PyTorch for next-item prediction task:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">tr</span>
 
 <span class="c1"># Create a schema or read one from disk: tr.Schema().from_json(SCHEMA_PATH).</span>
@@ -179,68 +179,33 @@ class because it merges context features with sequential features.</p>
 
 <span class="c1"># Define the model block including: inputs, masking, projection and transformer block.</span>
 <span class="n">body</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">SequentialBlock</span><span class="p">(</span>
-    <span class="n">input_module</span><span class="p">,</span> 
-    <span class="n">tr</span><span class="o">.</span><span class="n">MLPBlock</span><span class="p">([</span><span class="n">d_model</span><span class="p">]),</span> 
+    <span class="n">input_module</span><span class="p">,</span>
+    <span class="n">tr</span><span class="o">.</span><span class="n">MLPBlock</span><span class="p">([</span><span class="n">d_model</span><span class="p">]),</span>
     <span class="n">tr</span><span class="o">.</span><span class="n">TransformerBlock</span><span class="p">(</span><span class="n">transformer_config</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">input_module</span><span class="o">.</span><span class="n">masking</span><span class="p">)</span>
 <span class="p">)</span>
 
 <span class="c1"># Define the evaluation top-N metrics and the cut-offs</span>
-<span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>  
+<span class="n">metrics</span> <span class="o">=</span> <span class="p">[</span><span class="n">NDCGAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
            <span class="n">RecallAt</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">],</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
 
-<span class="c1"># Define a head with NextItemPredictionTask </span>
+<span class="c1"># Define a head with NextItemPredictionTask.</span>
 <span class="n">head</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
     <span class="n">body</span><span class="p">,</span>
     <span class="n">tr</span><span class="o">.</span><span class="n">NextItemPredictionTask</span><span class="p">(</span><span class="n">weight_tying</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">),</span>
     <span class="n">inputs</span><span class="o">=</span><span class="n">input_module</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="c1"># Get the end-to-end Model class </span>
+<span class="c1"># Get the end-to-end Model class.</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The following code sample shows how to define and train an <code class="docutils literal notranslate"><span class="pre">XLNet</span></code> model for binary classification prediction task:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">tr</span>
-
-<span class="c1"># Create a schema or read one from disk: tr.Schema().from_json(SCHEMA_PATH).</span>
-<span class="n">schema</span><span class="p">:</span> <span class="n">tr</span><span class="o">.</span><span class="n">Schema</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">tabular_sequence_testing_data</span><span class="o">.</span><span class="n">schema</span>
-
-<span class="n">max_sequence_length</span><span class="p">,</span> <span class="n">d_model</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">64</span>
-
-<span class="c1"># Define the input module to process the tabular input features.</span>
-<span class="n">input_module</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">TabularSequenceFeatures</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
-    <span class="n">schema</span><span class="p">,</span>
-    <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
-    <span class="n">continuous_projection</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span>
-    <span class="n">aggregation</span><span class="o">=</span><span class="s2">&quot;concat&quot;</span><span class="p">,</span>
-    <span class="n">masking</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Define XLNetConfig class and set default parameters for HF XLNet config  </span>
-<span class="n">transformer_config</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">XLNetConfig</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-    <span class="n">d_model</span><span class="o">=</span><span class="n">d_model</span><span class="p">,</span> <span class="n">n_head</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">n_layer</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">total_seq_length</span><span class="o">=</span><span class="n">max_sequence_length</span>
-<span class="p">)</span>
-<span class="c1"># Define the model block including: inputs, masking, projection and transformer block.</span>
-<span class="n">body</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">SequentialBlock</span><span class="p">(</span>
-    <span class="n">input_module</span><span class="p">,</span> <span class="n">tr</span><span class="o">.</span><span class="n">MLPBlock</span><span class="p">([</span><span class="mi">64</span><span class="p">]),</span> <span class="n">tr</span><span class="o">.</span><span class="n">TransformerBlock</span><span class="p">(</span><span class="n">transformer_config</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">input_module</span><span class="o">.</span><span class="n">masking</span><span class="p">)</span>
-<span class="p">)</span>
-
-<span class="c1"># Define a head with BinaryClassificationTask</span>
-<span class="n">head</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Head</span><span class="p">(</span>
-    <span class="n">body</span><span class="p">,</span>
-    <span class="n">tr</span><span class="o">.</span><span class="n">BinaryClassificationTask</span><span class="p">(</span><span class="s2">&quot;click&quot;</span><span class="p">,</span> <span class="n">summary_type</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> 
-                                <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="n">tm</span><span class="o">.</span><span class="n">Precision</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">),</span>
-                                         <span class="n">tm</span><span class="o">.</span><span class="n">Recall</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">),</span>
-                                         <span class="n">tm</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">),</span>
-                                         <span class="n">tm</span><span class="o">.</span><span class="n">F1Score</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s1">&#39;binary&#39;</span><span class="p">)]),</span>
-    <span class="n">inputs</span><span class="o">=</span><span class="n">input_module</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Get the end-to-end Model class </span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">head</span><span class="p">)</span>
-
-</pre></div>
-</div>
+<blockquote>
+<div><p>You can modify the preceding code to perform binary classification.
+The masking in the input module can be set to <code class="docutils literal notranslate"><span class="pre">None</span></code> instead of <code class="docutils literal notranslate"><span class="pre">causal</span></code>.
+When you define the head, you can replace the <code class="docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code>
+with an instance of <code class="docutils literal notranslate"><span class="pre">BinaryClassificationTask</span></code>.
+See the sample code in the <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.BinaryClassificationTask">API documentation for the class</a>.</p>
+</div></blockquote>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline"></a></h2>
