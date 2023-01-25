@@ -51,7 +51,7 @@ These components enable you to build a fully GPU-accelerated pipeline for sequen
 NVTabular has common preprocessing operations for session-based recommendation and exports a dataset schema.
 The schema is compatible with Transformers4Rec so that input features can be configured automatically.
 You can export your trained models to serve with Triton Inference Server in a single pipeline that includes online feature preprocessing and model inference.
-For more information, refer to [End-to-end pipeline with NVIDIA Merlin](pipeline.md).
+For more information, refer to [End-to-end pipeline with NVIDIA Merlin](https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html).
 
 <img src="_images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>
 <div style="text-align: center; margin: 20pt">
@@ -80,7 +80,7 @@ Training a model with Transformers4Rec typically requires performing the followi
 
 3. Construct a transformer-body and convert this into a model.
 
-The following code sample shows how to define and train a model with PyTorch:
+The following code sample shows how to define and train an XLNet model with PyTorch for next-item prediction task:
 
 ```python
 from transformers4rec import torch as tr
@@ -90,7 +90,7 @@ schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
 
 max_sequence_length, d_model = 20, 64
 
-# Define the input module to process the tabular input-features.
+# Define the input module to process the tabular input features.
 input_module = tr.TabularSequenceFeatures.from_schema(
     schema,
     max_sequence_length=max_sequence_length,
@@ -98,15 +98,39 @@ input_module = tr.TabularSequenceFeatures.from_schema(
     aggregation="concat",
     masking="causal",
 )
-# Define one or more prediction-tasks.
-prediction_tasks = tr.NextItemPredictionTask()
 
 # Define a transformer-config like the XLNet architecture.
 transformer_config = tr.XLNetConfig.build(
     d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
 )
-model: tr.Model = transformer_config.to_torch_model(input_module, prediction_tasks)
+
+# Define the model block including: inputs, masking, projection and transformer block.
+body = tr.SequentialBlock(
+    input_module,
+    tr.MLPBlock([d_model]),
+    tr.TransformerBlock(transformer_config, masking=input_module.masking)
+)
+
+# Define the evaluation top-N metrics and the cut-offs
+metrics = [NDCGAt(top_ks=[20, 40], labels_onehot=True),
+           RecallAt(top_ks=[20, 40], labels_onehot=True)]
+
+# Define a head with NextItemPredictionTask.
+head = tr.Head(
+    body,
+    tr.NextItemPredictionTask(weight_tying=True, metrics=metrics),
+    inputs=input_module,
+)
+
+# Get the end-to-end Model class.
+model = tr.Model(head)
 ```
+
+> You can modify the preceding code to perform binary classification.
+> The masking in the input module can be set to `None` instead of `causal`.
+> When you define the head, you can replace the `NextItemPredictionTask`
+> with an instance of `BinaryClassificationTask`.
+> See the sample code in the [API documentation for the class](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.BinaryClassificationTask).
 
 ## Installation
 

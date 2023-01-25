@@ -210,6 +210,78 @@ class DLDataLoader(PyTorchDataLoader):
     "merlin_dataloader", "merlin", "nvtabular_dataloader", "nvtabular"
 )
 class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
+    """
+    This class extends the [Merlin data loader]
+    (https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py).
+    The data input requires a merlin.io.Dataset or a path to the data files.
+    It also sets the dataset's schema with the necessary properties to prepare the input
+    list features as dense tensors (i.e. padded to the specified `max_sequence_length`).
+    The dense representation is required by the Transformers4Rec input modules.
+
+    Parameters
+    ----------
+    paths_or_dataset: Union[str, merlin.io.Dataset]
+        The dataset to load.
+    batch_size: int
+        The size of each batch to supply to the model.
+    max_sequence_length: int
+        The maximum sequence length to use for padding list columns.
+        By default, `0` is used as the padding index.
+    cats : List[str], optional
+        The list of categorical columns in the dataset.
+        By default None.
+    conts: List[str], optional
+        The list of continuous columns in the dataset.
+        By default None.
+    labels : List[str], optional
+        The list of label columns in the dataset.
+        By default None.
+    shuffle : bool, optional
+        Enable/disable shuffling of dataset.
+        By default False.
+    parts_per_chunk : int, optional
+        The number of partitions from the iterator, an Merlin Dataset,
+        to concatenate into a "chunk". By default 1.
+    device : int, optional
+        The device id of the selected GPU
+        By default None.
+    sparse_names : [str], optional
+        List with column names of columns that should be represented as sparse tensors.
+        By default None.
+    sparse_max : Dict[str, int], optional
+        A dictionary of key: column_name + value: integer representing the max sequence
+        length for a list column.
+        By default None.
+    sparse_as_dense : bool, optional
+        Boolean value to activate transforming sparse tensors to dense ones.
+        By default None.
+    drop_last: bool, optional
+        Whether or not to drop the last batch in an epoch. This is useful when you need to
+        guarantee that each batch contains exactly `batch_size` rows - since the last batch
+        will usually contain fewer rows.
+    seed_fn: callable
+        Function used to initialize random state
+    parts_per_chunk: int
+        Number of dataset partitions with size dictated by `buffer_size`
+        to load and concatenate asynchronously. More partitions leads to
+        better epoch-level randomness but can negatively impact throughput
+    global_size: int, optional
+        When doing distributed training, this indicates the number of total processes that are
+        training the model.
+    global_rank: int, optional
+        When doing distributed training, this indicates the local rank for the current process.
+    schema: Schema, optional
+         The `Schema` with the input features.
+    reader_kwargs:
+        Extra arguments to pass to the merlin.io.Dataset object, when the path to data files
+        is provided in `paths_or_dataset` argument.
+    row_groups_per_part: bool, optional
+        If true, preserve the group partitions when loading the dataset from parquet files.
+    collate_fn: Callable, optional
+        A processing function to collect and prepare the list samples
+        (tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.
+    """
+
     def __init__(
         self,
         paths_or_dataset,
@@ -233,6 +305,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         sparse_as_dense=True,
         drop_last=False,
         schema=None,
+        row_groups_per_part=True,
         **kwargs,
     ):
         T4RecDataLoader.__init__(self)
@@ -243,6 +316,8 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         self.max_sequence_length = max_sequence_length
         self.drop_last = drop_last
 
+        reader_kwargs = reader_kwargs or {}
+        reader_kwargs["row_groups_per_part"] = row_groups_per_part
         self.set_dataset(buffer_size, engine, reader_kwargs)
 
         self.dataset.schema = _augment_schema(
@@ -253,11 +328,20 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             logger.warning(
                 "UserWarning: User is advised to repartition the parquet file before training "
                 "so npartitions>=global_size. Cudf or pandas can be used for repartitioning "
-                "e.g.: df.to_parquet('file.parquet', row_group_size=N_ROWS/NPARTITIONS, engine"
-                "='pyarrow') as npartitions=nr_rows/row_group_size."
+                "eg. pdf.to_parquet('file.parquet',row_group_size=N_ROWS/NPARTITIONS) for pandas "
+                "or gdf.to_parquet('file.parquet',row_group_size_rows=N_ROWS/NPARTITIONS) for cudf "
+                "so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible "
+                "by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used)."
             )
             self.dataset = self.dataset.repartition(npartitions=global_size)
 
+        if (global_rank is not None) and (self.dataset.npartitions % global_size != 0):
+            logger.warning(
+                f"UserWarning: User is advised to set the number of partitions"
+                f" ({self.dataset.npartitions}) divisible by the number of available"
+                f" GPUs ({global_size}). This will divide the work equally among GPUs"
+                " for DDP training and ensure optimal performance."
+            )
         loader = Loader(
             self.dataset,
             self.batch_size,
