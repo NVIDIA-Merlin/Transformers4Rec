@@ -116,6 +116,9 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ==============================================================================</span>
+
+<span class="c1"># Each user is responsible for checking the content of datasets and the</span>
+<span class="c1"># applicable licenses and determining if suitable for the intended use.</span>
 </pre></div>
 </div>
 </div>
@@ -729,7 +732,7 @@ dtype: bool
 
 <span class="c1"># define output_folder to store the partitioned parquet files</span>
 <span class="n">OUTPUT_FOLDER</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_FOLDER&quot;</span><span class="p">,</span> <span class="n">INPUT_DATA_DIR</span> <span class="o">+</span> <span class="s2">&quot;sessions_by_day&quot;</span><span class="p">)</span>
-<span class="o">!</span>mkdir -p <span class="nv">$OUTPUT_FOLDER</span>
+<span class="o">!</span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$OUTPUT_FOLDER</span>
 </pre></div>
 </div>
 </div>
@@ -768,7 +771,7 @@ dtype: bool
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># check out the OUTPUT_FOLDER</span>
-<span class="o">!</span>ls <span class="nv">$OUTPUT_FOLDER</span>
+<span class="o">!</span>ls<span class="w"> </span><span class="nv">$OUTPUT_FOLDER</span>
 </pre></div>
 </div>
 </div>

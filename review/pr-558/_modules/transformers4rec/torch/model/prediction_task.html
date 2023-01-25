@@ -132,6 +132,85 @@
 
 
 <div class="viewcode-block" id="BinaryClassificationTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.BinaryClassificationTask">[docs]</a><span class="k">class</span> <span class="nc">BinaryClassificationTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a ``PredictionTask`` for binary classification.</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        # Define the input module to process the tabular input features.</span>
+<span class="sd">        input_module = tr.TabularSequenceFeatures.from_schema(</span>
+<span class="sd">            schema,</span>
+<span class="sd">            max_sequence_length=max_sequence_length,</span>
+<span class="sd">            continuous_projection=d_model,</span>
+<span class="sd">            aggregation=&quot;concat&quot;,</span>
+<span class="sd">            masking=None,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define XLNetConfig class and set default parameters for HF XLNet config.</span>
+<span class="sd">        transformer_config = tr.XLNetConfig.build(</span>
+<span class="sd">            d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define the model block including: inputs, masking, projection and transformer block.</span>
+<span class="sd">        body = tr.SequentialBlock(</span>
+<span class="sd">            input_module,</span>
+<span class="sd">            tr.MLPBlock([64]),</span>
+<span class="sd">            tr.TransformerBlock(</span>
+<span class="sd">                transformer_config,</span>
+<span class="sd">                masking=input_module.masking</span>
+<span class="sd">            )</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define a head with BinaryClassificationTask.</span>
+<span class="sd">        head = tr.Head(</span>
+<span class="sd">            body,</span>
+<span class="sd">            tr.BinaryClassificationTask(</span>
+<span class="sd">                &quot;click&quot;,</span>
+<span class="sd">                summary_type=&quot;mean&quot;,</span>
+<span class="sd">                metrics=[</span>
+<span class="sd">                    tm.Precision(task=&#39;binary&#39;),</span>
+<span class="sd">                    tm.Recall(task=&#39;binary&#39;),</span>
+<span class="sd">                    tm.Accuracy(task=&#39;binary&#39;),</span>
+<span class="sd">                    tm.F1Score(task=&#39;binary&#39;)</span>
+<span class="sd">                ]</span>
+<span class="sd">            ),</span>
+<span class="sd">            inputs=input_module,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Get the end-to-end Model class.</span>
+<span class="sd">        model = tr.Model(head)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    target_name: Optional[str] = None</span>
+<span class="sd">        Specifies the variable name that represents the positive and negative values.</span>
+
+<span class="sd">    task_name: Optional[str] = None</span>
+<span class="sd">        Specifies the name of the prediction task. If this parameter is not specified,</span>
+<span class="sd">        a name is automatically constructed based on ``target_name`` and the Python</span>
+<span class="sd">        class name of the model.</span>
+
+<span class="sd">    task_block: Optional[BlockType] = None</span>
+<span class="sd">        Specifies a module to transform the input tensor before computing predictions.</span>
+
+<span class="sd">    loss: torch.nn.Module</span>
+<span class="sd">        Specifies the loss function for the task.</span>
+<span class="sd">        The default class is ``torch.nn.BCELoss``.</span>
+
+<span class="sd">    metrics: Tuple[torch.nn.Module, ...]</span>
+<span class="sd">        Specifies the metrics to calculate during training and evaluation.</span>
+<span class="sd">        The default metrics are ``Precision``, ``Recall``, and ``Accuracy``.</span>
+
+<span class="sd">    summary_type: str</span>
+<span class="sd">        Summarizes a sequence into a single tensor. Accepted values are:</span>
+
+<span class="sd">            - ``last`` -- Take the last token hidden state (like XLNet)</span>
+<span class="sd">            - ``first`` -- Take the first token hidden state (like Bert)</span>
+<span class="sd">            - ``mean`` -- Take the mean of all tokens hidden states</span>
+<span class="sd">            - ``cls_index`` -- Supply a Tensor of classification token position (GPT/GPT-2)</span>
+<span class="sd">            - ``attn`` -- Not implemented now, use multi-head attention</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">DEFAULT_LOSS</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BCELoss</span><span class="p">()</span>
     <span class="n">DEFAULT_METRICS</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">tm</span><span class="o">.</span><span class="n">Precision</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">),</span>
@@ -199,7 +278,7 @@
 
 
 <div class="viewcode-block" id="NextItemPredictionTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask">[docs]</a><span class="k">class</span> <span class="nc">NextItemPredictionTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
 <span class="sd">    It requires a body containing a masking schema to use for training and target generation.</span>
 <span class="sd">    For the supported masking schemes, please refers to:</span>
 <span class="sd">    https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking</span>
@@ -254,7 +333,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="NextItemPredictionTask.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build method, this is called by the `Head`.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build method, this is called by the `Head`.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;NextItemPredictionTask needs a 3-dim vector as input, found:&quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -407,7 +486,7 @@
 
 
 <span class="k">class</span> <span class="nc">_NextItemPredictionTask</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Predict the interacted item-id probabilities.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Predict the interacted item-id probabilities.</span>
 
 <span class="sd">    - During inference, the task consists of predicting the next item.</span>
 <span class="sd">    - During training, the class supports the following Language modeling tasks:</span>

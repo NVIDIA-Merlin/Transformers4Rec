@@ -116,6 +116,9 @@
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
 <span class="c1"># ==============================================================================</span>
+
+<span class="c1"># Each user is responsible for checking the content of datasets and the</span>
+<span class="c1"># applicable licenses and determining if suitable for the intended use.</span>
 </pre></div>
 </div>
 </div>
@@ -196,7 +199,7 @@ been proposed to model the sequence of interactions within the current user sess
 <p>Let’s inspect the first lines of <code class="docutils literal notranslate"><span class="pre">schema.pb</span></code></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>head -30 <span class="nv">$SCHEMA_PATH</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>head<span class="w"> </span>-30<span class="w"> </span><span class="nv">$SCHEMA_PATH</span>
 </pre></div>
 </div>
 </div>
@@ -1756,7 +1759,7 @@ Wall time: 2min 21s
 <p>Before we move on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton</span></code>, let’s print out our results.txt file.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>cat results.txt
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>cat<span class="w"> </span>results.txt
 </pre></div>
 </div>
 </div>

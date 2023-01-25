@@ -123,7 +123,7 @@
 
 
 <div class="viewcode-block" id="T4RecDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader">[docs]</a><span class="k">class</span> <span class="nc">T4RecDataLoader</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base Helper class to build dataloader from the schema with properties</span>
 <span class="sd">    required by T4Rec Trainer class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -193,7 +193,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span>
 
 <div class="viewcode-block" id="PyarrowDataLoader.set_dataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.set_dataset">[docs]</a>        <span class="k">def</span> <span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cols_to_read</span><span class="p">,</span> <span class="n">target_names</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            set the Parquet dataset</span>
 
 <span class="sd">            Parameters</span>
@@ -231,7 +231,7 @@
             <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
         <span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Instantiates ``PyarrowDataLoader`` from a ``DatasetSchema``.</span>
 
 <span class="sd">            Parameters</span>
@@ -271,7 +271,7 @@
 
 
 <div class="viewcode-block" id="DLDataLoader"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader">[docs]</a><span class="k">class</span> <span class="nc">DLDataLoader</span><span class="p">(</span><span class="n">PyTorchDataLoader</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class is an extension of the torch dataloader.</span>
 <span class="sd">    It is required to support the FastAI framework.</span>
 
@@ -298,6 +298,78 @@
     <span class="s2">&quot;merlin_dataloader&quot;</span><span class="p">,</span> <span class="s2">&quot;merlin&quot;</span><span class="p">,</span> <span class="s2">&quot;nvtabular_dataloader&quot;</span><span class="p">,</span> <span class="s2">&quot;nvtabular&quot;</span>
 <span class="p">)</span>
 <span class="k">class</span> <span class="nc">MerlinDataLoader</span><span class="p">(</span><span class="n">T4RecDataLoader</span><span class="p">,</span> <span class="n">DLDataLoader</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class extends the [Merlin data loader]</span>
+<span class="sd">    (https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py).</span>
+<span class="sd">    The data input requires a merlin.io.Dataset or a path to the data files.</span>
+<span class="sd">    It also sets the dataset&#39;s schema with the necessary properties to prepare the input</span>
+<span class="sd">    list features as dense tensors (i.e. padded to the specified `max_sequence_length`).</span>
+<span class="sd">    The dense representation is required by the Transformers4Rec input modules.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    paths_or_dataset: Union[str, merlin.io.Dataset]</span>
+<span class="sd">        The dataset to load.</span>
+<span class="sd">    batch_size: int</span>
+<span class="sd">        The size of each batch to supply to the model.</span>
+<span class="sd">    max_sequence_length: int</span>
+<span class="sd">        The maximum sequence length to use for padding list columns.</span>
+<span class="sd">        By default, `0` is used as the padding index.</span>
+<span class="sd">    cats : List[str], optional</span>
+<span class="sd">        The list of categorical columns in the dataset.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    conts: List[str], optional</span>
+<span class="sd">        The list of continuous columns in the dataset.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    labels : List[str], optional</span>
+<span class="sd">        The list of label columns in the dataset.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    shuffle : bool, optional</span>
+<span class="sd">        Enable/disable shuffling of dataset.</span>
+<span class="sd">        By default False.</span>
+<span class="sd">    parts_per_chunk : int, optional</span>
+<span class="sd">        The number of partitions from the iterator, an Merlin Dataset,</span>
+<span class="sd">        to concatenate into a &quot;chunk&quot;. By default 1.</span>
+<span class="sd">    device : int, optional</span>
+<span class="sd">        The device id of the selected GPU</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    sparse_names : [str], optional</span>
+<span class="sd">        List with column names of columns that should be represented as sparse tensors.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    sparse_max : Dict[str, int], optional</span>
+<span class="sd">        A dictionary of key: column_name + value: integer representing the max sequence</span>
+<span class="sd">        length for a list column.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    sparse_as_dense : bool, optional</span>
+<span class="sd">        Boolean value to activate transforming sparse tensors to dense ones.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    drop_last: bool, optional</span>
+<span class="sd">        Whether or not to drop the last batch in an epoch. This is useful when you need to</span>
+<span class="sd">        guarantee that each batch contains exactly `batch_size` rows - since the last batch</span>
+<span class="sd">        will usually contain fewer rows.</span>
+<span class="sd">    seed_fn: callable</span>
+<span class="sd">        Function used to initialize random state</span>
+<span class="sd">    parts_per_chunk: int</span>
+<span class="sd">        Number of dataset partitions with size dictated by `buffer_size`</span>
+<span class="sd">        to load and concatenate asynchronously. More partitions leads to</span>
+<span class="sd">        better epoch-level randomness but can negatively impact throughput</span>
+<span class="sd">    global_size: int, optional</span>
+<span class="sd">        When doing distributed training, this indicates the number of total processes that are</span>
+<span class="sd">        training the model.</span>
+<span class="sd">    global_rank: int, optional</span>
+<span class="sd">        When doing distributed training, this indicates the local rank for the current process.</span>
+<span class="sd">    schema: Schema, optional</span>
+<span class="sd">         The `Schema` with the input features.</span>
+<span class="sd">    reader_kwargs:</span>
+<span class="sd">        Extra arguments to pass to the merlin.io.Dataset object, when the path to data files</span>
+<span class="sd">        is provided in `paths_or_dataset` argument.</span>
+<span class="sd">    row_groups_per_part: bool, optional</span>
+<span class="sd">        If true, preserve the group partitions when loading the dataset from parquet files.</span>
+<span class="sd">    collate_fn: Callable, optional</span>
+<span class="sd">        A processing function to collect and prepare the list samples</span>
+<span class="sd">        (tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">paths_or_dataset</span><span class="p">,</span>
@@ -321,6 +393,7 @@
         <span class="n">sparse_as_dense</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">schema</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">row_groups_per_part</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">T4RecDataLoader</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
@@ -331,6 +404,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="n">max_sequence_length</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span> <span class="o">=</span> <span class="n">drop_last</span>
 
+        <span class="n">reader_kwargs</span> <span class="o">=</span> <span class="n">reader_kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">reader_kwargs</span><span class="p">[</span><span class="s2">&quot;row_groups_per_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_groups_per_part</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">(</span><span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">_augment_schema</span><span class="p">(</span>
@@ -341,11 +416,20 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;UserWarning: User is advised to repartition the parquet file before training &quot;</span>
                 <span class="s2">&quot;so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning &quot;</span>
-                <span class="s2">&quot;e.g.: df.to_parquet(&#39;file.parquet&#39;, row_group_size=N_ROWS/NPARTITIONS, engine&quot;</span>
-                <span class="s2">&quot;=&#39;pyarrow&#39;) as npartitions=nr_rows/row_group_size.&quot;</span>
+                <span class="s2">&quot;eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas &quot;</span>
+                <span class="s2">&quot;or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf &quot;</span>
+                <span class="s2">&quot;so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible &quot;</span>
+                <span class="s2">&quot;by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).&quot;</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">npartitions</span><span class="o">=</span><span class="n">global_size</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="p">(</span><span class="n">global_rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span> <span class="o">%</span> <span class="n">global_size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;UserWarning: User is advised to set the number of partitions&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span><span class="si">}</span><span class="s2">) divisible by the number of available&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; GPUs (</span><span class="si">{</span><span class="n">global_size</span><span class="si">}</span><span class="s2">). This will divide the work equally among GPUs&quot;</span>
+                <span class="s2">&quot; for DDP training and ensure optimal performance.&quot;</span>
+            <span class="p">)</span>
         <span class="n">loader</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
@@ -396,7 +480,7 @@
         <span class="n">sparse_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">            Instantitates `MerlinDataLoader` from a ``DatasetSchema``.</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>

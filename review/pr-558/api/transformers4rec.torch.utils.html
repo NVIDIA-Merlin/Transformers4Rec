@@ -279,8 +279,59 @@ T4Rec Trainer during evaluation
 
 <dl class="py class">
 <dt id="transformers4rec.torch.utils.data_utils.MerlinDataLoader">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">MerlinDataLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">paths_or_dataset</span></em>, <em class="sig-param"><span class="pre">batch_size</span></em>, <em class="sig-param"><span class="pre">max_sequence_length</span></em>, <em class="sig-param"><span class="pre">conts=None</span></em>, <em class="sig-param"><span class="pre">cats=None</span></em>, <em class="sig-param"><span class="pre">labels=None</span></em>, <em class="sig-param"><span class="pre">collate_fn=&lt;function</span> <span class="pre">MerlinDataLoader.&lt;lambda&gt;&gt;</span></em>, <em class="sig-param"><span class="pre">engine=None</span></em>, <em class="sig-param"><span class="pre">buffer_size=0.1</span></em>, <em class="sig-param"><span class="pre">reader_kwargs=None</span></em>, <em class="sig-param"><span class="pre">shuffle=False</span></em>, <em class="sig-param"><span class="pre">seed_fn=None</span></em>, <em class="sig-param"><span class="pre">parts_per_chunk=1</span></em>, <em class="sig-param"><span class="pre">device=None</span></em>, <em class="sig-param"><span class="pre">global_size=None</span></em>, <em class="sig-param"><span class="pre">global_rank=None</span></em>, <em class="sig-param"><span class="pre">sparse_names=None</span></em>, <em class="sig-param"><span class="pre">sparse_max=None</span></em>, <em class="sig-param"><span class="pre">sparse_as_dense=True</span></em>, <em class="sig-param"><span class="pre">drop_last=False</span></em>, <em class="sig-param"><span class="pre">schema=None</span></em>, <em class="sig-param"><span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#MerlinDataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.MerlinDataLoader" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">MerlinDataLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">paths_or_dataset</span></em>, <em class="sig-param"><span class="pre">batch_size</span></em>, <em class="sig-param"><span class="pre">max_sequence_length</span></em>, <em class="sig-param"><span class="pre">conts=None</span></em>, <em class="sig-param"><span class="pre">cats=None</span></em>, <em class="sig-param"><span class="pre">labels=None</span></em>, <em class="sig-param"><span class="pre">collate_fn=&lt;function</span> <span class="pre">MerlinDataLoader.&lt;lambda&gt;&gt;</span></em>, <em class="sig-param"><span class="pre">engine=None</span></em>, <em class="sig-param"><span class="pre">buffer_size=0.1</span></em>, <em class="sig-param"><span class="pre">reader_kwargs=None</span></em>, <em class="sig-param"><span class="pre">shuffle=False</span></em>, <em class="sig-param"><span class="pre">seed_fn=None</span></em>, <em class="sig-param"><span class="pre">parts_per_chunk=1</span></em>, <em class="sig-param"><span class="pre">device=None</span></em>, <em class="sig-param"><span class="pre">global_size=None</span></em>, <em class="sig-param"><span class="pre">global_rank=None</span></em>, <em class="sig-param"><span class="pre">sparse_names=None</span></em>, <em class="sig-param"><span class="pre">sparse_max=None</span></em>, <em class="sig-param"><span class="pre">sparse_as_dense=True</span></em>, <em class="sig-param"><span class="pre">drop_last=False</span></em>, <em class="sig-param"><span class="pre">schema=None</span></em>, <em class="sig-param"><span class="pre">row_groups_per_part=True</span></em>, <em class="sig-param"><span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#MerlinDataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.MerlinDataLoader" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.dataloader.T_co</span></code>]</p>
+<p>This class extends the [Merlin data loader]
+(<a class="reference external" href="https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py">https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py</a>).
+The data input requires a merlin.io.Dataset or a path to the data files.
+It also sets the dataset’s schema with the necessary properties to prepare the input
+list features as dense tensors (i.e. padded to the specified <cite>max_sequence_length</cite>).
+The dense representation is required by the Transformers4Rec input modules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>paths_or_dataset</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://nvidia-merlin.github.io/core/main/api/merlin.io.html#merlin.io.Dataset" title="(in Merlin Core)"><em>merlin.io.Dataset</em></a><em>]</em>) – The dataset to load.</p></li>
+<li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of each batch to supply to the model.</p></li>
+<li><p><strong>max_sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The maximum sequence length to use for padding list columns.
+By default, <cite>0</cite> is used as the padding index.</p></li>
+<li><p><strong>cats</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – The list of categorical columns in the dataset.
+By default None.</p></li>
+<li><p><strong>conts</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – The list of continuous columns in the dataset.
+By default None.</p></li>
+<li><p><strong>labels</strong> (<em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – The list of label columns in the dataset.
+By default None.</p></li>
+<li><p><strong>shuffle</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Enable/disable shuffling of dataset.
+By default False.</p></li>
+<li><p><strong>parts_per_chunk</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The number of partitions from the iterator, an Merlin Dataset,
+to concatenate into a “chunk”. By default 1.</p></li>
+<li><p><strong>device</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – The device id of the selected GPU
+By default None.</p></li>
+<li><p><strong>sparse_names</strong> (<em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>]</em><em>, </em><em>optional</em>) – List with column names of columns that should be represented as sparse tensors.
+By default None.</p></li>
+<li><p><strong>sparse_max</strong> (<em>Dict</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, </em><em>optional</em>) – A dictionary of key: column_name + value: integer representing the max sequence
+length for a list column.
+By default None.</p></li>
+<li><p><strong>sparse_as_dense</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Boolean value to activate transforming sparse tensors to dense ones.
+By default None.</p></li>
+<li><p><strong>drop_last</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – Whether or not to drop the last batch in an epoch. This is useful when you need to
+guarantee that each batch contains exactly <cite>batch_size</cite> rows - since the last batch
+will usually contain fewer rows.</p></li>
+<li><p><strong>seed_fn</strong> (<em>callable</em>) – Function used to initialize random state</p></li>
+<li><p><strong>parts_per_chunk</strong> – Number of dataset partitions with size dictated by <cite>buffer_size</cite>
+to load and concatenate asynchronously. More partitions leads to
+better epoch-level randomness but can negatively impact throughput</p></li>
+<li><p><strong>global_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – When doing distributed training, this indicates the number of total processes that are
+training the model.</p></li>
+<li><p><strong>global_rank</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>, </em><em>optional</em>) – When doing distributed training, this indicates the local rank for the current process.</p></li>
+<li><p><strong>schema</strong> (<a class="reference internal" href="merlin_standard_lib.html#merlin_standard_lib.Schema" title="merlin_standard_lib.Schema"><em>Schema</em></a><em>, </em><em>optional</em>) – The <cite>Schema</cite> with the input features.</p></li>
+<li><p><strong>reader_kwargs</strong> – Extra arguments to pass to the merlin.io.Dataset object, when the path to data files
+is provided in <cite>paths_or_dataset</cite> argument.</p></li>
+<li><p><strong>row_groups_per_part</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, preserve the group partitions when loading the dataset from parquet files.</p></li>
+<li><p><strong>collate_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – A processing function to collect and prepare the list samples
+(tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt id="transformers4rec.torch.utils.data_utils.MerlinDataLoader.batch_size">
 <code class="sig-name descname"><span class="pre">batch_size</span></code><em class="property"><span class="pre">:</span> <span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.MerlinDataLoader.batch_size" title="Permalink to this definition"></a></dt>
@@ -384,7 +435,7 @@ T4Rec Trainer during evaluation
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>batch</strong> (<a class="reference external" href="https://docs.rapids.ai/api/cudf/stable/api_docs/api/cudf.DataFrame.html#cudf.DataFrame" title="(in cudf v22.10)"><em>cudf.DataFrame</em></a>) – the batch of raw data sent to triton server.</p></li>
+<li><p><strong>batch</strong> (<a class="reference external" href="https://docs.rapids.ai/api/cudf/stable/api_docs/api/cudf.DataFrame.html#cudf.DataFrame" title="(in cudf v22.12)"><em>cudf.DataFrame</em></a>) – the batch of raw data sent to triton server.</p></li>
 <li><p><strong>response</strong> (<em>tritonclient.grpc.InferResult</em>) – the response returned by grpc client.</p></li>
 <li><p><strong>top_k</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – the <cite>top_k</cite> top items to retrieve from predictions.</p></li>
 </ul>
