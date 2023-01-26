@@ -137,58 +137,8 @@
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-/usr/lib/python3/dist-packages/requests/__init__.py:89: RequestsDependencyWarning: urllib3 (1.26.12) or chardet (3.0.4) doesn&#39;t match a supported version!
-  warnings.warn(&quot;urllib3 ({}) or chardet ({}) doesn&#39;t match a supported &quot;
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (NDCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_full_state_property`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (DCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_full_state_property`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (AvgPrecisionAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_full_state_property`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (PrecisionAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_full_state_property`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (RecallAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_full_state_property`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
 </pre></div>
 </div>
 </div>
@@ -258,8 +208,8 @@
             (categorical_module): SequenceEmbeddingFeatures(
               (filter_features): FilterFeatures()
               (embedding_tables): ModuleDict(
-                (item_id-list): Embedding(491, 64, padding_idx=0)
-                (category-list): Embedding(159, 64, padding_idx=0)
+                (item_id-list): Embedding(503, 64, padding_idx=0)
+                (category-list): Embedding(126, 64, padding_idx=0)
               )
             )
           )
@@ -330,15 +280,15 @@
           (embeddings): SequenceEmbeddingFeatures(
             (filter_features): FilterFeatures()
             (embedding_tables): ModuleDict(
-              (item_id-list): Embedding(491, 64, padding_idx=0)
-              (category-list): Embedding(159, 64, padding_idx=0)
+              (item_id-list): Embedding(503, 64, padding_idx=0)
+              (category-list): Embedding(126, 64, padding_idx=0)
             )
           )
-          (item_embedding_table): Embedding(491, 64, padding_idx=0)
+          (item_embedding_table): Embedding(503, 64, padding_idx=0)
           (masking): MaskedLanguageModeling()
           (pre): Block(
             (module): NextItemPredictionTask(
-              (item_embedding_table): Embedding(491, 64, padding_idx=0)
+              (item_embedding_table): Embedding(503, 64, padding_idx=0)
               (log_softmax): LogSoftmax(dim=-1)
             )
           )
@@ -404,13 +354,13 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[  4,  11,   7,  ...,   0,   0,   0],
-        [ 14,  28,   1,  ...,   0,   0,   0],
-        [ 65,  23,   5,  ...,   0,   0,   0],
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[27, 26,  7,  ..., 32, 14,  0],
+        [15,  5,  5,  ...,  0,  0,  0],
+        [17, 12,  9,  ...,  0,  0,  0],
         ...,
-        [  4,   6,  15,  ...,   0,   0,   0],
-        [  8,  71, 235,  ...,   0,   0,   0],
-        [ 35,  28,  29,  ...,   0,   0,   0]], device=&#39;cuda:0&#39;)
+        [30, 13, 21,  ...,  0,  0,  0],
+        [19, 14,  8,  ...,  0,  0,  0],
+        [11, 27, 16,  ...,  0,  0,  0]], device=&#39;cuda:0&#39;)
 </pre></div>
 </div>
 </div>
@@ -476,7 +426,7 @@
       <th>0</th>
       <td>age_days-list</td>
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>float32</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
       <td>0</td>
@@ -486,7 +436,7 @@
       <th>1</th>
       <td>weekday_sin-list</td>
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>float32</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
       <td>0</td>
@@ -495,22 +445,22 @@
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.ID, Tags.LIST, Tags.CATEGORICAL, Tags.IT...</td>
-      <td>int64</td>
+      <td>(Tags.CATEGORICAL, Tags.ITEM_ID, Tags.ITEM, Ta...</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
       <td>0</td>
-      <td>490</td>
+      <td>502</td>
     </tr>
     <tr>
       <th>3</th>
       <td>category-list</td>
       <td>(Tags.LIST, Tags.CATEGORICAL)</td>
-      <td>int64</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
       <td>0</td>
-      <td>158</td>
+      <td>125</td>
     </tr>
   </tbody>
 </table>
@@ -589,11 +539,11 @@
 POST /v2/repository/index, headers None
 
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;121&#39;}&gt;
-bytearray(b&#39;[{&quot;name&quot;:&quot;0_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;ensemble_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
+bytearray(b&#39;[{&quot;name&quot;:&quot;0_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;executor_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
 </pre></div>
 </div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_predictpytorchtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
- {&#39;name&#39;: &#39;ensemble_model&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
+ {&#39;name&#39;: &#39;executor_model&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
 </pre></div>
 </div>
 </div>
@@ -610,15 +560,32 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 <span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">eval_paths</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">eval_loader</span> <span class="o">=</span> <span class="n">generate_dataloader</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">eval_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">eval_batch_size</span><span class="p">)</span>
 <span class="n">test_dict</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">eval_loader</span><span class="p">))</span>
-
-<span class="n">df_cols</span> <span class="o">=</span> <span class="p">{}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">test_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([ 14,  71,  45,  35, 140,  89,   7, 115, 196,  19,   2,  10,   0,   0,
+          0,   0,   0,   0,   0,   0], device=&#39;cuda:0&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_cols</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">test_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
-        <span class="n">dtype</span> <span class="o">=</span> <span class="n">input_schema</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
-        <span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
-
+            
 <span class="n">df</span> <span class="o">=</span> <span class="n">make_df</span><span class="p">(</span><span class="n">df_cols</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
@@ -656,38 +623,38 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
   <tbody>
     <tr>
       <th>0</th>
-      <td>[0.16444656, 0.5225043, 0.028780686, 0.5226429...</td>
-      <td>[0.71557677, 0.9728636, 0.2475986, 0.9576815, ...</td>
-      <td>[21, 42, 21, 61, 8, 59, 23, 2, 8, 152, 24, 76,...</td>
-      <td>[5, 9, 5, 14, 3, 14, 7, 3, 3, 38, 7, 19, 0, 0,...</td>
+      <td>[0.9509504, 0.3658292, 0.10605793, 0.8901615, ...</td>
+      <td>[0.9222485, 0.1284022, 0.92028487, 0.3788347, ...</td>
+      <td>[14, 71, 45, 35, 140, 89, 7, 115, 196, 19, 2, ...</td>
+      <td>[3, 14, 8, 6, 27, 16, 2, 20, 31, 4, 1, 3, 0, 0...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>[0.49890065, 0.040260114, 0.19494252, 0.946124...</td>
-      <td>[0.18057665, 0.032677807, 0.29251397, 0.262859...</td>
-      <td>[10, 1, 46, 25, 25, 38, 14, 81, 1, 2, 0, 0, 0,...</td>
-      <td>[3, 1, 11, 7, 7, 10, 2, 21, 1, 3, 0, 0, 0, 0, ...</td>
+      <td>[0.23776619, 0.062151734, 0.059320305, 0.37635...</td>
+      <td>[0.75332737, 0.18823138, 0.5440263, 0.27081072...</td>
+      <td>[6, 4, 42, 97, 208, 5, 50, 45, 7, 2, 0, 0, 0, ...</td>
+      <td>[1, 2, 7, 18, 34, 1, 9, 8, 2, 1, 0, 0, 0, 0, 0...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>[0.21874996, 0.469753, 0.17086145, 0.76867926,...</td>
-      <td>[0.5993904, 0.2790737, 0.91060346, 0.2623695, ...</td>
-      <td>[35, 30, 10, 3, 12, 2, 35, 79, 27, 20, 0, 0, 0...</td>
-      <td>[8, 6, 3, 4, 2, 3, 8, 18, 6, 4, 0, 0, 0, 0, 0,...</td>
+      <td>[0.6510976, 0.002470178, 0.19554594, 0.6035013...</td>
+      <td>[0.0155129675, 0.067784436, 0.6556247, 0.90605...</td>
+      <td>[25, 38, 126, 2, 14, 10, 8, 14, 16, 28, 0, 0, ...</td>
+      <td>[5, 7, 21, 1, 3, 3, 1, 3, 3, 5, 0, 0, 0, 0, 0,...</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>[0.30849916, 0.8587687, 0.5086633, 0.10153167,...</td>
-      <td>[0.5235866, 0.00294829, 0.36131513, 0.36315322...</td>
-      <td>[4, 15, 15, 29, 20, 7, 11, 8, 73, 62, 0, 0, 0,...</td>
-      <td>[1, 2, 2, 6, 4, 3, 2, 3, 15, 16, 0, 0, 0, 0, 0...</td>
+      <td>[0.62920743, 0.7574743, 0.1393074, 0.14867006,...</td>
+      <td>[0.44066542, 0.6632927, 0.51982445, 0.8328001,...</td>
+      <td>[4, 12, 26, 19, 23, 124, 22, 2, 50, 38, 0, 0, ...</td>
+      <td>[2, 3, 5, 4, 4, 22, 4, 1, 9, 7, 0, 0, 0, 0, 0,...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>[0.5838007, 0.6649669, 0.36846465, 0.15503058,...</td>
-      <td>[0.13625653, 0.44238144, 0.3952307, 0.30201116...</td>
-      <td>[10, 22, 11, 40, 85, 6, 31, 17, 31, 56, 0, 0, ...</td>
-      <td>[3, 7, 2, 9, 21, 1, 8, 5, 8, 12, 0, 0, 0, 0, 0...</td>
+      <td>[0.4540216, 0.66014326, 0.4065639, 0.90007794,...</td>
+      <td>[0.5709135, 0.41235211, 0.21241243, 0.01835139...</td>
+      <td>[33, 29, 46, 15, 14, 27, 38, 115, 60, 122, 0, ...</td>
+      <td>[6, 6, 8, 3, 3, 5, 7, 20, 11, 21, 0, 0, 0, 0, ...</td>
     </tr>
   </tbody>
 </table>
@@ -703,19 +670,19 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[-9.233524 , -3.4131083, -3.5132837, ..., -9.428043 , -9.324305 ,
-        -9.609962 ],
-       [-9.23428  , -3.412891 , -3.513485 , ..., -9.427843 , -9.324681 ,
-        -9.610075 ],
-       [-9.2349205, -3.41269  , -3.5136623, ..., -9.427677 , -9.3250065,
-        -9.610184 ],
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[ -9.769284 ,  -3.3535378,  -3.5593104, ..., -10.696345 ,
+         -9.082857 ,  -9.554779 ],
+       [ -9.769166 ,  -3.3535283,  -3.5592926, ..., -10.696279 ,
+         -9.082819 ,  -9.55474  ],
+       [ -9.768643 ,  -3.3534937,  -3.559177 , ..., -10.696127 ,
+         -9.0826   ,  -9.554597 ],
        ...,
-       [-9.234116 , -3.412993 , -3.5134692, ..., -9.427877 , -9.324525 ,
-        -9.610008 ],
-       [-9.234127 , -3.4129863, -3.513467 , ..., -9.427882 , -9.324532 ,
-        -9.610001 ],
-       [-9.234625 , -3.4128144, -3.5136077, ..., -9.427758 , -9.324816 ,
-        -9.610115 ]], dtype=float32)}
+       [ -9.769294 ,  -3.3535573,  -3.559361 , ..., -10.696278 ,
+         -9.082909 ,  -9.554747 ],
+       [ -9.769636 ,  -3.3535905,  -3.5594552, ..., -10.696384 ,
+         -9.083048 ,  -9.554836 ],
+       [ -9.769545 ,  -3.353582 ,  -3.5594208, ..., -10.696352 ,
+         -9.083025 ,  -9.554812 ]], dtype=float32)}
 </pre></div>
 </div>
 </div>
@@ -727,7 +694,7 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(32, 491)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(32, 503)
 </pre></div>
 </div>
 </div>
