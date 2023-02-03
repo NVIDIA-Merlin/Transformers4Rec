@@ -43,6 +43,7 @@ jobs:
           branch=main
           if [[ $ref_type == "tag"* ]]
           then
+            git -c protocol.version=2 fetch --prune --progress --no-recurse-submodules --depth=1 origin +refs/heads/release*:refs/remotes/origin/release*
             branch=$(git branch -r --contains ${{ github.ref_name }} --list '*release*' --format "%(refname:short)" | sed -e 's/^origin\///')
           fi
           tox -e test-cpu -- $branch
