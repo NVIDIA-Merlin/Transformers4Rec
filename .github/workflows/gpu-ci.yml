@@ -24,7 +24,6 @@ jobs:
         branch=main
         if [[ $ref_type == "tag"* ]]
         then
-          raw=$(git branch -r --contains ${{ github.ref_name }})
-          branch=${raw/origin\/}
+          branch=$(git branch -r --contains ${{ github.ref_name }} | sed -e 's/^[[:space:]]*origin\///')
         fi
         cd ${{ github.workspace }}; tox -e test-gpu -- $branch
