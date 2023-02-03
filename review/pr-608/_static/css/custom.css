@@ -1,0 +1,34 @@
+.wy-nav-content {
+    margin: 0;
+    background: #fcfcfc;
+    padding-top: 40px;
+}
+
+.wy-side-nav-search {
+    display: block;
+    width: 300px;
+    padding: .809em;
+    padding-top: 0.809em;
+    margin-bottom: .809em;
+    z-index: 200;
+    background-color: #2980b9;
+    text-align: center;
+    color: #fcfcfc;
+    padding-top: 40px;
+}
+
+div.banner {
+    position: fixed;
+    top: 10px;
+    left: 20px;
+    margin: 0;
+    z-index: 1000;
+    width: 1050px;
+    text-align: center;
+}
+
+p.banner {
+  border-radius: 4px;
+  color: #004831;
+  background: #76b900;
+}
