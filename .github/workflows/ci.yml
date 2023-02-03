@@ -43,6 +43,9 @@ jobs:
           branch=main
           if [[ $ref_type == "tag"* ]]
           then
+            # fetch release branches (the branch name is not automatically fetched by the actions/checkout step)
+            git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +refs/heads/release*:refs/remotes/origin/release*
+            # find the release branch that we're pointing at
             branch=$(git branch -r --contains ${{ github.ref_name }} --list '*release*' --format "%(refname:short)" | sed -e 's/^origin\///')
           fi
           tox -e test-cpu -- $branch
