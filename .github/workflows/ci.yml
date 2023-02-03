@@ -43,7 +43,7 @@ jobs:
           branch=main
           if [[ $ref_type == "tag"* ]]
           then
-            branch=$(git branch -r --contains ${{ github.ref_name }} | sed -e 's/^[[:space:]]*origin\///')
+            branch=$(git branch -r --contains ${{ github.ref_name }} --list '*release*' --format "%(refname:short)" | sed -e 's/^origin\///')
           fi
           tox -e test-cpu -- $branch
       - name: Generate package for pypi
