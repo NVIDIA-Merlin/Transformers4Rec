@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/features/embedding.html" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
@@ -94,7 +103,7 @@
 <span class="c1">#</span>
 
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 
@@ -125,7 +134,7 @@
     <span class="n">embedding_features_parameters</span><span class="o">=</span><span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="k">class</span> <span class="nc">EmbeddingFeatures</span><span class="p">(</span><span class="n">InputBlock</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Input block for embedding-lookups for categorical features.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Input block for embedding-lookups for categorical features.</span>
 
 <span class="sd">    For multi-hot features, the embeddings will be aggregated into a single tensor using the mean.</span>
 
@@ -195,7 +204,7 @@
         <span class="n">post</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;EmbeddingFeatures&quot;</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;Instantitates ``EmbeddingFeatures`` from a ``DatasetSchema``.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantitates ``EmbeddingFeatures`` from a ``DatasetSchema``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -340,7 +349,7 @@
     <span class="n">embedding_features_parameters</span><span class="o">=</span><span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="k">class</span> <span class="nc">SoftEmbeddingFeatures</span><span class="p">(</span><span class="n">EmbeddingFeatures</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Encapsulate continuous features encoded using the Soft-one hot encoding</span>
 <span class="sd">    embedding technique (SoftEmbedding),    from https://arxiv.org/pdf/1708.00065.pdf</span>
 <span class="sd">    In a nutshell, it keeps an embedding table for each continuous feature,</span>
@@ -388,7 +397,7 @@
         <span class="n">max_sequence_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;SoftEmbeddingFeatures&quot;</span><span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Instantitates ``SoftEmbeddingFeatures`` from a ``DatasetSchema``.</span>
 
 <span class="sd">        Parameters</span>
@@ -537,13 +546,13 @@
 
 
 <div class="viewcode-block" id="SoftEmbedding"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SoftEmbedding">[docs]</a><span class="k">class</span> <span class="nc">SoftEmbedding</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Soft-one hot encoding embedding technique, from https://arxiv.org/pdf/1708.00065.pdf</span>
 <span class="sd">    In a nutshell, it represents a continuous feature as a weighted average of embeddings</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_embeddings</span><span class="p">,</span> <span class="n">embeddings_dim</span><span class="p">,</span> <span class="n">emb_initializer</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -576,6 +585,43 @@
         <span class="n">soft_one_hot_embeddings</span> <span class="o">=</span> <span class="p">(</span><span class="n">weights</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedding_table</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">soft_one_hot_embeddings</span></div></div>
+
+
+<div class="viewcode-block" id="PretrainedEmbeddingsInitializer"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingsInitializer">[docs]</a><span class="k">class</span> <span class="nc">PretrainedEmbeddingsInitializer</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Initializer of embedding tables with pre-trained weights</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weight_matrix : Union[torch.Tensor, List[List[float]]]</span>
+<span class="sd">        A 2D torch or numpy tensor or lists of lists with the pre-trained</span>
+<span class="sd">        weights for embeddings. The expect dims are</span>
+<span class="sd">        (embedding_cardinality, embedding_dim). The embedding_cardinality</span>
+<span class="sd">        can be inferred from the column schema, for example,</span>
+<span class="sd">        `schema.select_by_name(&quot;item_id&quot;).feature[0].int_domain.max + 1`.</span>
+<span class="sd">        The first position of the embedding table is reserved for padded</span>
+<span class="sd">        items (id=0).</span>
+<span class="sd">    trainable : bool</span>
+<span class="sd">        Whether the embedding table should be trainable or not</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">weight_matrix</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">]]],</span>
+        <span class="n">trainable</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="c1"># The weight matrix is kept in CPU, but when forward() is called</span>
+        <span class="c1"># to initialize the embedding table weight will be copied to</span>
+        <span class="c1"># the embedding table device (e.g. cuda)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">weight_matrix</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span> <span class="o">=</span> <span class="n">trainable</span>
+
+<div class="viewcode-block" id="PretrainedEmbeddingsInitializer.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingsInitializer.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">x</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_matrix</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span></div></div>
 </pre></div>
 
            </div>
@@ -602,7 +648,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

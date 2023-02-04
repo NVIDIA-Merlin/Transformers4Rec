@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/ranking_metric.html" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API Documentation</a></li>
@@ -108,7 +117,7 @@
 
 
 <div class="viewcode-block" id="RankingMetric"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RankingMetric">[docs]</a><span class="k">class</span> <span class="nc">RankingMetric</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Metric wrapper for computing ranking metrics@K for session-based task.</span>
 
 <span class="sd">    Parameters</span>
@@ -139,7 +148,7 @@
 
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">preds</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute a ranking metric over a predictions and one-hot targets.</span>
 <span class="sd">        This method should be overridden by subclasses.</span>
 <span class="sd">        &quot;&quot;&quot;</span></div>
@@ -151,7 +160,7 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">PrecisionAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Compute precision@K for each of the provided cutoffs</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute precision@K for each of the provided cutoffs</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -184,7 +193,7 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">RecallAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Compute recall@K for each of the provided cutoffs</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute recall@K for each of the provided cutoffs</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -229,7 +238,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">precision_at</span> <span class="o">=</span> <span class="n">PrecisionAt</span><span class="p">(</span><span class="n">top_ks</span><span class="p">)</span><span class="o">.</span><span class="n">_metric</span>
 
     <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Compute average precision at K for provided cutoffs</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute average precision at K for provided cutoffs</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -273,7 +282,7 @@
     <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Compute discounted cumulative gain at K for provided cutoffs (ignoring ties)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute discounted cumulative gain at K for provided cutoffs (ignoring ties)</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -324,7 +333,7 @@
     <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Compute normalized discounted cumulative gain at K for provided cutoffs (ignoring ties)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute normalized discounted cumulative gain at K for provided cutoffs (ignoring ties)</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -358,15 +367,15 @@
         <span class="k">return</span> <span class="n">gains</span></div>
 
 
-<div class="viewcode-block" id="MeanRecipricolRankAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.MeanRecipricolRankAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;mrr_at&quot;</span><span class="p">,</span> <span class="s2">&quot;mrr&quot;</span><span class="p">)</span>
-<span class="k">class</span> <span class="nc">MeanRecipricolRankAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
+<div class="viewcode-block" id="MeanReciprocalRankAt"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.MeanReciprocalRankAt">[docs]</a><span class="nd">@ranking_metrics_registry</span><span class="o">.</span><span class="n">register_with_multiple_names</span><span class="p">(</span><span class="s2">&quot;mrr_at&quot;</span><span class="p">,</span> <span class="s2">&quot;mrr&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">MeanReciprocalRankAt</span><span class="p">(</span><span class="n">RankingMetric</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_ks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">MeanRecipricolRankAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MeanReciprocalRankAt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">top_ks</span><span class="o">=</span><span class="n">top_ks</span><span class="p">,</span> <span class="n">labels_onehot</span><span class="o">=</span><span class="n">labels_onehot</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_metric</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">ks</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">log_base</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Compute mean recipricol rank at K for provided cutoffs (ignoring ties)</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute mean recipricol rank at K for provided cutoffs (ignoring ties)</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -389,7 +398,9 @@
             <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span>
         <span class="p">)</span>
         <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ks</span><span class="p">):</span>
-            <span class="n">values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">topk_labels</span><span class="p">[:,</span> <span class="p">:</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">values</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="p">(</span><span class="n">topk_labels</span><span class="p">[:,</span> <span class="p">:</span><span class="n">k</span><span class="p">]</span> <span class="o">/</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">)</span>
             <span class="n">results</span><span class="p">[:,</span> <span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>
         <span class="k">return</span> <span class="n">results</span></div>
 </pre></div>
@@ -418,7 +429,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

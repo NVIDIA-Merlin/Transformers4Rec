@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/genindex.html" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
@@ -164,9 +173,13 @@
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.masking.CausalLanguageModeling.apply_mask_to_inputs">apply_mask_to_inputs() (transformers4rec.torch.masking.CausalLanguageModeling method)</a>
 
       <ul>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskedLanguageModeling.apply_mask_to_inputs">(transformers4rec.torch.masking.MaskedLanguageModeling method)</a>
+</li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.apply_mask_to_inputs">(transformers4rec.torch.masking.MaskSequence method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling.apply_mask_to_inputs">(transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.CausalLanguageModeling method)</a>
+</li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MaskedLanguageModeling.apply_mask_to_inputs">(transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MaskedLanguageModeling method)</a>
 </li>
       </ul></li>
       <li><a href="api/transformers4rec.torch.block.html#transformers4rec.torch.block.base.BlockBase.as_tabular">as_tabular() (transformers4rec.torch.block.base.BlockBase method)</a>
@@ -180,6 +193,8 @@
 </li>
       </ul></li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.AsTabular">AsTabular (class in transformers4rec.torch)</a>
+</li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.atleast_1d">atleast_1d() (in module transformers4rec.torch.utils.torch_utils)</a>
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.StochasticSwapNoise.augment">augment() (transformers4rec.torch.StochasticSwapNoise method)</a>
 
@@ -195,8 +210,14 @@
 <h2 id="B">B</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.batch_size">batch_size (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.batch_size">batch_size (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.batch_size">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.batch_size">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/transformers4rec.config.html#transformers4rec.config.transformer.BertConfig">BertConfig (class in transformers4rec.config.transformer)</a>
 
       <ul>
@@ -419,12 +440,10 @@
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RankingMetric.compute">compute() (transformers4rec.torch.ranking_metric.RankingMetric method)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Head.compute_loss">compute_loss() (transformers4rec.torch.Head method)</a>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Trainer.compute_loss">compute_loss() (transformers4rec.torch.Trainer method)</a>
 
       <ul>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Model.compute_loss">(transformers4rec.torch.Model method)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.compute_loss">(transformers4rec.torch.PredictionTask method)</a>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.compute_loss">(transformers4rec.torch.trainer.Trainer method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LossMixin.compute_loss">(transformers4rec.torch.utils.torch_utils.LossMixin method)</a>
 </li>
@@ -557,8 +576,14 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.T4RecTrainingArguments.data_loader_engine">(transformers4rec.torch.T4RecTrainingArguments attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.dataset">dataset (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.dataset">dataset (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.dataset">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.dataset">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.DatasetConstraints">DatasetConstraints (class in merlin_standard_lib.proto.schema_bp)</a>
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.DatasetMock">DatasetMock (class in transformers4rec.torch.trainer)</a>
@@ -601,10 +626,10 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.RegressionTask.DEFAULT_METRICS">(transformers4rec.torch.RegressionTask attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/merlin_standard_lib.html#merlin_standard_lib.registry.default_name">default_name() (in module merlin_standard_lib.registry)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/merlin_standard_lib.html#merlin_standard_lib.registry.default_object_name">default_object_name() (in module merlin_standard_lib.registry)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor.default_value">default_value (merlin_standard_lib.proto.schema_bp.TensorRepresentationDenseTensor attribute)</a>
@@ -625,6 +650,8 @@
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.SparseFeature.deprecated">deprecated (merlin_standard_lib.proto.schema_bp.SparseFeature attribute)</a>
 </li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.device">device() (transformers4rec.torch.utils.data_utils.DLDataLoader property)</a>
+</li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FixedShape.dim">dim (merlin_standard_lib.proto.schema_bp.FixedShape attribute)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.LifecycleStage.DISABLED">DISABLED (merlin_standard_lib.proto.schema_bp.LifecycleStage attribute)</a>
@@ -641,14 +668,22 @@
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.DistributionConstraints">DistributionConstraints (class in merlin_standard_lib.proto.schema_bp)</a>
 </li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader">DLDataLoader (class in transformers4rec.torch.utils.data_utils)</a>
+</li>
       <li><a href="api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.doc_utils.docstring_parameter">docstring_parameter() (in module merlin_standard_lib.utils.doc_utils)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Feature.domain">domain (merlin_standard_lib.proto.schema_bp.Feature attribute)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Feature.drift_comparator">drift_comparator (merlin_standard_lib.proto.schema_bp.Feature attribute)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.drop_last">drop_last (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.drop_last">drop_last (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.drop_last">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.drop_last">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -848,6 +883,8 @@
 </li>
         <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingFeatures.forward">(transformers4rec.torch.features.embedding.EmbeddingFeatures method)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingsInitializer.forward">(transformers4rec.torch.features.embedding.PretrainedEmbeddingsInitializer method)</a>
+</li>
         <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.SoftEmbedding.forward">(transformers4rec.torch.features.embedding.SoftEmbedding method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward">(transformers4rec.torch.features.sequence.TabularSequenceFeatures method)</a>
@@ -869,6 +906,8 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask.forward">(transformers4rec.torch.NextItemPredictionTask method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.forward">(transformers4rec.torch.PredictionTask method)</a>
+</li>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingsInitializer.forward">(transformers4rec.torch.PretrainedEmbeddingsInitializer method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.SequentialBlock.forward">(transformers4rec.torch.SequentialBlock method)</a>
 </li>
@@ -903,8 +942,6 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TabularSequenceFeatures.forward">(transformers4rec.torch.TabularSequenceFeatures method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TabularTransformation.forward">(transformers4rec.torch.TabularTransformation method)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.HFWrapper.forward">(transformers4rec.torch.trainer.HFWrapper method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TransformerBlock.forward">(transformers4rec.torch.TransformerBlock method)</a>
 </li>
@@ -1044,6 +1081,8 @@
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TabularSequenceFeatures.from_schema">(transformers4rec.torch.TabularSequenceFeatures class method)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.from_schema">(transformers4rec.torch.utils.data_utils.MerlinDataLoader class method)</a>
+</li>
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.from_schema">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader class method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader.from_schema">(transformers4rec.torch.utils.data_utils.T4RecDataLoader class method)</a>
@@ -1143,8 +1182,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Head">Head (class in transformers4rec.torch)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.HFWrapper">HFWrapper (class in transformers4rec.torch.trainer)</a>
-</li>
   </ul></td>
 </tr></table>
 
@@ -1168,6 +1205,8 @@
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeatureComparator.infinity_norm">infinity_norm (merlin_standard_lib.proto.schema_bp.FeatureComparator attribute)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.InfinityNorm">InfinityNorm (class in merlin_standard_lib.proto.schema_bp)</a>
+</li>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Model.input_schema">input_schema() (transformers4rec.torch.Model property)</a>
 </li>
       <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.base.InputBlock">InputBlock (class in transformers4rec.torch.features.base)</a>
 </li>
@@ -1201,13 +1240,13 @@
       </ul></li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.IntDomain.is_categorical">is_categorical (merlin_standard_lib.proto.schema_bp.IntDomain attribute)</a>
 </li>
-      <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FloatDomain.is_embedding">is_embedding (merlin_standard_lib.proto.schema_bp.FloatDomain attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FloatDomain.is_embedding">is_embedding (merlin_standard_lib.proto.schema_bp.FloatDomain attribute)</a>
+</li>
       <li><a href="api/transformers4rec.utils.html#transformers4rec.utils.dependencies.is_gpu_dataloader_available">is_gpu_dataloader_available() (in module transformers4rec.utils.dependencies)</a>
 </li>
-      <li><a href="api/transformers4rec.utils.html#transformers4rec.utils.dependencies.is_nvtabular_available">is_nvtabular_available() (in module transformers4rec.utils.dependencies)</a>
+      <li><a href="api/transformers4rec.utils.html#transformers4rec.utils.dependencies.is_merlin_dataloader_available">is_merlin_dataloader_available() (in module transformers4rec.utils.dependencies)</a>
 </li>
       <li><a href="api/transformers4rec.utils.html#transformers4rec.utils.dependencies.is_pyarrow_available">is_pyarrow_available() (in module transformers4rec.utils.dependencies)</a>
 </li>
@@ -1325,6 +1364,8 @@
       </ul></li>
       <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.examples_utils.list_files">list_files() (in module transformers4rec.torch.utils.examples_utils)</a>
 </li>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Model.load">load() (transformers4rec.torch.Model class method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Trainer.load_model_trainer_states_from_checkpoint">load_model_trainer_states_from_checkpoint() (transformers4rec.torch.Trainer method)</a>
@@ -1429,7 +1470,7 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.T4RecTrainingArguments.max_sequence_length">(transformers4rec.torch.T4RecTrainingArguments attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.MeanRecipricolRankAt">MeanRecipricolRankAt (class in transformers4rec.torch.ranking_metric)</a>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.MeanReciprocalRankAt">MeanReciprocalRankAt (class in transformers4rec.torch.ranking_metric)</a>
 </li>
       <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.MegatronBertConfig">MegatronBertConfig (transformers4rec.torch.utils.torch_utils.MappingTransformerMasking attribute)</a>
 </li>
@@ -1523,6 +1564,8 @@
         <li><a href="api/merlin_standard_lib.utils.html#module-merlin_standard_lib.utils.proto_utils">module</a>
 </li>
       </ul></li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader">MerlinDataLoader (class in transformers4rec.torch.utils.data_utils)</a>
+</li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Annotation.metadata">metadata() (merlin_standard_lib.proto.schema_bp.Annotation property)</a>
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.metric_name">metric_name() (transformers4rec.torch.PredictionTask method)</a>
@@ -1543,10 +1586,10 @@
         <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.ValueCount.min">(merlin_standard_lib.proto.schema_bp.ValueCount attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.min_avg_token_length">min_avg_token_length (merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.min_avg_token_length">min_avg_token_length (merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints attribute)</a>
+</li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeaturePresence.min_count">min_count (merlin_standard_lib.proto.schema_bp.FeaturePresence attribute)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.min_coverage">min_coverage (merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints attribute)</a>
@@ -1720,11 +1763,19 @@
       </ul></li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Feature.natural_language_domain">natural_language_domain (merlin_standard_lib.proto.schema_bp.Feature attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain">NaturalLanguageDomain (class in merlin_standard_lib.proto.schema_bp)</a>
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.NDCGAt">NDCGAt (class in transformers4rec.torch.ranking_metric)</a>
+</li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_concat">nested_concat() (in module transformers4rec.torch.utils.torch_utils)</a>
+</li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_detach">nested_detach() (in module transformers4rec.torch.utils.torch_utils)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_numpify">nested_numpify() (in module transformers4rec.torch.utils.torch_utils)</a>
+</li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.nested_truncate">nested_truncate() (in module transformers4rec.torch.utils.torch_utils)</a>
 </li>
       <li><a href="api/transformers4rec.torch.model.html#transformers4rec.torch.model.prediction_task.NextItemPredictionPrepareBlock">NextItemPredictionPrepareBlock (class in transformers4rec.torch.model.prediction_task)</a>
 </li>
@@ -1750,9 +1801,17 @@
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.DatasetConstraints.num_examples_version_comparator">num_examples_version_comparator (merlin_standard_lib.proto.schema_bp.DatasetConstraints attribute)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.num_workers">num_workers (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.num_workers">num_workers (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.num_workers">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.num_workers">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.NumericValueComparator">NumericValueComparator (class in merlin_standard_lib.proto.schema_bp)</a>
+</li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.numpy_pad_and_concatenate">numpy_pad_and_concatenate() (in module transformers4rec.torch.utils.torch_utils)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1784,6 +1843,8 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.T4RecTrainingArguments.output_dir">(transformers4rec.torch.T4RecTrainingArguments attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Model.output_schema">output_schema() (transformers4rec.torch.Model property)</a>
+</li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TabularBlock.output_size">output_size() (transformers4rec.torch.TabularBlock method)</a>
 
       <ul>
@@ -1828,10 +1889,22 @@
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.masking.PermutationLanguageModeling">PermutationLanguageModeling (class in transformers4rec.torch.masking)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.pin_memory">pin_memory (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.pin_memory">pin_memory (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.pin_memory">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.pin_memory_device">pin_memory_device (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.pin_memory">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
 </li>
+      </ul></li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.pin_memory_device">pin_memory_device (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.pin_memory_device">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
+</li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.pin_memory_device">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/transformers4rec.config.html#transformers4rec.config.trainer.T4RecTrainingArguments.place_model_on_device">place_model_on_device() (transformers4rec.config.trainer.T4RecTrainingArguments property)</a>
 
       <ul>
@@ -1870,14 +1943,26 @@
       </ul></li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask">PredictionTask (class in transformers4rec.torch)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.prefetch_factor">prefetch_factor (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.prefetch_factor">prefetch_factor (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.prefetch_factor">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.prefetch_factor">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock.prepare_module">prepare_module (transformers4rec.torch.block.transformer.TransformerBlock attribute)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Feature.presence">presence (merlin_standard_lib.proto.schema_bp.Feature attribute)</a>
 
       <ul>
         <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.SparseFeature.presence">(merlin_standard_lib.proto.schema_bp.SparseFeature attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingsInitializer">PretrainedEmbeddingsInitializer (class in transformers4rec.torch)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingsInitializer">(class in transformers4rec.torch.features.embedding)</a>
 </li>
       </ul></li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.process_metrics">process_metrics() (in module transformers4rec.torch.trainer)</a>
@@ -2072,7 +2157,15 @@
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling.sample_from_softmax">(transformers4rec.torch.utils.torch_utils.MappingTransformerMasking.ReplacementLanguageModeling method)</a>
 </li>
       </ul></li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.sampler">sampler (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.sampler">sampler (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.sampler">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
+</li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.sampler">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Model.save">save() (transformers4rec.torch.Model method)</a>
 </li>
       <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.EmbeddingBagWrapper.scale_grad_by_freq">scale_grad_by_freq (transformers4rec.torch.features.embedding.EmbeddingBagWrapper attribute)</a>
 </li>
@@ -2150,9 +2243,11 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Tag.SESSION_ID">(transformers4rec.torch.Tag attribute)</a>
 </li>
       </ul></li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.set_dataset">set_dataset() (transformers4rec.torch.utils.data_utils.PyarrowDataLoader method)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.set_dataset">set_dataset() (transformers4rec.torch.utils.data_utils.MerlinDataLoader method)</a>
 
       <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.set_dataset">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader method)</a>
+</li>
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.T4RecDataLoader.set_dataset">(transformers4rec.torch.utils.data_utils.T4RecDataLoader method)</a>
 </li>
       </ul></li>
@@ -2416,18 +2511,18 @@
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TimeOfDayDomainIntegerTimeOfDayFormat">TimeOfDayDomainIntegerTimeOfDayFormat (class in merlin_standard_lib.proto.schema_bp)</a>
 </li>
-      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.timeout">timeout (transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.DLDataLoader.timeout">timeout (transformers4rec.torch.utils.data_utils.DLDataLoader attribute)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.timeout">(transformers4rec.torch.utils.data_utils.MerlinDataLoader attribute)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.timeout">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.misc_utils.Timing">Timing (class in merlin_standard_lib.utils.misc_utils)</a>
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.to_head">to_head() (transformers4rec.torch.PredictionTask method)</a>
 </li>
-      <li><a href="api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_tf_model">to_huggingface_tf_model() (transformers4rec.config.transformer.T4RecConfig method)</a>
-
-      <ul>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.T4RecConfig.to_huggingface_tf_model">(transformers4rec.torch.T4RecConfig method)</a>
-</li>
-      </ul></li>
       <li><a href="api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_torch_model">to_huggingface_torch_model() (transformers4rec.config.transformer.T4RecConfig method)</a>
 
       <ul>
@@ -2464,12 +2559,6 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Schema.to_proto_text">(transformers4rec.torch.Schema method)</a>
 </li>
       </ul></li>
-      <li><a href="api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.to_tf_model">to_tf_model() (transformers4rec.config.transformer.T4RecConfig method)</a>
-
-      <ul>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.T4RecConfig.to_tf_model">(transformers4rec.torch.T4RecConfig method)</a>
-</li>
-      </ul></li>
       <li><a href="api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.to_torch_model">to_torch_model() (transformers4rec.config.transformer.T4RecConfig method)</a>
 
       <ul>
@@ -2477,6 +2566,8 @@
 </li>
       </ul></li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain.token_constraints">token_constraints (merlin_standard_lib.proto.schema_bp.NaturalLanguageDomain attribute)</a>
+</li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.torch_pad_and_concatenate">torch_pad_and_concatenate() (in module transformers4rec.torch.utils.torch_utils)</a>
 </li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Trainer">Trainer (class in transformers4rec.torch)</a>
 
@@ -2492,6 +2583,8 @@
         <li><a href="api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerBlock.training">(transformers4rec.torch.block.transformer.TransformerBlock attribute)</a>
 </li>
         <li><a href="api/transformers4rec.torch.block.html#transformers4rec.torch.block.transformer.TransformerPrepare.training">(transformers4rec.torch.block.transformer.TransformerPrepare attribute)</a>
+</li>
+        <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingsInitializer.training">(transformers4rec.torch.features.embedding.PretrainedEmbeddingsInitializer attribute)</a>
 </li>
         <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.SoftEmbedding.training">(transformers4rec.torch.features.embedding.SoftEmbedding attribute)</a>
 </li>
@@ -2509,19 +2602,7 @@
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.training">(transformers4rec.torch.PredictionTask attribute)</a>
 </li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.AvgPrecisionAt.training">(transformers4rec.torch.ranking_metric.AvgPrecisionAt attribute)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.DCGAt.training">(transformers4rec.torch.ranking_metric.DCGAt attribute)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.MeanRecipricolRankAt.training">(transformers4rec.torch.ranking_metric.MeanRecipricolRankAt attribute)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.NDCGAt.training">(transformers4rec.torch.ranking_metric.NDCGAt attribute)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.PrecisionAt.training">(transformers4rec.torch.ranking_metric.PrecisionAt attribute)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RankingMetric.training">(transformers4rec.torch.ranking_metric.RankingMetric attribute)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ranking_metric.RecallAt.training">(transformers4rec.torch.ranking_metric.RecallAt attribute)</a>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingsInitializer.training">(transformers4rec.torch.PretrainedEmbeddingsInitializer attribute)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.RegressionTask.training">(transformers4rec.torch.RegressionTask attribute)</a>
 </li>
@@ -2530,8 +2611,6 @@
         <li><a href="api/transformers4rec.torch.tabular.html#transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti.training">(transformers4rec.torch.tabular.aggregation.ElementwiseSumItemMulti attribute)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TabularModule.training">(transformers4rec.torch.TabularModule attribute)</a>
-</li>
-        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.trainer.HFWrapper.training">(transformers4rec.torch.trainer.HFWrapper attribute)</a>
 </li>
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.LambdaModule.training">(transformers4rec.torch.utils.torch_utils.LambdaModule attribute)</a>
 </li>
@@ -3017,7 +3096,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

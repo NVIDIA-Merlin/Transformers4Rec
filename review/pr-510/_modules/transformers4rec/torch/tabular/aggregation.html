@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/tabular/aggregation.html" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
@@ -105,7 +114,7 @@
 
 <div class="viewcode-block" id="ConcatFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ConcatFeatures">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ConcatFeatures</span><span class="p">(</span><span class="n">TabularAggregation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Aggregation by stacking all values in TabularData, all non-sequential values will be</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregation by stacking all values in TabularData, all non-sequential values will be</span>
 <span class="sd">    converted to a sequence.</span>
 
 <span class="sd">    The output of this concatenation will have 3 dimensions.</span>
@@ -133,7 +142,7 @@
 
 <div class="viewcode-block" id="StackFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.StackFeatures">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;stack&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">StackFeatures</span><span class="p">(</span><span class="n">TabularAggregation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Aggregation by stacking all values in input dictionary in the given dimension.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregation by stacking all values in input dictionary in the given dimension.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -196,7 +205,7 @@
 
 <div class="viewcode-block" id="ElementwiseSum"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSum">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;element-wise-sum&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">ElementwiseSum</span><span class="p">(</span><span class="n">ElementwiseFeatureAggregation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Aggregation by first stacking all values in TabularData in the first dimension, and then</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregation by first stacking all values in TabularData in the first dimension, and then</span>
 <span class="sd">    summing the result.&quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -218,7 +227,7 @@
 <div class="viewcode-block" id="ElementwiseSumItemMulti"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.tabular.html#transformers4rec.torch.ElementwiseSumItemMulti">[docs]</a><span class="nd">@tabular_aggregation_registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;element-wise-sum-item-multi&quot;</span><span class="p">)</span>
 <span class="nd">@requires_schema</span>
 <span class="k">class</span> <span class="nc">ElementwiseSumItemMulti</span><span class="p">(</span><span class="n">ElementwiseFeatureAggregation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Aggregation by applying the `ElementwiseSum` aggregation to all features except the item-id,</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Aggregation by applying the `ElementwiseSum` aggregation to all features except the item-id,</span>
 <span class="sd">    and then multiplying this with the item-ids.</span>
 
 <span class="sd">    Parameters</span>
@@ -275,7 +284,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

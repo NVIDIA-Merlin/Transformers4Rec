@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/model/prediction_task.html" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
@@ -102,6 +111,7 @@
 
 <span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">BuildableBlock</span><span class="p">,</span> <span class="n">SequentialBlock</span>
 <span class="kn">from</span> <span class="nn">..block.mlp</span> <span class="kn">import</span> <span class="n">MLPBlock</span>
+<span class="kn">from</span> <span class="nn">..masking</span> <span class="kn">import</span> <span class="n">MaskedLanguageModeling</span>
 <span class="kn">from</span> <span class="nn">..ranking_metric</span> <span class="kn">import</span> <span class="n">AvgPrecisionAt</span><span class="p">,</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
 <span class="kn">from</span> <span class="nn">..utils.torch_utils</span> <span class="kn">import</span> <span class="n">LambdaModule</span>
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BlockType</span><span class="p">,</span> <span class="n">PredictionTask</span>
@@ -122,11 +132,90 @@
 
 
 <div class="viewcode-block" id="BinaryClassificationTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.BinaryClassificationTask">[docs]</a><span class="k">class</span> <span class="nc">BinaryClassificationTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a ``PredictionTask`` for binary classification.</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        # Define the input module to process the tabular input features.</span>
+<span class="sd">        input_module = tr.TabularSequenceFeatures.from_schema(</span>
+<span class="sd">            schema,</span>
+<span class="sd">            max_sequence_length=max_sequence_length,</span>
+<span class="sd">            continuous_projection=d_model,</span>
+<span class="sd">            aggregation=&quot;concat&quot;,</span>
+<span class="sd">            masking=None,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define XLNetConfig class and set default parameters for HF XLNet config.</span>
+<span class="sd">        transformer_config = tr.XLNetConfig.build(</span>
+<span class="sd">            d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define the model block including: inputs, masking, projection and transformer block.</span>
+<span class="sd">        body = tr.SequentialBlock(</span>
+<span class="sd">            input_module,</span>
+<span class="sd">            tr.MLPBlock([64]),</span>
+<span class="sd">            tr.TransformerBlock(</span>
+<span class="sd">                transformer_config,</span>
+<span class="sd">                masking=input_module.masking</span>
+<span class="sd">            )</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define a head with BinaryClassificationTask.</span>
+<span class="sd">        head = tr.Head(</span>
+<span class="sd">            body,</span>
+<span class="sd">            tr.BinaryClassificationTask(</span>
+<span class="sd">                &quot;click&quot;,</span>
+<span class="sd">                summary_type=&quot;mean&quot;,</span>
+<span class="sd">                metrics=[</span>
+<span class="sd">                    tm.Precision(task=&#39;binary&#39;),</span>
+<span class="sd">                    tm.Recall(task=&#39;binary&#39;),</span>
+<span class="sd">                    tm.Accuracy(task=&#39;binary&#39;),</span>
+<span class="sd">                    tm.F1Score(task=&#39;binary&#39;)</span>
+<span class="sd">                ]</span>
+<span class="sd">            ),</span>
+<span class="sd">            inputs=input_module,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Get the end-to-end Model class.</span>
+<span class="sd">        model = tr.Model(head)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    target_name: Optional[str] = None</span>
+<span class="sd">        Specifies the variable name that represents the positive and negative values.</span>
+
+<span class="sd">    task_name: Optional[str] = None</span>
+<span class="sd">        Specifies the name of the prediction task. If this parameter is not specified,</span>
+<span class="sd">        a name is automatically constructed based on ``target_name`` and the Python</span>
+<span class="sd">        class name of the model.</span>
+
+<span class="sd">    task_block: Optional[BlockType] = None</span>
+<span class="sd">        Specifies a module to transform the input tensor before computing predictions.</span>
+
+<span class="sd">    loss: torch.nn.Module</span>
+<span class="sd">        Specifies the loss function for the task.</span>
+<span class="sd">        The default class is ``torch.nn.BCELoss``.</span>
+
+<span class="sd">    metrics: Tuple[torch.nn.Module, ...]</span>
+<span class="sd">        Specifies the metrics to calculate during training and evaluation.</span>
+<span class="sd">        The default metrics are ``Precision``, ``Recall``, and ``Accuracy``.</span>
+
+<span class="sd">    summary_type: str</span>
+<span class="sd">        Summarizes a sequence into a single tensor. Accepted values are:</span>
+
+<span class="sd">            - ``last`` -- Take the last token hidden state (like XLNet)</span>
+<span class="sd">            - ``first`` -- Take the first token hidden state (like Bert)</span>
+<span class="sd">            - ``mean`` -- Take the mean of all tokens hidden states</span>
+<span class="sd">            - ``cls_index`` -- Supply a Tensor of classification token position (GPT/GPT-2)</span>
+<span class="sd">            - ``attn`` -- Not implemented now, use multi-head attention</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">DEFAULT_LOSS</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">BCELoss</span><span class="p">()</span>
     <span class="n">DEFAULT_METRICS</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">tm</span><span class="o">.</span><span class="n">Precision</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-        <span class="n">tm</span><span class="o">.</span><span class="n">Recall</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
-        <span class="n">tm</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(),</span>
+        <span class="n">tm</span><span class="o">.</span><span class="n">Precision</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">),</span>
+        <span class="n">tm</span><span class="o">.</span><span class="n">Recall</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">),</span>
+        <span class="n">tm</span><span class="o">.</span><span class="n">Accuracy</span><span class="p">(</span><span class="n">task</span><span class="o">=</span><span class="s2">&quot;binary&quot;</span><span class="p">),</span>
         <span class="c1"># TODO: Fix this: tm.AUC()</span>
     <span class="p">)</span>
 
@@ -139,6 +228,7 @@
         <span class="n">metrics</span><span class="o">=</span><span class="n">DEFAULT_METRICS</span><span class="p">,</span>
         <span class="n">summary_type</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
             <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
@@ -175,6 +265,7 @@
         <span class="n">metrics</span><span class="o">=</span><span class="n">DEFAULT_METRICS</span><span class="p">,</span>
         <span class="n">summary_type</span><span class="o">=</span><span class="s2">&quot;first&quot;</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
             <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
@@ -187,7 +278,7 @@
 
 
 <div class="viewcode-block" id="NextItemPredictionTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask">[docs]</a><span class="k">class</span> <span class="nc">NextItemPredictionTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
 <span class="sd">    It requires a body containing a masking schema to use for training and target generation.</span>
 <span class="sd">    For the supported masking schemes, please refers to:</span>
 <span class="sd">    https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking</span>
@@ -212,9 +303,6 @@
 <span class="sd">        pad token id.</span>
 <span class="sd">    target_dim: int</span>
 <span class="sd">        vocabulary size of item ids</span>
-<span class="sd">    hf_format: bool</span>
-<span class="sd">        Output the dictionary of outputs needed by RecSysTrainer, if set to False,</span>
-<span class="sd">        return the predictions tensor.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">DEFAULT_METRICS</span> <span class="o">=</span> <span class="p">(</span>
@@ -234,20 +322,18 @@
         <span class="n">softmax_temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">target_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">hf_format</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="n">task_block</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="n">task_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span> <span class="o">=</span> <span class="n">softmax_temperature</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span> <span class="o">=</span> <span class="n">weight_tying</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span> <span class="o">=</span> <span class="n">padding_idx</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span> <span class="o">=</span> <span class="n">target_dim</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span> <span class="o">=</span> <span class="n">hf_format</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="kc">None</span>
 
 <div class="viewcode-block" id="NextItemPredictionTask.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Build method, this is called by the `Head`.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build method, this is called by the `Head`.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_size</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;NextItemPredictionTask needs a 3-dim vector as input, found:&quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">input_size</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -293,7 +379,7 @@
             <span class="n">body</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="n">task_block</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="n">pre</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="NextItemPredictionTask.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="NextItemPredictionTask.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
             <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
@@ -302,28 +388,14 @@
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">task_block</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="c1"># Retrieve labels from masking</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_masking</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">training</span> <span class="ow">or</span> <span class="n">testing</span><span class="p">:</span>
             <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="o">.</span><span class="n">masked_targets</span>  <span class="c1"># type: ignore</span>
             <span class="n">trg_flat</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
             <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">trg_flat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
             <span class="n">labels_all</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span><span class="n">trg_flat</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">)</span>
             <span class="c1"># remove padded items, keep only masked positions</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_pad_3d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># keep only last non-padded position for the &#39;Prediction step&#39;</span>
-            <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">item_seq</span>
-            <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
-            <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="n">rows_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-            <span class="n">labels_all</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
-            <span class="n">labels_all</span> <span class="o">=</span> <span class="n">labels_all</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
-
-        <span class="c1"># Compute predictions probs</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
-
-        <span class="c1"># prepare outputs for HF trainer</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span><span class="p">:</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">labels_all</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">{</span>
                 <span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
@@ -332,7 +404,19 @@
                 <span class="c1"># &quot;pred_metadata&quot;: {},</span>
                 <span class="c1"># &quot;model_outputs&quot;: [],</span>
             <span class="p">}</span>
-            <span class="c1"># TODO: Add model_outputs and metadata</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Get the hidden position to use for predicting the next item</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">item_seq</span>
+            <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">labels</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
+            <span class="n">rows_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">labels</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="p">,</span> <span class="n">MaskedLanguageModeling</span><span class="p">):</span>
+                <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
+
+        <span class="c1"># Compute predictions probs</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">return</span> <span class="n">x</span></div>
 
@@ -345,18 +429,11 @@
         <span class="n">out_tensor</span> <span class="o">=</span> <span class="n">inp_tensor_fl</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">inp_tensor</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">out_tensor</span></div>
 
-<div class="viewcode-block" id="NextItemPredictionTask.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+<div class="viewcode-block" id="NextItemPredictionTask.calculate_metrics"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.calculate_metrics">[docs]</a>    <span class="k">def</span> <span class="nf">calculate_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>  <span class="c1"># type: ignore</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_name</span><span class="p">:</span>
             <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">target_name</span><span class="p">]</span>
 
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">if</span> <span class="n">forward</span><span class="p">:</span>
-            <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hf_format</span><span class="p">:</span>
-                <span class="n">targets</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span>
-                <span class="n">predictions</span> <span class="o">=</span> <span class="n">predictions</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span>
         <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_to_prediction_fn</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
@@ -409,7 +486,7 @@
 
 
 <span class="k">class</span> <span class="nc">_NextItemPredictionTask</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Predict the interacted item-id probabilities.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Predict the interacted item-id probabilities.</span>
 
 <span class="sd">    - During inference, the task consists of predicting the next item.</span>
 <span class="sd">    - During training, the class supports the following Language modeling tasks:</span>
@@ -501,7 +578,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

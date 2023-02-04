@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/merlin_standard_lib/registry.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
@@ -113,7 +122,7 @@
 
 
 <div class="viewcode-block" id="default_name"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.default_name">[docs]</a><span class="k">def</span> <span class="nf">default_name</span><span class="p">(</span><span class="n">class_or_fn</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Default name for a class or function.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Default name for a class or function.</span>
 
 <span class="sd">    This is the naming function by default for registries expecting classes or</span>
 <span class="sd">    functions.</span>
@@ -135,7 +144,7 @@
 
 
 <div class="viewcode-block" id="Registry"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry">[docs]</a><span class="k">class</span> <span class="nc">Registry</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dict-like class for managing function registrations.</span>
 
 <span class="sd">    Example usage::</span>
@@ -210,7 +219,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Registry.default_key"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.default_key">[docs]</a>    <span class="k">def</span> <span class="nf">default_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Default key used when key not provided. Uses function from __init__.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Default key used when key not provided. Uses function from __init__.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_key_fn</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
@@ -218,17 +227,17 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
 
 <div class="viewcode-block" id="Registry.validate"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Validation function run before setting. Uses function from __init__.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validation function run before setting. Uses function from __init__.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_validator</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="Registry.on_set"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.on_set">[docs]</a>    <span class="k">def</span> <span class="nf">on_set</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Callback called on successful set. Uses function from __init__.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Callback called on successful set. Uses function from __init__.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_on_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_on_set</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Validate, set, and (if successful) call `on_set` for the given item.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate, set, and (if successful) call `on_set` for the given item.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -255,7 +264,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">on_set</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Registry.register"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.Registry.register">[docs]</a>    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_or_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Decorator to register a function, or registration itself.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Decorator to register a function, or registration itself.</span>
 <span class="sd">        This is primarily intended for use as a decorator, either with or without</span>
 <span class="sd">        a key/parentheses.</span>
 
@@ -362,7 +371,7 @@
 
 
 <div class="viewcode-block" id="display_list_by_prefix"><a class="viewcode-back" href="../../api/merlin_standard_lib.html#merlin_standard_lib.registry.display_list_by_prefix">[docs]</a><span class="k">def</span> <span class="nf">display_list_by_prefix</span><span class="p">(</span><span class="n">names_list</span><span class="p">,</span> <span class="n">starting_spaces</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creates a help string for names_list grouped by prefix.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates a help string for names_list grouped by prefix.&quot;&quot;&quot;</span>
     <span class="n">cur_prefix</span><span class="p">,</span> <span class="n">result_lines</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="p">[]</span>
     <span class="n">space</span> <span class="o">=</span> <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">starting_spaces</span>
     <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">names_list</span><span class="p">):</span>
@@ -399,7 +408,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

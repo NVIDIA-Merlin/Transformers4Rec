@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -23,10 +25,17 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Transformers4Rec Example Notebooks" href="examples/index.html" />
-    <link rel="prev" title="End-to-end pipeline with NVIDIA Merlin" href="pipeline.html" /> 
+    <link rel="prev" title="End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin" href="pipeline.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -47,7 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
@@ -114,10 +123,12 @@
 <p>To learn more about <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> see the <a class="reference external" href="https://pytorch.org/docs/master/generated/torch.nn.parallel.DistributedDataParallel.html#torch.nn.parallel.DistributedDataParallel">PyTorch Documentation</a>.</p>
 <p>To train using the <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> mode user should use PyTorch distributed launcher to run the script:</p>
 <p><code class="docutils literal notranslate"> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">torch.distributed.launch</span> <span class="pre">--nproc_per_node</span> <span class="pre">N_GPU</span> <span class="pre">your_script.py</span> <span class="pre">--your_arguments</span></code></p>
-<p>To have one process per GPU replace <code class="docutils literal notranslate"><span class="pre">N_GPU</span></code> with the number of GPUs you want to use and make sure <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> is set accordingly.</p>
-<p><b>Note:</b> When using <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code>, our data loader splits data between the GPUs based on dataset partitions. For that reason, the number of partitions of the dataset must be equal or larger than number of processes. If the parquet file has a small number of row groups (partitions), try repartitioning and saving it again using cudf or pandas before training. The dataloader checks <code class="docutils literal notranslate"><span class="pre">dataloader.dataset.npartitions</span></code> and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:</p>
-<p><code class="docutils literal notranslate"><span class="pre">df.to_parquet(&quot;filename.parquet&quot;,</span> <span class="pre">row_group_size=10000)</span></code></p>
-<p>Choose <code class="docutils literal notranslate"><span class="pre">row_group_size</span></code> such that <code class="docutils literal notranslate"><span class="pre">nr_rows/row_group_size&gt;=n_proc</span></code> because <code class="docutils literal notranslate"><span class="pre">n_rows=npartition*row_group_size</span></code>.</p>
+<p>To have one process per GPU, replace <code class="docutils literal notranslate"><span class="pre">N_GPU</span></code> with the number of GPUs you want to use. Optionally, you can also set CUDA_VISIBLE_DEVICES accordingly.</p>
+<p><b>Note:</b> When using <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code>, our data loader splits data between the GPUs based on dataset partitions. For that reason, the number of partitions of the dataset must be equal to or an integer multiple of the number of processes. If the parquet file has a small number of row groups (partitions), try repartitioning and saving it again using cudf or pandas before training. The dataloader checks <code class="docutils literal notranslate"><span class="pre">dataloader.dataset.npartitions</span></code> and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:</p>
+<p><code class="docutils literal notranslate"><span class="pre">gdf.to_parquet(&quot;filename.parquet&quot;,</span> <span class="pre">row_group_size_rows=10000)</span></code></p>
+<p>Choose <code class="docutils literal notranslate"><span class="pre">row_group_size_rows</span></code> such that <code class="docutils literal notranslate"><span class="pre">nr_rows/row_group_size_rows&gt;=n_proc</span></code> because <code class="docutils literal notranslate"><span class="pre">n_rows=npartition*row_group_size_rows</span></code>.</p>
+<p>With pandas, use the argument as <code class="docutils literal notranslate"><span class="pre">row_group_size=10000</span></code> instead.</p>
+<p>Please make sure that the resulting number of partitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).</p>
 </div>
 <div class="section" id="performance-comparison">
 <h2>Performance Comparison<a class="headerlink" href="#performance-comparison" title="Permalink to this headline"></a></h2>
@@ -132,7 +143,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="pipeline.html" class="btn btn-neutral float-left" title="End-to-end pipeline with NVIDIA Merlin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="pipeline.html" class="btn btn-neutral float-left" title="End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="examples/index.html" class="btn btn-neutral float-right" title="Transformers4Rec Example Notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
@@ -156,7 +167,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

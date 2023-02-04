@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/trainer.html" />
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API Documentation</a></li>
@@ -112,12 +121,7 @@
 <span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">Trainer</span> <span class="k">as</span> <span class="n">BaseTrainer</span>
 <span class="kn">from</span> <span class="nn">transformers.optimization</span> <span class="kn">import</span> <span class="n">TYPE_TO_SCHEDULER_FUNCTION</span>
 <span class="kn">from</span> <span class="nn">transformers.trainer_callback</span> <span class="kn">import</span> <span class="n">TrainerCallback</span>
-<span class="kn">from</span> <span class="nn">transformers.trainer_pt_utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">find_batch_size</span><span class="p">,</span>
-    <span class="n">nested_concat</span><span class="p">,</span>
-    <span class="n">nested_numpify</span><span class="p">,</span>
-    <span class="n">nested_truncate</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">transformers.trainer_pt_utils</span> <span class="kn">import</span> <span class="n">find_batch_size</span>
 <span class="kn">from</span> <span class="nn">transformers.trainer_utils</span> <span class="kn">import</span> <span class="n">PREFIX_CHECKPOINT_DIR</span><span class="p">,</span> <span class="n">EvalLoopOutput</span><span class="p">,</span> <span class="n">SchedulerType</span>
 <span class="kn">from</span> <span class="nn">transformers.utils</span> <span class="kn">import</span> <span class="n">logging</span>
 
@@ -126,12 +130,13 @@
 <span class="kn">from</span> <span class="nn">..config.trainer</span> <span class="kn">import</span> <span class="n">T4RecTrainingArguments</span>
 <span class="kn">from</span> <span class="nn">.model.base</span> <span class="kn">import</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">.utils.data_utils</span> <span class="kn">import</span> <span class="n">T4RecDataLoader</span>
+<span class="kn">from</span> <span class="nn">.utils.torch_utils</span> <span class="kn">import</span> <span class="n">nested_concat</span><span class="p">,</span> <span class="n">nested_detach</span><span class="p">,</span> <span class="n">nested_numpify</span><span class="p">,</span> <span class="n">nested_truncate</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Trainer"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer">[docs]</a><span class="k">class</span> <span class="nc">Trainer</span><span class="p">(</span><span class="n">BaseTrainer</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An :class:`~transformers.Trainer` specialized for sequential recommendation</span>
 <span class="sd">    including (session-based and sequtial recommendation)</span>
 
@@ -185,7 +190,6 @@
     <span class="p">):</span>
 
         <span class="n">mock_dataset</span> <span class="o">=</span> <span class="n">DatasetMock</span><span class="p">()</span>
-        <span class="n">hf_model</span> <span class="o">=</span> <span class="n">HFWrapper</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">incremental_logging</span> <span class="o">=</span> <span class="n">incremental_logging</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">incremental_logging</span><span class="p">:</span>
@@ -194,7 +198,7 @@
             <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">incremental_logging_callback</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">(</span><span class="n">Trainer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
-            <span class="n">model</span><span class="o">=</span><span class="n">hf_model</span><span class="p">,</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
             <span class="n">args</span><span class="o">=</span><span class="n">args</span><span class="p">,</span>
             <span class="n">train_dataset</span><span class="o">=</span><span class="n">mock_dataset</span><span class="p">,</span>
             <span class="n">eval_dataset</span><span class="o">=</span><span class="n">mock_dataset</span><span class="p">,</span>
@@ -213,7 +217,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">incremental_logging</span> <span class="o">=</span> <span class="n">incremental_logging</span>
 
 <div class="viewcode-block" id="Trainer.get_train_dataloader"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.get_train_dataloader">[docs]</a>    <span class="k">def</span> <span class="nf">get_train_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the train dataloader to use by Trainer.</span>
 <span class="sd">        It supports user defined data-loader set as an attribute in the constructor.</span>
 <span class="sd">        When the attribute is None, The data-loader is defined using train_dataset</span>
@@ -245,7 +249,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.get_eval_dataloader"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.get_eval_dataloader">[docs]</a>    <span class="k">def</span> <span class="nf">get_eval_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eval_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the eval dataloader to use by Trainer.</span>
 <span class="sd">        It supports user defined data-loader set as an attribute in the constructor.</span>
 <span class="sd">        When the attribute is None, The data-loader is defined using eval_dataset</span>
@@ -269,7 +273,7 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.get_test_dataloader"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.get_test_dataloader">[docs]</a>    <span class="k">def</span> <span class="nf">get_test_dataloader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the test dataloader to use by Trainer.</span>
 <span class="sd">        It supports user defined data-loader set as an attribute in the constructor.</span>
 <span class="sd">        When the attribute is None, The data-loader is defined using test_dataset</span>
@@ -278,13 +282,13 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_dataloader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_dataloader</span>
 
-        <span class="k">if</span> <span class="n">test_dataset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_dataset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">test_dataset</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_dataset_or_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Trainer: test requires an test_dataset.&quot;</span><span class="p">)</span>
-        <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">test_dataset</span> <span class="k">if</span> <span class="n">test_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_dataset</span>
+        <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">test_dataset</span> <span class="k">if</span> <span class="n">test_dataset</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_dataset_or_path</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;schema is required to generate Test Dataloader&quot;</span>
         <span class="k">return</span> <span class="n">T4RecDataLoader</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">data_loader_engine</span><span class="p">)</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">test_dataset_or_path</span><span class="p">,</span>
+            <span class="n">test_dataset</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">per_device_eval_batch_size</span><span class="p">,</span>
             <span class="n">max_sequence_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">max_sequence_length</span><span class="p">,</span>
             <span class="n">drop_last</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">dataloader_drop_last</span><span class="p">,</span>
@@ -293,13 +297,13 @@
         <span class="p">)</span></div>
 
 <div class="viewcode-block" id="Trainer.num_examples"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.num_examples">[docs]</a>    <span class="k">def</span> <span class="nf">num_examples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataloader</span><span class="p">:</span> <span class="n">DataLoader</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overriding :obj:`Trainer.num_examples()` method because</span>
 <span class="sd">        the data loaders for this project do not return the dataset size,</span>
 <span class="sd">        but the number of steps. So we estimate the dataset size here</span>
 <span class="sd">        by multiplying the number of steps * batch size</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        if dataloader == self.get_train_dataloader():</span>
 <span class="sd">            batch_size = self.args.per_device_train_batch_size</span>
 <span class="sd">        else:</span>
@@ -308,7 +312,7 @@
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataloader</span><span class="p">)</span> <span class="o">*</span> <span class="n">dataloader</span><span class="o">.</span><span class="n">_batch_size</span></div>
 
 <div class="viewcode-block" id="Trainer.reset_lr_scheduler"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.reset_lr_scheduler">[docs]</a>    <span class="k">def</span> <span class="nf">reset_lr_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Resets the LR scheduler of the previous :obj:`Trainer.train()` call,</span>
 <span class="sd">        so that a new LR scheduler one is created by the next :obj:`Trainer.train()` call.</span>
 <span class="sd">        This is important for LR schedules like `get_linear_schedule_with_warmup()`</span>
@@ -339,7 +343,7 @@
         <span class="n">num_training_steps</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">num_cycles</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Unified API to get any scheduler from its name.</span>
 
 <span class="sd">        Parameters</span>
@@ -388,40 +392,70 @@
             <span class="n">optimizer</span><span class="p">,</span> <span class="n">num_warmup_steps</span><span class="o">=</span><span class="n">num_warmup_steps</span><span class="p">,</span> <span class="n">num_training_steps</span><span class="o">=</span><span class="n">num_training_steps</span>
         <span class="p">)</span></div>
 
+<div class="viewcode-block" id="Trainer.compute_loss"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">return_outputs</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Overriding :obj:`Trainer.compute_loss()`</span>
+<span class="sd">        To allow for passing the targets to the model&#39;s forward method</span>
+<span class="sd">        How the loss is computed by Trainer. By default, all Transformers4Rec models return</span>
+<span class="sd">        a dictionary of three elements {&#39;loss&#39;, &#39;predictions&#39;, and &#39;labels}</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># Save past state if it exists</span>
+        <span class="c1"># TODO: this needs to be fixed and made cleaner later.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">past_index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_past</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">past_index</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;loss&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;The model did not return a loss from the inputs, only the following keys: &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outputs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;For reference, the inputs it received are {&#39;,&#39;.join(inputs.keys())}.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_outputs</span> <span class="k">else</span> <span class="n">loss</span></div>
+
 <div class="viewcode-block" id="Trainer.prediction_step"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.prediction_step">[docs]</a>    <span class="k">def</span> <span class="nf">prediction_step</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">model</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span>
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">prediction_loss_only</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">ignore_masking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">training</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">testing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span>
         <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
         <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
         <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span>
     <span class="p">]:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overriding :obj:`Trainer.prediction_step()`</span>
 <span class="sd">        to provide more flexibility to unpack results from the model,</span>
 <span class="sd">        like returning labels that are not exactly one input feature</span>
 <span class="sd">        model</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="n">inputs</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_amp</span><span class="p">:</span>
                 <span class="k">with</span> <span class="n">autocast</span><span class="p">():</span>
-                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="n">ignore_masking</span><span class="p">)</span>
+                    <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ignore_masking</span><span class="o">=</span><span class="n">ignore_masking</span><span class="p">)</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">testing</span><span class="p">:</span>
             <span class="n">loss</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="n">nested_detach</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">])</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">nested_detach</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">loss</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">nested_detach</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">prediction_loss_only</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-
-        <span class="n">predictions</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;predictions&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
-        <span class="n">labels</span> <span class="o">=</span> <span class="n">outputs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span>
 
         <span class="c1"># TODO: define metadata dict in the model for logging</span>
         <span class="c1"># other_outputs = {</span>
@@ -441,7 +475,7 @@
         <span class="n">ignore_keys</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">metric_key_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;eval&quot;</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvalLoopOutput</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Overriding :obj:`Trainer.prediction_loop()`</span>
 <span class="sd">        (shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`)</span>
 <span class="sd">        to provide more flexibility to work with streaming metrics</span>
@@ -474,12 +508,12 @@
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">description</span> <span class="o">==</span> <span class="s2">&quot;Prediction&quot;</span><span class="p">:</span>
-            <span class="n">ignore_masking</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">testing</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">ignore_masking</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">testing</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="c1"># set the model</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">wrapper_module</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
         <span class="c1"># reset metrics for the dataset (Train, Valid or Test)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">:</span>
             <span class="n">model</span><span class="o">.</span><span class="n">reset_metrics</span><span class="p">()</span>
@@ -538,17 +572,15 @@
                 <span class="n">inputs</span><span class="p">,</span>
                 <span class="n">prediction_loss_only</span><span class="p">,</span>
                 <span class="n">ignore_keys</span><span class="o">=</span><span class="n">ignore_keys</span><span class="p">,</span>
-                <span class="n">ignore_masking</span><span class="o">=</span><span class="n">ignore_masking</span><span class="p">,</span>
+                <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">,</span>
             <span class="p">)</span>
 
             <span class="c1"># Updates metrics</span>
             <span class="c1"># TODO: compute metrics each N eval_steps to speedup evaluation</span>
             <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="kc">None</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">testing</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">step</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">compute_metrics_each_n_steps</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span>
-                        <span class="n">preds</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">metric_key_prefix</span><span class="p">,</span> <span class="n">forward</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">call_body</span><span class="o">=</span><span class="kc">False</span>
-                    <span class="p">)</span>
+                    <span class="n">metrics_results_detailed</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">calculate_metrics</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 
             <span class="c1"># Update containers on host</span>
             <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -565,6 +597,11 @@
                     <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span><span class="n">labels_host</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">preds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">predict_top_k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">assert</span> <span class="p">(</span>
+                        <span class="s2">&quot;next-item&quot;</span> <span class="ow">in</span> <span class="n">preds</span>
+                    <span class="p">),</span> <span class="s2">&quot;Top-k prediction is specific to NextItemPredictionTask&quot;</span>
+                    <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;next-item&quot;</span><span class="p">]</span>
                 <span class="n">preds_sorted_item_scores</span><span class="p">,</span> <span class="n">preds_sorted_item_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span>
                     <span class="n">preds</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">predict_top_k</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span>
                 <span class="p">)</span>
@@ -671,7 +708,7 @@
         <span class="c1"># Get metrics :</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># Computing the metrics results as the average of all steps</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_metrics</span> <span class="ow">and</span> <span class="n">testing</span><span class="p">:</span>
             <span class="n">streaming_metrics_results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">metric_key_prefix</span><span class="p">)</span>
             <span class="n">streaming_metrics_results_flattened</span> <span class="o">=</span> <span class="n">process_metrics</span><span class="p">(</span>
                 <span class="n">streaming_metrics_results</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="n">metric_key_prefix</span> <span class="o">+</span> <span class="s2">&quot;_/&quot;</span>
@@ -679,7 +716,8 @@
 
             <span class="n">metrics</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">metrics</span><span class="p">,</span> <span class="o">**</span><span class="n">streaming_metrics_results_flattened</span><span class="p">}</span>
 
-        <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_/loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_losses</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">testing</span><span class="p">:</span>
+            <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_/loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_losses</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">EvalLoopOutput</span><span class="p">(</span>
             <span class="n">predictions</span><span class="o">=</span><span class="n">all_preds_item_ids_scores</span><span class="p">,</span>
@@ -689,7 +727,7 @@
         <span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_save_model_and_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_model_class</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the serialized model + trainer and random states.</span>
 
 <span class="sd">        Parameters</span>
@@ -699,11 +737,6 @@
 <span class="sd">            by default False</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">import</span> <span class="nn">os</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">cloudpickle</span>
-        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="n">cloudpickle</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Saving model...&quot;</span><span class="p">)</span>
         <span class="n">output_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
@@ -715,14 +748,10 @@
         <span class="c1"># save the serialized model</span>
         <span class="k">if</span> <span class="n">save_model_class</span><span class="p">:</span>
             <span class="c1"># TODO : fix serialization of DatasetSchema object</span>
-            <span class="k">if</span> <span class="n">cloudpickle</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;cloudpickle is required to save model class&quot;</span><span class="p">)</span>
-
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;model_class.pkl&quot;</span><span class="p">),</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out</span><span class="p">:</span>
-                <span class="n">cloudpickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">wrapper_module</span><span class="p">,</span> <span class="n">out</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Trainer.load_model_trainer_states_from_checkpoint"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.Trainer.load_model_trainer_states_from_checkpoint">[docs]</a>    <span class="k">def</span> <span class="nf">load_model_trainer_states_from_checkpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">checkpoint_path</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This method loads the checkpoints states of the model, trainer and random states.</span>
 <span class="sd">        If model is None the serialized model class is loaded from checkpoint.</span>
 <span class="sd">        It does not loads the optimizer and LR scheduler states (for that call trainer.train()</span>
@@ -743,9 +772,11 @@
             <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;cloudpickle is required to load model class&quot;</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading model class&quot;</span><span class="p">)</span>
-            <span class="n">model</span> <span class="o">=</span> <span class="n">cloudpickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="s2">&quot;model_class.pkl&quot;</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">))</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">cloudpickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">checkpoint_path</span><span class="p">,</span> <span class="s2">&quot;t4rec_model_class.pkl&quot;</span><span class="p">),</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span>
+            <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">HFWrapper</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading weights of previously trained model&quot;</span><span class="p">)</span>
         <span class="c1"># Restoring model weights</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span>
@@ -779,7 +810,7 @@
         <span class="n">metrics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
         <span class="n">metric_key_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        If --log_predictions is enabled, calls a callback function to</span>
 <span class="sd">        log predicted item ids, scores, metadata and metrics.</span>
 <span class="sd">        Parameters</span>
@@ -864,7 +895,7 @@
 
 
 <div class="viewcode-block" id="IncrementalLoggingCallback"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.IncrementalLoggingCallback">[docs]</a><span class="k">class</span> <span class="nc">IncrementalLoggingCallback</span><span class="p">(</span><span class="n">TrainerCallback</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An :class:`~transformers.TrainerCallback` that changes the state of the Trainer</span>
 <span class="sd">    on specific hooks for the purpose of the incremental logging</span>
 <span class="sd">    Parameters</span>
@@ -889,7 +920,7 @@
 
 
 <div class="viewcode-block" id="DatasetMock"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.DatasetMock">[docs]</a><span class="k">class</span> <span class="nc">DatasetMock</span><span class="p">(</span><span class="n">Dataset</span><span class="p">,</span> <span class="n">Sized</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mock to inform HF Trainer that the dataset is sized,</span>
 <span class="sd">    and can be obtained via the generated/provided data loader</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -899,21 +930,6 @@
 
     <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nsteps</span></div>
-
-
-<div class="viewcode-block" id="HFWrapper"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.HFWrapper">[docs]</a><span class="k">class</span> <span class="nc">HFWrapper</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Prepare the signature of the forward method</span>
-<span class="sd">    as required by HF Trainer</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">wrapper_module</span> <span class="o">=</span> <span class="n">model</span>
-
-<div class="viewcode-block" id="HFWrapper.forward"><a class="viewcode-back" href="../../../api/transformers4rec.torch.html#transformers4rec.torch.trainer.HFWrapper.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">inputs</span> <span class="o">=</span> <span class="n">kwargs</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wrapper_module</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
@@ -940,7 +956,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

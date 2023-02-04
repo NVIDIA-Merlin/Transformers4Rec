@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/utils/examples_utils.html" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -24,7 +26,14 @@
     <link rel="search" title="Search" href="../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -45,7 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example Notebooks</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API Documentation</a></li>
@@ -86,7 +95,7 @@
 
 
 <div class="viewcode-block" id="list_files"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.examples_utils.list_files">[docs]</a><span class="k">def</span> <span class="nf">list_files</span><span class="p">(</span><span class="n">startpath</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Util function to print the nested structure of a directory</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirs</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">startpath</span><span class="p">):</span>
@@ -99,7 +108,7 @@
 
 
 <div class="viewcode-block" id="visualize_response"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.examples_utils.visualize_response">[docs]</a><span class="k">def</span> <span class="nf">visualize_response</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">top_k</span><span class="p">,</span> <span class="n">session_col</span><span class="o">=</span><span class="s2">&quot;session_id&quot;</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Util function to extract top-k encoded item-ids from logits</span>
 
 <span class="sd">    Parameters</span>
@@ -122,7 +131,7 @@
 
 
 <div class="viewcode-block" id="fit_and_evaluate"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.examples_utils.fit_and_evaluate">[docs]</a><span class="k">def</span> <span class="nf">fit_and_evaluate</span><span class="p">(</span><span class="n">trainer</span><span class="p">,</span> <span class="n">start_time_index</span><span class="p">,</span> <span class="n">end_time_index</span><span class="p">,</span> <span class="n">input_dir</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Util function for time-window based fine-tuning using the T4rec Trainer class.</span>
 <span class="sd">    Iteratively train using data of a given index and evaluate on the validation data</span>
 <span class="sd">    of the following index.</span>
@@ -206,7 +215,18 @@
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>

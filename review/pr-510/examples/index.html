@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/index.html" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -26,7 +28,14 @@
     <link rel="prev" title="Multi-GPU data-parallel training using the Trainer class" href="../multi_gpu_train.html" /> 
 </head>
 
-<body class="wy-body-for-nav"> 
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
   <div class="wy-grid-for-nav">
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
@@ -47,7 +56,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../why_transformers4rec.html">Why Transformers4Rec?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../model_definition.html">Model Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../training_eval.html">Training and Evaluation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-end pipeline with NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Example Notebooks</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started-session-based/index.html">Getting Started: Session-based Recommendation with Synthetic Data</a></li>
@@ -138,15 +147,15 @@ The container is available from the NGC catalog at the following URL:</p>
 <ol>
 <li><p>If you haven’t already created a Docker volume to share models and datasets
 between containers, create the volume by running the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker volume create merlin-examples
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>volume<span class="w"> </span>create<span class="w"> </span>merlin-examples
 </pre></div>
 </div>
 </li>
 <li><p>Pull and start the container by running the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker run --gpus all --rm -it <span class="se">\</span>
-  -p <span class="m">8888</span>:8888 -p <span class="m">8797</span>:8787 -p <span class="m">8796</span>:8786 --ipc<span class="o">=</span>host <span class="se">\</span>
-  -v merlin-examples:/workspace/data <span class="se">\</span>
-  &lt;docker container&gt; /bin/bash
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span><span class="m">8888</span>:8888<span class="w"> </span>-p<span class="w"> </span><span class="m">8797</span>:8787<span class="w"> </span>-p<span class="w"> </span><span class="m">8796</span>:8786<span class="w"> </span>--ipc<span class="o">=</span>host<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-v<span class="w"> </span>merlin-examples:/workspace/data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>&lt;docker<span class="w"> </span>container&gt;<span class="w"> </span>/bin/bash
 </pre></div>
 </div>
 <p>The container opens a shell when the run command execution is completed.
@@ -156,20 +165,20 @@ Your shell prompt should look similar to the following example:</p>
 </div>
 </li>
 <li><p>Install JupyterLab with <code class="docutils literal notranslate"><span class="pre">pip</span></code> by running the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip install jupyterlab
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jupyterlab
 </pre></div>
 </div>
 <p>For more information, see the JupyterLab <a class="reference external" href="https://jupyterlab.readthedocs.io/en/stable/getting_started/installation.html">Installation Guide</a>.</p>
 </li>
 <li><p>Start the JupyterLab server by running the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>jupyter-lab --allow-root --ip<span class="o">=</span><span class="s1">&#39;0.0.0.0&#39;</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>jupyter-lab<span class="w"> </span>--allow-root<span class="w"> </span>--ip<span class="o">=</span><span class="s1">&#39;0.0.0.0&#39;</span>
 </pre></div>
 </div>
 <p>View the messages in your terminal to identify the URL for JupyterLab.
 The messages in your terminal show similar lines to the following example:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>Or copy and paste one of these URLs:
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>Or<span class="w"> </span>copy<span class="w"> </span>and<span class="w"> </span>paste<span class="w"> </span>one<span class="w"> </span>of<span class="w"> </span>these<span class="w"> </span>URLs:
 http://2efa5b50b909:8888/lab?token<span class="o">=</span>9b537d1fda9e4e9cadc673ba2a472e247deee69a6229ff8d
-or http://127.0.0.1:8888/lab?token<span class="o">=</span>9b537d1fda9e4e9cadc673ba2a472e247deee69a6229ff8d
+or<span class="w"> </span>http://127.0.0.1:8888/lab?token<span class="o">=</span>9b537d1fda9e4e9cadc673ba2a472e247deee69a6229ff8d
 </pre></div>
 </div>
 </li>
@@ -209,7 +218,18 @@ or http://127.0.0.1:8888/lab?token<span class="o">=</span>9b537d1fda9e4e9cadc673
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script> 
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
 
 </body>
 </html>
