@@ -8,39 +8,36 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: "ubuntu-latest"
     strategy:
       matrix:
         python-version: [3.9]
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.9
       - name: Install Ubuntu packages
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y protobuf-compiler pandoc
+          sudo apt-get install -y protobuf-compiler
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .[all]
+          python -m pip install --upgrade pip tox
       - name: Build
         run: |
-          python setup.py develop
-      - name: Report the versions to build
+          tox -vv -e docs-multi
+      - name: Delete unnecessary files
         run: |
-          sphinx-multiversion --dump-metadata docs/source docs/build/html | jq "keys"
-      - name: Building docs (multiversion)
-        run: |
-          sphinx-multiversion docs/source docs/build/html
+          find docs/build -name .doctrees -prune -exec rm -rf {} \;
+          find docs/build -name .buildinfo -exec rm {} \;
       - name: Upload HTML
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: html-build-artifact
           path: docs/build/html
@@ -52,7 +49,7 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: "gh-pages"
       - name: Initialize Git configuration
@@ -60,7 +57,7 @@ jobs:
           git config user.name docs-sched-rebuild
           git config user.email do-not-send-@github.com
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: html-build-artifact
       - name: Copy HTML directories

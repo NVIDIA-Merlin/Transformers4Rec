@@ -19,6 +19,7 @@ import logging
 import os
 from functools import partial
 
+import numpy as np
 import pandas as pd
 import torch
 import transformers
@@ -29,6 +30,7 @@ from exp_outputs import (
     log_metric_results,
     log_parameters,
 )
+from merlin.io import Dataset
 from transf_exp_args import DataArguments, ModelArguments, TrainingArguments
 from transformers import HfArgumentParser, set_seed
 from transformers.trainer_utils import is_main_process
@@ -36,6 +38,7 @@ from transformers.trainer_utils import is_main_process
 import transformers4rec.torch as t4r
 from merlin_standard_lib import Schema, Tag
 from transformers4rec.torch import Trainer
+from transformers4rec.torch.utils.data_utils import MerlinDataLoader
 from transformers4rec.torch.utils.examples_utils import wipe_memory
 
 logger = logging.getLogger(__name__)
@@ -137,7 +140,6 @@ def main():
 
     # Configures the next-item prediction-task
     prediction_task = t4r.NextItemPredictionTask(
-        hf_format=True,
         weight_tying=model_args.mf_constrained_embeddings,
         softmax_temperature=model_args.softmax_temperature,
         metrics=metrics,
@@ -182,6 +184,64 @@ def main():
         trainer.log(results_avg_time)
 
         log_aot_metric_results(training_args.output_dir, results_avg_time)
+
+    # Mimic the inference by manually computing recall@10 using the evaluation data
+    # of the last time-index.
+    eval_path = os.path.join(
+        data_args.data_path,
+        str(
+            data_args.final_time_window_index,
+        ).zfill(data_args.time_window_folder_pad_digits),
+        "test.parquet" if training_args.eval_on_test_set else "valid.parquet",
+    )
+    prediction_data = pd.read_parquet(eval_path)
+    # Extract label
+    labels = prediction_data["sess_pid_seq"].apply(lambda x: x[-1]).values
+
+    # Truncate input sequences up to last item - 1 to mimic the inference
+    def mask_last_interaction(x):
+        return list(x[:-1])
+
+    list_columns = schema.select_by_tag("list").column_names
+    for col in list_columns:
+        prediction_data[col] = prediction_data[col].apply(mask_last_interaction)
+    # Get top-10 predictions
+    test_loader = MerlinDataLoader.from_schema(
+        schema,
+        Dataset(prediction_data),
+        training_args.per_device_eval_batch_size,
+        max_sequence_length=training_args.max_sequence_length,
+        shuffle=False,
+    )
+    trainer.test_dataloader = test_loader
+    trainer.args.predict_top_k = 10
+    topk_preds = trainer.predict(test_loader).predictions[0]
+    # Compute recall@10
+    recall_10 = recall(topk_preds, labels)
+    logger.info(f"Recall@10 of manually masked test data = {str(recall_10)}")
+    output_file = os.path.join(training_args.output_dir, "eval_results_over_time.txt")
+    with open(output_file, "a") as writer:
+        writer.write(f"\n***** Recall@10 of simulated inference  = {recall_10} *****\n")
+    # Verify that the recall@10 from train.evaluate() matches the recall@10 calculated manually
+    if not isinstance(input_module.masking, t4r.masking.PermutationLanguageModeling):
+        # TODO fix inference discrepancy for permutation language modeling
+        assert np.isclose(recall_10, results_over_time[2]["eval_/next-item/recall_at_10"], rtol=0.1)
+
+
+def recall(predicted_items: np.ndarray, real_items: np.ndarray) -> float:
+    bs, top_k = predicted_items.shape
+    valid_rows = real_items != 0
+
+    # reshape predictions and labels to compare
+    # the top-10 predicted item-ids with the label id.
+    real_items = real_items.reshape(bs, 1, -1)
+    predicted_items = predicted_items.reshape(bs, 1, top_k)
+
+    num_relevant = real_items.shape[-1]
+    predicted_correct_sum = (predicted_items == real_items).sum(-1)
+    predicted_correct_sum = predicted_correct_sum[valid_rows]
+    recall_per_row = predicted_correct_sum / num_relevant
+    return np.mean(recall_per_row)
 
 
 def incremental_train_eval(

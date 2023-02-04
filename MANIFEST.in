@@ -15,6 +15,7 @@ recursive-include tests *.pbtxt
 recursive-include tests *.py
 
 recursive-include transformers4rec *.parquet *.json *.py *.typed
+recursive-include merlin_standard_lib *.py
 
 
 # Ignore notebooks & examples

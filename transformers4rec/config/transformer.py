@@ -18,11 +18,6 @@ import transformers
 
 from merlin_standard_lib import Registry
 
-try:
-    import tensorflow as tf
-except ImportError:
-    tf = None
-
 transformer_registry: Registry = Registry("transformers")
 
 
@@ -63,48 +58,6 @@ class T4RecConfig:
             loss_reduction=loss_reduction,
         ).to_model(**kwargs)
 
-    if tf:
-
-        def to_tf_model(
-            self,
-            input_features,
-            *prediction_task,
-            task_blocks=None,
-            task_weights=None,
-            loss_reduction=tf.reduce_mean,
-            **kwargs
-        ):
-            from .. import tf as tf4rec
-
-            if not isinstance(input_features, tf4rec.TabularSequenceFeatures):
-                raise ValueError("`input_features` must an instance of SequentialTabularFeatures")
-            if not all(isinstance(t, tf4rec.PredictionTask) for t in prediction_task):
-                raise ValueError(
-                    "`task` is of the wrong type, please provide one or multiple "
-                    "instance(s) of PredictionTask"
-                )
-
-            body = tf4rec.SequentialBlock(
-                [input_features, tf4rec.TransformerBlock(self, masking=input_features.masking)]
-            )
-
-            return tf4rec.Model(
-                tf4rec.Head(
-                    body,
-                    *prediction_task,
-                    task_blocks=task_blocks,
-                    task_weights=task_weights,
-                    loss_reduction=loss_reduction,
-                    inputs=input_features,
-                ),
-                **kwargs,
-            )
-
-    def to_huggingface_tf_model(self):
-        model_cls = transformers.TF_MODEL_MAPPING[self.transformers_config_cls]
-
-        return model_cls(self)
-
     @property
     def transformers_config_cls(self):
         return self.__class__.__bases__[1]
@@ -132,6 +85,8 @@ class ReformerConfig(T4RecConfig, transformers.ReformerConfig):
         axial_pos_shape_first_dim=4,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             attention_head_size=d_model,
@@ -213,6 +168,8 @@ class LongformerConfig(T4RecConfig, transformers.LongformerConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_hidden_layers=n_layer,
@@ -246,6 +203,8 @@ class ElectraConfig(T4RecConfig, transformers.ElectraConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             embedding_size=d_model,
@@ -281,6 +240,8 @@ class AlbertConfig(T4RecConfig, transformers.AlbertConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_attention_heads=n_head,
@@ -353,6 +314,8 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_hidden_layers=n_layer,
@@ -363,6 +326,7 @@ class BertConfig(T4RecConfig, transformers.BertConfig):
             dropout=dropout,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
+            max_position_embeddings=total_seq_length,
             vocab_size=1,
             **kwargs,
         )
@@ -385,6 +349,8 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
         log_attention_weights=False,
         **kwargs
     ):
+        # To account for target positions at inference mode, we extend the maximum sequence length.
+        total_seq_length = total_seq_length + 2
         return cls(
             hidden_size=d_model,
             num_hidden_layers=n_layer,
@@ -395,6 +361,7 @@ class RobertaConfig(T4RecConfig, transformers.RobertaConfig):
             dropout=dropout,
             pad_token_id=pad_token,
             output_attentions=log_attention_weights,
+            max_position_embeddings=total_seq_length,
             vocab_size=1,
             **kwargs,
         )

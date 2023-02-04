@@ -1,0 +1,11 @@
+Sphinx<3.6
+sphinx_rtd_theme==1.0.0
+sphinx-multiversion@git+https://github.com/mikemckiernan/sphinx-multiversion.git
+sphinxcontrib-copydirs@git+https://github.com/mikemckiernan/sphinxcontrib-copydirs.git
+sphinx-external-toc<0.4
+ipython==8.1.1
+jinja2<3.1
+markupsafe==2.0.1
+natsort==8.0.1
+myst-nb<0.14
+linkify-it-py<1.1

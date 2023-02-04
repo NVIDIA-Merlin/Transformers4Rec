@@ -19,3 +19,4 @@ balanced_wrapping = true
 indent = "    "
 known_third_party = ["cudf", "cupy", "dask", "dask_cuda", "dask_cudf", "numba", "numpy", "pytest", "rmm", "NVTabular"]
 skip = ["build",".eggs"]
+

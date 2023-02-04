@@ -41,9 +41,10 @@ def read_requirements(filename):
 
 requirements = {
     "base": read_requirements("requirements/base.txt"),
-    "tensorflow": read_requirements("requirements/tensorflow.txt"),
     "pytorch": read_requirements("requirements/pytorch.txt"),
     "nvtabular": read_requirements("requirements/nvtabular.txt"),
+    "dataloader": read_requirements("requirements/dataloader.txt"),
+    "docs": read_requirements("requirements/docs.txt"),
     "dev": read_requirements("requirements/dev.txt"),
 }
 
@@ -51,7 +52,7 @@ setup(
     name="transformers4rec",
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    packages=find_packages(),
+    packages=find_packages(include=["transformers4rec", "merlin_standard_lib"]),
     url="https://github.com/NVIDIA-Merlin/Transformers4Rec",
     author="NVIDIA Corporation",
     license="Apache 2.0",

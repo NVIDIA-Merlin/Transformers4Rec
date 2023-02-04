@@ -36,9 +36,10 @@ class T4RecTrainingArguments(TrainingArguments):
     eval_on_test_set:
     eval_steps_on_train_set:
     predict_top_k:  Option[int], int
-        Truncate recommendation list to the highest top-K predicted items
-        (do not affect evaluation metrics computation)
-        by default 10
+        Truncate recommendation list to the highest top-K predicted items,
+        (do not affect evaluation metrics computation),
+        this parameter is specific to NextItemPredictionTask.
+        by default 0
     log_predictions : Optional[bool], bool
         log predictions, labels and metadata features each --compute_metrics_each_n_steps
         (for test set).
@@ -71,10 +72,10 @@ class T4RecTrainingArguments(TrainingArguments):
     )
 
     data_loader_engine: str = field(
-        default="nvtabular",
+        default="merlin",
         metadata={
             "help": "Parquet data loader engine. "
-            "'nvtabular': GPU-accelerated parquet data loader from NVTabular, 'pyarrow': read whole parquet into memory."
+            "'merlin': GPU-accelerated parquet data loader from Merlin, 'pyarrow': read whole parquet into memory."
         },
     )
 
@@ -89,9 +90,10 @@ class T4RecTrainingArguments(TrainingArguments):
     )
 
     predict_top_k: int = field(
-        default=10,
+        default=0,
         metadata={
-            "help": "Truncate recommendation list to the highest top-K predicted items (do not affect evaluation metrics computation)"
+            "help": "Truncate recommendation list to the highest top-K predicted items (do not affect evaluation metrics computation), "
+            "this parameter is specific to NextItemPredictionTask."
         },
     )
 

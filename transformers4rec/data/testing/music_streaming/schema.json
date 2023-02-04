@@ -1,0 +1,162 @@
+{
+    "feature": [
+      {
+        "name": "session_id",
+        "type": "INT",
+        "intDomain": {
+          "name": "session_id",
+          "max": "10000",
+          "isCategorical": true
+        },
+        "annotation": {
+          "tag": [
+            "categorical",
+            "session_id"
+          ]
+        }
+      },
+      {
+        "name": "item_id",
+        "type": "INT",
+        "valueCount": {
+          "min": "1",
+          "max": "20"
+        },
+        "intDomain": {
+          "name": "item_id",
+          "max": "10000",
+          "isCategorical": true,
+          "is_list": true
+        },
+        "annotation": {
+          "tag": [
+            "categorical",
+            "item_id",
+            "item", 
+            "list"
+          ]
+        }
+      },
+      {
+        "name": "item_category",
+        "type": "INT",
+        "is_list": true,
+        "valueCount": {
+          "min": "1",
+          "max": "20"
+        },
+        "intDomain": {
+          "name": "item_category",
+          "max": "100",
+          "isCategorical": true,
+          "is_list": true
+        },
+        "annotation": {
+          "tag": [
+            "categorical",
+            "item",
+            "list"
+        
+          ]
+        }
+      },
+      {
+        "name": "item_recency",
+        "type": "FLOAT",
+        "valueCount": {
+          "min": "1",
+          "max": "20"
+        },
+        "floatDomain": {
+          "name": "item_recency",
+          "max": 1.0,
+          "is_list": true
+        },
+        "annotation": {
+          "tag": [
+            "continuous",
+            "item",
+            "list"
+          ]
+        }
+      },
+      {
+        "name": "item_genres",
+        "valueCount": {
+          "min": "1",
+          "max": "20"
+        },
+        "type": "INT",
+        "intDomain": {
+          "name": "genres",
+          "max": "100",
+          "isCategorical": true,
+          "is_list": true
+        },
+        "annotation": {
+          "tag": [
+            "categorical",
+            "item",
+            "list"
+          ]
+        }
+      },
+      {
+        "name": "user_id",
+        "type": "INT",
+        "intDomain": {
+          "name": "user_id",
+          "max": "10000",
+          "isCategorical": true
+        },
+        "annotation": {
+          "tag": [
+            "categorical",
+            "user_id"
+          ]
+        }
+      },
+      {
+        "name": "country",
+        "type": "INT",
+        "intDomain": {
+          "name": "country",
+          "max": "100",
+          "isCategorical": true
+        },
+        "annotation": {
+          "tag": [
+            "categorical",
+            "user"
+          ]
+        }
+      },
+      {
+        "name": "click",
+        "annotation": {
+          "tag": [
+            "binary_classification",
+            "target"
+          ]
+        }
+      },
+      {
+        "name": "play_percentage",
+        "annotation": {
+          "tag": [
+            "regression",
+            "target"
+          ]
+        }
+      },
+      {
+        "name": "like",
+        "annotation": {
+          "tag": [
+            "binary_classification",
+            "target"
+          ]
+        }
+      }
+    ]
+}

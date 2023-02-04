@@ -1,0 +1,7 @@
+-r dev.txt
+-r pytorch.txt
+
+pytest>=5
+pytest-cov>=2
+testbook
+ipykernel

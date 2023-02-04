@@ -15,6 +15,8 @@
 #
 import copy
 import inspect
+import os
+import pathlib
 from collections import defaultdict
 from types import SimpleNamespace
 from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
@@ -22,6 +24,8 @@ from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
 import numpy as np
 import torch
 import torchmetrics as tm
+from merlin.schema import ColumnSchema
+from merlin.schema import Schema as Core_Schema
 from tqdm import tqdm
 from transformers.modeling_utils import SequenceSummary
 
@@ -141,17 +145,29 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
                 metric.to(device)
         self.built = True
 
-    def forward(self, inputs, **kwargs):
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        targets: torch.Tensor = None,
+        training: bool = False,
+        testing: bool = False,
+    ):
         x = inputs
 
         if len(x.size()) == 3 and self.summary_type:
             x = self.sequence_summary(x)
 
         if self.task_block:
-            x = self.task_block(x)
+            x = self.task_block(x)  # type: ignore
 
         if self.pre:
-            x = self.pre(x)
+            x = self.pre(x)  # type: ignore
+
+        if training or testing:
+            # add support of computing the loss inside the forward
+            # and return a dictionary as standard output
+            loss = self.loss(x, target=targets)
+            return {"loss": loss, "labels": targets, "predictions": x}
 
         return x
 
@@ -170,45 +186,14 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     def set_metrics(self, metrics):
         self.metrics = torch.nn.ModuleList(metrics)
 
-    def compute_loss(
-        self,
-        inputs: Union[torch.Tensor, TabularData],
-        targets: Union[torch.Tensor, TabularData],
-        compute_metrics: bool = True,
-        training: bool = False,
-        ignore_masking: bool = False,
-        **kwargs,
-    ) -> torch.Tensor:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
-
-        predictions = self(inputs, training=training, ignore_masking=ignore_masking)
-        loss = self.loss(predictions, targets)
-
-        if compute_metrics:
-            self.calculate_metrics(
-                predictions, targets, mode="train", ignore_masking=ignore_masking, forward=False
-            )
-
-            return loss
-
-        return loss
-
     def calculate_metrics(  # type: ignore
         self,
-        predictions: Union[torch.Tensor, TabularData],
-        targets: Union[torch.Tensor, TabularData],
-        mode: str = "val",
-        forward: bool = True,
-        ignore_masking: bool = False,
-        **kwargs,
+        predictions: torch.Tensor,
+        targets: torch.Tensor,
     ) -> Dict[str, torch.Tensor]:
-        if isinstance(targets, dict) and self.target_name:
-            targets = targets[self.target_name]
 
         outputs = {}
-        if forward:
-            predictions = self(predictions, ignore_masking=ignore_masking)
+
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))
 
         from .prediction_task import BinaryClassificationTask
@@ -382,78 +367,80 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(
         self,
         body_outputs: Union[torch.Tensor, TabularData],
-        training: bool = True,
+        training: bool = False,
+        testing: bool = False,
+        targets: Union[torch.Tensor, TabularData] = None,
         call_body: bool = False,
-        always_output_dict: bool = False,
-        ignore_masking: bool = True,
         **kwargs,
     ) -> Union[torch.Tensor, TabularData]:
         outputs = {}
 
         if call_body:
-            body_outputs = self.body(body_outputs, training=training, ignore_masking=ignore_masking)
+            body_outputs = self.body(body_outputs, training=training, testing=testing, **kwargs)
 
-        for name, task in self.prediction_task_dict.items():
-            outputs[name] = task(body_outputs, ignore_masking=ignore_masking, **kwargs)
-
-        if len(outputs) == 1 and not always_output_dict:
-            return outputs[list(outputs.keys())[0]]
+        if training or testing:
+            losses = []
+            labels = {}
+            predictions = {}
+            for name, task in self.prediction_task_dict.items():
+                if isinstance(targets, dict):
+                    label = targets.get(task.target_name, None)
+                else:
+                    label = targets
+                if label is not None:
+                    # Remove dimension `1` as merlin dataloader returns tensors of shape (-1, 1)
+                    label = torch.squeeze(label.float(), -1)
+                task_output = task(
+                    body_outputs, targets=label, training=training, testing=testing, **kwargs
+                )
+                labels[name] = task_output["labels"]
+                predictions[name] = task_output["predictions"]
+                losses.append(task_output["loss"] * self._task_weights[name])
+            loss_tensor = torch.stack(losses)
+            loss = getattr(loss_tensor, self.loss_reduction)()
+            outputs = {"loss": loss, "labels": labels, "predictions": predictions}
+        else:
+            for name, task in self.prediction_task_dict.items():
+                outputs[name] = task(
+                    body_outputs, targets=targets, training=training, testing=testing, **kwargs
+                )
 
         return outputs
 
-    def compute_loss(  # type: ignore
-        self,
-        body_outputs: Union[torch.Tensor, TabularData],
-        targets: Union[torch.Tensor, TabularData],
-        training: bool = True,
-        compute_metrics: bool = True,
-        call_body: bool = False,
-        ignore_masking: bool = True,
-        **kwargs,
-    ) -> torch.Tensor:
-        losses = []
-
-        if call_body:
-            body_outputs = self.body(body_outputs, training=training, ignore_masking=ignore_masking)
-
-        for name, task in self.prediction_task_dict.items():
-            loss = task.compute_loss(
-                body_outputs,
-                targets,
-                compute_metrics=compute_metrics,
-                ignore_masking=ignore_masking,
-                **kwargs,
-            )
-            losses.append(loss * self._task_weights[name])
-
-        loss_tensor = torch.stack(losses)
-
-        return getattr(loss_tensor, self.loss_reduction)()
-
     def calculate_metrics(  # type: ignore
         self,
-        body_outputs: Union[torch.Tensor, TabularData],
+        predictions: Union[torch.Tensor, TabularData],
         targets: Union[torch.Tensor, TabularData],
-        mode: str = "val",
-        forward=True,
-        call_body=False,
-        ignore_masking=True,
-        **kwargs,
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        """Calculate metrics of the task(s) set in the Head instance.
+
+        Parameters
+        ----------
+        predictions: Union[torch.Tensor, TabularData]
+            The predictions tensors to use for calculate metrics.
+            They can be either a torch.Tensor if a single task is used or
+            a dictionary of torch.Tensor if multiple tasks are used. In the
+            second case, the dictionary is indexed by the tasks names.
+        targets:
+            The tensor or dictionary of targets to use for computing the metrics of
+            one or multiple tasks.
+        """
         metrics = {}
 
-        if call_body:
-            body_outputs = self.body(body_outputs, training=False, ignore_masking=ignore_masking)
-
         for name, task in self.prediction_task_dict.items():
+            label = targets
+            output = predictions
+            if isinstance(targets, dict):
+                # The labels are retrieved from the task's output
+                # and indexed by the task name.
+                label = targets[name]
+            if isinstance(predictions, dict):
+                output = predictions[name]
+
             metrics.update(
                 task.calculate_metrics(
-                    body_outputs,
-                    targets,
-                    mode=mode,
-                    forward=forward,
-                    ignore_masking=ignore_masking,
-                    **kwargs,
+                    predictions=output,
+                    targets=label,
                 )
             )
 
@@ -491,32 +478,28 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
 
 class Model(torch.nn.Module, LossMixin, MetricsMixin):
-    """Model class that can aggregate one of multiple heads.
-
-    Parameters
-    ----------
-    head: Head
-        One or more heads of the model.
-    head_weights: List[float], optional
-        Weight-value to use for each head.
-    head_reduction: str, optional
-        How to reduce the losses into a single tensor when multiple heads are used.
-    optimizer: Type[torch.optim.Optimizer]
-        Optimizer-class to use during fitting
-    name: str, optional
-        Name of the model.
-    """
-
     def __init__(
         self,
         *head: Head,
         head_weights: Optional[List[float]] = None,
         head_reduction: str = "mean",
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
-        name=None,
+        name: str = None,
     ):
-        """
-        #TODO
+        """Model class that can aggregate one or multiple heads.
+
+        Parameters
+        ----------
+        head: Head
+            One or more heads of the model.
+        head_weights: List[float], optional
+            Weight-value to use for each head.
+        head_reduction: str, optional
+            How to reduce the losses into a single tensor when multiple heads are used.
+        optimizer: Type[torch.optim.Optimizer]
+            Optimizer-class to use during fitting
+        name: str, optional
+            Name of the model.
         """
         if head_weights:
             if not isinstance(head_weights, list):
@@ -534,40 +517,87 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_reduction = head_reduction
         self.optimizer = optimizer
 
-    def forward(self, inputs: TensorOrTabularData, training=True, **kwargs):
-        # TODO: Optimize this
-        outputs = {}
-        for head in self.heads:
-            outputs.update(
-                head(inputs, call_body=True, training=training, always_output_dict=True, **kwargs)
-            )
+    def forward(
+        self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs
+    ):
+        # Convert inputs to float32 which is the default type, expected by PyTorch
+        for name, val in inputs.items():
+            if torch.is_floating_point(val):
+                inputs[name] = val.to(torch.float32)
+        # Squeeze second dimension `1` of non-list inputs
+        for name, val in inputs.items():
+            inputs[name] = torch.squeeze(val, -1)
 
-        if len(outputs) == 1:
-            return outputs[list(outputs.keys())[0]]
+        if isinstance(targets, dict) and len(targets) == 0:
+            # `pyarrow`` dataloader is returning {} instead of None
+            # TODO remove this code when `PyarraowDataLoader` is dropped
+            targets = None
+
+        # TODO: Optimize this
+        if training or testing:
+            losses = []
+            labels = {}
+            predictions = {}
+            for i, head in enumerate(self.heads):
+                head_output = head(
+                    inputs,
+                    call_body=True,
+                    targets=targets,
+                    training=training,
+                    testing=testing,
+                    **kwargs,
+                )
+                labels.update(head_output["labels"])
+                predictions.update(head_output["predictions"])
+                losses.append(head_output["loss"] * self.head_weights[i])
+            loss_tensor = torch.stack(losses)
+            loss = getattr(loss_tensor, self.head_reduction)()
+            if len(labels) == 1:
+                labels = list(labels.values())[0]
+                predictions = list(predictions.values())[0]
+            return {"loss": loss, "labels": labels, "predictions": predictions}
+        else:
+            outputs = {}
+            for head in self.heads:
+                outputs.update(
+                    head(
+                        inputs,
+                        call_body=True,
+                        targets=targets,
+                        training=training,
+                        testing=testing,
+                        **kwargs,
+                    )
+                )
+            if len(outputs) == 1:
+                return list(outputs.values())[0]
 
         return outputs
 
-    def compute_loss(self, inputs, targets, compute_metrics=True, **kwargs) -> torch.Tensor:
-        losses = []
-
-        for i, head in enumerate(self.heads):
-            loss = head.compute_loss(
-                inputs, targets, call_body=True, compute_metrics=compute_metrics, **kwargs
-            )
-            losses.append(loss * self.head_weights[i])
-
-        loss_tensor = torch.stack(losses)
-
-        return getattr(loss_tensor, self.head_reduction)()
-
     def calculate_metrics(  # type: ignore
-        self, inputs, targets, mode="val", call_body=True, forward=True, **kwargs
+        self,
+        predictions: Union[torch.Tensor, TabularData],
+        targets: Union[torch.Tensor, TabularData],
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
+        """Calculate metrics of the task(s) set in the Head instance.
+
+        Parameters
+        ----------
+        predictions: Union[torch.Tensor, TabularData]
+            The predictions tensors returned by the model.
+            They can be either a torch.Tensor if a single task is used or
+            a dictionary of torch.Tensor if multiple heads/tasks are used. In the
+            second case, the dictionary is indexed by the tasks names.
+        targets:
+            The tensor or dictionary of targets returned by the model.
+            They are used for computing the metrics of one or multiple tasks.
+        """
         outputs = {}
         for head in self.heads:
             outputs.update(
                 head.calculate_metrics(
-                    inputs, targets, mode=mode, call_body=call_body, forward=forward, **kwargs
+                    predictions,
+                    targets,
                 )
             )
 
@@ -594,11 +624,15 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 super(BlockWithHeadLightning, self).__init__()
                 self.parent = parent_self
 
-            def forward(self, inputs, *args, **kwargs):
-                return self.parent(inputs, *args, **kwargs)
+            def forward(self, inputs, targets=None, training=False, testing=False, *args, **kwargs):
+                return self.parent(
+                    inputs, targets=targets, training=training, testing=testing, *args, **kwargs
+                )
 
-            def training_step(self, batch, batch_idx):
-                loss = self.parent.compute_loss(*batch)
+            def training_step(self, batch, batch_idx, targets=None, training=True, testing=False):
+                loss = self.parent(*batch, targets=targets, training=training, testing=testing)[
+                    "loss"
+                ]
                 self.log("train_loss", loss)
 
                 return loss
@@ -619,6 +653,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         amp=False,
         train=True,
         verbose=True,
+        compute_metric=True,
     ):
         if isinstance(dataloader, torch.utils.data.DataLoader):
             dataset = dataloader.dataset
@@ -639,15 +674,18 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 for batch_idx, (x, y) in batch_iterator:
                     if amp:
                         with torch.cuda.amp.autocast():
-                            loss = self.compute_loss(x, y)
+                            output = self(x, targets=y, training=True)
                     else:
-                        loss = self.compute_loss(x, y)
-
-                    losses.append(float(loss))
-
+                        output = self(x, targets=y, training=True)
+                    losses.append(float(output["loss"]))
+                    if compute_metric:
+                        self.calculate_metrics(
+                            output["predictions"],
+                            targets=output["labels"],
+                        )
                     if train:
                         optimizer.zero_grad()
-                        loss.backward()
+                        output["loss"].backward()
                         optimizer.step()
                 if verbose:
                     print(self.compute_metrics(mode="train"))
@@ -657,7 +695,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         return np.array(epoch_losses)
 
-    def evaluate(self, dataloader, verbose=True, mode="eval"):
+    def evaluate(
+        self, dataloader, targets=None, training=False, testing=True, verbose=True, mode="eval"
+    ):
         if isinstance(dataloader, torch.utils.data.DataLoader):
             dataset = dataloader.dataset
         else:
@@ -668,7 +708,11 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             batch_iterator = tqdm(batch_iterator)
         self.reset_metrics()
         for batch_idx, (x, y) in batch_iterator:
-            self.calculate_metrics(x, y, mode=mode)
+            output = self(x, targets=y, training=training, testing=testing)
+            self.calculate_metrics(
+                output["predictions"],
+                targets=output["labels"],
+            )
 
         return self.compute_metrics(mode=mode)
 
@@ -677,6 +721,114 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             return self.name
 
         return super(Model, self)._get_name()
+
+    @property
+    def input_schema(self):
+        # return the input schema given by the model
+        # loop over the heads to get input schemas
+        schemas = []
+        for head in self.heads:
+            schemas.append(head.body.inputs.schema)
+        model_schema = sum(schemas, Schema())
+
+        # TODO: rework T4R to use Merlin Schemas.
+        # In the meantime, we convert model_schema to merlin core schema
+        core_schema = Core_Schema()
+        for column in model_schema:
+            name = column.name
+
+            dtype = {0: np.float32, 2: np.int64, 3: np.float32}[column.type]
+            tags = column.tags
+            is_list = column.value_count.max > 0
+            int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
+            properties = {
+                "int_domain": int_domain,
+            }
+
+            col_schema = ColumnSchema(
+                name,
+                dtype=dtype,
+                tags=tags,
+                properties=properties,
+                is_list=is_list,
+                is_ragged=False,
+            )
+            core_schema[name] = col_schema
+        return core_schema
+
+    @property
+    def output_schema(self):
+        from .prediction_task import BinaryClassificationTask, RegressionTask
+
+        # if the model has one head with one task, the output is a tensor
+        # if multiple heads and/or multiple prediction task, the output is a dictionary
+        output_cols = []
+        for head in self.heads:
+            for name, task in head.prediction_task_dict.items():
+                target_dim = task.target_dim
+                int_domain = {"min": target_dim, "max": target_dim}
+                if (
+                    isinstance(task, (BinaryClassificationTask, RegressionTask))
+                    and not task.summary_type
+                ):
+                    is_list = True
+                else:
+                    is_list = False
+                properties = {
+                    "int_domain": int_domain,
+                }
+                col_schema = ColumnSchema(
+                    name, dtype=np.float32, properties=properties, is_list=is_list, is_ragged=False
+                )
+                output_cols.append(col_schema)
+
+        return Core_Schema(output_cols)
+
+    def save(self, path: Union[str, os.PathLike], model_name="t4rec_model_class"):
+        """Saves the model to f"{export_path}/{model_name}.pkl" using `cloudpickle`
+
+        Parameters
+        ----------
+        path : Union[str, os.PathLike]
+            Path to the directory where the T4Rec model should be saved.
+        model_name : str, optional
+           the name given to the pickle file storing the T4Rec model,
+            by default 't4rec_model_class'
+        """
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ValueError("cloudpickle is required to save model class")
+
+        export_path = pathlib.Path(path)
+        export_path.mkdir(exist_ok=True)
+
+        model_name = model_name + ".pkl"
+        export_path = export_path / model_name
+        with open(export_path, "wb") as out:
+            cloudpickle.dump(self, out)
+
+    @classmethod
+    def load(cls, path: Union[str, os.PathLike], model_name="t4rec_model_class") -> "Model":
+        """Loads a T4Rec model that was saved with `model.save()`.
+
+        Parameters
+        ----------
+        path : Union[str, os.PathLike]
+            Path to the directory where the T4Rec model is saved.
+        model_name : str, optional
+           the name given to the pickle file storing the T4Rec model,
+            by default 't4rec_model_class'.
+        """
+        try:
+            import cloudpickle
+        except ImportError:
+            raise ValueError("cloudpickle is required to load T4Rec model")
+
+        export_path = pathlib.Path(path)
+        model_name = model_name + ".pkl"
+        export_path = export_path / model_name
+        return cloudpickle.load(open(export_path, "rb"))
 
 
 def _output_metrics(metrics):

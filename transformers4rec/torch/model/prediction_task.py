@@ -23,6 +23,7 @@ import torchmetrics as tm
 
 from ..block.base import Block, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock
+from ..masking import MaskedLanguageModeling
 from ..ranking_metric import AvgPrecisionAt, NDCGAt, RecallAt
 from ..utils.torch_utils import LambdaModule
 from .base import BlockType, PredictionTask
@@ -43,11 +44,90 @@ class BinaryClassificationPrepareBlock(BuildableBlock):
 
 
 class BinaryClassificationTask(PredictionTask):
+    """Returns a ``PredictionTask`` for binary classification.
+
+    Example usage::
+
+        # Define the input module to process the tabular input features.
+        input_module = tr.TabularSequenceFeatures.from_schema(
+            schema,
+            max_sequence_length=max_sequence_length,
+            continuous_projection=d_model,
+            aggregation="concat",
+            masking=None,
+        )
+
+        # Define XLNetConfig class and set default parameters for HF XLNet config.
+        transformer_config = tr.XLNetConfig.build(
+            d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length
+        )
+
+        # Define the model block including: inputs, masking, projection and transformer block.
+        body = tr.SequentialBlock(
+            input_module,
+            tr.MLPBlock([64]),
+            tr.TransformerBlock(
+                transformer_config,
+                masking=input_module.masking
+            )
+        )
+
+        # Define a head with BinaryClassificationTask.
+        head = tr.Head(
+            body,
+            tr.BinaryClassificationTask(
+                "click",
+                summary_type="mean",
+                metrics=[
+                    tm.Precision(task='binary'),
+                    tm.Recall(task='binary'),
+                    tm.Accuracy(task='binary'),
+                    tm.F1Score(task='binary')
+                ]
+            ),
+            inputs=input_module,
+        )
+
+        # Get the end-to-end Model class.
+        model = tr.Model(head)
+
+    Parameters
+    ----------
+
+    target_name: Optional[str] = None
+        Specifies the variable name that represents the positive and negative values.
+
+    task_name: Optional[str] = None
+        Specifies the name of the prediction task. If this parameter is not specified,
+        a name is automatically constructed based on ``target_name`` and the Python
+        class name of the model.
+
+    task_block: Optional[BlockType] = None
+        Specifies a module to transform the input tensor before computing predictions.
+
+    loss: torch.nn.Module
+        Specifies the loss function for the task.
+        The default class is ``torch.nn.BCELoss``.
+
+    metrics: Tuple[torch.nn.Module, ...]
+        Specifies the metrics to calculate during training and evaluation.
+        The default metrics are ``Precision``, ``Recall``, and ``Accuracy``.
+
+    summary_type: str
+        Summarizes a sequence into a single tensor. Accepted values are:
+
+            - ``last`` -- Take the last token hidden state (like XLNet)
+            - ``first`` -- Take the first token hidden state (like Bert)
+            - ``mean`` -- Take the mean of all tokens hidden states
+            - ``cls_index`` -- Supply a Tensor of classification token position (GPT/GPT-2)
+            - ``attn`` -- Not implemented now, use multi-head attention
+    """
+
     DEFAULT_LOSS = torch.nn.BCELoss()
     DEFAULT_METRICS = (
-        tm.Precision(num_classes=2),
-        tm.Recall(num_classes=2),
-        tm.Accuracy(),
+        tm.Precision(num_classes=2, task="binary"),
+        tm.Recall(num_classes=2, task="binary"),
+        tm.Accuracy(task="binary"),
         # TODO: Fix this: tm.AUC()
     )
 
@@ -60,6 +140,7 @@ class BinaryClassificationTask(PredictionTask):
         metrics=DEFAULT_METRICS,
         summary_type="first",
     ):
+        self.target_dim = 1
         super().__init__(
             loss=loss,
             metrics=metrics,
@@ -96,6 +177,7 @@ class RegressionTask(PredictionTask):
         metrics=DEFAULT_METRICS,
         summary_type="first",
     ):
+        self.target_dim = 1
         super().__init__(
             loss=loss,
             metrics=metrics,
@@ -133,9 +215,6 @@ class NextItemPredictionTask(PredictionTask):
         pad token id.
     target_dim: int
         vocabulary size of item ids
-    hf_format: bool
-        Output the dictionary of outputs needed by RecSysTrainer, if set to False,
-        return the predictions tensor.
     """
 
     DEFAULT_METRICS = (
@@ -155,14 +234,12 @@ class NextItemPredictionTask(PredictionTask):
         softmax_temperature: float = 1,
         padding_idx: int = 0,
         target_dim: int = None,
-        hf_format=False,
     ):
         super().__init__(loss=loss, metrics=metrics, task_block=task_block, task_name=task_name)
         self.softmax_temperature = softmax_temperature
         self.weight_tying = weight_tying
         self.padding_idx = padding_idx
         self.target_dim = target_dim
-        self.hf_format = hf_format
 
         self.item_embedding_table = None
         self.masking = None
@@ -214,7 +291,7 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, ignore_masking=True, **kwargs):
+    def forward(self, inputs: torch.Tensor, targets=None, training=False, testing=False, **kwargs):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -223,28 +300,14 @@ class NextItemPredictionTask(PredictionTask):
             x = self.task_block(x)  # type: ignore
 
         # Retrieve labels from masking
-        if not ignore_masking:
+        if training or testing:
             labels = self.masking.masked_targets  # type: ignore
             trg_flat = labels.flatten()
             non_pad_mask = trg_flat != self.padding_idx
             labels_all = torch.masked_select(trg_flat, non_pad_mask)
             # remove padded items, keep only masked positions
             x = self.remove_pad_3d(x, non_pad_mask)
-        else:
-            # keep only last non-padded position for the 'Prediction step'
-            labels = self.embeddings.item_seq
-            non_pad_mask = labels != self.padding_idx
-            last_item_sessions = non_pad_mask.sum(dim=1) - 1
-            rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=labels.device)
-            labels_all = labels[rows_ids, last_item_sessions]
-            labels_all = labels_all.flatten()
-            x = x[rows_ids, last_item_sessions]
-
-        # Compute predictions probs
-        x = self.pre(x)  # type: ignore
-
-        # prepare outputs for HF trainer
-        if self.hf_format:
+            x = self.pre(x)  # type: ignore
             loss = self.loss(x, labels_all)
             return {
                 "loss": loss,
@@ -253,7 +316,19 @@ class NextItemPredictionTask(PredictionTask):
                 # "pred_metadata": {},
                 # "model_outputs": [],
             }
-            # TODO: Add model_outputs and metadata
+        else:
+            # Get the hidden position to use for predicting the next item
+            labels = self.embeddings.item_seq
+            non_pad_mask = labels != self.padding_idx
+            rows_ids = torch.arange(labels.size(0), dtype=torch.long, device=labels.device)
+            if isinstance(self.masking, MaskedLanguageModeling):
+                last_item_sessions = non_pad_mask.sum(dim=1)
+            else:
+                last_item_sessions = non_pad_mask.sum(dim=1) - 1
+            x = x[rows_ids, last_item_sessions]
+
+        # Compute predictions probs
+        x = self.pre(x)  # type: ignore
 
         return x
 
@@ -266,18 +341,11 @@ class NextItemPredictionTask(PredictionTask):
         out_tensor = inp_tensor_fl.view(-1, inp_tensor.size(1))
         return out_tensor
 
-    def calculate_metrics(  # type: ignore
-        self, predictions, targets, mode="val", forward=True, **kwargs
-    ) -> Dict[str, torch.Tensor]:
+    def calculate_metrics(self, predictions, targets) -> Dict[str, torch.Tensor]:  # type: ignore
         if isinstance(targets, dict) and self.target_name:
             targets = targets[self.target_name]
 
         outputs = {}
-        if forward:
-            predictions = self(predictions, ignore_masking=False)
-            if self.hf_format:
-                targets = predictions["labels"]
-                predictions = predictions["predictions"]
         predictions = self.forward_to_prediction_fn(predictions)
 
         for metric in self.metrics:

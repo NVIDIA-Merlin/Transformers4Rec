@@ -14,12 +14,12 @@
 # limitations under the License.
 #
 
-import importlib
 import itertools
 import json
 import os
 import subprocess
 import sys
+from importlib.util import find_spec
 from os.path import dirname, realpath
 
 import pytest
@@ -28,7 +28,8 @@ TEST_PATH = dirname(dirname(realpath(__file__)))
 SESSION_PATH = "examples/getting-started-session-based/"
 
 
-@pytest.mark.skipif(importlib.util.find_spec("cudf") is None, reason="needs cudf")
+# @pytest.mark.skipif(find_spec("cudf") is None, reason="needs cudf")
+@pytest.mark.skip(reason="there is a testbook version of this test")
 def test_session(tmpdir):
     BASE_PATH = os.path.join(dirname(TEST_PATH), SESSION_PATH)
     os.environ["INPUT_DATA_DIR"] = "/tmp/data/"
@@ -37,7 +38,7 @@ def test_session(tmpdir):
     _run_notebook(tmpdir, nb_path)
 
     # Run session based
-    torch = importlib.util.find_spec("torch")
+    torch = find_spec("torch")
     if torch is not None:
         os.environ["INPUT_SCHEMA_PATH"] = BASE_PATH + "schema.pb"
         nb_path = os.path.join(BASE_PATH, "02-session-based-XLNet-with-PyT.ipynb")

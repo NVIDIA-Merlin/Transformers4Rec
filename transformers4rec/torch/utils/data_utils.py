@@ -15,13 +15,17 @@
 #
 
 import logging
+import warnings
 from abc import ABC
 
 import numpy as np
+import torch
+from merlin.dataloader.torch import Loader
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
 from merlin_standard_lib import Registry, Schema, Tag
+from merlin_standard_lib.utils.misc_utils import _augment_schema, validate_dataset
 
 from ...utils import dependencies
 
@@ -64,6 +68,7 @@ if dependencies.is_pyarrow_available():
             batch_size,
             max_sequence_length,
             cols_to_read=None,
+            target_names=None,
             shuffle=False,
             shuffle_buffer_size=0,
             num_workers=1,
@@ -72,6 +77,11 @@ if dependencies.is_pyarrow_available():
             **kwargs,
         ):
             T4RecDataLoader.__init__(self)
+            warnings.warn(
+                "The `pyarrow` data loader is deprecated and should be replaced "
+                "by `merlin_dataloader`",
+                DeprecationWarning,
+            )
             self.paths_or_dataset = paths_or_dataset
             self.batch_size = batch_size
             self.shuffle = shuffle
@@ -81,7 +91,7 @@ if dependencies.is_pyarrow_available():
             self.max_sequence_length = max_sequence_length
             self.drop_last = drop_last
 
-            self.set_dataset(cols_to_read=cols_to_read)
+            self.set_dataset(cols_to_read=cols_to_read, target_names=target_names)
 
             PyTorchDataLoader.__init__(
                 self,
@@ -94,7 +104,7 @@ if dependencies.is_pyarrow_available():
             # set _batch_size attribute needed by HF trainer
             self._batch_size = self.batch_size
 
-        def set_dataset(self, cols_to_read):
+        def set_dataset(self, cols_to_read, target_names):
             """
             set the Parquet dataset
 
@@ -110,6 +120,7 @@ if dependencies.is_pyarrow_available():
                 self.paths_or_dataset,
                 cols_to_read,
                 seq_features_len_pad_trim=self.max_sequence_length,
+                target_names=target_names,
             )
             if self.shuffle and self.shuffle_buffer_size > 0:
                 dataset = ShuffleDataset(dataset, buffer_size=self.shuffle_buffer_size)
@@ -162,6 +173,7 @@ if dependencies.is_pyarrow_available():
                 batch_size,
                 max_sequence_length,
                 cols_to_read=cols_to_read,
+                target_names=targets,
                 shuffle=shuffle,
                 shuffle_buffer_size=shuffle_buffer_size,
                 num_workers=num_workers,
@@ -170,176 +182,264 @@ if dependencies.is_pyarrow_available():
             )
 
 
-if dependencies.is_gpu_dataloader_available():
-    from nvtabular.loader.torch import DLDataLoader
-    from nvtabular.loader.torch import TorchAsyncItr as DataLoader
+class DLDataLoader(PyTorchDataLoader):
+    """
+    This class is an extension of the torch dataloader.
+    It is required to support the FastAI framework.
 
-    from merlin_standard_lib.utils.misc_utils import validate_dataset
+    Setting the batch size directly to DLDataLoader makes it 3x slower.
+    So we set as an alternative attribute and use it within
+    T4Rec Trainer during evaluation
+    # TODO : run experiments with new merlin-dataloader
+    """
 
-    class DLDataLoaderWrapper(DLDataLoader):
-        """
-        Setting the batch size directly to DLDataLoader makes it 3x slower.
-        So we set as an alternative attribute and use it within
-        T4Rec Trainer during evaluation
-        # TODO : run experiments with new nvt dataloader
-        """
+    def __init__(self, *args, **kwargs) -> None:
+        if "batch_size" in kwargs:
+            self._batch_size = kwargs.pop("batch_size")
+            super().__init__(*args, **kwargs)
 
-        def __init__(self, *args, **kwargs) -> None:
-            if "batch_size" in kwargs:
-                self._batch_size = kwargs.pop("batch_size")
-                super().__init__(*args, **kwargs)
+    @property
+    def device(self):
+        return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    @dataloader_registry.register_with_multiple_names("nvtabular_dataloader", "nvtabular")
-    class NVTabularDataLoader(T4RecDataLoader, DLDataLoaderWrapper):
-        def __init__(
+    def __len__(self):
+        return len(self.dataset)
+
+
+@dataloader_registry.register_with_multiple_names(
+    "merlin_dataloader", "merlin", "nvtabular_dataloader", "nvtabular"
+)
+class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
+    """
+    This class extends the [Merlin data loader]
+    (https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py).
+    The data input requires a merlin.io.Dataset or a path to the data files.
+    It also sets the dataset's schema with the necessary properties to prepare the input
+    list features as dense tensors (i.e. padded to the specified `max_sequence_length`).
+    The dense representation is required by the Transformers4Rec input modules.
+
+    Parameters
+    ----------
+    paths_or_dataset: Union[str, merlin.io.Dataset]
+        The dataset to load.
+    batch_size: int
+        The size of each batch to supply to the model.
+    max_sequence_length: int
+        The maximum sequence length to use for padding list columns.
+        By default, `0` is used as the padding index.
+    cats : List[str], optional
+        The list of categorical columns in the dataset.
+        By default None.
+    conts: List[str], optional
+        The list of continuous columns in the dataset.
+        By default None.
+    labels : List[str], optional
+        The list of label columns in the dataset.
+        By default None.
+    shuffle : bool, optional
+        Enable/disable shuffling of dataset.
+        By default False.
+    parts_per_chunk : int, optional
+        The number of partitions from the iterator, an Merlin Dataset,
+        to concatenate into a "chunk". By default 1.
+    device : int, optional
+        The device id of the selected GPU
+        By default None.
+    sparse_names : [str], optional
+        List with column names of columns that should be represented as sparse tensors.
+        By default None.
+    sparse_max : Dict[str, int], optional
+        A dictionary of key: column_name + value: integer representing the max sequence
+        length for a list column.
+        By default None.
+    sparse_as_dense : bool, optional
+        Boolean value to activate transforming sparse tensors to dense ones.
+        By default None.
+    drop_last: bool, optional
+        Whether or not to drop the last batch in an epoch. This is useful when you need to
+        guarantee that each batch contains exactly `batch_size` rows - since the last batch
+        will usually contain fewer rows.
+    seed_fn: callable
+        Function used to initialize random state
+    parts_per_chunk: int
+        Number of dataset partitions with size dictated by `buffer_size`
+        to load and concatenate asynchronously. More partitions leads to
+        better epoch-level randomness but can negatively impact throughput
+    global_size: int, optional
+        When doing distributed training, this indicates the number of total processes that are
+        training the model.
+    global_rank: int, optional
+        When doing distributed training, this indicates the local rank for the current process.
+    schema: Schema, optional
+         The `Schema` with the input features.
+    reader_kwargs:
+        Extra arguments to pass to the merlin.io.Dataset object, when the path to data files
+        is provided in `paths_or_dataset` argument.
+    row_groups_per_part: bool, optional
+        If true, preserve the group partitions when loading the dataset from parquet files.
+    collate_fn: Callable, optional
+        A processing function to collect and prepare the list samples
+        (tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.
+    """
+
+    def __init__(
+        self,
+        paths_or_dataset,
+        batch_size,
+        max_sequence_length,
+        conts=None,
+        cats=None,
+        labels=None,
+        collate_fn=lambda x: x[0],
+        engine=None,
+        buffer_size=0.1,
+        reader_kwargs=None,
+        shuffle=False,
+        seed_fn=None,
+        parts_per_chunk=1,
+        device=None,
+        global_size=None,
+        global_rank=None,
+        sparse_names=None,
+        sparse_max=None,
+        sparse_as_dense=True,
+        drop_last=False,
+        schema=None,
+        row_groups_per_part=True,
+        **kwargs,
+    ):
+        T4RecDataLoader.__init__(self)
+
+        self.paths_or_dataset = paths_or_dataset
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.max_sequence_length = max_sequence_length
+        self.drop_last = drop_last
+
+        reader_kwargs = reader_kwargs or {}
+        reader_kwargs["row_groups_per_part"] = row_groups_per_part
+        self.set_dataset(buffer_size, engine, reader_kwargs)
+
+        self.dataset.schema = _augment_schema(
+            self.dataset.schema, cats, conts, labels, sparse_names, sparse_max, sparse_as_dense
+        )
+
+        if (global_rank is not None) and (self.dataset.npartitions < global_size):
+            logger.warning(
+                "UserWarning: User is advised to repartition the parquet file before training "
+                "so npartitions>=global_size. Cudf or pandas can be used for repartitioning "
+                "eg. pdf.to_parquet('file.parquet',row_group_size=N_ROWS/NPARTITIONS) for pandas "
+                "or gdf.to_parquet('file.parquet',row_group_size_rows=N_ROWS/NPARTITIONS) for cudf "
+                "so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible "
+                "by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used)."
+            )
+            self.dataset = self.dataset.repartition(npartitions=global_size)
+
+        if (global_rank is not None) and (self.dataset.npartitions % global_size != 0):
+            logger.warning(
+                f"UserWarning: User is advised to set the number of partitions"
+                f" ({self.dataset.npartitions}) divisible by the number of available"
+                f" GPUs ({global_size}). This will divide the work equally among GPUs"
+                " for DDP training and ensure optimal performance."
+            )
+        loader = Loader(
+            self.dataset,
+            self.batch_size,
+            shuffle,
+            seed_fn=seed_fn,
+            parts_per_chunk=parts_per_chunk,
+            device=device,
+            global_size=global_size,
+            global_rank=global_rank,
+            drop_last=drop_last,
+        )
+
+        DLDataLoader.__init__(
             self,
+            loader,
+            collate_fn=collate_fn,
+            batch_size=self.batch_size,
+            drop_last=self.drop_last,
+        )
+        self.schema = schema
+        self.max_sequence_length = max_sequence_length
+
+    def set_dataset(self, buffer_size, engine, reader_kwargs):
+        dataset = validate_dataset(
+            self.paths_or_dataset,
+            self.batch_size,
+            buffer_size,
+            engine,
+            reader_kwargs,
+        )
+        self.dataset = dataset
+
+    @classmethod
+    def from_schema(
+        cls,
+        schema: Schema,
+        paths_or_dataset,
+        batch_size,
+        max_sequence_length,
+        continuous_features=None,
+        categorical_features=None,
+        targets=None,
+        collate_fn=lambda x: x[0],
+        shuffle=True,
+        buffer_size=0.06,
+        parts_per_chunk=1,
+        sparse_names=None,
+        sparse_max=None,
+        **kwargs,
+    ):
+        """
+            Instantitates `MerlinDataLoader` from a ``DatasetSchema``.
+        Parameters
+        ----------
+            schema: DatasetSchema
+                Dataset schema
+            paths_or_dataset: Union[str, Dataset]
+                Path to paquet data of Dataset object.
+            batch_size: int
+                batch size of Dataloader.
+            max_sequence_length: int
+                The maximum length of list features.
+        """
+        categorical_features = (
+            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+        )
+        continuous_features = (
+            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+        )
+        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+        schema = schema.select_by_name(categorical_features + continuous_features + targets)
+        sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
+        sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
+        loader = cls(
             paths_or_dataset,
-            batch_size,
-            max_sequence_length,
-            conts=None,
-            cats=None,
-            labels=None,
-            collate_fn=lambda x: x[0][0],
-            engine=None,
-            buffer_size=0.1,
-            reader_kwargs=None,
-            shuffle=False,
-            seed_fn=None,
-            parts_per_chunk=1,
-            device=None,
-            global_size=None,
-            global_rank=None,
-            sparse_names=None,
-            sparse_max=None,
-            sparse_as_dense=True,
-            drop_last=False,
-            schema=None,
+            batch_size=batch_size,
+            max_sequence_length=max_sequence_length,
+            labels=targets,
+            cats=categorical_features,
+            conts=continuous_features,
+            collate_fn=collate_fn,
+            engine="parquet",
+            shuffle=shuffle,
+            buffer_size=buffer_size,  # how many batches to load at once
+            parts_per_chunk=parts_per_chunk,
+            sparse_names=sparse_names,
+            sparse_max=sparse_max,
+            schema=schema,
             **kwargs,
-        ):
-            T4RecDataLoader.__init__(self)
+        )
 
-            self.paths_or_dataset = paths_or_dataset
-            self.batch_size = batch_size
-            self.shuffle = shuffle
-            self.max_sequence_length = max_sequence_length
-            self.drop_last = drop_last
-
-            self.set_dataset(buffer_size, engine, reader_kwargs)
-
-            if (global_rank is not None) and (self.dataset.npartitions < global_size):
-                logger.warning(
-                    "UserWarning: User is advised to repartition the parquet file before training "
-                    "so npartitions>=global_size. Cudf or pandas can be used for repartitioning "
-                    "e.g.: df.to_parquet('file.parquet', row_group_size=N_ROWS/NPARTITIONS, engine"
-                    "='pyarrow') as npartitions=nr_rows/row_group_size."
-                )
-                self.dataset = self.dataset.repartition(npartitions=global_size)
-
-            loader = DataLoader(
-                self.dataset,
-                cats,
-                conts,
-                labels,
-                self.batch_size,
-                shuffle,
-                seed_fn=seed_fn,
-                parts_per_chunk=parts_per_chunk,
-                device=device,
-                global_size=global_size,
-                global_rank=global_rank,
-                drop_last=drop_last,
-                sparse_names=sparse_names,
-                sparse_max=sparse_max,
-                sparse_as_dense=sparse_as_dense,
-            )
-
-            DLDataLoaderWrapper.__init__(
-                self,
-                loader,
-                collate_fn=collate_fn,
-                batch_size=self.batch_size,
-                drop_last=self.drop_last,
-            )
-            self.schema = schema
-            self.max_sequence_length = max_sequence_length
-
-        def set_dataset(self, buffer_size, engine, reader_kwargs):
-            dataset = validate_dataset(
-                self.paths_or_dataset,
-                self.batch_size,
-                buffer_size,
-                engine,
-                reader_kwargs,
-            )
-            self.dataset = dataset
-
-        @classmethod
-        def from_schema(
-            cls,
-            schema: Schema,
-            paths_or_dataset,
-            batch_size,
-            max_sequence_length,
-            continuous_features=None,
-            categorical_features=None,
-            targets=None,
-            collate_fn=lambda x: x[0][0],
-            shuffle=True,
-            buffer_size=0.06,
-            parts_per_chunk=1,
-            separate_labels=True,
-            named_labels=False,
-            sparse_names=None,
-            sparse_max=None,
-            **kwargs,
-        ):
-            """
-               Instantitates ``NVTabularDataLoader`` from a ``DatasetSchema``.
-            Parameters
-            ----------
-                schema: DatasetSchema
-                    Dataset schema
-                paths_or_dataset: Union[str, Dataset]
-                    Path to paquet data of Dataset object.
-                batch_size: int
-                    batch size of Dataloader.
-                max_sequence_length: int
-                    The maximum length of list features.
-            """
-            categorical_features = (
-                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
-            )
-            continuous_features = (
-                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
-            )
-            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
-
-            sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
-            sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
-            nvt_loader = cls(
-                paths_or_dataset,
-                batch_size=batch_size,
-                max_sequence_length=max_sequence_length,
-                labels=targets if separate_labels else [],
-                cats=categorical_features if separate_labels else categorical_features + targets,
-                conts=continuous_features,
-                collate_fn=collate_fn,
-                engine="parquet",
-                shuffle=shuffle,
-                buffer_size=buffer_size,  # how many batches to load at once
-                parts_per_chunk=parts_per_chunk,
-                sparse_names=sparse_names,
-                sparse_max=sparse_max,
-                schema=schema,
-                **kwargs,
-            )
-
-            return nvt_loader
+        return loader
 
 
 class ParquetDataset(Dataset):
-    def __init__(self, parquet_file, cols_to_read, seq_features_len_pad_trim):
+    def __init__(self, parquet_file, cols_to_read, target_names, seq_features_len_pad_trim):
         self.cols_to_read = cols_to_read
+        self.target_names = target_names
         self.data = pq.ParquetDataset(parquet_file).read(columns=self.cols_to_read).to_pandas()
         self.seq_features_len_pad_trim = seq_features_len_pad_trim
 
@@ -348,7 +448,10 @@ class ParquetDataset(Dataset):
 
     def __getitem__(self, index):
         df = self.data.loc[index]
-        return {col: self.pad_seq_column_if_needed(df[col]) for col in df.index}
+        input_features = list(set(self.cols_to_read).difference(self.target_names))
+        inputs = {col: self.pad_seq_column_if_needed(df[col]) for col in input_features}
+        targets = {col: self.pad_seq_column_if_needed(df[col]) for col in self.target_names}
+        return inputs, targets
 
     def pad_seq_column_if_needed(self, values):
         if type(values) is np.ndarray:
