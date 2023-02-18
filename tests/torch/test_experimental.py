@@ -25,7 +25,6 @@ pytorch = pytest.importorskip("torch")
 
 @pytest.mark.parametrize("fusion_aggregation", ["concat", "elementwise-mul", "elementwise-sum"])
 def test_post_fusion_context_block(yoochoose_schema, torch_yoochoose_like, fusion_aggregation):
-
     tab_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
