@@ -292,7 +292,6 @@ def incremental_train_eval(
             trainer.train()
 
         if training_args.do_eval:
-
             # 3. Evaluate on train data of time_index
             trainer.eval_dataset_or_path = train_paths
             train_metrics = trainer.evaluate(metric_key_prefix="train")

@@ -94,7 +94,6 @@ class DataArguments:
 
 @dataclass
 class ModelArguments:
-
     input_features_aggregation: Optional[str] = field(
         default="concat",
         metadata={
@@ -445,7 +444,6 @@ class ModelArguments:
 
 @dataclass
 class TrainingArguments(T4RecTrainingArguments):
-
     ##################################################################################
     # Arguments kept only for compatibility with the original Transformers4Rec paper
     # reproducibility script

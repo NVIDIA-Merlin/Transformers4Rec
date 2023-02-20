@@ -100,7 +100,6 @@ class Trainer(BaseTrainer):
         incremental_logging: bool = False,
         **kwargs,
     ):
-
         mock_dataset = DatasetMock()
 
         self.incremental_logging = incremental_logging

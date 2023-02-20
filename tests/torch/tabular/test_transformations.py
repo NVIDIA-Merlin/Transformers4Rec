@@ -193,7 +193,6 @@ def test_layer_norm_apply_only_categ_features(yoochoose_schema, torch_yoochoose_
 
 
 def test_stochastic_swap_noise_raise_exception_not_2d_item_id():
-
     s = schema.Schema(
         [
             schema.ColumnSchema.create_categorical(

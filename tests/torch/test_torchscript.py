@@ -7,7 +7,6 @@ tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_torchsciprt_not_strict(torch_yoochoose_like, yoochoose_schema):
-
     input_module = tr.TabularSequenceFeatures.from_schema(
         yoochoose_schema,
         max_sequence_length=20,
