@@ -330,7 +330,8 @@
 
 
 <div class="viewcode-block" id="torch_pad_and_concatenate"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.torch_pad_and_concatenate">[docs]</a><span class="k">def</span> <span class="nf">torch_pad_and_concatenate</span><span class="p">(</span><span class="n">tensor1</span><span class="p">,</span> <span class="n">tensor2</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second if necessary.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second as needed</span>
+
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
 <span class="sd">    dict outputs. So we should remove it when T4Rec is updated to use the latest version</span>
 <span class="sd">    &quot;&quot;&quot;</span>
