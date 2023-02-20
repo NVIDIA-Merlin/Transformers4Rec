@@ -474,7 +474,6 @@ class ShuffleDataset(IterableDataset):
         self.buffer_size = buffer_size
 
     def __iter__(self):
-
         logger.info("[SHUFFLE] INITIALIZING BUFFER_SIZE: {}".format(self.buffer_size))
 
         raise StopIteration()

@@ -40,7 +40,6 @@ lm_tasks.remove("permutation")
 # Test output of XLNet with different masking tasks using SequentialBlock
 @pytest.mark.parametrize("task", lm_tasks)
 def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
-
     col_group = yoochoose_schema
     tab_module = tr.TabularSequenceFeatures.from_schema(
         col_group,
@@ -67,7 +66,6 @@ def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
 
 # Test output of XLNet with permutation language model using SequentialBlock
 def test_xlnet_with_plm(yoochoose_schema, torch_yoochoose_like):
-
     col_group = yoochoose_schema
     tab_module = tr.TabularSequenceFeatures.from_schema(
         col_group,

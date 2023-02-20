@@ -191,7 +191,6 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         predictions: torch.Tensor,
         targets: torch.Tensor,
     ) -> Dict[str, torch.Tensor]:
-
         outputs = {}
 
         predictions = self.forward_to_prediction_fn(cast(torch.Tensor, predictions))

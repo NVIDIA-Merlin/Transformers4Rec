@@ -3,7 +3,6 @@ import numpy as np
 
 
 def create_bar_chart(text_file_name):
-
     ndcg_10 = []
     ndcg_20 = []
     recall_10 = []

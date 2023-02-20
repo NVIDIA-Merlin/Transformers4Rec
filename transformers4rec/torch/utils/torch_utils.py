@@ -242,7 +242,8 @@ def nested_concat(tensors, new_tensors, padding_index=-100):
 
 
 def torch_pad_and_concatenate(tensor1, tensor2, padding_index=-100):
-    """Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second if necessary.
+    """Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second as needed
+
     #TODO this method was copied from the latest version of HF transformers library to support
     dict outputs. So we should remove it when T4Rec is updated to use the latest version
     """

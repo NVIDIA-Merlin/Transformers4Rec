@@ -59,7 +59,6 @@ def test_set_train_eval_loaders_attributes(
 
 @pytest.mark.parametrize("batch_size", [16, 32])
 def test_set_train_eval_loaders_pyarrow(torch_yoochoose_next_item_prediction_model, batch_size):
-
     data = tr.data.tabular_sequence_testing_data
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
