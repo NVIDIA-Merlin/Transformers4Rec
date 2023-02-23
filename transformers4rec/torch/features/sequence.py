@@ -17,8 +17,9 @@
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
+from merlin.schema import Schema
 
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Tag
 from merlin_standard_lib.schema.tag import TagsType
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
@@ -153,11 +154,11 @@ class TabularSequenceFeatures(TabularFeatures):
         masking: Optional[Union[str, MaskSequence]] = None,
         **kwargs
     ) -> "TabularSequenceFeatures":
-        """Instantiates ``TabularFeatures`` from a ``DatasetSchema``
+        """Instantiates ``TabularFeatures`` from a ``merlin.schema.Schema``
 
         Parameters
         ----------
-        schema : DatasetSchema
+        schema : merlin.schema.Schema
             Dataset schema
         continuous_tags : Optional[Union[DefaultTags, list, str]], optional
             Tags to filter the continuous features, by default Tag.CONTINUOUS

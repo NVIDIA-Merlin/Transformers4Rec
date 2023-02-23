@@ -16,18 +16,23 @@
 
 
 import os
+import pathlib
 from typing import Optional
 
-from merlin_standard_lib import Schema
+from merlin.schema import Schema
+from merlin.schema.io.tensorflow_metadata import TensorflowMetadata
 
 
 class Dataset:
     def __init__(self, schema_path: str):
         self.schema_path = schema_path
+        _schema_path = pathlib.Path(schema_path)
         if self.schema_path.endswith(".pb") or self.schema_path.endswith(".pbtxt"):
-            self._schema = Schema().from_proto_text(self.schema_path)
+            self._schema = TensorflowMetadata.from_proto_text_file(
+                _schema_path.parent, _schema_path.name
+            ).to_merlin_schema()
         else:
-            self._schema = Schema().from_json(self.schema_path)
+            self._schema = TensorflowMetadata.from_json_file(_schema_path).to_merlin_schema()
 
     @property
     def schema(self) -> Schema:

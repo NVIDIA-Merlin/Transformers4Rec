@@ -18,7 +18,8 @@ import collections
 import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
-from ..utils import proto_utils
+from merlin.schema.io import proto_utils
+
 from .tag import TagsType
 
 try:
@@ -30,6 +31,7 @@ except ImportError:
     cached_property = lambda func: property(lru_cache()(func))  # type: ignore  # noqa
 
 import betterproto  # noqa
+from merlin.schema import Schema as MerlinSchema
 
 from ..proto.schema_bp import *  # noqa
 from ..proto.schema_bp import (
@@ -44,6 +46,15 @@ from ..proto.schema_bp import (
     ValueCountList,
     _Schema,
 )
+
+
+def categorical_cardinalities(schema: MerlinSchema) -> Dict[str, int]:
+    outputs = {}
+
+    for col in schema.column_schemas:
+        if col.int_domain and col.int_domain.is_categorical:
+            outputs[col.name] = col.int_domain.max + 1
+    return outputs
 
 
 def _parse_shape_and_value_count(shape, value_count) -> Dict[str, Any]:

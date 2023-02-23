@@ -20,6 +20,7 @@ from typing import Any, Callable, Dict, List, Optional, Text, Union
 import torch
 
 from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib.schema.schema import categorical_cardinalities
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
@@ -176,7 +177,7 @@ class EmbeddingFeatures(InputBlock):
         embeddings_initializers = embeddings_initializers or {}
 
         emb_config = {}
-        cardinalities = schema.categorical_cardinalities()
+        cardinalities = categorical_cardinalities(schema)
         for key, cardinality in cardinalities.items():
             embedding_size = embedding_dims.get(key, embedding_dim_default)
             embedding_initializer = embeddings_initializers.get(key, None)

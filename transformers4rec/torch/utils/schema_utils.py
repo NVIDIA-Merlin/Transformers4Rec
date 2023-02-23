@@ -18,9 +18,7 @@ import random
 from typing import Any, Dict, Optional
 
 import torch
-
-from merlin_standard_lib import Schema
-from merlin_standard_lib.utils.proto_utils import has_field
+from merlin.schema import ColumnSchema, Schema
 
 from ..typing import TabularData
 
@@ -39,12 +37,17 @@ def random_data_from_schema(
         if max_session_length:
             session_length = random.randint(min_session_length, max_session_length)
 
-        for feature in schema.feature:
-            is_list_feature = has_field(feature, "value_count")
-            is_int_feature = has_field(feature, "int_domain")
-            is_embedding = feature.shape.dim[0].size > 1 if has_field(feature, "shape") else False
+        for feature in schema.column_schemas.values():
+            feature: ColumnSchema = feature
 
-            shape = [d.size for d in feature.shape.dim] if has_field(feature, "shape") else (1,)
+            is_list_feature = feature.is_list
+            is_int_feature = feature.dtype and feature.dtype.is_integer
+
+            is_embedding = (
+                feature.shape and feature.shape.is_list and feature.shape.is_fixed
+            )  # feature.shape and feature.shape.dims and feature.shape.dims[0].size > 1
+
+            shape = feature.shape.as_tuple if feature.shape and feature.shape.dims else (1, 0)
 
             if is_int_feature:
                 max_num = feature.int_domain.max
@@ -53,13 +56,13 @@ def random_data_from_schema(
                     row = torch.randint(1, max_num, (list_length,), device=device)
 
                 else:
-                    row = torch.randint(1, max_num, tuple(shape), device=device)
+                    row = torch.randint(1, max_num, shape, device=device)
             else:
                 if is_list_feature:
                     list_length = session_length or feature.value_count.max
                     row = torch.rand((list_length,), device=device)
                 else:
-                    row = torch.rand(tuple(shape), device=device)
+                    row = torch.rand(shape, device=device)
 
             if is_list_feature:
                 row = (row, [len(row)])  # type: ignore

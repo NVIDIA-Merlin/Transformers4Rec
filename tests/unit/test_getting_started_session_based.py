@@ -24,7 +24,7 @@ def test_func():
         tb1.inject(
             """
             import os
-            os.environ["INPUT_DATA_DIR"] = "/tmp/data/"
+            os.environ["INPUT_DATA_DIR"] = "/workspace/data/"
             os.environ["NUM_ROWS"] = "10000"
             """
         )

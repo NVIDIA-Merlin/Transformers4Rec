@@ -15,6 +15,7 @@
 #
 
 import pytest
+from merlin.schema import Schema
 
 from merlin_standard_lib import Tag, schema
 
@@ -260,8 +261,8 @@ def test_input_dropout_with_tabular_features_post(yoochoose_schema, torch_yoocho
         assert output_dropout_zeros_rate == pytest.approx(DROPOUT_RATE, abs=0.2)
 
 
-def test_input_dropout_with_tabular_features_post_from_squema(
-    yoochoose_schema, torch_yoochoose_like
+def test_input_dropout_with_tabular_features_post_from_schema(
+    yoochoose_schema: Schema, torch_yoochoose_like
 ):
     DROPOUT_RATE = 0.3
 
@@ -276,7 +277,9 @@ def test_input_dropout_with_tabular_features_post_from_squema(
             "timestamp/weekday/cos/list",
         ]
     )
+    import pdb
 
+    pdb.set_trace()
     tab_module = tr.TabularSequenceFeatures.from_schema(schema)
     out_features = tab_module(inputs)
 
