@@ -16,14 +16,14 @@
 
 from __future__ import absolute_import
 
-import importlib
+from importlib.util import find_spec
 from pathlib import Path
 
-import pytest
 import numpy as np
-
-from merlin.io import Dataset
+import pytest
 from merlin.datasets.synthetic import generate_data
+from merlin.io import Dataset
+
 from merlin_standard_lib import Schema
 from transformers4rec.data import tabular_sequence_testing_data, tabular_testing_data
 
@@ -75,6 +75,6 @@ def tabular_schema() -> Schema:
     return tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
 
-torch = importlib.util.find_spec("torch")
+torch = find_spec("torch")
 if torch is not None:
     from tests.torch.conftest import *  # noqa
