@@ -21,8 +21,9 @@ import shutil
 import tempfile
 from typing import TypeVar
 
-from merlin.schema import Schema
 from tqdm import tqdm
+
+from merlin_standard_lib import Schema
 
 LOG = logging.getLogger("transformers4rec")
 FIRST_SEEN_ITEM_COL_NAME = "item_ts_first"
