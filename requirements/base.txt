@@ -4,3 +4,4 @@ tqdm>=4.27
 betterproto<2.0.0
 pyarrow>=1.0
 tensorflow-metadata
+merlin-models

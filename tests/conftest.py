@@ -20,11 +20,29 @@ import importlib
 from pathlib import Path
 
 import pytest
+import numpy as np
 
+from merlin.io import Dataset
+from merlin.datasets.synthetic import generate_data
 from merlin_standard_lib import Schema
 from transformers4rec.data import tabular_sequence_testing_data, tabular_testing_data
 
 REPO_ROOT = Path(__file__).parent.parent
+
+np.random.seed(0)
+
+
+@pytest.fixture
+def ecommerce_data() -> Dataset:
+    return generate_data("e-commerce", num_rows=100)
+
+
+@pytest.fixture
+def testing_data() -> Dataset:
+    data = generate_data("testing", num_rows=100)
+    data.schema = data.schema.without(["session_id", "session_start", "day_idx"])
+
+    return data
 
 
 @pytest.fixture
