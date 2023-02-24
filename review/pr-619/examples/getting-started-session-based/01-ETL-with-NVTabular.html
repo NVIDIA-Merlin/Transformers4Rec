@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETL with NVTabular &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/getting-started-session-based/01-ETL-with-NVTabular.html" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="../../_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Session-based Recommendation with XLNET" href="02-session-based-XLNet-with-PyT.html" />
+    <link rel="prev" title="Getting Started: Session-based Recommendation with Synthetic Data" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../multi_gpu_train.html">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Example Notebooks</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Getting Started: Session-based Recommendation with Synthetic Data</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ETL with NVTabular</a></li>
+<li class="toctree-l3"><a class="reference internal" href="02-session-based-XLNet-with-PyT.html">Session-based Recommendation with XLNET</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../end-to-end-session-based/index.html">End-to-end session-based recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../tutorial/index.html">Tutorial: End-to-end Session-based Recommendation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Transformers4Rec Example Notebooks</a> &raquo;</li>
+          <li><a href="index.html">Getting Started: Session-based Recommendation with Synthetic Data</a> &raquo;</li>
+      <li>ETL with NVTabular</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2022 NVIDIA Corporation. All Rights Reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="c1"># ======================================================================</span>
+
+<span class="c1"># Each user is responsible for checking the content of datasets and the</span>
+<span class="c1"># applicable licenses and determining if suitable for the intended use.</span>
+</pre></div>
+</div>
+</div>
+</div>
+<img alt="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-01-etl-with-nvtabular/nvidia_logo.png" src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-01-etl-with-nvtabular/nvidia_logo.png" />
+<div class="tex2jax_ignore mathjax_ignore section" id="etl-with-nvtabular">
+<h1>ETL with NVTabular<a class="headerlink" href="#etl-with-nvtabular" title="Permalink to this headline"></a></h1>
+<p>In this notebook we are going to generate synthetic data and then create sequential features with <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular">NVTabular</a>. Such data will be used in the next notebook to train a session-based recommendation model.</p>
+<p>NVTabular is a feature engineering and preprocessing library for tabular data designed to quickly and easily manipulate terabyte scale datasets used to train deep learning based recommender systems. It provides a high level abstraction to simplify code and accelerates computation on the GPU using the RAPIDS cuDF library.</p>
+<div class="section" id="import-required-libraries">
+<h2>Import required libraries<a class="headerlink" href="#import-required-libraries" title="Permalink to this headline"></a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="kn">import</span> <span class="nn">nvtabular</span> <span class="k">as</span> <span class="nn">nvt</span>
+<span class="kn">from</span> <span class="nn">nvtabular.ops</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">merlin.schema.tags</span> <span class="kn">import</span> <span class="n">Tags</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="define-input-output-path">
+<h2>Define Input/Output Path<a class="headerlink" href="#define-input-output-path" title="Permalink to this headline"></a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="create-a-synthetic-input-data">
+<h2>Create a Synthetic Input Data<a class="headerlink" href="#create-a-synthetic-input-data" title="Permalink to this headline"></a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_ROWS</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NUM_ROWS&quot;</span><span class="p">,</span> <span class="mi">100000</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">long_tailed_item_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">lognormal</span><span class="p">(</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">50000</span><span class="p">)</span>
+<span class="c1"># generate random item interaction features </span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">70000</span><span class="p">,</span> <span class="mi">90000</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">])</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">long_tailed_item_distribution</span>
+
+<span class="c1"># generate category mapping for each item-id</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">334</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">335</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;age_days&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;weekday_sin&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="c1"># generate day mapping for each session </span>
+<span class="n">map_day</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">nunique</span><span class="p">()))))</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">df</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_day</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Visualize couple of rows of the synthetic dataset:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>session_id</th>
+      <th>item_id</th>
+      <th>category</th>
+      <th>age_days</th>
+      <th>weekday_sin</th>
+      <th>day</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>88469</td>
+      <td>7</td>
+      <td>2</td>
+      <td>0.876678</td>
+      <td>0.330926</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>83904</td>
+      <td>120</td>
+      <td>21</td>
+      <td>0.258138</td>
+      <td>0.422327</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>81493</td>
+      <td>42</td>
+      <td>8</td>
+      <td>0.234976</td>
+      <td>0.686702</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>73668</td>
+      <td>182</td>
+      <td>32</td>
+      <td>0.498537</td>
+      <td>0.121023</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>74926</td>
+      <td>59</td>
+      <td>11</td>
+      <td>0.126336</td>
+      <td>0.765945</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+</div>
+<div class="section" id="feature-engineering-with-nvtabular">
+<h2>Feature Engineering with NVTabular<a class="headerlink" href="#feature-engineering-with-nvtabular" title="Permalink to this headline"></a></h2>
+<p>Deep Learning models require dense input features. Categorical features are sparse, and need to be represented by dense embeddings in the model. To allow for that, categorical features first need to be encoded as contiguous integers <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">...,</span> <span class="pre">|C|)</span></code>, where <code class="docutils literal notranslate"><span class="pre">|C|</span></code> is the feature cardinality (number of unique values), so that their embeddings can be efficiently stored in embedding layers.  We will use NVTabular to preprocess the categorical features, so that all categorical columns are encoded as contiguous integers. Note that the <code class="docutils literal notranslate"><span class="pre">Categorify</span></code> op encodes OOVs or nulls to <code class="docutils literal notranslate"><span class="pre">0</span></code> automatically. In our synthetic dataset we do not have any nulls. On the other hand <code class="docutils literal notranslate"><span class="pre">0</span></code> is also used for padding the sequences in input block, therefore, you can set <code class="docutils literal notranslate"><span class="pre">start_index=1</span></code> arg in the Categorify op if you want the encoded null or OOV values to start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p>
+<p>Here our goal is to create sequential features. To do so, we are grouping the features together at the session level in the following cell. In this synthetically generated example dataset, we do not have a timestamp column, but if we had one (that’s the case for most real-world datasets), we would be sorting the interactions by the timestamp column as in this <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/01-ETL-with-NVTabular.ipynb">example notebook</a>. Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SESSIONS_MAX_LENGTH</span> <span class="o">=</span><span class="mi">20</span>
+
+<span class="c1"># Categorify categorical features</span>
+<span class="n">categ_feats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">,</span> <span class="s1">&#39;item_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">()</span>
+
+<span class="c1"># Define Groupby Workflow</span>
+<span class="n">groupby_feats</span> <span class="o">=</span> <span class="n">categ_feats</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">,</span> <span class="s1">&#39;age_days&#39;</span><span class="p">,</span> <span class="s1">&#39;weekday_sin&#39;</span><span class="p">]</span>
+
+<span class="c1"># Group interaction features by session</span>
+<span class="n">groupby_features</span> <span class="o">=</span> <span class="n">groupby_feats</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Groupby</span><span class="p">(</span>
+    <span class="n">groupby_cols</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;session_id&quot;</span><span class="p">],</span> 
+    <span class="n">aggs</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;item_id&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">,</span> <span class="s2">&quot;count&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;category&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">],</span>     
+        <span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;first&quot;</span><span class="p">],</span>
+        <span class="s2">&quot;age_days&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">],</span>
+        <span class="s1">&#39;weekday_sin&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">],</span>
+        <span class="p">},</span>
+    <span class="n">name_sep</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
+
+<span class="c1"># Select and truncate the sequential features</span>
+<span class="n">sequence_features_truncated</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;category-list&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> 
+<span class="p">)</span>
+
+<span class="n">sequence_features_truncated_item</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">TagAsItemID</span><span class="p">()</span>
+<span class="p">)</span>  
+<span class="n">sequence_features_truncated_cont</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;age_days-list&#39;</span><span class="p">,</span> <span class="s1">&#39;weekday_sin-list&#39;</span><span class="p">]</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">])</span>
+<span class="p">)</span>
+
+<span class="c1"># Filter out sessions with length 1 (not valid for next-item prediction training and evaluation)</span>
+<span class="n">MINIMUM_SESSION_LENGTH</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">selected_features</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;item_id-count&#39;</span><span class="p">,</span> <span class="s1">&#39;day-first&#39;</span><span class="p">,</span> <span class="s1">&#39;session_id&#39;</span><span class="p">]</span> <span class="o">+</span> 
+    <span class="n">sequence_features_truncated_item</span> <span class="o">+</span>
+    <span class="n">sequence_features_truncated</span> <span class="o">+</span> 
+    <span class="n">sequence_features_truncated_cont</span>
+<span class="p">)</span>
+    
+<span class="n">filtered_sessions</span> <span class="o">=</span> <span class="n">selected_features</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Filter</span><span class="p">(</span><span class="n">f</span><span class="o">=</span><span class="k">lambda</span> <span class="n">df</span><span class="p">:</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;item_id-count&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">MINIMUM_SESSION_LENGTH</span><span class="p">)</span>
+
+<span class="n">seq_feats_list</span> <span class="o">=</span> <span class="n">filtered_sessions</span><span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">,</span> <span class="s1">&#39;category-list&#39;</span><span class="p">,</span> <span class="s1">&#39;age_days-list&#39;</span><span class="p">,</span> <span class="s1">&#39;weekday_sin-list&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span>  <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ValueCount</span><span class="p">()</span>
+
+
+<span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">filtered_sessions</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">,</span> <span class="s1">&#39;day-first&#39;</span><span class="p">,</span> <span class="s1">&#39;item_id-count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">seq_feats_list</span><span class="p">)</span>
+
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">cpu</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># Generate statistics for the features</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="c1"># Apply the preprocessing and return an NVTabular dataset</span>
+<span class="n">sessions_ds</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="c1"># Convert the NVTabular dataset to a Dask cuDF dataframe (`to_ddf()`) and then to cuDF dataframe (`.compute()`)</span>
+<span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">sessions_ds</span><span class="o">.</span><span class="n">to_ddf</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:148: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:148: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:148: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_gdf</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>session_id</th>
+      <th>day-first</th>
+      <th>item_id-count</th>
+      <th>item_id-list</th>
+      <th>category-list</th>
+      <th>age_days-list</th>
+      <th>weekday_sin-list</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>1</td>
+      <td>19</td>
+      <td>[27, 26, 7, 46, 13, 2, 4, 237, 10, 35, 46, 35,...</td>
+      <td>[5, 5, 2, 8, 2, 1, 2, 45, 3, 6, 8, 6, 1, 16, 3...</td>
+      <td>[0.97853184, 0.4591664, 0.083990775, 0.7000025...</td>
+      <td>[0.04896013, 0.18139902, 0.5046173, 0.48253214...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>4</td>
+      <td>18</td>
+      <td>[45, 7, 17, 17, 44, 17, 35, 23, 1, 194, 13, 18...</td>
+      <td>[8, 2, 4, 4, 8, 4, 6, 4, 2, 36, 2, 4, 2, 7, 7,...</td>
+      <td>[0.4287106, 0.75681955, 0.70978284, 0.8613602,...</td>
+      <td>[0.88505965, 0.07815777, 0.8684893, 0.25832322...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>5</td>
+      <td>15</td>
+      <td>[27, 38, 10, 64, 84, 109, 152, 37, 13, 158, 3,...</td>
+      <td>[5, 7, 3, 11, 15, 19, 29, 7, 2, 27, 1, 4, 5, 2...</td>
+      <td>[0.07284722, 0.48706728, 0.09015047, 0.4159043...</td>
+      <td>[0.4339925, 0.51614755, 0.3565242, 0.5322814, ...</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>It is possible to save the preprocessing workflow. That is useful to apply the same preprocessing to other data (with the same schema) and also to deploy the session-based recommendation pipeline to Triton Inference Server.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>tags</th>
+      <th>dtype</th>
+      <th>is_list</th>
+      <th>is_ragged</th>
+      <th>properties.num_buckets</th>
+      <th>properties.freq_threshold</th>
+      <th>properties.max_size</th>
+      <th>properties.start_index</th>
+      <th>properties.cat_path</th>
+      <th>properties.domain.min</th>
+      <th>properties.domain.max</th>
+      <th>properties.domain.name</th>
+      <th>properties.embedding_sizes.cardinality</th>
+      <th>properties.embedding_sizes.dimension</th>
+      <th>properties.value_count.min</th>
+      <th>properties.value_count.max</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>session_id</td>
+      <td>(Tags.CATEGORICAL)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>.//categories/unique.session_id.parquet</td>
+      <td>0.0</td>
+      <td>19871.0</td>
+      <td>session_id</td>
+      <td>19872.0</td>
+      <td>408.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>day-first</td>
+      <td>()</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>item_id-count</td>
+      <td>(Tags.CATEGORICAL)</td>
+      <td>DType(name='int32', element_type=&lt;ElementType....</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>.//categories/unique.item_id.parquet</td>
+      <td>0.0</td>
+      <td>502.0</td>
+      <td>item_id</td>
+      <td>503.0</td>
+      <td>52.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>item_id-list</td>
+      <td>(Tags.CATEGORICAL, Tags.ITEM_ID, Tags.ID, Tags...</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>.//categories/unique.item_id.parquet</td>
+      <td>0.0</td>
+      <td>502.0</td>
+      <td>item_id</td>
+      <td>503.0</td>
+      <td>52.0</td>
+      <td>2.0</td>
+      <td>19.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>category-list</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>.//categories/unique.category.parquet</td>
+      <td>0.0</td>
+      <td>125.0</td>
+      <td>category</td>
+      <td>126.0</td>
+      <td>24.0</td>
+      <td>2.0</td>
+      <td>19.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>age_days-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.0</td>
+      <td>19.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>weekday_sin-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>True</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>2.0</td>
+      <td>19.0</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>The following will generate <code class="docutils literal notranslate"><span class="pre">schema.pbtxt</span></code> file in the provided folder.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:148: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;workflow_etl&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="export-pre-processed-data-by-day">
+<h2>Export pre-processed data by day<a class="headerlink" href="#export-pre-processed-data-by-day" title="Permalink to this headline"></a></h2>
+<p>In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day folder: <code class="docutils literal notranslate"><span class="pre">train.parquet</span></code>, <code class="docutils literal notranslate"><span class="pre">validation.parquet</span></code> and <code class="docutils literal notranslate"><span class="pre">test.parquet</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;sessions_by_day&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.data.preprocessing</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
+<span class="n">save_time_based_splits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="p">),</span>
+                       <span class="n">output_dir</span><span class="o">=</span> <span class="n">OUTPUT_DIR</span><span class="p">,</span>
+                       <span class="n">partition_col</span><span class="o">=</span><span class="s1">&#39;day-first&#39;</span><span class="p">,</span>
+                       <span class="n">timestamp_col</span><span class="o">=</span><span class="s1">&#39;session_id&#39;</span><span class="p">,</span> 
+                      <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00&lt;00:00, 27.95it/s]
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="checking-the-preprocessed-outputs">
+<h2>Checking the preprocessed outputs<a class="headerlink" href="#checking-the-preprocessed-outputs" title="Permalink to this headline"></a></h2>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">TRAIN_PATHS</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;train.parquet&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">TRAIN_PATHS</span><span class="p">)</span>
+<span class="n">df</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>session_id</th>
+      <th>item_id-count</th>
+      <th>item_id-list</th>
+      <th>category-list</th>
+      <th>age_days-list</th>
+      <th>weekday_sin-list</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>19</td>
+      <td>[27, 26, 7, 46, 13, 2, 4, 237, 10, 35, 46, 35,...</td>
+      <td>[5, 5, 2, 8, 2, 1, 2, 45, 3, 6, 8, 6, 1, 16, 3...</td>
+      <td>[0.97853184, 0.4591664, 0.083990775, 0.7000025...</td>
+      <td>[0.04896013, 0.18139902, 0.5046173, 0.48253214...</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>17</td>
+      <td>13</td>
+      <td>[15, 5, 5, 58, 8, 18, 29, 34, 2, 3, 43, 54, 9]</td>
+      <td>[3, 1, 1, 10, 1, 4, 6, 6, 1, 1, 8, 10, 1]</td>
+      <td>[0.76496226, 0.85960853, 0.13536207, 0.3988903...</td>
+      <td>[0.3081522, 0.17396946, 0.8448347, 0.8297997, ...</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>34</td>
+      <td>13</td>
+      <td>[17, 12, 9, 21, 29, 6, 23, 6, 5, 176, 12, 26, 1]</td>
+      <td>[4, 3, 1, 4, 6, 1, 4, 1, 1, 29, 3, 5, 2]</td>
+      <td>[0.42529476, 0.66954064, 0.46188155, 0.2200255...</td>
+      <td>[0.951742, 0.7311401, 0.6795269, 0.5283087, 0....</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>58</td>
+      <td>12</td>
+      <td>[84, 11, 7, 66, 23, 1, 36, 5, 19, 22, 6, 22]</td>
+      <td>[15, 3, 2, 12, 4, 2, 7, 1, 4, 4, 1, 4]</td>
+      <td>[0.7655469, 0.4924979, 0.9192873, 0.6521773, 0...</td>
+      <td>[0.060284566, 0.9057582, 0.9853312, 0.27452144...</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>64</td>
+      <td>12</td>
+      <td>[12, 7, 6, 5, 26, 20, 90, 28, 132, 36, 21, 8]</td>
+      <td>[3, 2, 1, 1, 5, 2, 16, 5, 23, 7, 4, 1]</td>
+      <td>[0.86268437, 0.11732827, 0.31621945, 0.0408642...</td>
+      <td>[0.8027563, 0.7638514, 0.055432655, 0.06549974...</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2110</th>
+      <td>19074</td>
+      <td>2</td>
+      <td>[10, 16]</td>
+      <td>[3, 3]</td>
+      <td>[0.9952336, 0.018463716]</td>
+      <td>[0.3855745, 0.8623388]</td>
+    </tr>
+    <tr>
+      <th>2111</th>
+      <td>19122</td>
+      <td>2</td>
+      <td>[37, 28]</td>
+      <td>[7, 5]</td>
+      <td>[0.26565734, 0.3376144]</td>
+      <td>[0.519952, 0.117240556]</td>
+    </tr>
+    <tr>
+      <th>2112</th>
+      <td>19128</td>
+      <td>2</td>
+      <td>[18, 15]</td>
+      <td>[4, 3]</td>
+      <td>[0.65739745, 0.46439078]</td>
+      <td>[0.49096248, 0.5064814]</td>
+    </tr>
+    <tr>
+      <th>2113</th>
+      <td>19134</td>
+      <td>2</td>
+      <td>[9, 116]</td>
+      <td>[1, 20]</td>
+      <td>[0.45008472, 0.36275008]</td>
+      <td>[0.10166882, 0.8127918]</td>
+    </tr>
+    <tr>
+      <th>2114</th>
+      <td>19136</td>
+      <td>2</td>
+      <td>[6, 9]</td>
+      <td>[1, 1]</td>
+      <td>[0.61278456, 0.64234763]</td>
+      <td>[0.46083343, 0.8074532]</td>
+    </tr>
+  </tbody>
+</table>
+<p>1686 rows × 6 columns</p>
+</div></div></div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">gc</span>
+<span class="k">del</span> <span class="n">df</span>
+<span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>490
+</pre></div>
+</div>
+</div>
+</div>
+<p>You have  just created session-level features to train a session-based recommendation model using NVTabular. Now you can move to the the next notebook,<code class="docutils literal notranslate"><span class="pre">02-session-based-XLNet-with-PyT.ipynb</span></code> to train a session-based recommendation model using <a class="reference external" href="https://arxiv.org/abs/1906.08237">XLNet</a>, one of the state-of-the-art NLP model. Please shut down this kernel to free the GPU memory before you start the next one.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Getting Started: Session-based Recommendation with Synthetic Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="02-session-based-XLNet-with-PyT.html" class="btn btn-neutral float-right" title="Session-based Recommendation with XLNET" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
