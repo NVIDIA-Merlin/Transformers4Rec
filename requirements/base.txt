@@ -1,4 +1,4 @@
 transformers<4.19
 tqdm>=4.27
 pyarrow>=1.0
-merlin-models
+merlin-models>=0.11
