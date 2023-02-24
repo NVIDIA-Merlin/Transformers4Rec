@@ -27,7 +27,7 @@ jobs:
         run: |
           sudo apt-get update -y
           sudo apt-get install -y protobuf-compiler
-      - name: Install dependencies
+      - name: Install Tox
         run: |
           python -m pip install --upgrade pip tox
       - name: Checking Manifest
