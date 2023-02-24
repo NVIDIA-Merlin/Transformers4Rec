@@ -29,11 +29,10 @@ from transformers4rec.data import tabular_sequence_testing_data, tabular_testing
 
 REPO_ROOT = Path(__file__).parent.parent
 
-np.random.seed(0)
-
 
 @pytest.fixture
 def ecommerce_data() -> Dataset:
+    np.random.seed(0)
     return generate_data("e-commerce", num_rows=100)
 
 
