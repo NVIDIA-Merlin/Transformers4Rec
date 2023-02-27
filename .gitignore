@@ -103,3 +103,6 @@ tmp/
 # PyCharm
 .idea
 
+# NVTabular
+categories
+
