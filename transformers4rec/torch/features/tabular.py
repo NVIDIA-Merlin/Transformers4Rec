@@ -16,10 +16,8 @@
 
 from typing import List, Optional, Tuple, Type, Union
 
-from merlin.schema import Schema
+from merlin.schema import Schema, Tags, TagsType
 
-from merlin_standard_lib import Tag
-from merlin_standard_lib.schema.tag import TagsType
 from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import SequentialBlock
@@ -120,8 +118,8 @@ class TabularFeatures(MergeTabular):
     def from_schema(  # type: ignore
         cls,
         schema: Schema,
-        continuous_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CONTINUOUS,),
-        categorical_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CATEGORICAL,),
+        continuous_tags: Optional[Union[TagsType, Tuple[Tags]]] = (Tags.CONTINUOUS,),
+        categorical_tags: Optional[Union[TagsType, Tuple[Tags]]] = (Tags.CATEGORICAL,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,

@@ -194,7 +194,9 @@ class TabularModule(torch.nn.Module):
         if not schema_copy.column_schemas:
             return None
 
-        return cls.from_features(schema_copy.column_names, schema=schema_copy, **kwargs)
+        return cls.from_features(
+            schema_copy.column_names, schema=schema_copy.column_names, **kwargs
+        )
 
     @classmethod
     @docstring_parameter(tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING, extra_padding=4)
@@ -587,7 +589,12 @@ class MergeTabular(TabularBlock):
 
         # Merge schemas if necessary.
         if not schema and all(getattr(m, "schema", False) for m in self.merge_values):
-            self.schema = reduce(lambda a, b: a + b, [m.schema for m in self.merge_values])
+            self.schema = []
+            for m in self.merge_values:
+                if isinstance(m, list):
+                    self.schema.extend(m)
+                elif isinstance(m, Schema):
+                    self.schema.extend(m.column_names)
 
     @property
     def merge_values(self):

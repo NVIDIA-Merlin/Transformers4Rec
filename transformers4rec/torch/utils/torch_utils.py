@@ -103,7 +103,7 @@ class MetricsMixin:
         """
         raise NotImplementedError()
 
-    def compute_metrics(self, mode: str = None) -> Dict[str, Union[float, torch.Tensor]]:
+    def compute_metrics(self, mode: Optional[str] = None) -> Dict[str, Union[float, torch.Tensor]]:
         """Returns the current state of each metric.
 
         The state is typically updated each batch by calling the `calculate_metrics` method.
@@ -151,7 +151,7 @@ def get_output_sizes_from_schema(
                     max_sequence_length or int(feature.value_count.max),
                 ]
             )
-        elif feature.shape:
+        elif feature.shape and feature.shape.dims and feature.shape.dims.as_tuple:
             sizes[name] = torch.Size([batch_size] + [d for d in feature.shape.as_tuple])
             # sizes[name] = torch.Size([batch_size] + [d.size for d in feature.shape.dim])
         else:

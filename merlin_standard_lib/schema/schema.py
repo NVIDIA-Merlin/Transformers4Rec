@@ -31,7 +31,9 @@ except ImportError:
     cached_property = lambda func: property(lru_cache()(func))  # type: ignore  # noqa
 
 import betterproto  # noqa
+from merlin.schema import ColumnSchema as MerlinColumnSchema
 from merlin.schema import Schema as MerlinSchema
+from merlin.schema import Tags
 
 from ..proto.schema_bp import *  # noqa
 from ..proto.schema_bp import (
@@ -51,8 +53,9 @@ from ..proto.schema_bp import (
 def categorical_cardinalities(schema: MerlinSchema) -> Dict[str, int]:
     outputs = {}
 
-    for col in schema.column_schemas:
-        if col.int_domain and col.int_domain.is_categorical:
+    for col in schema.column_schemas.values():
+        col: MerlinColumnSchema = col
+        if col.int_domain and Tags.CATEGORICAL in col.tags:
             outputs[col.name] = col.int_domain.max + 1
     return outputs
 

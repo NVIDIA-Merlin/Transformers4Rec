@@ -15,7 +15,9 @@
 #
 from typing import Optional
 
-from merlin_standard_lib import Schema
+from merlin.schema import Schema, Tags
+
+from transformers4rec.torch.typing import TabularData
 
 
 class SchemaMixin:
@@ -53,8 +55,9 @@ class SchemaMixin:
         if input and getattr(input, "set_schema"):
             input.set_schema(schema)
 
-    def get_item_ids_from_inputs(self, inputs):
-        return inputs[self.schema.item_id_column_name]
+    def get_item_ids_from_inputs(self, inputs: TabularData):
+        item_id = self.schema.select_by_tag(Tags.ITEM_ID).first.name
+        return inputs[item_id]
 
     def get_padding_mask_from_item_id(self, inputs, pad_token=0):
         item_id_inputs = self.get_item_ids_from_inputs(inputs)
