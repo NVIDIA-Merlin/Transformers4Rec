@@ -2,10 +2,10 @@ import logging
 
 import numpy as np
 import pandas as pd
+from merlin.schema.io.proto_utils import has_field
 
 import merlin_standard_lib as msl
 from merlin_standard_lib import Schema, Tag
-from merlin_standard_lib.utils.proto_utils import has_field
 
 LOG = logging.getLogger("transformers4rec")
 

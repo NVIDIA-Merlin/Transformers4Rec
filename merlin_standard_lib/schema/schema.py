@@ -18,7 +18,8 @@ import collections
 import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
-from ..utils import proto_utils
+from merlin.schema.io import proto_utils
+
 from .tag import TagsType
 
 try:
