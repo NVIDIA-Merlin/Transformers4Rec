@@ -41,9 +41,9 @@ def read_requirements(filename):
 
 requirements = {
     "base": read_requirements("requirements/base.txt"),
+    "merlin": read_requirements("requirements/merlin.txt"),
     "pytorch": read_requirements("requirements/pytorch.txt"),
     "nvtabular": read_requirements("requirements/nvtabular.txt"),
-    "dataloader": read_requirements("requirements/dataloader.txt"),
     "docs": read_requirements("requirements/docs.txt"),
     "dev": read_requirements("requirements/dev.txt"),
 }
@@ -58,7 +58,7 @@ setup(
     license="Apache 2.0",
     long_description=open("README.md", encoding="utf8").read(),
     long_description_content_type="text/markdown",
-    install_requires=requirements["base"],
+    install_requires=requirements["base"] + requirements["merlin"],
     test_suite="tests",
     extras_require={**requirements, "all": list(itertools.chain(*list(requirements.values())))},
     include_package_data=True,
