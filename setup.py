@@ -40,8 +40,8 @@ def read_requirements(filename):
 
 
 requirements = {
-    "base": read_requirements("requirements/base.txt"),
-    "merlin": read_requirements("requirements/merlin.txt"),
+    "base": read_requirements("requirements/base_external.txt")
+    + read_requirements("requirements/base_merlin.txt"),
     "pytorch": read_requirements("requirements/pytorch.txt"),
     "nvtabular": read_requirements("requirements/nvtabular.txt"),
     "docs": read_requirements("requirements/docs.txt"),
