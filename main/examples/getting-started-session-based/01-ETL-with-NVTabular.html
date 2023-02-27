@@ -648,7 +648,7 @@
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.data.preprocessing</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.utils.data_utils</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
 <span class="n">save_time_based_splits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="p">),</span>
                        <span class="n">output_dir</span><span class="o">=</span> <span class="n">OUTPUT_DIR</span><span class="p">,</span>
                        <span class="n">partition_col</span><span class="o">=</span><span class="s1">&#39;day-first&#39;</span><span class="p">,</span>
