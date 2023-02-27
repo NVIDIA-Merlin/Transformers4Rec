@@ -15,6 +15,7 @@
 
 import pytest
 
+from merlin_standard_lib import categorical_cardinalities
 from merlin_standard_lib.schema import schema
 
 
@@ -60,7 +61,7 @@ def test_column_schema_categorical_with_shape():
 
     assert col.shape.dim[0].size == 1
 
-    assert schema.Schema([col]).categorical_cardinalities() == dict(cat_1=1000 + 1)
+    assert categorical_cardinalities(schema.Schema([col])) == dict(cat_1=1000 + 1)
 
 
 def test_column_schema_categorical_with_value_count():
