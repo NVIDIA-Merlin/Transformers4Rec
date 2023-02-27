@@ -402,7 +402,12 @@ class Schema(_Schema):
     def from_proto_text(self, path_or_proto_text: str) -> "Schema":
         from tensorflow_metadata.proto.v0 import schema_pb2
 
-        return proto_utils.proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
+        if os.path.isfile(path_or_proto_text):
+            with open(path_or_proto_text, "r") as f:
+                proto_text = f.read()
+        else:
+            proto_text = path_or_proto_text
+        return proto_utils.proto_text_to_better_proto(self, proto_text, schema_pb2.Schema())
 
     def copy(self, **kwargs) -> "Schema":
         return proto_utils.copy_better_proto_message(self, **kwargs)
