@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
 import collections
+import json
 import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
-from ..utils import proto_utils
+from google.protobuf import json_format, text_format
+from google.protobuf.message import Message as ProtoMessage
+from merlin.schema.io import proto_utils
+
 from .tag import TagsType
 
 try:
@@ -30,6 +32,7 @@ except ImportError:
     cached_property = lambda func: property(lru_cache()(func))  # type: ignore  # noqa
 
 import betterproto  # noqa
+from betterproto import Message as BetterProtoMessage
 
 from ..proto.schema_bp import *  # noqa
 from ..proto.schema_bp import (
@@ -44,6 +47,8 @@ from ..proto.schema_bp import (
     ValueCountList,
     _Schema,
 )
+
+ProtoMessageType = TypeVar("ProtoMessageType", bound=BetterProtoMessage)
 
 
 def _parse_shape_and_value_count(shape, value_count) -> Dict[str, Any]:
@@ -401,7 +406,7 @@ class Schema(_Schema):
     def from_proto_text(self, path_or_proto_text: str) -> "Schema":
         from tensorflow_metadata.proto.v0 import schema_pb2
 
-        return proto_utils.proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
+        return _proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
 
     def copy(self, **kwargs) -> "Schema":
         return proto_utils.copy_better_proto_message(self, **kwargs)
@@ -508,3 +513,25 @@ class Schema(_Schema):
                 result.column_schemas.pop(key, None)
 
         return result
+
+
+def _proto_text_to_better_proto(
+    better_proto_message: ProtoMessageType, path_proto_text: str, message: ProtoMessage
+) -> ProtoMessageType:
+    proto_text = path_proto_text
+    if os.path.isfile(proto_text):
+        with open(path_proto_text, "r") as f:
+            proto_text = f.read()
+
+    proto = text_format.Parse(proto_text, message)
+
+    # This is a hack because as of now we can't parse the Any representation.
+    # TODO: Fix this.
+    d = json_format.MessageToDict(proto)
+    for f in d["feature"]:
+        if "extraMetadata" in f["annotation"]:  # type: ignore
+            extra_metadata = f["annotation"].pop("extraMetadata")  # type: ignore
+            f["annotation"]["comment"] = [json.dumps(extra_metadata[0]["value"])]  # type: ignore
+    json_str = json_format.MessageToJson(json_format.ParseDict(d, message))
+
+    return better_proto_message.__class__().from_json(json_str)

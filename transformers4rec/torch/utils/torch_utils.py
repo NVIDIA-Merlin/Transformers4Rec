@@ -21,9 +21,9 @@ from typing import Dict, Optional, Union
 
 import numpy as np
 import torch
+from merlin.schema.io.proto_utils import has_field
 
 from merlin_standard_lib import Schema
-from merlin_standard_lib.utils.proto_utils import has_field
 
 from ...config.schema import SchemaMixin
 from ..typing import TabularData
