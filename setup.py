@@ -39,9 +39,11 @@ def read_requirements(filename):
         return [line for line in lineiter if line and not line.startswith("#")]
 
 
+base = read_requirements("requirements/base_external.txt")
+base += read_requirements("requirements/base_merlin.txt")
+
 requirements = {
-    "base": read_requirements("requirements/base_external.txt")
-    + read_requirements("requirements/base_merlin.txt"),
+    "base": base,
     "pytorch": read_requirements("requirements/pytorch.txt"),
     "nvtabular": read_requirements("requirements/nvtabular.txt"),
     "docs": read_requirements("requirements/docs.txt"),
@@ -58,7 +60,7 @@ setup(
     license="Apache 2.0",
     long_description=open("README.md", encoding="utf8").read(),
     long_description_content_type="text/markdown",
-    install_requires=requirements["base"] + requirements["merlin"],
+    install_requires=requirements["base"],
     test_suite="tests",
     extras_require={**requirements, "all": list(itertools.chain(*list(requirements.values())))},
     include_package_data=True,
