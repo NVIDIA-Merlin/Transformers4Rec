@@ -19,9 +19,9 @@ from functools import reduce
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
+from merlin.models.utils.doc_utils import docstring_parameter
 
 from merlin_standard_lib import Registry, Schema
-from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import BlockBase, SequentialBlock, right_shift_block
 from ..typing import TabularData, TensorOrTabularData
