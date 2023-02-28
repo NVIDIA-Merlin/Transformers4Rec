@@ -24,13 +24,13 @@ from typing import Callable, Dict, Iterable, List, Optional, Type, Union, cast
 import numpy as np
 import torch
 import torchmetrics as tm
+from merlin.models.utils.registry import camelcase_to_snakecase
 from merlin.schema import ColumnSchema
 from merlin.schema import Schema as Core_Schema
 from tqdm import tqdm
 from transformers.modeling_utils import SequenceSummary
 
 from merlin_standard_lib import Schema, Tag
-from merlin_standard_lib.registry import camelcase_to_snakecase
 
 from ..block.base import BlockBase, BlockOrModule, BlockType
 from ..features.base import InputBlock

@@ -17,7 +17,6 @@
 from betterproto import Message
 from merlin.schema.io import proto_utils
 
-from .registry import Registry, RegistryMixin
 from .schema import schema
 from .schema.schema import ColumnSchema, Schema
 from .schema.tag import Tag

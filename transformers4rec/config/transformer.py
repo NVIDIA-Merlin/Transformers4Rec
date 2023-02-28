@@ -15,8 +15,7 @@
 #
 
 import transformers
-
-from merlin_standard_lib import Registry
+from merlin.models.utils.registry import Registry
 
 transformer_registry: Registry = Registry("transformers")
 

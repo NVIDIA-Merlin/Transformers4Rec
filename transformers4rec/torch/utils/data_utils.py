@@ -22,10 +22,11 @@ import numpy as np
 import torch
 from merlin.dataloader.torch import Loader
 from merlin.models.utils.misc_utils import validate_dataset
+from merlin.models.utils.registry import Registry
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
-from merlin_standard_lib import Registry, Schema, Tag
+from merlin_standard_lib import Schema, Tag
 
 from ...utils import dependencies
 from ..utils.schema_utils import _augment_schema

@@ -19,9 +19,8 @@ from abc import abstractmethod
 
 import torch
 import torchmetrics as tm
+from merlin.models.utils.registry import Registry
 from torchmetrics.utilities.data import dim_zero_cat
-
-from merlin_standard_lib import Registry
 
 from .utils import torch_utils
 
