@@ -196,7 +196,7 @@ def test_stochastic_swap_noise_raise_exception_not_2d_item_id():
     s = schema.Schema(
         [
             schema.ColumnSchema.create_categorical(
-                "item_id_feat", num_items=1000, tags=[Tags.ITEM.value, Tags.ID.value]
+                "item_id_feat", num_items=1000, tags=[Tags.ITEM_ID]
             ),
         ]
     )

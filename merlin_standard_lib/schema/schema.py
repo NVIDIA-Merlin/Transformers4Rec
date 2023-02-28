@@ -19,7 +19,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar
 
 from google.protobuf import json_format, text_format
 from google.protobuf.message import Message as ProtoMessage
-from merlin.schema import Tags, TagsType
+from merlin.schema import Tags, TagSet, TagsType
 from merlin.schema.io import proto_utils
 
 try:
@@ -78,7 +78,7 @@ class ColumnSchema(Feature):
         tags: Optional[TagsType] = None,
         **kwargs,
     ) -> "ColumnSchema":
-        _tags: List[str] = [str(t) for t in tags] if tags else []
+        _tags: List[str] = [t.value for t in TagSet(tags or [])]
 
         extra = _parse_shape_and_value_count(shape, value_count)
         int_domain = IntDomain(name=name, min=min_index, max=num_items, is_categorical=True)
@@ -303,20 +303,17 @@ class Schema(_Schema):
         if not isinstance(to_select, (list, tuple)) and not callable(to_select):
             to_select = [to_select]
 
-        if not callable(to_select):
-            # _filter_column_schemas operates on the Tags as strings, so we convert any `Tags` to a
-            # string before filtering.
+        if callable(to_select):
+            return self._filter_column_schemas(to_select, lambda x: False, lambda x: x.tags)
+        else:
+            # Schema.tags always returns a List[str] with the tag values, so if the user wants to
+            # filter using the Tags Enum, we need to convert those to their string value
             to_select = [tag.value if isinstance(tag, Tags) else tag for tag in to_select]
 
-        def collection_filter_fn(column_tags):
-            column_tags_lower = [c.lower() for c in column_tags]
-            return all(x.lower() in column_tags_lower for x in to_select)
+            def collection_filter_fn(column_names: List[str]):
+                return all(x in column_names for x in to_select)
 
-        output: Schema = self._filter_column_schemas(
-            to_select, collection_filter_fn, lambda x: x.tags
-        )
-
-        return output
+            return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
 
     def remove_by_tag(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -380,7 +377,7 @@ class Schema(_Schema):
 
     @cached_property
     def item_id_column_name(self):
-        item_id_col = self.select_by_tag("item_id")
+        item_id_col = self.select_by_tag(Tags.ITEM_ID)
         if len(item_id_col.column_names) == 0:
             raise ValueError("There is no column tagged as item id.")
 

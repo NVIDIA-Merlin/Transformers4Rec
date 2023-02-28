@@ -55,9 +55,9 @@ def main():
     # Loading the schema of the dataset
     schema = Schema().from_proto_text(data_args.features_schema_path)
     if not data_args.use_side_information_features:
-        schema = schema.select_by_tag([Tags.ITEM, Tags.ID])
+        schema = schema.select_by_tag([Tags.ITEM_ID])
 
-    item_id_col = schema.select_by_tag([Tags.ITEM, Tags.ID]).column_names[0]
+    item_id_col = schema.select_by_tag([Tags.ITEM_ID]).column_names[0]
     col_names = schema.column_names
     logger.info("Column names: {}".format(col_names))
 

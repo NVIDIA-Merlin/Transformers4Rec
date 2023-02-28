@@ -30,7 +30,7 @@ def test_random_data_from_simple_schema():
             ColumnSchema.create_categorical(
                 "item_id",
                 num_items=1000,
-                tags=[Tags.ITEM, Tags.ID, Tags.LIST],
+                tags=[Tags.ITEM_ID, Tags.LIST],
                 value_count=ValueCount(1, 50),
             ),
             ColumnSchema.create_categorical(

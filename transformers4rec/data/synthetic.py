@@ -172,7 +172,7 @@ synthetic_ecommerce_data_schema = Schema(
         msl.ColumnSchema.create_categorical(
             "item_id",
             num_items=10000,
-            tags=[Tags.ITEM, Tags.ID, Tags.LIST],
+            tags=[Tags.ITEM_ID, Tags.LIST],
             value_count=msl.schema.ValueCount(1, 20),
         ),
         msl.ColumnSchema.create_categorical(

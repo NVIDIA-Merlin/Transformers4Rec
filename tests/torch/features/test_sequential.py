@@ -44,7 +44,9 @@ def test_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
 
     outputs = tab_module(torch_yoochoose_like)
 
-    tag_select = lambda tags: any(t in [Tags.CONTINUOUS, Tags.CATEGORICAL] for t in tags)  # noqa
+    tag_select = lambda tags: any(  # noqa
+        t in [Tags.CONTINUOUS.value, Tags.CATEGORICAL.value] for t in tags
+    )
     cols = schema.select_by_tag(tag_select).column_names
 
     assert set(outputs.keys()) == set(cols)
