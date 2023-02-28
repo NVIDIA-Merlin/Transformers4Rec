@@ -20,7 +20,7 @@ from typing import Any, Callable, Dict, List, Optional, Text, Union
 import torch
 from merlin.models.utils.doc_utils import docstring_parameter
 
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Schema, Tag, categorical_cardinalities
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 from ..tabular.base import (
@@ -176,7 +176,7 @@ class EmbeddingFeatures(InputBlock):
         embeddings_initializers = embeddings_initializers or {}
 
         emb_config = {}
-        cardinalities = schema.categorical_cardinalities()
+        cardinalities = categorical_cardinalities(schema)
         for key, cardinality in cardinalities.items():
             embedding_size = embedding_dims.get(key, embedding_dim_default)
             embedding_initializer = embeddings_initializers.get(key, None)
@@ -353,7 +353,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         embeddings_initializers = embeddings_initializers or {}
 
         sizes = {}
-        cardinalities = schema.categorical_cardinalities()
+        cardinalities = categorical_cardinalities(schema)
         for col_name in schema.column_names:
             # If this is NOT a categorical feature
             if col_name not in cardinalities:

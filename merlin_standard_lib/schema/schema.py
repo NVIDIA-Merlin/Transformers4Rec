@@ -367,14 +367,6 @@ class Schema(_Schema):
 
         return Schema(selected_schemas)
 
-    def categorical_cardinalities(self) -> Dict[str, int]:
-        outputs = {}
-        for col in self:
-            if col.int_domain and col.int_domain.is_categorical:
-                outputs[col.name] = col.int_domain.max + 1
-
-        return outputs
-
     @property
     def column_names(self) -> List[str]:
         return [f.name for f in self.feature]
@@ -535,3 +527,12 @@ def _proto_text_to_better_proto(
     json_str = json_format.MessageToJson(json_format.ParseDict(d, message))
 
     return better_proto_message.__class__().from_json(json_str)
+
+
+def categorical_cardinalities(schema) -> Dict[str, int]:
+    outputs = {}
+    for col in schema:
+        if col.int_domain and col.int_domain.is_categorical:
+            outputs[col.name] = col.int_domain.max + 1
+
+    return outputs
