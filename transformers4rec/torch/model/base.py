@@ -27,10 +27,11 @@ import torchmetrics as tm
 from merlin.models.utils.registry import camelcase_to_snakecase
 from merlin.schema import ColumnSchema
 from merlin.schema import Schema as Core_Schema
+from merlin.schema import Tags
 from tqdm import tqdm
 from transformers.modeling_utils import SequenceSummary
 
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Schema
 
 from ..block.base import BlockBase, BlockOrModule, BlockType
 from ..features.base import InputBlock
@@ -326,11 +327,11 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
         from .prediction_task import BinaryClassificationTask, RegressionTask
 
-        for binary_target in schema.select_by_tag(Tag.BINARY_CLASSIFICATION).column_names:
+        for binary_target in schema.select_by_tag([Tags.BINARY, Tags.CLASSIFICATION]).column_names:
             tasks.append(BinaryClassificationTask(binary_target))
             task_weights.append(task_weight_dict.get(binary_target, 1.0))
 
-        for regression_target in schema.select_by_tag(Tag.REGRESSION).column_names:
+        for regression_target in schema.select_by_tag(Tags.REGRESSION).column_names:
             tasks.append(RegressionTask(regression_target))
             task_weights.append(task_weight_dict.get(regression_target, 1.0))
 

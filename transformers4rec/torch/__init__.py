@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Schema
 
 from .. import data
 from ..config.schema import requires_schema
@@ -75,7 +75,6 @@ from .trainer import Trainer  # type: ignore
 
 __all__ = [
     "Schema",
-    "Tag",
     "ranking_metric",
     "requires_schema",
     "T4RecConfig",

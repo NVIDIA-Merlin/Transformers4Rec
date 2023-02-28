@@ -19,9 +19,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar
 
 from google.protobuf import json_format, text_format
 from google.protobuf.message import Message as ProtoMessage
+from merlin.schema import Tags, TagsType
 from merlin.schema.io import proto_utils
-
-from .tag import TagsType
 
 try:
     from functools import cached_property  # type: ignore
@@ -83,7 +82,7 @@ class ColumnSchema(Feature):
 
         extra = _parse_shape_and_value_count(shape, value_count)
         int_domain = IntDomain(name=name, min=min_index, max=num_items, is_categorical=True)
-        _tags = list(set(_tags + ["categorical"]))
+        _tags = list(set(_tags + [Tags.CATEGORICAL.value]))
         extra["type"] = FeatureType.INT
 
         return cls(name=name, int_domain=int_domain, **extra, **kwargs).with_tags(_tags)
@@ -121,7 +120,7 @@ class ColumnSchema(Feature):
                     name=name, min=int(min_value), max=int(max_value), is_categorical=False
                 )
         extra["type"] = FeatureType.FLOAT if is_float else FeatureType.INT
-        _tags = list(set(_tags + ["continuous"]))
+        _tags = list(set(_tags + [Tags.CONTINUOUS.value]))
 
         return cls(name=name, **extra, **kwargs).with_tags(_tags)
 
@@ -144,21 +143,19 @@ class ColumnSchema(Feature):
     def with_tags_based_on_properties(
         self, using_value_count=True, using_domain=True
     ) -> "ColumnSchema":
-        from .tag import Tag
-
         extra_tags = []
 
         if using_value_count and proto_utils.has_field(self, "value_count"):
-            extra_tags.append(str(Tag.LIST))
+            extra_tags.append(str(Tags.LIST))
 
         if using_domain and proto_utils.has_field(self, "int_domain"):
             if self.int_domain.is_categorical:
-                extra_tags.append(str(Tag.CATEGORICAL))
+                extra_tags.append(str(Tags.CATEGORICAL))
             else:
-                extra_tags.append(str(Tag.CONTINUOUS))
+                extra_tags.append(str(Tags.CONTINUOUS))
 
         if using_domain and proto_utils.has_field(self, "float_domain"):
-            extra_tags.append(str(Tag.CONTINUOUS))
+            extra_tags.append(str(Tags.CONTINUOUS))
 
         return self.with_tags(extra_tags) if extra_tags else self.copy()
 
@@ -306,8 +303,14 @@ class Schema(_Schema):
         if not isinstance(to_select, (list, tuple)) and not callable(to_select):
             to_select = [to_select]
 
+        if not callable(to_select):
+            # _filter_column_schemas operates on the Tags as strings, so we convert any `Tags` to a
+            # string before filtering.
+            to_select = [tag.value if isinstance(tag, Tags) else tag for tag in to_select]
+
         def collection_filter_fn(column_tags):
-            return all(x in column_tags for x in to_select)
+            column_tags_lower = [c.lower() for c in column_tags]
+            return all(x.lower() in column_tags_lower for x in to_select)
 
         output: Schema = self._filter_column_schemas(
             to_select, collection_filter_fn, lambda x: x.tags
