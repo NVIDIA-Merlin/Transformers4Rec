@@ -21,9 +21,8 @@ from collections import OrderedDict
 from typing import List, Optional, Union
 
 import torch
+from merlin.models.utils.misc_utils import filter_kwargs
 from torch.nn import Module
-
-from merlin_standard_lib.utils.misc_utils import filter_kwargs
 
 from ..utils import torch_utils
 
@@ -144,7 +143,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
 
         for i, module in enumerate(self):
             if i == len(self) - 1:
-                filtered_kwargs = filter_kwargs(kwargs, module, filter_positional_or_keyword=False)
+                filtered_kwargs = filter_kwargs(kwargs, module, cascade_kwargs_if_possible=True)
                 input = module(input, **filtered_kwargs)
 
             elif "training" in inspect.signature(module.forward).parameters:
