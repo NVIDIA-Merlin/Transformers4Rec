@@ -16,11 +16,11 @@
 
 import math
 
-from merlin_standard_lib import Schema
+from merlin_standard_lib import Schema, categorical_cardinalities
 
 
 def get_embedding_sizes_from_schema(schema: Schema, multiplier: float = 2.0):
-    cardinalities = schema.categorical_cardinalities()
+    cardinalities = categorical_cardinalities(schema)
 
     return {
         key: get_embedding_size_from_cardinality(val, multiplier)

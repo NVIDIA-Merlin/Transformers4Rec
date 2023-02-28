@@ -18,11 +18,19 @@ from betterproto import Message
 from merlin.schema.io import proto_utils
 
 from .schema import schema
-from .schema.schema import ColumnSchema, Schema
+from .schema.schema import ColumnSchema, Schema, categorical_cardinalities
 from .schema.tag import Tag
 
 # Other monkey-patching
 Message.HasField = proto_utils.has_field  # type: ignore
 Message.copy = proto_utils.copy_better_proto_message  # type: ignore
 
-__all__ = ["ColumnSchema", "Schema", "schema", "Tag", "Registry", "RegistryMixin"]
+__all__ = [
+    "ColumnSchema",
+    "Schema",
+    "schema",
+    "Tag",
+    "Registry",
+    "RegistryMixin",
+    "categorical_cardinalities",
+]
