@@ -21,13 +21,14 @@ from abc import ABC
 import numpy as np
 import torch
 from merlin.dataloader.torch import Loader
+from merlin.models.utils.misc_utils import validate_dataset
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
 from merlin_standard_lib import Registry, Schema, Tag
-from merlin_standard_lib.utils.misc_utils import _augment_schema, validate_dataset
 
 from ...utils import dependencies
+from ..utils.schema_utils import _augment_schema
 
 logger = logging.getLogger(__name__)
 
