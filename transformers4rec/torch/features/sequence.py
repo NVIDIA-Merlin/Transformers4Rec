@@ -17,10 +17,10 @@
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
+from merlin.models.utils.doc_utils import docstring_parameter
 
 from merlin_standard_lib import Schema, Tag
 from merlin_standard_lib.schema.tag import TagsType
-from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..block.base import BlockOrModule, BuildableBlock, SequentialBlock
 from ..block.mlp import MLPBlock

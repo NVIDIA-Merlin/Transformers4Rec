@@ -18,9 +18,9 @@ from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Text, Union
 
 import torch
+from merlin.models.utils.doc_utils import docstring_parameter
 
 from merlin_standard_lib import Schema, Tag
-from merlin_standard_lib.utils.doc_utils import docstring_parameter
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 from ..tabular.base import (
