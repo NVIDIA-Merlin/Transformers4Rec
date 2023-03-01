@@ -351,7 +351,7 @@ class Trainer(BaseTrainer):
         inputs = self._prepare_inputs(inputs)
         inputs, targets = inputs
         with torch.no_grad():
-            if self.use_amp:
+            if self.use_cuda_amp:
                 with autocast():
                     outputs = model(inputs, targets=targets, training=training, testing=testing)
             else:
@@ -702,7 +702,7 @@ class Trainer(BaseTrainer):
         torch.random.set_rng_state(checkpoint_rng_state["cpu"])
         torch.cuda.random.set_rng_state_all(checkpoint_rng_state["cuda"])
         # Restoring AMP scaler
-        if self.use_amp:
+        if self.use_cuda_amp:
             self.scaler.load_state_dict(torch.load(os.path.join(checkpoint_path, "scaler.pt")))
 
     @property
