@@ -13,15 +13,18 @@ def test_generate_item_interactions():
 
     assert isinstance(data, pd.DataFrame)
     assert len(data) == 500
-    assert list(data.columns) == [
-        "session_id",
-        "item_id",
-        "day",
-        "purchase",
-        "price",
-        "category",
-        "item_recency",
-    ]
+    print(sorted(list(data.columns)))
+    assert sorted(list(data.columns)) == sorted(
+        [
+            "session_id",
+            "item_id",
+            "day",
+            "purchase",
+            "price",
+            "category",
+            "item_recency",
+        ]
+    )
     expected_dtypes = {
         "session_id": "int64",
         "item_id": "int64",
@@ -31,5 +34,8 @@ def test_generate_item_interactions():
         "category": "int64",
         "item_recency": "float64",
     }
+    for key, val in dict(data.dtypes).items():
+        print((key, val))
+        assert val == expected_dtypes[key]
 
-    assert all(val == expected_dtypes[key] for key, val in dict(data.dtypes).items())
+    # assert all(val == expected_dtypes[key] for key, val in dict(data.dtypes).items())

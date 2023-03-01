@@ -102,7 +102,7 @@ class ColumnSchema(Feature):
         tags: Optional[TagsType] = None,
         **kwargs,
     ) -> "ColumnSchema":
-        _tags: List[str] = [str(t) for t in tags] if tags else []
+        _tags: List[str] = [t.value for t in TagSet(tags or [])]
 
         extra = _parse_shape_and_value_count(shape, value_count)
         if min_value is not None and max_value is not None:

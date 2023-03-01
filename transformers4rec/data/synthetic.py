@@ -98,13 +98,13 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
     data: pd.DataFrame
         Pandas dataframe with synthetic generated data.
     """
-    session_col = schema.select_by_tag([Tags.SESSION, Tags.ID]).feature[0]
+    session_col = schema.select_by_tag([Tags.SESSION_ID.value]).feature[0]
     data = pd.DataFrame(
         np.random.randint(1, session_col.int_domain.max, num_interactions),
         columns=[session_col.name],
     ).astype(np.int64)
 
-    item_id_col = schema.select_by_tag([Tags.ITEM, Tags.ID]).feature[0]
+    item_id_col = schema.select_by_tag([Tags.ITEM_ID.value]).feature[0]
     data[item_id_col.name] = np.clip(
         np.random.lognormal(3.0, 1.0, num_interactions).astype(np.int32),
         1,
@@ -112,11 +112,11 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
     ).astype(np.int64)
 
     # get session cols
-    session_features = schema.select_by_tag(Tags.SESSION).feature
+    session_features = schema.select_by_tag(Tags.SESSION.value).feature
     for feature in session_features:
         is_int_feature = has_field(feature, "int_domain")
         if is_int_feature:
-            if Tags.BINARY.value in feature.tags and Tags.CLASSIFICATION in feature.tags:
+            if Tags.BINARY_CLASSIFICATION.value in feature.tags:
                 mapping_feature = dict(
                     zip(
                         data[session_col.name].unique(),
@@ -149,7 +149,7 @@ def generate_item_interactions(num_interactions: int, schema: Schema) -> pd.Data
             data[feature.name] = data[session_col.name].map(mapping_feature)
 
     # get item-id cols
-    items_features = schema.select_by_tag(Tags.ITEM).feature
+    items_features = schema.select_by_tag(Tags.ITEM.value).feature
     for feature in items_features:
         is_int_feature = has_field(feature, "int_domain")
         if is_int_feature:
@@ -190,7 +190,7 @@ synthetic_ecommerce_data_schema = Schema(
         ),
         msl.ColumnSchema.create_categorical("day", num_items=11, tags=[Tags.SESSION]),
         msl.ColumnSchema.create_categorical(
-            "purchase", num_items=3, tags=[Tags.SESSION, Tags.BINARY, Tags.CLASSIFICATION]
+            "purchase", num_items=3, tags=[Tags.SESSION, Tags.BINARY_CLASSIFICATION]
         ),
         msl.ColumnSchema.create_continuous(
             "price", min_value=0, max_value=1, tags=[Tags.SESSION, Tags.REGRESSION]
