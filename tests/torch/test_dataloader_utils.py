@@ -15,9 +15,9 @@
 #
 
 import pytest
+import torch
 
-torch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 
 def test_pyarrow_load(yoochoose_schema, yoochoose_path_file):

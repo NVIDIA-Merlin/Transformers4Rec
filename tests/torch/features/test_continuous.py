@@ -14,11 +14,8 @@
 # limitations under the License.
 #
 
-import pytest
-
+import transformers4rec.torch as tr
 from merlin_standard_lib import Tag
-
-tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_continuous_features(torch_con_features):

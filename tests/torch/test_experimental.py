@@ -16,11 +16,9 @@
 
 import pytest
 
+import transformers4rec.torch as tr
 from transformers4rec.config import transformer as tconf
 from transformers4rec.torch.experimental import PostContextFusion
-
-tr = pytest.importorskip("transformers4rec.torch")
-pytorch = pytest.importorskip("torch")
 
 
 @pytest.mark.parametrize("fusion_aggregation", ["concat", "elementwise-mul", "elementwise-sum"])

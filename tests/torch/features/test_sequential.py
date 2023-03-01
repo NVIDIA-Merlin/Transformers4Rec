@@ -16,9 +16,8 @@
 
 import pytest
 
+import transformers4rec.torch as tr
 from merlin_standard_lib import Tag
-
-tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_sequential_and_non_seq_embedding_features(yoochoose_schema, torch_yoochoose_like):

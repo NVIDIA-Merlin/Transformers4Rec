@@ -1,14 +1,11 @@
 import os
-from importlib.util import find_spec
 
-import numpy as np
 import pytest
 from merlin.core.dispatch import HAS_GPU
 from testbook import testbook
 
 from tests.conftest import REPO_ROOT
 
-pytest.importorskip("torch")
 pytest.importorskip("transformers")
 
 # flake8: noqa
