@@ -738,7 +738,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
             dtype = {0: np.float32, 2: np.int64, 3: np.float32}[column.type]
             tags = column.tags
-            is_list = column.value_count.max > 0
+            dims = None
+            if column.value_count.max > 0:
+                dims = (None, column.value_count.max)
             int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
             properties = {
                 "int_domain": int_domain,
@@ -749,8 +751,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 dtype=dtype,
                 tags=tags,
                 properties=properties,
-                is_list=is_list,
-                is_ragged=False,
+                dims=dims
             )
             core_schema[name] = col_schema
         return core_schema
