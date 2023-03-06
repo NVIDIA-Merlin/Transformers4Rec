@@ -16,7 +16,6 @@
 
 from __future__ import absolute_import
 
-from importlib.util import find_spec
 from pathlib import Path
 
 import numpy as np
@@ -74,6 +73,9 @@ def tabular_schema() -> Schema:
     return tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
 
-torch = find_spec("torch")
-if torch is not None:
-    from tests.torch.conftest import *  # noqa
+try:
+    import torchmetrics  # noqa
+
+    from tests.torch._conftest import *  # noqa
+except ModuleNotFoundError:
+    pass
