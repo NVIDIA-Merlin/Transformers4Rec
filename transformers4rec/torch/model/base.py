@@ -747,11 +747,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             }
 
             col_schema = ColumnSchema(
-                name,
-                dtype=dtype,
-                tags=tags,
-                properties=properties,
-                dims=dims
+                name, dtype=dtype, tags=tags, properties=properties, dims=dims
             )
             core_schema[name] = col_schema
         return core_schema
