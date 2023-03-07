@@ -828,18 +828,14 @@
             <span class="n">tags</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">tags</span>
             <span class="n">dims</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span><span class="p">))</span>
             <span class="n">int_domain</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">max</span><span class="p">}</span>
             <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
             <span class="p">}</span>
 
             <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
-                <span class="n">name</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
-                <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
-                <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
-                <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
+                <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
             <span class="p">)</span>
             <span class="n">core_schema</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_schema</span>
         <span class="k">return</span> <span class="n">core_schema</span>
