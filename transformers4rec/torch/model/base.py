@@ -740,7 +740,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             tags = column.tags
             dims = None
             if column.value_count.max > 0:
-                dims = (None, column.value_count.max)
+                dims = (None, (column.value_count.min, column.value_count.max))
             int_domain = {"min": column.int_domain.min, "max": column.int_domain.max}
             properties = {
                 "int_domain": int_domain,
