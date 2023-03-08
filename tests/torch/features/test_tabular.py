@@ -14,12 +14,8 @@
 # limitations under the License.
 #
 
-import pytest
-
+import transformers4rec.torch as tr
 from merlin_standard_lib import Tag
-
-tr = pytest.importorskip("transformers4rec.torch")
-torch_utils = pytest.importorskip("transformers4rec.torch.utils.torch_utils")
 
 
 def test_tabular_features(tabular_schema, torch_tabular_data):

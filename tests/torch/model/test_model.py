@@ -21,19 +21,17 @@ import pytest
 import torch
 from merlin.schema import Schema as Core_Schema
 
+import transformers4rec.torch as tr
 from transformers4rec.config import transformer as tconf
 
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
-
-if pytorch.cuda.is_available():
+if torch.cuda.is_available():
     devices = ["cpu", "cuda"]
 else:
     devices = ["cpu"]
 
 
 def test_simple_model(torch_tabular_features, torch_tabular_data):
-    targets = {"target": pytorch.randint(2, (100,)).float()}
+    targets = {"target": torch.randint(2, (100,)).float()}
 
     inputs = torch_tabular_features
     body = tr.SequentialBlock(inputs, tr.MLPBlock([64]))
@@ -75,7 +73,7 @@ def test_sequential_prediction_model(
     )
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
 
-    bc_targets = pytorch.randint(2, (100,)).float()
+    bc_targets = torch.randint(2, (100,)).float()
 
     model = tr.Model(head_1, head_2)
     output = model(torch_yoochoose_like, training=True, targets=bc_targets)
@@ -93,8 +91,8 @@ def test_model_with_multiple_heads_and_tasks(
 ):
     # Tabular classification and regression tasks
     targets = {
-        "classification": pytorch.randint(2, (100,)).float(),
-        "regression": pytorch.randint(2, (100,)).float(),
+        "classification": torch.randint(2, (100,)).float(),
+        "regression": torch.randint(2, (100,)).float(),
     }
 
     non_sequential_features_schema = yoochoose_schema.select_by_name(["user_age", "user_country"])
@@ -115,8 +113,8 @@ def test_model_with_multiple_heads_and_tasks(
 
     # Session-based classification and regression tasks
     targets_2 = {
-        "classification_session": pytorch.randint(2, (100,)).float(),
-        "regression_session": pytorch.randint(2, (100,)).float(),
+        "classification_session": torch.randint(2, (100,)).float(),
+        "regression_session": torch.randint(2, (100,)).float(),
     }
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=4, n_layer=2, total_seq_length=20

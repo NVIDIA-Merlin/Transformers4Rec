@@ -18,11 +18,10 @@ from functools import partial
 
 import numpy as np
 import pytest
+import torch
 
+import transformers4rec.torch as tr
 from merlin_standard_lib import Tag
-
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_embedding_features(torch_cat_features):
@@ -53,7 +52,7 @@ def test_embedding_features_layernorm(torch_cat_features):
 def test_embedding_features_custom_init(torch_cat_features):
     MEAN = 1.0
     STD = 0.05
-    emb_initializer = partial(pytorch.nn.init.normal_, mean=MEAN, std=STD)
+    emb_initializer = partial(torch.nn.init.normal_, mean=MEAN, std=STD)
     feature_config = {
         f: tr.FeatureConfig(tr.TableConfig(100, dim=15, name=f, initializer=emb_initializer))
         for f in torch_cat_features.keys()
@@ -133,8 +132,8 @@ def test_embedding_features_yoochoose_custom_initializers(yoochoose_schema, torc
         schema,
         layer_norm=False,
         embeddings_initializers={
-            "item_id/list": partial(pytorch.nn.init.normal_, mean=ITEM_MEAN, std=ITEM_STD),
-            "category/list": partial(pytorch.nn.init.normal_, mean=CATEGORY_MEAN, std=CATEGORY_STD),
+            "item_id/list": partial(torch.nn.init.normal_, mean=ITEM_MEAN, std=ITEM_STD),
+            "category/list": partial(torch.nn.init.normal_, mean=CATEGORY_MEAN, std=CATEGORY_STD),
         },
     )
 
@@ -198,16 +197,16 @@ def test_soft_embedding():
     num_embeddings = 64
 
     soft_embedding = tr.SoftEmbedding(num_embeddings, embeddings_dim)
-    assert soft_embedding.embedding_table.weight.shape == pytorch.Size(
+    assert soft_embedding.embedding_table.weight.shape == torch.Size(
         [num_embeddings, embeddings_dim]
     ), "Internal soft embedding table does not have the expected shape"
 
     batch_size = 10
     seq_length = 20
-    cont_feature_inputs = pytorch.rand((batch_size, seq_length))
+    cont_feature_inputs = torch.rand((batch_size, seq_length))
     output = soft_embedding(cont_feature_inputs)
 
-    assert output.shape == pytorch.Size(
+    assert output.shape == torch.Size(
         [batch_size, seq_length, embeddings_dim]
     ), "Soft embedding output has not the expected shape"
 
@@ -222,20 +221,20 @@ def test_soft_embedding_with_custom_init():
 
     INIT_MEAN = 1.0
     INIT_STD = 0.05
-    emb_initializer = partial(pytorch.nn.init.normal_, mean=INIT_MEAN, std=INIT_STD)
+    emb_initializer = partial(torch.nn.init.normal_, mean=INIT_MEAN, std=INIT_STD)
     soft_embedding = tr.SoftEmbedding(
         num_embeddings, embeddings_dim, emb_initializer=emb_initializer
     )
-    assert soft_embedding.embedding_table.weight.shape == pytorch.Size(
+    assert soft_embedding.embedding_table.weight.shape == torch.Size(
         [num_embeddings, embeddings_dim]
     ), "Internal soft embedding table does not have the expected shape"
 
     batch_size = 10
     seq_length = 20
-    cont_feature_inputs = pytorch.rand((batch_size, seq_length))
+    cont_feature_inputs = torch.rand((batch_size, seq_length))
     output = soft_embedding(cont_feature_inputs)
 
-    assert output.shape == pytorch.Size(
+    assert output.shape == torch.Size(
         [batch_size, seq_length, embeddings_dim]
     ), "Soft embedding output has not the expected shape"
 
@@ -247,7 +246,7 @@ def test_soft_continuous_features(torch_con_features):
     dim = 16
     num_embeddings = 64
 
-    emb_initializer = partial(pytorch.nn.init.normal_, mean=1.0, std=0.05)
+    emb_initializer = partial(torch.nn.init.normal_, mean=1.0, std=0.05)
 
     feature_config = {
         f: tr.FeatureConfig(
@@ -268,8 +267,8 @@ def test_soft_continuous_features(torch_con_features):
 def test_layer_norm_features():
     ln = tr.TabularLayerNorm(features_dim={"a": 100, "b": 200})
     inputs = {
-        "a": pytorch.tensor(np.random.uniform(1.0, 4.0, (500, 100)), dtype=pytorch.float32),
-        "b": pytorch.tensor(np.random.uniform(2.0, 10.0, (500, 200)), dtype=pytorch.float32),
+        "a": torch.tensor(np.random.uniform(1.0, 4.0, (500, 100)), dtype=torch.float32),
+        "b": torch.tensor(np.random.uniform(2.0, 10.0, (500, 200)), dtype=torch.float32),
     }
 
     outputs = ln(inputs)
