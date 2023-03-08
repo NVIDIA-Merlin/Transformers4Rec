@@ -14,14 +14,11 @@
 # limitations under the License.
 #
 
-
-import pytest
+import torch
 
 from merlin_standard_lib import ColumnSchema, Schema, Tag
 from merlin_standard_lib.schema.schema import ValueCount
-
-schema_utils = pytest.importorskip("transformers4rec.torch.utils.schema_utils")
-pytorch = pytest.importorskip("torch")
+from transformers4rec.torch.utils import schema_utils
 
 
 def test_random_data_from_simple_schema():
@@ -46,12 +43,12 @@ def test_random_data_from_simple_schema():
     random_data = schema_utils.random_data_from_schema(s, 100, max_session_length=50)
 
     assert random_data["context_cat"].shape == (100,)
-    assert random_data["session_con"].dtype == pytorch.float32
+    assert random_data["session_con"].dtype == torch.float32
     for val in s.select_by_tag(Tag.LIST).filter_columns_from_dict(random_data).values():
         assert val.shape == (100, 50)
 
     for val in s.select_by_tag(Tag.CATEGORICAL).filter_columns_from_dict(random_data).values():
-        assert val.dtype == pytorch.int64
+        assert val.dtype == torch.int64
         assert val.max() < 1000
 
 

@@ -18,23 +18,22 @@ import os
 import tempfile
 
 import pytest
+import torch
 
+import transformers4rec.torch as tr
 from transformers4rec.config import trainer
 from transformers4rec.config import transformer as tconf
-
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
 def test_set_train_eval_loaders_attributes(
     torch_yoochoose_like, torch_yoochoose_next_item_prediction_model, batch_size
 ):
-    train_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size)
+    train_loader = torch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size)
     train_loader._batch_size = batch_size
-    eval_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
+    eval_loader = torch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
     eval_loader._batch_size = batch_size // 2
-    test_loader = pytorch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
+    test_loader = torch.utils.data.DataLoader([torch_yoochoose_like], batch_size=batch_size // 2)
     test_loader._batch_size = batch_size // 2
 
     args = trainer.T4RecTrainingArguments(

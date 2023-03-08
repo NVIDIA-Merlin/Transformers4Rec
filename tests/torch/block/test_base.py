@@ -14,10 +14,9 @@
 # limitations under the License.
 #
 
-import pytest
+import torch
 
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 
 def test_base_block(torch_tabular_features):
@@ -32,7 +31,7 @@ def test_sequential_block(torch_tabular_features):
     block = tr.SequentialBlock(
         torch_tabular_features,
         tr.MLPBlock([64, 32]),
-        tr.Block(pytorch.nn.Dropout(0.5), [None, 32]),
+        tr.Block(torch.nn.Dropout(0.5), [None, 32]),
     )
 
     output_size = block.output_size()
@@ -46,7 +45,7 @@ def test_sequential_block_with_output_size(torch_tabular_features):
     block = tr.SequentialBlock(
         torch_tabular_features,
         tr.MLPBlock([64, 32]),
-        pytorch.nn.Dropout(0.5),
+        torch.nn.Dropout(0.5),
         output_size=[None, 32],
     )
 
@@ -56,8 +55,8 @@ def test_sequential_block_with_output_size(torch_tabular_features):
 
 def test_sequential(torch_tabular_features):
     inputs = torch_tabular_features
-    block = pytorch.nn.Sequential(*tr.build_blocks(inputs, tr.MLPBlock([64, 32])))
-    block2 = pytorch.nn.Sequential(inputs, tr.MLPBlock([64, 32]).to_module(inputs))
+    block = torch.nn.Sequential(*tr.build_blocks(inputs, tr.MLPBlock([64, 32])))
+    block2 = torch.nn.Sequential(inputs, tr.MLPBlock([64, 32]).to_module(inputs))
 
-    assert isinstance(block, pytorch.nn.Sequential)
-    assert isinstance(block2, pytorch.nn.Sequential)
+    assert isinstance(block, torch.nn.Sequential)
+    assert isinstance(block2, torch.nn.Sequential)

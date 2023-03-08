@@ -15,11 +15,10 @@
 #
 
 import pytest
+import torch
 
+import transformers4rec.torch as tr
 from merlin_standard_lib import Tag
-
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
 
 
 def test_concat_aggregation_yoochoose(tabular_schema, torch_tabular_data):
@@ -49,8 +48,8 @@ def test_element_wise_sum_features_different_shapes():
     with pytest.raises(ValueError) as excinfo:
         element_wise_op = tr.ElementwiseSum()
         input = {
-            "item_id/list": pytorch.rand(10, 20),
-            "category/list": pytorch.rand(10, 25),
+            "item_id/list": torch.rand(10, 20),
+            "category/list": torch.rand(10, 25),
         }
         element_wise_op(input)
     assert "shapes of all input features are not equal" in str(excinfo.value)
@@ -89,8 +88,8 @@ def test_element_wise_sum_item_multi_features_different_shapes(yoochoose_schema)
         categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
         element_wise_op = tr.ElementwiseSumItemMulti(categ_schema)
         input = {
-            "item_id/list": pytorch.rand(10, 20),
-            "category/list": pytorch.rand(10, 25),
+            "item_id/list": torch.rand(10, 20),
+            "category/list": torch.rand(10, 25),
         }
         element_wise_op(input)
     assert "shapes of all input features are not equal" in str(excinfo.value)
