@@ -143,9 +143,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
-  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
-/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
 </pre></div>
 </div>
@@ -227,48 +225,48 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>88469</td>
-      <td>7</td>
-      <td>2</td>
-      <td>0.876678</td>
-      <td>0.330926</td>
+      <td>75772</td>
       <td>3</td>
+      <td>1</td>
+      <td>0.893401</td>
+      <td>0.830613</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>83904</td>
-      <td>120</td>
+      <td>82179</td>
+      <td>77</td>
       <td>21</td>
-      <td>0.258138</td>
-      <td>0.422327</td>
-      <td>6</td>
+      <td>0.892670</td>
+      <td>0.745608</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>81493</td>
-      <td>42</td>
-      <td>8</td>
-      <td>0.234976</td>
-      <td>0.686702</td>
-      <td>6</td>
+      <td>83356</td>
+      <td>19</td>
+      <td>5</td>
+      <td>0.189608</td>
+      <td>0.011347</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>73668</td>
-      <td>182</td>
-      <td>32</td>
-      <td>0.498537</td>
-      <td>0.121023</td>
-      <td>8</td>
+      <td>88757</td>
+      <td>177</td>
+      <td>48</td>
+      <td>0.059060</td>
+      <td>0.771164</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>74926</td>
-      <td>59</td>
-      <td>11</td>
-      <td>0.126336</td>
-      <td>0.765945</td>
-      <td>1</td>
+      <td>82165</td>
+      <td>20</td>
+      <td>6</td>
+      <td>0.910964</td>
+      <td>0.449554</td>
+      <td>3</td>
     </tr>
   </tbody>
 </table>
@@ -304,17 +302,17 @@
 <span class="c1"># Select and truncate the sequential features</span>
 <span class="n">sequence_features_truncated</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;category-list&#39;</span><span class="p">]</span>
-    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
 <span class="p">)</span>
 
 <span class="n">sequence_features_truncated_item</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">]</span>
-    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
     <span class="o">&gt;&gt;</span> <span class="n">TagAsItemID</span><span class="p">()</span>
 <span class="p">)</span>  
 <span class="n">sequence_features_truncated_cont</span> <span class="o">=</span> <span class="p">(</span>
     <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;age_days-list&#39;</span><span class="p">,</span> <span class="s1">&#39;weekday_sin-list&#39;</span><span class="p">]</span> 
-    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span> 
+    <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> 
     <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">])</span>
 <span class="p">)</span>
 
@@ -393,32 +391,32 @@
     <tr>
       <th>0</th>
       <td>1</td>
-      <td>1</td>
-      <td>19</td>
-      <td>[27, 26, 7, 46, 13, 2, 4, 237, 10, 35, 46, 35,...</td>
-      <td>[5, 5, 2, 8, 2, 1, 2, 45, 3, 6, 8, 6, 1, 16, 3...</td>
-      <td>[0.97853184, 0.4591664, 0.083990775, 0.7000025...</td>
-      <td>[0.04896013, 0.18139902, 0.5046173, 0.48253214...</td>
+      <td>7</td>
+      <td>16</td>
+      <td>[10, 33, 35, 68, 19, 4, 6, 4, 37, 104, 19, 30,...</td>
+      <td>[5, 9, 11, 21, 4, 2, 2, 2, 11, 29, 4, 9, 7, 14...</td>
+      <td>[0.2510539, 0.12130147, 0.61642516, 0.45710337...</td>
+      <td>[0.66570914, 0.6149484, 0.98552155, 0.10168565...</td>
     </tr>
     <tr>
       <th>1</th>
       <td>2</td>
-      <td>4</td>
-      <td>18</td>
-      <td>[45, 7, 17, 17, 44, 17, 35, 23, 1, 194, 13, 18...</td>
-      <td>[8, 2, 4, 4, 8, 4, 6, 4, 2, 36, 2, 4, 2, 7, 7,...</td>
-      <td>[0.4287106, 0.75681955, 0.70978284, 0.8613602,...</td>
-      <td>[0.88505965, 0.07815777, 0.8684893, 0.25832322...</td>
+      <td>9</td>
+      <td>14</td>
+      <td>[50, 99, 18, 39, 47, 43, 5, 75, 3, 8, 163, 30,...</td>
+      <td>[14, 26, 6, 10, 14, 12, 1, 19, 1, 4, 45, 9, 2,...</td>
+      <td>[0.17742382, 0.81522274, 0.75508606, 0.1395472...</td>
+      <td>[0.29890507, 0.6564371, 0.96094626, 0.6960773,...</td>
     </tr>
     <tr>
       <th>2</th>
       <td>3</td>
       <td>5</td>
-      <td>15</td>
-      <td>[27, 38, 10, 64, 84, 109, 152, 37, 13, 158, 3,...</td>
-      <td>[5, 7, 3, 11, 15, 19, 29, 7, 2, 27, 1, 4, 5, 2...</td>
-      <td>[0.07284722, 0.48706728, 0.09015047, 0.4159043...</td>
-      <td>[0.4339925, 0.51614755, 0.3565242, 0.5322814, ...</td>
+      <td>14</td>
+      <td>[26, 15, 51, 12, 40, 9, 54, 57, 8, 376, 57, 24...</td>
+      <td>[7, 3, 13, 4, 10, 2, 15, 15, 4, 136, 15, 8, 6,...</td>
+      <td>[0.21535604, 0.76454645, 0.82518786, 0.0410606...</td>
+      <td>[0.037031054, 0.3980902, 0.95815617, 0.7962937...</td>
     </tr>
   </tbody>
 </table>
@@ -483,9 +481,9 @@
       <td>0.0</td>
       <td>.//categories/unique.session_id.parquet</td>
       <td>0.0</td>
-      <td>19871.0</td>
+      <td>19855.0</td>
       <td>session_id</td>
-      <td>19872.0</td>
+      <td>19856.0</td>
       <td>408.0</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -523,9 +521,9 @@
       <td>0.0</td>
       <td>.//categories/unique.item_id.parquet</td>
       <td>0.0</td>
-      <td>502.0</td>
+      <td>495.0</td>
       <td>item_id</td>
-      <td>503.0</td>
+      <td>496.0</td>
       <td>52.0</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -533,42 +531,42 @@
     <tr>
       <th>3</th>
       <td>item_id-list</td>
-      <td>(Tags.CATEGORICAL, Tags.ITEM_ID, Tags.ID, Tags...</td>
+      <td>(Tags.ITEM, Tags.ID, Tags.ITEM_ID, Tags.LIST, ...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>True</td>
+      <td>False</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.item_id.parquet</td>
       <td>0.0</td>
-      <td>502.0</td>
+      <td>495.0</td>
       <td>item_id</td>
-      <td>503.0</td>
+      <td>496.0</td>
       <td>52.0</td>
-      <td>2.0</td>
-      <td>19.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>category-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>True</td>
+      <td>False</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.category.parquet</td>
       <td>0.0</td>
-      <td>125.0</td>
+      <td>178.0</td>
       <td>category</td>
-      <td>126.0</td>
-      <td>24.0</td>
-      <td>2.0</td>
-      <td>19.0</td>
+      <td>179.0</td>
+      <td>29.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
     </tr>
     <tr>
       <th>5</th>
@@ -576,7 +574,7 @@
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>True</td>
+      <td>False</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -587,8 +585,8 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>2.0</td>
-      <td>19.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
     </tr>
     <tr>
       <th>6</th>
@@ -596,7 +594,7 @@
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>True</td>
+      <td>False</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -607,8 +605,8 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>2.0</td>
-      <td>19.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
     </tr>
   </tbody>
 </table>
@@ -658,7 +656,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00&lt;00:00, 27.95it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 9/9 [00:00&lt;00:00, 19.93it/s]
 </pre></div>
 </div>
 </div>
@@ -710,48 +708,48 @@
   <tbody>
     <tr>
       <th>0</th>
-      <td>1</td>
-      <td>19</td>
-      <td>[27, 26, 7, 46, 13, 2, 4, 237, 10, 35, 46, 35,...</td>
-      <td>[5, 5, 2, 8, 2, 1, 2, 45, 3, 6, 8, 6, 1, 16, 3...</td>
-      <td>[0.97853184, 0.4591664, 0.083990775, 0.7000025...</td>
-      <td>[0.04896013, 0.18139902, 0.5046173, 0.48253214...</td>
+      <td>6</td>
+      <td>14</td>
+      <td>[7, 11, 73, 6, 31, 5, 19, 63, 52, 1, 28, 19, 2...</td>
+      <td>[2, 5, 19, 2, 9, 1, 4, 17, 13, 1, 7, 4, 8, 5, ...</td>
+      <td>[0.84568787, 0.038363576, 0.7171949, 0.0886422...</td>
+      <td>[0.9072822, 0.55461484, 0.2662152, 0.6641106, ...</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>17</td>
-      <td>13</td>
-      <td>[15, 5, 5, 58, 8, 18, 29, 34, 2, 3, 43, 54, 9]</td>
-      <td>[3, 1, 1, 10, 1, 4, 6, 6, 1, 1, 8, 10, 1]</td>
-      <td>[0.76496226, 0.85960853, 0.13536207, 0.3988903...</td>
-      <td>[0.3081522, 0.17396946, 0.8448347, 0.8297997, ...</td>
+      <td>9</td>
+      <td>14</td>
+      <td>[42, 22, 30, 26, 19, 9, 53, 5, 51, 5, 19, 3, 2...</td>
+      <td>[12, 6, 9, 7, 4, 2, 15, 1, 13, 1, 4, 1, 8, 3, ...</td>
+      <td>[0.4074032, 0.7792388, 0.49303588, 0.027537243...</td>
+      <td>[0.65899414, 0.42423004, 0.20023833, 0.6077999...</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>34</td>
+      <td>14</td>
       <td>13</td>
-      <td>[17, 12, 9, 21, 29, 6, 23, 6, 5, 176, 12, 26, 1]</td>
-      <td>[4, 3, 1, 4, 6, 1, 4, 1, 1, 29, 3, 5, 2]</td>
-      <td>[0.42529476, 0.66954064, 0.46188155, 0.2200255...</td>
-      <td>[0.951742, 0.7311401, 0.6795269, 0.5283087, 0....</td>
+      <td>[7, 60, 2, 7, 28, 2, 25, 24, 151, 74, 112, 31,...</td>
+      <td>[2, 16, 1, 2, 7, 1, 8, 8, 40, 24, 29, 9, 17, 0...</td>
+      <td>[0.9137222, 0.77429664, 0.4397028, 0.41606435,...</td>
+      <td>[0.3428851, 0.9583178, 0.07852303, 0.8921527, ...</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>58</td>
+      <td>39</td>
       <td>12</td>
-      <td>[84, 11, 7, 66, 23, 1, 36, 5, 19, 22, 6, 22]</td>
-      <td>[15, 3, 2, 12, 4, 2, 7, 1, 4, 4, 1, 4]</td>
-      <td>[0.7655469, 0.4924979, 0.9192873, 0.6521773, 0...</td>
-      <td>[0.060284566, 0.9057582, 0.9853312, 0.27452144...</td>
+      <td>[67, 1, 16, 31, 21, 9, 14, 3, 8, 22, 23, 50, 0...</td>
+      <td>[17, 1, 3, 9, 6, 2, 3, 1, 4, 6, 8, 14, 0, 0, 0...</td>
+      <td>[0.7679332, 0.7644972, 0.8533882, 0.67827713, ...</td>
+      <td>[0.87136024, 0.92441916, 0.27371496, 0.4557360...</td>
     </tr>
     <tr>
       <th>5</th>
-      <td>64</td>
+      <td>52</td>
       <td>12</td>
-      <td>[12, 7, 6, 5, 26, 20, 90, 28, 132, 36, 21, 8]</td>
-      <td>[3, 2, 1, 1, 5, 2, 16, 5, 23, 7, 4, 1]</td>
-      <td>[0.86268437, 0.11732827, 0.31621945, 0.0408642...</td>
-      <td>[0.8027563, 0.7638514, 0.055432655, 0.06549974...</td>
+      <td>[31, 17, 49, 13, 49, 16, 23, 85, 23, 164, 28, ...</td>
+      <td>[9, 3, 13, 5, 13, 3, 8, 23, 8, 51, 7, 2, 0, 0,...</td>
+      <td>[0.32460424, 0.9527502, 0.77985513, 0.91916, 0...</td>
+      <td>[0.12728073, 0.87657094, 0.7073715, 0.9970732,...</td>
     </tr>
     <tr>
       <th>...</th>
@@ -763,53 +761,53 @@
       <td>...</td>
     </tr>
     <tr>
-      <th>2110</th>
-      <td>19074</td>
+      <th>2145</th>
+      <td>19158</td>
       <td>2</td>
-      <td>[10, 16]</td>
-      <td>[3, 3]</td>
-      <td>[0.9952336, 0.018463716]</td>
-      <td>[0.3855745, 0.8623388]</td>
+      <td>[34, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...</td>
+      <td>[9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
+      <td>[0.44386843, 0.17579898, 0.0, 0.0, 0.0, 0.0, 0...</td>
+      <td>[0.58763367, 0.997146, 0.0, 0.0, 0.0, 0.0, 0.0...</td>
     </tr>
     <tr>
-      <th>2111</th>
-      <td>19122</td>
+      <th>2146</th>
+      <td>19165</td>
       <td>2</td>
-      <td>[37, 28]</td>
-      <td>[7, 5]</td>
-      <td>[0.26565734, 0.3376144]</td>
-      <td>[0.519952, 0.117240556]</td>
+      <td>[1, 60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...</td>
+      <td>[1, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...</td>
+      <td>[0.45839304, 0.15023704, 0.0, 0.0, 0.0, 0.0, 0...</td>
+      <td>[0.47192892, 0.6211317, 0.0, 0.0, 0.0, 0.0, 0....</td>
     </tr>
     <tr>
-      <th>2112</th>
-      <td>19128</td>
+      <th>2148</th>
+      <td>19183</td>
       <td>2</td>
-      <td>[18, 15]</td>
-      <td>[4, 3]</td>
-      <td>[0.65739745, 0.46439078]</td>
-      <td>[0.49096248, 0.5064814]</td>
+      <td>[23, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...</td>
+      <td>[8, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
+      <td>[0.7376038, 0.7187783, 0.0, 0.0, 0.0, 0.0, 0.0...</td>
+      <td>[0.4954509, 0.5675057, 0.0, 0.0, 0.0, 0.0, 0.0...</td>
     </tr>
     <tr>
-      <th>2113</th>
-      <td>19134</td>
+      <th>2149</th>
+      <td>19199</td>
       <td>2</td>
-      <td>[9, 116]</td>
-      <td>[1, 20]</td>
-      <td>[0.45008472, 0.36275008]</td>
-      <td>[0.10166882, 0.8127918]</td>
+      <td>[52, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...</td>
+      <td>[13, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...</td>
+      <td>[0.96259063, 0.8100127, 0.0, 0.0, 0.0, 0.0, 0....</td>
+      <td>[0.3484375, 0.10194607, 0.0, 0.0, 0.0, 0.0, 0....</td>
     </tr>
     <tr>
-      <th>2114</th>
-      <td>19136</td>
+      <th>2150</th>
+      <td>19221</td>
       <td>2</td>
-      <td>[6, 9]</td>
-      <td>[1, 1]</td>
-      <td>[0.61278456, 0.64234763]</td>
-      <td>[0.46083343, 0.8074532]</td>
+      <td>[3, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
+      <td>[1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
+      <td>[0.9268296, 0.71968925, 0.0, 0.0, 0.0, 0.0, 0....</td>
+      <td>[0.8299869, 0.7187812, 0.0, 0.0, 0.0, 0.0, 0.0...</td>
     </tr>
   </tbody>
 </table>
-<p>1686 rows × 6 columns</p>
+<p>1718 rows × 6 columns</p>
 </div></div></div>
 </div>
 <div class="cell docutils container">
@@ -821,7 +819,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>490
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>565
 </pre></div>
 </div>
 </div>
