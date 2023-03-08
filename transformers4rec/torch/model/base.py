@@ -760,6 +760,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         # if multiple heads and/or multiple prediction task, the output is a dictionary
         output_cols = []
         for head in self.heads:
+            dims = None
             for name, task in head.prediction_task_dict.items():
                 target_dim = task.target_dim
                 int_domain = {"min": target_dim, "max": target_dim}
@@ -767,15 +768,13 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     isinstance(task, (BinaryClassificationTask, RegressionTask))
                     and not task.summary_type
                 ):
-                    is_list = True
+                    dims = (None, (1, None), task.target_dim)
                 else:
-                    is_list = False
+                    dims = (None, task.target_dim)
                 properties = {
                     "int_domain": int_domain,
                 }
-                col_schema = ColumnSchema(
-                    name, dtype=np.float32, properties=properties, is_list=is_list, is_ragged=False
-                )
+                col_schema = ColumnSchema(name, dtype=np.float32, properties=properties, dims=dims)
                 output_cols.append(col_schema)
 
         return Core_Schema(output_cols)
