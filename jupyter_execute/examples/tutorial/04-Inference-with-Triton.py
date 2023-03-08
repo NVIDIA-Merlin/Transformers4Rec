@@ -19,6 +19,9 @@
 # limitations under the License.
 # ==============================================================================
 
+# Each user is responsible for checking the content of datasets and the
+# applicable licenses and determining if suitable for the intended use.
+
 
 # <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-04-inference-with-triton/nvidia_logo.png" style="width: 90px; float: right;">
 # 

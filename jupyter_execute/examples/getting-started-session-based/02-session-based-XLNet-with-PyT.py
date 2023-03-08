@@ -19,11 +19,16 @@
 # limitations under the License.
 # ==============================================================================
 
+# Each user is responsible for checking the content of datasets and the
+# applicable licenses and determining if suitable for the intended use.
+
 
 # <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-02-session-based-xlnet-with-pyt/nvidia_logo.png" style="width: 90px; float: right;">
 # 
 # # Session-based Recommendation with XLNET
 
+# This notebook is created using the latest stable [merlin-pytorch](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch/tags) container.
+# 
 # In this notebook we introduce the [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec) library for sequential and session-based recommendation. This notebook uses the PyTorch API. Transformers4Rec integrates with the popular [HuggingFace’s Transformers](https://github.com/huggingface/transformers) and makes it possible to experiment with a cutting-edge implementation of the latest NLP Transformer architectures.  
 # 
 # We demonstrate how to build a session-based recommendation model with the [XLNET](https://arxiv.org/abs/1906.08237) Transformer architecture. The XLNet architecture was designed to leverage the best of both auto-regressive language modeling and auto-encoding with its Permutation Language Modeling training method. In this example we will use XLNET with masked language modeling (MLM) training method, which showed very promising results in the experiments conducted in our [ACM RecSys'21 paper](https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/recsys21_transformers4rec_paper.pdf).
@@ -164,21 +169,35 @@ model = tr.Model(head)
 
 # ### Train the model 
 
-# We use the NVTabular PyTorch Dataloader for optimized loading of multiple features from input parquet files. You can learn more about this data loader [here](https://nvidia-merlin.github.io/NVTabular/main/training/pytorch.html).
+# We use the Merlin Dataloader's PyTorch Dataloader for optimized loading of multiple features from input parquet files. You can learn more about this data loader [here](https://nvidia-merlin.github.io/NVTabular/main/training/pytorch.html).
 
 # ### **Set Training arguments**
 
 # In[8]:
 
 
+per_device_train_batch_size = int(os.environ.get(
+    "per_device_train_batch_size", 
+    '128'
+))
+
+per_device_eval_batch_size = int(os.environ.get(
+    "per_device_eval_batch_size", 
+    '32'
+))
+
+
+# In[9]:
+
+
 from transformers4rec.config.trainer import T4RecTrainingArguments
 from transformers4rec.torch import Trainer
 # Set hyperparameters for training 
-train_args = T4RecTrainingArguments(data_loader_engine='nvtabular', 
+train_args = T4RecTrainingArguments(data_loader_engine='merlin', 
                                     dataloader_drop_last = True,
                                     gradient_accumulation_steps = 1,
-                                    per_device_train_batch_size = 128, 
-                                    per_device_eval_batch_size = 32,
+                                    per_device_train_batch_size = per_device_train_batch_size, 
+                                    per_device_eval_batch_size = per_device_eval_batch_size,
                                     output_dir = "./tmp", 
                                     learning_rate=0.0005,
                                     lr_scheduler_type='cosine', 
@@ -190,7 +209,7 @@ train_args = T4RecTrainingArguments(data_loader_engine='nvtabular',
                                     no_cuda=False)
 
 
-# Note that we add an argument `data_loader_engine='nvtabular'` to automatically load the features needed for training using the schema. The default value is nvtabular for optimized GPU-based data-loading. Optionally a `PyarrowDataLoader` (pyarrow) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
+# Note that we add an argument `data_loader_engine='merlin'` to automatically load the features needed for training using the schema. The default value is `merlin` for optimized GPU-based data-loading. Optionally a `PyarrowDataLoader` (pyarrow) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
 
 # ## Daily Fine-Tuning: Training over a time window
 
@@ -198,7 +217,7 @@ train_args = T4RecTrainingArguments(data_loader_engine='nvtabular',
 
 # We have extended the HuggingFace transformers `Trainer` class (PyTorch only) to support evaluation of RecSys metrics. In this example, the evaluation of the session-based recommendation model is performed using traditional Top-N ranking metrics such as Normalized Discounted Cumulative Gain (NDCG@20) and Hit Rate (HR@20). NDCG accounts for rank of the relevant item in the recommendation list and is a more fine-grained metric than HR, which only verifies whether the relevant item is among the top-n items. HR@n is equivalent to Recall@n when there is only one relevant item in the recommendation list.
 
-# In[9]:
+# In[10]:
 
 
 # Instantiate the T4Rec Trainer, which manages training and evaluation for the PyTorch API
@@ -212,28 +231,67 @@ trainer = Trainer(
 
 # Define the output folder of the processed parquet files:
 
-# In[10]:
+# In[11]:
 
 
 INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data")
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/sessions_by_day")
 
+start_window_index = int(os.environ.get(
+    "start_window_index", 
+    '1'
+))
 
-# In[11]:
+final_window_index = int(os.environ.get(
+    "final_window_index", 
+    '8'
+))
 
 
-get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_time_window_index = 8\n#Iterating over days of one week\nfor time_index in range(start_time_window_index, final_time_window_index):\n    # Set data \n    time_index_train = time_index\n    time_index_eval = time_index + 1\n    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))\n    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))\n    print(train_paths)\n    \n    # Train on day related to time_index \n    print(\'*\'*20)\n    print("Launch training for day %s are:" %time_index)\n    print(\'*\'*20 + \'\\n\')\n    trainer.train_dataset_or_path = train_paths\n    trainer.reset_lr_scheduler()\n    trainer.train()\n    trainer.state.global_step +=1\n    print(\'finished\')\n    \n    # Evaluate on the following day\n    trainer.eval_dataset_or_path = eval_paths\n    train_metrics = trainer.evaluate(metric_key_prefix=\'eval\')\n    print(\'*\'*20)\n    print("Eval results for day %s are:\\t" %time_index_eval)\n    print(\'\\n\' + \'*\'*20 + \'\\n\')\n    for key in sorted(train_metrics.keys()):\n        print(" %s = %s" % (key, str(train_metrics[key]))) \n    wipe_memory()\n')
+# In[12]:
+
+
+start_time_window_index = start_window_index
+final_time_window_index = final_window_index
+#Iterating over days of one week
+for time_index in range(start_time_window_index, final_time_window_index):
+    # Set data 
+    time_index_train = time_index
+    time_index_eval = time_index + 1
+    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))
+    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))
+    print(train_paths)
+    
+    # Train on day related to time_index 
+    print('*'*20)
+    print("Launch training for day %s are:" %time_index)
+    print('*'*20 + '\n')
+    trainer.train_dataset_or_path = train_paths
+    trainer.reset_lr_scheduler()
+    trainer.train()
+    trainer.state.global_step +=1
+    print('finished')
+    
+    # Evaluate on the following day
+    trainer.eval_dataset_or_path = eval_paths
+    train_metrics = trainer.evaluate(metric_key_prefix='eval')
+    print('*'*20)
+    print("Eval results for day %s are:\t" %time_index_eval)
+    print('\n' + '*'*20 + '\n')
+    for key in sorted(train_metrics.keys()):
+        print(" %s = %s" % (key, str(train_metrics[key]))) 
+    wipe_memory()
 
 
 # ### Re-compute evaluation metrics of the validation data
 
-# In[12]:
+# In[13]:
 
 
 eval_data_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))
 
 
-# In[13]:
+# In[14]:
 
 
 # set new data from day 7
@@ -246,7 +304,7 @@ for key in sorted(eval_metrics.keys()):
 
 # Let's save the model to be able to load it back at inference step. Using `model.save()`, we save the model as a pkl file in the given path.
 
-# In[14]:
+# In[15]:
 
 
 model_path= os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/saved_model")

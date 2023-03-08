@@ -19,6 +19,9 @@
 # limitations under the License.
 # ==============================================================================
 
+# Each user is responsible for checking the content of datasets and the
+# applicable licenses and determining if suitable for the intended use.
+
 
 # <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_tutorial-03-session-based-recsys/nvidia_logo.png" style="width: 90px; float: right;">
 # 
@@ -403,7 +406,7 @@ model = tr.Model(head)
 
 # **Set training arguments**
 
-# Among the training arguments you can set the `data_loader_engine` to automatically instantiate the dataloader based on the schema, rather than instantiating the data loader manually like we did for the RNN example. The default value is `"nvtabular"` for optimized GPU-based data-loading. Optionally the PyarrowDataLoader (`"pyarrow"`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded into CPU memory.
+# Among the training arguments you can set the `data_loader_engine` to automatically instantiate the dataloader based on the schema, rather than instantiating the data loader manually like we did for the RNN example. The default value is `"merlin"` for optimized GPU-based data-loading. Optionally the PyarrowDataLoader (`"pyarrow"`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded into CPU memory.
 
 # In[19]:
 
@@ -415,7 +418,7 @@ from transformers4rec.torch import Trainer
 training_args = T4RecTrainingArguments(
             output_dir="./tmp",
             max_sequence_length=20,
-            data_loader_engine='nvtabular',
+            data_loader_engine='merlin',
             num_train_epochs=3, 
             dataloader_drop_last=False,
             per_device_train_batch_size = 256,
@@ -566,7 +569,7 @@ from transformers4rec.torch.utils.examples_utils import wipe_memory
 training_args = T4RecTrainingArguments(
             output_dir="./tmp",
             max_sequence_length=20,
-            data_loader_engine='nvtabular',
+            data_loader_engine='merlin',
             num_train_epochs=3, 
             dataloader_drop_last=False,
             per_device_train_batch_size = 256,

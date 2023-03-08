@@ -19,6 +19,9 @@
 # limitations under the License.
 # ==============================================================================
 
+# Each user is responsible for checking the content of datasets and the
+# applicable licenses and determining if suitable for the intended use.
+
 
 # <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-01-etl-with-nvtabular/nvidia_logo.png" style="width: 90px; float: right;">
 # 
@@ -310,7 +313,7 @@ sessions_gdf = sessions_gdf[sessions_gdf.day_index>=178]
 # In[16]:
 
 
-from transformers4rec.data.preprocessing import save_time_based_splits
+from transformers4rec.utils.data_utils import save_time_based_splits
 save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                        output_dir= "./preproc_sessions_by_day",
                        partition_col='day_index',

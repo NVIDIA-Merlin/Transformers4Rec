@@ -17,7 +17,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# =======
+# ======================================================================
+
+# Each user is responsible for checking the content of datasets and the
+# applicable licenses and determining if suitable for the intended use.
 
 
 # <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_getting-started-session-based-01-etl-with-nvtabular/nvidia_logo.png" style="width: 90px; float: right;">
@@ -39,8 +42,6 @@ import glob
 import numpy as np
 import pandas as pd
 
-import cudf
-import cupy as cp
 import nvtabular as nvt
 from nvtabular.ops import *
 from merlin.schema.tags import Tags
@@ -59,17 +60,21 @@ INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
 # In[4]:
 
 
-NUM_ROWS = 100000
-long_tailed_item_distribution = np.clip(np.random.lognormal(3., 1., NUM_ROWS).astype(np.int32), 1, 50000)
+NUM_ROWS = os.environ.get("NUM_ROWS", 100000)
 
+
+# In[5]:
+
+
+long_tailed_item_distribution = np.clip(np.random.lognormal(3., 1., int(NUM_ROWS)).astype(np.int32), 1, 50000)
 # generate random item interaction features 
-df = pd.DataFrame(np.random.randint(70000, 90000, NUM_ROWS), columns=['session_id'])
+df = pd.DataFrame(np.random.randint(70000, 90000, int(NUM_ROWS)), columns=['session_id'])
 df['item_id'] = long_tailed_item_distribution
 
 # generate category mapping for each item-id
 df['category'] = pd.cut(df['item_id'], bins=334, labels=np.arange(1, 335)).astype(np.int32)
-df['age_days'] = np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
-df['weekday_sin']= np.random.uniform(0, 1, NUM_ROWS).astype(np.float32)
+df['age_days'] = np.random.uniform(0, 1, int(NUM_ROWS)).astype(np.float32)
+df['weekday_sin']= np.random.uniform(0, 1, int(NUM_ROWS)).astype(np.float32)
 
 # generate day mapping for each session 
 map_day = dict(zip(df.session_id.unique(), np.random.randint(1, 10, size=(df.session_id.nunique()))))
@@ -78,7 +83,7 @@ df['day'] =  df.session_id.map(map_day)
 
 # Visualize couple of rows of the synthetic dataset:
 
-# In[5]:
+# In[6]:
 
 
 df.head()
@@ -88,9 +93,9 @@ df.head()
 
 # Deep Learning models require dense input features. Categorical features are sparse, and need to be represented by dense embeddings in the model. To allow for that, categorical features first need to be encoded as contiguous integers `(0, ..., |C|)`, where `|C|` is the feature cardinality (number of unique values), so that their embeddings can be efficiently stored in embedding layers.  We will use NVTabular to preprocess the categorical features, so that all categorical columns are encoded as contiguous integers. Note that the `Categorify` op encodes OOVs or nulls to `0` automatically. In our synthetic dataset we do not have any nulls. On the other hand `0` is also used for padding the sequences in input block, therefore, you can set `start_index=1` arg in the Categorify op if you want the encoded null or OOV values to start from `1` instead of `0` because we reserve `0` for padding the sequence features.
 
-# Here our goal is to create sequential features.  In this cell, we are creating temporal features and grouping them together at the session level, sorting the interactions by time. Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.
+# Here our goal is to create sequential features. To do so, we are grouping the features together at the session level in the following cell. In this synthetically generated example dataset, we do not have a timestamp column, but if we had one (that's the case for most real-world datasets), we would be sorting the interactions by the timestamp column as in this [example notebook](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/01-ETL-with-NVTabular.ipynb). Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.
 
-# In[6]:
+# In[7]:
 
 
 SESSIONS_MAX_LENGTH =20
@@ -116,21 +121,18 @@ groupby_features = groupby_feats >> nvt.ops.Groupby(
 # Select and truncate the sequential features
 sequence_features_truncated = (
     groupby_features['category-list']
-    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
-    >> nvt.ops.ValueCount()
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True) 
 )
 
 sequence_features_truncated_item = (
     groupby_features['item_id-list']
-    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True) 
     >> TagAsItemID()
-    >> nvt.ops.ValueCount()
 )  
 sequence_features_truncated_cont = (
     groupby_features['age_days-list', 'weekday_sin-list'] 
-    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True) 
     >> nvt.ops.AddMetadata(tags=[Tags.CONTINUOUS])
-    >> nvt.ops.ValueCount()
 )
 
 # Filter out sessions with length 1 (not valid for next-item prediction training and evaluation)
@@ -158,16 +160,10 @@ sessions_ds = workflow.transform(dataset)
 sessions_gdf = sessions_ds.to_ddf().compute()
 
 
-# In[7]:
-
-
-sessions_gdf.head(3)
-
-
 # In[8]:
 
 
-sessions_gdf.dtypes
+sessions_gdf.head(3)
 
 
 # It is possible to save the preprocessing workflow. That is useful to apply the same preprocessing to other data (with the same schema) and also to deploy the session-based recommendation pipeline to Triton Inference Server.
@@ -189,7 +185,7 @@ workflow.fit_transform(dataset).to_parquet(os.path.join(INPUT_DATA_DIR, "process
 # In[11]:
 
 
-workflow.save('workflow_etl')
+workflow.save(os.path.join(INPUT_DATA_DIR, "workflow_etl"))
 
 
 # ## Export pre-processed data by day
@@ -200,13 +196,12 @@ workflow.save('workflow_etl')
 
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR",os.path.join(INPUT_DATA_DIR, "sessions_by_day"))
-get_ipython().system('mkdir -p $OUTPUT_DIR')
 
 
 # In[13]:
 
 
-from transformers4rec.data.preprocessing import save_time_based_splits
+from transformers4rec.utils.data_utils import save_time_based_splits
 save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                        output_dir= OUTPUT_DIR,
                        partition_col='day-first',
@@ -219,14 +214,22 @@ save_time_based_splits(data=nvt.Dataset(sessions_gdf),
 # In[14]:
 
 
-TRAIN_PATHS = sorted(glob.glob(os.path.join(OUTPUT_DIR, "1", "train.parquet")))
+TRAIN_PATHS = os.path.join(OUTPUT_DIR, "1", "train.parquet")
 
 
 # In[15]:
 
 
-gdf = cudf.read_parquet(TRAIN_PATHS[0])
-gdf
+df = pd.read_parquet(TRAIN_PATHS)
+df
+
+
+# In[16]:
+
+
+import gc
+del df
+gc.collect()
 
 
 # You have  just created session-level features to train a session-based recommendation model using NVTabular. Now you can move to the the next notebook,`02-session-based-XLNet-with-PyT.ipynb` to train a session-based recommendation model using [XLNet](https://arxiv.org/abs/1906.08237), one of the state-of-the-art NLP model. Please shut down this kernel to free the GPU memory before you start the next one.

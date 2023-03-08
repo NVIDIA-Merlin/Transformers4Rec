@@ -19,6 +19,9 @@
 # limitations under the License.
 # ==============================================================================
 
+# Each user is responsible for checking the content of datasets and the
+# applicable licenses and determining if suitable for the intended use.
+
 
 # <img src="https://developer.download.nvidia.com/notebooks/dlsw-notebooks/merlin_transformers4rec_end-to-end-session-based-02-end-to-end-session-based-with-yoochoose-pyt/nvidia_logo.png" style="width: 90px; float: right;">
 # 
@@ -113,7 +116,7 @@ model = transformer_config.to_torch_model(input_module, prediction_task)
 
 # #### Set the training arguments
 
-# An additional argument `data_loader_engine` is defined to automatically load the features needed for training using the schema. The default value is `nvtabular` for optimized GPU-based data-loading.  Optionally a `PyarrowDataLoader` (`pyarrow`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
+# An additional argument `data_loader_engine` is defined to automatically load the features needed for training using the schema. The default value is `merlin` for optimized GPU-based data-loading.  Optionally a `PyarrowDataLoader` (`pyarrow`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.
 
 # In[6]:
 
@@ -121,7 +124,7 @@ model = transformer_config.to_torch_model(input_module, prediction_task)
 training_args = tr.trainer.T4RecTrainingArguments(
             output_dir="./tmp",
             max_sequence_length=20,
-            data_loader_engine='nvtabular',
+            data_loader_engine='merlin',
             num_train_epochs=10, 
             dataloader_drop_last=False,
             per_device_train_batch_size = 384,
@@ -329,5 +332,7 @@ triton_client.unload_model(model_name="t4r_pytorch_pt")
 # - Merlin Transformers4rec: https://github.com/NVIDIA-Merlin/Transformers4Rec
 # 
 # - Merlin NVTabular: https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular
+# 
+# - Merlin Dataloader: https://github.com/NVIDIA-Merlin/dataloader
 # 
 # - Triton inference server: https://github.com/triton-inference-server

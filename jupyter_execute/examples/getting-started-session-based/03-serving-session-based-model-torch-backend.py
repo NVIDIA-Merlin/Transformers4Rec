@@ -19,6 +19,9 @@
 # limitations under the License.
 # ==============================================================================
 
+# Each user is responsible for checking the content of datasets and the
+# applicable licenses and determining if suitable for the intended use.
+
 
 # <img src="https://developer.download.nvidia.com//notebooks/dlsw-notebooks/remtting-started-session-based-03-serving-session-based-model-torch-backend/nvidia_logo.png" style="width: 90px; float: right;">
 # 
@@ -50,8 +53,6 @@ from merlin.io import Dataset
 from merlin.core.dispatch import make_df  # noqa
 from merlin.systems.dag import Ensemble  # noqa
 from merlin.systems.dag.ops.pytorch import PredictPyTorch  # noqa
-from merlin.systems.dag.ops.workflow import TransformWorkflow
-from merlin.systems.triton.utils import run_ensemble_on_tritonserver  # noqa
 
 
 # We define the paths
@@ -61,7 +62,7 @@ from merlin.systems.triton.utils import run_ensemble_on_tritonserver  # noqa
 
 INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data")
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/sessions_by_day")
-model_path= os.environ.get("OUTPUT_DIR", f"{INPUT_DATA_DIR}/saved_model")
+model_path= os.environ.get("model_path", f"{INPUT_DATA_DIR}/saved_model")
 
 
 # ### Set the schema object
@@ -144,13 +145,13 @@ train_dict = next(iter(loader))
 # In[10]:
 
 
-train_dict['item_id-list']
+train_dict[0]['item_id-list']
 
 
 # In[11]:
 
 
-traced_model = torch.jit.trace(model, train_dict, strict=True)
+traced_model = torch.jit.trace(model, train_dict[0], strict=True)
 
 
 # Generate model input and output schemas to feed in the `PredictPyTorch` operator below.
@@ -165,12 +166,19 @@ output_schema = model.output_schema
 # In[13]:
 
 
+for col_name, col_schema in input_schema.column_schemas.items():
+    input_schema[col_name] = input_schema[col_name].with_shape((None, sparse_max[col_name]))
+
+
+# In[14]:
+
+
 input_schema
 
 
 # Let's create a folder that we can store the exported models and the config files.
 
-# In[14]:
+# In[15]:
 
 
 import shutil
@@ -183,7 +191,7 @@ os.mkdir(ens_model_path)
 
 # We use `PredictPyTorch` operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.
 
-# In[15]:
+# In[16]:
 
 
 torch_op = input_schema.column_names >> PredictPyTorch(
@@ -195,11 +203,17 @@ torch_op = input_schema.column_names >> PredictPyTorch(
 # 
 # When we create an `Ensemble` object we supply the graph and a schema representing the starting input of the graph. The inputs to the ensemble graph are the inputs to the first operator of out graph. After we created the Ensemble we export the graph, supplying an export path for the `ensemble.export` function. This returns an ensemble config which represents the entire inference pipeline and a list of node-specific configs.
 
-# In[16]:
+# In[17]:
 
 
 ensemble = Ensemble(torch_op, input_schema)
 ens_config, node_configs = ensemble.export(ens_model_path)
+
+
+# In[18]:
+
+
+ensemble.input_schema
 
 
 # ## Starting Triton Server
@@ -210,7 +224,7 @@ ens_config, node_configs = ensemble.export(ens_model_path)
 # 
 # For the `--model-repository` argument, specify the same path as the export_path that you specified previously in the `ensemble.export` method. This command will launch the server and load all the models to the server. Once all the models are loaded successfully, you should see READY status printed out in the terminal for each loaded model.
 
-# In[17]:
+# In[19]:
 
 
 import tritonclient.http as client
@@ -240,23 +254,32 @@ triton_client.get_model_repository_index()
 # 
 # We do not serve the raw dataframe because in the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the deployed DL model for a prediction. Therefore, we use a transformed dataset that is processed similarly as train set. 
 
-# In[41]:
+# In[21]:
 
 
+eval_batch_size = 32
 eval_paths = os.path.join(OUTPUT_DIR, f"{1}/valid.parquet")
 eval_dataset = Dataset(eval_paths, shuffle=False)
-eval_loader = generate_dataloader(schema, eval_dataset, batch_size=32)
+eval_loader = generate_dataloader(schema, eval_dataset, batch_size=eval_batch_size)
 test_dict = next(iter(eval_loader))
 
-df_cols = {}
-for name, tensor in test_dict.items():
-    if name in input_schema.column_names:
-        dtype = input_schema[name].dtype
 
-        df_cols[name] = tensor.cpu().numpy().astype(dtype)
+# In[22]:
+
+
+test_dict[0]['item_id-list'][0]
+
+
+# In[23]:
+
+
+df_cols = {}
+for name, tensor in test_dict[0].items():
+    if name in input_schema.column_names:
+        df_cols[name] = tensor.cpu().numpy()
         if len(tensor.shape) > 1:
             df_cols[name] = list(df_cols[name])
-
+            
 df = make_df(df_cols)
 print(df.shape)
 df.head()
@@ -264,25 +287,20 @@ df.head()
 
 # Once our models are successfully loaded to the TIS, we can now easily send a request to TIS and get a response for our query with send_triton_request utility function.
 
-# In[42]:
+# In[24]:
 
 
 from merlin.systems.triton.utils import send_triton_request
 response = send_triton_request(input_schema, df[input_schema.column_names], output_schema.column_names)
+print(response)
 
 
-# In[43]:
-
-
-response
-
-
-# In[44]:
+# In[25]:
 
 
 response['next-item'].shape
 
 
 # We return a response for each request in the df. Each row in the `response['next-item']` array corresponds to the logit values per item in the catalog, and one logit score corresponding to the null, OOV and padded items. The first score of each array in each row corresponds to the score for the padded item, OOV or null item. Note that we dont have OOV or null items in our syntheticall generated datasets.
-
+# 
 # This is the end of this suit of examples. You successfully performed feature engineering with NVTabular trained transformer architecture based session-based recommendation models with Transformers4Rec deployed a trained model to Triton Inference Server with Torch backend, sent request and got responses from the server. If you would like to learn how to serve a TF4Rec model with Python backend please visit this [example](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb).
