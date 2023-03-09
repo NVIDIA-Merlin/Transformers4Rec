@@ -115,10 +115,11 @@
 <span class="kn">from</span> <span class="nn">merlin.models.utils.registry</span> <span class="kn">import</span> <span class="n">camelcase_to_snakecase</span>
 <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">ColumnSchema</span>
 <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span> <span class="k">as</span> <span class="n">Core_Schema</span>
+<span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Tags</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">transformers.modeling_utils</span> <span class="kn">import</span> <span class="n">SequenceSummary</span>
 
-<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
 
 <span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">BlockBase</span><span class="p">,</span> <span class="n">BlockOrModule</span><span class="p">,</span> <span class="n">BlockType</span>
 <span class="kn">from</span> <span class="nn">..features.base</span> <span class="kn">import</span> <span class="n">InputBlock</span>
@@ -414,11 +415,11 @@
 
         <span class="kn">from</span> <span class="nn">.prediction_task</span> <span class="kn">import</span> <span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span>
 
-        <span class="k">for</span> <span class="n">binary_target</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">BINARY_CLASSIFICATION</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">binary_target</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">([</span><span class="n">Tags</span><span class="o">.</span><span class="n">BINARY</span><span class="p">,</span> <span class="n">Tags</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">])</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
             <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">BinaryClassificationTask</span><span class="p">(</span><span class="n">binary_target</span><span class="p">))</span>
             <span class="n">task_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_weight_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">binary_target</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
 
-        <span class="k">for</span> <span class="n">regression_target</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">REGRESSION</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">regression_target</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">REGRESSION</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
             <span class="n">tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RegressionTask</span><span class="p">(</span><span class="n">regression_target</span><span class="p">))</span>
             <span class="n">task_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">task_weight_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">regression_target</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
 
