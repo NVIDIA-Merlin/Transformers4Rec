@@ -79,6 +79,21 @@ def tabular_core_schema(tabular_schema):
     return TensorflowMetadata.from_json(tabular_schema.to_json()).to_merlin_schema()
 
 
+def tabular_schemas():
+    schema = tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
+
+    return pytest.mark.parametrize(
+        "schema",
+        [
+            pytest.param(schema, id="merlin-standard-lib"),
+            pytest.param(
+                TensorflowMetadata.from_json(schema.to_json()).to_merlin_schema(),
+                id="merlin-core",
+            ),
+        ],
+    )
+
+
 try:
     import torchmetrics  # noqa
 
