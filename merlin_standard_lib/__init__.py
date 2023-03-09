@@ -19,7 +19,6 @@ from merlin.schema.io import proto_utils
 
 from .schema import schema
 from .schema.schema import ColumnSchema, Schema, categorical_cardinalities
-from .schema.tag import Tag
 
 # Other monkey-patching
 Message.HasField = proto_utils.has_field  # type: ignore
@@ -29,7 +28,6 @@ __all__ = [
     "ColumnSchema",
     "Schema",
     "schema",
-    "Tag",
     "Registry",
     "RegistryMixin",
     "categorical_cardinalities",

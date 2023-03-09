@@ -16,9 +16,9 @@
 
 import pytest
 import torch
+from merlin.schema import Tags
 
 import transformers4rec.torch as tr
-from merlin_standard_lib import Tag
 
 
 def test_concat_aggregation_yoochoose(tabular_schema, torch_tabular_data):
@@ -75,7 +75,7 @@ def test_element_wise_sum_item_multi_no_col_group():
 
 def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+        categ_schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
         # Remove the item id from col_group
         categ_schema = categ_schema.remove_by_name("item_id/list")
         element_wise_op = tr.ElementwiseSumItemMulti(categ_schema)
@@ -85,7 +85,7 @@ def test_element_wise_sum_item_multi_col_group_no_item_id(yoochoose_schema):
 
 def test_element_wise_sum_item_multi_features_different_shapes(yoochoose_schema):
     with pytest.raises(ValueError) as excinfo:
-        categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+        categ_schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
         element_wise_op = tr.ElementwiseSumItemMulti(categ_schema)
         input = {
             "item_id/list": torch.rand(10, 20),
@@ -109,7 +109,7 @@ def test_element_wise_sum_item_multi_aggregation_yoochoose(yoochoose_schema, tor
 def test_element_wise_sum_item_multi_aggregation_registry_yoochoose(
     yoochoose_schema, torch_yoochoose_like
 ):
-    categ_schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    categ_schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
 
     tab_module = tr.TabularSequenceFeatures.from_schema(
         categ_schema, aggregation="element-wise-sum-item-multi"

@@ -15,8 +15,9 @@
 #
 
 import torch
+from merlin.schema import Tags
 
-from merlin_standard_lib import ColumnSchema, Schema, Tag
+from merlin_standard_lib import ColumnSchema, Schema
 from merlin_standard_lib.schema.schema import ValueCount
 from transformers4rec.torch.utils import schema_utils
 
@@ -27,14 +28,14 @@ def test_random_data_from_simple_schema():
             ColumnSchema.create_categorical(
                 "item_id",
                 num_items=1000,
-                tags=[Tag.ITEM_ID, Tag.LIST],
+                tags=[Tags.ITEM_ID, Tags.LIST],
                 value_count=ValueCount(1, 50),
             ),
             ColumnSchema.create_categorical(
-                "session_cat", num_items=1000, tags=[Tag.LIST], value_count=ValueCount(1, 50)
+                "session_cat", num_items=1000, tags=[Tags.LIST], value_count=ValueCount(1, 50)
             ),
             ColumnSchema.create_continuous(
-                "session_con", tags=[Tag.LIST], value_count=ValueCount(1, 50)
+                "session_con", tags=[Tags.LIST], value_count=ValueCount(1, 50)
             ),
             ColumnSchema.create_categorical("context_cat", num_items=1000),
         ]
@@ -44,10 +45,10 @@ def test_random_data_from_simple_schema():
 
     assert random_data["context_cat"].shape == (100,)
     assert random_data["session_con"].dtype == torch.float32
-    for val in s.select_by_tag(Tag.LIST).filter_columns_from_dict(random_data).values():
+    for val in s.select_by_tag(Tags.LIST).filter_columns_from_dict(random_data).values():
         assert val.shape == (100, 50)
 
-    for val in s.select_by_tag(Tag.CATEGORICAL).filter_columns_from_dict(random_data).values():
+    for val in s.select_by_tag(Tags.CATEGORICAL).filter_columns_from_dict(random_data).values():
         assert val.dtype == torch.int64
         assert val.max() < 1000
 

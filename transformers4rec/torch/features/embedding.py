@@ -19,8 +19,9 @@ from typing import Any, Callable, Dict, List, Optional, Text, Union
 
 import torch
 from merlin.models.utils.doc_utils import docstring_parameter
+from merlin.schema import TagsType
 
-from merlin_standard_lib import Schema, Tag, categorical_cardinalities
+from merlin_standard_lib import Schema, categorical_cardinalities
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 from ..tabular.base import (
@@ -107,7 +108,7 @@ class EmbeddingFeatures(InputBlock):
         infer_embedding_sizes_multiplier: float = 2.0,
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         combiner: str = "mean",
-        tags: Optional[Union[Tag, list, str]] = None,
+        tags: Optional[TagsType] = None,
         item_id: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -304,7 +305,7 @@ class SoftEmbeddingFeatures(EmbeddingFeatures):
         embeddings_initializers: Optional[Dict[str, Callable[[Any], None]]] = None,
         layer_norm: bool = True,
         combiner: str = "mean",
-        tags: Optional[Union[Tag, list, str]] = None,
+        tags: Optional[TagsType] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
         **kwargs,

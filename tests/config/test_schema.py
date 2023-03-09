@@ -14,15 +14,16 @@
 # limitations under the License.
 #
 import pytest
+from merlin.schema import Tags
 
-from merlin_standard_lib import Tag, categorical_cardinalities
+from merlin_standard_lib import categorical_cardinalities
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
 
 def test_schema_from_yoochoose_schema(yoochoose_schema):
     assert len(yoochoose_schema.column_names) == 22
-    assert len(yoochoose_schema.select_by_tag(Tag.CONTINUOUS).column_schemas) == 11
-    assert len(yoochoose_schema.select_by_tag(Tag.CATEGORICAL).column_schemas) == 3
+    assert len(yoochoose_schema.select_by_tag(Tags.CONTINUOUS).column_schemas) == 11
+    assert len(yoochoose_schema.select_by_tag(Tags.CATEGORICAL).column_schemas) == 3
 
 
 def test_schema_cardinalities(yoochoose_schema):

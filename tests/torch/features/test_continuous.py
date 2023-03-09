@@ -14,8 +14,9 @@
 # limitations under the License.
 #
 
+from merlin.schema import Tags
+
 import transformers4rec.torch as tr
-from merlin_standard_lib import Tag
 
 
 def test_continuous_features(torch_con_features):
@@ -27,7 +28,7 @@ def test_continuous_features(torch_con_features):
 
 def test_continuous_features_yoochoose(yoochoose_schema, torch_yoochoose_like):
     schema = yoochoose_schema
-    cont_cols = schema.select_by_tag(Tag.CONTINUOUS)
+    cont_cols = schema.select_by_tag(Tags.CONTINUOUS)
 
     con = tr.ContinuousFeatures.from_schema(cont_cols)
     outputs = con(torch_yoochoose_like)
