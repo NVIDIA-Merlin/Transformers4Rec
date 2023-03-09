@@ -23,7 +23,6 @@ def test_mlp_block(tabular_schema, torch_tabular_data):
     )
 
     block = tab_module >> tr.MLPBlock([64, 32])
-
     outputs = block(torch_tabular_data)
 
     assert outputs.ndim == 2

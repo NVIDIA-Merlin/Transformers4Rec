@@ -32,6 +32,15 @@ def test_tabular_features(tabular_schema, torch_tabular_data):
     )
 
 
+def test_tabular_features_core_schema(tabular_core_schema, torch_tabular_data):
+    schema = tabular_core_schema
+    tab_module = tr.TabularFeatures.from_schema(schema)
+
+    outputs = tab_module(torch_tabular_data)
+
+    assert outputs is not None
+
+
 def test_tabular_features_embeddings_options(tabular_schema, torch_tabular_data):
     schema = tabular_schema
 
