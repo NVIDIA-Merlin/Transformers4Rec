@@ -632,8 +632,8 @@ dict outputs. So we should remove it when T4Rec is updated to use the latest ver
 <dl class="py function">
 <dt id="transformers4rec.torch.utils.torch_utils.torch_pad_and_concatenate">
 <code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.torch_utils.</span></code><code class="sig-name descname"><span class="pre">torch_pad_and_concatenate</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tensor2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/torch_utils.html#torch_pad_and_concatenate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.torch_utils.torch_pad_and_concatenate" title="Permalink to this definition"></a></dt>
-<dd><p>Concatenates <cite>tensor1</cite> and <cite>tensor2</cite> on first axis, applying padding on the second as needed</p>
-<p>#TODO this method was copied from the latest version of HF transformers library to support
+<dd><p>Concatenates <cite>tensor1</cite> and <cite>tensor2</cite> on first axis, applying padding on the second if necessary.
+#TODO this method was copied from the latest version of HF transformers library to support
 dict outputs. So we should remove it when T4Rec is updated to use the latest version</p>
 </dd></dl>
 
@@ -1014,6 +1014,10 @@ over the positive items (masked) of the current batch otherwise</p></li>
       <dd><a href="../../v0.1.15/api/transformers4rec.torch.utils.html">v0.1.15</a></dd>
       <dd><a href="../../v0.1.16/api/transformers4rec.torch.utils.html">v0.1.16</a></dd>
       <dd><a href="transformers4rec.torch.utils.html">v23.02.00</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../main/api/transformers4rec.torch.utils.html">main</a></dd>
     </dl>
   </div>
 </div><script>

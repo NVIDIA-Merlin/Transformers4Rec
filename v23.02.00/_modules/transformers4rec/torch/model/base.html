@@ -112,13 +112,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torchmetrics</span> <span class="k">as</span> <span class="nn">tm</span>
-<span class="kn">from</span> <span class="nn">merlin.models.utils.registry</span> <span class="kn">import</span> <span class="n">camelcase_to_snakecase</span>
 <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">ColumnSchema</span>
 <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span> <span class="k">as</span> <span class="n">Core_Schema</span>
 <span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
 <span class="kn">from</span> <span class="nn">transformers.modeling_utils</span> <span class="kn">import</span> <span class="n">SequenceSummary</span>
 
 <span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.registry</span> <span class="kn">import</span> <span class="n">camelcase_to_snakecase</span>
 
 <span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">BlockBase</span><span class="p">,</span> <span class="n">BlockOrModule</span><span class="p">,</span> <span class="n">BlockType</span>
 <span class="kn">from</span> <span class="nn">..features.base</span> <span class="kn">import</span> <span class="n">InputBlock</span>
@@ -279,6 +279,7 @@
         <span class="n">predictions</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">forward_to_prediction_fn</span><span class="p">(</span><span class="n">cast</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">predictions</span><span class="p">))</span>
@@ -962,6 +963,10 @@
       <dd><a href="../../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="base.html">v23.02.00</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../main/index.html">main</a></dd>
     </dl>
   </div>
 </div><script>

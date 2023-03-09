@@ -313,7 +313,7 @@ sessions_gdf = sessions_gdf[sessions_gdf.day_index>=178]
 # In[16]:
 
 
-from transformers4rec.utils.data_utils import save_time_based_splits
+from transformers4rec.data.preprocessing import save_time_based_splits
 save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                        output_dir= "./preproc_sessions_by_day",
                        partition_col='day_index',

@@ -104,11 +104,11 @@
 
 <span class="kn">import</span> <span class="nn">math</span>
 
-<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">categorical_cardinalities</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
 
 
 <div class="viewcode-block" id="get_embedding_sizes_from_schema"><a class="viewcode-back" href="../../../api/merlin_standard_lib.utils.html#merlin_standard_lib.utils.embedding_utils.get_embedding_sizes_from_schema">[docs]</a><span class="k">def</span> <span class="nf">get_embedding_sizes_from_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">2.0</span><span class="p">):</span>
-    <span class="n">cardinalities</span> <span class="o">=</span> <span class="n">categorical_cardinalities</span><span class="p">(</span><span class="n">schema</span><span class="p">)</span>
+    <span class="n">cardinalities</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">categorical_cardinalities</span><span class="p">()</span>
 
     <span class="k">return</span> <span class="p">{</span>
         <span class="n">key</span><span class="p">:</span> <span class="n">get_embedding_size_from_cardinality</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">multiplier</span><span class="p">)</span>
@@ -159,6 +159,10 @@
       <dd><a href="../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="embedding_utils.html">v23.02.00</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../main/index.html">main</a></dd>
     </dl>
   </div>
 </div><script>

@@ -106,9 +106,9 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">merlin.schema.io.proto_utils</span> <span class="kn">import</span> <span class="n">has_field</span>
 
 <span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.proto_utils</span> <span class="kn">import</span> <span class="n">has_field</span>
 
 <span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span>
 
@@ -215,45 +215,6 @@
     <span class="n">sparse_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sparse_coo_tensor</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">num_rows</span><span class="p">,</span> <span class="n">seq_limit</span><span class="p">]))</span>
 
     <span class="k">return</span> <span class="n">sparse_tensor</span><span class="o">.</span><span class="n">to_dense</span><span class="p">()</span>
-
-
-<span class="k">def</span> <span class="nf">_augment_schema</span><span class="p">(</span>
-    <span class="n">schema</span><span class="p">,</span>
-    <span class="n">cats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">conts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">sparse_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">sparse_max</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">sparse_as_dense</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-<span class="p">):</span>
-    <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">ColumnSchema</span><span class="p">,</span> <span class="n">Tags</span>
-
-    <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span><span class="n">conts</span> <span class="o">+</span> <span class="n">cats</span> <span class="o">+</span> <span class="n">labels</span><span class="p">)</span>
-
-    <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">labels</span>
-    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">[]:</span>
-        <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cats</span> <span class="ow">or</span> <span class="p">[]:</span>
-        <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">conts</span> <span class="ow">or</span> <span class="p">[]:</span>
-        <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
-
-    <span class="c1"># Set the appropriate properties for the sparse_names/sparse_max/sparse_as_dense</span>
-    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">sparse_names</span> <span class="ow">or</span> <span class="p">[]:</span>
-        <span class="n">cs</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">col</span><span class="p">]</span>
-        <span class="n">properties</span> <span class="o">=</span> <span class="n">cs</span><span class="o">.</span><span class="n">properties</span>
-        <span class="k">if</span> <span class="n">sparse_max</span> <span class="ow">and</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">sparse_max</span><span class="p">:</span>
-            <span class="n">properties</span><span class="p">[</span><span class="s2">&quot;value_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">sparse_max</span><span class="p">[</span><span class="n">col</span><span class="p">]}</span>
-        <span class="n">schema</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">cs</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-            <span class="n">tags</span><span class="o">=</span><span class="n">cs</span><span class="o">.</span><span class="n">tags</span><span class="p">,</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">cs</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-            <span class="n">is_list</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">is_ragged</span><span class="o">=</span><span class="ow">not</span> <span class="n">sparse_as_dense</span><span class="p">,</span>
-            <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">schema</span>
 </pre></div>
 
            </div>
@@ -292,6 +253,10 @@
       <dd><a href="../../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="schema_utils.html">v23.02.00</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../main/index.html">main</a></dd>
     </dl>
   </div>
 </div><script>

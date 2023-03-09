@@ -201,7 +201,7 @@ OUTPUT_DIR = os.environ.get("OUTPUT_DIR",os.path.join(INPUT_DATA_DIR, "sessions_
 # In[13]:
 
 
-from transformers4rec.utils.data_utils import save_time_based_splits
+from transformers4rec.data.preprocessing import save_time_based_splits
 save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                        output_dir= OUTPUT_DIR,
                        partition_col='day-first',

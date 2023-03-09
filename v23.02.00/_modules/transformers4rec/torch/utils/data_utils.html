@@ -109,15 +109,13 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">merlin.dataloader.torch</span> <span class="kn">import</span> <span class="n">Loader</span>
-<span class="kn">from</span> <span class="nn">merlin.models.utils.misc_utils</span> <span class="kn">import</span> <span class="n">validate_dataset</span>
-<span class="kn">from</span> <span class="nn">merlin.models.utils.registry</span> <span class="kn">import</span> <span class="n">Registry</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span> <span class="k">as</span> <span class="n">PyTorchDataLoader</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">IterableDataset</span>
 
-<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Registry</span><span class="p">,</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.misc_utils</span> <span class="kn">import</span> <span class="n">_augment_schema</span><span class="p">,</span> <span class="n">validate_dataset</span>
 
 <span class="kn">from</span> <span class="nn">...utils</span> <span class="kn">import</span> <span class="n">dependencies</span>
-<span class="kn">from</span> <span class="nn">..utils.schema_utils</span> <span class="kn">import</span> <span class="n">_augment_schema</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -564,6 +562,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">buffer_size</span> <span class="o">=</span> <span class="n">buffer_size</span>
 
     <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[SHUFFLE] INITIALIZING BUFFER_SIZE: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer_size</span><span class="p">))</span>
 
         <span class="k">raise</span> <span class="ne">StopIteration</span><span class="p">()</span>
@@ -609,6 +608,10 @@
       <dd><a href="../../../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="data_utils.html">v23.02.00</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../../../main/index.html">main</a></dd>
     </dl>
   </div>
 </div><script>

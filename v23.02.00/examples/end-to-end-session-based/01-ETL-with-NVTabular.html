@@ -588,7 +588,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.utils.data_utils</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.data.preprocessing</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
 <span class="n">save_time_based_splits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="p">),</span>
                        <span class="n">output_dir</span><span class="o">=</span> <span class="s2">&quot;./preproc_sessions_by_day&quot;</span><span class="p">,</span>
                        <span class="n">partition_col</span><span class="o">=</span><span class="s1">&#39;day_index&#39;</span><span class="p">,</span>
@@ -711,6 +711,10 @@ Count after removed in-session repeated interactions: 28971543
       <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="01-ETL-with-NVTabular.html">v23.02.00</a></dd>
+    </dl>
+    <dl>
+      <dt>Branches</dt>
+      <dd><a href="../../../main/index.html">main</a></dd>
     </dl>
   </div>
 </div><script>
