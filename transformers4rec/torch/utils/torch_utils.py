@@ -153,7 +153,7 @@ def _get_size_from_shape(col_schema, batch_size) -> torch.Size:
         if has_field(col_schema, "shape"):
             shape += [d.size for d in col_schema.shape.dim]
     elif col_schema.shape.dims is not None:
-        shape += [d.size for d in col_schema.shape.dims]
+        raise NotImplementedError("TODO: support shape.dims")
 
     return torch.Size(shape)
 
