@@ -19,6 +19,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar
 
 from google.protobuf import json_format, text_format
 from google.protobuf.message import Message as ProtoMessage
+
 from merlin.models.utils import schema_utils as mm_schema_utils
 from merlin.schema import Schema as CoreSchema
 from merlin.schema import Tags, TagSet, TagsType
