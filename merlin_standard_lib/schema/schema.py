@@ -19,6 +19,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar
 
 from google.protobuf import json_format, text_format
 from google.protobuf.message import Message as ProtoMessage
+from merlin.models.utils import schema_utils as mm_schema_utils
+from merlin.schema import Schema as CoreSchema
 from merlin.schema import Tags, TagSet, TagsType
 from merlin.schema.io import proto_utils
 
@@ -530,6 +532,9 @@ def _proto_text_to_better_proto(
 
 
 def categorical_cardinalities(schema) -> Dict[str, int]:
+    if isinstance(schema, CoreSchema):
+        return mm_schema_utils.categorical_cardinalities(schema)
+
     outputs = {}
     for col in schema:
         if col.int_domain and col.int_domain.is_categorical:

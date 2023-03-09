@@ -21,9 +21,11 @@ from typing import Dict, Optional, Union
 
 import numpy as np
 import torch
+from merlin.schema import Schema as CoreSchema
 from merlin.schema.io.proto_utils import has_field
 
 from merlin_standard_lib import Schema
+from merlin_standard_lib.schema.schema import ColumnSchema
 
 from ...config.schema import SchemaMixin
 from ..typing import TabularData
@@ -137,22 +139,42 @@ def check_gpu(module):
         return False
 
 
+def _has_field(col_schema, field_name):
+    if isinstance(col_schema, ColumnSchema):
+        return has_field(col_schema, field_name)
+
+    return getattr(col_schema, field_name, None)
+
+
+def _get_size_from_shape(col_schema, batch_size) -> torch.Size:
+    shape = [batch_size]
+
+    if isinstance(col_schema, ColumnSchema):
+        if has_field(col_schema, "shape"):
+            shape += [d.size for d in col_schema.shape.dim]
+    elif col_schema.shape.dims is not None:
+        shape += [d.size for d in col_schema.shape.dims]
+
+    return torch.Size(shape)
+
+
 def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_length=None):
     sizes = {}
-    for feature in schema.feature:
+
+    features = schema if isinstance(schema, CoreSchema) else schema.feature
+
+    for feature in features:
         name = feature.name
         # Sequential or multi-hot feature
-        if has_field(feature, "value_count"):
+        if _has_field(feature, "value_count"):
             sizes[name] = torch.Size(
                 [
                     batch_size,
                     max_sequence_length if max_sequence_length else feature.value_count.max,
                 ]
             )
-        elif has_field(feature, "shape"):
-            sizes[name] = torch.Size([batch_size] + [d.size for d in feature.shape.dim])
         else:
-            sizes[name] = torch.Size([batch_size])
+            sizes[name] = _get_size_from_shape(feature, batch_size)
 
     return sizes
 
