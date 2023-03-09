@@ -35,7 +35,6 @@ def test_generate_item_interactions():
         "item_recency": "float64",
     }
     for key, val in dict(data.dtypes).items():
-        print((key, val))
         assert val == expected_dtypes[key]
 
-    # assert all(val == expected_dtypes[key] for key, val in dict(data.dtypes).items())
+    assert all(val == expected_dtypes[key] for key, val in dict(data.dtypes).items())
