@@ -18,8 +18,7 @@
 from merlin.schema import Tags
 
 import transformers4rec.torch as tr
-
-from ...conftest import tabular_schemas
+from tests.conftest import tabular_schemas
 
 
 @tabular_schemas()
