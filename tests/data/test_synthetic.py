@@ -36,5 +36,3 @@ def test_generate_item_interactions():
     }
     for key, val in dict(data.dtypes).items():
         assert val == expected_dtypes[key]
-
-    assert all(val == expected_dtypes[key] for key, val in dict(data.dtypes).items())
