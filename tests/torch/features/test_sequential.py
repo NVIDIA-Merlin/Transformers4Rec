@@ -15,18 +15,18 @@
 #
 
 import pytest
+from merlin.schema import Tags
 
 import transformers4rec.torch as tr
-from merlin_standard_lib import Tag
 
 
 def test_sequential_and_non_seq_embedding_features(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tag.CATEGORICAL)
+    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
     emb_module = tr.SequenceEmbeddingFeatures.from_schema(schema)
 
     outputs = emb_module(torch_yoochoose_like)
 
-    assert list(outputs.keys()) == schema.select_by_tag(Tag.CATEGORICAL).column_names
+    assert list(outputs.keys()) == schema.select_by_tag(Tags.CATEGORICAL).column_names
 
     seq_features = ["item_id/list", "category/list"]
     non_seq_features = ["user_country"]
@@ -44,7 +44,9 @@ def test_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
 
     outputs = tab_module(torch_yoochoose_like)
 
-    tag_select = lambda tags: any(t in [Tag.CONTINUOUS, Tag.CATEGORICAL] for t in tags)  # noqa
+    tag_select = lambda tags: any(  # noqa
+        t in [Tags.CONTINUOUS.value, Tags.CATEGORICAL.value] for t in tags
+    )
     cols = schema.select_by_tag(tag_select).column_names
 
     assert set(outputs.keys()) == set(cols)
@@ -63,11 +65,11 @@ def test_sequential_tabular_features_with_feature_modules_kwargs(
     outputs = tab_module(torch_yoochoose_like)
 
     assert set(outputs.keys()) == set(
-        schema.select_by_tag(Tag.CONTINUOUS).column_names
-        + schema.select_by_tag(Tag.CATEGORICAL).column_names
+        schema.select_by_tag(Tags.CONTINUOUS).column_names
+        + schema.select_by_tag(Tags.CATEGORICAL).column_names
     )
 
-    categ_features = schema.select_by_tag(Tag.CATEGORICAL).column_names
+    categ_features = schema.select_by_tag(Tags.CATEGORICAL).column_names
     assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
 
 
@@ -76,7 +78,7 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, torch_yoo
     tab_module = tr.TabularSequenceFeatures.from_schema(
         schema, max_sequence_length=20, continuous_projection=64
     )
-    continuous_feature_names = schema.select_by_tag(Tag.CONTINUOUS).column_names
+    continuous_feature_names = schema.select_by_tag(Tags.CONTINUOUS).column_names
 
     outputs = tab_module(torch_yoochoose_like)
 
