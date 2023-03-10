@@ -18,6 +18,8 @@ import logging
 import warnings
 from abc import ABC
 
+from typing import Dict, Optional
+
 import numpy as np
 import torch
 from merlin.dataloader.torch import Loader
@@ -323,10 +325,6 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         reader_kwargs["row_groups_per_part"] = row_groups_per_part
         self.set_dataset(buffer_size, engine, reader_kwargs)
 
-        self.dataset.schema = _augment_schema(
-            self.dataset.schema, cats, conts, labels, sparse_names, sparse_max, sparse_as_dense
-        )
-
         if (global_rank is not None) and (self.dataset.npartitions < global_size):
             logger.warning(
                 "UserWarning: User is advised to repartition the parquet file before training "
@@ -355,7 +353,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             global_size=global_size,
             global_rank=global_rank,
             drop_last=drop_last,
-        )
+        ).map(_get_pad_fn(sparse_max))
 
         DLDataLoader.__init__(
             self,
@@ -437,6 +435,100 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         )
 
         return loader
+
+
+import torch.nn.functional as F
+
+def _pad_dense_tensor(t: torch.Tensor, length: Optional[int]) -> torch.Tensor:
+    if length and len(t.shape) == 2:
+        pad_diff = length - t.shape[1]
+        return F.pad(input=t, pad=(0, pad_diff, 0, 0))
+    return t
+
+
+def _pad_ragged_tensor_1(values: torch.Tensor, offsets: torch.Tensor, padding_length: int):
+    num_rows = len(offsets) - 1
+    padded_values = torch.zeros(
+        (num_rows, padding_length),
+        dtype=values.dtype, device=values.device
+    )
+    for i in range(num_rows):
+        row_values = values[offsets[i] : offsets[i + 1]]
+        padded_values[i: len(row_values)] = row_values
+    return padded_values
+
+def transform_1(X, padding_length):
+    X_padded = {}
+    for k, values in X.items():
+        if k.endswith("__values"):
+            col_name = k[:-8]
+            offsets = X[f"{col_name}__offsets"]
+            padded_values = _pad_ragged_tensor_1(values, offsets, padding_length)
+            X_padded[col_name] = padded_values
+        elif k.endswith("__offsets"):
+            continue
+        elif isinstance(values, tuple):
+            values, offsets = values
+            padded_values = _pad_ragged_tensor_1(values, offsets, padding_length)
+            X_padded[col_name] = padded_values
+        else:
+            X_padded[k] = _pad_dense_tensor(values, padding_length)
+
+    return X_padded
+
+
+def _get_indices(offsets, diff_offsets):
+    row_ids = torch.arange(len(offsets) - 1, device=offsets.device)
+    row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
+    row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
+    col_ids = torch.arange(len(row_offset_repeated), device=offsets.device) - row_offset_repeated
+    indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1)
+    return indices
+
+
+def _pad_ragged_tensor_2(values, offsets, padding_length):
+    num_rows = len(offsets) - 1
+    diff_offsets = offsets[1:] - offsets[:-1]
+    indices = _get_indices(offsets, diff_offsets)
+    sparse_tensor = torch.sparse_coo_tensor(
+        indices.T, values, torch.Size([num_rows, padding_length]), device=values.device
+    )
+    return sparse_tensor.to_dense()
+
+
+def _pad_batch(X, padding_lengths, ragged_pad_fn):
+    X_padded = {}
+    for k, values in X.items():
+        if k.endswith("__values"):
+            col_name = k[:-8]
+            offsets = X[f"{col_name}__offsets"]
+            padding_length = padding_lengths.get(col_name)
+            padded_values = ragged_pad_fn(values, offsets, padding_length)
+            X_padded[col_name] = padded_values
+        elif k.endswith("__offsets"):
+            continue
+        elif isinstance(values, tuple):
+            padding_length = padding_lengths.get(k)
+            if padding_length:
+                values, offsets = values
+                padded_values = ragged_pad_fn(values, offsets, padding_length)
+                X_padded[col_name] = padded_values
+            else:
+                X_padded[k] = values
+        else:
+            padding_length = padding_lengths.get(k)
+            X_padded[k] = _pad_dense_tensor(values, padding_length)
+
+    return X_padded
+
+
+def _get_pad_fn(padding_lengths: Dict[str, int]):
+    def pad_fn(x, y):
+        new_x = _pad_batch(x, padding_lengths, _pad_ragged_tensor_2)
+        new_y = _pad_batch(y, padding_lengths, _pad_ragged_tensor_2)
+        return new_x, new_y
+
+    return pad_fn
 
 
 class ParquetDataset(Dataset):
