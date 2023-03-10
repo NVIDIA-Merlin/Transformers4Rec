@@ -59,9 +59,7 @@ def test_set_train_eval_loaders_attributes(
 @pytest.mark.parametrize("batch_size", [16, 32])
 @pytest.mark.parametrize("schema_type", ["msl", "core"])
 def test_set_train_eval_loaders_pyarrow(
-    torch_yoochoose_next_item_prediction_model, 
-    batch_size,
-    schema_type
+    torch_yoochoose_next_item_prediction_model, batch_size, schema_type
 ):
     data = tr.data.tabular_sequence_testing_data
     schema = data.schema if schema_type == "msl" else data.merlin_schema
@@ -146,10 +144,7 @@ def test_create_scheduler(torch_yoochoose_next_item_prediction_model, scheduler)
 
 
 @pytest.mark.parametrize("schema_type", ["msl", "core"])
-def test_trainer_eval_loop(
-    torch_yoochoose_next_item_prediction_model,
-    schema_type
-):
+def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model, schema_type):
     pytest.importorskip("pyarrow")
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
