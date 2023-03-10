@@ -57,8 +57,14 @@ def test_set_train_eval_loaders_attributes(
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
-def test_set_train_eval_loaders_pyarrow(torch_yoochoose_next_item_prediction_model, batch_size):
+@pytest.mark.parametrize("schema_type", ["msl", "core"])
+def test_set_train_eval_loaders_pyarrow(
+    torch_yoochoose_next_item_prediction_model, 
+    batch_size,
+    schema_type
+):
     data = tr.data.tabular_sequence_testing_data
+    schema = data.schema if schema_type == "msl" else data.merlin_schema
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         max_steps=5,
@@ -72,7 +78,7 @@ def test_set_train_eval_loaders_pyarrow(torch_yoochoose_next_item_prediction_mod
     resys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
-        schema=data.schema,
+        schema=schema,
         train_dataset_or_path=data.path,
         eval_dataset_or_path=data.path,
     )
@@ -139,7 +145,11 @@ def test_create_scheduler(torch_yoochoose_next_item_prediction_model, scheduler)
     assert result
 
 
-def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
+@pytest.mark.parametrize("schema_type", ["msl", "core"])
+def test_trainer_eval_loop(
+    torch_yoochoose_next_item_prediction_model,
+    schema_type
+):
     pytest.importorskip("pyarrow")
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
@@ -157,10 +167,11 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
     )
 
     data = tr.data.tabular_sequence_testing_data
+    schema = data.schema if schema_type == "msl" else data.merlin_schema
     recsys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
-        schema=data.schema,
+        schema=schema,
         train_dataset_or_path=data.path,
         eval_dataset_or_path=data.path,
         test_dataset_or_path=data.path,
@@ -336,9 +347,10 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
         ),
     ],
 )
-def test_trainer_music_streaming(task_and_metrics):
+@pytest.mark.parametrize("schema_type", ["msl", "core"])
+def test_trainer_music_streaming(task_and_metrics, schema_type):
     data = tr.data.music_streaming_testing_data
-    schema = data.schema
+    schema = data.schema if schema_type == "msl" else data.merlin_schema
     batch_size = 16
     task, default_metric = task_and_metrics
 
@@ -385,9 +397,10 @@ def test_trainer_music_streaming(task_and_metrics):
     assert predictions is not None
 
 
-def test_trainer_with_multiple_tasks():
+@pytest.mark.parametrize("schema_type", ["msl", "core"])
+def test_trainer_with_multiple_tasks(schema_type):
     data = tr.data.music_streaming_testing_data
-    schema = data.schema
+    schema = data.schema if schema_type == "msl" else data.merlin_schema
     batch_size = 16
     tasks = [
         tr.NextItemPredictionTask(weight_tying=True),

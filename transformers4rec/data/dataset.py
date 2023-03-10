@@ -19,6 +19,8 @@ import os
 from typing import Optional
 
 from merlin_standard_lib import Schema
+from merlin.schema import Schema as CoreSchema
+from merlin.schema.io.tensorflow_metadata import TensorflowMetadata
 
 
 class Dataset:
@@ -32,6 +34,10 @@ class Dataset:
     @property
     def schema(self) -> Schema:
         return self._schema
+    
+    @property
+    def merlin_schema(self) -> CoreSchema:
+        return TensorflowMetadata.from_json(self.schema.to_json()).to_merlin_schema()
 
     def torch_synthetic_data(
         self, num_rows=100, min_session_length=5, max_session_length=20, device=None
