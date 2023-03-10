@@ -827,19 +827,16 @@
 
             <span class="n">dtype</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">}[</span><span class="n">column</span><span class="o">.</span><span class="n">type</span><span class="p">]</span>
             <span class="n">tags</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">tags</span>
-            <span class="n">is_list</span> <span class="o">=</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="n">column</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span><span class="p">))</span>
             <span class="n">int_domain</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">min</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">column</span><span class="o">.</span><span class="n">int_domain</span><span class="o">.</span><span class="n">max</span><span class="p">}</span>
             <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
             <span class="p">}</span>
 
             <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
-                <span class="n">name</span><span class="p">,</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
-                <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
-                <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span>
-                <span class="n">is_list</span><span class="o">=</span><span class="n">is_list</span><span class="p">,</span>
-                <span class="n">is_ragged</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
             <span class="p">)</span>
             <span class="n">core_schema</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">col_schema</span>
         <span class="k">return</span> <span class="n">core_schema</span>
@@ -852,6 +849,7 @@
         <span class="c1"># if multiple heads and/or multiple prediction task, the output is a dictionary</span>
         <span class="n">output_cols</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
+            <span class="n">dims</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">head</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="n">target_dim</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">target_dim</span>
                 <span class="n">int_domain</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="n">target_dim</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="n">target_dim</span><span class="p">}</span>
@@ -859,15 +857,13 @@
                     <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="p">(</span><span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span><span class="p">))</span>
                     <span class="ow">and</span> <span class="ow">not</span> <span class="n">task</span><span class="o">.</span><span class="n">summary_type</span>
                 <span class="p">):</span>
-                    <span class="n">is_list</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">task</span><span class="o">.</span><span class="n">target_dim</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">is_list</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="n">dims</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">task</span><span class="o">.</span><span class="n">target_dim</span><span class="p">)</span>
                 <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
                 <span class="p">}</span>
-                <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
-                    <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">is_list</span><span class="o">=</span><span class="n">is_list</span><span class="p">,</span> <span class="n">is_ragged</span><span class="o">=</span><span class="kc">False</span>
-                <span class="p">)</span>
+                <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">)</span>
                 <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Core_Schema</span><span class="p">(</span><span class="n">output_cols</span><span class="p">)</span>
