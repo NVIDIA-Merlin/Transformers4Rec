@@ -161,6 +161,11 @@ class EmbeddingFeatures(InputBlock):
 
         _item_id = schema.select_by_tag(Tags.ITEM_ID)
         if not item_id and len(_item_id) > 0:
+            if len(_item_id) > 1:
+                raise ValueError(
+                    "Multiple columns with tag ITEM_ID found. "
+                    "Please specify the item_id column name."
+                )
             item_id = list(_item_id)[0].name
 
         embedding_dims = embedding_dims or {}
