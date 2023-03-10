@@ -84,6 +84,37 @@ def test_sequential_prediction_model(
     assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
 
 
+def test_sequential_binary_classification_model(
+    torch_yoochoose_tabular_transformer_features,
+    torch_yoochoose_like,
+):
+    bs, max_len = 100, 20
+    targets = {"sequential_target": torch.randint(2, (bs, max_len)).float()}
+
+    inputs = torch_yoochoose_tabular_transformer_features
+    transformer_config = tconf.XLNetConfig.build(
+        d_model=64, n_head=4, n_layer=2, total_seq_length=max_len
+    )
+    body = tr.SequentialBlock(inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config))
+    head = tr.Head(
+        body,
+        tr.BinaryClassificationTask("sequential_target", summary_type=None),
+        inputs=inputs,
+    )
+    model = tr.Model(head)
+
+    dataset = [(torch_yoochoose_like, targets)]
+    losses = model.fit(dataset, num_epochs=5)
+    metrics = model.evaluate(dataset, mode="eval")
+
+    assert len(metrics) == 3
+    assert len(losses) == 5
+    assert all(loss.min() >= 0 and loss.max() <= 1 for loss in losses)
+
+    predictions = model(torch_yoochoose_like)
+    assert predictions.shape == (bs, max_len)
+
+
 def test_model_with_multiple_heads_and_tasks(
     yoochoose_schema,
     torch_yoochoose_tabular_transformer_features,

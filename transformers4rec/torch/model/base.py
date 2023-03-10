@@ -36,7 +36,7 @@ from merlin_standard_lib import Schema
 from ..block.base import BlockBase, BlockOrModule, BlockType
 from ..features.base import InputBlock
 from ..features.sequence import TabularFeaturesType
-from ..typing import TabularData, TensorOrTabularData
+from ..typing import TabularData
 from ..utils.torch_utils import LossMixin, MetricsMixin
 
 
@@ -517,9 +517,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_reduction = head_reduction
         self.optimizer = optimizer
 
-    def forward(
-        self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs
-    ):
+    def forward(self, inputs: TabularData, targets=None, training=False, testing=False, **kwargs):
         # Convert inputs to float32 which is the default type, expected by PyTorch
         for name, val in inputs.items():
             if torch.is_floating_point(val):
@@ -783,6 +781,10 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 output_cols.append(col_schema)
 
         return Core_Schema(output_cols)
+
+    @property
+    def prediction_tasks(self):
+        return [task for head in self.heads for task in list(head.prediction_task_dict.values())]
 
     def save(self, path: Union[str, os.PathLike], model_name="t4rec_model_class"):
         """Saves the model to f"{export_path}/{model_name}.pkl" using `cloudpickle`
