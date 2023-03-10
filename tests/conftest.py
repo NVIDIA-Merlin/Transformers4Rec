@@ -79,8 +79,13 @@ def tabular_core_schema(tabular_schema):
     return TensorflowMetadata.from_json(tabular_schema.to_json()).to_merlin_schema()
 
 
-def parametrize_tabular_schemas():
-    schema = tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
+def parametrize_schemas(name):
+    if name == "tabular":
+        schema = tabular_testing_data.schema.remove_by_name(
+            ["session_id", "session_start", "day_idx"]
+        )
+    elif name == "yoochoose":
+        schema = tabular_sequence_testing_data.schema
 
     return pytest.mark.parametrize(
         "schema",
