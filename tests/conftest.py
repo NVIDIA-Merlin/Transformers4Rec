@@ -22,6 +22,7 @@ import numpy as np
 import pytest
 from merlin.datasets.synthetic import generate_data
 from merlin.io import Dataset
+from merlin.schema.io.tensorflow_metadata import TensorflowMetadata
 
 from merlin_standard_lib import Schema
 from transformers4rec.data import tabular_sequence_testing_data, tabular_testing_data
@@ -71,6 +72,26 @@ def tabular_schema_file() -> str:
 @pytest.fixture
 def tabular_schema() -> Schema:
     return tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
+
+
+@pytest.fixture
+def tabular_core_schema(tabular_schema):
+    return TensorflowMetadata.from_json(tabular_schema.to_json()).to_merlin_schema()
+
+
+def parametrize_tabular_schemas():
+    schema = tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
+
+    return pytest.mark.parametrize(
+        "schema",
+        [
+            pytest.param(schema, id="merlin-standard-lib"),
+            pytest.param(
+                TensorflowMetadata.from_json(schema.to_json()).to_merlin_schema(),
+                id="merlin-core",
+            ),
+        ],
+    )
 
 
 try:

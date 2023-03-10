@@ -18,10 +18,11 @@
 from merlin.schema import Tags
 
 import transformers4rec.torch as tr
+from tests.conftest import parametrize_tabular_schemas
 
 
-def test_tabular_features(tabular_schema, torch_tabular_data):
-    schema = tabular_schema
+@parametrize_tabular_schemas()
+def test_tabular_features(schema, torch_tabular_data):
     tab_module = tr.TabularFeatures.from_schema(schema)
 
     outputs = tab_module(torch_tabular_data)
@@ -32,9 +33,8 @@ def test_tabular_features(tabular_schema, torch_tabular_data):
     )
 
 
-def test_tabular_features_embeddings_options(tabular_schema, torch_tabular_data):
-    schema = tabular_schema
-
+@parametrize_tabular_schemas()
+def test_tabular_features_embeddings_options(schema, torch_tabular_data):
     EMB_DIM = 100
     tab_module = tr.TabularFeatures.from_schema(schema, embedding_dim_default=EMB_DIM)
 
@@ -44,8 +44,8 @@ def test_tabular_features_embeddings_options(tabular_schema, torch_tabular_data)
     assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
 
 
-def test_tabular_features_with_projection(tabular_schema, torch_tabular_data):
-    schema = tabular_schema
+@parametrize_tabular_schemas()
+def test_tabular_features_with_projection(schema, torch_tabular_data):
     tab_module = tr.TabularFeatures.from_schema(schema, continuous_projection=64)
 
     outputs = tab_module(torch_tabular_data)
@@ -57,9 +57,8 @@ def test_tabular_features_with_projection(tabular_schema, torch_tabular_data):
     assert list(outputs["continuous_projection"].shape)[1] == 64
 
 
-def test_tabular_features_soft_encoding(tabular_schema, torch_tabular_data):
-    schema = tabular_schema
-
+@parametrize_tabular_schemas()
+def test_tabular_features_soft_encoding(schema, torch_tabular_data):
     emb_cardinality = 10
     emb_dim = 8
     tab_module = tr.TabularFeatures.from_schema(
