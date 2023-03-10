@@ -15,13 +15,16 @@
 #
 
 import pytest
+from merlin.schema import Schema as CoreSchema
 from merlin.schema import Tags
 
 import transformers4rec.torch as tr
+from tests.conftest import parametrize_schemas
 
 
-def test_sequential_and_non_seq_embedding_features(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema.select_by_tag(Tags.CATEGORICAL)
+@parametrize_schemas("yoochoose")
+def test_sequential_and_non_seq_embedding_features(schema, torch_yoochoose_like):
+    schema = schema.select_by_tag(Tags.CATEGORICAL)
     emb_module = tr.SequenceEmbeddingFeatures.from_schema(schema)
 
     outputs = emb_module(torch_yoochoose_like)
@@ -38,24 +41,24 @@ def test_sequential_and_non_seq_embedding_features(yoochoose_schema, torch_yooch
         assert list(outputs[fname].shape) == [100, 64]
 
 
-def test_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+@parametrize_schemas("yoochoose")
+def test_sequential_tabular_features(schema, torch_yoochoose_like):
     tab_module = tr.TabularSequenceFeatures.from_schema(schema)
 
     outputs = tab_module(torch_yoochoose_like)
 
-    tag_select = lambda tags: any(  # noqa
-        t in [Tags.CONTINUOUS.value, Tags.CATEGORICAL.value] for t in tags
-    )
-    cols = schema.select_by_tag(tag_select).column_names
+    cols = [
+        c.name
+        for c in list(
+            schema.select_by_tag(Tags.CONTINUOUS) + schema.select_by_tag(Tags.CATEGORICAL)
+        )
+    ]
 
     assert set(outputs.keys()) == set(cols)
 
 
-def test_sequential_tabular_features_with_feature_modules_kwargs(
-    yoochoose_schema, torch_yoochoose_like
-):
-    schema = yoochoose_schema
+@parametrize_schemas("yoochoose")
+def test_sequential_tabular_features_with_feature_modules_kwargs(schema, torch_yoochoose_like):
     EMB_DIM = 200
     tab_module = tr.TabularSequenceFeatures.from_schema(
         schema,
@@ -73,8 +76,8 @@ def test_sequential_tabular_features_with_feature_modules_kwargs(
     assert all(v.shape[-1] == EMB_DIM for k, v in outputs.items() if k in categ_features)
 
 
-def test_sequential_tabular_features_with_projection(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+@parametrize_schemas("yoochoose")
+def test_sequential_tabular_features_with_projection(schema, torch_yoochoose_like):
     tab_module = tr.TabularSequenceFeatures.from_schema(
         schema, max_sequence_length=20, continuous_projection=64
     )
@@ -87,9 +90,10 @@ def test_sequential_tabular_features_with_projection(yoochoose_schema, torch_yoo
     assert list(outputs["continuous_projection"].shape)[1:] == [20, 64]
 
 
-def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoochoose_like):
+@parametrize_schemas("yoochoose")
+def test_sequential_tabular_features_with_masking(schema, torch_yoochoose_like):
     input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
+        schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=100,
@@ -103,13 +107,14 @@ def test_sequential_tabular_features_with_masking(yoochoose_schema, torch_yoocho
     assert outputs.shape[1] == 20
 
 
-def test_sequential_tabular_features_ignore_masking(yoochoose_schema, torch_yoochoose_like):
+@parametrize_schemas("yoochoose")
+def test_sequential_tabular_features_ignore_masking(schema, torch_yoochoose_like):
     import numpy as np
 
     from transformers4rec.torch.masking import CausalLanguageModeling, MaskedLanguageModeling
 
     input_module = tr.TabularSequenceFeatures.from_schema(
-        yoochoose_schema,
+        schema,
         max_sequence_length=20,
         continuous_projection=64,
         d_output=100,
@@ -140,17 +145,16 @@ def test_sequential_tabular_features_ignore_masking(yoochoose_schema, torch_yooc
     assert output_inference_masking.shape[1] == output_eval_masking.shape[1] + 1
 
 
-def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_like):
-    continuous_module = tr.ContinuousFeatures.from_schema(yoochoose_schema, tags=["continuous"])
-    categorical_module = tr.SequenceEmbeddingFeatures.from_schema(
-        yoochoose_schema, tags=["categorical"]
-    )
+@parametrize_schemas("yoochoose")
+def test_tabular_features_yoochoose_direct(schema, torch_yoochoose_like):
+    continuous_module = tr.ContinuousFeatures.from_schema(schema, tags=Tags.CONTINUOUS)
+    categorical_module = tr.SequenceEmbeddingFeatures.from_schema(schema, tags=Tags.CATEGORICAL)
 
     tab_seq_features = tr.TabularSequenceFeatures(
         continuous_module=continuous_module,
         categorical_module=categorical_module,
         aggregation="concat",
-        schema=yoochoose_schema,
+        schema=schema,
     )
     outputs = tab_seq_features(torch_yoochoose_like)
 
@@ -173,12 +177,16 @@ def test_tabular_features_yoochoose_direct(yoochoose_schema, torch_yoochoose_lik
     assert len(outputs.shape) == 3
 
 
-def test_sequential_tabular_features_with_masking_no_itemid(yoochoose_schema):
+@parametrize_schemas("yoochoose")
+def test_sequential_tabular_features_with_masking_no_itemid(schema):
     with pytest.raises(ValueError) as excinfo:
-        yoochoose_schema = yoochoose_schema.remove_by_name("item_id/list")
+        if isinstance(schema, CoreSchema):
+            schema = schema.excluding_by_name("item_id/list")
+        else:
+            schema = schema.remove_by_name("item_id/list")
 
         tr.TabularSequenceFeatures.from_schema(
-            yoochoose_schema,
+            schema,
             max_sequence_length=20,
             continuous_projection=64,
             d_output=100,
@@ -202,8 +210,8 @@ def test_sequential_tabular_features_with_projection_and_d_output(yoochoose_sche
     assert "You cannot specify both d_output and projection at the same time" in str(excinfo.value)
 
 
-def test_sequential_and_non_sequential_tabular_features(yoochoose_schema, torch_yoochoose_like):
-    schema = yoochoose_schema
+@parametrize_schemas("yoochoose")
+def test_sequential_and_non_sequential_tabular_features(schema, torch_yoochoose_like):
     tab_module = tr.TabularSequenceFeatures.from_schema(schema, aggregation="concat")
 
     outputs = tab_module(torch_yoochoose_like)

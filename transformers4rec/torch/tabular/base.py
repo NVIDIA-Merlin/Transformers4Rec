@@ -15,6 +15,7 @@
 #
 
 from abc import ABC
+from copy import deepcopy
 from functools import reduce
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -186,7 +187,7 @@ class TabularModule(torch.nn.Module):
         -------
         Optional[TabularModule]
         """
-        schema_copy = schema.copy()
+        schema_copy = deepcopy(schema)
         if tags:
             schema_copy = schema_copy.select_by_tag(tags)
 
