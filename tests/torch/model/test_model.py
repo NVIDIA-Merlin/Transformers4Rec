@@ -89,6 +89,7 @@ def test_sequential_binary_classification_model(
     torch_yoochoose_like,
 ):
     bs, max_len = 100, 20
+    wrong_target = {"target": torch.randint(2, (bs,)).float()}
     targets = {"sequential_target": torch.randint(2, (bs, max_len)).float()}
 
     inputs = torch_yoochoose_tabular_transformer_features
@@ -96,6 +97,18 @@ def test_sequential_binary_classification_model(
         d_model=64, n_head=4, n_layer=2, total_seq_length=max_len
     )
     body = tr.SequentialBlock(inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config))
+
+    with pytest.raises(ValueError) as excinfo:
+        head = tr.Head(
+            body,
+            tr.BinaryClassificationTask("target", summary_type=None),
+            inputs=inputs,
+        )
+        model = tr.Model(head)
+        dataset = [(torch_yoochoose_like, wrong_target)]
+        losses = model.fit(dataset, num_epochs=1)
+    assert "If `summary_type==None`, targets are expected to be a 2D tensor" in str(excinfo.value)
+
     head = tr.Head(
         body,
         tr.BinaryClassificationTask("sequential_target", summary_type=None),

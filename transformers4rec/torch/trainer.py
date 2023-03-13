@@ -511,14 +511,16 @@ class Trainer(BaseTrainer):
             if preds is not None and self.args.predict_top_k > 0:
                 # get outputs of next-item scores
                 if isinstance(preds, dict):
-                    assert (
-                        "next-item" in preds
-                    ), "Top-k prediction is specific to NextItemPredictionTask"
+                    assert any(
+                        isinstance(x, NextItemPredictionTask) for x in model.prediction_tasks
+                    ), "Top-k prediction is specific to NextItemPredictionTask, "
+                    "Please ensure `self.args.predict_top_k == 0` "
                     pred_next_item = preds["next-item"]
                 else:
                     assert isinstance(
                         model.prediction_tasks[0], NextItemPredictionTask
-                    ), "Top-k prediction is specific to NextItemPredictionTask"
+                    ), "Top-k prediction is specific to NextItemPredictionTask, "
+                    "Please ensure `self.args.predict_top_k == 0` "
                     pred_next_item = preds
 
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(

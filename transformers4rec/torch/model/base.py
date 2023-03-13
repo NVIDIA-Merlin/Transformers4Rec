@@ -167,6 +167,13 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         if training or testing:
             # add support of computing the loss inside the forward
             # and return a dictionary as standard output
+            if self.summary_type is None:
+                if targets.dim() != 2:
+                    raise ValueError(
+                        "If `summary_type==None`, targets are expected to be a 2D tensor, "
+                        f"but got a tensor with shape {targets.shape}"
+                    )
+
             loss = self.loss(x, target=targets)
             return {"loss": loss, "labels": targets, "predictions": x}
 
