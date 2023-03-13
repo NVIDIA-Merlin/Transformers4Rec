@@ -342,10 +342,89 @@ def test_evaluate_results(torch_yoochoose_next_item_prediction_model):
         ),
     ],
 )
-@pytest.mark.parametrize("schema_type", ["msl", "core"])
-def test_trainer_music_streaming(task_and_metrics, schema_type):
+def test_trainer_music_streaming(task_and_metrics):
     data = tr.data.music_streaming_testing_data
-    schema = data.schema if schema_type == "msl" else data.merlin_schema
+    schema = data.schema
+    batch_size = 16
+    task, default_metric = task_and_metrics
+
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="mlm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+    model = transformer_config.to_torch_model(inputs, task)
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        data_loader_engine="merlin_dataloader",
+        max_sequence_length=20,
+        fp16=False,
+        report_to=[],
+        debug=["r"],
+    )
+
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataset_or_path=data.path,
+        eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
+        compute_metrics=True,
+    )
+
+    recsys_trainer.train()
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+    predictions = recsys_trainer.predict(data.path)
+
+    assert isinstance(eval_metrics, dict)
+    assert set(default_metric).issubset(set(eval_metrics.keys()))
+    assert eval_metrics["eval_/loss"] is not None
+
+    assert predictions is not None
+
+
+# This is broken out as a separate test since combining it leads to strange errors
+@pytest.mark.parametrize(
+    "task_and_metrics",
+    [
+        (
+            tr.NextItemPredictionTask(weight_tying=True),
+            [
+                "eval_/next-item/ndcg_at_10",
+                "eval_/next-item/ndcg_at_20",
+                "eval_/next-item/avg_precision_at_10",
+                "eval_/next-item/avg_precision_at_20",
+                "eval_/next-item/recall_at_10",
+                "eval_/next-item/recall_at_20",
+            ],
+        ),
+        (
+            tr.BinaryClassificationTask("click", summary_type="mean"),
+            [
+                "eval_/click/binary_classification_task/binary_accuracy",
+                "eval_/click/binary_classification_task/binary_precision",
+                "eval_/click/binary_classification_task/binary_recall",
+            ],
+        ),
+        (
+            tr.RegressionTask("play_percentage", summary_type="mean"),
+            [
+                "eval_/play_percentage/regression_task/mean_squared_error",
+            ],
+        ),
+    ],
+)
+def test_trainer_music_streaming_core_schema(task_and_metrics):
+    data = tr.data.music_streaming_testing_data
+    schema = data.merlin_schema
     batch_size = 16
     task, default_metric = task_and_metrics
 
