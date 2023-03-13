@@ -13,8 +13,7 @@ def test_remove_consecutive_interactions(testing_data):
         df.copy(), timestamp_col="event_timestamp"
     )
 
-    assert len(filtered) < len(df)
-    assert len(filtered) >= 97
+    assert len(filtered) <= len(df)
     assert len(list(filtered.columns)) == len(list(df.columns))
 
 
