@@ -28,7 +28,6 @@ from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
 from merlin_standard_lib import Schema
-from transformers4rec.torch.utils import schema_utils
 from transformers4rec.torch.utils.padding import get_pad_fn
 
 from ...utils import dependencies
@@ -343,7 +342,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
                 " for DDP training and ensure optimal performance."
             )
 
-        self.dataset.schema = schema_utils._augment_schema(
+        self.dataset.schema = self._augment_schema(
             self.dataset.schema, cats=cats, conts=conts, labels=labels
         )
 
@@ -368,6 +367,26 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         )
         self.schema = schema
         self.max_sequence_length = max_sequence_length
+
+
+    @staticmethod
+    def _augment_schema(
+        schema,
+        cats=None,
+        conts=None,
+        labels=None,
+    ):
+        schema = schema.select_by_name(conts + cats + labels)
+
+        labels = [labels] if isinstance(labels, str) else labels
+        for label in labels or []:
+            schema[label] = schema[label].with_tags(Tags.TARGET)
+        for label in cats or []:
+            schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
+        for label in conts or []:
+            schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
+
+        return schema
 
     def set_dataset(self, buffer_size, engine, reader_kwargs):
         dataset = validate_dataset(

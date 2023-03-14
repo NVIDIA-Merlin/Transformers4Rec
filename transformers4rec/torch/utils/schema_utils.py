@@ -127,24 +127,3 @@ def _get_sparse_tensor(values, indices, num_rows, seq_limit):
     sparse_tensor = torch.sparse_coo_tensor(indices.T, values, torch.Size([num_rows, seq_limit]))
 
     return sparse_tensor.to_dense()
-
-
-def _augment_schema(
-    schema,
-    cats=None,
-    conts=None,
-    labels=None,
-):
-    from merlin.schema import Tags
-
-    schema = schema.select_by_name(conts + cats + labels)
-
-    labels = [labels] if isinstance(labels, str) else labels
-    for label in labels or []:
-        schema[label] = schema[label].with_tags(Tags.TARGET)
-    for label in cats or []:
-        schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
-    for label in conts or []:
-        schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
-
-    return schema
