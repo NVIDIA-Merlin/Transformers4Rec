@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
@@ -53,20 +53,44 @@ def _pad_ragged_tensor(values, offsets, padding_length):
     return sparse_tensor.to_dense()
 
 
-def _pad_batch(X, padding_lengths, ragged_pad_fn):
-    if X is None or not isinstance(X, dict):
-        return X
+Batch = Dict[str, Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]]
 
-    X_padded = {}
-    for k, values in X.items():
+
+def pad_batch(batch: Batch, padding_lengths: Dict[str, int]) -> Batch:
+    """Pad list features in a batch to padding length specified
+
+    Parameters
+    ----------
+    X : Batch
+        dictionary of tensors in batch
+    padding_lengths : Dict[str, int]
+        dictionary mapping list column name to padding length
+
+    Returns
+    -------
+    Batch
+        Batch with padded list features
+
+    Raises
+    ------
+    ValueError
+        If ragged column found with no padding length provided
+    """
+    if batch is None or not isinstance(batch, dict):
+        return batch
+
+    batch_padded = {}
+    for k, values in batch.items():
         if k.endswith("__values"):
             col_name = k[:-8]
-            offsets = X[f"{col_name}__offsets"]
+            offsets = batch[f"{col_name}__offsets"]
             padding_length = padding_lengths.get(col_name)
             if padding_length:
-                padded_values = ragged_pad_fn(values, offsets, padding_length)
-                X_padded[col_name] = padded_values
+                padded_values = _pad_ragged_tensor(values, offsets, padding_length)
+                batch_padded[col_name] = padded_values
             else:
+                # Note: This exception can be removed if the model is
+                # updated to support __values / __offsets inputs
                 raise ValueError(
                     f"Found ragged column '{col_name}' with unspecified padding length. "
                     "Please provide a padding length for this feature "
@@ -77,22 +101,18 @@ def _pad_batch(X, padding_lengths, ragged_pad_fn):
         elif isinstance(values, tuple):
             padding_length = padding_lengths.get(k)
             if padding_length:
+                col_name = k
                 values, offsets = values
-                padded_values = ragged_pad_fn(values, offsets, padding_length)
-                X_padded[k] = padded_values
+                padded_values = _pad_ragged_tensor(values, offsets, padding_length)
+                batch_padded[col_name] = padded_values
             else:
-                X_padded[k] = values
+                raise ValueError(
+                    f"Found ragged column '{col_name}' with unspecified padding length. "
+                    "Please provide a padding length for this feature "
+                    "to be converted to a dense tensor. "
+                )
         else:
             padding_length = padding_lengths.get(k)
-            X_padded[k] = _pad_dense_tensor(values, padding_length)
+            batch_padded[k] = _pad_dense_tensor(values, padding_length)
 
-    return X_padded
-
-
-def get_pad_fn(padding_lengths: Dict[str, int]):
-    def pad_fn(x, y):
-        new_x = _pad_batch(x, padding_lengths, _pad_ragged_tensor)
-        new_y = _pad_batch(y, padding_lengths, _pad_ragged_tensor)
-        return new_x, new_y
-
-    return pad_fn
+    return batch_padded

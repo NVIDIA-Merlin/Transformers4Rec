@@ -28,7 +28,7 @@ from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
 from merlin_standard_lib import Schema
-from transformers4rec.torch.utils.padding import get_pad_fn
+from transformers4rec.torch.utils.padding import pad_batch
 
 from ...utils import dependencies
 
@@ -356,7 +356,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             global_size=global_size,
             global_rank=global_rank,
             drop_last=drop_last,
-        ).map(get_pad_fn(sparse_max))
+        ).map(self.get_pad_fn(sparse_max))
 
         DLDataLoader.__init__(
             self,
@@ -368,6 +368,14 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         self.schema = schema
         self.max_sequence_length = max_sequence_length
 
+    @staticmethod
+    def _get_pad_fn(padding_lengths):
+        def pad_fn(x, y):
+            new_x = pad_batch(x, padding_lengths)
+            new_y = pad_batch(y, padding_lengths)
+            return new_x, new_y
+
+        return pad_fn
 
     @staticmethod
     def _augment_schema(

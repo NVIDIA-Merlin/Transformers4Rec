@@ -17,7 +17,7 @@ from itertools import accumulate
 
 import torch
 
-from transformers4rec.torch.utils.padding import get_pad_fn
+from transformers4rec.torch.utils.padding import pad_batch
 
 
 def _get_values_offsets(data):
@@ -32,13 +32,11 @@ def _get_values_offsets(data):
 
 def test_pad_values_offsets_tuple():
     data = [[1, 2], [], [3, 4, 5]]
-    pad_fn = get_pad_fn({"a": 5})
     values, offsets = _get_values_offsets(data)
 
     x = {"a": (values, offsets)}
-    y = torch.tensor([1, 0, 1])
 
-    padded_x, padded_y = pad_fn(x, y)
+    padded_x = pad_batch(x, {"a": 5})
     assert torch.equal(
         padded_x["a"],
         torch.tensor(
@@ -49,18 +47,15 @@ def test_pad_values_offsets_tuple():
             ]
         ),
     )
-    assert torch.equal(padded_y, y)
 
 
 def test_pad_values_offsets_dict():
     data = [[1, 2], [], [3, 4, 5]]
-    pad_fn = get_pad_fn({"a": 7})
     values, offsets = _get_values_offsets(data)
 
     x = {"a__values": values, "a__offsets": offsets}
-    y = torch.tensor([1, 0, 1])
 
-    padded_x, padded_y = pad_fn(x, y)
+    padded_x = pad_batch(x, {"a": 7})
     assert torch.equal(
         padded_x["a"],
         torch.tensor(
@@ -71,18 +66,15 @@ def test_pad_values_offsets_dict():
             ]
         ),
     )
-    assert torch.equal(padded_y, y)
 
 
 def test_pad_values_dense():
     data = [[1, 2], [], [3, 4, 5]]
-    pad_fn = get_pad_fn({"a": 7, "b": 3})
     values, offsets = _get_values_offsets(data)
 
     x = {"a__values": values, "a__offsets": offsets, "b": torch.tensor([[3, 6], [4, 1], [8, 4]])}
-    y = torch.tensor([1, 0, 1])
 
-    padded_x, padded_y = pad_fn(x, y)
+    padded_x = pad_batch(x, {"a": 7, "b": 3})
     assert torch.equal(
         padded_x["a"],
         torch.tensor(
@@ -103,4 +95,3 @@ def test_pad_values_dense():
             ]
         ),
     )
-    assert torch.equal(padded_y, y)
