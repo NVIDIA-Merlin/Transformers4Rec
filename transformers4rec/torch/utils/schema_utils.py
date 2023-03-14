@@ -134,11 +134,8 @@ def _augment_schema(
     cats=None,
     conts=None,
     labels=None,
-    sparse_names=None,
-    sparse_max=None,
-    sparse_as_dense=False,
 ):
-    from merlin.schema import ColumnSchema, Tags
+    from merlin.schema import Tags
 
     schema = schema.select_by_name(conts + cats + labels)
 
@@ -149,20 +146,5 @@ def _augment_schema(
         schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
     for label in conts or []:
         schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
-
-    # Set the appropriate properties for the sparse_names/sparse_max/sparse_as_dense
-    for col in sparse_names or []:
-        cs = schema[col]
-        properties = cs.properties
-        if sparse_max and col in sparse_max:
-            properties["value_count"] = {"max": sparse_max[col]}
-        schema[col] = ColumnSchema(
-            name=cs.name,
-            tags=cs.tags,
-            dtype=cs.dtype,
-            is_list=True,
-            is_ragged=not sparse_as_dense,
-            properties=properties,
-        )
 
     return schema
