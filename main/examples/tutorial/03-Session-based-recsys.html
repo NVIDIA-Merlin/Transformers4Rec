@@ -179,6 +179,14 @@ been proposed to model the sequence of interactions within the current user sess
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="instantiates-schema-object-from-a-schema-file">
 <h5>Instantiates Schema object from a <code class="docutils literal notranslate"><span class="pre">schema</span></code> file.<a class="headerlink" href="#instantiates-schema-object-from-a-schema-file" title="Permalink to this headline"></a></h5>
@@ -309,9 +317,7 @@ feature {
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># import NVTabular dependencies</span>
-<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">NVTabularDataLoader</span>
-
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">MerlinDataLoader</span>
 <span class="n">x_cat_names</span><span class="p">,</span> <span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id-list_seq&#39;</span><span class="p">],</span> <span class="p">[]</span>
 
 <span class="c1"># dictionary representing max sequence length for column</span>
@@ -320,17 +326,15 @@ feature {
     <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span>
 <span class="p">}</span>
 
-<span class="c1"># Define a `get_dataloader` function to call in the training loop</span>
-<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
-
-    <span class="k">return</span> <span class="n">NVTabularDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
-        <span class="n">schema</span><span class="p">,</span>
-        <span class="n">path</span><span class="p">,</span> 
-        <span class="n">batch_size</span><span class="p">,</span>
-        <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">sequence_length</span><span class="p">,</span>
-        <span class="n">sparse_names</span><span class="o">=</span><span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span><span class="p">,</span>
-        <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_features_max</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">MerlinDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+            <span class="n">schema</span><span class="p">,</span>
+            <span class="n">data_path</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">sequence_length</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">loader</span>
 </pre></div>
 </div>
 </div>
@@ -448,7 +452,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:54, Epoch 3/3]
+      [1314/1314 00:45, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -460,27 +464,27 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.998800</td>
+      <td>9.749300</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>9.232800</td>
+      <td>8.609500</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.988600</td>
+      <td>8.939700</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.909300</td>
+      <td>8.314000</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.806200</td>
+      <td>8.788300</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.794200</td>
+      <td>8.290700</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -496,24 +500,9 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 02:22]
+  [415/415 01:37]
 </div>
-</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 2 are:	
-
-********************
-
- eval/loss = 8.856975555419922
- eval/next-item/ndcg_at_10 = 0.03842613101005554
- eval/next-item/ndcg_at_20 = 0.04755885899066925
- eval/next-item/recall_at_10 = 0.07503204792737961
- eval/next-item/recall_at_20 = 0.11130382120609283
- eval_runtime = 7.7593
- eval_samples_per_second = 1711.5
- eval_steps_per_second = 53.484
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+</div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 106240
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -523,6 +512,19 @@ Eval results for day 2 are:
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 2 are:	
+
+********************
+
+ eval_/loss = 8.913729667663574
+ eval_/next-item/ndcg_at_10 = 0.03864600881934166
+ eval_/next-item/ndcg_at_20 = 0.04731746390461922
+ eval_/next-item/recall_at_10 = 0.07480581849813461
+ eval_/next-item/recall_at_20 = 0.10934318602085114
+ eval_runtime = 4.1726
+ eval_samples_per_second = 3182.643
+ eval_steps_per_second = 99.458
+********************
 Launch training for day 2 are:
 ********************
 </pre></div>
@@ -531,7 +533,7 @@ Launch training for day 2 are:
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 01:01, Epoch 3/3]
+      [1245/1245 00:40, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -543,27 +545,27 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.966600</td>
+      <td>8.950000</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.843700</td>
+      <td>8.301100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.653300</td>
+      <td>8.685000</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.556200</td>
+      <td>8.033900</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.428500</td>
+      <td>8.539100</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.404300</td>
+      <td>7.897500</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -580,14 +582,17 @@ Eval results for day 3 are:
 
 ********************
 
- eval/loss = 8.518232345581055
- eval/next-item/ndcg_at_10 = 0.05569075420498848
- eval/next-item/ndcg_at_20 = 0.06843017041683197
- eval/next-item/recall_at_10 = 0.10552927851676941
- eval/next-item/recall_at_20 = 0.15609200298786163
- eval_runtime = 7.3871
- eval_samples_per_second = 1663.442
- eval_steps_per_second = 51.983
+ eval_/loss = 8.607415199279785
+ eval_/next-item/ndcg_at_10 = 0.050130441784858704
+ eval_/next-item/ndcg_at_20 = 0.0627480074763298
+ eval_/next-item/recall_at_10 = 0.09582450240850449
+ eval_/next-item/recall_at_20 = 0.1454901397228241
+ eval_runtime = 4.5884
+ eval_samples_per_second = 2678.071
+ eval_steps_per_second = 83.69
+********************
+Launch training for day 3 are:
+********************
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -599,16 +604,11 @@ Eval results for day 3 are:
   Total optimization steps = 1146
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Launch training for day 3 are:
-********************
-</pre></div>
-</div>
 <div class="output text_html">
     <div>
 
       <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1146/1146 00:52, Epoch 3/3]
+      [1146/1146 00:41, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -620,23 +620,23 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.601800</td>
+      <td>8.622600</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.478500</td>
+      <td>8.097400</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.281100</td>
+      <td>8.136700</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.190300</td>
+      <td>7.918200</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.048100</td>
+      <td>7.906000</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -653,16 +653,16 @@ Eval results for day 4 are:
 
 ********************
 
- eval/loss = 8.1531982421875
- eval/next-item/ndcg_at_10 = 0.06854147464036942
- eval/next-item/ndcg_at_20 = 0.08415079861879349
- eval/next-item/recall_at_10 = 0.1280597746372223
- eval/next-item/recall_at_20 = 0.1900927573442459
- eval_runtime = 9.4121
- eval_samples_per_second = 1652.345
- eval_steps_per_second = 51.636
-CPU times: user 2min 43s, sys: 5.41 s, total: 2min 48s
-Wall time: 3min 22s
+ eval_/loss = 8.288442611694336
+ eval_/next-item/ndcg_at_10 = 0.06340715289115906
+ eval_/next-item/ndcg_at_20 = 0.07752308994531631
+ eval_/next-item/recall_at_10 = 0.11730224639177322
+ eval_/next-item/recall_at_20 = 0.17334450781345367
+ eval_runtime = 5.8607
+ eval_samples_per_second = 2653.622
+ eval_steps_per_second = 82.926
+CPU times: user 2min 7s, sys: 18.7 s, total: 2min 25s
+Wall time: 2min 25s
 </pre></div>
 </div>
 </div>
@@ -914,7 +914,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:45, Epoch 3/3]
+      [1314/1314 00:42, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -926,27 +926,27 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.927000</td>
+      <td>9.962600</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>9.046400</td>
+      <td>9.069300</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.779300</td>
+      <td>8.804700</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.635800</td>
+      <td>8.683600</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.539400</td>
+      <td>8.587600</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.507000</td>
+      <td>8.526800</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -962,28 +962,9 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 01:48]
+  [415/415 01:41]
 </div>
-</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 2 are:	
-
-********************
-
- epoch = 3.0
- eval/loss = 8.753535270690918
- eval/next-item/ndcg_at_10 = 0.049175068736076355
- eval/next-item/ndcg_at_20 = 0.06000332161784172
- eval/next-item/recall_at_10 = 0.09177286922931671
- eval/next-item/recall_at_20 = 0.1346806436777115
- eval_runtime = 7.0703
- eval_samples_per_second = 1878.271
- eval_steps_per_second = 58.696
-********************
-Launch training for day 2 are:
-********************
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+</div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 106240
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -992,11 +973,29 @@ Launch training for day 2 are:
   Total optimization steps = 1245
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 2 are:	
+
+********************
+
+ eval_/loss = 8.75032901763916
+ eval_/next-item/ndcg_at_10 = 0.04943731799721718
+ eval_/next-item/ndcg_at_20 = 0.05980231985449791
+ eval_/next-item/recall_at_10 = 0.0919990986585617
+ eval_/next-item/recall_at_20 = 0.13324786722660065
+ eval_runtime = 5.4566
+ eval_samples_per_second = 2433.74
+ eval_steps_per_second = 76.054
+********************
+Launch training for day 2 are:
+********************
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 00:43, Epoch 3/3]
+      [1245/1245 00:42, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1008,27 +1007,27 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.635100</td>
+      <td>8.657900</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.523100</td>
+      <td>8.531000</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.375600</td>
+      <td>8.416200</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.322400</td>
+      <td>8.326000</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.232100</td>
+      <td>8.246600</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.209900</td>
+      <td>8.237400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -1038,6 +1037,15 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+***** Running training *****
+  Num examples = 97792
+  Num Epochs = 3
+  Instantaneous batch size per device = 256
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
+  Gradient Accumulation steps = 1
+  Total optimization steps = 1146
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
@@ -1045,27 +1053,17 @@ Eval results for day 3 are:
 
 ********************
 
- epoch = 3.0
- eval/loss = 8.421579360961914
- eval/next-item/ndcg_at_10 = 0.061416078358888626
- eval/next-item/ndcg_at_20 = 0.07491344213485718
- eval/next-item/recall_at_10 = 0.11719132959842682
- eval/next-item/recall_at_20 = 0.17060838639736176
- eval_runtime = 7.0074
- eval_samples_per_second = 1753.564
- eval_steps_per_second = 54.799
+ eval_/loss = 8.407739639282227
+ eval_/next-item/ndcg_at_10 = 0.061461370438337326
+ eval_/next-item/ndcg_at_20 = 0.07609260082244873
+ eval_/next-item/recall_at_10 = 0.11710977554321289
+ eval_/next-item/recall_at_20 = 0.17509378492832184
+ eval_runtime = 5.3949
+ eval_samples_per_second = 2277.703
+ eval_steps_per_second = 71.178
 ********************
 Launch training for day 3 are:
 ********************
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 97792
-  Num Epochs = 3
-  Instantaneous batch size per device = 256
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 256
-  Gradient Accumulation steps = 1
-  Total optimization steps = 1146
 </pre></div>
 </div>
 <div class="output text_html">
@@ -1084,23 +1082,23 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.312100</td>
+      <td>8.336200</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.226900</td>
+      <td>8.225100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.095400</td>
+      <td>8.095700</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.065600</td>
+      <td>8.059300</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.965600</td>
+      <td>8.001400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -1117,17 +1115,16 @@ Eval results for day 4 are:
 
 ********************
 
- epoch = 3.0
- eval/loss = 8.107558250427246
- eval/next-item/ndcg_at_10 = 0.07384572923183441
- eval/next-item/ndcg_at_20 = 0.08944202959537506
- eval/next-item/recall_at_10 = 0.13939706981182098
- eval/next-item/recall_at_20 = 0.20175212621688843
- eval_runtime = 8.9372
- eval_samples_per_second = 1740.144
- eval_steps_per_second = 54.38
-CPU times: user 6min 57s, sys: 14.3 s, total: 7min 11s
-Wall time: 2min 35s
+ eval_/loss = 8.106550216674805
+ eval_/next-item/ndcg_at_10 = 0.0750429779291153
+ eval_/next-item/ndcg_at_20 = 0.09080573171377182
+ eval_/next-item/recall_at_10 = 0.13933265209197998
+ eval_/next-item/recall_at_20 = 0.20188096165657043
+ eval_runtime = 6.6772
+ eval_samples_per_second = 2329.136
+ eval_steps_per_second = 72.786
+CPU times: user 9min 7s, sys: 6.61 s, total: 9min 14s
+Wall time: 2min 24s
 </pre></div>
 </div>
 </div>
@@ -1183,58 +1180,10 @@ information for meaningful predictions. With that motivation, in this section, w
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (NDCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (DCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (AvgPrecisionAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (PrecisionAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (RecallAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
 </pre></div>
 </div>
 </div>
@@ -1293,37 +1242,7 @@ information for meaningful predictions. With that motivation, in this section, w
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (NDCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (DCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (RecallAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;192&#39; to be equal to the item-id embedding dimension &#39;64&#39;
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;192&#39; to be equal to the item-id embedding dimension &#39;64&#39;
 </pre></div>
 </div>
 </div>
@@ -1412,9 +1331,7 @@ Launch training for day 1 are:
 ********************
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
-***** Running training *****
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 112128
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -1427,7 +1344,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:38, Epoch 3/3]
+      [1314/1314 00:50, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1439,55 +1356,43 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.800100</td>
+      <td>9.877500</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.901500</td>
+      <td>8.953100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.605100</td>
+      <td>8.644200</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.488700</td>
+      <td>8.553500</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.400200</td>
+      <td>8.442300</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.316600</td>
+      <td>8.370600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
-
-
-/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
 </pre></div>
 </div>
 <div class="output text_html">
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 01:37]
+  [415/415 02:01]
 </div>
 </div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 106240
@@ -1503,14 +1408,14 @@ Eval results for day 2 are:
 
 ********************
 
- eval_/loss = 8.571016311645508
- eval_/next-item/ndcg_at_10 = 0.056183043867349625
- eval_/next-item/ndcg_at_20 = 0.06743346154689789
- eval_/next-item/recall_at_10 = 0.10519568622112274
- eval_/next-item/recall_at_20 = 0.14983786642551422
- eval_runtime = 5.9015
- eval_samples_per_second = 2250.265
- eval_steps_per_second = 70.321
+ eval_/loss = 8.590065002441406
+ eval_/next-item/ndcg_at_10 = 0.055847249925136566
+ eval_/next-item/ndcg_at_20 = 0.0678437352180481
+ eval_/next-item/recall_at_10 = 0.10240554809570312
+ eval_/next-item/recall_at_20 = 0.14998868107795715
+ eval_runtime = 7.3193
+ eval_samples_per_second = 1814.379
+ eval_steps_per_second = 56.699
 ********************
 Launch training for day 2 are:
 ********************
@@ -1520,7 +1425,7 @@ Launch training for day 2 are:
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 00:38, Epoch 3/3]
+      [1245/1245 00:49, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1532,48 +1437,38 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.467400</td>
+      <td>8.497500</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.309900</td>
+      <td>8.372800</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.158200</td>
+      <td>8.209000</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.031100</td>
+      <td>8.092800</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.945800</td>
+      <td>7.990100</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>7.903200</td>
+      <td>7.943600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
 
 
-/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
 ***** Running training *****
   Num examples = 97792
   Num Epochs = 3
@@ -1588,14 +1483,14 @@ Eval results for day 3 are:
 
 ********************
 
- eval_/loss = 8.15834903717041
- eval_/next-item/ndcg_at_10 = 0.07294631749391556
- eval_/next-item/ndcg_at_20 = 0.08888539671897888
- eval_/next-item/recall_at_10 = 0.13961833715438843
- eval_/next-item/recall_at_20 = 0.20274017751216888
- eval_runtime = 6.0052
- eval_samples_per_second = 2046.222
- eval_steps_per_second = 63.944
+ eval_/loss = 8.21552848815918
+ eval_/next-item/ndcg_at_10 = 0.0723777562379837
+ eval_/next-item/ndcg_at_20 = 0.08812418580055237
+ eval_/next-item/recall_at_10 = 0.13929212093353271
+ eval_/next-item/recall_at_20 = 0.20176154375076294
+ eval_runtime = 7.4019
+ eval_samples_per_second = 1660.118
+ eval_steps_per_second = 51.879
 ********************
 Launch training for day 3 are:
 ********************
@@ -1605,7 +1500,7 @@ Launch training for day 3 are:
     <div>
 
       <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1146/1146 00:36, Epoch 3/3]
+      [1146/1146 00:46, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1617,44 +1512,32 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.022800</td>
+      <td>8.085600</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>7.885300</td>
+      <td>7.931100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>7.731600</td>
+      <td>7.786800</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>7.658300</td>
+      <td>7.713000</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.579400</td>
+      <td>7.629900</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
-
-
-/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
@@ -1662,16 +1545,16 @@ Eval results for day 4 are:
 
 ********************
 
- eval_/loss = 7.776895999908447
- eval_/next-item/ndcg_at_10 = 0.08828220516443253
- eval_/next-item/ndcg_at_20 = 0.10635553300380707
- eval_/next-item/recall_at_10 = 0.16612987220287323
- eval_/next-item/recall_at_20 = 0.23788972198963165
- eval_runtime = 7.7023
- eval_samples_per_second = 2019.133
- eval_steps_per_second = 63.098
-CPU times: user 8min 27s, sys: 8.55 s, total: 8min 35s
-Wall time: 2min 21s
+ eval_/loss = 7.807511806488037
+ eval_/next-item/ndcg_at_10 = 0.09104408323764801
+ eval_/next-item/ndcg_at_20 = 0.10987412184476852
+ eval_/next-item/recall_at_10 = 0.1722494214773178
+ eval_/next-item/recall_at_20 = 0.2469080239534378
+ eval_runtime = 9.3003
+ eval_samples_per_second = 1672.2
+ eval_steps_per_second = 52.256
+CPU times: user 10min 17s, sys: 7.7 s, total: 10min 25s
+Wall time: 2min 53s
 </pre></div>
 </div>
 </div>
@@ -1684,7 +1567,7 @@ Wall time: 2min 21s
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;XLNet-MLM with side information accuracy results:&#39;</span><span class="p">)</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span>  <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
 </pre></div>
 </div>
 </div>
@@ -1748,9 +1631,27 @@ Wall time: 2min 21s
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column user_session, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None),))). Overriding dtype in NVTabular workflow.
   warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int32 for column product_id-count, but workflow  is producing type DType(name=&#39;int32&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None),))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column product_id-list_seq, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column brand-list_seq, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column category_id-list_seq, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects float32 for column et_dayofweek_sin-list_seq, but workflow  is producing type DType(name=&#39;float32&#39;, element_type=&lt;ElementType.Float: &#39;float&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects float32 for column et_dayofweek_cos-list_seq, but workflow  is producing type DType(name=&#39;float32&#39;, element_type=&lt;ElementType.Float: &#39;float&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects float32 for column price_log_norm-list_seq, but workflow  is producing type DType(name=&#39;float32&#39;, element_type=&lt;ElementType.Float: &#39;float&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects float64 for column relative_price_to_avg_categ_id-list_seq, but workflow  is producing type DType(name=&#39;float64&#39;, element_type=&lt;ElementType.Float: &#39;float&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects float32 for column product_recency_days_log_norm-list_seq, but workflow  is producing type DType(name=&#39;float32&#39;, element_type=&lt;ElementType.Float: &#39;float&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column day_index, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=None)). Overriding dtype in NVTabular workflow.
   warnings.warn(
 </pre></div>
 </div>
@@ -1765,37 +1666,24 @@ Wall time: 2min 21s
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>GRU accuracy results:
-next-item/ndcg_at_10:0.07151895016431808
-next-item/ndcg_at_20:0.08768121898174286
-next-item/recall_at_10:0.1361762434244156
-next-item/recall_at_20:0.20020613074302673
+next-item/ndcg_at_10:0.06340715289115906
+next-item/ndcg_at_20:0.07752308994531631
+next-item/recall_at_10:0.11730224639177322
+next-item/recall_at_20:0.17334450781345367
 
 XLNet-MLM accuracy results:
-next-item/ndcg_at_10:0.07384572923183441
-next-item/ndcg_at_20:0.08944202959537506
-next-item/recall_at_10:0.13939706981182098
-next-item/recall_at_20:0.20175212621688843
+next-item/ndcg_at_10:0.0750429779291153
+next-item/ndcg_at_20:0.09080573171377182
+next-item/recall_at_10:0.13933265209197998
+next-item/recall_at_20:0.20188096165657043
 
 XLNet-MLM with side information accuracy results:
-next-item/ndcg_at_10:0.08558817952871323
-next-item/ndcg_at_20:0.10371016710996628
-next-item/recall_at_10:0.1605256348848343
-next-item/recall_at_20:0.2324143350124359
+next-item/ndcg_at_10:0.09104408323764801
+next-item/ndcg_at_20:0.10987412184476852
+next-item/recall_at_10:0.1722494214773178
+next-item/recall_at_20:0.2469080239534378
 </pre></div>
 </div>
-</div>
-</div>
-<p>Let’s plot bar charts to visualize and compare the accuracy results using <code class="docutils literal notranslate"><span class="pre">visuals</span></code> util function.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">visuals</span> <span class="kn">import</span> <span class="n">create_bar_chart</span>
-<span class="n">create_bar_chart</span><span class="p">(</span><span class="s1">&#39;results.txt&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../../_images/03-Session-based-recsys_105_0.png" src="../../_images/03-Session-based-recsys_105_0.png" />
-<img alt="../../_images/03-Session-based-recsys_105_1.png" src="../../_images/03-Session-based-recsys_105_1.png" />
 </div>
 </div>
 <p><strong>In the end, using side information provided higher accuracy. Why is that? Have an idea?</strong></p>
@@ -1806,16 +1694,7 @@ next-item/recall_at_20:0.2324143350124359
 <div class="section" id="wrap-up">
 <h2>Wrap Up<a class="headerlink" href="#wrap-up" title="Permalink to this headline"></a></h2>
 <p>Congratulations on finishing this notebook. In this tutorial, we have presented Transformers4Rec, an open source library designed to enable RecSys researchers and practitioners to quickly and easily explore the latest developments of the NLP for sequential and session-based recommendation tasks.</p>
-<p>Please execute the cell below to shut down the kernel before moving on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton.ipynb</span></code>.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
-<span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
-<span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
+<p>Please shut down the kernel before moving on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton.ipynb</span></code>.</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
