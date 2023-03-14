@@ -356,7 +356,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             global_size=global_size,
             global_rank=global_rank,
             drop_last=drop_last,
-        ).map(self.get_pad_fn(sparse_max))
+        ).map(self._get_pad_fn(sparse_max))
 
         DLDataLoader.__init__(
             self,
