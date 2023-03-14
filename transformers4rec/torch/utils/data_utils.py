@@ -17,11 +17,11 @@
 import logging
 import warnings
 from abc import ABC
-
 from typing import Dict, Optional
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 from merlin.dataloader.torch import Loader
 from merlin.models.utils.misc_utils import validate_dataset
 from merlin.models.utils.registry import Registry
@@ -32,7 +32,6 @@ from torch.utils.data import Dataset, IterableDataset
 from merlin_standard_lib import Schema
 
 from ...utils import dependencies
-from ..utils.schema_utils import _augment_schema
 
 logger = logging.getLogger(__name__)
 
@@ -343,6 +342,9 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
                 f" GPUs ({global_size}). This will divide the work equally among GPUs"
                 " for DDP training and ensure optimal performance."
             )
+
+        self.dataset.schema = self.dataset.schema.select_by_name(cats + conts + labels)
+
         loader = Loader(
             self.dataset,
             self.batch_size,
@@ -437,8 +439,6 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         return loader
 
 
-import torch.nn.functional as F
-
 def _pad_dense_tensor(t: torch.Tensor, length: Optional[int]) -> torch.Tensor:
     if length and len(t.shape) == 2:
         pad_diff = length - t.shape[1]
@@ -446,35 +446,23 @@ def _pad_dense_tensor(t: torch.Tensor, length: Optional[int]) -> torch.Tensor:
     return t
 
 
+def _squeeze(tensor):
+    if len(tensor.shape) == 2:
+        return tensor.squeeze(1)
+    return tensor
+
+
 def _pad_ragged_tensor_1(values: torch.Tensor, offsets: torch.Tensor, padding_length: int):
+    values = _squeeze(values)
+    offsets = _squeeze(offsets)
     num_rows = len(offsets) - 1
     padded_values = torch.zeros(
-        (num_rows, padding_length),
-        dtype=values.dtype, device=values.device
+        (num_rows, padding_length), dtype=values.dtype, device=values.device
     )
     for i in range(num_rows):
         row_values = values[offsets[i] : offsets[i + 1]]
-        padded_values[i: len(row_values)] = row_values
+        padded_values[i, : len(row_values)] = row_values
     return padded_values
-
-def transform_1(X, padding_length):
-    X_padded = {}
-    for k, values in X.items():
-        if k.endswith("__values"):
-            col_name = k[:-8]
-            offsets = X[f"{col_name}__offsets"]
-            padded_values = _pad_ragged_tensor_1(values, offsets, padding_length)
-            X_padded[col_name] = padded_values
-        elif k.endswith("__offsets"):
-            continue
-        elif isinstance(values, tuple):
-            values, offsets = values
-            padded_values = _pad_ragged_tensor_1(values, offsets, padding_length)
-            X_padded[col_name] = padded_values
-        else:
-            X_padded[k] = _pad_dense_tensor(values, padding_length)
-
-    return X_padded
 
 
 def _get_indices(offsets, diff_offsets):
@@ -487,6 +475,8 @@ def _get_indices(offsets, diff_offsets):
 
 
 def _pad_ragged_tensor_2(values, offsets, padding_length):
+    values = _squeeze(values)
+    offsets = _squeeze(offsets)
     num_rows = len(offsets) - 1
     diff_offsets = offsets[1:] - offsets[:-1]
     indices = _get_indices(offsets, diff_offsets)
@@ -497,6 +487,9 @@ def _pad_ragged_tensor_2(values, offsets, padding_length):
 
 
 def _pad_batch(X, padding_lengths, ragged_pad_fn):
+    if not X:
+        return X
+
     X_padded = {}
     for k, values in X.items():
         if k.endswith("__values"):
@@ -512,7 +505,7 @@ def _pad_batch(X, padding_lengths, ragged_pad_fn):
             if padding_length:
                 values, offsets = values
                 padded_values = ragged_pad_fn(values, offsets, padding_length)
-                X_padded[col_name] = padded_values
+                X_padded[k] = padded_values
             else:
                 X_padded[k] = values
         else:
