@@ -12,7 +12,7 @@ on:
 
 jobs:
   gpu-ci:
-    runs-on: 2GPU
+    runs-on: 1GPU
 
     steps:
     - uses: actions/checkout@v3
