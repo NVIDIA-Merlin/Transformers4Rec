@@ -380,9 +380,9 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     @staticmethod
     def _augment_schema(
         schema,
-        cats=None,
-        conts=None,
-        labels=None,
+        cats,
+        conts,
+        labels,
     ):
         schema = schema.select_by_name(conts + cats + labels)
 
