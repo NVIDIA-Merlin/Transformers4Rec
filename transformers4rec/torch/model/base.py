@@ -36,7 +36,7 @@ from merlin_standard_lib import Schema
 from ..block.base import BlockBase, BlockOrModule, BlockType
 from ..features.base import InputBlock
 from ..features.sequence import TabularFeaturesType
-from ..typing import TabularData, TensorOrTabularData
+from ..typing import TabularData
 from ..utils.torch_utils import LossMixin, MetricsMixin
 
 
@@ -46,7 +46,6 @@ def name_fn(name, inp):
 
 class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
     """Individual prediction-task of a model.
-
     Parameters
     ----------
     loss: torch.nn.Module
@@ -109,7 +108,6 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         """
         The method will be called when block is converted to a model,
         i.e when linked to prediction head.
-
         Parameters
         ----------
         block:
@@ -167,6 +165,13 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
         if training or testing:
             # add support of computing the loss inside the forward
             # and return a dictionary as standard output
+            if self.summary_type is None:
+                if targets.dim() != 2:
+                    raise ValueError(
+                        "If `summary_type==None`, targets are expected to be a 2D tensor, "
+                        f"but got a tensor with shape {targets.shape}"
+                    )
+
             loss = self.loss(x, target=targets)
             return {"loss": loss, "labels": targets, "predictions": x}
 
@@ -224,7 +229,6 @@ class PredictionTask(torch.nn.Module, LossMixin, MetricsMixin):
 
 class Head(torch.nn.Module, LossMixin, MetricsMixin):
     """Head of a Model, a head has a single body but could have multiple prediction-tasks.
-
     Parameters
     ----------
     body: Block
@@ -269,7 +273,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
     def build(self, inputs=None, device=None, task_blocks=None):
         """Build each prediction task that's part of the head.
-
         Parameters
         ----------
         body
@@ -306,7 +309,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         inputs: Optional[TabularFeaturesType] = None,
     ) -> "Head":
         """Instantiate a Head from a Schema through tagged targets.
-
         Parameters
         ----------
         schema: DatasetSchema
@@ -316,7 +318,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         task_weight_dict
         loss_reduction
         inputs
-
         Returns
         -------
         Head
@@ -348,12 +349,10 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
     def pop_labels(self, inputs: TabularData) -> TabularData:
         """Pop the labels from the different prediction_tasks from the inputs.
-
         Parameters
         ----------
         inputs: TabularData
             Input dictionary containing all targets.
-
         Returns
         -------
         TabularData
@@ -413,7 +412,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         targets: Union[torch.Tensor, TabularData],
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         """Calculate metrics of the task(s) set in the Head instance.
-
         Parameters
         ----------
         predictions: Union[torch.Tensor, TabularData]
@@ -468,7 +466,6 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
 
     def to_model(self, **kwargs) -> "Model":
         """Convert the head to a Model.
-
         Returns
         -------
         Model
@@ -487,7 +484,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         name: str = None,
     ):
         """Model class that can aggregate one or multiple heads.
-
         Parameters
         ----------
         head: Head
@@ -517,9 +513,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_reduction = head_reduction
         self.optimizer = optimizer
 
-    def forward(
-        self, inputs: TensorOrTabularData, targets=None, training=False, testing=False, **kwargs
-    ):
+    def forward(self, inputs: TabularData, targets=None, training=False, testing=False, **kwargs):
         # Convert inputs to float32 which is the default type, expected by PyTorch
         for name, val in inputs.items():
             if torch.is_floating_point(val):
@@ -580,7 +574,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         targets: Union[torch.Tensor, TabularData],
     ) -> Dict[str, Union[Dict[str, torch.Tensor], torch.Tensor]]:
         """Calculate metrics of the task(s) set in the Head instance.
-
         Parameters
         ----------
         predictions: Union[torch.Tensor, TabularData]
@@ -772,7 +765,12 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     isinstance(task, (BinaryClassificationTask, RegressionTask))
                     and not task.summary_type
                 ):
-                    dims = (None, (1, None), task.target_dim)
+                    dims = (None, (1, None))
+                elif (
+                    isinstance(task, (BinaryClassificationTask, RegressionTask))
+                    and task.summary_type
+                ):
+                    dims = (None,)
                 else:
                     dims = (None, task.target_dim)
                 properties = {
@@ -783,9 +781,12 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
         return Core_Schema(output_cols)
 
+    @property
+    def prediction_tasks(self):
+        return [task for head in self.heads for task in list(head.prediction_task_dict.values())]
+
     def save(self, path: Union[str, os.PathLike], model_name="t4rec_model_class"):
         """Saves the model to f"{export_path}/{model_name}.pkl" using `cloudpickle`
-
         Parameters
         ----------
         path : Union[str, os.PathLike]
@@ -810,7 +811,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
     @classmethod
     def load(cls, path: Union[str, os.PathLike], model_name="t4rec_model_class") -> "Model":
         """Loads a T4Rec model that was saved with `model.save()`.
-
         Parameters
         ----------
         path : Union[str, os.PathLike]
