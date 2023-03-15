@@ -380,18 +380,22 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     @staticmethod
     def _augment_schema(
         schema,
-        cats,
-        conts,
-        labels,
+        cats=None,
+        conts=None,
+        labels=None,
     ):
+        cats = cats or []
+        conts = conts or []
+        labels = labels or []
+
         schema = schema.select_by_name(conts + cats + labels)
 
         labels = [labels] if isinstance(labels, str) else labels
-        for label in labels or []:
+        for label in labels:
             schema[label] = schema[label].with_tags(Tags.TARGET)
-        for label in cats or []:
+        for label in cats:
             schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
-        for label in conts or []:
+        for label in conts:
             schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
 
         return schema
