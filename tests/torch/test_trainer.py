@@ -19,6 +19,7 @@ import tempfile
 
 import pytest
 import torch
+from merlin.schema import Schema
 
 import transformers4rec.torch as tr
 from transformers4rec.config import trainer
@@ -357,6 +358,8 @@ def test_trainer_music_streaming(task_and_metrics):
     transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
     model = transformer_config.to_torch_model(inputs, task)
 
+    assert isinstance(model.input_schema, Schema)
+
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         max_steps=5,
@@ -436,6 +439,8 @@ def test_trainer_music_streaming_core_schema(task_and_metrics):
     )
     transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
     model = transformer_config.to_torch_model(inputs, task)
+
+    assert isinstance(model.input_schema, Schema)
 
     args = trainer.T4RecTrainingArguments(
         output_dir=".",

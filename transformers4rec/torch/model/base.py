@@ -729,6 +729,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         schemas = []
         for head in self.heads:
             schemas.append(head.body.inputs.schema)
+        if all(isinstance(s, Core_Schema) for s in schemas):
+            return sum(schemas, Core_Schema())
+
         model_schema = sum(schemas, Schema())
 
         # TODO: rework T4R to use Merlin Schemas.
