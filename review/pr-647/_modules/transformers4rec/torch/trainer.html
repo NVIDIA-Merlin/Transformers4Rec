@@ -129,6 +129,7 @@
 
 <span class="kn">from</span> <span class="nn">..config.trainer</span> <span class="kn">import</span> <span class="n">T4RecTrainingArguments</span>
 <span class="kn">from</span> <span class="nn">.model.base</span> <span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span> <span class="nn">.model.prediction_task</span> <span class="kn">import</span> <span class="n">NextItemPredictionTask</span>
 <span class="kn">from</span> <span class="nn">.utils.data_utils</span> <span class="kn">import</span> <span class="n">T4RecDataLoader</span>
 <span class="kn">from</span> <span class="nn">.utils.torch_utils</span> <span class="kn">import</span> <span class="n">nested_concat</span><span class="p">,</span> <span class="n">nested_detach</span><span class="p">,</span> <span class="n">nested_numpify</span><span class="p">,</span> <span class="n">nested_truncate</span>
 
@@ -525,7 +526,7 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;***** Running </span><span class="si">%s</span><span class="s2"> *****&quot;</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  Batch size = </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
-        <span class="n">preds_item_ids_scores_host</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">preds_host</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">labels_host</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">metric_key_prefix</span> <span class="o">==</span> <span class="s2">&quot;train&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">eval_steps_on_train_set</span><span class="p">:</span>
@@ -542,11 +543,11 @@
         <span class="c1"># Initialize containers</span>
         <span class="c1"># losses/preds/labels on GPU/TPU (accumulated for eval_accumulation_steps)</span>
         <span class="n">losses_host</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">preds_item_ids_scores_host</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">preds_host</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">labels_host</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># losses/preds/labels on CPU (final containers)</span>
         <span class="n">all_losses</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="n">all_preds_item_ids_scores</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">all_preds</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">all_labels</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="c1"># Will be useful when we have an iterable dataset so don&#39;t know its length.</span>
         <span class="n">observed_num_examples</span> <span class="o">=</span> <span class="mi">0</span>
@@ -596,13 +597,22 @@
                     <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span><span class="n">labels_host</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">preds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">predict_top_k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># get outputs of next-item scores</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-                    <span class="k">assert</span> <span class="p">(</span>
-                        <span class="s2">&quot;next-item&quot;</span> <span class="ow">in</span> <span class="n">preds</span>
-                    <span class="p">),</span> <span class="s2">&quot;Top-k prediction is specific to NextItemPredictionTask&quot;</span>
-                    <span class="n">preds</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;next-item&quot;</span><span class="p">]</span>
+                    <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span>
+                        <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">NextItemPredictionTask</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">prediction_tasks</span>
+                    <span class="p">),</span> <span class="s2">&quot;Top-k prediction is specific to NextItemPredictionTask, &quot;</span>
+                    <span class="s2">&quot;Please ensure `self.args.predict_top_k == 0` &quot;</span>
+                    <span class="n">pred_next_item</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;next-item&quot;</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
+                        <span class="n">model</span><span class="o">.</span><span class="n">prediction_tasks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">NextItemPredictionTask</span>
+                    <span class="p">),</span> <span class="s2">&quot;Top-k prediction is specific to NextItemPredictionTask, &quot;</span>
+                    <span class="s2">&quot;Please ensure `self.args.predict_top_k == 0` &quot;</span>
+                    <span class="n">pred_next_item</span> <span class="o">=</span> <span class="n">preds</span>
+
                 <span class="n">preds_sorted_item_scores</span><span class="p">,</span> <span class="n">preds_sorted_item_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span>
-                    <span class="n">preds</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">predict_top_k</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span>
+                    <span class="n">pred_next_item</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">predict_top_k</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span>
                 <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_maybe_log_predictions</span><span class="p">(</span>
                     <span class="n">labels</span><span class="p">,</span>
@@ -614,18 +624,25 @@
                 <span class="p">)</span>
                 <span class="c1"># The output predictions will be a tuple with the ranked top-n item ids,</span>
                 <span class="c1"># and item recommendation scores</span>
-                <span class="n">preds_item_ids_scores</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">preds_sorted_item_ids</span><span class="p">,</span>
-                    <span class="n">preds_sorted_item_scores</span><span class="p">,</span>
-                <span class="p">)</span>
-                <span class="n">preds_item_ids_scores_host</span> <span class="o">=</span> <span class="p">(</span>
-                    <span class="n">preds_item_ids_scores</span>
-                    <span class="k">if</span> <span class="n">preds_item_ids_scores_host</span> <span class="ow">is</span> <span class="kc">None</span>
-                    <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span>
-                        <span class="n">preds_item_ids_scores_host</span><span class="p">,</span>
-                        <span class="n">preds_item_ids_scores</span><span class="p">,</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;next-item&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">preds_sorted_item_ids</span><span class="p">,</span>
+                        <span class="n">preds_sorted_item_scores</span><span class="p">,</span>
                     <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">preds</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">preds_sorted_item_ids</span><span class="p">,</span>
+                        <span class="n">preds_sorted_item_scores</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+            <span class="n">preds_host</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">preds</span>
+                <span class="k">if</span> <span class="n">preds_host</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span>
+                    <span class="n">preds_host</span><span class="p">,</span>
+                    <span class="n">preds</span><span class="p">,</span>
                 <span class="p">)</span>
+            <span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">control</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">callback_handler</span><span class="o">.</span><span class="n">on_prediction_step</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">control</span>
@@ -651,19 +668,19 @@
                         <span class="k">if</span> <span class="n">all_labels</span> <span class="ow">is</span> <span class="kc">None</span>
                         <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span><span class="n">all_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                     <span class="p">)</span>
-                <span class="k">if</span> <span class="n">preds_item_ids_scores_host</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">preds_item_ids_scores</span> <span class="o">=</span> <span class="n">nested_numpify</span><span class="p">(</span><span class="n">preds_item_ids_scores_host</span><span class="p">)</span>
-                    <span class="n">all_preds_item_ids_scores</span> <span class="o">=</span> <span class="p">(</span>
-                        <span class="n">preds_item_ids_scores</span>
-                        <span class="k">if</span> <span class="n">all_preds_item_ids_scores</span> <span class="ow">is</span> <span class="kc">None</span>
+                <span class="k">if</span> <span class="n">preds_host</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">preds</span> <span class="o">=</span> <span class="n">nested_numpify</span><span class="p">(</span><span class="n">preds_host</span><span class="p">)</span>
+                    <span class="n">all_preds</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">preds</span>
+                        <span class="k">if</span> <span class="n">all_preds</span> <span class="ow">is</span> <span class="kc">None</span>
                         <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span>
-                            <span class="n">all_preds_item_ids_scores</span><span class="p">,</span>
-                            <span class="n">preds_item_ids_scores</span><span class="p">,</span>
+                            <span class="n">all_preds</span><span class="p">,</span>
+                            <span class="n">preds</span><span class="p">,</span>
                         <span class="p">)</span>
                     <span class="p">)</span>
 
                 <span class="c1"># Set back to None to begin a new accumulation</span>
-                <span class="n">losses_host</span><span class="p">,</span> <span class="n">preds_item_ids_scores_host</span><span class="p">,</span> <span class="n">labels_host</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+                <span class="n">losses_host</span><span class="p">,</span> <span class="n">preds_host</span><span class="p">,</span> <span class="n">labels_host</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">past_index</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;_past&quot;</span><span class="p">):</span>
             <span class="c1"># Clean the state at the end of the evaluation loop</span>
@@ -680,14 +697,14 @@
             <span class="n">all_labels</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="n">labels</span> <span class="k">if</span> <span class="n">all_labels</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span><span class="n">all_labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">preds_item_ids_scores_host</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">preds_item_ids_scores</span> <span class="o">=</span> <span class="n">nested_numpify</span><span class="p">(</span><span class="n">preds_item_ids_scores_host</span><span class="p">)</span>
-            <span class="n">all_preds_item_ids_scores</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">preds_item_ids_scores</span>
-                <span class="k">if</span> <span class="n">all_preds_item_ids_scores</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">preds_host</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">preds_host</span> <span class="o">=</span> <span class="n">nested_numpify</span><span class="p">(</span><span class="n">preds_host</span><span class="p">)</span>
+            <span class="n">all_preds</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">preds_host</span>
+                <span class="k">if</span> <span class="n">all_preds</span> <span class="ow">is</span> <span class="kc">None</span>
                 <span class="k">else</span> <span class="n">nested_concat</span><span class="p">(</span>
-                    <span class="n">all_preds_item_ids_scores</span><span class="p">,</span>
-                    <span class="n">preds_item_ids_scores</span><span class="p">,</span>
+                    <span class="n">all_preds</span><span class="p">,</span>
+                    <span class="n">preds_host</span><span class="p">,</span>
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="c1"># Get Number of samples :</span>
@@ -699,8 +716,8 @@
         <span class="c1"># samplers has been rounded to a multiple of batch_size, so we truncate.</span>
         <span class="k">if</span> <span class="n">all_losses</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">all_losses</span> <span class="o">=</span> <span class="n">all_losses</span><span class="p">[:</span><span class="n">num_samples</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">all_preds_item_ids_scores</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">all_preds_item_ids_scores</span> <span class="o">=</span> <span class="n">nested_truncate</span><span class="p">(</span><span class="n">all_preds_item_ids_scores</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">all_preds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">all_preds</span> <span class="o">=</span> <span class="n">nested_truncate</span><span class="p">(</span><span class="n">all_preds</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">all_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">all_labels</span> <span class="o">=</span> <span class="n">nested_truncate</span><span class="p">(</span><span class="n">all_labels</span><span class="p">,</span> <span class="n">num_samples</span><span class="p">)</span>
 
@@ -719,7 +736,7 @@
             <span class="n">metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_/loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">all_losses</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">EvalLoopOutput</span><span class="p">(</span>
-            <span class="n">predictions</span><span class="o">=</span><span class="n">all_preds_item_ids_scores</span><span class="p">,</span>
+            <span class="n">predictions</span><span class="o">=</span><span class="n">all_preds</span><span class="p">,</span>
             <span class="n">label_ids</span><span class="o">=</span><span class="n">all_labels</span><span class="p">,</span>
             <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
             <span class="n">num_samples</span><span class="o">=</span><span class="n">num_examples</span><span class="p">,</span>
