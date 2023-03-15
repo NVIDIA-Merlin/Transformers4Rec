@@ -468,18 +468,22 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_augment_schema</span><span class="p">(</span>
         <span class="n">schema</span><span class="p">,</span>
-        <span class="n">cats</span><span class="p">,</span>
-        <span class="n">conts</span><span class="p">,</span>
-        <span class="n">labels</span><span class="p">,</span>
+        <span class="n">cats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">conts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="n">cats</span> <span class="o">=</span> <span class="n">cats</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">conts</span> <span class="o">=</span> <span class="n">conts</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">[]</span>
+
         <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span><span class="n">conts</span> <span class="o">+</span> <span class="n">cats</span> <span class="o">+</span> <span class="n">labels</span><span class="p">)</span>
 
         <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">labels</span>
-        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
             <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cats</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cats</span><span class="p">:</span>
             <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">conts</span> <span class="ow">or</span> <span class="p">[]:</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">conts</span><span class="p">:</span>
             <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">schema</span>
