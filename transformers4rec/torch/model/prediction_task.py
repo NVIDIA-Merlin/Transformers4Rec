@@ -36,7 +36,7 @@ class BinaryClassificationPrepareBlock(BuildableBlock):
         return SequentialBlock(
             torch.nn.Linear(input_size[-1], 1, bias=False),
             torch.nn.Sigmoid(),
-            LambdaModule(lambda x: x.view(-1)),
+            LambdaModule(lambda x: torch.squeeze(x, -1)),
             output_size=[
                 None,
             ],
@@ -157,7 +157,7 @@ class RegressionPrepareBlock(BuildableBlock):
     def build(self, input_size) -> SequentialBlock:
         return SequentialBlock(
             torch.nn.Linear(input_size[-1], 1),
-            LambdaModule(lambda x: x.view(-1)),
+            LambdaModule(lambda x: torch.squeeze(x, -1)),
             output_size=[
                 None,
             ],
