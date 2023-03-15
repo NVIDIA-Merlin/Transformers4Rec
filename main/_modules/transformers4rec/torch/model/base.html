@@ -817,6 +817,9 @@
         <span class="n">schemas</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">head</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">heads</span><span class="p">:</span>
             <span class="n">schemas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">head</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">Core_Schema</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">schemas</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">schemas</span><span class="p">,</span> <span class="n">Core_Schema</span><span class="p">())</span>
+
         <span class="n">model_schema</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">schemas</span><span class="p">,</span> <span class="n">Schema</span><span class="p">())</span>
 
         <span class="c1"># TODO: rework T4R to use Merlin Schemas.</span>
