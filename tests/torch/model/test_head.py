@@ -49,7 +49,7 @@ def test_simple_heads_on_sequence(
     if summary:
         targets = {"target": torch.randint(2, (100,)).float()}
     else:
-        targets = {"target": torch.randint(2, (2000,)).float()}
+        targets = {"target": torch.randint(2, (100, 20)).float()}
 
     body = tr.SequentialBlock(inputs, tr.MLPBlock([64]))
     head = task("target", task_block=task_block, summary_type=summary).to_head(body, inputs)
