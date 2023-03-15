@@ -13,6 +13,8 @@
 # limitations under the License.
 #
 
+from warnings import catch_warnings
+
 import pytest
 
 from merlin_standard_lib import categorical_cardinalities
@@ -37,16 +39,20 @@ def test_column_schema():
 
 
 def test_schema():
-    s = schema.Schema(
-        [
-            schema.ColumnSchema.create_continuous("con_1"),
-            schema.ColumnSchema.create_continuous("con_2_int", is_float=False),
-            schema.ColumnSchema.create_categorical("cat_1", 1000),
-            schema.ColumnSchema.create_categorical(
-                "cat_2", 100, value_count=schema.ValueCount(1, 20)
-            ),
-        ]
-    )
+    with catch_warnings(record=True) as w:
+        schema.Schema._is_first_init = True
+        s = schema.Schema(
+            [
+                schema.ColumnSchema.create_continuous("con_1"),
+                schema.ColumnSchema.create_continuous("con_2_int", is_float=False),
+                schema.ColumnSchema.create_categorical("cat_1", 1000),
+                schema.ColumnSchema.create_categorical(
+                    "cat_2", 100, value_count=schema.ValueCount(1, 20)
+                ),
+            ]
+        )
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
 
     assert len(s.select_by_type(schema.FeatureType.INT).column_names) == 3
     assert len(s.select_by_name(lambda x: x.startswith("con")).column_names) == 2

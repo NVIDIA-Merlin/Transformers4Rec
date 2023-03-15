@@ -16,6 +16,7 @@ import collections
 import json
 import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
+from warnings import warn
 
 from google.protobuf import json_format, text_format
 from google.protobuf.message import Message as ProtoMessage
@@ -216,6 +217,18 @@ class Schema(_Schema):
     """A collection of column schemas for a dataset."""
 
     feature: List["ColumnSchema"] = betterproto.message_field(1)
+    _is_first_init = True
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self._is_first_init:
+            # TODO: Make description more descriptive. What version are we planning to remove it?
+            warn(
+                "Schema from `merlin_standard_lib` is deprecated, ",
+                "use Schema from `merlin.schema` instead.",
+                DeprecationWarning,
+            )
+        self._is_first_init = False
 
     @classmethod
     def create(
