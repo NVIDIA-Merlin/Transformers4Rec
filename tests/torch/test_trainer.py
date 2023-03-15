@@ -19,6 +19,7 @@ import tempfile
 
 import pytest
 import torch
+from merlin.schema import Schema
 
 import transformers4rec.torch as tr
 from transformers4rec.config import trainer
@@ -57,8 +58,12 @@ def test_set_train_eval_loaders_attributes(
 
 
 @pytest.mark.parametrize("batch_size", [16, 32])
-def test_set_train_eval_loaders_pyarrow(torch_yoochoose_next_item_prediction_model, batch_size):
+@pytest.mark.parametrize("schema_type", ["msl", "core"])
+def test_set_train_eval_loaders_pyarrow(
+    torch_yoochoose_next_item_prediction_model, batch_size, schema_type
+):
     data = tr.data.tabular_sequence_testing_data
+    schema = data.schema if schema_type == "msl" else data.merlin_schema
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         max_steps=5,
@@ -72,7 +77,7 @@ def test_set_train_eval_loaders_pyarrow(torch_yoochoose_next_item_prediction_mod
     resys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
-        schema=data.schema,
+        schema=schema,
         train_dataset_or_path=data.path,
         eval_dataset_or_path=data.path,
     )
@@ -139,7 +144,8 @@ def test_create_scheduler(torch_yoochoose_next_item_prediction_model, scheduler)
     assert result
 
 
-def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
+@pytest.mark.parametrize("schema_type", ["msl", "core"])
+def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model, schema_type):
     pytest.importorskip("pyarrow")
     batch_size = 16
     args = trainer.T4RecTrainingArguments(
@@ -157,10 +163,11 @@ def test_trainer_eval_loop(torch_yoochoose_next_item_prediction_model):
     )
 
     data = tr.data.tabular_sequence_testing_data
+    schema = data.schema if schema_type == "msl" else data.merlin_schema
     recsys_trainer = tr.Trainer(
         model=torch_yoochoose_next_item_prediction_model,
         args=args,
-        schema=data.schema,
+        schema=schema,
         train_dataset_or_path=data.path,
         eval_dataset_or_path=data.path,
         test_dataset_or_path=data.path,
@@ -351,6 +358,8 @@ def test_trainer_music_streaming(task_and_metrics):
     transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
     model = transformer_config.to_torch_model(inputs, task)
 
+    assert isinstance(model.input_schema, Schema)
+
     args = trainer.T4RecTrainingArguments(
         output_dir=".",
         max_steps=5,
@@ -390,9 +399,92 @@ def test_trainer_music_streaming(task_and_metrics):
         assert predictions.predictions.shape == (1000,)
 
 
-def test_trainer_with_multiple_tasks():
+# This is broken out as a separate test since combining it leads to strange errors
+@pytest.mark.parametrize(
+    "task_and_metrics",
+    [
+        (
+            tr.NextItemPredictionTask(weight_tying=True),
+            [
+                "eval_/next-item/ndcg_at_10",
+                "eval_/next-item/ndcg_at_20",
+                "eval_/next-item/avg_precision_at_10",
+                "eval_/next-item/avg_precision_at_20",
+                "eval_/next-item/recall_at_10",
+                "eval_/next-item/recall_at_20",
+            ],
+        ),
+        (
+            tr.BinaryClassificationTask("click", summary_type="mean"),
+            [
+                "eval_/click/binary_classification_task/binary_accuracy",
+                "eval_/click/binary_classification_task/binary_precision",
+                "eval_/click/binary_classification_task/binary_recall",
+            ],
+        ),
+        (
+            tr.RegressionTask("play_percentage", summary_type="mean"),
+            [
+                "eval_/play_percentage/regression_task/mean_squared_error",
+            ],
+        ),
+    ],
+)
+def test_trainer_music_streaming_core_schema(task_and_metrics):
     data = tr.data.music_streaming_testing_data
-    schema = data.schema
+    schema = data.merlin_schema
+    batch_size = 16
+    task, default_metric = task_and_metrics
+
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="mlm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+    model = transformer_config.to_torch_model(inputs, task)
+
+    assert isinstance(model.input_schema, Schema)
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        data_loader_engine="merlin_dataloader",
+        max_sequence_length=20,
+        fp16=False,
+        report_to=[],
+        debug=["r"],
+    )
+
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataset_or_path=data.path,
+        eval_dataset_or_path=data.path,
+        test_dataset_or_path=data.path,
+        compute_metrics=True,
+    )
+
+    recsys_trainer.train()
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+    predictions = recsys_trainer.predict(data.path)
+
+    assert isinstance(eval_metrics, dict)
+    assert set(default_metric).issubset(set(eval_metrics.keys()))
+    assert eval_metrics["eval_/loss"] is not None
+
+    assert predictions is not None
+
+
+@pytest.mark.parametrize("schema_type", ["msl", "core"])
+def test_trainer_with_multiple_tasks(schema_type):
+    data = tr.data.music_streaming_testing_data
+    schema = data.schema if schema_type == "msl" else data.merlin_schema
     batch_size = 16
     predict_top_k = 20
     tasks = [
