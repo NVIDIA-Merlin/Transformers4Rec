@@ -468,9 +468,9 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_augment_schema</span><span class="p">(</span>
         <span class="n">schema</span><span class="p">,</span>
-        <span class="n">cats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">conts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cats</span><span class="p">,</span>
+        <span class="n">conts</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span><span class="n">conts</span> <span class="o">+</span> <span class="n">cats</span> <span class="o">+</span> <span class="n">labels</span><span class="p">)</span>
 
