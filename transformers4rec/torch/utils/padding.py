@@ -17,6 +17,7 @@ from typing import Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn.functional as F
+from merlin.table import TensorTable
 
 
 def _pad_dense_tensor(t: torch.Tensor, length: Optional[int]) -> torch.Tensor:
@@ -80,13 +81,11 @@ def pad_batch(batch: Batch, padding_lengths: Dict[str, int]) -> Batch:
         return batch
 
     batch_padded = {}
-    for k, values in batch.items():
-        if k.endswith("__values"):
-            col_name = k[:-8]
-            offsets = batch[f"{col_name}__offsets"]
+    for col_name, col in TensorTable(batch).items():
+        if col.offsets is not None:
             padding_length = padding_lengths.get(col_name)
             if padding_length:
-                padded_values = _pad_ragged_tensor(values, offsets, padding_length)
+                padded_values = _pad_ragged_tensor(col.values, col.offsets, padding_length)
                 batch_padded[col_name] = padded_values
             else:
                 # Note: This exception can be removed if the model is
@@ -96,23 +95,8 @@ def pad_batch(batch: Batch, padding_lengths: Dict[str, int]) -> Batch:
                     "Please provide a padding length for this feature "
                     "to be converted to a dense tensor. "
                 )
-        elif k.endswith("__offsets"):
-            continue
-        elif isinstance(values, tuple):
-            padding_length = padding_lengths.get(k)
-            if padding_length:
-                col_name = k
-                values, offsets = values
-                padded_values = _pad_ragged_tensor(values, offsets, padding_length)
-                batch_padded[col_name] = padded_values
-            else:
-                raise ValueError(
-                    f"Found ragged column '{col_name}' with unspecified padding length. "
-                    "Please provide a padding length for this feature "
-                    "to be converted to a dense tensor. "
-                )
         else:
-            padding_length = padding_lengths.get(k)
-            batch_padded[k] = _pad_dense_tensor(values, padding_length)
+            padding_length = padding_lengths.get(col_name)
+            batch_padded[col_name] = _pad_dense_tensor(col.values, padding_length)
 
     return batch_padded
