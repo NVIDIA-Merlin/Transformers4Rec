@@ -265,13 +265,13 @@ GET /v2/health/live, headers None
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
 
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;77&#39;}&gt;
-bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;}]&#39;)
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;167&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;t4r_pytorch_nvt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;t4r_pytorch_pt&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
 </pre></div>
 </div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;},
- {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;},
- {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;}]
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;t4r_pytorch&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_nvt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;t4r_pytorch_pt&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
 </pre></div>
 </div>
 </div>
@@ -280,15 +280,7 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;t4r_pytorch&quot;},{&quot;name&quot;:&q
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_name</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
-<span class="n">triton_client</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/load, headers None
-{}
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch&#39;
+<span class="c1">#triton_client.load_model(model_name=model_name)</span>
 </pre></div>
 </div>
 </div>
@@ -455,18 +447,18 @@ Loaded model &#39;t4r_pytorch&#39;
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>output :
- [[-12.917275  -13.998102   -9.683803  ... -13.947979  -14.180218
-  -12.8354845]
- [-20.280272  -23.873571   -5.0763226 ... -25.152992  -26.323795
-  -22.31371  ]
- [-21.788324  -25.123737   -7.5168085 ... -25.008371  -25.098593
-  -21.587286 ]
- [-19.229067  -21.751818   -5.5143347 ... -22.60496   -23.740078
-  -20.470545 ]
- [-19.638445  -22.572128   -6.323636  ... -23.640789  -23.961683
-  -19.857796 ]
- [-15.302393  -16.56955    -7.9798465 ... -17.170517  -17.792694
-  -15.643038 ]]
+ [[-12.723562  -12.491022  -10.335574  ... -12.581782  -13.05106
+  -12.618895 ]
+ [-23.642227  -22.039886   -6.7999535 ... -19.80544   -24.779701
+  -22.18703  ]
+ [-19.41877   -20.361322   -8.806894  ... -18.347404  -22.84088
+  -18.40315  ]
+ [-28.79064   -28.92058    -4.05371   ... -27.96975   -33.81291
+  -28.3871   ]
+ [-25.966614  -25.668694   -3.7074547 ... -23.999676  -29.794075
+  -25.53212  ]
+ [-19.15293   -18.776417   -7.6022983 ... -18.301687  -20.212255
+  -18.365705 ]]
 </pre></div>
 </div>
 </div>
@@ -481,17 +473,17 @@ Loaded model &#39;t4r_pytorch&#39;
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `1167651`: 253 || 583 || 3539 || 510 || 447
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `1167651`: 389 || 344 || 307 || 429 || 976
 
-- Top-5 predictions for session `1637332`: 12 || 54 || 146 || 75 || 160
+- Top-5 predictions for session `1637332`: 380 || 225 || 516 || 502 || 381
 
-- Top-5 predictions for session `1808164`: 157 || 142 || 200 || 253 || 80
+- Top-5 predictions for session `1808164`: 441 || 99 || 34 || 112 || 104
 
-- Top-5 predictions for session `3794756`: 404 || 146 || 75 || 54 || 160
+- Top-5 predictions for session `3794756`: 398 || 239 || 2 || 361 || 5
 
-- Top-5 predictions for session `4202155`: 106 || 94 || 57 || 38 || 36
+- Top-5 predictions for session `4202155`: 5 || 43 || 26 || 29 || 10
 
-- Top-5 predictions for session `5470852`: 540 || 319 || 618 || 495 || 702
+- Top-5 predictions for session `5470852`: 398 || 288 || 146 || 54 || 75
 </pre></div>
 </div>
 </div>
@@ -514,33 +506,12 @@ Loaded model &#39;t4r_pytorch&#39;
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/unload, headers None
-{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch&#39;
-POST /v2/repository/models/t4r_pytorch_nvt/unload, headers None
-{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch_nvt&#39;
-POST /v2/repository/models/t4r_pytorch_pt/unload, headers None
-{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch_pt&#39;
-</pre></div>
-</div>
-</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
 <span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
 <span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;status&#39;: &#39;ok&#39;, &#39;restart&#39;: True}
 </pre></div>
 </div>
 </div>
