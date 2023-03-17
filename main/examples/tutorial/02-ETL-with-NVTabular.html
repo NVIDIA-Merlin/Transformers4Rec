@@ -128,7 +128,7 @@
 <h1>ETL with NVTabular<a class="headerlink" href="#etl-with-nvtabular" title="Permalink to this headline"></a></h1>
 <p>You can execute these tutorial notebooks using the latest stable <a class="reference external" href="https://catalog.ngc.nvidia.com/orgs/nvidia/teams/merlin/containers/merlin-pytorch">merlin-pytorch</a> container.</p>
 <p><strong>Launch the docker container</strong></p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8888</span><span class="p">:</span><span class="mi">8888</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_data</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">data</span><span class="o">/</span>  <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">pytorch</span><span class="p">:</span><span class="mf">22.</span><span class="n">XX</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">run</span> <span class="o">-</span><span class="n">it</span> <span class="o">--</span><span class="n">gpus</span> <span class="n">device</span><span class="o">=</span><span class="mi">0</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8000</span><span class="p">:</span><span class="mi">8000</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8001</span><span class="p">:</span><span class="mi">8001</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8002</span><span class="p">:</span><span class="mi">8002</span> <span class="o">-</span><span class="n">p</span> <span class="mi">8888</span><span class="p">:</span><span class="mi">8888</span> <span class="o">-</span><span class="n">v</span> <span class="o">&lt;</span><span class="n">path_to_data</span><span class="o">&gt;</span><span class="p">:</span><span class="o">/</span><span class="n">workspace</span><span class="o">/</span><span class="n">data</span><span class="o">/</span>  <span class="n">nvcr</span><span class="o">.</span><span class="n">io</span><span class="o">/</span><span class="n">nvidia</span><span class="o">/</span><span class="n">merlin</span><span class="o">/</span><span class="n">merlin</span><span class="o">-</span><span class="n">pytorch</span><span class="p">:</span><span class="mf">23.</span><span class="n">XX</span>
 </pre></div>
 </div>
 <p>This script will mount your local data folder that includes your data files to <code class="docutils literal notranslate"><span class="pre">/workspace/data</span></code> directory in the merlin-pytorch docker container.</p>
@@ -169,6 +169,23 @@
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># avoid numba warnings</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">config</span>
+<span class="n">config</span><span class="o">.</span><span class="n">CUDA_LOW_OCCUPANCY_WARNINGS</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="set-up-input-and-output-data-paths">
@@ -197,114 +214,29 @@
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
 <span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;Oct-2019.parquet&#39;</span><span class="p">))</span>  
-<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>CPU times: user 585 ms, sys: 239 ms, total: 824 ms
-Wall time: 840 ms
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   user_session event_type  product_id          category_id category_code  \
+0            43       view     5300797  2053013563173241677          &lt;NA&gt;   
+1            43       view     5300798  2053013563173241677          &lt;NA&gt;   
+2            43       view     5300284  2053013563173241677          &lt;NA&gt;   
+3            43       view     5300382  2053013563173241677          &lt;NA&gt;   
+4            43       view     5300366  2053013563173241677          &lt;NA&gt;   
+
+       brand  price    user_id  event_time_ts  prod_first_event_time_ts  
+0  panasonic  39.90  513903572     1570460611                1569948287  
+1  panasonic  32.18  513903572     1570460616                1569934097  
+2    rowenta  30.86  513903572     1570460621                1569927253  
+3  remington  28.22  513903572     1570460636                1570026747  
+4    polaris  26.46  513903572     1570460650                1570097085  
+CPU times: user 1.9 s, sys: 596 ms, total: 2.5 s
+Wall time: 2.52 s
 </pre></div>
 </div>
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>user_session</th>
-      <th>event_type</th>
-      <th>product_id</th>
-      <th>category_id</th>
-      <th>category_code</th>
-      <th>brand</th>
-      <th>price</th>
-      <th>user_id</th>
-      <th>event_time_ts</th>
-      <th>prod_first_event_time_ts</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>43</td>
-      <td>view</td>
-      <td>5300797</td>
-      <td>2053013563173241677</td>
-      <td>&lt;NA&gt;</td>
-      <td>panasonic</td>
-      <td>39.90</td>
-      <td>513903572</td>
-      <td>1570460611</td>
-      <td>1569948287</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>43</td>
-      <td>view</td>
-      <td>5300798</td>
-      <td>2053013563173241677</td>
-      <td>&lt;NA&gt;</td>
-      <td>panasonic</td>
-      <td>32.18</td>
-      <td>513903572</td>
-      <td>1570460616</td>
-      <td>1569934097</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>43</td>
-      <td>view</td>
-      <td>5300284</td>
-      <td>2053013563173241677</td>
-      <td>&lt;NA&gt;</td>
-      <td>rowenta</td>
-      <td>30.86</td>
-      <td>513903572</td>
-      <td>1570460621</td>
-      <td>1569927253</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>43</td>
-      <td>view</td>
-      <td>5300382</td>
-      <td>2053013563173241677</td>
-      <td>&lt;NA&gt;</td>
-      <td>remington</td>
-      <td>28.22</td>
-      <td>513903572</td>
-      <td>1570460636</td>
-      <td>1570026747</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>43</td>
-      <td>view</td>
-      <td>5300366</td>
-      <td>2053013563173241677</td>
-      <td>&lt;NA&gt;</td>
-      <td>polaris</td>
-      <td>26.46</td>
-      <td>513903572</td>
-      <td>1570460650</td>
-      <td>1570097085</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
+</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -350,7 +282,8 @@ dtype: bool
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># categorify features </span>
-<span class="n">cat_feats</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">,</span> <span class="s1">&#39;category_code&#39;</span><span class="p">,</span> <span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;product_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">(</span><span class="n">start_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">item_id</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">TagAsItemID</span><span class="p">()</span>
+<span class="n">cat_feats</span> <span class="o">=</span> <span class="n">item_id</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;category_code&#39;</span><span class="p">,</span> <span class="s1">&#39;brand&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id&#39;</span><span class="p">,</span> <span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Categorify</span><span class="p">(</span><span class="n">start_index</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -396,8 +329,17 @@ dtype: bool
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weekday_sin</span> <span class="o">=</span> <span class="n">sessiontime_weekday</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;et_dayofweek_sin&#39;</span><span class="p">)</span>
-<span class="n">weekday_cos</span><span class="o">=</span> <span class="n">sessiontime_weekday</span> <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">get_cycled_feature_value_cos</span><span class="p">(</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;et_dayofweek_cos&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">weekday_sin</span> <span class="o">=</span> <span class="p">(</span><span class="n">sessiontime_weekday</span> <span class="o">&gt;&gt;</span> 
+               <span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">get_cycled_feature_value_sin</span><span class="p">(</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="o">&gt;&gt;</span> 
+               <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;et_dayofweek_sin&#39;</span><span class="p">)</span> <span class="o">&gt;&gt;</span>
+               <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">])</span>
+              <span class="p">)</span>
+    
+<span class="n">weekday_cos</span><span class="o">=</span> <span class="p">(</span><span class="n">sessiontime_weekday</span> <span class="o">&gt;&gt;</span> 
+              <span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="n">get_cycled_feature_value_cos</span><span class="p">(</span><span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span> <span class="o">&gt;&gt;</span> 
+              <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;et_dayofweek_cos&#39;</span><span class="p">)</span> <span class="o">&gt;&gt;</span>
+              <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">])</span>
+             <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -450,7 +392,11 @@ dtype: bool
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">recency_features</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;event_time_ts&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">ItemRecency</span><span class="p">()</span> 
-<span class="n">recency_features_norm</span> <span class="o">=</span> <span class="n">recency_features</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LogOp</span><span class="p">()</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">out_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;product_recency_days_log_norm&#39;</span><span class="p">)</span>
+<span class="n">recency_features_norm</span> <span class="o">=</span> <span class="p">(</span><span class="n">recency_features</span> <span class="o">&gt;&gt;</span> 
+                         <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LogOp</span><span class="p">()</span> <span class="o">&gt;&gt;</span> 
+                         <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">out_dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">&gt;&gt;</span> 
+                         <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;product_recency_days_log_norm&#39;</span><span class="p">)</span>
+                        <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -488,7 +434,12 @@ dtype: bool
     <span class="k">return</span> <span class="n">col</span>
     
 <span class="n">avg_category_id_pr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;category_id&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">JoinGroupby</span><span class="p">(</span><span class="n">cont_cols</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">],</span> <span class="n">stats</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mean&quot;</span><span class="p">])</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;avg_category_id_price&#39;</span><span class="p">)</span>
-<span class="n">relative_price_to_avg_category</span> <span class="o">=</span> <span class="n">avg_category_id_pr</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LambdaOp</span><span class="p">(</span><span class="n">relative_price_to_avg_categ</span><span class="p">,</span> <span class="n">dependency</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">])</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;relative_price_to_avg_categ_id&quot;</span><span class="p">)</span>
+<span class="n">relative_price_to_avg_category</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">avg_category_id_pr</span> <span class="o">&gt;&gt;</span> 
+    <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LambdaOp</span><span class="p">(</span><span class="n">relative_price_to_avg_categ</span><span class="p">,</span> <span class="n">dependency</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">])</span> <span class="o">&gt;&gt;</span> 
+    <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;relative_price_to_avg_categ_id&quot;</span><span class="p">)</span> <span class="o">&gt;&gt;</span>
+    <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">])</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -525,7 +476,7 @@ dtype: bool
         <span class="s1">&#39;relative_price_to_avg_categ_id&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">],</span>
         <span class="s1">&#39;product_recency_days_log_norm&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;list&quot;</span><span class="p">]</span>
         <span class="p">},</span>
-    <span class="n">name_sep</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">])</span>
+    <span class="n">name_sep</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -559,7 +510,7 @@ dtype: bool
 <p>We truncate the sequence features in length according to sessions_max_length param, which is set as 20 in our example.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">groupby_features_trim</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">SESSIONS_MAX_LENGTH</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">postfix</span> <span class="o">=</span> <span class="s1">&#39;_seq&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">groupby_features_trim</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -571,9 +522,10 @@ dtype: bool
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># calculate session day index based on &#39;timestamp-first&#39; column</span>
 <span class="n">day_index</span> <span class="o">=</span> <span class="p">((</span><span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;event_time_dt-first&#39;</span><span class="p">])</span>  <span class="o">&gt;&gt;</span> 
-    <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LambdaOp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="p">(</span><span class="n">col</span> <span class="o">-</span> <span class="n">col</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;&gt;</span> 
-    <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="s2">&quot;day_index&quot;</span><span class="p">)</span>
-<span class="p">)</span>
+             <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">LambdaOp</span><span class="p">(</span><span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="p">(</span><span class="n">col</span> <span class="o">-</span> <span class="n">col</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">.</span><span class="n">dt</span><span class="o">.</span><span class="n">days</span> <span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;&gt;</span> 
+             <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">Rename</span><span class="p">(</span><span class="n">f</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">col</span><span class="p">:</span> <span class="s2">&quot;day_index&quot;</span><span class="p">)</span> <span class="o">&gt;&gt;</span>
+             <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">])</span>
+            <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -583,7 +535,9 @@ dtype: bool
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">selected_features</span> <span class="o">=</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">,</span> <span class="s1">&#39;product_id-count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">groupby_features_trim</span> <span class="o">+</span> <span class="n">day_index</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sess_id</span> <span class="o">=</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;user_session&#39;</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">AddMetadata</span><span class="p">(</span><span class="n">tags</span><span class="o">=</span><span class="p">[</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">])</span>
+
+<span class="n">selected_features</span> <span class="o">=</span> <span class="n">sess_id</span> <span class="o">+</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;product_id-count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">groupby_features_trim</span> <span class="o">+</span> <span class="n">day_index</span>
 </pre></div>
 </div>
 </div>
@@ -598,41 +552,32 @@ dtype: bool
 </div>
 </div>
 </div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># avoid numba warnings</span>
-<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">config</span>
-<span class="n">config</span><span class="o">.</span><span class="n">CUDA_LOW_OCCUPANCY_WARNINGS</span> <span class="o">=</span> <span class="mi">0</span>
-</pre></div>
-</div>
-</div>
-</div>
 <ul class="simple">
 <li><p>Initialize the NVTabular dataset object and workflow graph.</p></li>
 </ul>
 <p>NVTabular’s preprocessing and feature engineering workflows are directed graphs of operators. When we initialize a Workflow with our pipeline, workflow organizes the input and output columns.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-
-<span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">filtered_sessions</span><span class="p">)</span>
-<span class="n">workflow</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
-<span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_ddf</span><span class="p">()</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="p">(</span><span class="n">filtered_sessions</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+<span class="c1"># Learn features statistics necessary of the preprocessing workflow</span>
+<span class="c1"># The following will generate schema.pbtxt file in the provided folder and export the parquet files.</span>
+<span class="n">workflow</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
   warnings.warn(
 </pre></div>
 </div>
 </div>
 </div>
-<p>Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the <code class="docutils literal notranslate"><span class="pre">workflow.fit()</span></code> method so that our Workflow can use these stats to transform any given input.</p>
-<p>Let’s print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sessions_gdf</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span>
 </pre></div>
 </div>
 </div>
@@ -655,70 +600,271 @@ dtype: bool
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>user_session</th>
-      <th>product_id-count</th>
-      <th>product_id-list_seq</th>
-      <th>category_code-list_seq</th>
-      <th>brand-list_seq</th>
-      <th>category_id-list_seq</th>
-      <th>et_dayofweek_sin-list_seq</th>
-      <th>et_dayofweek_cos-list_seq</th>
-      <th>price_log_norm-list_seq</th>
-      <th>relative_price_to_avg_categ_id-list_seq</th>
-      <th>product_recency_days_log_norm-list_seq</th>
-      <th>day_index</th>
+      <th>name</th>
+      <th>tags</th>
+      <th>dtype</th>
+      <th>is_list</th>
+      <th>is_ragged</th>
+      <th>properties.num_buckets</th>
+      <th>properties.freq_threshold</th>
+      <th>properties.max_size</th>
+      <th>properties.start_index</th>
+      <th>properties.cat_path</th>
+      <th>properties.domain.min</th>
+      <th>properties.domain.max</th>
+      <th>properties.domain.name</th>
+      <th>properties.embedding_sizes.cardinality</th>
+      <th>properties.embedding_sizes.dimension</th>
+      <th>properties.value_count.min</th>
+      <th>properties.value_count.max</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>2</td>
-      <td>779</td>
-      <td>[19064, 52057, 13290, 11446, 15835, 879, 633, ...</td>
-      <td>[1, 1, 1, 1, 1, 12, 12, 12, 12, 12, 12, 12, 12...</td>
-      <td>[171, 120, 231, 392, 562, 20, 9, 20, 295, 143,...</td>
-      <td>[3, 3, 3, 3, 3, 17, 17, 17, 17, 17, 17, 17, 17...</td>
-      <td>[0.9749277, 0.9749277, 0.9749277, 0.9749277, 0...</td>
-      <td>[-0.22252177, -0.22252177, -0.22252177, -0.222...</td>
-      <td>[-0.6063042879104614, -0.5922226905822754, -0....</td>
-      <td>[0.03519274808521567, 0.05391073897011643, 0.0...</td>
-      <td>[-2.266085624694824, -2.266085624694824, -2.26...</td>
-      <td>1</td>
+      <td>user_session</td>
+      <td>(Tags.CATEGORICAL)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>3</td>
-      <td>316</td>
-      <td>[252, 2801, 5399, 1074, 252, 355, 327, 319, 34...</td>
-      <td>[1, 17, 17, 15, 1, 1, 17, 31, 17, 17, 17, 17, ...</td>
-      <td>[1, 1, 1, 1, 1, 50, 1, 1, 36, 1, 1, 36, 50, 1,...</td>
-      <td>[234, 36, 36, 30, 234, 52, 36, 48, 36, 36, 36,...</td>
-      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[-0.90096927, -0.90096927, -0.90096927, -0.900...</td>
-      <td>[0.7637995481491089, 0.4069388806819916, 0.258...</td>
-      <td>[0.0006990219343376929, -0.0487534739286619, -...</td>
-      <td>[-0.8581507205963135, -0.9379308223724365, -1....</td>
-      <td>2</td>
+      <td>product_id-count</td>
+      <td>(Tags.ITEM_ID, Tags.ITEM, Tags.CATEGORICAL, Ta...</td>
+      <td>DType(name='int32', element_type=&lt;ElementType....</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.product_id.parquet</td>
+      <td>0.0</td>
+      <td>118334.0</td>
+      <td>product_id</td>
+      <td>118335.0</td>
+      <td>512.0</td>
+      <td>NaN</td>
+      <td>NaN</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>4</td>
-      <td>277</td>
-      <td>[765, 353, 1360, 1965, 2204, 3129, 726, 861, 9...</td>
-      <td>[12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 1...</td>
-      <td>[448, 114, 1, 20, 20, 72, 114, 143, 20, 141, 7...</td>
-      <td>[17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 17, 1...</td>
-      <td>[0.43388295, 0.43388295, 0.43388295, 0.4338829...</td>
-      <td>[-0.90096927, -0.90096927, -0.90096927, -0.900...</td>
-      <td>[-1.7807854413986206, -0.5645747184753418, -0....</td>
-      <td>[-0.8327210168829422, -0.19123243552338817, 0....</td>
-      <td>[-0.799250602722168, -0.7864173650741577, -0.8...</td>
-      <td>2</td>
+      <td>product_id-list</td>
+      <td>(Tags.ID, Tags.CATEGORICAL, Tags.LIST, Tags.IT...</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.product_id.parquet</td>
+      <td>0.0</td>
+      <td>118334.0</td>
+      <td>product_id</td>
+      <td>118335.0</td>
+      <td>512.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>category_code-list</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.category_code.parquet</td>
+      <td>0.0</td>
+      <td>124.0</td>
+      <td>category_code</td>
+      <td>125.0</td>
+      <td>24.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>brand-list</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.brand.parquet</td>
+      <td>0.0</td>
+      <td>2640.0</td>
+      <td>brand</td>
+      <td>2641.0</td>
+      <td>132.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>category_id-list</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.category_id.parquet</td>
+      <td>0.0</td>
+      <td>566.0</td>
+      <td>category_id</td>
+      <td>567.0</td>
+      <td>56.0</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>et_dayofweek_sin-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>et_dayofweek_cos-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>price_log_norm-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>relative_price_to_avg_categ_id-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float64', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>product_recency_days_log_norm-list</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>20.0</td>
+      <td>20.0</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>day_index</td>
+      <td>(Tags.CATEGORICAL)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>False</td>
+      <td>False</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
     </tr>
   </tbody>
 </table>
 </div></div></div>
 </div>
+<p>Above, we created an NVTabular Dataset object using our input dataset. Then, we calculate statistics for this workflow on the input dataset, i.e. on our training set, using the <code class="docutils literal notranslate"><span class="pre">workflow.fit()</span></code> method so that our Workflow can use these stats to transform any given input.</p>
 </div>
 </div>
 </div>
@@ -753,6 +899,65 @@ dtype: bool
 <p><code class="docutils literal notranslate"><span class="pre">gpu_preprocessing</span></code> function converts the process df to a Dataset object and write out hive-partitioned data to disk.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># read in the processed train dataset</span>
+<span class="n">sessions_gdf</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt/part_0.parquet&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   user_session  product_id-count  \
+0             1               779   
+1             6               316   
+
+                                     product_id-list  \
+0  [7171, 13290, 19757, 20401, 19757, 20401, 2122...   
+1  [4093, 3427, 20536, 27530, 11262, 18532, 33985...   
+
+                                  category_code-list  \
+0  [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ...   
+1  [17, 17, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2...   
+
+                                          brand-list  \
+0  [34, 231, 239, 34, 239, 34, 120, 120, 249, 231...   
+1  [50, 1, 36, 1, 1, 1, 1, 3, 2, 2, 2, 2, 2, 2, 1...   
+
+                                    category_id-list  \
+0  [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, ...   
+1  [36, 36, 163, 163, 163, 163, 163, 2, 2, 2, 2, ...   
+
+                               et_dayofweek_sin-list  \
+0  [0.7818321, 0.7818321, 0.7818321, 0.7818321, 0...   
+1  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   
+
+                               et_dayofweek_cos-list  \
+0  [0.6234891, 0.6234891, 0.6234891, 0.6234891, 0...   
+1  [-0.90096927, -0.90096927, -0.90096927, -0.900...   
+
+                                 price_log_norm-list  \
+0  [-0.543168, -0.5673179, -0.578279, -0.62369585...   
+1  [0.23708352, 0.24015874, -0.80294055, -0.66287...   
+
+                 relative_price_to_avg_categ_id-list  \
+0  [0.12176345592788261, 0.08783709744899952, 0.0...   
+1  [-0.23209574328358615, -0.22911214248041414, -...   
+
+                  product_recency_days_log_norm-list  day_index  
+0  [1.1603423, 1.1818986, 1.0499662, 1.0900966, 1...          1  
+1  [-0.7081338, -0.69109577, -0.73886937, -0.7074...          2  
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.utils.data_utils</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
 <span class="n">save_time_based_splits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="p">),</span>
                        <span class="n">output_dir</span><span class="o">=</span> <span class="n">OUTPUT_FOLDER</span><span class="p">,</span>
@@ -763,7 +968,7 @@ dtype: bool
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:03&lt;00:00,  1.86it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 7/7 [00:02&lt;00:00,  2.75it/s]
 </pre></div>
 </div>
 </div>
@@ -782,37 +987,7 @@ dtype: bool
 </div>
 </div>
 <p>Save NVTabular workflow to load at the inference step.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;user_session&#39;,
- &#39;product_id-count&#39;,
- &#39;product_id-list_seq&#39;,
- &#39;category_code-list_seq&#39;,
- &#39;brand-list_seq&#39;,
- &#39;category_id-list_seq&#39;,
- &#39;et_dayofweek_sin-list_seq&#39;,
- &#39;et_dayofweek_cos-list_seq&#39;,
- &#39;price_log_norm-list_seq&#39;,
- &#39;relative_price_to_avg_categ_id-list_seq&#39;,
- &#39;product_recency_days_log_norm-list_seq&#39;,
- &#39;day_index&#39;]
-</pre></div>
-</div>
-</div>
-</div>
 <p>You can uncomment the cell below and execute it to see the output schema generated from nvtabular workflow.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#workflow.output_schema</span>
-</pre></div>
-</div>
-</div>
-</div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;workflow_etl&#39;</span><span class="p">)</span>
@@ -824,22 +999,7 @@ dtype: bool
 </div>
 <div class="section" id="wrap-up">
 <h2>7. Wrap Up<a class="headerlink" href="#wrap-up" title="Permalink to this headline"></a></h2>
-<p>That’s it! We finished our first task. We reprocessed our dataset and created new features to train a session-based recommendation model. Please run the cell below to shut down the kernel before moving on to the next notebook.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
-
-<span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
-<span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;status&#39;: &#39;ok&#39;, &#39;restart&#39;: True}
-</pre></div>
-</div>
-</div>
-</div>
+<p>That’s it! We finished our first task. We reprocessed our dataset and created new features to train a session-based recommendation model. Please shut down the kernel before moving on to the next notebook.</p>
 </div>
 </div>
 
