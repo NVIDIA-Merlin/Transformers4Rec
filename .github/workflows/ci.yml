@@ -57,7 +57,7 @@ jobs:
             # find the release branch that we're pointing at
             branch=$(git branch -r --contains ${{ github.ref_name }} --list '*release*' --format "%(refname:short)" | sed -e 's/^origin\///')
           fi
-          tox -e test-cpu-notebooks -- $branch
+          tox -e test-cpu-integration -- $branch
       - name: Generate package for pypi
         run: |
           python setup.py sdist

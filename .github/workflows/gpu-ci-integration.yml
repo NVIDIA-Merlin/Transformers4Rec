@@ -29,4 +29,4 @@ jobs:
             # find the release branch that we're pointing at
             branch=$(git branch -r --contains ${{ github.ref_name }} --list '*release*' --format "%(refname:short)" | sed -e 's/^origin\///')
           fi
-          cd ${{ github.workspace }}; tox -e test-notebooks -- $branch
+          cd ${{ github.workspace }}; tox -e test-gpu-integration -- $branch
