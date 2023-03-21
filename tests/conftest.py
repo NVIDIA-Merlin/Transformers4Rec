@@ -102,6 +102,6 @@ def parametrize_schemas(name):
 try:
     import torchmetrics  # noqa
 
-    from tests.torch._conftest import *  # noqa
+    from tests.unit.torch._conftest import *  # noqa
 except ModuleNotFoundError:
     pass
