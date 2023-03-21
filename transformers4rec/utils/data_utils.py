@@ -121,7 +121,7 @@ def session_aggregator(
         data = dask_cudf.from_cudf(data, npartitions=3)
 
     # get item and session features
-    item_features = schema.select_by_tag(["item"]).feature
+    item_features = schema.select_by_tag(["item"]).first
     session_feat = schema.select_by_tag(["session"]).column_names
     groupby_dict = {k.name: ["list"] for k in item_features}
     for col in session_feat:

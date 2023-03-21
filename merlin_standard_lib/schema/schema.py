@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-
 import collections
+import json
 import os
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, TypeVar, Union
 
-from ..utils import proto_utils
-from .tag import TagsType
+from google.protobuf import json_format, text_format
+from google.protobuf.message import Message as ProtoMessage
+from merlin.models.utils import schema_utils as mm_schema_utils
+from merlin.schema import Schema as CoreSchema
+from merlin.schema import Tags, TagSet, TagsType
+from merlin.schema.io import proto_utils
 
 try:
     from functools import cached_property  # type: ignore
@@ -30,6 +33,7 @@ except ImportError:
     cached_property = lambda func: property(lru_cache()(func))  # type: ignore  # noqa
 
 import betterproto  # noqa
+from betterproto import Message as BetterProtoMessage
 
 from ..proto.schema_bp import *  # noqa
 from ..proto.schema_bp import (
@@ -44,6 +48,8 @@ from ..proto.schema_bp import (
     ValueCountList,
     _Schema,
 )
+
+ProtoMessageType = TypeVar("ProtoMessageType", bound=BetterProtoMessage)
 
 
 def _parse_shape_and_value_count(shape, value_count) -> Dict[str, Any]:
@@ -74,11 +80,11 @@ class ColumnSchema(Feature):
         tags: Optional[TagsType] = None,
         **kwargs,
     ) -> "ColumnSchema":
-        _tags: List[str] = [str(t) for t in tags] if tags else []
+        _tags: List[str] = [t.value for t in TagSet(tags or [])]
 
         extra = _parse_shape_and_value_count(shape, value_count)
         int_domain = IntDomain(name=name, min=min_index, max=num_items, is_categorical=True)
-        _tags = list(set(_tags + ["categorical"]))
+        _tags = list(set(_tags + [Tags.CATEGORICAL.value]))
         extra["type"] = FeatureType.INT
 
         return cls(name=name, int_domain=int_domain, **extra, **kwargs).with_tags(_tags)
@@ -98,7 +104,7 @@ class ColumnSchema(Feature):
         tags: Optional[TagsType] = None,
         **kwargs,
     ) -> "ColumnSchema":
-        _tags: List[str] = [str(t) for t in tags] if tags else []
+        _tags: List[str] = [t.value for t in TagSet(tags or [])]
 
         extra = _parse_shape_and_value_count(shape, value_count)
         if min_value is not None and max_value is not None:
@@ -116,7 +122,7 @@ class ColumnSchema(Feature):
                     name=name, min=int(min_value), max=int(max_value), is_categorical=False
                 )
         extra["type"] = FeatureType.FLOAT if is_float else FeatureType.INT
-        _tags = list(set(_tags + ["continuous"]))
+        _tags = list(set(_tags + [Tags.CONTINUOUS.value]))
 
         return cls(name=name, **extra, **kwargs).with_tags(_tags)
 
@@ -139,21 +145,19 @@ class ColumnSchema(Feature):
     def with_tags_based_on_properties(
         self, using_value_count=True, using_domain=True
     ) -> "ColumnSchema":
-        from .tag import Tag
-
         extra_tags = []
 
         if using_value_count and proto_utils.has_field(self, "value_count"):
-            extra_tags.append(str(Tag.LIST))
+            extra_tags.append(str(Tags.LIST))
 
         if using_domain and proto_utils.has_field(self, "int_domain"):
             if self.int_domain.is_categorical:
-                extra_tags.append(str(Tag.CATEGORICAL))
+                extra_tags.append(str(Tags.CATEGORICAL))
             else:
-                extra_tags.append(str(Tag.CONTINUOUS))
+                extra_tags.append(str(Tags.CONTINUOUS))
 
         if using_domain and proto_utils.has_field(self, "float_domain"):
-            extra_tags.append(str(Tag.CONTINUOUS))
+            extra_tags.append(str(Tags.CONTINUOUS))
 
         return self.with_tags(extra_tags) if extra_tags else self.copy()
 
@@ -301,14 +305,17 @@ class Schema(_Schema):
         if not isinstance(to_select, (list, tuple)) and not callable(to_select):
             to_select = [to_select]
 
-        def collection_filter_fn(column_tags):
-            return all(x in column_tags for x in to_select)
+        if callable(to_select):
+            return self._filter_column_schemas(to_select, lambda x: False, lambda x: x.tags)
+        else:
+            # Schema.tags always returns a List[str] with the tag values, so if the user wants to
+            # filter using the Tags Enum, we need to convert those to their string value
+            to_select = [tag.value if isinstance(tag, Tags) else tag for tag in to_select]
 
-        output: Schema = self._filter_column_schemas(
-            to_select, collection_filter_fn, lambda x: x.tags
-        )
+            def collection_filter_fn(column_names: List[str]):
+                return all(x in column_names for x in to_select)
 
-        return output
+            return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
 
     def remove_by_tag(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
@@ -362,14 +369,6 @@ class Schema(_Schema):
 
         return Schema(selected_schemas)
 
-    def categorical_cardinalities(self) -> Dict[str, int]:
-        outputs = {}
-        for col in self:
-            if col.int_domain and col.int_domain.is_categorical:
-                outputs[col.name] = col.int_domain.max + 1
-
-        return outputs
-
     @property
     def column_names(self) -> List[str]:
         return [f.name for f in self.feature]
@@ -380,7 +379,7 @@ class Schema(_Schema):
 
     @cached_property
     def item_id_column_name(self):
-        item_id_col = self.select_by_tag("item_id")
+        item_id_col = self.select_by_tag(Tags.ITEM_ID)
         if len(item_id_col.column_names) == 0:
             raise ValueError("There is no column tagged as item id.")
 
@@ -401,7 +400,7 @@ class Schema(_Schema):
     def from_proto_text(self, path_or_proto_text: str) -> "Schema":
         from tensorflow_metadata.proto.v0 import schema_pb2
 
-        return proto_utils.proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
+        return _proto_text_to_better_proto(self, path_or_proto_text, schema_pb2.Schema())
 
     def copy(self, **kwargs) -> "Schema":
         return proto_utils.copy_better_proto_message(self, **kwargs)
@@ -508,3 +507,37 @@ class Schema(_Schema):
                 result.column_schemas.pop(key, None)
 
         return result
+
+
+def _proto_text_to_better_proto(
+    better_proto_message: ProtoMessageType, path_proto_text: str, message: ProtoMessage
+) -> ProtoMessageType:
+    proto_text = path_proto_text
+    if os.path.isfile(proto_text):
+        with open(path_proto_text, "r") as f:
+            proto_text = f.read()
+
+    proto = text_format.Parse(proto_text, message)
+
+    # This is a hack because as of now we can't parse the Any representation.
+    # TODO: Fix this.
+    d = json_format.MessageToDict(proto)
+    for f in d["feature"]:
+        if "extraMetadata" in f["annotation"]:  # type: ignore
+            extra_metadata = f["annotation"].pop("extraMetadata")  # type: ignore
+            f["annotation"]["comment"] = [json.dumps(extra_metadata[0]["value"])]  # type: ignore
+    json_str = json_format.MessageToJson(json_format.ParseDict(d, message))
+
+    return better_proto_message.__class__().from_json(json_str)
+
+
+def categorical_cardinalities(schema) -> Dict[str, int]:
+    if isinstance(schema, CoreSchema):
+        return mm_schema_utils.categorical_cardinalities(schema)
+
+    outputs = {}
+    for col in schema:
+        if col.int_domain and col.int_domain.is_categorical:
+            outputs[col.name] = col.int_domain.max + 1
+
+    return outputs

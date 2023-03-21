@@ -15,13 +15,15 @@
 #
 
 from abc import ABC
+from copy import deepcopy
 from functools import reduce
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
+from merlin.models.utils.doc_utils import docstring_parameter
+from merlin.models.utils.registry import Registry
 
-from merlin_standard_lib import Registry, Schema
-from merlin_standard_lib.utils.doc_utils import docstring_parameter
+from merlin_standard_lib import Schema
 
 from ..block.base import BlockBase, SequentialBlock, right_shift_block
 from ..typing import TabularData, TensorOrTabularData
@@ -185,7 +187,7 @@ class TabularModule(torch.nn.Module):
         -------
         Optional[TabularModule]
         """
-        schema_copy = schema.copy()
+        schema_copy = deepcopy(schema)
         if tags:
             schema_copy = schema_copy.select_by_tag(tags)
 

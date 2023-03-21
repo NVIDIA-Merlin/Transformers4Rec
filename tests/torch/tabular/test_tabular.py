@@ -17,7 +17,7 @@
 import pytest
 import torch
 
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 if torch.cuda.is_available():
     devices = ["cpu", "cuda"]

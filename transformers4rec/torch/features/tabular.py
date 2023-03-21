@@ -16,9 +16,10 @@
 
 from typing import List, Optional, Tuple, Type, Union
 
-from merlin_standard_lib import Schema, Tag
-from merlin_standard_lib.schema.tag import TagsType
-from merlin_standard_lib.utils.doc_utils import docstring_parameter
+from merlin.models.utils.doc_utils import docstring_parameter
+from merlin.schema import Tags, TagsType
+
+from merlin_standard_lib import Schema
 
 from ..block.base import SequentialBlock
 from ..block.mlp import MLPBlock
@@ -118,8 +119,8 @@ class TabularFeatures(MergeTabular):
     def from_schema(  # type: ignore
         cls,
         schema: Schema,
-        continuous_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CONTINUOUS,),
-        categorical_tags: Optional[Union[TagsType, Tuple[Tag]]] = (Tag.CATEGORICAL,),
+        continuous_tags: Optional[Union[TagsType, Tuple[Tags]]] = (Tags.CONTINUOUS,),
+        categorical_tags: Optional[Union[TagsType, Tuple[Tags]]] = (Tags.CATEGORICAL,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -133,10 +134,10 @@ class TabularFeatures(MergeTabular):
         ----------
         schema : DatasetSchema
             Dataset schema
-        continuous_tags : Optional[Union[DefaultTags, list, str]], optional
-            Tags to filter the continuous features, by default Tag.CONTINUOUS
-        categorical_tags : Optional[Union[DefaultTags, list, str]], optional
-            Tags to filter the categorical features, by default Tag.CATEGORICAL
+        continuous_tags : Optional[Union[TagsType, Tuple[Tags]]], optional
+            Tags to filter the continuous features, by default Tags.CONTINUOUS
+        categorical_tags : Optional[Union[TagsType, Tuple[Tags]]], optional
+            Tags to filter the categorical features, by default Tags.CATEGORICAL
         aggregation : Optional[str], optional
             Feature aggregation option, by default None
         automatic_build : bool, optional

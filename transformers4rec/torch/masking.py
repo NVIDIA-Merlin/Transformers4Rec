@@ -17,10 +17,9 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional, Tuple
 
 import torch
+from merlin.models.utils.doc_utils import docstring_parameter
+from merlin.models.utils.registry import Registry
 from torch import nn
-
-from merlin_standard_lib import Registry
-from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from .utils.torch_utils import OutputSizeMixin
 

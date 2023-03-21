@@ -13,12 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 import numpy as np
 import pytest
+import torch
 
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 # fixed parameters for tests
 lm_tasks = list(tr.masking.masking_registry.keys())
@@ -47,9 +46,9 @@ def test_mask_only_last_item_for_eval(torch_masking_inputs, task):
     lm.compute_masked_targets(torch_masking_inputs["labels"], training=False)
     # get non padded last items
     non_padded_mask = torch_masking_inputs["labels"] != torch_masking_inputs["padding_idx"]
-    rows_ids = pytorch.arange(
+    rows_ids = torch.arange(
         torch_masking_inputs["labels"].size(0),
-        dtype=pytorch.long,
+        dtype=torch.long,
         device=torch_masking_inputs["labels"].device,
     )
     last_item_sessions = non_padded_mask.sum(axis=1) - 1
@@ -100,9 +99,9 @@ def test_clm_training_on_last_item(torch_masking_inputs):
     lm.compute_masked_targets(torch_masking_inputs["labels"], training=True)
     # get non padded last items
     non_padded_mask = torch_masking_inputs["labels"] != torch_masking_inputs["padding_idx"]
-    rows_ids = pytorch.arange(
+    rows_ids = torch.arange(
         torch_masking_inputs["labels"].size(0),
-        dtype=pytorch.long,
+        dtype=torch.long,
         device=torch_masking_inputs["labels"].device,
     )
     last_item_sessions = non_padded_mask.sum(axis=1) - 1
@@ -174,9 +173,7 @@ def test_replaced_fake_tokens(torch_masking_inputs):
     # Nb of pos items
     pos_items = non_pad_mask.sum()
     # generate random logits
-    logits = pytorch.tensor(
-        np.random.uniform(0, 1, (pos_items, torch_masking_inputs["vocab_size"]))
-    )
+    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, torch_masking_inputs["vocab_size"])))
     corrupted_inputs, discriminator_labels, _ = lm.get_fake_tokens(
         torch_masking_inputs["labels"], trg_flat, logits
     )
@@ -197,7 +194,7 @@ def test_replacement_from_batch(torch_masking_inputs):
     # Nb of pos items
     pos_items = non_pad_mask.sum()
     # generate random logits
-    logits = pytorch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
+    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
     corrupted_inputs, discriminator_labels, updates = lm.get_fake_tokens(
         torch_masking_inputs["labels"], trg_flat, logits
     )
@@ -217,7 +214,7 @@ def test_sample_from_softmax_output(torch_masking_inputs):
     # Nb of pos items
     pos_items = non_pad_mask.sum()
     # generate random logits
-    logits = pytorch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
+    logits = torch.tensor(np.random.uniform(0, 1, (pos_items, pos_items)))
     updates = lm.sample_from_softmax(logits)
     assert updates.size(0) == pos_items
 
@@ -230,5 +227,5 @@ def test_masked_positions(torch_masking_inputs, mode):
     )
     masking_info = lm.compute_masked_targets(torch_masking_inputs["labels"], training=mode)
 
-    targets = pytorch.masked_select(masking_info.targets, masking_info.schema)
+    targets = torch.masked_select(masking_info.targets, masking_info.schema)
     assert all(targets != torch_masking_inputs["padding_idx"])

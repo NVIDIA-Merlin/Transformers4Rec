@@ -1,6 +1,4 @@
-import pytest
-
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 
 def test_readme_quick_start_example_pytorch():

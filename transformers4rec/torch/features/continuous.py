@@ -17,9 +17,9 @@
 from typing import List, Optional
 
 import torch
+from merlin.models.utils.doc_utils import docstring_parameter
 
 from merlin_standard_lib import Schema
-from merlin_standard_lib.utils.doc_utils import docstring_parameter
 
 from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,

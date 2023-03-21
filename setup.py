@@ -39,11 +39,13 @@ def read_requirements(filename):
         return [line for line in lineiter if line and not line.startswith("#")]
 
 
+base = read_requirements("requirements/base_external.txt")
+base += read_requirements("requirements/base_merlin.txt")
+
 requirements = {
-    "base": read_requirements("requirements/base.txt"),
+    "base": base,
     "pytorch": read_requirements("requirements/pytorch.txt"),
     "nvtabular": read_requirements("requirements/nvtabular.txt"),
-    "dataloader": read_requirements("requirements/dataloader.txt"),
     "docs": read_requirements("requirements/docs.txt"),
     "dev": read_requirements("requirements/dev.txt"),
 }

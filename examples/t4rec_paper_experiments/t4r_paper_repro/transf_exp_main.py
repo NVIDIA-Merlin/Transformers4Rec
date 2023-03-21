@@ -31,12 +31,13 @@ from exp_outputs import (
     log_parameters,
 )
 from merlin.io import Dataset
+from merlin.schema import Tags
 from transf_exp_args import DataArguments, ModelArguments, TrainingArguments
 from transformers import HfArgumentParser, set_seed
 from transformers.trainer_utils import is_main_process
 
 import transformers4rec.torch as t4r
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Schema
 from transformers4rec.torch import Trainer
 from transformers4rec.torch.utils.data_utils import MerlinDataLoader
 from transformers4rec.torch.utils.examples_utils import wipe_memory
@@ -54,9 +55,9 @@ def main():
     # Loading the schema of the dataset
     schema = Schema().from_proto_text(data_args.features_schema_path)
     if not data_args.use_side_information_features:
-        schema = schema.select_by_tag(Tag.ITEM_ID)
+        schema = schema.select_by_tag([Tags.ITEM_ID])
 
-    item_id_col = schema.select_by_tag(Tag.ITEM_ID).column_names[0]
+    item_id_col = schema.select_by_tag([Tags.ITEM_ID]).column_names[0]
     col_names = schema.column_names
     logger.info("Column names: {}".format(col_names))
 
@@ -292,7 +293,6 @@ def incremental_train_eval(
             trainer.train()
 
         if training_args.do_eval:
-
             # 3. Evaluate on train data of time_index
             trainer.eval_dataset_or_path = train_paths
             train_metrics = trainer.evaluate(metric_key_prefix="train")

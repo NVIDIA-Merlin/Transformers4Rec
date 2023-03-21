@@ -15,9 +15,9 @@
 #
 
 import pytest
+import torch
 
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 # fixed parameters for tests
 METRICS = [
@@ -28,7 +28,7 @@ METRICS = [
 
 @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
 def test_simple_heads(torch_tabular_features, torch_tabular_data, task):
-    targets = {"target": pytorch.randint(2, (100,)).float()}
+    targets = {"target": torch.randint(2, (100,)).float()}
 
     body = tr.SequentialBlock(torch_tabular_features, tr.MLPBlock([64]))
     head = task("target").to_head(body, torch_tabular_features)
@@ -47,9 +47,9 @@ def test_simple_heads_on_sequence(
 ):
     inputs = torch_yoochoose_tabular_transformer_features
     if summary:
-        targets = {"target": pytorch.randint(2, (100,)).float()}
+        targets = {"target": torch.randint(2, (100,)).float()}
     else:
-        targets = {"target": pytorch.randint(2, (2000,)).float()}
+        targets = {"target": torch.randint(2, (100, 20)).float()}
 
     body = tr.SequentialBlock(inputs, tr.MLPBlock([64]))
     head = task("target", task_block=task_block, summary_type=summary).to_head(body, inputs)
@@ -71,8 +71,8 @@ def test_simple_heads_on_sequence(
 )
 def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, task_blocks):
     targets = {
-        "classification": pytorch.randint(2, (100,)).float(),
-        "regression": pytorch.randint(2, (100,)).float(),
+        "classification": torch.randint(2, (100,)).float(),
+        "regression": torch.randint(2, (100,)).float(),
     }
 
     body = tr.SequentialBlock(torch_tabular_features, tr.MLPBlock([64]))
@@ -82,9 +82,9 @@ def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, ta
     ]
     # TODO: how to get targets with no dataloader?
     head = tr.Head(body, tasks, task_blocks=task_blocks)
-    optimizer = pytorch.optim.Adam(head.parameters())
+    optimizer = torch.optim.Adam(head.parameters())
 
-    with pytorch.set_grad_enabled(mode=True):
+    with torch.set_grad_enabled(mode=True):
         body_out = body(torch_tabular_data)
         output = head(body_out, targets=targets, training=True)
         loss = output["loss"]
@@ -99,7 +99,7 @@ def test_head_with_multiple_tasks(torch_tabular_features, torch_tabular_data, ta
     if task_blocks:
         assert head.task_blocks["classification"][0] != head.task_blocks["regression"][0]
 
-        assert not pytorch.equal(
+        assert not torch.equal(
             head.task_blocks["classification"][0][0].weight,
             head.task_blocks["regression"][0][0].weight,
         )
@@ -146,7 +146,7 @@ def test_item_prediction_loss_and_metrics(
 
     trg_flat = input_module.masking.masked_targets.flatten()
     non_pad_mask = trg_flat != input_module.masking.padding_idx
-    labels_all = pytorch.masked_select(trg_flat, non_pad_mask)
+    labels_all = torch.masked_select(trg_flat, non_pad_mask)
 
     output = head.prediction_task_dict["next-item"](
         inputs=body_outputs,
@@ -186,7 +186,7 @@ def test_item_prediction_HF_output(
 
 def test_head_not_inferring_output_size_body(torch_tabular_features):
     with pytest.raises(ValueError) as excinfo:
-        body = tr.SequentialBlock(torch_tabular_features, pytorch.nn.Dropout(0.5))
+        body = tr.SequentialBlock(torch_tabular_features, torch.nn.Dropout(0.5))
         tr.Head(
             body,
             tr.BinaryClassificationTask(),
@@ -197,7 +197,7 @@ def test_head_not_inferring_output_size_body(torch_tabular_features):
 
 def test_item_prediction_head_with_wrong_body(torch_tabular_features):
     with pytest.raises(ValueError) as excinfo:
-        body = tr.SequentialBlock(torch_tabular_features, pytorch.nn.Dropout(0.5))
+        body = tr.SequentialBlock(torch_tabular_features, torch.nn.Dropout(0.5))
         tr.Head(
             body,
             tr.NextItemPredictionTask(),
@@ -214,7 +214,7 @@ def test_item_prediction_head_with_input_size(
     body = tr.SequentialBlock(
         input_module,
         tr.MLPBlock([64]),
-        pytorch.nn.GRU(input_size=64, hidden_size=64, num_layers=2),
+        torch.nn.GRU(input_size=64, hidden_size=64, num_layers=2),
         output_size=[None, 20, 64],
     )
     head = tr.Head(
@@ -237,7 +237,7 @@ def test_item_prediction_with_rnn(
     body = tr.SequentialBlock(
         input_module,
         tr.MLPBlock([64]),
-        tr.Block(pytorch.nn.GRU(input_size=64, hidden_size=64, num_layers=2), [None, 20, 64]),
+        tr.Block(torch.nn.GRU(input_size=64, hidden_size=64, num_layers=2), [None, 20, 64]),
     )
     head = tr.Head(
         body,

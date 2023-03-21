@@ -17,9 +17,8 @@
 import pytest
 import torch
 
+import transformers4rec.torch as tr
 from transformers4rec.torch.ranking_metric import MeanReciprocalRankAt
-
-tr = pytest.importorskip("transformers4rec.torch")
 
 # fixed parameters for tests
 list_metrics = list(tr.ranking_metric.ranking_metrics_registry.keys())

@@ -13,40 +13,20 @@
 # limitations under the License.
 #
 
+import warnings
 
-from enum import Enum
-from typing import List, Union
+from merlin.schema import Tags
 
-
-class Tag(Enum):
-    # Feature types
-    CATEGORICAL = "categorical"
-    CONTINUOUS = "continuous"
-    LIST = "list"
-    TEXT = "text"
-    TEXT_TOKENIZED = "text_tokenized"
-    TIME = "time"
-
-    # Feature context
-    USER = "user"
-    USER_ID = "user_id"
-    ITEM = "item"
-    ITEM_ID = "item_id"
-    SESSION = "session"
-    SESSION_ID = "session_id"
-    CONTEXT = "context"
-
-    # Target related
-    TARGETS = "target"
-    BINARY_CLASSIFICATION = "binary_classification"
-    MULTI_CLASS_CLASSIFICATION = "multi_class"
-    REGRESSION = "regression"
-
-    def __str__(self):
-        return self.value
-
-    def __eq__(self, o: object) -> bool:
-        return str(o) == str(self)
+Tag = Tags
 
 
-TagsType = Union[List[str], List[Tag], List[Union[Tag, str]]]
+warnings.warn(
+    "The `merlin_standard_lib.schema.tag` module has moved to `merlin.schema`. "
+    "Support for importing from `merlin_standard_lib.schema.tag` is deprecated, "
+    "and will be removed in a future version. Please update "
+    "your imports to refer to `merlin.schema`.",
+    DeprecationWarning,
+)
+
+
+__all__ = ["Tag"]

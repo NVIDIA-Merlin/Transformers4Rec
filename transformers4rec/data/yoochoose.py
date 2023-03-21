@@ -58,7 +58,7 @@ def process_clicks(data_path: str, device="gpu"):
     -------
     Union[cudf.DataFrame, pandas.DataFrame]
     """
-    from .preprocessing import (  # type: ignore
+    from ..utils.data_utils import (  # type: ignore
         add_item_first_seen_col_to_df,
         remove_consecutive_interactions,
     )

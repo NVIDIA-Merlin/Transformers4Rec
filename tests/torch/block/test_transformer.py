@@ -15,12 +15,10 @@
 #
 
 import pytest
+import torch
 
+import transformers4rec.torch as tr
 from transformers4rec.config import transformer as tconf
-
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
-
 
 config_classes = [
     tconf.XLNetConfig,
@@ -40,7 +38,6 @@ lm_tasks.remove("permutation")
 # Test output of XLNet with different masking tasks using SequentialBlock
 @pytest.mark.parametrize("task", lm_tasks)
 def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
-
     col_group = yoochoose_schema
     tab_module = tr.TabularSequenceFeatures.from_schema(
         col_group,
@@ -67,7 +64,6 @@ def test_transformer_block(yoochoose_schema, torch_yoochoose_like, task):
 
 # Test output of XLNet with permutation language model using SequentialBlock
 def test_xlnet_with_plm(yoochoose_schema, torch_yoochoose_like):
-
     col_group = yoochoose_schema
     tab_module = tr.TabularSequenceFeatures.from_schema(
         col_group,
@@ -137,7 +133,7 @@ def test_transformer_block_clm(yoochoose_schema, torch_yoochoose_like, transform
     transformer_model = transformer_body.build(d_model=64, n_head=4, n_layer=2, total_seq_length=20)
     model = tr.TransformerBlock(transformer=transformer_model)
 
-    block = pytorch.nn.Sequential(tab_module, model)
+    block = torch.nn.Sequential(tab_module, model)
 
     outputs = block(torch_yoochoose_like)
 
@@ -160,7 +156,7 @@ def test_reformer_block_clm(yoochoose_schema, torch_yoochoose_like):
         transformer="reformer", d_model=64, n_head=4, n_layer=2, total_seq_length=20
     )
 
-    block = pytorch.nn.Sequential(tab_module, model)
+    block = torch.nn.Sequential(tab_module, model)
 
     outputs = block(torch_yoochoose_like)
 

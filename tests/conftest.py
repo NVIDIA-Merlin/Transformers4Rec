@@ -16,15 +16,32 @@
 
 from __future__ import absolute_import
 
-import importlib
 from pathlib import Path
 
+import numpy as np
 import pytest
+from merlin.datasets.synthetic import generate_data
+from merlin.io import Dataset
+from merlin.schema.io.tensorflow_metadata import TensorflowMetadata
 
 from merlin_standard_lib import Schema
 from transformers4rec.data import tabular_sequence_testing_data, tabular_testing_data
 
 REPO_ROOT = Path(__file__).parent.parent
+
+
+@pytest.fixture
+def ecommerce_data() -> Dataset:
+    np.random.seed(0)
+    return generate_data("e-commerce", num_rows=100)
+
+
+@pytest.fixture
+def testing_data() -> Dataset:
+    data = generate_data("testing", num_rows=100)
+    data.schema = data.schema.without(["session_id", "session_start", "day_idx"])
+
+    return data
 
 
 @pytest.fixture
@@ -57,6 +74,34 @@ def tabular_schema() -> Schema:
     return tabular_testing_data.schema.remove_by_name(["session_id", "session_start", "day_idx"])
 
 
-torch = importlib.util.find_spec("torch")
-if torch is not None:
-    from tests.torch.conftest import *  # noqa
+@pytest.fixture
+def tabular_core_schema(tabular_schema):
+    return TensorflowMetadata.from_json(tabular_schema.to_json()).to_merlin_schema()
+
+
+def parametrize_schemas(name):
+    if name == "tabular":
+        schema = tabular_testing_data.schema.remove_by_name(
+            ["session_id", "session_start", "day_idx"]
+        )
+    elif name == "yoochoose":
+        schema = tabular_sequence_testing_data.schema
+
+    return pytest.mark.parametrize(
+        "schema",
+        [
+            pytest.param(schema, id="merlin-standard-lib"),
+            pytest.param(
+                TensorflowMetadata.from_json(schema.to_json()).to_merlin_schema(),
+                id="merlin-core",
+            ),
+        ],
+    )
+
+
+try:
+    import torchmetrics  # noqa
+
+    from tests.torch._conftest import *  # noqa
+except ModuleNotFoundError:
+    pass
