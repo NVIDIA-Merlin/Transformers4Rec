@@ -179,16 +179,33 @@ been proposed to model the sequence of interactions within the current user sess
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+</pre></div>
 </div>
-<div class="section" id="instantiates-schema-object-from-a-schema-file">
-<h5>Instantiates Schema object from a <code class="docutils literal notranslate"><span class="pre">schema</span></code> file.<a class="headerlink" href="#instantiates-schema-object-from-a-schema-file" title="Permalink to this headline"></a></h5>
+</div>
+</div>
+<div class="section" id="instantiates-schema-object-by-reading-the-save-trained-parquet-file">
+<h5>Instantiates Schema object by reading the save trained parquet file.<a class="headerlink" href="#instantiates-schema-object-by-reading-the-save-trained-parquet-file" title="Permalink to this headline"></a></h5>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
-<span class="c1"># Define schema object to pass it to the TabularSequenceFeatures class</span>
-<span class="n">SCHEMA_PATH</span> <span class="o">=</span> <span class="s1">&#39;schema_tutorial.pb&#39;</span>
-<span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">()</span><span class="o">.</span><span class="n">from_proto_text</span><span class="p">(</span><span class="n">SCHEMA_PATH</span><span class="p">)</span>
-<span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">([</span><span class="s1">&#39;product_id-list_seq&#39;</span><span class="p">])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data&quot;</span><span class="p">)</span>
+
+<span class="n">train</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt/part_0.parquet&quot;</span><span class="p">))</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">schema</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">([</span><span class="s1">&#39;product_id-list&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -196,48 +213,6 @@ been proposed to model the sequence of interactions within the current user sess
 <p>Transformers4Rec library relies on <code class="docutils literal notranslate"><span class="pre">Schema</span></code> object in <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> that takes the input features as input and create all the necessary layers to process and aggregate them. As you can see below, the <code class="docutils literal notranslate"><span class="pre">schema.pb</span></code> is a protobuf text file contains features metadata, including statistics about features such as cardinality, min and max values and also tags based on their characteristics and dtypes (e.g., <code class="docutils literal notranslate"><span class="pre">categorical</span></code>, <code class="docutils literal notranslate"><span class="pre">continuous</span></code>, <code class="docutils literal notranslate"><span class="pre">list</span></code>, <code class="docutils literal notranslate"><span class="pre">item_id</span></code>). We can tag our target column and even add the prediction task such as <code class="docutils literal notranslate"><span class="pre">binary</span></code>, <code class="docutils literal notranslate"><span class="pre">regression</span></code> or <code class="docutils literal notranslate"><span class="pre">multiclass</span></code> as tags for the target column in the <code class="docutils literal notranslate"><span class="pre">schema.pb</span></code> file. The <code class="docutils literal notranslate"><span class="pre">Schema</span></code> provides a standard representation for metadata that is useful when training machine learning or deep learning models.</p>
 <p>The metadata information loaded from <code class="docutils literal notranslate"><span class="pre">Schema</span></code> and their tags are used to automatically set the parameters of Transformers4rec models. Certain Transformers4rec modules have a <code class="docutils literal notranslate"><span class="pre">from_schema()</span></code> method to instantiate their parameters and layers from protobuf text file respectively.</p>
 <p>Although in this tutorial we are defining the <code class="docutils literal notranslate"><span class="pre">Schema</span></code> manually, the next NVTabular release is going to generate the schema with appropriate types and tags automatically from the preprocessing workflow, allowing the user to set additional feaure tags if needed.</p>
-<p>Let’s inspect the first lines of <code class="docutils literal notranslate"><span class="pre">schema.pb</span></code></p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>head<span class="w"> </span>-30<span class="w"> </span><span class="nv">$SCHEMA_PATH</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>feature {
-  name: &quot;user_session&quot;
-  type: INT
-  int_domain {
-    name: &quot;user_session&quot;
-    min: 1
-    max: 1877365
-    is_categorical: false
-  }
-  annotation {
-    tag: &quot;groupby_col&quot;
-  }
-}
-feature {
-  name: &quot;category_id-list_seq&quot;
-  value_count {
-    min: 2
-    max: 20
-  }
-  type: INT
-  int_domain {
-    name: &quot;category_id-list_seq&quot;
-    min: 1
-    max: 566
-    is_categorical: true
-  }
-  annotation {
-    tag: &quot;list&quot;
-    tag: &quot;categorical&quot;
-    tag: &quot;item&quot;
-</pre></div>
-</div>
-</div>
-</div>
 </div>
 <div class="section" id="defining-the-input-block-tabularsequencefeatures">
 <h5>Defining the input block: <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code><a class="headerlink" href="#defining-the-input-block-tabularsequencefeatures" title="Permalink to this headline"></a></h5>
@@ -309,9 +284,7 @@ feature {
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># import NVTabular dependencies</span>
-<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">NVTabularDataLoader</span>
-
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">MerlinDataLoader</span>
 <span class="n">x_cat_names</span><span class="p">,</span> <span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id-list_seq&#39;</span><span class="p">],</span> <span class="p">[]</span>
 
 <span class="c1"># dictionary representing max sequence length for column</span>
@@ -320,17 +293,15 @@ feature {
     <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span>
 <span class="p">}</span>
 
-<span class="c1"># Define a `get_dataloader` function to call in the training loop</span>
-<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
-
-    <span class="k">return</span> <span class="n">NVTabularDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
-        <span class="n">schema</span><span class="p">,</span>
-        <span class="n">path</span><span class="p">,</span> 
-        <span class="n">batch_size</span><span class="p">,</span>
-        <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">sequence_length</span><span class="p">,</span>
-        <span class="n">sparse_names</span><span class="o">=</span><span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span><span class="p">,</span>
-        <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_features_max</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_dataloader</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">):</span>
+        <span class="n">loader</span> <span class="o">=</span> <span class="n">MerlinDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+            <span class="n">schema</span><span class="p">,</span>
+            <span class="n">data_path</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">sequence_length</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">loader</span>
 </pre></div>
 </div>
 </div>
@@ -448,7 +419,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:54, Epoch 3/3]
+      [1314/1314 00:52, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -460,27 +431,27 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.998800</td>
+      <td>9.759100</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>9.232800</td>
+      <td>8.757200</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.988600</td>
+      <td>8.920300</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.909300</td>
+      <td>8.442900</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.806200</td>
+      <td>8.751000</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.794200</td>
+      <td>8.367600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -496,21 +467,21 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 02:22]
+  [415/415 03:57]
 </div>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
 Eval results for day 2 are:	
 
 ********************
 
- eval/loss = 8.856975555419922
- eval/next-item/ndcg_at_10 = 0.03842613101005554
- eval/next-item/ndcg_at_20 = 0.04755885899066925
- eval/next-item/recall_at_10 = 0.07503204792737961
- eval/next-item/recall_at_20 = 0.11130382120609283
- eval_runtime = 7.7593
- eval_samples_per_second = 1711.5
- eval_steps_per_second = 53.484
+ eval_/loss = 8.848333358764648
+ eval_/next-item/ndcg_at_10 = 0.040753647685050964
+ eval_/next-item/ndcg_at_20 = 0.049305129796266556
+ eval_/next-item/recall_at_10 = 0.07925495505332947
+ eval_/next-item/recall_at_20 = 0.11349068582057953
+ eval_runtime = 43.1016
+ eval_samples_per_second = 308.109
+ eval_steps_per_second = 9.628
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -531,7 +502,7 @@ Launch training for day 2 are:
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 01:01, Epoch 3/3]
+      [1245/1245 00:51, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -543,27 +514,27 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.966600</td>
+      <td>8.940700</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.843700</td>
+      <td>8.468400</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.653300</td>
+      <td>8.670800</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.556200</td>
+      <td>8.197200</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.428500</td>
+      <td>8.498300</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.404300</td>
+      <td>8.065300</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -580,14 +551,14 @@ Eval results for day 3 are:
 
 ********************
 
- eval/loss = 8.518232345581055
- eval/next-item/ndcg_at_10 = 0.05569075420498848
- eval/next-item/ndcg_at_20 = 0.06843017041683197
- eval/next-item/recall_at_10 = 0.10552927851676941
- eval/next-item/recall_at_20 = 0.15609200298786163
- eval_runtime = 7.3871
- eval_samples_per_second = 1663.442
- eval_steps_per_second = 51.983
+ eval_/loss = 8.614578247070312
+ eval_/next-item/ndcg_at_10 = 0.05164230614900589
+ eval_/next-item/ndcg_at_20 = 0.0637783482670784
+ eval_/next-item/recall_at_10 = 0.09867884963750839
+ eval_/next-item/recall_at_20 = 0.1468765288591385
+ eval_runtime = 35.8932
+ eval_samples_per_second = 342.349
+ eval_steps_per_second = 10.698
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -608,7 +579,7 @@ Launch training for day 3 are:
     <div>
 
       <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1146/1146 00:52, Epoch 3/3]
+      [1146/1146 00:47, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -620,23 +591,23 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.601800</td>
+      <td>8.620800</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.478500</td>
+      <td>8.233000</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.281100</td>
+      <td>8.173500</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.190300</td>
+      <td>7.982100</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.048100</td>
+      <td>7.933700</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -653,16 +624,16 @@ Eval results for day 4 are:
 
 ********************
 
- eval/loss = 8.1531982421875
- eval/next-item/ndcg_at_10 = 0.06854147464036942
- eval/next-item/ndcg_at_20 = 0.08415079861879349
- eval/next-item/recall_at_10 = 0.1280597746372223
- eval/next-item/recall_at_20 = 0.1900927573442459
- eval_runtime = 9.4121
- eval_samples_per_second = 1652.345
- eval_steps_per_second = 51.636
-CPU times: user 2min 43s, sys: 5.41 s, total: 2min 48s
-Wall time: 3min 22s
+ eval_/loss = 8.204485893249512
+ eval_/next-item/ndcg_at_10 = 0.06745054572820663
+ eval_/next-item/ndcg_at_20 = 0.08173713833093643
+ eval_/next-item/recall_at_10 = 0.12599845230579376
+ eval_/next-item/recall_at_20 = 0.18262046575546265
+ eval_runtime = 60.7599
+ eval_samples_per_second = 255.958
+ eval_steps_per_second = 7.999
+CPU times: user 2min 52s, sys: 1min 5s, total: 3min 57s
+Wall time: 4min 55s
 </pre></div>
 </div>
 </div>
@@ -740,8 +711,16 @@ retrieval metrics are used to compute the Top-20 accuracy of recommendation list
 
 <span class="kn">import</span> <span class="nn">torch</span> 
 <span class="kn">import</span> <span class="nn">transformers4rec.torch</span> <span class="k">as</span> <span class="nn">tr</span>
-
 <span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">wipe_memory</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
 </pre></div>
 </div>
 </div>
@@ -749,14 +728,20 @@ retrieval metrics are used to compute the Top-20 accuracy of recommendation list
 <p>As we did above, we start with defining our schema object and selecting only the <code class="docutils literal notranslate"><span class="pre">product_id</span></code> feature for training.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
 
-<span class="c1"># Define schema object to pass it to the TabularSequenceFeatures class</span>
-<span class="n">SCHEMA_PATH</span> <span class="o">=</span> <span class="s1">&#39;schema_tutorial.pb&#39;</span>
-<span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">()</span><span class="o">.</span><span class="n">from_proto_text</span><span class="p">(</span><span class="n">SCHEMA_PATH</span><span class="p">)</span>
+<span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data&quot;</span><span class="p">)</span>
 
-<span class="c1"># Create a sub-schema only with the selected features</span>
-<span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">([</span><span class="s1">&#39;product_id-list_seq&#39;</span><span class="p">])</span>
+<span class="n">train</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt/part_0.parquet&quot;</span><span class="p">))</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">schema</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">([</span><span class="s1">&#39;product_id-list&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -835,11 +820,6 @@ retrieval metrics are used to compute the Top-20 accuracy of recommendation list
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PyTorch: setting up devices
-</pre></div>
-</div>
-</div>
 </div>
 <p><strong>Instantiate the trainer</strong></p>
 <div class="cell docutils container">
@@ -896,6 +876,11 @@ retrieval metrics are used to compute the Top-20 accuracy of recommendation list
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Launch training for day 1 are:
+********************
+</pre></div>
+</div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 112128
   Num Epochs = 3
@@ -905,16 +890,11 @@ retrieval metrics are used to compute the Top-20 accuracy of recommendation list
   Total optimization steps = 1314
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Launch training for day 1 are:
-********************
-</pre></div>
-</div>
 <div class="output text_html">
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:45, Epoch 3/3]
+      [1314/1314 00:52, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -926,27 +906,27 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.927000</td>
+      <td>9.978000</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>9.046400</td>
+      <td>9.067800</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.779300</td>
+      <td>8.780000</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.635800</td>
+      <td>8.656200</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.539400</td>
+      <td>8.566800</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.507000</td>
+      <td>8.511600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -962,28 +942,9 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 01:48]
+  [415/415 04:01]
 </div>
-</div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 2 are:	
-
-********************
-
- epoch = 3.0
- eval/loss = 8.753535270690918
- eval/next-item/ndcg_at_10 = 0.049175068736076355
- eval/next-item/ndcg_at_20 = 0.06000332161784172
- eval/next-item/recall_at_10 = 0.09177286922931671
- eval/next-item/recall_at_20 = 0.1346806436777115
- eval_runtime = 7.0703
- eval_samples_per_second = 1878.271
- eval_steps_per_second = 58.696
-********************
-Launch training for day 2 are:
-********************
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+</div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 106240
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -992,11 +953,29 @@ Launch training for day 2 are:
   Total optimization steps = 1245
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 2 are:	
+
+********************
+
+ eval_/loss = 8.715866088867188
+ eval_/next-item/ndcg_at_10 = 0.050047338008880615
+ eval_/next-item/ndcg_at_20 = 0.06090249866247177
+ eval_/next-item/recall_at_10 = 0.09584496170282364
+ eval_/next-item/recall_at_20 = 0.13875272870063782
+ eval_runtime = 45.3102
+ eval_samples_per_second = 293.091
+ eval_steps_per_second = 9.159
+********************
+Launch training for day 2 are:
+********************
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 00:43, Epoch 3/3]
+      [1245/1245 00:48, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1008,27 +987,27 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.635100</td>
+      <td>8.646500</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.523100</td>
+      <td>8.534100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.375600</td>
+      <td>8.395500</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.322400</td>
+      <td>8.349400</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.232100</td>
+      <td>8.259200</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.209900</td>
+      <td>8.222200</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -1045,15 +1024,14 @@ Eval results for day 3 are:
 
 ********************
 
- epoch = 3.0
- eval/loss = 8.421579360961914
- eval/next-item/ndcg_at_10 = 0.061416078358888626
- eval/next-item/ndcg_at_20 = 0.07491344213485718
- eval/next-item/recall_at_10 = 0.11719132959842682
- eval/next-item/recall_at_20 = 0.17060838639736176
- eval_runtime = 7.0074
- eval_samples_per_second = 1753.564
- eval_steps_per_second = 54.799
+ eval_/loss = 8.42210865020752
+ eval_/next-item/ndcg_at_10 = 0.06027791276574135
+ eval_/next-item/ndcg_at_20 = 0.07407757639884949
+ eval_/next-item/recall_at_10 = 0.1122981607913971
+ eval_/next-item/recall_at_20 = 0.16726472973823547
+ eval_runtime = 39.0537
+ eval_samples_per_second = 314.643
+ eval_steps_per_second = 9.833
 ********************
 Launch training for day 3 are:
 ********************
@@ -1072,7 +1050,7 @@ Launch training for day 3 are:
     <div>
 
       <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1146/1146 00:40, Epoch 3/3]
+      [1146/1146 00:46, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1084,23 +1062,23 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.312100</td>
+      <td>8.325100</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.226900</td>
+      <td>8.238700</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.095400</td>
+      <td>8.108700</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.065600</td>
+      <td>8.037000</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.965600</td>
+      <td>7.972000</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -1117,17 +1095,16 @@ Eval results for day 4 are:
 
 ********************
 
- epoch = 3.0
- eval/loss = 8.107558250427246
- eval/next-item/ndcg_at_10 = 0.07384572923183441
- eval/next-item/ndcg_at_20 = 0.08944202959537506
- eval/next-item/recall_at_10 = 0.13939706981182098
- eval/next-item/recall_at_20 = 0.20175212621688843
- eval_runtime = 8.9372
- eval_samples_per_second = 1740.144
- eval_steps_per_second = 54.38
-CPU times: user 6min 57s, sys: 14.3 s, total: 7min 11s
-Wall time: 2min 35s
+ eval_/loss = 8.08250617980957
+ eval_/next-item/ndcg_at_10 = 0.0742299035191536
+ eval_/next-item/ndcg_at_20 = 0.09017771482467651
+ eval_/next-item/recall_at_10 = 0.14068539440631866
+ eval_/next-item/recall_at_20 = 0.20387786626815796
+ eval_runtime = 63.4715
+ eval_samples_per_second = 245.023
+ eval_steps_per_second = 7.657
+CPU times: user 11min 29s, sys: 51.9 s, total: 12min 21s
+Wall time: 4min 59s
 </pre></div>
 </div>
 </div>
@@ -1177,81 +1154,41 @@ information for meaningful predictions. With that motivation, in this section, w
 
 <span class="kn">import</span> <span class="nn">torch</span> 
 <span class="kn">import</span> <span class="nn">transformers4rec.torch</span> <span class="k">as</span> <span class="nn">tr</span>
-
 <span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (NDCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (DCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (AvgPrecisionAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (PrecisionAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (RecallAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define categorical and continuous columns to fed to training model</span>
-<span class="n">x_cat_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;brand-list_seq&#39;</span><span class="p">]</span>
-<span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_recency_days_log_norm-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_sin-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_cos-list_seq&#39;</span><span class="p">,</span> 
-                <span class="s1">&#39;price_log_norm-list_seq&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_price_to_avg_categ_id-list_seq&#39;</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
 
-<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="c1"># Define categorical and continuous columns to fed to training model</span>
+<span class="n">x_cat_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_id-list&#39;</span><span class="p">,</span> <span class="s1">&#39;category_id-list&#39;</span><span class="p">,</span> <span class="s1">&#39;brand-list&#39;</span><span class="p">]</span>
+<span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;product_recency_days_log_norm-list&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_sin-list&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_cos-list&#39;</span><span class="p">,</span> 
+                <span class="s1">&#39;price_log_norm-list&#39;</span><span class="p">,</span> <span class="s1">&#39;relative_price_to_avg_categ_id-list&#39;</span><span class="p">]</span>
 
-<span class="c1"># Define schema object to pass it to the TabularSequenceFeatures class</span>
-<span class="n">SCHEMA_PATH</span> <span class="o">=</span><span class="s1">&#39;schema_tutorial.pb&#39;</span>
-<span class="n">schema</span> <span class="o">=</span> <span class="n">Schema</span><span class="p">()</span><span class="o">.</span><span class="n">from_proto_text</span><span class="p">(</span><span class="n">SCHEMA_PATH</span><span class="p">)</span>
+
+<span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data&quot;</span><span class="p">)</span>
+
+<span class="n">train</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;processed_nvt/part_0.parquet&quot;</span><span class="p">))</span>
+<span class="n">schema</span> <span class="o">=</span> <span class="n">train</span><span class="o">.</span><span class="n">schema</span>
 <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span><span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -1293,37 +1230,7 @@ information for meaningful predictions. With that motivation, in this section, w
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (NDCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (DCGAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-/usr/local/lib/python3.8/dist-packages/torchmetrics/utilities/prints.py:36: UserWarning: Torchmetrics v0.9 introduced a new argument class property called `full_state_update` that has
-                not been set for this class (RecallAt). The property determines if `update` by
-                default needs access to the full metric state. If this is not the case, significant speedups can be
-                achieved and we recommend setting this to `False`.
-                We provide an checking function
-                `from torchmetrics.utilities import check_forward_no_full_state`
-                that can be used to check if the `full_state_update=True` (old and potential slower behaviour,
-                default for now) or if `full_state_update=False` can be used safely.
-                
-  warnings.warn(*args, **kwargs)
-Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;192&#39; to be equal to the item-id embedding dimension &#39;64&#39;
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;192&#39; to be equal to the item-id embedding dimension &#39;64&#39;
 </pre></div>
 </div>
 </div>
@@ -1412,9 +1319,7 @@ Launch training for day 1 are:
 ********************
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
-***** Running training *****
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 112128
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -1427,7 +1332,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='1314' max='1314' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1314/1314 00:38, Epoch 3/3]
+      [1314/1314 02:07, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1439,55 +1344,43 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>9.800100</td>
+      <td>9.823300</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.901500</td>
+      <td>8.907700</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.605100</td>
+      <td>8.615000</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.488700</td>
+      <td>8.508400</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>8.400200</td>
+      <td>8.392100</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>8.316600</td>
+      <td>8.309200</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
-
-
-/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
 </pre></div>
 </div>
 <div class="output text_html">
 <div>
 
   <progress value='1285' max='415' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [415/415 01:37]
+  [415/415 06:27]
 </div>
 </div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 106240
@@ -1503,14 +1396,14 @@ Eval results for day 2 are:
 
 ********************
 
- eval_/loss = 8.571016311645508
- eval_/next-item/ndcg_at_10 = 0.056183043867349625
- eval_/next-item/ndcg_at_20 = 0.06743346154689789
- eval_/next-item/recall_at_10 = 0.10519568622112274
- eval_/next-item/recall_at_20 = 0.14983786642551422
- eval_runtime = 5.9015
- eval_samples_per_second = 2250.265
- eval_steps_per_second = 70.321
+ eval_/loss = 8.507274627685547
+ eval_/next-item/ndcg_at_10 = 0.059581220149993896
+ eval_/next-item/ndcg_at_20 = 0.07178892195224762
+ eval_/next-item/recall_at_10 = 0.10866450518369675
+ eval_/next-item/recall_at_20 = 0.15722796320915222
+ eval_runtime = 48.7391
+ eval_samples_per_second = 272.471
+ eval_steps_per_second = 8.515
 ********************
 Launch training for day 2 are:
 ********************
@@ -1520,7 +1413,7 @@ Launch training for day 2 are:
     <div>
 
       <progress value='1245' max='1245' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1245/1245 00:38, Epoch 3/3]
+      [1245/1245 02:01, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1532,49 +1425,57 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.467400</td>
+      <td>8.442700</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>8.309900</td>
+      <td>8.282900</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>8.158200</td>
+      <td>8.154300</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>8.031100</td>
+      <td>8.022300</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.945800</td>
+      <td>7.951400</td>
     </tr>
     <tr>
       <td>1200</td>
-      <td>7.903200</td>
+      <td>7.864900</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 3 are:	
 
+********************
 
-/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
-***** Running training *****
+ eval_/loss = 8.165782928466797
+ eval_/next-item/ndcg_at_10 = 0.07608938217163086
+ eval_/next-item/ndcg_at_20 = 0.09094516187906265
+ eval_/next-item/recall_at_10 = 0.14394062757492065
+ eval_/next-item/recall_at_20 = 0.2028217315673828
+ eval_runtime = 41.5671
+ eval_samples_per_second = 295.618
+ eval_steps_per_second = 9.238
+********************
+Launch training for day 3 are:
+********************
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 97792
   Num Epochs = 3
   Instantaneous batch size per device = 256
@@ -1583,29 +1484,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   Total optimization steps = 1146
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 3 are:	
-
-********************
-
- eval_/loss = 8.15834903717041
- eval_/next-item/ndcg_at_10 = 0.07294631749391556
- eval_/next-item/ndcg_at_20 = 0.08888539671897888
- eval_/next-item/recall_at_10 = 0.13961833715438843
- eval_/next-item/recall_at_20 = 0.20274017751216888
- eval_runtime = 6.0052
- eval_samples_per_second = 2046.222
- eval_steps_per_second = 63.944
-********************
-Launch training for day 3 are:
-********************
-</pre></div>
-</div>
 <div class="output text_html">
     <div>
 
       <progress value='1146' max='1146' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [1146/1146 00:36, Epoch 3/3]
+      [1146/1146 01:51, Epoch 3/3]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -1617,44 +1500,32 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>200</td>
-      <td>8.022800</td>
+      <td>8.026600</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>7.885300</td>
+      <td>7.860000</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>7.731600</td>
+      <td>7.709400</td>
     </tr>
     <tr>
       <td>800</td>
-      <td>7.658300</td>
+      <td>7.622100</td>
     </tr>
     <tr>
       <td>1000</td>
-      <td>7.579400</td>
+      <td>7.549700</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 Saving model checkpoint to ./tmp/checkpoint-1000
 Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 
 
 Training completed. Do not forget to share your model on huggingface.co/models =)
-
-
-/usr/local/lib/python3.8/dist-packages/cudf/core/frame.py:384: UserWarning: The deep parameter is ignored and is only included for pandas compatibility.
-  warnings.warn(
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
@@ -1662,16 +1533,16 @@ Eval results for day 4 are:
 
 ********************
 
- eval_/loss = 7.776895999908447
- eval_/next-item/ndcg_at_10 = 0.08828220516443253
- eval_/next-item/ndcg_at_20 = 0.10635553300380707
- eval_/next-item/recall_at_10 = 0.16612987220287323
- eval_/next-item/recall_at_20 = 0.23788972198963165
- eval_runtime = 7.7023
- eval_samples_per_second = 2019.133
- eval_steps_per_second = 63.098
-CPU times: user 8min 27s, sys: 8.55 s, total: 8min 35s
-Wall time: 2min 21s
+ eval_/loss = 7.7548112869262695
+ eval_/next-item/ndcg_at_10 = 0.09143278002738953
+ eval_/next-item/ndcg_at_20 = 0.10998427122831345
+ eval_/next-item/recall_at_10 = 0.17630764842033386
+ eval_/next-item/recall_at_20 = 0.249935582280159
+ eval_runtime = 66.6057
+ eval_samples_per_second = 233.494
+ eval_steps_per_second = 7.297
+CPU times: user 16min 50s, sys: 1min 6s, total: 17min 57s
+Wall time: 8min 42s
 </pre></div>
 </div>
 </div>
@@ -1684,7 +1555,7 @@ Wall time: 2min 21s
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;XLNet-MLM with side information accuracy results:&#39;</span><span class="p">)</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span>  <span class="n">model</span><span class="o">.</span><span class="n">compute_metrics</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span> 
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">item</span><span class="p">()))</span>
 </pre></div>
 </div>
 </div>
@@ -1711,7 +1582,7 @@ Wall time: 2min 21s
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># dictionary representing max sequence length for the sequential (list) columns</span>
 <span class="n">sparse_features_max</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">fname</span><span class="p">:</span> <span class="n">sequence_length</span>
-    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;category_code-list_seq&#39;</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;category_code-list&#39;</span><span class="p">]</span>
 <span class="p">}</span>
 
 <span class="n">sparse_features_max</span>
@@ -1719,15 +1590,15 @@ Wall time: 2min 21s
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;product_id-list_seq&#39;: 20,
- &#39;category_id-list_seq&#39;: 20,
- &#39;brand-list_seq&#39;: 20,
- &#39;product_recency_days_log_norm-list_seq&#39;: 20,
- &#39;et_dayofweek_sin-list_seq&#39;: 20,
- &#39;et_dayofweek_cos-list_seq&#39;: 20,
- &#39;price_log_norm-list_seq&#39;: 20,
- &#39;relative_price_to_avg_categ_id-list_seq&#39;: 20,
- &#39;category_code-list_seq&#39;: 20}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;product_id-list&#39;: 20,
+ &#39;category_id-list&#39;: 20,
+ &#39;brand-list&#39;: 20,
+ &#39;product_recency_days_log_norm-list&#39;: 20,
+ &#39;et_dayofweek_sin-list&#39;: 20,
+ &#39;et_dayofweek_cos-list&#39;: 20,
+ &#39;price_log_norm-list&#39;: 20,
+ &#39;relative_price_to_avg_categ_id-list&#39;: 20,
+ &#39;category_code-list&#39;: 20}
 </pre></div>
 </div>
 </div>
@@ -1741,17 +1612,9 @@ Wall time: 2min 21s
     <span class="n">workflow</span><span class="p">,</span>
     <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_features_max</span><span class="p">,</span>
     <span class="n">name</span><span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">,</span>
-    <span class="n">model_path</span><span class="o">=</span> <span class="s2">&quot;/workspace/models&quot;</span><span class="p">,</span>
+    <span class="n">model_path</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;models&#39;</span><span class="p">),</span>
     <span class="n">label_columns</span> <span class="o">=</span><span class="p">[],</span>
 <span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: positional arguments and argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/torch/nn/modules/module.py:1402: UserWarning: argument &quot;destination&quot; are deprecated. nn.Module.state_dict will not accept them in the future. Refer to https://pytorch.org/docs/master/generated/torch.nn.Module.html#torch.nn.Module.state_dict for details.
-  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -1765,37 +1628,24 @@ Wall time: 2min 21s
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>GRU accuracy results:
-next-item/ndcg_at_10:0.07151895016431808
-next-item/ndcg_at_20:0.08768121898174286
-next-item/recall_at_10:0.1361762434244156
-next-item/recall_at_20:0.20020613074302673
+next-item/ndcg_at_10:0.06745054572820663
+next-item/ndcg_at_20:0.08173713833093643
+next-item/recall_at_10:0.12599845230579376
+next-item/recall_at_20:0.18262046575546265
 
 XLNet-MLM accuracy results:
-next-item/ndcg_at_10:0.07384572923183441
-next-item/ndcg_at_20:0.08944202959537506
-next-item/recall_at_10:0.13939706981182098
-next-item/recall_at_20:0.20175212621688843
+next-item/ndcg_at_10:0.0742299035191536
+next-item/ndcg_at_20:0.09017771482467651
+next-item/recall_at_10:0.14068539440631866
+next-item/recall_at_20:0.20387786626815796
 
 XLNet-MLM with side information accuracy results:
-next-item/ndcg_at_10:0.08558817952871323
-next-item/ndcg_at_20:0.10371016710996628
-next-item/recall_at_10:0.1605256348848343
-next-item/recall_at_20:0.2324143350124359
+next-item/ndcg_at_10:0.08309739083051682
+next-item/ndcg_at_20:0.10099391639232635
+next-item/recall_at_10:0.1542772501707077
+next-item/recall_at_20:0.22519969940185547
 </pre></div>
 </div>
-</div>
-</div>
-<p>Let’s plot bar charts to visualize and compare the accuracy results using <code class="docutils literal notranslate"><span class="pre">visuals</span></code> util function.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">visuals</span> <span class="kn">import</span> <span class="n">create_bar_chart</span>
-<span class="n">create_bar_chart</span><span class="p">(</span><span class="s1">&#39;results.txt&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../../_images/03-Session-based-recsys_105_0.png" src="../../_images/03-Session-based-recsys_105_0.png" />
-<img alt="../../_images/03-Session-based-recsys_105_1.png" src="../../_images/03-Session-based-recsys_105_1.png" />
 </div>
 </div>
 <p><strong>In the end, using side information provided higher accuracy. Why is that? Have an idea?</strong></p>
@@ -1806,16 +1656,7 @@ next-item/recall_at_20:0.2324143350124359
 <div class="section" id="wrap-up">
 <h2>Wrap Up<a class="headerlink" href="#wrap-up" title="Permalink to this headline"></a></h2>
 <p>Congratulations on finishing this notebook. In this tutorial, we have presented Transformers4Rec, an open source library designed to enable RecSys researchers and practitioners to quickly and easily explore the latest developments of the NLP for sequential and session-based recommendation tasks.</p>
-<p>Please execute the cell below to shut down the kernel before moving on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton.ipynb</span></code>.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">IPython</span>
-<span class="n">app</span> <span class="o">=</span> <span class="n">IPython</span><span class="o">.</span><span class="n">Application</span><span class="o">.</span><span class="n">instance</span><span class="p">()</span>
-<span class="n">app</span><span class="o">.</span><span class="n">kernel</span><span class="o">.</span><span class="n">do_shutdown</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
+<p>Please shut down the kernel before moving on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton.ipynb</span></code>.</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>

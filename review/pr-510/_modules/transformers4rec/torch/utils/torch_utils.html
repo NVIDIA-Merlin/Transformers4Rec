@@ -109,9 +109,11 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span> <span class="k">as</span> <span class="n">CoreSchema</span>
+<span class="kn">from</span> <span class="nn">merlin.schema.io.proto_utils</span> <span class="kn">import</span> <span class="n">has_field</span>
 
 <span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
-<span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.proto_utils</span> <span class="kn">import</span> <span class="n">has_field</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib.schema.schema</span> <span class="kn">import</span> <span class="n">ColumnSchema</span>
 
 <span class="kn">from</span> <span class="nn">...config.schema</span> <span class="kn">import</span> <span class="n">SchemaMixin</span>
 <span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span>
@@ -225,22 +227,42 @@
         <span class="k">return</span> <span class="kc">False</span></div>
 
 
+<span class="k">def</span> <span class="nf">_has_field</span><span class="p">(</span><span class="n">col_schema</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_schema</span><span class="p">,</span> <span class="n">ColumnSchema</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">has_field</span><span class="p">(</span><span class="n">col_schema</span><span class="p">,</span> <span class="n">field_name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">col_schema</span><span class="p">,</span> <span class="n">field_name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_size_from_shape</span><span class="p">(</span><span class="n">col_schema</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">:</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">batch_size</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">col_schema</span><span class="p">,</span> <span class="n">ColumnSchema</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">has_field</span><span class="p">(</span><span class="n">col_schema</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
+            <span class="n">shape</span> <span class="o">+=</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">col_schema</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dim</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">col_schema</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dims</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;TODO: support shape.dims&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="get_output_sizes_from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.get_output_sizes_from_schema">[docs]</a><span class="k">def</span> <span class="nf">get_output_sizes_from_schema</span><span class="p">(</span><span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="n">sizes</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">schema</span><span class="o">.</span><span class="n">feature</span><span class="p">:</span>
+
+    <span class="n">features</span> <span class="o">=</span> <span class="n">schema</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">CoreSchema</span><span class="p">)</span> <span class="k">else</span> <span class="n">schema</span><span class="o">.</span><span class="n">feature</span>
+
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">name</span>
         <span class="c1"># Sequential or multi-hot feature</span>
-        <span class="k">if</span> <span class="n">has_field</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="s2">&quot;value_count&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_has_field</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="s2">&quot;value_count&quot;</span><span class="p">):</span>
             <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">batch_size</span><span class="p">,</span>
                     <span class="n">max_sequence_length</span> <span class="k">if</span> <span class="n">max_sequence_length</span> <span class="k">else</span> <span class="n">feature</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">has_field</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
-            <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">batch_size</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">size</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">feature</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dim</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">batch_size</span><span class="p">])</span>
+            <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_size_from_shape</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">sizes</span></div>
 
@@ -330,7 +352,8 @@
 
 
 <div class="viewcode-block" id="torch_pad_and_concatenate"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.torch_utils.torch_pad_and_concatenate">[docs]</a><span class="k">def</span> <span class="nf">torch_pad_and_concatenate</span><span class="p">(</span><span class="n">tensor1</span><span class="p">,</span> <span class="n">tensor2</span><span class="p">,</span> <span class="n">padding_index</span><span class="o">=-</span><span class="mi">100</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second if necessary.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Concatenates `tensor1` and `tensor2` on first axis, applying padding on the second as needed</span>
+
 <span class="sd">    #TODO this method was copied from the latest version of HF transformers library to support</span>
 <span class="sd">    dict outputs. So we should remove it when T4Rec is updated to use the latest version</span>
 <span class="sd">    &quot;&quot;&quot;</span>
