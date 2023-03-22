@@ -41,6 +41,7 @@ from merlin_standard_lib import Schema
 
 from ..config.trainer import T4RecTrainingArguments
 from .model.base import Model
+from .model.prediction_task import NextItemPredictionTask
 from .utils.data_utils import T4RecDataLoader
 from .utils.torch_utils import nested_concat, nested_detach, nested_numpify, nested_truncate
 
@@ -449,7 +450,7 @@ class Trainer(BaseTrainer):
         logger.info("***** Running %s *****", description)
         logger.info("  Batch size = %d", batch_size)
 
-        preds_item_ids_scores_host: Union[torch.Tensor, List[torch.Tensor]] = None
+        preds_host: Union[torch.Tensor, List[torch.Tensor], Dict[str, torch.Tensor]] = None
         labels_host: Union[torch.Tensor, List[torch.Tensor]] = None
 
         if metric_key_prefix == "train" and self.args.eval_steps_on_train_set:
@@ -466,11 +467,11 @@ class Trainer(BaseTrainer):
         # Initialize containers
         # losses/preds/labels on GPU/TPU (accumulated for eval_accumulation_steps)
         losses_host = None
-        preds_item_ids_scores_host = None
+        preds_host = None
         labels_host = None
         # losses/preds/labels on CPU (final containers)
         all_losses = None
-        all_preds_item_ids_scores = None
+        all_preds = None
         all_labels = None
         # Will be useful when we have an iterable dataset so don't know its length.
         observed_num_examples = 0
@@ -520,13 +521,22 @@ class Trainer(BaseTrainer):
                     else nested_concat(labels_host, labels, padding_index=0)
                 )
             if preds is not None and self.args.predict_top_k > 0:
+                # get outputs of next-item scores
                 if isinstance(preds, dict):
-                    assert (
-                        "next-item" in preds
-                    ), "Top-k prediction is specific to NextItemPredictionTask"
-                    preds = preds["next-item"]
+                    assert any(
+                        isinstance(x, NextItemPredictionTask) for x in model.prediction_tasks
+                    ), "Top-k prediction is specific to NextItemPredictionTask, "
+                    "Please ensure `self.args.predict_top_k == 0` "
+                    pred_next_item = preds["next-item"]
+                else:
+                    assert isinstance(
+                        model.prediction_tasks[0], NextItemPredictionTask
+                    ), "Top-k prediction is specific to NextItemPredictionTask, "
+                    "Please ensure `self.args.predict_top_k == 0` "
+                    pred_next_item = preds
+
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(
-                    preds, k=self.args.predict_top_k, dim=-1
+                    pred_next_item, k=self.args.predict_top_k, dim=-1
                 )
                 self._maybe_log_predictions(
                     labels,
@@ -538,18 +548,25 @@ class Trainer(BaseTrainer):
                 )
                 # The output predictions will be a tuple with the ranked top-n item ids,
                 # and item recommendation scores
-                preds_item_ids_scores = (
-                    preds_sorted_item_ids,
-                    preds_sorted_item_scores,
-                )
-                preds_item_ids_scores_host = (
-                    preds_item_ids_scores
-                    if preds_item_ids_scores_host is None
-                    else nested_concat(
-                        preds_item_ids_scores_host,
-                        preds_item_ids_scores,
+                if isinstance(preds, dict):
+                    preds["next-item"] = (
+                        preds_sorted_item_ids,
+                        preds_sorted_item_scores,
                     )
+                else:
+                    preds = (
+                        preds_sorted_item_ids,
+                        preds_sorted_item_scores,
+                    )
+
+            preds_host = (
+                preds
+                if preds_host is None
+                else nested_concat(
+                    preds_host,
+                    preds,
                 )
+            )
 
             self.control = self.callback_handler.on_prediction_step(
                 self.args, self.state, self.control
@@ -575,19 +592,19 @@ class Trainer(BaseTrainer):
                         if all_labels is None
                         else nested_concat(all_labels, labels, padding_index=0)
                     )
-                if preds_item_ids_scores_host is not None:
-                    preds_item_ids_scores = nested_numpify(preds_item_ids_scores_host)
-                    all_preds_item_ids_scores = (
-                        preds_item_ids_scores
-                        if all_preds_item_ids_scores is None
+                if preds_host is not None:
+                    preds = nested_numpify(preds_host)
+                    all_preds = (
+                        preds
+                        if all_preds is None
                         else nested_concat(
-                            all_preds_item_ids_scores,
-                            preds_item_ids_scores,
+                            all_preds,
+                            preds,
                         )
                     )
 
                 # Set back to None to begin a new accumulation
-                losses_host, preds_item_ids_scores_host, labels_host = None, None, None
+                losses_host, preds_host, labels_host = None, None, None
 
         if self.args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop
@@ -604,14 +621,14 @@ class Trainer(BaseTrainer):
             all_labels = (
                 labels if all_labels is None else nested_concat(all_labels, labels, padding_index=0)
             )
-        if preds_item_ids_scores_host is not None:
-            preds_item_ids_scores = nested_numpify(preds_item_ids_scores_host)
-            all_preds_item_ids_scores = (
-                preds_item_ids_scores
-                if all_preds_item_ids_scores is None
+        if preds_host is not None:
+            preds_host = nested_numpify(preds_host)
+            all_preds = (
+                preds_host
+                if all_preds is None
                 else nested_concat(
-                    all_preds_item_ids_scores,
-                    preds_item_ids_scores,
+                    all_preds,
+                    preds_host,
                 )
             )
         # Get Number of samples :
@@ -623,8 +640,8 @@ class Trainer(BaseTrainer):
         # samplers has been rounded to a multiple of batch_size, so we truncate.
         if all_losses is not None:
             all_losses = all_losses[:num_samples]
-        if all_preds_item_ids_scores is not None:
-            all_preds_item_ids_scores = nested_truncate(all_preds_item_ids_scores, num_samples)
+        if all_preds is not None:
+            all_preds = nested_truncate(all_preds, num_samples)
         if all_labels is not None:
             all_labels = nested_truncate(all_labels, num_samples)
 
@@ -643,7 +660,7 @@ class Trainer(BaseTrainer):
             metrics[f"{metric_key_prefix}_/loss"] = all_losses.mean().item()
 
         return EvalLoopOutput(
-            predictions=all_preds_item_ids_scores,
+            predictions=all_preds,
             label_ids=all_labels,
             metrics=metrics,
             num_samples=num_examples,

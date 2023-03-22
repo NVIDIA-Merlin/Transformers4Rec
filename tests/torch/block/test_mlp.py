@@ -14,9 +14,7 @@
 # limitations under the License.
 #
 
-import pytest
-
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 
 def test_mlp_block(tabular_schema, torch_tabular_data):

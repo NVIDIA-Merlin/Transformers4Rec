@@ -23,13 +23,14 @@ import torch
 from merlin.dataloader.torch import Loader
 from merlin.models.utils.misc_utils import validate_dataset
 from merlin.models.utils.registry import Registry
+from merlin.schema import Tags
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
-from merlin_standard_lib import Schema, Tag
+from merlin_standard_lib import Schema
+from transformers4rec.torch.utils.padding import pad_batch
 
 from ...utils import dependencies
-from ..utils.schema_utils import _augment_schema
 
 logger = logging.getLogger(__name__)
 
@@ -161,12 +162,12 @@ if dependencies.is_pyarrow_available():
             """
 
             categorical_features = (
-                categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+                categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
             )
             continuous_features = (
-                continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+                continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
             )
-            targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+            targets = targets or schema.select_by_tag(Tags.TARGET).column_names
 
             cols_to_read = categorical_features + continuous_features + targets
 
@@ -322,10 +323,6 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         reader_kwargs["row_groups_per_part"] = row_groups_per_part
         self.set_dataset(buffer_size, engine, reader_kwargs)
 
-        self.dataset.schema = _augment_schema(
-            self.dataset.schema, cats, conts, labels, sparse_names, sparse_max, sparse_as_dense
-        )
-
         if (global_rank is not None) and (self.dataset.npartitions < global_size):
             logger.warning(
                 "UserWarning: User is advised to repartition the parquet file before training "
@@ -344,6 +341,11 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
                 f" GPUs ({global_size}). This will divide the work equally among GPUs"
                 " for DDP training and ensure optimal performance."
             )
+
+        self.dataset.schema = self._augment_schema(
+            self.dataset.schema, cats=cats, conts=conts, labels=labels
+        )
+
         loader = Loader(
             self.dataset,
             self.batch_size,
@@ -354,7 +356,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             global_size=global_size,
             global_rank=global_rank,
             drop_last=drop_last,
-        )
+        ).map(self._get_pad_fn(sparse_max))
 
         DLDataLoader.__init__(
             self,
@@ -365,6 +367,38 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         )
         self.schema = schema
         self.max_sequence_length = max_sequence_length
+
+    @staticmethod
+    def _get_pad_fn(padding_lengths):
+        def pad_fn(x, y):
+            new_x = pad_batch(x, padding_lengths)
+            new_y = pad_batch(y, padding_lengths)
+            return new_x, new_y
+
+        return pad_fn
+
+    @staticmethod
+    def _augment_schema(
+        schema,
+        cats=None,
+        conts=None,
+        labels=None,
+    ):
+        cats = cats or []
+        conts = conts or []
+        labels = labels or []
+
+        schema = schema.select_by_name(conts + cats + labels)
+
+        labels = [labels] if isinstance(labels, str) else labels
+        for label in labels:
+            schema[label] = schema[label].with_tags(Tags.TARGET)
+        for label in cats:
+            schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
+        for label in conts:
+            schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
+
+        return schema
 
     def set_dataset(self, buffer_size, engine, reader_kwargs):
         dataset = validate_dataset(
@@ -408,14 +442,14 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
                 The maximum length of list features.
         """
         categorical_features = (
-            categorical_features or schema.select_by_tag(Tag.CATEGORICAL).column_names
+            categorical_features or schema.select_by_tag(Tags.CATEGORICAL).column_names
         )
         continuous_features = (
-            continuous_features or schema.select_by_tag(Tag.CONTINUOUS).column_names
+            continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
         )
-        targets = targets or schema.select_by_tag(Tag.TARGETS).column_names
+        targets = targets or schema.select_by_tag(Tags.TARGET).column_names
         schema = schema.select_by_name(categorical_features + continuous_features + targets)
-        sparse_names = sparse_names or schema.select_by_tag(Tag.LIST).column_names
+        sparse_names = sparse_names or schema.select_by_tag(Tags.LIST).column_names
         sparse_max = sparse_max or {name: max_sequence_length for name in sparse_names}
         loader = cls(
             paths_or_dataset,

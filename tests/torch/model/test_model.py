@@ -21,19 +21,17 @@ import pytest
 import torch
 from merlin.schema import Schema as Core_Schema
 
+import transformers4rec.torch as tr
 from transformers4rec.config import transformer as tconf
 
-pytorch = pytest.importorskip("torch")
-tr = pytest.importorskip("transformers4rec.torch")
-
-if pytorch.cuda.is_available():
+if torch.cuda.is_available():
     devices = ["cpu", "cuda"]
 else:
     devices = ["cpu"]
 
 
 def test_simple_model(torch_tabular_features, torch_tabular_data):
-    targets = {"target": pytorch.randint(2, (100,)).float()}
+    targets = {"target": torch.randint(2, (100,)).float()}
 
     inputs = torch_tabular_features
     body = tr.SequentialBlock(inputs, tr.MLPBlock([64]))
@@ -75,7 +73,7 @@ def test_sequential_prediction_model(
     )
     head_2 = task("target", summary_type="mean").to_head(body, inputs)
 
-    bc_targets = pytorch.randint(2, (100,)).float()
+    bc_targets = torch.randint(2, (100,)).float()
 
     model = tr.Model(head_1, head_2)
     output = model(torch_yoochoose_like, training=True, targets=bc_targets)
@@ -86,6 +84,50 @@ def test_sequential_prediction_model(
     assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
 
 
+def test_sequential_binary_classification_model(
+    torch_yoochoose_tabular_transformer_features,
+    torch_yoochoose_like,
+):
+    bs, max_len = 100, 20
+    wrong_target = {"target": torch.randint(2, (bs,)).float()}
+    targets = {"sequential_target": torch.randint(2, (bs, max_len)).float()}
+
+    inputs = torch_yoochoose_tabular_transformer_features
+    transformer_config = tconf.XLNetConfig.build(
+        d_model=64, n_head=4, n_layer=2, total_seq_length=max_len
+    )
+    body = tr.SequentialBlock(inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config))
+
+    with pytest.raises(ValueError) as excinfo:
+        head = tr.Head(
+            body,
+            tr.BinaryClassificationTask("target", summary_type=None),
+            inputs=inputs,
+        )
+        model = tr.Model(head)
+        dataset = [(torch_yoochoose_like, wrong_target)]
+        losses = model.fit(dataset, num_epochs=1)
+    assert "If `summary_type==None`, targets are expected to be a 2D tensor" in str(excinfo.value)
+
+    head = tr.Head(
+        body,
+        tr.BinaryClassificationTask("sequential_target", summary_type=None),
+        inputs=inputs,
+    )
+    model = tr.Model(head)
+
+    dataset = [(torch_yoochoose_like, targets)]
+    losses = model.fit(dataset, num_epochs=5)
+    metrics = model.evaluate(dataset, mode="eval")
+
+    assert len(metrics) == 3
+    assert len(losses) == 5
+    assert all(loss.min() >= 0 and loss.max() <= 1 for loss in losses)
+
+    predictions = model(torch_yoochoose_like)
+    assert predictions.shape == (bs, max_len)
+
+
 def test_model_with_multiple_heads_and_tasks(
     yoochoose_schema,
     torch_yoochoose_tabular_transformer_features,
@@ -93,8 +135,8 @@ def test_model_with_multiple_heads_and_tasks(
 ):
     # Tabular classification and regression tasks
     targets = {
-        "classification": pytorch.randint(2, (100,)).float(),
-        "regression": pytorch.randint(2, (100,)).float(),
+        "classification": torch.randint(2, (100,)).float(),
+        "regression": torch.randint(2, (100,)).float(),
     }
 
     non_sequential_features_schema = yoochoose_schema.select_by_name(["user_age", "user_country"])
@@ -115,8 +157,8 @@ def test_model_with_multiple_heads_and_tasks(
 
     # Session-based classification and regression tasks
     targets_2 = {
-        "classification_session": pytorch.randint(2, (100,)).float(),
-        "regression_session": pytorch.randint(2, (100,)).float(),
+        "classification_session": torch.randint(2, (100,)).float(),
+        "regression_session": torch.randint(2, (100,)).float(),
     }
     transformer_config = tconf.XLNetConfig.build(
         d_model=64, n_head=4, n_layer=2, total_seq_length=20

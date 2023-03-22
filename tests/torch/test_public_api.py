@@ -16,7 +16,7 @@
 
 import pytest
 
-tr = pytest.importorskip("transformers4rec.torch")
+import transformers4rec.torch as tr
 
 transformer_config_names = [
     "AlbertConfig",
