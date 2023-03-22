@@ -111,13 +111,14 @@
 <span class="kn">from</span> <span class="nn">merlin.dataloader.torch</span> <span class="kn">import</span> <span class="n">Loader</span>
 <span class="kn">from</span> <span class="nn">merlin.models.utils.misc_utils</span> <span class="kn">import</span> <span class="n">validate_dataset</span>
 <span class="kn">from</span> <span class="nn">merlin.models.utils.registry</span> <span class="kn">import</span> <span class="n">Registry</span>
+<span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Tags</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span> <span class="k">as</span> <span class="n">PyTorchDataLoader</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">IterableDataset</span>
 
-<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">Tag</span>
+<span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.padding</span> <span class="kn">import</span> <span class="n">pad_batch</span>
 
 <span class="kn">from</span> <span class="nn">...utils</span> <span class="kn">import</span> <span class="n">dependencies</span>
-<span class="kn">from</span> <span class="nn">..utils.schema_utils</span> <span class="kn">import</span> <span class="n">_augment_schema</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -249,12 +250,12 @@
 <span class="sd">            &quot;&quot;&quot;</span>
 
             <span class="n">categorical_features</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">categorical_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+                <span class="n">categorical_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
             <span class="p">)</span>
             <span class="n">continuous_features</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">continuous_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+                <span class="n">continuous_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
             <span class="p">)</span>
-            <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">TARGETS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
 
             <span class="n">cols_to_read</span> <span class="o">=</span> <span class="n">categorical_features</span> <span class="o">+</span> <span class="n">continuous_features</span> <span class="o">+</span> <span class="n">targets</span>
 
@@ -410,10 +411,6 @@
         <span class="n">reader_kwargs</span><span class="p">[</span><span class="s2">&quot;row_groups_per_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_groups_per_part</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">(</span><span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">_augment_schema</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">cats</span><span class="p">,</span> <span class="n">conts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">sparse_names</span><span class="p">,</span> <span class="n">sparse_max</span><span class="p">,</span> <span class="n">sparse_as_dense</span>
-        <span class="p">)</span>
-
         <span class="k">if</span> <span class="p">(</span><span class="n">global_rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span> <span class="o">&lt;</span> <span class="n">global_size</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;UserWarning: User is advised to repartition the parquet file before training &quot;</span>
@@ -432,6 +429,11 @@
                 <span class="sa">f</span><span class="s2">&quot; GPUs (</span><span class="si">{</span><span class="n">global_size</span><span class="si">}</span><span class="s2">). This will divide the work equally among GPUs&quot;</span>
                 <span class="s2">&quot; for DDP training and ensure optimal performance.&quot;</span>
             <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_augment_schema</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span> <span class="n">cats</span><span class="o">=</span><span class="n">cats</span><span class="p">,</span> <span class="n">conts</span><span class="o">=</span><span class="n">conts</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span>
+        <span class="p">)</span>
+
         <span class="n">loader</span> <span class="o">=</span> <span class="n">Loader</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
@@ -442,7 +444,7 @@
             <span class="n">global_size</span><span class="o">=</span><span class="n">global_size</span><span class="p">,</span>
             <span class="n">global_rank</span><span class="o">=</span><span class="n">global_rank</span><span class="p">,</span>
             <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_pad_fn</span><span class="p">(</span><span class="n">sparse_max</span><span class="p">))</span>
 
         <span class="n">DLDataLoader</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span>
@@ -453,6 +455,38 @@
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="n">max_sequence_length</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_pad_fn</span><span class="p">(</span><span class="n">padding_lengths</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">pad_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+            <span class="n">new_x</span> <span class="o">=</span> <span class="n">pad_batch</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">padding_lengths</span><span class="p">)</span>
+            <span class="n">new_y</span> <span class="o">=</span> <span class="n">pad_batch</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">padding_lengths</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">new_x</span><span class="p">,</span> <span class="n">new_y</span>
+
+        <span class="k">return</span> <span class="n">pad_fn</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_augment_schema</span><span class="p">(</span>
+        <span class="n">schema</span><span class="p">,</span>
+        <span class="n">cats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">conts</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">cats</span> <span class="o">=</span> <span class="n">cats</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">conts</span> <span class="o">=</span> <span class="n">conts</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">or</span> <span class="p">[]</span>
+
+        <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span><span class="n">conts</span> <span class="o">+</span> <span class="n">cats</span> <span class="o">+</span> <span class="n">labels</span><span class="p">)</span>
+
+        <span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="n">labels</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">labels</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+            <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">cats</span><span class="p">:</span>
+            <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">conts</span><span class="p">:</span>
+            <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span> <span class="o">=</span> <span class="n">schema</span><span class="p">[</span><span class="n">label</span><span class="p">]</span><span class="o">.</span><span class="n">with_tags</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">schema</span>
 
 <div class="viewcode-block" id="MerlinDataLoader.set_dataset"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.set_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">):</span>
         <span class="n">dataset</span> <span class="o">=</span> <span class="n">validate_dataset</span><span class="p">(</span>
@@ -496,14 +530,14 @@
 <span class="sd">                The maximum length of list features.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">categorical_features</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">categorical_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="n">categorical_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CATEGORICAL</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
         <span class="p">)</span>
         <span class="n">continuous_features</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">continuous_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+            <span class="n">continuous_features</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">CONTINUOUS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
         <span class="p">)</span>
-        <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">TARGETS</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">TARGET</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
         <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_name</span><span class="p">(</span><span class="n">categorical_features</span> <span class="o">+</span> <span class="n">continuous_features</span> <span class="o">+</span> <span class="n">targets</span><span class="p">)</span>
-        <span class="n">sparse_names</span> <span class="o">=</span> <span class="n">sparse_names</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tag</span><span class="o">.</span><span class="n">LIST</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
+        <span class="n">sparse_names</span> <span class="o">=</span> <span class="n">sparse_names</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">LIST</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
         <span class="n">sparse_max</span> <span class="o">=</span> <span class="n">sparse_max</span> <span class="ow">or</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">max_sequence_length</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sparse_names</span><span class="p">}</span>
         <span class="n">loader</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
             <span class="n">paths_or_dataset</span><span class="p">,</span>
