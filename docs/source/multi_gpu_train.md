@@ -56,3 +56,5 @@ We trained and evaluated a number of models using single GPU, `DataParallel` and
 <img src="_images/DP_DDP_perf.png" alt="Performance comparison of diffrerent training modes" style="width:800px;display:block;margin-left:auto;margin-right:auto;"/><br>
 
 These experiments used a machine with 2 <i>Tesla V100-SXM2-32GB-LS</i> GPUs.
+
+<b>Note:</b> Using Data-Parallel training can impact metrics such at NDCG and recall. Therefore, Users are advised to tune the learning rate for better accuracy.
