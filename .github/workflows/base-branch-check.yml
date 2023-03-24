@@ -6,4 +6,4 @@ on:
 
 jobs:
   check:
-    uses: NVIDIA-Merlin/.github/.github/workflows/check-base-branch.yml@check-base-ref
+    uses: NVIDIA-Merlin/.github/.github/workflows/check-base-branch.yml@main
