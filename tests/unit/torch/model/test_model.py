@@ -83,6 +83,12 @@ def test_sequential_prediction_model(
     assert len(list(output["predictions"])) == 2
     assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
 
+    # test inference inputs with only one item
+    inference_inputs = tr.data.tabular_sequence_testing_data.torch_synthetic_data(
+        num_rows=10, min_session_length=1, max_session_length=1
+    )
+    _ = model(inference_inputs)
+
 
 def test_sequential_binary_classification_model(
     torch_yoochoose_tabular_transformer_features,

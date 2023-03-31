@@ -387,8 +387,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
                 else:
                     label = targets
                 if label is not None:
-                    # Remove dimension `1` as merlin dataloader returns tensors of shape (-1, 1)
-                    label = torch.squeeze(label.float(), -1)
+                    label = label.float()
                 task_output = task(
                     body_outputs, targets=label, training=training, testing=testing, **kwargs
                 )
@@ -518,9 +517,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         for name, val in inputs.items():
             if torch.is_floating_point(val):
                 inputs[name] = val.to(torch.float32)
-        # Squeeze second dimension `1` of non-list inputs
-        for name, val in inputs.items():
-            inputs[name] = torch.squeeze(val, -1)
 
         if isinstance(targets, dict) and len(targets) == 0:
             # `pyarrow`` dataloader is returning {} instead of None
