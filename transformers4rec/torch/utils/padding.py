@@ -109,13 +109,18 @@ def pad_batch(
 
 
 @torch.jit.script
-def pad_inputs(inputs: Dict[str, torch.Tensor], max_sequence_length: Optional[int]):
-    """Pad ragged inputs to dense tensors with max sequence length
+def pad_inputs(inputs: Dict[str, torch.Tensor], max_sequence_length: Optional[int] = None):
+    """Pad ragged inputs to fixed size tensors.
+
+    Pads all the sequence features in the inputs to the same length.
+    The minimum of max_sequence_length and the maximum sequence length in the inputs.
 
     Parameters
     ----------
     inputs : Dict[str, Tensor]
         Dictionary of tensors
+    max_sequence_length: int, optional
+        The maximum sequence length to limit sequence features to
 
     Returns
     -------
