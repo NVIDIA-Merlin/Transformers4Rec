@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Dict
+from typing import Dict, Optional
 
 import torch
 import torch.nn.functional as F
@@ -106,3 +106,40 @@ def pad_batch(
                 batch_padded[col_name] = value
 
     return batch_padded
+
+
+@torch.jit.script
+def pad_inputs(inputs: Dict[str, torch.Tensor], max_sequence_length: Optional[int]):
+    """Pad ragged inputs to dense tensors with max sequence length
+
+    Parameters
+    ----------
+    inputs : Dict[str, Tensor]
+        Dictionary of tensors
+
+    Returns
+    -------
+    inputs : Dict[str, Tensor]
+        Padded inputs
+    """
+    batch_max_sequence_length = 0
+    for key, val in inputs.items():
+        if key.endswith("__offsets"):
+            offsets = val
+            max_row_length = int(torch.max(offsets[1:] - offsets[:-1]))
+            batch_max_sequence_length = max(max_row_length, batch_max_sequence_length)
+
+    padding_sequence_length = batch_max_sequence_length
+    if max_sequence_length is not None:
+        padding_sequence_length = min(max_sequence_length, batch_max_sequence_length)
+
+    if padding_sequence_length > 0:
+        padding_lengths: Dict[str, int] = {}
+        for key in inputs.keys():
+            if key.endswith("__offsets"):
+                col_name: str = key[: -len("__offsets")]
+                padding_lengths[col_name] = padding_sequence_length
+        if padding_lengths:
+            inputs = pad_batch(inputs, padding_lengths)
+
+    return inputs
