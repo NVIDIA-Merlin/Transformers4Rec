@@ -474,6 +474,43 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         return Model(self, **kwargs)
 
 
+@torch.jit.script
+def pad_inputs(inputs: Dict[str, torch.Tensor], max_sequence_length: Optional[int]):
+    """Pad ragged inputs to dense tensors with max sequence length
+
+    Parameters
+    ----------
+    inputs : Dict[str, Tensor]
+        Dictionary of tensors
+
+    Returns
+    -------
+    inputs : Dict[str, Tensor]
+        Padded inputs
+    """
+    batch_max_sequence_length = 0
+    for key, val in inputs.items():
+        if key.endswith("__offsets"):
+            offsets = val
+            max_row_length = int(torch.max(offsets[1:] - offsets[:-1]))
+            batch_max_sequence_length = max(max_row_length, batch_max_sequence_length)
+
+    padding_sequence_length = batch_max_sequence_length
+    if max_sequence_length is not None:
+        padding_sequence_length = min(max_sequence_length, batch_max_sequence_length)
+
+    if padding_sequence_length > 0:
+        padding_lengths: Dict[str, int] = {}
+        for key in inputs.keys():
+            if key.endswith("__offsets"):
+                col_name: str = key[: -len("__offsets")]
+                padding_lengths[col_name] = padding_sequence_length
+        if padding_lengths:
+            inputs = pad_batch(inputs, padding_lengths)
+
+    return inputs
+
+
 class Model(torch.nn.Module, LossMixin, MetricsMixin):
     def __init__(
         self,
@@ -518,39 +555,6 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.optimizer = optimizer
         self.max_sequence_length = max_sequence_length
 
-    def pad_inputs(self, inputs):
-        """Pad ragged inputs to dense tensors with max sequence length
-
-        Parameters
-        ----------
-        inputs : Dict[str, Tensor]
-            Dictionary of tensors
-
-        Returns
-        -------
-        inputs : Dict[str, Tensor]
-            Padded inputs
-        """
-        batch_max_sequence_length = 0
-        for name, val in inputs.items():
-            if name.endswith("__offsets"):
-                max_row_length = int(torch.max(val[1:] - val[:-1]))
-                batch_max_sequence_length = max(max_row_length, batch_max_sequence_length)
-
-        padding_sequence_length = batch_max_sequence_length
-        if self.max_sequence_length is not None:
-            padding_sequence_length = min(self.max_sequence_length, batch_max_sequence_length)
-
-        if padding_sequence_length:
-            padding_lengths = {}
-            for name in inputs.keys():
-                if name.endswith("__offsets"):
-                    padding_lengths[name[: -len("__offsets")]] = padding_sequence_length
-            if padding_lengths:
-                inputs = pad_batch(inputs, padding_lengths)
-
-        return inputs
-
     def forward(self, inputs: TabularData, targets=None, training=False, testing=False, **kwargs):
         # Convert inputs to float32 which is the default type, expected by PyTorch
         for name, val in inputs.items():
@@ -558,7 +562,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 inputs[name] = val.to(torch.float32)
 
         # pad ragged inputs
-        inputs = self.pad_inputs(inputs)
+        inputs = pad_inputs(inputs, self.max_sequence_length)
 
         if isinstance(targets, dict) and len(targets) == 0:
             # `pyarrow`` dataloader is returning {} instead of None
