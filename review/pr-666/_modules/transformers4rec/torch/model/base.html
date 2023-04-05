@@ -125,7 +125,7 @@
 <span class="kn">from</span> <span class="nn">..features.base</span> <span class="kn">import</span> <span class="n">InputBlock</span>
 <span class="kn">from</span> <span class="nn">..features.sequence</span> <span class="kn">import</span> <span class="n">TabularFeaturesType</span>
 <span class="kn">from</span> <span class="nn">..typing</span> <span class="kn">import</span> <span class="n">TabularData</span>
-<span class="kn">from</span> <span class="nn">..utils.padding</span> <span class="kn">import</span> <span class="n">pad_batch</span>
+<span class="kn">from</span> <span class="nn">..utils.padding</span> <span class="kn">import</span> <span class="n">pad_inputs</span>
 <span class="kn">from</span> <span class="nn">..utils.torch_utils</span> <span class="kn">import</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span>
 
 
@@ -560,43 +560,6 @@
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="n">Model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
-
-
-<span class="nd">@torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">script</span>
-<span class="k">def</span> <span class="nf">pad_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span> <span class="n">max_sequence_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Pad ragged inputs to dense tensors with max sequence length</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    inputs : Dict[str, Tensor]</span>
-<span class="sd">        Dictionary of tensors</span>
-
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    inputs : Dict[str, Tensor]</span>
-<span class="sd">        Padded inputs</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">batch_max_sequence_length</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;__offsets&quot;</span><span class="p">):</span>
-            <span class="n">offsets</span> <span class="o">=</span> <span class="n">val</span>
-            <span class="n">max_row_length</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">offsets</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">offsets</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
-            <span class="n">batch_max_sequence_length</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_row_length</span><span class="p">,</span> <span class="n">batch_max_sequence_length</span><span class="p">)</span>
-
-    <span class="n">padding_sequence_length</span> <span class="o">=</span> <span class="n">batch_max_sequence_length</span>
-    <span class="k">if</span> <span class="n">max_sequence_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">padding_sequence_length</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">max_sequence_length</span><span class="p">,</span> <span class="n">batch_max_sequence_length</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">padding_sequence_length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">padding_lengths</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">inputs</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;__offsets&quot;</span><span class="p">):</span>
-                <span class="n">col_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">key</span><span class="p">[:</span> <span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;__offsets&quot;</span><span class="p">)]</span>
-                <span class="n">padding_lengths</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">padding_sequence_length</span>
-        <span class="k">if</span> <span class="n">padding_lengths</span><span class="p">:</span>
-            <span class="n">inputs</span> <span class="o">=</span> <span class="n">pad_batch</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">padding_lengths</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">inputs</span>
 
 
 <div class="viewcode-block" id="Model"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model">[docs]</a><span class="k">class</span> <span class="nc">Model</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">LossMixin</span><span class="p">,</span> <span class="n">MetricsMixin</span><span class="p">):</span>
