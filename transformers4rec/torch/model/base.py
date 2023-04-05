@@ -37,6 +37,7 @@ from ..block.base import BlockBase, BlockOrModule, BlockType
 from ..features.base import InputBlock
 from ..features.sequence import TabularFeaturesType
 from ..typing import TabularData
+from ..utils.padding import pad_batch
 from ..utils.torch_utils import LossMixin, MetricsMixin
 
 
@@ -517,6 +518,21 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         for name, val in inputs.items():
             if torch.is_floating_point(val):
                 inputs[name] = val.to(torch.float32)
+
+        # Pad ragged inputs
+        max_sequence_length = 0
+        for name, val in inputs.items():
+            if name.endswith("__offsets"):
+                max_row_length = int(torch.max(val[1:] - val[:-1]))
+                max_sequence_length = max(max_row_length, max_sequence_length)
+
+        if max_sequence_length:
+            padding_lengths = {}
+            for name in inputs.keys():
+                if name.endswith("__offsets"):
+                    padding_lengths[name[:-9]] = max_sequence_length
+            if padding_lengths:
+                inputs = pad_batch(inputs, padding_lengths)
 
         if isinstance(targets, dict) and len(targets) == 0:
             # `pyarrow`` dataloader is returning {} instead of None
