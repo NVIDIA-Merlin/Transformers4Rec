@@ -76,11 +76,12 @@ def test_sequential_prediction_model_with_ragged_inputs(torch_yoochoose_like, yo
         num_rows=10, min_session_length=1, max_session_length=4, ragged=True
     )
     inference_inputs_2 = tr.data.tabular_sequence_testing_data.torch_synthetic_data(
-        num_rows=10, min_session_length=1, max_session_length=10, ragged=True
+        num_rows=20, min_session_length=1, max_session_length=10, ragged=True
     )
     model_output = model(inference_inputs)
 
-    # if model is traced with ragged inputs it must be called with ragged inputs
+    # if the model is traced with ragged inputs it can only be called with ragged inputs
+    # if the model is traced with padded inputs it can only be called with padded inputs
     traced_model = torch.jit.trace(model, inference_inputs, strict=False)
     traced_model_output = traced_model(inference_inputs)
     assert torch.equal(model_output, traced_model_output)
