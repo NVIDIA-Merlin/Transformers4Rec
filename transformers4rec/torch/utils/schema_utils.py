@@ -31,6 +31,7 @@ def random_data_from_schema(
     max_session_length: Optional[int] = None,
     min_session_length: int = 5,
     device=None,
+    ragged=False,
 ) -> TabularData:
     data: Dict[str, Any] = {}
 
@@ -87,13 +88,18 @@ def random_data_from_schema(
     for key, val in data.items():
         if isinstance(val, tuple):
             offsets = [0]
-            for length in val[1][:-1]:
-                offsets.append(offsets[-1] + length)
-            vals = (val[0], torch.tensor(offsets, device=device).unsqueeze(dim=1))
-            values, offsets, diff_offsets, num_rows = _pull_values_offsets(vals, device=device)
-            indices = _get_indices(offsets, diff_offsets, device=device)
-            seq_limit = max_session_length or val[1][0]
-            outputs[key] = _get_sparse_tensor(values, indices, num_rows, seq_limit)
+            for row_length in val[1]:
+                offsets.append(offsets[-1] + row_length)
+
+            if ragged:
+                outputs[f"{key}__values"] = val[0]
+                outputs[f"{key}__offsets"] = torch.tensor(offsets, device=device)
+            else:
+                vals = (val[0], torch.tensor(offsets[:-1], device=device).unsqueeze(dim=1))
+                values, offsets, diff_offsets, num_rows = _pull_values_offsets(vals, device=device)
+                indices = _get_indices(offsets, diff_offsets, device=device)
+                seq_limit = max_session_length or val[1][0]
+                outputs[key] = _get_sparse_tensor(values, indices, num_rows, seq_limit)
         else:
             outputs[key] = data[key]
 
