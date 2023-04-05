@@ -545,7 +545,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             padding_lengths = {}
             for name in inputs.keys():
                 if name.endswith("__offsets"):
-                    padding_lengths[name[:-len("__offsets")]] = padding_sequence_length
+                    padding_lengths[name[: -len("__offsets")]] = padding_sequence_length
             if padding_lengths:
                 inputs = pad_batch(inputs, padding_lengths)
 
