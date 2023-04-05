@@ -47,11 +47,12 @@ def _pad_ragged_tensor(values, offsets, padding_length):
     offsets = _squeeze(offsets)
     num_rows = len(offsets) - 1
     diff_offsets = offsets[1:] - offsets[:-1]
+    max_length = int(diff_offsets.max())
     indices = _get_indices(offsets, diff_offsets)
     sparse_tensor = torch.sparse_coo_tensor(
-        indices.T, values, torch.Size([num_rows, padding_length]), device=values.device
+        indices.T, values, torch.Size([num_rows, max_length]), device=values.device
     )
-    return sparse_tensor.to_dense()
+    return _pad_dense_tensor(sparse_tensor.to_dense(), padding_length)
 
 
 Batch = Dict[str, Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]]

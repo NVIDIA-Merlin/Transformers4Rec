@@ -68,6 +68,38 @@ def test_pad_values_offsets_dict():
     )
 
 
+def test_pad_with_truncation():
+    data = [[1, 2], [], [3, 4, 5, 4, 7]]
+    values, offsets = _get_values_offsets(data)
+
+    x = {
+        "a__values": values,
+        "a__offsets": offsets,
+        "b": torch.tensor([[1, 2, 3, 4], [6, 7, 8, 9]]),
+    }
+
+    padded_x = pad_batch(x, {"a": 3, "b": 2})
+    assert torch.equal(
+        padded_x["a"],
+        torch.tensor(
+            [
+                [1, 2, 0],
+                [0, 0, 0],
+                [3, 4, 5],
+            ]
+        ),
+    )
+    assert torch.equal(
+        padded_x["b"],
+        torch.tensor(
+            [
+                [1, 2],
+                [6, 7],
+            ]
+        ),
+    )
+
+
 def test_pad_values_dense():
     data = [[1, 2], [], [3, 4, 5]]
     values, offsets = _get_values_offsets(data)
