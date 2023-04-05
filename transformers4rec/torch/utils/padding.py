@@ -13,36 +13,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict
 
 import torch
 import torch.nn.functional as F
-from merlin.table import TensorTable
 
 
-def _pad_dense_tensor(t: torch.Tensor, length: Optional[int]) -> torch.Tensor:
-    if length and len(t.shape) == 2:
+def _pad_dense_tensor(t: torch.Tensor, length: int) -> torch.Tensor:
+    if len(t.shape) == 2:
         pad_diff = length - t.shape[1]
         return F.pad(input=t, pad=(0, pad_diff, 0, 0))
     return t
 
 
-def _squeeze(tensor):
+def _squeeze(tensor: torch.Tensor):
     if len(tensor.shape) == 2:
         return tensor.squeeze(1)
     return tensor
 
 
-def _get_indices(offsets, diff_offsets):
+def _get_indices(offsets: torch.Tensor, diff_offsets: torch.Tensor):
     row_ids = torch.arange(len(offsets) - 1, device=offsets.device)
     row_ids_repeated = torch.repeat_interleave(row_ids, diff_offsets)
     row_offset_repeated = torch.repeat_interleave(offsets[:-1], diff_offsets)
     col_ids = torch.arange(len(row_offset_repeated), device=offsets.device) - row_offset_repeated
-    indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], axis=1)
+    indices = torch.cat([row_ids_repeated.unsqueeze(-1), col_ids.unsqueeze(-1)], dim=1)
     return indices
 
 
-def _pad_ragged_tensor(values, offsets, padding_length):
+def _pad_ragged_tensor(values: torch.Tensor, offsets: torch.Tensor, padding_length: int):
     values = _squeeze(values)
     offsets = _squeeze(offsets)
     num_rows = len(offsets) - 1
@@ -55,15 +54,15 @@ def _pad_ragged_tensor(values, offsets, padding_length):
     return _pad_dense_tensor(sparse_tensor.to_dense(), padding_length)
 
 
-Batch = Dict[str, Union[torch.Tensor, Tuple[torch.Tensor, torch.Tensor]]]
-
-
-def pad_batch(batch: Batch, padding_lengths: Dict[str, int]) -> Batch:
+@torch.jit.script
+def pad_batch(
+    batch: Dict[str, torch.Tensor], padding_lengths: Dict[str, int]
+) -> Dict[str, torch.Tensor]:
     """Pad list features in a batch to padding length specified
 
     Parameters
     ----------
-    X : Batch
+    batch : Batch
         dictionary of tensors in batch
     padding_lengths : Dict[str, int]
         dictionary mapping list column name to padding length
@@ -78,15 +77,15 @@ def pad_batch(batch: Batch, padding_lengths: Dict[str, int]) -> Batch:
     ValueError
         If ragged column found with no padding length provided
     """
-    if batch is None or not isinstance(batch, dict):
-        return batch
-
     batch_padded = {}
-    for col_name, col in TensorTable(batch).items():
-        if col.offsets is not None:
+    for key, value in batch.items():
+        if key.endswith("__offsets"):
+            col_name = key[: -len("__offsets")]
             padding_length = padding_lengths.get(col_name)
-            if padding_length:
-                padded_values = _pad_ragged_tensor(col.values, col.offsets, padding_length)
+            if padding_length is not None:
+                padded_values = _pad_ragged_tensor(
+                    batch[f"{col_name}__values"], value, padding_length
+                )
                 batch_padded[col_name] = padded_values
             else:
                 # Note: This exception can be removed if the model is
@@ -96,8 +95,14 @@ def pad_batch(batch: Batch, padding_lengths: Dict[str, int]) -> Batch:
                     "Please provide a padding length for this feature "
                     "to be converted to a dense tensor. "
                 )
+        elif key.endswith("__values"):
+            continue
         else:
+            col_name = key
             padding_length = padding_lengths.get(col_name)
-            batch_padded[col_name] = _pad_dense_tensor(col.values, padding_length)
+            if padding_length is not None:
+                batch_padded[col_name] = _pad_dense_tensor(value, padding_length)
+            else:
+                batch_padded[col_name] = value
 
     return batch_padded

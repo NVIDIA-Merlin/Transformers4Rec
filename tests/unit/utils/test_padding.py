@@ -30,25 +30,6 @@ def _get_values_offsets(data):
     return torch.tensor(values), torch.tensor(offsets)
 
 
-def test_pad_values_offsets_tuple():
-    data = [[1, 2], [], [3, 4, 5]]
-    values, offsets = _get_values_offsets(data)
-
-    x = {"a": (values, offsets)}
-
-    padded_x = pad_batch(x, {"a": 5})
-    assert torch.equal(
-        padded_x["a"],
-        torch.tensor(
-            [
-                [1, 2, 0, 0, 0],
-                [0, 0, 0, 0, 0],
-                [3, 4, 5, 0, 0],
-            ]
-        ),
-    )
-
-
 def test_pad_values_offsets_dict():
     data = [[1, 2], [], [3, 4, 5]]
     values, offsets = _get_values_offsets(data)
