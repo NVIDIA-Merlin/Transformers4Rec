@@ -147,10 +147,5 @@ class TestPadInputs:
         )
         assert torch.equal(
             padded_inputs["b"],
-            torch.tensor(
-                [
-                    [3, 6],
-                    [4, 1],
-                ]
-            ),
+            inputs["b"],
         )
