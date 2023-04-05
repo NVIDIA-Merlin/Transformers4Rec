@@ -55,44 +55,39 @@ def test_simple_model(torch_tabular_features, torch_tabular_data):
     assert all(loss.min() >= 0 and loss.max() <= 1 for loss in losses)
 
 
-@pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
-def test_sequential_prediction_model_with_ragged_inputs(
-    torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, task
-):
-    inputs = torch_yoochoose_tabular_transformer_features
-
+def test_sequential_prediction_model_with_ragged_inputs(torch_yoochoose_like, yoochoose_schema):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="causal",
+    )
+    prediction_task = tr.NextItemPredictionTask(weight_tying=True)
     transformer_config = tconf.XLNetConfig.build(
-        d_model=64, n_head=4, n_layer=2, total_seq_length=20
+        d_model=64, n_head=8, n_layer=2, total_seq_length=20
     )
-    body = tr.SequentialBlock(inputs, tr.MLPBlock([64]), tr.TransformerBlock(transformer_config))
+    model = transformer_config.to_torch_model(input_module, prediction_task)
 
-    head_1 = tr.Head(
-        body,
-        tr.NextItemPredictionTask(weight_tying=True),
-        inputs=inputs,
-    )
-    head_2 = task("target", summary_type="mean").to_head(body, inputs)
+    _ = model(torch_yoochoose_like)
 
-    bc_targets = torch.randint(2, (100,)).float()
+    model.eval()
 
-    model = tr.Model(head_1, head_2)
-    output = model(torch_yoochoose_like, training=True, targets=bc_targets)
-
-    assert isinstance(output, dict)
-    assert len(list(output.keys())) == 3
-    assert len(list(output["predictions"])) == 2
-    assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
-
-    # test inference inputs with only one item
     inference_inputs = tr.data.tabular_sequence_testing_data.torch_synthetic_data(
         num_rows=10, min_session_length=1, max_session_length=4, ragged=True
     )
-    _ = model(inference_inputs)
-
     inference_inputs_2 = tr.data.tabular_sequence_testing_data.torch_synthetic_data(
-        num_rows=20, min_session_length=1, max_session_length=10, ragged=True
+        num_rows=10, min_session_length=1, max_session_length=10, ragged=True
     )
-    _ = model(inference_inputs_2)
+    model_output = model(inference_inputs)
+
+    # if model is traced with ragged inputs it must be called with ragged inputs
+    traced_model = torch.jit.trace(model, inference_inputs, strict=False)
+    traced_model_output = traced_model(inference_inputs)
+    assert torch.equal(model_output, traced_model_output)
+
+    model_output = model(inference_inputs_2)
+    traced_model_output = traced_model(inference_inputs_2)
+    assert torch.equal(model_output, traced_model_output)
 
 
 @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
