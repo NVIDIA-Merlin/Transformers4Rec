@@ -82,26 +82,25 @@ def test_func():
         tb3.execute_cell(list(range(0, NUM_OF_CELLS - 12)))
         tb3.inject(
             """
-            eval_batch_size = 4
-            eval_paths = os.path.join('/tmp/data/sessions_by_day', f"{1}/valid.parquet")
-            eval_dataset = Dataset(eval_paths, shuffle=False)
-            eval_loader = generate_dataloader(schema, eval_dataset, batch_size=eval_batch_size)
-            test_dict = next(iter(eval_loader))
-            df_cols = {}
-            for name, tensor in test_dict[0].items():
-                if name in input_schema.column_names:
-                    df_cols[name] = tensor.cpu().numpy()
-                    if len(tensor.shape) > 1:
-                        df_cols[name] = list(df_cols[name])
-            df = make_df(df_cols)
+            NUM_ROWS =1000
+            long_tailed_item_distribution = np.clip(np.random.lognormal(3., 1., int(NUM_ROWS)).astype(np.int32), 1, 50000)
+            df = pd.DataFrame(np.random.randint(70000, 90000, int(NUM_ROWS)), columns=['session_id'])
+            df['item_id'] = long_tailed_item_distribution
+            df['category'] = pd.cut(df['item_id'], bins=334, labels=np.arange(1, 335)).astype(np.int32)
+            df['age_days'] = np.random.uniform(0, 1, int(NUM_ROWS)).astype(np.float32)
+            df['weekday_sin']= np.random.uniform(0, 1, int(NUM_ROWS)).astype(np.float32)
+            map_day = dict(zip(df.session_id.unique(), np.random.randint(1, 10, size=(df.session_id.nunique()))))
+            df['day'] =  df.session_id.map(map_day)
+
             from merlin.systems.triton.utils import run_ensemble_on_tritonserver
             response = run_ensemble_on_tritonserver(
-                "/tmp/data/models", ensemble.graph.input_schema, df[input_schema.column_names], output_schema.column_names,  'executor_model'
+                "/tmp/data/models", workflow.input_schema, df, output_schema.column_names,  'executor_model'
             )
-            response_array = [x.tolist()[0] for x in response["next-item"]]
+            response_array = list(response['next-item'][1])
+            cardinality = workflow.output_schema['item_id-list'].properties['embedding_sizes']['cardinality']
             """
         )
         tb3.execute_cell(NUM_OF_CELLS - 3)
-        batch_size = tb3.ref("eval_batch_size")
+        item_cardinality = tb3.ref("cardinality")
         response_array = tb3.ref("response_array")
-        assert len(response_array) == batch_size
+        assert len(response_array) == item_cardinality
