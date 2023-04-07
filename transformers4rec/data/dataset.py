@@ -41,7 +41,7 @@ class Dataset:
         return TensorflowMetadata.from_json(self.schema.to_json()).to_merlin_schema()
 
     def torch_synthetic_data(
-        self, num_rows=100, min_session_length=5, max_session_length=20, device=None
+        self, num_rows=100, min_session_length=5, max_session_length=20, device=None, ragged=False
     ):
         from transformers4rec.torch.utils import schema_utils
 
@@ -51,6 +51,7 @@ class Dataset:
             min_session_length=min_session_length,
             max_session_length=max_session_length,
             device=device,
+            ragged=ragged,
         )
 
     def tf_synthetic_data(self, num_rows=100, min_session_length=5, max_session_length=20):
