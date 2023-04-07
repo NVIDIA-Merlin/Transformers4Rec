@@ -16,7 +16,8 @@
 
 
 import logging
-from typing import Dict, Iterable, Optional
+from math import sqrt
+from typing import Dict, Iterable, Optional, Sequence, Tuple
 
 import torch
 import torchmetrics as tm
@@ -215,6 +216,10 @@ class NextItemPredictionTask(PredictionTask):
         pad token id.
     target_dim: int
         vocabulary size of item ids
+    sampled_softmax: Optional[bool]
+        Enables sampled softmax. By default False
+    max_n_samples: Optional[int]
+        Number of samples for sampled softmax. By default 100
     """
 
     DEFAULT_METRICS = (
@@ -226,7 +231,7 @@ class NextItemPredictionTask(PredictionTask):
 
     def __init__(
         self,
-        loss: torch.nn.Module = torch.nn.NLLLoss(ignore_index=0),
+        loss: torch.nn.Module = torch.nn.CrossEntropyLoss(),
         metrics: Iterable[tm.Metric] = DEFAULT_METRICS,
         task_block: Optional[BlockType] = None,
         task_name: str = "next-item",
@@ -234,12 +239,16 @@ class NextItemPredictionTask(PredictionTask):
         softmax_temperature: float = 1,
         padding_idx: int = 0,
         target_dim: int = None,
+        sampled_softmax: Optional[bool] = False,
+        max_n_samples: Optional[int] = 100,
     ):
         super().__init__(loss=loss, metrics=metrics, task_block=task_block, task_name=task_name)
         self.softmax_temperature = softmax_temperature
         self.weight_tying = weight_tying
         self.padding_idx = padding_idx
         self.target_dim = target_dim
+        self.sampled_softmax = sampled_softmax
+        self.max_n_samples = max_n_samples
 
         self.item_embedding_table = None
         self.masking = None
@@ -286,6 +295,9 @@ class NextItemPredictionTask(PredictionTask):
             weight_tying=self.weight_tying,
             item_embedding_table=self.item_embedding_table,
             softmax_temperature=self.softmax_temperature,
+            sampled_softmax=self.sampled_softmax,
+            max_n_samples=self.max_n_samples,
+            min_id=self.padding_idx + 1,
         )
         super().build(
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
@@ -307,14 +319,13 @@ class NextItemPredictionTask(PredictionTask):
             labels_all = torch.masked_select(trg_flat, non_pad_mask)
             # remove padded items, keep only masked positions
             x = self.remove_pad_3d(x, non_pad_mask)
-            x = self.pre(x)  # type: ignore
-            loss = self.loss(x, labels_all)
+            y = labels_all
+            x, y = self.pre(x, targets=y, training=training, testing=testing)  # type: ignore
+            loss = self.loss(x, y)
             return {
                 "loss": loss,
                 "labels": labels_all,
                 "predictions": x,
-                # "pred_metadata": {},
-                # "model_outputs": [],
             }
         else:
             # Get the hidden position to use for predicting the next item
@@ -327,10 +338,10 @@ class NextItemPredictionTask(PredictionTask):
                 last_item_sessions = non_pad_mask.sum(dim=1) - 1
             x = x[rows_ids, last_item_sessions]
 
-        # Compute predictions probs
-        x = self.pre(x)  # type: ignore
+            # Compute predictions probs
+            x, _ = self.pre(x)  # type: ignore
 
-        return x
+            return x
 
     def remove_pad_3d(self, inp_tensor, non_pad_mask):
         # inp_tensor: (n_batch x seqlen x emb_dim)
@@ -377,12 +388,18 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
         weight_tying: bool = False,
         item_embedding_table: Optional[torch.nn.Module] = None,
         softmax_temperature: float = 0,
+        sampled_softmax: Optional[bool] = False,
+        max_n_samples: Optional[int] = 100,
+        min_id: Optional[int] = 0,
     ):
         super().__init__()
         self.target_dim = target_dim
         self.weight_tying = weight_tying
         self.item_embedding_table = item_embedding_table
         self.softmax_temperature = softmax_temperature
+        self.sampled_softmax = sampled_softmax
+        self.max_n_samples = max_n_samples
+        self.min_id = min_id
 
     def build(self, input_size) -> Block:
         return Block(
@@ -392,6 +409,9 @@ class NextItemPredictionPrepareBlock(BuildableBlock):
                 self.weight_tying,
                 self.item_embedding_table,
                 self.softmax_temperature,
+                self.sampled_softmax,
+                self.max_n_samples,
+                self.min_id,
             ),
             [-1, self.target_dim],
         )
@@ -417,15 +437,24 @@ class _NextItemPredictionTask(torch.nn.Module):
         softmax_temperature: float
             Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).
             Value 1.0 reduces to regular softmax.
+        sampled_softmax: Optional[bool]
+            Enables sampled softmax. By default False
+        max_n_samples: Optional[int]
+            Number of samples for sampled softmax. By default 100
+        min_id : Optional[int]
+            The minimum value of the range for the log-uniform sampling. By default 0.
     """
 
     def __init__(
         self,
-        input_size: int,
+        input_size: Sequence,
         target_dim: int,
         weight_tying: bool = False,
         item_embedding_table: Optional[torch.nn.Module] = None,
         softmax_temperature: float = 0,
+        sampled_softmax: Optional[bool] = False,
+        max_n_samples: Optional[int] = 100,
+        min_id: Optional[int] = 0,
     ):
         super().__init__()
         self.input_size = input_size
@@ -433,34 +462,225 @@ class _NextItemPredictionTask(torch.nn.Module):
         self.weight_tying = weight_tying
         self.item_embedding_table = item_embedding_table
         self.softmax_temperature = softmax_temperature
-        self.log_softmax = torch.nn.LogSoftmax(dim=-1)
+        self.sampled_softmax = sampled_softmax
 
-        if self.weight_tying:
-            self.output_layer_bias = torch.nn.Parameter(torch.Tensor(self.target_dim))
-            torch.nn.init.zeros_(self.output_layer_bias)
-        else:
-            self.output_layer = torch.nn.Linear(
-                self.input_size[-1], self.target_dim  # type: ignore
+        if not self.weight_tying:
+            self.output_layer = torch.nn.Parameter(torch.empty(input_size[-1], self.target_dim))
+            torch.nn.init.kaiming_uniform_(self.output_layer, a=sqrt(5))
+
+        if self.sampled_softmax:
+            self.sampler = LogUniformSampler(
+                max_n_samples=max_n_samples,
+                max_id=target_dim,
+                min_id=min_id,
+                unique_sampling=True,
             )
 
-    def forward(self, inputs: torch.Tensor) -> torch.Tensor:
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        targets: Optional[torch.Tensor] = None,
+        training=False,
+        testing=False,
+        **kwargs,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.weight_tying:
-            logits = torch.nn.functional.linear(
-                inputs,
-                weight=self.item_embedding_table.weight,  # type: ignore
-                bias=self.output_layer_bias,
-            )
+            output_weights = self.item_embedding_table.weight.t()
         else:
-            logits = self.output_layer(inputs)
+            output_weights = self.output_layer
+
+        if self.sampled_softmax and (training or testing):
+            logits, targets = self.sampled(inputs, targets, output_weights)
+
+        else:
+            logits = inputs @ output_weights
 
         if self.softmax_temperature:
             # Softmax temperature to reduce model overconfidence
             # and better calibrate probs and accuracy
             logits = torch.div(logits, self.softmax_temperature)
 
-        predictions = self.log_softmax(logits)
+        return logits, targets
 
-        return predictions
+    def sampled(self, inputs, targets, output_weights):
+        """Returns logits using sampled softmax"""
+        neg_samples, targets_probs, samples_probs = self.sampler.sample(targets)
+
+        positive_weights = output_weights.t()[targets]
+        negative_weights = output_weights.t()[neg_samples]
+
+        positive_scores = (inputs * positive_weights).sum(dim=-1, keepdim=True)
+        negative_scores = inputs @ negative_weights.t()
+
+        # logQ correction, to not overpenalize popular items for being sampled
+        # more often as negatives
+        epsilon = 1e-16
+        positive_scores -= torch.unsqueeze(torch.log(targets_probs + epsilon), dim=-1)
+        negative_scores -= torch.unsqueeze(torch.log(samples_probs + epsilon), dim=0)
+
+        # Remove accidental matches
+        accidental_hits = torch.unsqueeze(targets, -1) == torch.unsqueeze(neg_samples, 0)
+        negative_scores[accidental_hits] = -1e37
+
+        logits = torch.cat([positive_scores, negative_scores], axis=1)
+        new_targets = torch.zeros(logits.shape[0], dtype=torch.int64)
+
+        return logits, new_targets
 
     def _get_name(self) -> str:
         return "NextItemPredictionTask"
+
+
+class LogUniformSampler(object):
+    def __init__(
+        self,
+        max_n_samples: int,
+        max_id: int,
+        min_id: Optional[int] = 0,
+        unique_sampling: bool = True,
+        n_samples_multiplier_before_unique: int = 2,
+    ):
+        """LogUniformSampler samples negative samples based on a log-uniform distribution.
+        `P(class) = (log(class + 2) - log(class + 1)) / log(max_id + 1)`
+
+        This implementation is based on to:
+        https://github.com/kimiyoung/transformer-xl/blob/master/pytorch/utils/log_uniform_sampler.py
+        TensorFlow Reference:
+        https://github.com/tensorflow/tensorflow/blob/r1.10/tensorflow/python/ops/candidate_sampling_ops.py
+
+        LogUniformSampler assumes item ids are sorted decreasingly by their frequency.
+
+        if `unique_sampling==True`, then only unique sampled items will be returned.
+        The actual # samples will vary from run to run if `unique_sampling==True`,
+        as sampling without replacement (`torch.multinomial(..., replacement=False)`) is slow,
+        so we use `torch.multinomial(..., replacement=True).unique()` which doesn't guarantee
+        the same number of unique sampled items. You can try to increase
+        n_samples_multiplier_before_unique to increase the chances to have more
+        unique samples in that case.
+
+        Parameters
+        ----------
+        max_n_samples : int
+            The maximum desired number of negative samples. The number of samples might be
+            smaller than that if `unique_sampling==True`, as explained above.
+        max_id : int
+            The maximum value of the range for the log-uniform distribution.
+        min_id : Optional[int]
+            The minimum value of the range for the log-uniform sampling. By default 0.
+        unique_sampling : bool
+            Whether to return unique samples. By default True
+        n_samples_multiplier_before_unique : int
+            If unique_sampling=True, it is not guaranteed that the number of returned
+            samples will be equal to max_n_samples, as explained above.
+            You can increase n_samples_multiplier_before_unique to maximize
+            chances that a larger number of unique samples is returned.
+        """
+
+        if max_id <= 0:
+            raise ValueError("max_id must be a positive integer.")
+        if max_n_samples <= 0:
+            raise ValueError("n_sample must be a positive integer.")
+
+        self.max_id = max_id
+        self.unique_sampling = unique_sampling
+        self.max_n_samples = max_n_samples
+        self.n_sample = max_n_samples
+        if self.unique_sampling:
+            self.n_sample = int(self.n_sample * n_samples_multiplier_before_unique)
+
+        with torch.no_grad():
+            self.dist = self.get_log_uniform_distr(max_id, min_id)
+            self.unique_sampling_dist = self.get_unique_sampling_distr(self.dist, self.n_sample)
+
+    def get_log_uniform_distr(self, max_id: int, min_id: int = 0) -> torch.Tensor:
+        """Approximates the items frequency distribution with log-uniform probability distribution
+        with P(class) = (log(class + 2) - log(class + 1)) / log(max_id + 1).
+        It assumes item ids are sorted decreasingly by their frequency.
+
+        Parameters
+        ----------
+        max_id : int
+            Maximum discrete value for sampling (e.g. cardinality of the item id)
+
+        Returns
+        -------
+        torch.Tensor
+            Returns the log uniform probability distribution
+        """
+        log_indices = torch.arange(1.0, max_id - min_id + 2.0, 1.0).log_()
+        probs = (log_indices[1:] - log_indices[:-1]) / log_indices[-1]
+        if min_id > 0:
+            probs = torch.cat([torch.zeros([min_id], dtype=probs.dtype), probs], axis=0)
+        return probs
+
+    def get_unique_sampling_distr(self, dist, n_sample):
+        """Returns the probability that each item is sampled at least once
+        given the specified number of trials. This is meant to be used when
+        self.unique_sampling == True.
+        That probability can be approximated by by 1 - (1 - p)^n
+        and we use a numerically stable version: -expm1(num_tries * log1p(-p))
+        """
+        return (-(-dist.double().log1p_() * n_sample).expm1_()).float()
+
+    def sample(self, labels: torch.Tensor):
+        """Sample negative samples and calculate their probabilities.
+
+        If `unique_sampling==True`, then only unique sampled items will be returned.
+        The actual # samples will vary from run to run if `unique_sampling==True`,
+        as sampling without replacement (`torch.multinomial(..., replacement=False)`) is slow,
+        so we use `torch.multinomial(..., replacement=True).unique()`
+        which doesn't guarantee the same number of unique sampled items.
+        You can try to increase n_samples_multiplier_before_unique
+        to increase the chances to have more unique samples in that case.
+
+        Parameters
+        ----------
+        labels : torch.Tensor, dtype=torch.long, shape=(batch_size,)
+            The input labels for which negative samples should be generated.
+
+        Returns
+        -------
+        neg_samples : torch.Tensor, dtype=torch.long, shape=(n_samples,)
+            The unique negative samples drawn from the log-uniform distribution.
+        true_probs : torch.Tensor, dtype=torch.float32, shape=(batch_size,)
+            The probabilities of the input labels according
+            to the log-uniform distribution (depends on self.unique_sampling choice).
+        samp_log_probs : torch.Tensor, dtype=torch.float32, shape=(n_samples,)
+            The probabilities of the sampled negatives according
+            to the log-uniform distribution (depends on self.unique_sampling choice).
+        """
+
+        if not torch.is_tensor(labels):
+            raise TypeError("Labels must be a torch.Tensor.")
+        if labels.dtype != torch.long:
+            raise ValueError("Labels must be a tensor of dtype long.")
+        if labels.dim() > 2 or (labels.dim() == 2 and min(labels.shape) > 1):
+            raise ValueError(
+                "Labels must be a 1-dimensional tensor or a 2-dimensional tensor"
+                "with one of the dimensions equal to 1."
+            )
+        if labels.size(0) == 0:
+            raise ValueError("Labels must not be an empty tensor.")
+        if (labels < 0).any() or (labels > self.max_id).any():
+            raise ValueError("All label values must be within the range [0, max_id].")
+
+        n_tries = self.n_sample
+
+        with torch.no_grad():
+            neg_samples = torch.multinomial(self.dist, n_tries, replacement=True).unique()[
+                : self.max_n_samples
+            ]
+            device = labels.device
+            neg_samples = neg_samples.to(device)
+
+            if self.unique_sampling:
+                true_probs = self.unique_sampling_dist[labels]
+                samples_probs = self.unique_sampling_dist[neg_samples]
+            else:
+                true_probs = self.dist[labels]
+                samples_probs = self.dist[neg_samples]
+
+            true_probs = true_probs.to(device)
+            samples_probs = samples_probs.to(device)
+
+            return neg_samples, true_probs, samples_probs

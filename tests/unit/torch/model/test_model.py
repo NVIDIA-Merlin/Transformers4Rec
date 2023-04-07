@@ -374,6 +374,21 @@ def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_sc
     assert model(torch_yoochoose_like, training=True)
 
 
+def test_with_next_item_pred_sampled_softmax(torch_yoochoose_like, yoochoose_schema):
+    d_model = 32
+    transformer_config = tconf.XLNetConfig.build(d_model, 4, 2, 20)
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=32,
+        masking="mlm",
+    )
+    task = tr.NextItemPredictionTask(weight_tying=True, sampled_softmax=True, max_n_samples=1000)
+    model = transformer_config.to_torch_model(input_module, task)
+    assert model(torch_yoochoose_like, training=True)
+
+
 @pytest.mark.parametrize("masking", ["causal", "mlm", "plm", "rtd"])
 def test_output_shape_mode_eval(torch_yoochoose_like, yoochoose_schema, masking):
     input_module = tr.TabularSequenceFeatures.from_schema(

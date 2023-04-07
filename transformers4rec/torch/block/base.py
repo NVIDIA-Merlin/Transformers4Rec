@@ -60,8 +60,8 @@ class Block(BlockBase):
         self.module = module
         self._output_size = output_size
 
-    def forward(self, inputs):
-        return self.module(inputs)
+    def forward(self, inputs, **kwargs):
+        return self.module(inputs, **kwargs)
 
     def forward_output_size(self, input_size):
         if self._output_size[0] is None:
