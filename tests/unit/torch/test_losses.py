@@ -25,10 +25,8 @@ def test_item_prediction_with_label_smoothing_ce_loss(
 
     loss = head_output["loss"]
 
-    n_classes = 51997
     head_predictions = head_output["predictions"]["next-item"]
-    manuall_loss = torch.nn.NLLLoss(reduction="mean")
-    target_with_smoothing = labels_all * (1 - label_smoothing) + label_smoothing / n_classes
-    manual_output_loss = manuall_loss(head_predictions, target_with_smoothing.to(torch.long))
+    manuall_loss = torch.nn.CrossEntropyLoss(reduction="mean", label_smoothing=label_smoothing)
+    manual_output_loss = manuall_loss(head_predictions, labels_all)
 
     assert np.allclose(manual_output_loss.detach().numpy(), loss.detach().numpy(), rtol=1e-3)

@@ -531,7 +531,7 @@ class _NextItemPredictionTask(torch.nn.Module):
         return "NextItemPredictionTask"
 
 
-class LogUniformSampler(object):
+class LogUniformSampler:
     def __init__(
         self,
         max_n_samples: int,
