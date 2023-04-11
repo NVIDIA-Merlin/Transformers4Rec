@@ -219,8 +219,8 @@
             (categorical_module): SequenceEmbeddingFeatures(
               (filter_features): FilterFeatures()
               (embedding_tables): ModuleDict(
-                (item_id-list): Embedding(497, 64, padding_idx=0)
-                (category-list): Embedding(143, 64, padding_idx=0)
+                (item_id-list): Embedding(489, 64, padding_idx=0)
+                (category-list): Embedding(165, 64, padding_idx=0)
               )
             )
           )
@@ -291,15 +291,15 @@
           (embeddings): SequenceEmbeddingFeatures(
             (filter_features): FilterFeatures()
             (embedding_tables): ModuleDict(
-              (item_id-list): Embedding(497, 64, padding_idx=0)
-              (category-list): Embedding(143, 64, padding_idx=0)
+              (item_id-list): Embedding(489, 64, padding_idx=0)
+              (category-list): Embedding(165, 64, padding_idx=0)
             )
           )
-          (item_embedding_table): Embedding(497, 64, padding_idx=0)
+          (item_embedding_table): Embedding(489, 64, padding_idx=0)
           (masking): MaskedLanguageModeling()
           (pre): Block(
             (module): NextItemPredictionTask(
-              (item_embedding_table): Embedding(497, 64, padding_idx=0)
+              (item_embedding_table): Embedding(489, 64, padding_idx=0)
               (log_softmax): LogSoftmax(dim=-1)
             )
           )
@@ -365,13 +365,13 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[ 11,  16,  52,  ...,   0,   0,   0],
-        [ 28,   1,  18,  ...,   0,   0,   0],
-        [167, 113,  61,  ...,   0,   0,   0],
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[  5,  42,  24,  ...,   0,   0,   0],
+        [  8,   4,  40,  ...,   0,   0,   0],
+        [ 29,  16,  38,  ...,   0,   0,   0],
         ...,
-        [  3,  58,  61,  ...,   0,   0,   0],
-        [  1,  21,   0,  ...,   0,   0,   0],
-        [  4,  15,  41,  ...,   0,   0,   0]], device=&#39;cuda:0&#39;)
+        [  5,   2,  12,  ...,   0,   0,   0],
+        [ 29,  11,  13,  ...,   0,   0,   0],
+        [161,  12,  32,  ...,   0,   0,   0]], device=&#39;cuda:0&#39;)
 </pre></div>
 </div>
 </div>
@@ -494,7 +494,7 @@
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.LIST, Tags.ID, Tags.CATEGORICAL, Tags.IT...</td>
+      <td>(Tags.ID, Tags.CATEGORICAL, Tags.ITEM, Tags.LI...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -505,10 +505,10 @@
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.item_id.parquet</td>
-      <td>497.0</td>
-      <td>52.0</td>
+      <td>489.0</td>
+      <td>51.0</td>
       <td>0.0</td>
-      <td>496.0</td>
+      <td>488.0</td>
       <td>item_id</td>
     </tr>
     <tr>
@@ -525,10 +525,10 @@
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.category.parquet</td>
-      <td>143.0</td>
-      <td>26.0</td>
+      <td>165.0</td>
+      <td>28.0</td>
       <td>0.0</td>
-      <td>142.0</td>
+      <td>164.0</td>
       <td>category</td>
     </tr>
   </tbody>
@@ -563,145 +563,6 @@
 </div>
 </div>
 </div>
-<p>Our workflow has two columns that are not fed to model as input features, so we need to remove these two columns from workflow output schema.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">del</span> <span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_schemas</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">]</span>
-<span class="k">del</span> <span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_schemas</span><span class="p">[</span><span class="s1">&#39;day-first&#39;</span><span class="p">]</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># we only keep the columns that are input to the model</span>
-<span class="n">workflow</span><span class="o">.</span><span class="n">output_schema</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>name</th>
-      <th>tags</th>
-      <th>dtype</th>
-      <th>is_list</th>
-      <th>is_ragged</th>
-      <th>properties.num_buckets</th>
-      <th>properties.freq_threshold</th>
-      <th>properties.max_size</th>
-      <th>properties.start_index</th>
-      <th>properties.cat_path</th>
-      <th>properties.domain.min</th>
-      <th>properties.domain.max</th>
-      <th>properties.domain.name</th>
-      <th>properties.embedding_sizes.cardinality</th>
-      <th>properties.embedding_sizes.dimension</th>
-      <th>properties.value_count.min</th>
-      <th>properties.value_count.max</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>item_id-list</td>
-      <td>(Tags.LIST, Tags.ID, Tags.CATEGORICAL, Tags.IT...</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>.//categories/unique.item_id.parquet</td>
-      <td>0.0</td>
-      <td>496.0</td>
-      <td>item_id</td>
-      <td>497.0</td>
-      <td>52.0</td>
-      <td>20</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>category-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>.//categories/unique.category.parquet</td>
-      <td>0.0</td>
-      <td>142.0</td>
-      <td>category</td>
-      <td>143.0</td>
-      <td>26.0</td>
-      <td>20</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>age_days-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>20</td>
-      <td>20</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>weekday_sin-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>20</td>
-      <td>20</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
-</div>
 <p>For transforming the raw input features during inference, we use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/workflow.py">TransformWorkflow</a> operator that ensures the workflow is correctly saved and packaged with the required config so the server will know how to load it. We use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/pytorch.py">PredictPyTorch</a> operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -710,6 +571,14 @@
 <span class="p">)</span>
 
 <span class="n">ensemble</span> <span class="o">=</span> <span class="n">Ensemble</span><span class="p">(</span><span class="n">torch_op</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;session_id&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;day-first&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -886,8 +755,8 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id  item_id  category  age_days  weekday_sin  day
-0       74443       23        10  0.100614     0.034311    4
-1       88512        7         3  0.255196     0.414701    2
+0       86940        5         3  0.537970     0.002699    6
+1       81596       17         9  0.782668     0.385270    4
 </pre></div>
 </div>
 </div>
@@ -902,19 +771,19 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[ -9.883799 ,  -3.4167202,  -3.5539691, ...,  -9.903243 ,
-        -10.080429 ,  -9.736532 ],
-       [ -9.883825 ,  -3.4169102,  -3.5542827, ...,  -9.902823 ,
-        -10.079994 ,  -9.736897 ],
-       [ -9.883803 ,  -3.4168637,  -3.5542285, ...,  -9.902873 ,
-        -10.080062 ,  -9.736796 ],
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[-10.3142395,  -3.4098535,  -3.4116247, ...,  -9.233587 ,
+         -9.641741 , -10.570887 ],
+       [-10.314354 ,  -3.4099286,  -3.4116242, ...,  -9.233635 ,
+         -9.6416   , -10.570789 ],
+       [-10.315022 ,  -3.4105031,  -3.4116468, ...,  -9.233878 ,
+         -9.640664 , -10.570228 ],
        ...,
-       [ -9.883751 ,  -3.4165516,  -3.553697 , ...,  -9.903563 ,
-        -10.080756 ,  -9.736205 ],
-       [ -9.883795 ,  -3.416768 ,  -3.5540614, ...,  -9.903113 ,
-        -10.080299 ,  -9.736627 ],
-       [ -9.8838   ,  -3.4167717,  -3.5540478, ...,  -9.90313  ,
-        -10.080301 ,  -9.736641 ]], dtype=float32)}
+       [-10.314558 ,  -3.4101386,  -3.411638 , ...,  -9.233701 ,
+         -9.641275 , -10.570612 ],
+       [-10.314491 ,  -3.4100583,  -3.4116335, ...,  -9.233676 ,
+         -9.641399 , -10.570669 ],
+       [-10.314852 ,  -3.4103851,  -3.4116478, ...,  -9.233808 ,
+         -9.640871 , -10.570368 ]], dtype=float32)}
 </pre></div>
 </div>
 </div>
@@ -926,7 +795,7 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(33, 497)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(23, 489)
 </pre></div>
 </div>
 </div>
