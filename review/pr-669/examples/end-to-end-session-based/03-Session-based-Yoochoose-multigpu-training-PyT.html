@@ -148,6 +148,8 @@
 <li><p><b>data repartitioning</b>: when training on multiple GPUs, data must be re-partitioned into &gt;1 partitions where the number of partitions must be at least equal to the number of GPUs. The torch utility library in Transformers4Rec does this automatically and outputs a UserWarning message. If you would like to avoid this warning message, you may choose to manually re-partition your data files before you launch the training loop or function. See <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html#distributeddataparallel">this document</a> for further information on how to do manual re-partitioning.</p></li>
 <li><p><b>training and evaluation batch sizes</b>: in the default DistributedDataParallel mode we will be running, keeping the batch size unchanged means each worker will receive the same-size batch despite the fact that you are now using multiple GPUs. If you would like to keep the total batch size constant, you may want to divide the training and evaluation batch sizes by the number of GPUs you are running on, which is expected to reduce time it takes train and evaluate on each batch.</p></li>
 </ul>
+<p>Finally, if you have worked with the <b>synthetic</b> data set in notebook 01, search and modify the code in the next cell as follows:</p>
+<p><code class="docutils literal notranslate"><span class="pre">USE_SYNTHETIC</span> <span class="pre">=</span> <span class="pre">os.environ.get(&quot;USE_SYNTHETIC&quot;,</span> <span class="pre">&quot;True&quot;)</span></code></p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%writefile</span> &#39;./pyt_trainer.py&#39;
@@ -169,8 +171,8 @@
 <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--local_rank&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory with training and validation data&#39;</span><span class="p">)</span>
 <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--learning-rate&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">float</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Learning rate for training&#39;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--per-device-train-batch-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">384</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Per device batch size for training&#39;</span><span class="p">)</span>
-<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--per-device-eval-batch-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Per device batch size for evaluation&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--per-device-train-batch-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Per device batch size for training&#39;</span><span class="p">)</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--per-device-eval-batch-size&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Per device batch size for evaluation&#39;</span><span class="p">)</span>
 <span class="n">sh_args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 
 <span class="c1"># create the schema object by reading the processed train set generated in the previous 01-ETL-with-NVTabular notebook</span>
@@ -235,8 +237,14 @@
 <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
 <span class="c1"># main loop for training</span>
-<span class="n">start_time_window_index</span> <span class="o">=</span> <span class="mi">178</span>
-<span class="n">final_time_window_index</span> <span class="o">=</span> <span class="mi">181</span>
+<span class="n">USE_SYNTHETIC</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;USE_SYNTHETIC&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">)</span>
+<span class="k">if</span> <span class="n">USE_SYNTHETIC</span><span class="p">:</span>
+    <span class="n">start_time_window_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;START_DAY_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">))</span>
+    <span class="n">final_time_window_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;FINAL_DAY_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;4&quot;</span><span class="p">))</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">start_time_window_index</span> <span class="o">=</span> <span class="mi">178</span>
+    <span class="n">final_time_window_index</span> <span class="o">=</span> <span class="mi">181</span>
+
 <span class="c1"># Iterating over days from 178 to 181</span>
 <span class="k">for</span> <span class="n">time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_time_window_index</span><span class="p">,</span> <span class="n">final_time_window_index</span><span class="p">):</span>
     <span class="c1"># Set data </span>
@@ -244,7 +252,7 @@
     <span class="n">time_index_eval</span> <span class="o">=</span> <span class="n">time_index</span> <span class="o">+</span> <span class="mi">1</span>
     <span class="n">train_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">time_index_train</span><span class="si">}</span><span class="s2">/train.parquet&quot;</span><span class="p">))</span>
     <span class="n">eval_paths</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">time_index_eval</span><span class="si">}</span><span class="s2">/valid.parquet&quot;</span><span class="p">))</span>
-    
+
     <span class="c1"># Train on day related to time_index </span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="o">*</span><span class="mi">20</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Launch training for day </span><span class="si">%s</span><span class="s2"> are:&quot;</span> <span class="o">%</span><span class="n">time_index</span><span class="p">)</span>
@@ -266,7 +274,12 @@
     <span class="n">wipe_memory</span><span class="p">()</span>
 
 <span class="n">end</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total training time:&#39;</span><span class="p">,</span><span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Total training time:&#39;</span><span class="p">,</span> <span class="n">end</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Overwriting ./pyt_trainer.py
 </pre></div>
 </div>
 </div>
@@ -284,7 +297,209 @@
 </ul>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span><span class="w"> </span>torchrun<span class="w"> </span>--nproc_per_node<span class="w"> </span><span class="m">2</span><span class="w"> </span>pyt_trainer.py<span class="w"> </span>--path<span class="w"> </span><span class="s2">&quot;/workspace/data/preproc_sessions_by_day&quot;</span><span class="w"> </span>--learning-rate<span class="w"> </span><span class="m">0</span>.0005
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/preproc_sessions_by_day&quot;</span><span class="p">)</span>
+<span class="n">LR</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;LEARNING_RATE&quot;</span><span class="p">,</span> <span class="s2">&quot;0.0005&quot;</span><span class="p">))</span>
+<span class="n">BATCH_SIZE_TRAIN</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;BATCH_SIZE_TRAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;64&quot;</span><span class="p">))</span>
+<span class="n">BATCH_SIZE_VALID</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;BATCH_SIZE_VALID&quot;</span><span class="p">,</span> <span class="s2">&quot;32&quot;</span><span class="p">))</span>
+<span class="o">!</span>torchrun<span class="w"> </span>--nproc_per_node<span class="w"> </span><span class="m">2</span><span class="w"> </span>pyt_trainer.py<span class="w"> </span>--path<span class="w"> </span><span class="o">{</span>OUTPUT_DIR<span class="o">}</span><span class="w"> </span>--learning-rate<span class="w"> </span><span class="o">{</span>LR<span class="o">}</span><span class="w"> </span>--per-device-train-batch-size<span class="w"> </span><span class="o">{</span>BATCH_SIZE_TRAIN<span class="o">}</span><span class="w"> </span>--per-device-eval-batch-size<span class="w"> </span><span class="o">{</span>BATCH_SIZE_VALID<span class="o">}</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>WARNING:torch.distributed.run:
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;320&#39; to be equal to the item-id embedding dimension &#39;64&#39;
+Projecting inputs of NextItemPredictionTask to&#39;64&#39; As weight tying requires the input dimension &#39;320&#39; to be equal to the item-id embedding dimension &#39;64&#39;
+********************
+Launch training for day 1 are:
+********************
+
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+********************
+Launch training for day 1 are:
+********************
+
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+***** Running training *****
+  Num examples = 896
+  Num Epochs = 10
+  Instantaneous batch size per device = 64
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 140
+ 99%|████████████████████████████████████████▍| 138/140 [00:08&lt;00:00, 21.46it/s]
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+finished
+{&#39;train_runtime&#39;: 8.7957, &#39;train_samples_per_second&#39;: 1.137, &#39;train_steps_per_second&#39;: 15.917, &#39;train_loss&#39;: 4.655868966238839, &#39;epoch&#39;: 10.0}
+100%|█████████████████████████████████████████| 140/140 [00:08&lt;00:00, 15.92it/s]
+finished
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+  0%|                                                     | 0/3 [00:00&lt;?, ?it/s]********************
+Eval results for day 2 are:	
+
+********************
+
+ eval_/loss = 4.298766613006592
+ eval_/next-item/avg_precision_at_10 = 0.08962880074977875
+ eval_/next-item/avg_precision_at_20 = 0.10595977306365967
+ eval_/next-item/ndcg_at_10 = 0.13458143174648285
+ eval_/next-item/ndcg_at_20 = 0.19475054740905762
+ eval_/next-item/recall_at_10 = 0.2864583432674408
+ eval_/next-item/recall_at_20 = 0.5260416865348816
+ eval_runtime = 0.188
+ eval_samples_per_second = 510.559
+ eval_steps_per_second = 10.637
+100%|█████████████████████████████████████████████| 3/3 [00:00&lt;00:00, 41.88it/s]
+********************
+Eval results for day 2 are:	
+
+********************
+
+ eval_/loss = 4.298766613006592
+ eval_/next-item/avg_precision_at_10 = 0.08962880074977875
+ eval_/next-item/avg_precision_at_20 = 0.10595977306365967
+ eval_/next-item/ndcg_at_10 = 0.13458143174648285
+ eval_/next-item/ndcg_at_20 = 0.19475054740905762
+ eval_/next-item/recall_at_10 = 0.2864583432674408
+ eval_/next-item/recall_at_20 = 0.5260416865348816
+ eval_runtime = 0.1883
+ eval_samples_per_second = 509.831
+ eval_steps_per_second = 10.621
+********************
+Launch training for day 2 are:
+********************
+
+********************
+Launch training for day 2 are:
+********************
+
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+***** Running training *****
+  Num examples = 896
+  Num Epochs = 10
+  Instantaneous batch size per device = 64
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 140
+ 99%|████████████████████████████████████████▍| 138/140 [00:06&lt;00:00, 23.02it/s]
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+finished
+{&#39;train_runtime&#39;: 6.9759, &#39;train_samples_per_second&#39;: 1.434, &#39;train_steps_per_second&#39;: 20.069, &#39;train_loss&#39;: 4.380169241768973, &#39;epoch&#39;: 10.0}
+100%|█████████████████████████████████████████| 140/140 [00:06&lt;00:00, 20.07it/s]
+finished
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+100%|█████████████████████████████████████████████| 3/3 [00:00&lt;00:00, 29.31it/s]********************
+Eval results for day 3 are:	
+
+********************
+
+ eval_/loss = 4.282521724700928
+ eval_/next-item/avg_precision_at_10 = 0.10143022984266281
+ eval_/next-item/avg_precision_at_20 = 0.11465895175933838
+ eval_/next-item/ndcg_at_10 = 0.15677432715892792
+ eval_/next-item/ndcg_at_20 = 0.20357738435268402
+ eval_/next-item/recall_at_10 = 0.34375
+ eval_/next-item/recall_at_20 = 0.5260416865348816
+ eval_runtime = 0.2227
+ eval_samples_per_second = 430.977
+ eval_steps_per_second = 8.979
+100%|█████████████████████████████████████████████| 3/3 [00:00&lt;00:00, 27.83it/s]
+********************
+Eval results for day 3 are:	
+
+********************
+
+ eval_/loss = 4.282521724700928
+ eval_/next-item/avg_precision_at_10 = 0.10143022984266281
+ eval_/next-item/avg_precision_at_20 = 0.11465895175933838
+ eval_/next-item/ndcg_at_10 = 0.15677432715892792
+ eval_/next-item/ndcg_at_20 = 0.20357738435268402
+ eval_/next-item/recall_at_10 = 0.34375
+ eval_/next-item/recall_at_20 = 0.5260416865348816
+ eval_runtime = 0.2211
+ eval_samples_per_second = 434.152
+ eval_steps_per_second = 9.045
+********************
+Launch training for day 3 are:
+********************
+
+********************
+Launch training for day 3 are:
+********************
+
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+***** Running training *****
+  Num examples = 832
+  Num Epochs = 10
+  Instantaneous batch size per device = 64
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 130
+ 98%|████████████████████████████████████████▎| 128/130 [00:06&lt;00:00, 21.75it/s]
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
+
+
+finished
+{&#39;train_runtime&#39;: 6.6023, &#39;train_samples_per_second&#39;: 1.515, &#39;train_steps_per_second&#39;: 19.69, &#39;train_loss&#39;: 4.432806396484375, &#39;epoch&#39;: 10.0}
+100%|█████████████████████████████████████████| 130/130 [00:06&lt;00:00, 19.69it/s]
+finished
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+UserWarning: User is advised to repartition the parquet file before training so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning eg. pdf.to_parquet(&#39;file.parquet&#39;,row_group_size=N_ROWS/NPARTITIONS) for pandas or gdf.to_parquet(&#39;file.parquet&#39;,row_group_size_rows=N_ROWS/NPARTITIONS) for cudf so that npartitions=nr_rows/row_group_size. Also ensure npartitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).
+  0%|                                                     | 0/3 [00:00&lt;?, ?it/s]********************
+Eval results for day 4 are:	
+
+********************
+
+ eval_/loss = 4.350400447845459
+ eval_/next-item/avg_precision_at_10 = 0.08414351940155029
+ eval_/next-item/avg_precision_at_20 = 0.10239402949810028
+ eval_/next-item/ndcg_at_10 = 0.13084712624549866
+ eval_/next-item/ndcg_at_20 = 0.19692164659500122
+ eval_/next-item/recall_at_10 = 0.2916666865348816
+ eval_/next-item/recall_at_20 = 0.5520833730697632
+ eval_runtime = 0.1911
+ eval_samples_per_second = 502.416
+ eval_steps_per_second = 10.467
+100%|█████████████████████████████████████████████| 3/3 [00:00&lt;00:00, 39.95it/s]
+********************
+Eval results for day 4 are:	
+
+********************
+
+ eval_/loss = 4.350400447845459
+ eval_/next-item/avg_precision_at_10 = 0.08414351940155029
+ eval_/next-item/avg_precision_at_20 = 0.10239402949810028
+ eval_/next-item/ndcg_at_10 = 0.13084712624549866
+ eval_/next-item/ndcg_at_20 = 0.19692164659500122
+ eval_/next-item/recall_at_10 = 0.2916666865348816
+ eval_/next-item/recall_at_20 = 0.5520833730697632
+ eval_runtime = 0.1918
+ eval_samples_per_second = 500.534
+ eval_steps_per_second = 10.428
+Total training time: 24.93268895149231
+Total training time: 29.117866277694702
 </pre></div>
 </div>
 </div>
