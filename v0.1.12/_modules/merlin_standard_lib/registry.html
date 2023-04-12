@@ -256,7 +256,7 @@
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;key </span><span class="si">%s</span><span class="s2"> already registered in registry </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span><span class="p">))</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;value must be callable&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_registry</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
@@ -306,7 +306,7 @@
             <span class="k">return</span> <span class="n">value</span>
 
         <span class="c1"># Handle if decorator was used without parens</span>
-        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">key_or_value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">key_or_value</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">decorator</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">key_or_value</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="k">lambda</span> <span class="n">value</span><span class="p">:</span> <span class="n">decorator</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key_or_value</span><span class="p">)</span></div>
