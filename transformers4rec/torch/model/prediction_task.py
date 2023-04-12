@@ -316,11 +316,12 @@ class NextItemPredictionTask(PredictionTask):
             labels = self.masking.masked_targets  # type: ignore
             trg_flat = labels.flatten()
             non_pad_mask = trg_flat != self.padding_idx
-            labels_all = torch.masked_select(trg_flat, non_pad_mask)
+            labels_all = torch.masked_select(trg_flat, non_pad_mask).long()
             # remove padded items, keep only masked positions
             x = self.remove_pad_3d(x, non_pad_mask)
             y = labels_all
             x, y = self.pre(x, targets=y, training=training, testing=testing)  # type: ignore
+
             loss = self.loss(x, y)
             return {
                 "loss": loss,
@@ -520,10 +521,10 @@ class _NextItemPredictionTask(torch.nn.Module):
 
         # Remove accidental matches
         accidental_hits = torch.unsqueeze(targets, -1) == torch.unsqueeze(neg_samples, 0)
-        negative_scores[accidental_hits] = -1e37
+        negative_scores[accidental_hits] = torch.finfo(torch.float16).min / 100.0
 
         logits = torch.cat([positive_scores, negative_scores], axis=1)
-        new_targets = torch.zeros(logits.shape[0], dtype=torch.int64)
+        new_targets = torch.zeros(logits.shape[0], dtype=torch.int64, device=targets.device)
 
         return logits, new_targets
 
@@ -670,17 +671,17 @@ class LogUniformSampler:
             neg_samples = torch.multinomial(self.dist, n_tries, replacement=True).unique()[
                 : self.max_n_samples
             ]
+
             device = labels.device
             neg_samples = neg_samples.to(device)
 
             if self.unique_sampling:
-                true_probs = self.unique_sampling_dist[labels]
-                samples_probs = self.unique_sampling_dist[neg_samples]
+                dist = self.unique_sampling_dist
             else:
-                true_probs = self.dist[labels]
-                samples_probs = self.dist[neg_samples]
+                dist = self.dist
+            dist = dist.to(device)
 
-            true_probs = true_probs.to(device)
-            samples_probs = samples_probs.to(device)
+            true_probs = dist[labels]
+            samples_probs = dist[neg_samples]
 
             return neg_samples, true_probs, samples_probs
