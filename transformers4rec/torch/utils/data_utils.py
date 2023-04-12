@@ -372,7 +372,10 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     def _get_pad_fn(padding_lengths):
         def pad_fn(x, y):
             new_x = pad_batch(x, padding_lengths)
-            new_y = pad_batch(y, padding_lengths)
+            if y is not None and isinstance(y, dict):
+                new_y = pad_batch(y, padding_lengths)
+            else:
+                new_y = y
             return new_x, new_y
 
         return pad_fn

@@ -37,6 +37,7 @@ from ..block.base import BlockBase, BlockOrModule, BlockType
 from ..features.base import InputBlock
 from ..features.sequence import TabularFeaturesType
 from ..typing import TabularData
+from ..utils.padding import pad_inputs
 from ..utils.torch_utils import LossMixin, MetricsMixin
 
 
@@ -481,6 +482,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         head_reduction: str = "mean",
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name: str = None,
+        max_sequence_length: Optional[int] = None,
     ):
         """Model class that can aggregate one or multiple heads.
         Parameters
@@ -495,6 +497,9 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             Optimizer-class to use during fitting
         name: str, optional
             Name of the model.
+        max_sequence_length : int, optional
+            The maximum sequence length supported by the model.
+            Used to truncate sequence inputs longer than this value.
         """
         if head_weights:
             if not isinstance(head_weights, list):
@@ -511,12 +516,16 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_weights = head_weights or [1.0] * len(head)
         self.head_reduction = head_reduction
         self.optimizer = optimizer
+        self.max_sequence_length = max_sequence_length
 
     def forward(self, inputs: TabularData, targets=None, training=False, testing=False, **kwargs):
         # Convert inputs to float32 which is the default type, expected by PyTorch
         for name, val in inputs.items():
             if torch.is_floating_point(val):
                 inputs[name] = val.to(torch.float32)
+
+        # pad ragged inputs
+        inputs = pad_inputs(inputs, self.max_sequence_length)
 
         if isinstance(targets, dict) and len(targets) == 0:
             # `pyarrow`` dataloader is returning {} instead of None
