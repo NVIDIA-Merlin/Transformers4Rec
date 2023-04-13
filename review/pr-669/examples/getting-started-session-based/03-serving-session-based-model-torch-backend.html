@@ -123,14 +123,17 @@
 
 <span class="kn">import</span> <span class="nn">cudf</span>
 <span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="kn">import</span> <span class="nn">torch</span> 
 
 <span class="kn">from</span> <span class="nn">transformers4rec</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">tr</span>
 <span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
 
-<span class="kn">from</span> <span class="nn">merlin.core.dispatch</span> <span class="kn">import</span> <span class="n">make_df</span>  <span class="c1"># noqa</span>
-<span class="kn">from</span> <span class="nn">merlin.systems.dag</span> <span class="kn">import</span> <span class="n">Ensemble</span>  <span class="c1"># noqa</span>
-<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.pytorch</span> <span class="kn">import</span> <span class="n">PredictPyTorch</span>  <span class="c1"># noqa</span>
+<span class="kn">from</span> <span class="nn">merlin.core.dispatch</span> <span class="kn">import</span> <span class="n">make_df</span> 
+<span class="kn">from</span> <span class="nn">merlin.systems.dag</span> <span class="kn">import</span> <span class="n">Ensemble</span>  
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.pytorch</span> <span class="kn">import</span> <span class="n">PredictPyTorch</span> 
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.workflow</span> <span class="kn">import</span> <span class="n">TransformWorkflow</span> 
 </pre></div>
 </div>
 </div>
@@ -216,8 +219,8 @@
             (categorical_module): SequenceEmbeddingFeatures(
               (filter_features): FilterFeatures()
               (embedding_tables): ModuleDict(
-                (item_id-list): Embedding(481, 64, padding_idx=0)
-                (category-list): Embedding(145, 64, padding_idx=0)
+                (item_id-list): Embedding(489, 64, padding_idx=0)
+                (category-list): Embedding(165, 64, padding_idx=0)
               )
             )
           )
@@ -288,15 +291,15 @@
           (embeddings): SequenceEmbeddingFeatures(
             (filter_features): FilterFeatures()
             (embedding_tables): ModuleDict(
-              (item_id-list): Embedding(481, 64, padding_idx=0)
-              (category-list): Embedding(145, 64, padding_idx=0)
+              (item_id-list): Embedding(489, 64, padding_idx=0)
+              (category-list): Embedding(165, 64, padding_idx=0)
             )
           )
-          (item_embedding_table): Embedding(481, 64, padding_idx=0)
+          (item_embedding_table): Embedding(489, 64, padding_idx=0)
           (masking): MaskedLanguageModeling()
           (pre): Block(
             (module): NextItemPredictionTask(
-              (item_embedding_table): Embedding(481, 64, padding_idx=0)
+              (item_embedding_table): Embedding(489, 64, padding_idx=0)
               (log_softmax): LogSoftmax(dim=-1)
             )
           )
@@ -362,13 +365,13 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[ 7,  7, 41,  ...,  0,  0,  0],
-        [31, 11, 88,  ...,  0,  0,  0],
-        [17, 31,  6,  ...,  0,  0,  0],
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[  5,  42,  24,  ...,   0,   0,   0],
+        [  8,   4,  40,  ...,   0,   0,   0],
+        [ 29,  16,  38,  ...,   0,   0,   0],
         ...,
-        [ 2, 35,  0,  ...,  0,  0,  0],
-        [ 6, 12, 20,  ...,  0,  0,  0],
-        [31, 10, 11,  ...,  0,  0,  0]], device=&#39;cuda:0&#39;)
+        [  5,   2,  12,  ...,   0,   0,   0],
+        [ 29,  11,  13,  ...,   0,   0,   0],
+        [161,  12,  32,  ...,   0,   0,   0]], device=&#39;cuda:0&#39;)
 </pre></div>
 </div>
 </div>
@@ -491,7 +494,7 @@
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.ID, Tags.ITEM_ID, Tags.ITEM, Tags.CATEGO...</td>
+      <td>(Tags.ID, Tags.CATEGORICAL, Tags.ITEM, Tags.LI...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -502,16 +505,16 @@
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.item_id.parquet</td>
-      <td>481.0</td>
+      <td>489.0</td>
       <td>51.0</td>
       <td>0.0</td>
-      <td>480.0</td>
+      <td>488.0</td>
       <td>item_id</td>
     </tr>
     <tr>
       <th>3</th>
       <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -522,10 +525,10 @@
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.category.parquet</td>
-      <td>145.0</td>
-      <td>26.0</td>
+      <td>165.0</td>
+      <td>28.0</td>
       <td>0.0</td>
-      <td>144.0</td>
+      <td>164.0</td>
       <td>category</td>
     </tr>
   </tbody>
@@ -545,12 +548,37 @@
 </div>
 </div>
 </div>
-<p>We use <code class="docutils literal notranslate"><span class="pre">PredictPyTorch</span></code> operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.</p>
+<p>We want to serve NVT model and our trained session-based model together as an ensemble to the Triton Inference Server. That way we can send raw requests to Triton and return back item scores per session. For that we need to load our save workflow first.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nvtabular.workflow</span> <span class="kn">import</span> <span class="n">Workflow</span>
+<span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;workflow_etl&quot;</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;item_id&#39;, &#39;category&#39;, &#39;day&#39;, &#39;age_days&#39;, &#39;weekday_sin&#39;, &#39;session_id&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<p>For transforming the raw input features during inference, we use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/workflow.py">TransformWorkflow</a> operator that ensures the workflow is correctly saved and packaged with the required config so the server will know how to load it. We use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/pytorch.py">PredictPyTorch</a> operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">TransformWorkflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
     <span class="n">traced_model</span><span class="p">,</span> <span class="n">input_schema</span><span class="p">,</span> <span class="n">output_schema</span>
 <span class="p">)</span>
+
+<span class="n">ensemble</span> <span class="o">=</span> <span class="n">Ensemble</span><span class="p">(</span><span class="n">torch_op</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;session_id&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;day-first&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -559,8 +587,7 @@
 <p>When we create an <code class="docutils literal notranslate"><span class="pre">Ensemble</span></code> object we supply the graph and a schema representing the starting input of the graph. The inputs to the ensemble graph are the inputs to the first operator of out graph. After we created the Ensemble we export the graph, supplying an export path for the <code class="docutils literal notranslate"><span class="pre">ensemble.export</span></code> function. This returns an ensemble config which represents the entire inference pipeline and a list of node-specific configs.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ensemble</span> <span class="o">=</span> <span class="n">Ensemble</span><span class="p">(</span><span class="n">torch_op</span><span class="p">,</span> <span class="n">input_schema</span><span class="p">)</span>
-<span class="n">ens_config</span><span class="p">,</span> <span class="n">node_configs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ens_config</span><span class="p">,</span> <span class="n">node_configs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -595,105 +622,56 @@
       <th>dtype</th>
       <th>is_list</th>
       <th>is_ragged</th>
-      <th>properties.triton_scalar_shape</th>
-      <th>properties.value_count.min</th>
-      <th>properties.value_count.max</th>
-      <th>properties.num_buckets</th>
-      <th>properties.freq_threshold</th>
-      <th>properties.max_size</th>
-      <th>properties.start_index</th>
-      <th>properties.cat_path</th>
-      <th>properties.embedding_sizes.cardinality</th>
-      <th>properties.embedding_sizes.dimension</th>
-      <th>properties.domain.min</th>
-      <th>properties.domain.max</th>
-      <th>properties.domain.name</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>weekday_sin-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
+      <td>item_id</td>
+      <td>()</td>
+      <td>DType(name='int32', element_type=&lt;ElementType....</td>
       <td>False</td>
-      <td>[]</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
+      <td>False</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>age_days-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
+      <td>category</td>
+      <td>()</td>
+      <td>DType(name='int32', element_type=&lt;ElementType....</td>
       <td>False</td>
-      <td>[]</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
+      <td>False</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>item_id-list</td>
-      <td>(Tags.ID, Tags.ITEM_ID, Tags.ITEM, Tags.CATEGO...</td>
+      <td>day</td>
+      <td>()</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
       <td>False</td>
-      <td>[]</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>.//categories/unique.item_id.parquet</td>
-      <td>481.0</td>
-      <td>51.0</td>
-      <td>0.0</td>
-      <td>480.0</td>
-      <td>item_id</td>
+      <td>False</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
+      <td>age_days</td>
+      <td>()</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>False</td>
-      <td>[]</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>.//categories/unique.category.parquet</td>
-      <td>145.0</td>
-      <td>26.0</td>
-      <td>0.0</td>
-      <td>144.0</td>
-      <td>category</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>weekday_sin</td>
+      <td>()</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>False</td>
+      <td>False</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>session_id</td>
+      <td>()</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>False</td>
+      <td>False</td>
     </tr>
   </tbody>
 </table>
@@ -738,11 +716,12 @@
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
 POST /v2/repository/index, headers None
 
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;121&#39;}&gt;
-bytearray(b&#39;[{&quot;name&quot;:&quot;0_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;executor_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;188&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;1_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;executor_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
 </pre></div>
 </div>
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_predictpytorchtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_transformworkflowtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;1_predictpytorchtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
  {&#39;name&#39;: &#39;executor_model&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
 </pre></div>
 </div>
@@ -751,138 +730,60 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;0_predictpytorchtriton&quot;,&quot;vers
 <div class="section" id="send-request-to-triton-and-get-the-response">
 <h3>Send request to Triton and get the response<a class="headerlink" href="#send-request-to-triton-and-get-the-response" title="Permalink to this headline"></a></h3>
 <p>The last step of a machine learning (ML)/deep learning (DL) pipeline is to deploy the model to production, and get responses for a given query or a set of queries.
-In this section, we generate a dataframe that we can serve as a request to TIS. Note that this is a transformed dataframe. We also need out dataset list columns to be padded to the max sequence length that was set in the ETL pipeline.</p>
-<p>We do not serve the raw dataframe because in the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the deployed DL model for a prediction. Therefore, we use a transformed dataset that is processed similarly as train set.</p>
+In this section, we generate a dataframe that we can serve as a request to TIS. We do serve the raw dataframe and in the production setting, we want to transform the input data as done during training (ETL). We need to apply the same mean/std for continuous features and use the same categorical mapping to convert the categories to continuous integer before we use the deployed DL model for a prediction.</p>
+<p>Let’s generate a dataframe with raw input values. We can send this dataframe to Triton as a request.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">eval_batch_size</span> <span class="o">=</span> <span class="mi">32</span>
-<span class="n">eval_paths</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">OUTPUT_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mi">1</span><span class="si">}</span><span class="s2">/valid.parquet&quot;</span><span class="p">)</span>
-<span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">eval_paths</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="n">eval_loader</span> <span class="o">=</span> <span class="n">generate_dataloader</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">eval_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">eval_batch_size</span><span class="p">)</span>
-<span class="n">test_dict</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">eval_loader</span><span class="p">))</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">test_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_ROWS</span> <span class="o">=</span><span class="mi">1000</span>
+<span class="n">long_tailed_item_distribution</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">lognormal</span><span class="p">(</span><span class="mf">3.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">50000</span><span class="p">)</span>
+<span class="c1"># generate random item interaction features </span>
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">70000</span><span class="p">,</span> <span class="mi">90000</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">)),</span> <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;session_id&#39;</span><span class="p">])</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">long_tailed_item_distribution</span>
+
+<span class="c1"># generate category mapping for each item-id</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;item_id&#39;</span><span class="p">],</span> <span class="n">bins</span><span class="o">=</span><span class="mi">334</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">335</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;age_days&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;weekday_sin&#39;</span><span class="p">]</span><span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">NUM_ROWS</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="c1"># generate day mapping for each session </span>
+<span class="n">map_day</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">unique</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">nunique</span><span class="p">()))))</span>
+<span class="n">df</span><span class="p">[</span><span class="s1">&#39;day&#39;</span><span class="p">]</span> <span class="o">=</span>  <span class="n">df</span><span class="o">.</span><span class="n">session_id</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">map_day</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([ 7,  5,  5, 12,  7, 19, 62, 14,  4,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-         0,  0], device=&#39;cuda:0&#39;)
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id  item_id  category  age_days  weekday_sin  day
+0       86940        5         3  0.537970     0.002699    6
+1       81596       17         9  0.782668     0.385270    4
 </pre></div>
 </div>
 </div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df_cols</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">test_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">:</span>
-        <span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">df_cols</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
-            
-<span class="n">df</span> <span class="o">=</span> <span class="n">make_df</span><span class="p">(</span><span class="n">df_cols</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-<span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(32, 4)
-</pre></div>
-</div>
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>age_days-list</th>
-      <th>weekday_sin-list</th>
-      <th>item_id-list</th>
-      <th>category-list</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>[0.30438614, 0.809415, 0.4060944, 0.3965151, 0...</td>
-      <td>[0.1224156, 0.4469866, 0.0006228724, 0.2732989...</td>
-      <td>[7, 5, 5, 12, 7, 19, 62, 14, 4, 0, 0, 0, 0, 0,...</td>
-      <td>[2, 1, 1, 3, 2, 6, 13, 4, 1, 0, 0, 0, 0, 0, 0,...</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>[0.96371543, 0.23374352, 0.79393756, 0.0, 0.0,...</td>
-      <td>[0.17755665, 0.07790468, 0.7028925, 0.0, 0.0, ...</td>
-      <td>[23, 19, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
-      <td>[5, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>[0.7407414, 0.2928302, 0.1934419, 0.0, 0.0, 0....</td>
-      <td>[0.12156885, 0.051108807, 0.806525, 0.0, 0.0, ...</td>
-      <td>[12, 14, 18, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
-      <td>[3, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>[0.8000404, 0.72552097, 0.8033363, 0.06934566,...</td>
-      <td>[0.37198335, 0.5371064, 0.9486511, 0.7411687, ...</td>
-      <td>[21, 58, 13, 5, 44, 0, 0, 0, 0, 0, 0, 0, 0, 0,...</td>
-      <td>[3, 12, 2, 1, 11, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>[0.10884159, 0.2825696, 0.60954845, 0.0, 0.0, ...</td>
-      <td>[0.09428788, 0.88109225, 0.15780881, 0.0, 0.0,...</td>
-      <td>[5, 10, 32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...</td>
-      <td>[1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
 </div>
 <p>Once our models are successfully loaded to the TIS, we can now easily send a request to TIS and get a response for our query with send_triton_request utility function.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">df</span><span class="p">[</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">],</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">df</span><span class="p">,</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[-10.279172 ,  -3.3285382,  -3.423249 , ...,  -9.597292 ,
-        -10.079497 ,  -9.894423 ],
-       [-10.279955 ,  -3.328599 ,  -3.4235704, ...,  -9.596973 ,
-        -10.079582 ,  -9.894649 ],
-       [-10.28006  ,  -3.32861  ,  -3.4236221, ...,  -9.596931 ,
-        -10.079575 ,  -9.894657 ],
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[-10.3142395,  -3.4098535,  -3.4116247, ...,  -9.233587 ,
+         -9.641741 , -10.570887 ],
+       [-10.314354 ,  -3.4099286,  -3.4116242, ...,  -9.233635 ,
+         -9.6416   , -10.570789 ],
+       [-10.315022 ,  -3.4105031,  -3.4116468, ...,  -9.233878 ,
+         -9.640664 , -10.570228 ],
        ...,
-       [-10.279462 ,  -3.3285487,  -3.423347 , ...,  -9.597226 ,
-        -10.079483 ,  -9.894518 ],
-       [-10.28092  ,  -3.3286107,  -3.4241762, ...,  -9.596828 ,
-        -10.07973  ,  -9.894941 ],
-       [-10.280691 ,  -3.3285236,  -3.424143 , ...,  -9.596914 ,
-        -10.079795 ,  -9.894926 ]], dtype=float32)}
+       [-10.314558 ,  -3.4101386,  -3.411638 , ...,  -9.233701 ,
+         -9.641275 , -10.570612 ],
+       [-10.314491 ,  -3.4100583,  -3.4116335, ...,  -9.233676 ,
+         -9.641399 , -10.570669 ],
+       [-10.314852 ,  -3.4103851,  -3.4116478, ...,  -9.233808 ,
+         -9.640871 , -10.570368 ]], dtype=float32)}
 </pre></div>
 </div>
 </div>
@@ -894,13 +795,13 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(32, 481)
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(23, 489)
 </pre></div>
 </div>
 </div>
 </div>
 <p>We return a response for each request in the df. Each row in the <code class="docutils literal notranslate"><span class="pre">response['next-item']</span></code> array corresponds to the logit values per item in the catalog, and one logit score corresponding to the null, OOV and padded items. The first score of each array in each row corresponds to the score for the padded item, OOV or null item. Note that we dont have OOV or null items in our syntheticall generated datasets.</p>
-<p>This is the end of this suit of examples. You successfully performed feature engineering with NVTabular trained transformer architecture based session-based recommendation models with Transformers4Rec deployed a trained model to Triton Inference Server with Torch backend, sent request and got responses from the server. If you would like to learn how to serve a TF4Rec model with Python backend please visit this <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb">example</a>.</p>
+<p>This is the end of this suit of examples. You successfully performed feature engineering with NVTabular trained transformer architecture based session-based recommendation models with Transformers4Rec deployed the saved workflow and the trained model to Triton Inference Server with Torch backend, sent request and got responses from the server. If you would like to learn how to serve a TF4Rec model with Python backend please visit this <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb">example</a>.</p>
 </div>
 </div>
 </div>
