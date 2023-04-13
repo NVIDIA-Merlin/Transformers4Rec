@@ -466,7 +466,7 @@ class _NextItemPredictionTask(torch.nn.Module):
         self.sampled_softmax = sampled_softmax
 
         if not self.weight_tying:
-            self.output_layer = torch.nn.Parameter(torch.empty(input_size[-1], self.target_dim))
+            self.output_layer = torch.nn.Parameter(torch.empty(self.target_dim, input_size[-1]))
             torch.nn.init.kaiming_uniform_(self.output_layer, a=sqrt(5))
 
         if self.sampled_softmax:
@@ -486,15 +486,14 @@ class _NextItemPredictionTask(torch.nn.Module):
         **kwargs,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         if self.weight_tying:
-            output_weights = self.item_embedding_table.weight.t()
+            output_weights = self.item_embedding_table.weight
         else:
             output_weights = self.output_layer
 
-        if self.sampled_softmax and (training or testing):
+        if self.sampled_softmax and training:
             logits, targets = self.sampled(inputs, targets, output_weights)
-
         else:
-            logits = inputs @ output_weights
+            logits = inputs @ output_weights.t()
 
         if self.softmax_temperature:
             # Softmax temperature to reduce model overconfidence
@@ -507,8 +506,8 @@ class _NextItemPredictionTask(torch.nn.Module):
         """Returns logits using sampled softmax"""
         neg_samples, targets_probs, samples_probs = self.sampler.sample(targets)
 
-        positive_weights = output_weights.t()[targets]
-        negative_weights = output_weights.t()[neg_samples]
+        positive_weights = output_weights[targets]
+        negative_weights = output_weights[neg_samples]
 
         positive_scores = (inputs * positive_weights).sum(dim=-1, keepdim=True)
         negative_scores = inputs @ negative_weights.t()

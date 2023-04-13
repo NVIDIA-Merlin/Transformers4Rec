@@ -173,7 +173,7 @@ class AvgPrecisionAt(RankingMetric):
         num_relevant = torch.sum(labels, dim=1)
         max_k = max(ks)
 
-        precisions = self.precision_at(1 + torch.arange(max_k), topk_scores, topk_labels)
+        precisions = self.precision_at(list(range(1, max_k + 1)), topk_scores, topk_labels)
         rel_precisions = precisions * topk_labels
 
         for index, k in enumerate(ks):

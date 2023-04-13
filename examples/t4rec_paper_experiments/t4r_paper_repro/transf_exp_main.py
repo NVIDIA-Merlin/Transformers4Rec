@@ -145,6 +145,8 @@ def main():
         softmax_temperature=model_args.softmax_temperature,
         metrics=metrics,
         loss=label_smoothing_xe_loss,
+        sampled_softmax=model_args.sampled_softmax,
+        max_n_samples=model_args.sampled_softmax_max_n_samples,
     )
 
     model_config = get_model_config(training_args, model_args)
