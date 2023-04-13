@@ -263,7 +263,7 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM_ID, Tags.ID, Tags.CATEGORICAL, Tags...</td>
+      <td>(Tags.ITEM_ID, Tags.ID, Tags.LIST, Tags.CATEGO...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -272,10 +272,10 @@
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.item_id.parquet</td>
-      <td>481.0</td>
-      <td>51.0</td>
+      <td>497.0</td>
+      <td>52.0</td>
       <td>0.0</td>
-      <td>480.0</td>
+      <td>496.0</td>
       <td>item_id</td>
       <td>20</td>
       <td>20</td>
@@ -283,7 +283,7 @@
     <tr>
       <th>1</th>
       <td>category-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -292,10 +292,10 @@
       <td>0.0</td>
       <td>0.0</td>
       <td>.//categories/unique.category.parquet</td>
-      <td>145.0</td>
+      <td>143.0</td>
       <td>26.0</td>
       <td>0.0</td>
-      <td>144.0</td>
+      <td>142.0</td>
       <td>category</td>
       <td>20</td>
       <td>20</td>
@@ -303,7 +303,7 @@
     <tr>
       <th>2</th>
       <td>weekday_sin-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
@@ -323,7 +323,7 @@
     <tr>
       <th>3</th>
       <td>age_days-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
@@ -561,7 +561,7 @@ Launch training for day 1 are:
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:01, Epoch 5/5]
+      [65/65 00:02, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -573,7 +573,7 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>5.812300</td>
+      <td>5.772000</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -586,21 +586,21 @@ Launch training for day 1 are:
 <div>
 
   <progress value='48' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [6/6 00:16]
+  [6/6 00:20]
 </div>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
 Eval results for day 2 are:	
 
 ********************
 
- eval_/loss = 5.045756816864014
- eval_/next-item/ndcg_at_20 = 0.1720433533191681
- eval_/next-item/ndcg_at_40 = 0.2304922342300415
- eval_/next-item/recall_at_20 = 0.4479166865348816
- eval_/next-item/recall_at_40 = 0.734375
- eval_runtime = 0.1534
- eval_samples_per_second = 1251.373
- eval_steps_per_second = 39.105
+ eval_/loss = 5.125837326049805
+ eval_/next-item/ndcg_at_20 = 0.15405046939849854
+ eval_/next-item/ndcg_at_40 = 0.19994235038757324
+ eval_/next-item/recall_at_20 = 0.421875
+ eval_/next-item/recall_at_40 = 0.6458333730697632
+ eval_runtime = 0.1725
+ eval_samples_per_second = 1113.287
+ eval_steps_per_second = 34.79
 [&#39;/workspace/data/sessions_by_day/2/train.parquet&#39;]
 ********************
 Launch training for day 2 are:
@@ -632,26 +632,13 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.857400</td>
+      <td>4.879700</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
-********************
-Eval results for day 3 are:	
-
-********************
-
- eval_/loss = 4.47845983505249
- eval_/next-item/ndcg_at_20 = 0.20010951161384583
- eval_/next-item/ndcg_at_40 = 0.2491903007030487
- eval_/next-item/recall_at_20 = 0.5625
- eval_/next-item/recall_at_40 = 0.8020833730697632
- eval_runtime = 0.159
- eval_samples_per_second = 1207.847
- eval_steps_per_second = 37.745
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -663,7 +650,20 @@ Eval results for day 3 are:
   Total optimization steps = 65
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/3/train.parquet&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 3 are:	
+
+********************
+
+ eval_/loss = 4.680967807769775
+ eval_/next-item/ndcg_at_20 = 0.17892448604106903
+ eval_/next-item/ndcg_at_40 = 0.22572219371795654
+ eval_/next-item/recall_at_20 = 0.484375
+ eval_/next-item/recall_at_40 = 0.7135416865348816
+ eval_runtime = 0.1745
+ eval_samples_per_second = 1100.148
+ eval_steps_per_second = 34.38
+[&#39;/workspace/data/sessions_by_day/3/train.parquet&#39;]
 ********************
 Launch training for day 3 are:
 ********************
@@ -673,7 +673,7 @@ Launch training for day 3 are:
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:02, Epoch 5/5]
+      [65/65 00:03, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -685,7 +685,7 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.582600</td>
+      <td>4.581400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -697,14 +697,18 @@ Eval results for day 4 are:
 
 ********************
 
- eval_/loss = 4.428158283233643
- eval_/next-item/ndcg_at_20 = 0.19852674007415771
- eval_/next-item/ndcg_at_40 = 0.257255494594574
- eval_/next-item/recall_at_20 = 0.4895833432674408
- eval_/next-item/recall_at_40 = 0.7760416865348816
- eval_runtime = 0.1462
- eval_samples_per_second = 1313.302
- eval_steps_per_second = 41.041
+ eval_/loss = 4.464942455291748
+ eval_/next-item/ndcg_at_20 = 0.2020609825849533
+ eval_/next-item/ndcg_at_40 = 0.24695619940757751
+ eval_/next-item/recall_at_20 = 0.5260416865348816
+ eval_/next-item/recall_at_40 = 0.7447916865348816
+ eval_runtime = 0.165
+ eval_samples_per_second = 1163.669
+ eval_steps_per_second = 36.365
+[&#39;/workspace/data/sessions_by_day/4/train.parquet&#39;]
+********************
+Launch training for day 4 are:
+********************
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -714,12 +718,6 @@ Eval results for day 4 are:
   Total train batch size (w. parallel, distributed &amp; accumulation) = 128
   Gradient Accumulation steps = 1
   Total optimization steps = 65
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/4/train.parquet&#39;]
-********************
-Launch training for day 4 are:
-********************
 </pre></div>
 </div>
 <div class="output text_html">
@@ -738,26 +736,13 @@ Launch training for day 4 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.496400</td>
+      <td>4.519200</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
-********************
-Eval results for day 5 are:	
-
-********************
-
- eval_/loss = 4.330148696899414
- eval_/next-item/ndcg_at_20 = 0.22238120436668396
- eval_/next-item/ndcg_at_40 = 0.2671073079109192
- eval_/next-item/recall_at_20 = 0.5885416865348816
- eval_/next-item/recall_at_40 = 0.8072916865348816
- eval_runtime = 0.1497
- eval_samples_per_second = 1282.976
- eval_steps_per_second = 40.093
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -769,7 +754,20 @@ Eval results for day 5 are:
   Total optimization steps = 65
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/5/train.parquet&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 5 are:	
+
+********************
+
+ eval_/loss = 4.440032958984375
+ eval_/next-item/ndcg_at_20 = 0.20033857226371765
+ eval_/next-item/ndcg_at_40 = 0.24777457118034363
+ eval_/next-item/recall_at_20 = 0.5416666865348816
+ eval_/next-item/recall_at_40 = 0.7760416865348816
+ eval_runtime = 0.1673
+ eval_samples_per_second = 1147.626
+ eval_steps_per_second = 35.863
+[&#39;/workspace/data/sessions_by_day/5/train.parquet&#39;]
 ********************
 Launch training for day 5 are:
 ********************
@@ -791,26 +789,13 @@ Launch training for day 5 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.534100</td>
+      <td>4.479100</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
-********************
-Eval results for day 6 are:	
-
-********************
-
- eval_/loss = 4.478173732757568
- eval_/next-item/ndcg_at_20 = 0.16448986530303955
- eval_/next-item/ndcg_at_40 = 0.22266244888305664
- eval_/next-item/recall_at_20 = 0.4739583432674408
- eval_/next-item/recall_at_40 = 0.7552083730697632
- eval_runtime = 0.1538
- eval_samples_per_second = 1248.547
- eval_steps_per_second = 39.017
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -822,7 +807,20 @@ Eval results for day 6 are:
   Total optimization steps = 65
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/6/train.parquet&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+Eval results for day 6 are:	
+
+********************
+
+ eval_/loss = 4.369968891143799
+ eval_/next-item/ndcg_at_20 = 0.18754208087921143
+ eval_/next-item/ndcg_at_40 = 0.23825709521770477
+ eval_/next-item/recall_at_20 = 0.5416666865348816
+ eval_/next-item/recall_at_40 = 0.7864583730697632
+ eval_runtime = 0.1616
+ eval_samples_per_second = 1188.118
+ eval_steps_per_second = 37.129
+[&#39;/workspace/data/sessions_by_day/6/train.parquet&#39;]
 ********************
 Launch training for day 6 are:
 ********************
@@ -832,7 +830,7 @@ Launch training for day 6 are:
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:01, Epoch 5/5]
+      [65/65 00:02, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -844,7 +842,7 @@ Launch training for day 6 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.483300</td>
+      <td>4.459600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -856,14 +854,14 @@ Eval results for day 7 are:
 
 ********************
 
- eval_/loss = 4.236471652984619
- eval_/next-item/ndcg_at_20 = 0.21075992286205292
- eval_/next-item/ndcg_at_40 = 0.2642228603363037
- eval_/next-item/recall_at_20 = 0.5572916865348816
- eval_/next-item/recall_at_40 = 0.8125
- eval_runtime = 0.1599
- eval_samples_per_second = 1200.538
- eval_steps_per_second = 37.517
+ eval_/loss = 4.5033793449401855
+ eval_/next-item/ndcg_at_20 = 0.1925697922706604
+ eval_/next-item/ndcg_at_40 = 0.23315435647964478
+ eval_/next-item/recall_at_20 = 0.53125
+ eval_/next-item/recall_at_40 = 0.7291666865348816
+ eval_runtime = 0.1677
+ eval_samples_per_second = 1144.864
+ eval_steps_per_second = 35.777
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -885,7 +883,7 @@ Launch training for day 7 are:
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:01, Epoch 5/5]
+      [65/65 00:02, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -897,7 +895,7 @@ Launch training for day 7 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.457100</td>
+      <td>4.455300</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -909,14 +907,14 @@ Eval results for day 8 are:
 
 ********************
 
- eval_/loss = 4.431709289550781
- eval_/next-item/ndcg_at_20 = 0.19320915639400482
- eval_/next-item/ndcg_at_40 = 0.24811463057994843
+ eval_/loss = 4.4695820808410645
+ eval_/next-item/ndcg_at_20 = 0.1891615390777588
+ eval_/next-item/ndcg_at_40 = 0.24406516551971436
  eval_/next-item/recall_at_20 = 0.5104166865348816
- eval_/next-item/recall_at_40 = 0.78125
- eval_runtime = 0.1487
- eval_samples_per_second = 1291.383
- eval_steps_per_second = 40.356
+ eval_/next-item/recall_at_40 = 0.7760416865348816
+ eval_runtime = 0.1806
+ eval_samples_per_second = 1063.043
+ eval_steps_per_second = 33.22
 </pre></div>
 </div>
 </div>
@@ -940,14 +938,14 @@ Eval results for day 8 are:
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.431709289550781
-  eval_/next-item/ndcg_at_20 = 0.19320915639400482
-  eval_/next-item/ndcg_at_40 = 0.24811463057994843
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.4695820808410645
+  eval_/next-item/ndcg_at_20 = 0.1891615390777588
+  eval_/next-item/ndcg_at_40 = 0.24406516551971436
   eval_/next-item/recall_at_20 = 0.5104166865348816
-  eval_/next-item/recall_at_40 = 0.78125
-  eval_runtime = 0.1607
-  eval_samples_per_second = 1194.43
-  eval_steps_per_second = 37.326
+  eval_/next-item/recall_at_40 = 0.7760416865348816
+  eval_runtime = 0.1776
+  eval_samples_per_second = 1081.009
+  eval_steps_per_second = 33.782
 </pre></div>
 </div>
 </div>
