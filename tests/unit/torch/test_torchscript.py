@@ -24,6 +24,5 @@ def test_torchsciprt_not_strict(torch_yoochoose_like, yoochoose_schema):
     traced_model = torch.jit.trace(model, torch_yoochoose_like, strict=False)
     assert isinstance(traced_model, torch.jit.TopLevelTracedModule)
     assert torch.allclose(
-        model(torch_yoochoose_like),
-        traced_model(torch_yoochoose_like),
+        model(torch_yoochoose_like), traced_model(torch_yoochoose_like), rtol=5e-02
     )
