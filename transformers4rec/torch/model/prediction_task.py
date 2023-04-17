@@ -325,7 +325,7 @@ class NextItemPredictionTask(PredictionTask):
             loss = self.loss(x, y)
             return {
                 "loss": loss,
-                "labels": labels_all,
+                "labels": y,
                 "predictions": x,
             }
         else:
