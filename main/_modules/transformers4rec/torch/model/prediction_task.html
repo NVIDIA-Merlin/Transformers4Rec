@@ -104,7 +104,8 @@
 
 
 <span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sqrt</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">torchmetrics</span> <span class="k">as</span> <span class="nn">tm</span>
@@ -303,6 +304,10 @@
 <span class="sd">        pad token id.</span>
 <span class="sd">    target_dim: int</span>
 <span class="sd">        vocabulary size of item ids</span>
+<span class="sd">    sampled_softmax: Optional[bool]</span>
+<span class="sd">        Enables sampled softmax. By default False</span>
+<span class="sd">    max_n_samples: Optional[int]</span>
+<span class="sd">        Number of samples for sampled softmax. By default 100</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">DEFAULT_METRICS</span> <span class="o">=</span> <span class="p">(</span>
@@ -314,7 +319,7 @@
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">NLLLoss</span><span class="p">(</span><span class="n">ignore_index</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+        <span class="n">loss</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">(),</span>
         <span class="n">metrics</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">tm</span><span class="o">.</span><span class="n">Metric</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_METRICS</span><span class="p">,</span>
         <span class="n">task_block</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">BlockType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">task_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;next-item&quot;</span><span class="p">,</span>
@@ -322,12 +327,16 @@
         <span class="n">softmax_temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
         <span class="n">padding_idx</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
         <span class="n">target_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sampled_softmax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">max_n_samples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="n">task_block</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="n">task_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span> <span class="o">=</span> <span class="n">softmax_temperature</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span> <span class="o">=</span> <span class="n">weight_tying</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span> <span class="o">=</span> <span class="n">padding_idx</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span> <span class="o">=</span> <span class="n">target_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span> <span class="o">=</span> <span class="n">sampled_softmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span> <span class="o">=</span> <span class="n">max_n_samples</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="kc">None</span>
@@ -374,6 +383,9 @@
             <span class="n">weight_tying</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span><span class="p">,</span>
             <span class="n">item_embedding_table</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span><span class="p">,</span>
             <span class="n">softmax_temperature</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span><span class="p">,</span>
+            <span class="n">sampled_softmax</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span><span class="p">,</span>
+            <span class="n">max_n_samples</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span><span class="p">,</span>
+            <span class="n">min_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
             <span class="n">body</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="n">task_block</span><span class="o">=</span><span class="n">task_block</span><span class="p">,</span> <span class="n">pre</span><span class="o">=</span><span class="n">pre</span>
@@ -392,17 +404,17 @@
             <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span><span class="o">.</span><span class="n">masked_targets</span>  <span class="c1"># type: ignore</span>
             <span class="n">trg_flat</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
             <span class="n">non_pad_mask</span> <span class="o">=</span> <span class="n">trg_flat</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
-            <span class="n">labels_all</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span><span class="n">trg_flat</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">)</span>
+            <span class="n">labels_all</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">masked_select</span><span class="p">(</span><span class="n">trg_flat</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
             <span class="c1"># remove padded items, keep only masked positions</span>
             <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">remove_pad_3d</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">)</span>
-            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
-            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">labels_all</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">labels_all</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">{</span>
                 <span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels_all</span><span class="p">,</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span>
                 <span class="s2">&quot;predictions&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
-                <span class="c1"># &quot;pred_metadata&quot;: {},</span>
-                <span class="c1"># &quot;model_outputs&quot;: [],</span>
             <span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Get the hidden position to use for predicting the next item</span>
@@ -415,10 +427,10 @@
                 <span class="n">last_item_sessions</span> <span class="o">=</span> <span class="n">non_pad_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">rows_ids</span><span class="p">,</span> <span class="n">last_item_sessions</span><span class="p">]</span>
 
-        <span class="c1"># Compute predictions probs</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+            <span class="c1"># Compute predictions probs</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
 
-        <span class="k">return</span> <span class="n">x</span></div>
+            <span class="k">return</span> <span class="n">x</span></div>
 
 <div class="viewcode-block" id="NextItemPredictionTask.remove_pad_3d"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.remove_pad_3d">[docs]</a>    <span class="k">def</span> <span class="nf">remove_pad_3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp_tensor</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">):</span>
         <span class="c1"># inp_tensor: (n_batch x seqlen x emb_dim)</span>
@@ -465,12 +477,18 @@
         <span class="n">weight_tying</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">item_embedding_table</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">softmax_temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">sampled_softmax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">max_n_samples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">min_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span> <span class="o">=</span> <span class="n">target_dim</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span> <span class="o">=</span> <span class="n">weight_tying</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span> <span class="o">=</span> <span class="n">item_embedding_table</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span> <span class="o">=</span> <span class="n">softmax_temperature</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span> <span class="o">=</span> <span class="n">sampled_softmax</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span> <span class="o">=</span> <span class="n">max_n_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_id</span> <span class="o">=</span> <span class="n">min_id</span>
 
 <div class="viewcode-block" id="NextItemPredictionPrepareBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionPrepareBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Block</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">Block</span><span class="p">(</span>
@@ -480,6 +498,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">min_id</span><span class="p">,</span>
             <span class="p">),</span>
             <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span><span class="p">],</span>
         <span class="p">)</span></div></div>
@@ -505,15 +526,24 @@
 <span class="sd">        softmax_temperature: float</span>
 <span class="sd">            Softmax temperature, used to reduce model overconfidence, so that softmax(logits / T).</span>
 <span class="sd">            Value 1.0 reduces to regular softmax.</span>
+<span class="sd">        sampled_softmax: Optional[bool]</span>
+<span class="sd">            Enables sampled softmax. By default False</span>
+<span class="sd">        max_n_samples: Optional[int]</span>
+<span class="sd">            Number of samples for sampled softmax. By default 100</span>
+<span class="sd">        min_id : Optional[int]</span>
+<span class="sd">            The minimum value of the range for the log-uniform sampling. By default 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">input_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">input_size</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">,</span>
         <span class="n">target_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">weight_tying</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">item_embedding_table</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">softmax_temperature</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">sampled_softmax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">max_n_samples</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="n">min_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span> <span class="o">=</span> <span class="n">input_size</span>
@@ -521,37 +551,232 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span> <span class="o">=</span> <span class="n">weight_tying</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span> <span class="o">=</span> <span class="n">item_embedding_table</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span> <span class="o">=</span> <span class="n">softmax_temperature</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">log_softmax</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">LogSoftmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span> <span class="o">=</span> <span class="n">sampled_softmax</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">output_layer_bias</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span><span class="p">))</span>
-            <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">zeros_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer_bias</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">input_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_dim</span><span class="p">,</span> <span class="n">input_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">5</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span> <span class="o">=</span> <span class="n">LogUniformSampler</span><span class="p">(</span>
+                <span class="n">max_n_samples</span><span class="o">=</span><span class="n">max_n_samples</span><span class="p">,</span>
+                <span class="n">max_id</span><span class="o">=</span><span class="n">target_dim</span><span class="p">,</span>
+                <span class="n">min_id</span><span class="o">=</span><span class="n">min_id</span><span class="p">,</span>
+                <span class="n">unique_sampling</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+        <span class="n">targets</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_tying</span><span class="p">:</span>
-            <span class="n">logits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span>
-                <span class="n">inputs</span><span class="p">,</span>
-                <span class="n">weight</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
-                <span class="n">bias</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">output_layer_bias</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="n">output_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item_embedding_table</span><span class="o">.</span><span class="n">weight</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="n">output_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_layer</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span> <span class="ow">and</span> <span class="n">training</span><span class="p">:</span>
+            <span class="n">logits</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">output_weights</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logits</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">@</span> <span class="n">output_weights</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span><span class="p">:</span>
             <span class="c1"># Softmax temperature to reduce model overconfidence</span>
             <span class="c1"># and better calibrate probs and accuracy</span>
             <span class="n">logits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span><span class="p">)</span>
 
-        <span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_softmax</span><span class="p">(</span><span class="n">logits</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">logits</span><span class="p">,</span> <span class="n">targets</span>
 
-        <span class="k">return</span> <span class="n">predictions</span>
+    <span class="k">def</span> <span class="nf">sampled</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">output_weights</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns logits using sampled softmax&quot;&quot;&quot;</span>
+        <span class="n">neg_samples</span><span class="p">,</span> <span class="n">targets_probs</span><span class="p">,</span> <span class="n">samples_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampler</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+
+        <span class="n">positive_weights</span> <span class="o">=</span> <span class="n">output_weights</span><span class="p">[</span><span class="n">targets</span><span class="p">]</span>
+        <span class="n">negative_weights</span> <span class="o">=</span> <span class="n">output_weights</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span>
+
+        <span class="n">positive_scores</span> <span class="o">=</span> <span class="p">(</span><span class="n">inputs</span> <span class="o">*</span> <span class="n">positive_weights</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">negative_scores</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">@</span> <span class="n">negative_weights</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>
+
+        <span class="c1"># logQ correction, to not overpenalize popular items for being sampled</span>
+        <span class="c1"># more often as negatives</span>
+        <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-16</span>
+        <span class="n">positive_scores</span> <span class="o">-=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">targets_probs</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">negative_scores</span> <span class="o">-=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">samples_probs</span> <span class="o">+</span> <span class="n">epsilon</span><span class="p">),</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Remove accidental matches</span>
+        <span class="n">accidental_hits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">targets</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">==</span> <span class="n">torch</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">neg_samples</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">negative_scores</span><span class="p">[</span><span class="n">accidental_hits</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span><span class="o">.</span><span class="n">min</span> <span class="o">/</span> <span class="mf">100.0</span>
+
+        <span class="n">logits</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">positive_scores</span><span class="p">,</span> <span class="n">negative_scores</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">new_targets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">targets</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">logits</span><span class="p">,</span> <span class="n">new_targets</span>
 
     <span class="k">def</span> <span class="nf">_get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="s2">&quot;NextItemPredictionTask&quot;</span>
+
+
+<div class="viewcode-block" id="LogUniformSampler"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler">[docs]</a><span class="k">class</span> <span class="nc">LogUniformSampler</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">max_n_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">max_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">min_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">unique_sampling</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">n_samples_multiplier_before_unique</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;LogUniformSampler samples negative samples based on a log-uniform distribution.</span>
+<span class="sd">        `P(class) = (log(class + 2) - log(class + 1)) / log(max_id + 1)`</span>
+
+<span class="sd">        This implementation is based on to:</span>
+<span class="sd">        https://github.com/kimiyoung/transformer-xl/blob/master/pytorch/utils/log_uniform_sampler.py</span>
+<span class="sd">        TensorFlow Reference:</span>
+<span class="sd">        https://github.com/tensorflow/tensorflow/blob/r1.10/tensorflow/python/ops/candidate_sampling_ops.py</span>
+
+<span class="sd">        LogUniformSampler assumes item ids are sorted decreasingly by their frequency.</span>
+
+<span class="sd">        if `unique_sampling==True`, then only unique sampled items will be returned.</span>
+<span class="sd">        The actual # samples will vary from run to run if `unique_sampling==True`,</span>
+<span class="sd">        as sampling without replacement (`torch.multinomial(..., replacement=False)`) is slow,</span>
+<span class="sd">        so we use `torch.multinomial(..., replacement=True).unique()` which doesn&#39;t guarantee</span>
+<span class="sd">        the same number of unique sampled items. You can try to increase</span>
+<span class="sd">        n_samples_multiplier_before_unique to increase the chances to have more</span>
+<span class="sd">        unique samples in that case.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_n_samples : int</span>
+<span class="sd">            The maximum desired number of negative samples. The number of samples might be</span>
+<span class="sd">            smaller than that if `unique_sampling==True`, as explained above.</span>
+<span class="sd">        max_id : int</span>
+<span class="sd">            The maximum value of the range for the log-uniform distribution.</span>
+<span class="sd">        min_id : Optional[int]</span>
+<span class="sd">            The minimum value of the range for the log-uniform sampling. By default 0.</span>
+<span class="sd">        unique_sampling : bool</span>
+<span class="sd">            Whether to return unique samples. By default True</span>
+<span class="sd">        n_samples_multiplier_before_unique : int</span>
+<span class="sd">            If unique_sampling=True, it is not guaranteed that the number of returned</span>
+<span class="sd">            samples will be equal to max_n_samples, as explained above.</span>
+<span class="sd">            You can increase n_samples_multiplier_before_unique to maximize</span>
+<span class="sd">            chances that a larger number of unique samples is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">max_id</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_id must be a positive integer.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">max_n_samples</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n_sample must be a positive integer.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_id</span> <span class="o">=</span> <span class="n">max_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unique_sampling</span> <span class="o">=</span> <span class="n">unique_sampling</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span> <span class="o">=</span> <span class="n">max_n_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span> <span class="o">=</span> <span class="n">max_n_samples</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique_sampling</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span> <span class="o">*</span> <span class="n">n_samples_multiplier_before_unique</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_log_uniform_distr</span><span class="p">(</span><span class="n">max_id</span><span class="p">,</span> <span class="n">min_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="n">dist</span><span class="p">)</span>
+            <span class="n">unique_sampling_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unique_sampling_distr</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;unique_sampling_dist&quot;</span><span class="p">,</span> <span class="n">unique_sampling_dist</span><span class="p">)</span>
+
+<div class="viewcode-block" id="LogUniformSampler.get_log_uniform_distr"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.get_log_uniform_distr">[docs]</a>    <span class="k">def</span> <span class="nf">get_log_uniform_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">min_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Approximates the items frequency distribution with log-uniform probability distribution</span>
+<span class="sd">        with P(class) = (log(class + 2) - log(class + 1)) / log(max_id + 1).</span>
+<span class="sd">        It assumes item ids are sorted decreasingly by their frequency.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        max_id : int</span>
+<span class="sd">            Maximum discrete value for sampling (e.g. cardinality of the item id)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.Tensor</span>
+<span class="sd">            Returns the log uniform probability distribution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_id</span> <span class="o">-</span> <span class="n">min_id</span> <span class="o">+</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">log_</span><span class="p">()</span>
+        <span class="n">probs</span> <span class="o">=</span> <span class="p">(</span><span class="n">log_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">log_indices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">log_indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">min_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">min_id</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">probs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">probs</span></div>
+
+<div class="viewcode-block" id="LogUniformSampler.get_unique_sampling_distr"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.get_unique_sampling_distr">[docs]</a>    <span class="k">def</span> <span class="nf">get_unique_sampling_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">n_sample</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the probability that each item is sampled at least once</span>
+<span class="sd">        given the specified number of trials. This is meant to be used when</span>
+<span class="sd">        self.unique_sampling == True.</span>
+<span class="sd">        That probability can be approximated by by 1 - (1 - p)^n</span>
+<span class="sd">        and we use a numerically stable version: -expm1(num_tries * log1p(-p))</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="o">-</span><span class="n">dist</span><span class="o">.</span><span class="n">double</span><span class="p">()</span><span class="o">.</span><span class="n">log1p_</span><span class="p">()</span> <span class="o">*</span> <span class="n">n_sample</span><span class="p">)</span><span class="o">.</span><span class="n">expm1_</span><span class="p">())</span><span class="o">.</span><span class="n">float</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="LogUniformSampler.sample"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.sample">[docs]</a>    <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sample negative samples and calculate their probabilities.</span>
+
+<span class="sd">        If `unique_sampling==True`, then only unique sampled items will be returned.</span>
+<span class="sd">        The actual # samples will vary from run to run if `unique_sampling==True`,</span>
+<span class="sd">        as sampling without replacement (`torch.multinomial(..., replacement=False)`) is slow,</span>
+<span class="sd">        so we use `torch.multinomial(..., replacement=True).unique()`</span>
+<span class="sd">        which doesn&#39;t guarantee the same number of unique sampled items.</span>
+<span class="sd">        You can try to increase n_samples_multiplier_before_unique</span>
+<span class="sd">        to increase the chances to have more unique samples in that case.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        labels : torch.Tensor, dtype=torch.long, shape=(batch_size,)</span>
+<span class="sd">            The input labels for which negative samples should be generated.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        neg_samples : torch.Tensor, dtype=torch.long, shape=(n_samples,)</span>
+<span class="sd">            The unique negative samples drawn from the log-uniform distribution.</span>
+<span class="sd">        true_probs : torch.Tensor, dtype=torch.float32, shape=(batch_size,)</span>
+<span class="sd">            The probabilities of the input labels according</span>
+<span class="sd">            to the log-uniform distribution (depends on self.unique_sampling choice).</span>
+<span class="sd">        samp_log_probs : torch.Tensor, dtype=torch.float32, shape=(n_samples,)</span>
+<span class="sd">            The probabilities of the sampled negatives according</span>
+<span class="sd">            to the log-uniform distribution (depends on self.unique_sampling choice).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Labels must be a torch.Tensor.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">labels</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Labels must be a tensor of dtype long.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">labels</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="nb">min</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Labels must be a 1-dimensional tensor or a 2-dimensional tensor&quot;</span>
+                <span class="s2">&quot;with one of the dimensions equal to 1.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Labels must not be an empty tensor.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">labels</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">labels</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_id</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All label values must be within the range [0, max_id].&quot;</span><span class="p">)</span>
+
+        <span class="n">n_tries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="n">n_tries</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span>
+                <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span>
+            <span class="p">]</span>
+
+            <span class="n">device</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">device</span>
+            <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">neg_samples</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique_sampling</span><span class="p">:</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique_sampling_dist</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span>
+
+            <span class="n">true_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">labels</span><span class="p">]</span>
+            <span class="n">samples_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span>
+
+            <span class="k">return</span> <span class="n">neg_samples</span><span class="p">,</span> <span class="n">true_probs</span><span class="p">,</span> <span class="n">samples_probs</span></div>
+
+<div class="viewcode-block" id="LogUniformSampler.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
