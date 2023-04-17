@@ -531,7 +531,7 @@ class _NextItemPredictionTask(torch.nn.Module):
         return "NextItemPredictionTask"
 
 
-class LogUniformSampler:
+class LogUniformSampler(torch.nn.Module):
     def __init__(
         self,
         max_n_samples: int,
@@ -575,6 +575,7 @@ class LogUniformSampler:
             You can increase n_samples_multiplier_before_unique to maximize
             chances that a larger number of unique samples is returned.
         """
+        super().__init__()
 
         if max_id <= 0:
             raise ValueError("max_id must be a positive integer.")
@@ -589,8 +590,10 @@ class LogUniformSampler:
             self.n_sample = int(self.n_sample * n_samples_multiplier_before_unique)
 
         with torch.no_grad():
-            self.dist = self.get_log_uniform_distr(max_id, min_id)
-            self.unique_sampling_dist = self.get_unique_sampling_distr(self.dist, self.n_sample)
+            dist = self.get_log_uniform_distr(max_id, min_id)
+            self.register_buffer("dist", dist)
+            unique_sampling_dist = self.get_unique_sampling_distr(dist, self.n_sample)
+            self.register_buffer("unique_sampling_dist", unique_sampling_dist)
 
     def get_log_uniform_distr(self, max_id: int, min_id: int = 0) -> torch.Tensor:
         """Approximates the items frequency distribution with log-uniform probability distribution
@@ -678,9 +681,11 @@ class LogUniformSampler:
                 dist = self.unique_sampling_dist
             else:
                 dist = self.dist
-            dist = dist.to(device)
 
             true_probs = dist[labels]
             samples_probs = dist[neg_samples]
 
             return neg_samples, true_probs, samples_probs
+
+    def forward(self, labels):
+        return self.sample(labels)
