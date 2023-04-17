@@ -50,7 +50,7 @@ class RankingMetric(tm.Metric):
         # Computing the metrics at different cut-offs
         if self.labels_onehot:
             target = torch_utils.tranform_label_to_onehot(target, preds.size(-1))
-        metric = self._metric(torch.LongTensor(self.top_ks), preds.view(-1, preds.size(-1)), target)
+        metric = self._metric(self.top_ks, preds.view(-1, preds.size(-1)), target)
         self.metric_mean.append(metric)  # type: ignore
 
     def compute(self):
@@ -171,9 +171,9 @@ class AvgPrecisionAt(RankingMetric):
 
         # Compute average precisions at K
         num_relevant = torch.sum(labels, dim=1)
-        max_k = ks.max().item()
+        max_k = max(ks)
 
-        precisions = self.precision_at(1 + torch.arange(max_k), topk_scores, topk_labels)
+        precisions = self.precision_at(list(range(1, max_k + 1)), topk_scores, topk_labels)
         rel_precisions = precisions * topk_labels
 
         for index, k in enumerate(ks):
@@ -214,9 +214,7 @@ class DCGAt(RankingMetric):
         dcgs = torch_utils.create_output_placeholder(scores, ks)
 
         # Compute discounts
-        discount_positions = torch.arange(ks.max().item()).to(
-            device=scores.device, dtype=torch.float32
-        )
+        discount_positions = torch.arange(max(ks)).to(device=scores.device, dtype=torch.float32)
 
         discount_log_base = torch.log(
             torch.Tensor([log_base]).to(device=scores.device, dtype=torch.float32)
