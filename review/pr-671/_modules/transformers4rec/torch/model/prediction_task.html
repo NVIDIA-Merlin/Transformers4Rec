@@ -413,7 +413,7 @@
             <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
             <span class="k">return</span> <span class="p">{</span>
                 <span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span>
-                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels_all</span><span class="p">,</span>
+                <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span>
                 <span class="s2">&quot;predictions&quot;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
@@ -619,7 +619,7 @@
         <span class="k">return</span> <span class="s2">&quot;NextItemPredictionTask&quot;</span>
 
 
-<div class="viewcode-block" id="LogUniformSampler"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler">[docs]</a><span class="k">class</span> <span class="nc">LogUniformSampler</span><span class="p">:</span>
+<div class="viewcode-block" id="LogUniformSampler"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler">[docs]</a><span class="k">class</span> <span class="nc">LogUniformSampler</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">max_n_samples</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -663,6 +663,7 @@
 <span class="sd">            You can increase n_samples_multiplier_before_unique to maximize</span>
 <span class="sd">            chances that a larger number of unique samples is returned.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">max_id</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_id must be a positive integer.&quot;</span><span class="p">)</span>
@@ -677,8 +678,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span> <span class="o">*</span> <span class="n">n_samples_multiplier_before_unique</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_log_uniform_distr</span><span class="p">(</span><span class="n">max_id</span><span class="p">,</span> <span class="n">min_id</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">unique_sampling_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unique_sampling_distr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span><span class="p">)</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_log_uniform_distr</span><span class="p">(</span><span class="n">max_id</span><span class="p">,</span> <span class="n">min_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="n">dist</span><span class="p">)</span>
+            <span class="n">unique_sampling_dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_unique_sampling_distr</span><span class="p">(</span><span class="n">dist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;unique_sampling_dist&quot;</span><span class="p">,</span> <span class="n">unique_sampling_dist</span><span class="p">)</span>
 
 <div class="viewcode-block" id="LogUniformSampler.get_log_uniform_distr"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.get_log_uniform_distr">[docs]</a>    <span class="k">def</span> <span class="nf">get_log_uniform_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">min_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Approximates the items frequency distribution with log-uniform probability distribution</span>
@@ -766,12 +769,14 @@
                 <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unique_sampling_dist</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span>
-            <span class="n">dist</span> <span class="o">=</span> <span class="n">dist</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
             <span class="n">true_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">labels</span><span class="p">]</span>
             <span class="n">samples_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span>
 
-            <span class="k">return</span> <span class="n">neg_samples</span><span class="p">,</span> <span class="n">true_probs</span><span class="p">,</span> <span class="n">samples_probs</span></div></div>
+            <span class="k">return</span> <span class="n">neg_samples</span><span class="p">,</span> <span class="n">true_probs</span><span class="p">,</span> <span class="n">samples_probs</span></div>
+
+<div class="viewcode-block" id="LogUniformSampler.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>
