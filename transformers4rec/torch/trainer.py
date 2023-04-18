@@ -530,9 +530,11 @@ class Trainer(BaseTrainer):
                 )
             if preds is not None and self.args.predict_top_k > 0:
                 if self.model.top_k != -1:
-                     raise ValueError("you cannot set top_k argument in the model class and the, " 
-                                      "predict_top_k  in the trainer at the same time. Please ensure setting "
-                                      "only predict_top_k")
+                    raise ValueError(
+                        "you cannot set top_k argument in the model class and the, "
+                        "predict_top_k  in the trainer at the same time. Please ensure setting "
+                        "only predict_top_k"
+                    )
                 # get outputs of next-item scores
                 if isinstance(preds, dict):
                     assert any(
