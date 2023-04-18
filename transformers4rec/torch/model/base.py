@@ -371,9 +371,12 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         testing: bool = False,
         targets: Union[torch.Tensor, TabularData] = None,
         call_body: bool = False,
+        top_k: Optional[int] = -1,
         **kwargs,
     ) -> Union[torch.Tensor, TabularData]:
         outputs = {}
+
+        from transformers4rec.torch.model.prediction_task import NextItemPredictionTask
 
         if call_body:
             body_outputs = self.body(body_outputs, training=training, testing=testing, **kwargs)
@@ -400,9 +403,20 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
             outputs = {"loss": loss, "labels": labels, "predictions": predictions}
         else:
             for name, task in self.prediction_task_dict.items():
-                outputs[name] = task(
-                    body_outputs, targets=targets, training=training, testing=testing, **kwargs
-                )
+                if isinstance(task, NextItemPredictionTask):
+                    outputs[name] = task(
+                        body_outputs,
+                        targets=targets,
+                        training=training,
+                        testing=testing,
+                        top_k=top_k,
+                        **kwargs,
+                    )
+
+                else:
+                    outputs[name] = task(
+                        body_outputs, targets=targets, training=training, testing=testing, **kwargs
+                    )
 
         return outputs
 
@@ -483,6 +497,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name: str = None,
         max_sequence_length: Optional[int] = None,
+        top_k: Optional[int] = -1,
     ):
         """Model class that can aggregate one or multiple heads.
         Parameters
@@ -517,6 +532,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         self.head_reduction = head_reduction
         self.optimizer = optimizer
         self.max_sequence_length = max_sequence_length
+        self.top_k = top_k
 
     def forward(self, inputs: TabularData, targets=None, training=False, testing=False, **kwargs):
         # Convert inputs to float32 which is the default type, expected by PyTorch
@@ -565,6 +581,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                         targets=targets,
                         training=training,
                         testing=testing,
+                        top_k=self.top_k,
                         **kwargs,
                     )
                 )
