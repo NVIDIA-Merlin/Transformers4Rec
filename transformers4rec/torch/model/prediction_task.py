@@ -303,7 +303,9 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, targets=None, training=False, testing=False, top_k=-1, **kwargs):
+    def forward(
+        self, inputs: torch.Tensor, targets=None, training=False, testing=False, top_k=-1, **kwargs
+    ):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
