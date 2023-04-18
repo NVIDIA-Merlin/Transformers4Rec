@@ -128,6 +128,14 @@ class Trainer(BaseTrainer):
         self.schema = schema
         self.incremental_logging = incremental_logging
 
+        # Set global_rank and global_size if DDP is used
+        if self.args.local_rank != -1:
+            self.device = self.local_rank = self.args.local_rank
+            self.global_size = self.args.world_size
+        else:
+            self.device = self.local_rank = None
+            self.global_size = None
+
     def get_train_dataloader(self):
         """
         Set the train dataloader to use by Trainer.
@@ -140,14 +148,6 @@ class Trainer(BaseTrainer):
 
         assert self.schema is not None, "schema is required to generate Train Dataloader"
 
-        # Set global_rank and global_size if DDP is used
-        if self.args.local_rank != -1:
-            local_rank = self.args.local_rank
-            global_size = self.args.world_size
-        else:
-            local_rank = None
-            global_size = None
-
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
             self.train_dataset_or_path,
@@ -156,8 +156,9 @@ class Trainer(BaseTrainer):
             drop_last=self.args.dataloader_drop_last,
             shuffle=True,
             shuffle_buffer_size=self.args.shuffle_buffer_size,
-            global_rank=local_rank,
-            global_size=global_size,
+            global_rank=self.local_rank,
+            global_size=self.global_size,
+            device=self.device,
         )
 
     def get_eval_dataloader(self, eval_dataset=None):
@@ -174,6 +175,7 @@ class Trainer(BaseTrainer):
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         assert self.schema is not None, "schema is required to generate Eval Dataloader"
+
         return T4RecDataLoader.parse(self.args.data_loader_engine).from_schema(
             self.schema,
             self.eval_dataset_or_path,
@@ -182,6 +184,9 @@ class Trainer(BaseTrainer):
             drop_last=self.args.dataloader_drop_last,
             shuffle=False,
             shuffle_buffer_size=self.args.shuffle_buffer_size,
+            global_rank=self.local_rank,
+            global_size=self.global_size,
+            device=self.device,
         )
 
     def get_test_dataloader(self, test_dataset=None):
@@ -206,6 +211,9 @@ class Trainer(BaseTrainer):
             drop_last=self.args.dataloader_drop_last,
             shuffle=False,
             shuffle_buffer_size=self.args.shuffle_buffer_size,
+            global_rank=self.local_rank,
+            global_size=self.global_size,
+            device=self.device,
         )
 
     def num_examples(self, dataloader: DataLoader):
@@ -352,7 +360,7 @@ class Trainer(BaseTrainer):
         inputs = self._prepare_inputs(inputs)
         inputs, targets = inputs
         with torch.no_grad():
-            if self.use_amp:
+            if self._use_cuda_amp:
                 with autocast():
                     outputs = model(inputs, targets=targets, training=training, testing=testing)
             else:
@@ -378,6 +386,18 @@ class Trainer(BaseTrainer):
         other_outputs = None
 
         return (loss, predictions, labels, other_outputs)
+
+    @property
+    def _use_cuda_amp(self):
+        """
+        Check for CUDA AMP that is compatible with versions of the
+        transformers package before and after version 4.20 (which
+        renamed the property `use_amp` to `use_cuda_amp`)
+        """
+        try:
+            return self.use_cuda_amp
+        except AttributeError:
+            return self.use_amp
 
     def evaluation_loop(
         self,
@@ -719,7 +739,7 @@ class Trainer(BaseTrainer):
         torch.random.set_rng_state(checkpoint_rng_state["cpu"])
         torch.cuda.random.set_rng_state_all(checkpoint_rng_state["cuda"])
         # Restoring AMP scaler
-        if self.use_amp:
+        if self._use_cuda_amp:
             self.scaler.load_state_dict(torch.load(os.path.join(checkpoint_path, "scaler.pt")))
 
     @property

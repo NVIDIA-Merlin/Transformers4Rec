@@ -5,6 +5,10 @@ on:
     workflows: [Test]
     types: [completed]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   WF_ID: ${{ github.event.workflow_run.id }}
 

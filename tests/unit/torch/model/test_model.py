@@ -55,6 +55,42 @@ def test_simple_model(torch_tabular_features, torch_tabular_data):
     assert all(loss.min() >= 0 and loss.max() <= 1 for loss in losses)
 
 
+def test_sequential_prediction_model_with_ragged_inputs(torch_yoochoose_like, yoochoose_schema):
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        d_output=64,
+        masking="causal",
+    )
+    prediction_task = tr.NextItemPredictionTask(weight_tying=True)
+    transformer_config = tconf.XLNetConfig.build(
+        d_model=64, n_head=8, n_layer=2, total_seq_length=20
+    )
+    model = transformer_config.to_torch_model(input_module, prediction_task)
+
+    _ = model(torch_yoochoose_like)
+
+    model.eval()
+
+    inference_inputs = tr.data.tabular_sequence_testing_data.torch_synthetic_data(
+        num_rows=10, min_session_length=1, max_session_length=4, ragged=True
+    )
+    inference_inputs_2 = tr.data.tabular_sequence_testing_data.torch_synthetic_data(
+        num_rows=20, min_session_length=1, max_session_length=10, ragged=True
+    )
+    model_output = model(inference_inputs)
+
+    # if the model is traced with ragged inputs it can only be called with ragged inputs
+    # if the model is traced with padded inputs it can only be called with padded inputs
+    traced_model = torch.jit.trace(model, inference_inputs, strict=False)
+    traced_model_output = traced_model(inference_inputs)
+    assert torch.equal(model_output, traced_model_output)
+
+    model_output = model(inference_inputs_2)
+    traced_model_output = traced_model(inference_inputs_2)
+    assert torch.equal(model_output, traced_model_output)
+
+
 @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
 def test_sequential_prediction_model(
     torch_yoochoose_tabular_transformer_features, torch_yoochoose_like, task
@@ -82,6 +118,12 @@ def test_sequential_prediction_model(
     assert len(list(output.keys())) == 3
     assert len(list(output["predictions"])) == 2
     assert set(list(output.keys())) == set(["loss", "labels", "predictions"])
+
+    # test inference inputs with only one item
+    inference_inputs = tr.data.tabular_sequence_testing_data.torch_synthetic_data(
+        num_rows=10, min_session_length=1, max_session_length=1
+    )
+    _ = model(inference_inputs)
 
 
 def test_sequential_binary_classification_model(
@@ -328,6 +370,21 @@ def test_with_d_model_different_from_item_dim(torch_yoochoose_like, yoochoose_sc
         masking="mlm",
     )
     task = tr.NextItemPredictionTask(weight_tying=True)
+    model = transformer_config.to_torch_model(input_module, task)
+    assert model(torch_yoochoose_like, training=True)
+
+
+def test_with_next_item_pred_sampled_softmax(torch_yoochoose_like, yoochoose_schema):
+    d_model = 32
+    transformer_config = tconf.XLNetConfig.build(d_model, 4, 2, 20)
+    input_module = tr.TabularSequenceFeatures.from_schema(
+        yoochoose_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        d_output=32,
+        masking="mlm",
+    )
+    task = tr.NextItemPredictionTask(weight_tying=True, sampled_softmax=True, max_n_samples=1000)
     model = transformer_config.to_torch_model(input_module, task)
     assert model(torch_yoochoose_like, training=True)
 

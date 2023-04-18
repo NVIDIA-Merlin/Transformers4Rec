@@ -153,6 +153,8 @@ def _get_size_from_shape(col_schema, batch_size) -> torch.Size:
         if has_field(col_schema, "shape"):
             shape += [d.size for d in col_schema.shape.dim]
     elif col_schema.shape.dims is not None:
+        if len(col_schema.shape.dims) == 1 and col_schema.shape.dims[0].max is None:
+            return torch.Size(shape)
         raise NotImplementedError("TODO: support shape.dims")
 
     return torch.Size(shape)
@@ -187,8 +189,8 @@ def calculate_batch_size_from_input_size(input_size):
 
 
 def check_inputs(ks, scores, labels):
-    if len(ks.shape) > 1:
-        raise ValueError("ks should be a 1-dimensional tensor")
+    if not (isinstance(ks, (list, tuple)) and len(ks) >= 1):
+        raise ValueError("ks should be a list or tuple with at least one element")
 
     if len(scores.shape) != 2:
         raise ValueError("scores must be a 2-dimensional tensor")
@@ -200,9 +202,9 @@ def check_inputs(ks, scores, labels):
         raise ValueError("scores and labels must be the same shape")
 
     return (
-        ks.to(dtype=torch.int32, device=scores.device),
+        ks,
         scores,
-        labels,  # .to(dtype=torch.float32, device=scores.device),
+        labels,
     )
 
 

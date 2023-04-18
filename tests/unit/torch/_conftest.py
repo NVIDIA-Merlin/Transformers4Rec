@@ -88,7 +88,7 @@ def torch_ranking_metrics_inputs():
     VOCAB_SIZE = 40
     features = {}
     features["scores"] = torch.tensor(np.random.uniform(0, 1, (POS_EXAMPLE, VOCAB_SIZE)))
-    features["ks"] = torch.LongTensor([1, 2, 3, 5, 10, 20])
+    features["ks"] = [1, 2, 3, 5, 10, 20]
     features["labels_one_hot"] = torch.LongTensor(
         np.random.choice(a=[0, 1], size=(POS_EXAMPLE, VOCAB_SIZE))
     )

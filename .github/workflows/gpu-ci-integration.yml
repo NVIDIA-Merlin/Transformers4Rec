@@ -1,0 +1,32 @@
+name: GPU NOTEBOOK CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags:
+      - v*
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, closed]
+
+jobs:
+  gpu-ci:
+    runs-on: 1GPU
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Run tests
+        run: |
+          ref_type=${{ github.ref_type }}
+          branch=main
+          if [[ $ref_type == "tag"* ]]
+          then
+            # fetch release branches (the branch name is not automatically fetched by the actions/checkout step)
+            git -c protocol.version=2 fetch --no-tags --prune --progress --no-recurse-submodules --depth=1 origin +refs/heads/release*:refs/remotes/origin/release*
+            # find the release branch that we're pointing at
+            branch=$(git branch -r --contains ${{ github.ref_name }} --list '*release*' --format "%(refname:short)" | sed -e 's/^origin\///')
+          fi
+          cd ${{ github.workspace }}; tox -e test-gpu-integration -- $branch

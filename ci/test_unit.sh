@@ -28,5 +28,5 @@ if [ "$container" == "merlin-tensorflow" ]; then
     # pytest -rsx tests/tf
 # Pytorch container
 elif [ "$container" == "merlin-pytorch" ]; then
-    pytest -rsx tests/torch
+    pytest -rsx tests/unit/torch
 fi

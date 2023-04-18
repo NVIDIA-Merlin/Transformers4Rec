@@ -10,9 +10,13 @@ on:
     branches: [ main ]
     types: [opened, synchronize, reopened, closed]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   gpu-ci:
-    runs-on: 1GPU
+    runs-on: 2GPU
 
     steps:
     - uses: actions/checkout@v3
