@@ -618,9 +618,11 @@
                 <span class="p">)</span>
             <span class="k">if</span> <span class="n">preds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">predict_top_k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">top_k</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;you cannot set top_k argument in the model class and the, &quot;</span> 
-                                      <span class="s2">&quot;predict_top_k  in the trainer at the same time. Please ensure setting &quot;</span>
-                                      <span class="s2">&quot;only predict_top_k&quot;</span><span class="p">)</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;you cannot set top_k argument in the model class and the, &quot;</span>
+                        <span class="s2">&quot;predict_top_k  in the trainer at the same time. Please ensure setting &quot;</span>
+                        <span class="s2">&quot;only predict_top_k&quot;</span>
+                    <span class="p">)</span>
                 <span class="c1"># get outputs of next-item scores</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                     <span class="k">assert</span> <span class="nb">any</span><span class="p">(</span>
