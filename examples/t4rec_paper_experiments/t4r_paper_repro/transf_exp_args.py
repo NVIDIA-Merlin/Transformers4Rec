@@ -441,6 +441,21 @@ class ModelArguments:
         },
     )
 
+    # Sampled Softmax
+    sampled_softmax: Optional[bool] = field(
+        default=False,
+        metadata={"help": "Enables sampled softmax for training."},
+    )
+
+    sampled_softmax_max_n_samples: Optional[int] = field(
+        default=1000,
+        metadata={
+            "help": "Max number of unique negative samples for sampled softmax."
+            "The number of samples might differ across batches, as the exact number "
+            "of unique items might not be the same."
+        },
+    )
+
 
 @dataclass
 class TrainingArguments(T4RecTrainingArguments):
