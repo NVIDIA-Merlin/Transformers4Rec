@@ -512,9 +512,12 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             Optimizer-class to use during fitting
         name: str, optional
             Name of the model.
-        max_sequence_length : int, optional
+        max_sequence_length: int, optional
             The maximum sequence length supported by the model.
             Used to truncate sequence inputs longer than this value.
+        top_k: int, optional
+            The number of items to return at the inference step once the model is deployed.
+            Default is -1, which will return all items.
         """
         if head_weights:
             if not isinstance(head_weights, list):
@@ -773,6 +776,8 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
 
     @property
     def output_schema(self):
+        from merlin.schema import Tags
+
         from .prediction_task import BinaryClassificationTask, RegressionTask
 
         # if the model has one head with one task, the output is a tensor
@@ -800,12 +805,25 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 }
                 # in case one sets top_k at the inference step we return two outputs
                 if self.top_k > 0:
-                    col_schema_scores = ColumnSchema("item_id_scores", dtype=np.float32, properties=properties, dims=dims)
-                    col_schema_ids = ColumnSchema("item_ids", dtype=np.int64, properties=properties, dims=dims)
+                    # be sure categ item-id dtype in model.input schema and output schema matches
+                    col_name = self.input_schema.select_by_tag(Tags.ITEM_ID).column_names[0]
+                    col_dtype = (
+                        self.input_schema.select_by_tag(Tags.ITEM_ID)
+                        .column_schemas[col_name]
+                        .dtype.name
+                    )
+                    col_schema_scores = ColumnSchema(
+                        "item_id_scores", dtype=np.float32, properties=properties, dims=dims
+                    )
+                    col_schema_ids = ColumnSchema(
+                        "item_ids", dtype=np.dtype(col_dtype), properties=properties, dims=dims
+                    )
                     output_cols.append(col_schema_scores)
                     output_cols.append(col_schema_ids)
                 else:
-                    col_schema = ColumnSchema(name, dtype=np.float32, properties=properties, dims=dims)
+                    col_schema = ColumnSchema(
+                        name, dtype=np.float32, properties=properties, dims=dims
+                    )
                     output_cols.append(col_schema)
 
         return Core_Schema(output_cols)
