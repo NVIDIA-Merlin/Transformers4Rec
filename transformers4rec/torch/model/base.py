@@ -798,8 +798,15 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                 properties = {
                     "int_domain": int_domain,
                 }
-                col_schema = ColumnSchema(name, dtype=np.float32, properties=properties, dims=dims)
-                output_cols.append(col_schema)
+                # in case one sets top_k at the inference step we return two outputs
+                if self.top_k > 0:
+                    col_schema_scores = ColumnSchema("item_id_scores", dtype=np.float32, properties=properties, dims=dims)
+                    col_schema_ids = ColumnSchema("item_ids", dtype=np.int64, properties=properties, dims=dims)
+                    output_cols.append(col_schema_scores)
+                    output_cols.append(col_schema_ids)
+                else:
+                    col_schema = ColumnSchema(name, dtype=np.float32, properties=properties, dims=dims)
+                    output_cols.append(col_schema)
 
         return Core_Schema(output_cols)
 

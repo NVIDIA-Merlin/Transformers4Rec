@@ -348,7 +348,7 @@ class NextItemPredictionTask(PredictionTask):
                 return x
             else:
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(x, k=top_k, dim=-1)
-                return preds_sorted_item_ids
+                return preds_sorted_item_scores, preds_sorted_item_ids
 
     def remove_pad_3d(self, inp_tensor, non_pad_mask):
         # inp_tensor: (n_batch x seqlen x emb_dim)
