@@ -600,9 +600,12 @@
 <span class="sd">            Optimizer-class to use during fitting</span>
 <span class="sd">        name: str, optional</span>
 <span class="sd">            Name of the model.</span>
-<span class="sd">        max_sequence_length : int, optional</span>
+<span class="sd">        max_sequence_length: int, optional</span>
 <span class="sd">            The maximum sequence length supported by the model.</span>
 <span class="sd">            Used to truncate sequence inputs longer than this value.</span>
+<span class="sd">        top_k: int, optional</span>
+<span class="sd">            The number of items to return at the inference step once the model is deployed.</span>
+<span class="sd">            Default is -1, which will return all items.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">head_weights</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_weights</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -861,6 +864,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">output_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Tags</span>
+
         <span class="kn">from</span> <span class="nn">.prediction_task</span> <span class="kn">import</span> <span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span>
 
         <span class="c1"># if the model has one head with one task, the output is a tensor</span>
@@ -888,12 +893,25 @@
                 <span class="p">}</span>
                 <span class="c1"># in case one sets top_k at the inference step we return two outputs</span>
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_k</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">col_schema_scores</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span><span class="s2">&quot;item_id_scores&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">)</span>
-                    <span class="n">col_schema_ids</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span><span class="s2">&quot;item_ids&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">)</span>
+                    <span class="c1"># be sure categ item-id dtype in model.input schema and output schema matches</span>
+                    <span class="n">col_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">ITEM_ID</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">col_dtype</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">ITEM_ID</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">column_schemas</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span>
+                        <span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span>
+                    <span class="p">)</span>
+                    <span class="n">col_schema_scores</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                        <span class="s2">&quot;item_id_scores&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
+                    <span class="p">)</span>
+                    <span class="n">col_schema_ids</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                        <span class="s2">&quot;item_ids&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">col_dtype</span><span class="p">),</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
+                    <span class="p">)</span>
                     <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema_scores</span><span class="p">)</span>
                     <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema_ids</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
-                    <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">)</span>
+                    <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                        <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
+                    <span class="p">)</span>
                     <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Core_Schema</span><span class="p">(</span><span class="n">output_cols</span><span class="p">)</span>
