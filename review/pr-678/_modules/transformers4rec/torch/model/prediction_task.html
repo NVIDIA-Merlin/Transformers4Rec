@@ -436,7 +436,7 @@
                 <span class="k">return</span> <span class="n">x</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">preds_sorted_item_scores</span><span class="p">,</span> <span class="n">preds_sorted_item_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">topk</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">top_k</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-                <span class="k">return</span> <span class="n">preds_sorted_item_ids</span></div>
+                <span class="k">return</span> <span class="n">preds_sorted_item_scores</span><span class="p">,</span> <span class="n">preds_sorted_item_ids</span></div>
 
 <div class="viewcode-block" id="NextItemPredictionTask.remove_pad_3d"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionTask.remove_pad_3d">[docs]</a>    <span class="k">def</span> <span class="nf">remove_pad_3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inp_tensor</span><span class="p">,</span> <span class="n">non_pad_mask</span><span class="p">):</span>
         <span class="c1"># inp_tensor: (n_batch x seqlen x emb_dim)</span>
