@@ -26,6 +26,16 @@ class DataArguments:
         metadata={"help": "Path to dataset."},
     )
 
+    train_path: Optional[str] = field(
+        default="",
+        metadata={"help": "Path to train dataset."},
+    )
+
+    validation_path: Optional[str] = field(
+        default="",
+        metadata={"help": "Path to valid dataset."},
+    )
+
     features_schema_path: Optional[str] = field(
         default=None,
         metadata={"help": "Path with the dataset schema in protobuf text format"},
@@ -106,7 +116,7 @@ class ModelArguments:
         default="gpt2",
         metadata={
             "help": "Type of the sequential model. Can be: "
-            "gpt2|transfoxl|xlnet|reformer|longformer"
+            "gpt2|transfoxl|xlnet|reformer|longformer|lstm"
         },
     )
 
@@ -473,4 +483,9 @@ class TrainingArguments(T4RecTrainingArguments):
             "help": "Run validation set every this epoch. "
             "-1 means no validation is used (default: -1)"
         },
+    )
+
+    incremental_training: bool = field(
+        default=False,
+        metadata={"help": "Launch incremental training between start and end time-index"},
     )
