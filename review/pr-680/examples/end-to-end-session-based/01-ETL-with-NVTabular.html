@@ -100,57 +100,6 @@
              
   <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%</span><span class="k">bash</span>
-
-cd /models &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .
-cd /nvtabular &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .
-cd /core &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .
-cd /systems &amp;&amp; git pull &amp;&amp; git checkout d652251ec349172ec019c62d82bf10a18dc32049 &amp;&amp; pip install .
-#cd /systems &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .
-cd /dataloader &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .
-cd /transformers4rec &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .
-cd /workspace
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>error: pathspec &#39;main&#39; did not match any file(s) known to git
-</pre></div>
-</div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">CalledProcessError</span><span class="g g-Whitespace">                        </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="n">get_ipython</span><span class="p">()</span><span class="o">.</span><span class="n">run_cell_magic</span><span class="p">(</span><span class="s1">&#39;bash&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">cd /models &amp;&amp; git checkout -- main &amp;&amp; git pull &amp;&amp; pip install .</span><span class="se">\n</span><span class="s1"># cd /nvtabular &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .</span><span class="se">\n</span><span class="s1"># cd /core &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .</span><span class="se">\n</span><span class="s1"># cd /systems &amp;&amp; git pull &amp;&amp; git checkout d652251ec349172ec019c62d82bf10a18dc32049 &amp;&amp; pip install .</span><span class="se">\n</span><span class="s1"># #cd /systems &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .</span><span class="se">\n</span><span class="s1"># cd /dataloader &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .</span><span class="se">\n</span><span class="s1"># cd /transformers4rec &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .</span><span class="se">\n</span><span class="s1"># cd /workspace</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/IPython/core/interactiveshell.py:2430,</span> in <span class="ni">InteractiveShell.run_cell_magic</span><span class="nt">(self, magic_name, line, cell)</span>
-<span class="g g-Whitespace">   </span><span class="mi">2428</span> <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">builtin_trap</span><span class="p">:</span>
-<span class="g g-Whitespace">   </span><span class="mi">2429</span>     <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="n">magic_arg_s</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-<span class="ne">-&gt; </span><span class="mi">2430</span>     <span class="n">result</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="g g-Whitespace">   </span><span class="mi">2432</span> <span class="c1"># The code below prevents the output from being displayed</span>
-<span class="g g-Whitespace">   </span><span class="mi">2433</span> <span class="c1"># when using magics with decodator @output_can_be_silenced</span>
-<span class="g g-Whitespace">   </span><span class="mi">2434</span> <span class="c1"># when the last Python token in the expression is a &#39;;&#39;.</span>
-<span class="g g-Whitespace">   </span><span class="mi">2435</span> <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">magic</span><span class="o">.</span><span class="n">MAGIC_OUTPUT_CAN_BE_SILENCED</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/IPython/core/magics/script.py:153,</span> in <span class="ni">ScriptMagics._make_script_magic.&lt;locals&gt;.named_script_magic</span><span class="nt">(line, cell)</span>
-<span class="g g-Whitespace">    </span><span class="mi">151</span> <span class="k">else</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">152</span>     <span class="n">line</span> <span class="o">=</span> <span class="n">script</span>
-<span class="ne">--&gt; </span><span class="mi">153</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">shebang</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/IPython/core/magics/script.py:305,</span> in <span class="ni">ScriptMagics.shebang</span><span class="nt">(self, line, cell)</span>
-<span class="g g-Whitespace">    </span><span class="mi">300</span> <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">raise_error</span> <span class="ow">and</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">301</span>     <span class="c1"># If we get here and p.returncode is still None, we must have</span>
-<span class="g g-Whitespace">    </span><span class="mi">302</span>     <span class="c1"># killed it but not yet seen its return code. We don&#39;t wait for it,</span>
-<span class="g g-Whitespace">    </span><span class="mi">303</span>     <span class="c1"># in case it&#39;s stuck in uninterruptible sleep. -9 = SIGKILL</span>
-<span class="g g-Whitespace">    </span><span class="mi">304</span>     <span class="n">rc</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="ow">or</span> <span class="o">-</span><span class="mi">9</span>
-<span class="ne">--&gt; </span><span class="mi">305</span>     <span class="k">raise</span> <span class="n">CalledProcessError</span><span class="p">(</span><span class="n">rc</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span>
-
-<span class="ne">CalledProcessError</span>: Command &#39;b&#39;\ncd /models &amp;&amp; git checkout -- main &amp;&amp; git pull &amp;&amp; pip install .\n# cd /nvtabular &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .\n# cd /core &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .\n# cd /systems &amp;&amp; git pull &amp;&amp; git checkout d652251ec349172ec019c62d82bf10a18dc32049 &amp;&amp; pip install .\n# #cd /systems &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .\n# cd /dataloader &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .\n# cd /transformers4rec &amp;&amp; git checkout main &amp;&amp; git pull &amp;&amp; pip install .\n# cd /workspace\n&#39;&#39; returned non-zero exit status 1.
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Copyright 2022 NVIDIA Corporation. All Rights Reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
@@ -282,11 +231,11 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id   timestamp    item_id  category  itemid_ts_first
-0        9392  1396376642  214546772         0       1396331807
-1        9392  1396376646  214839377         0       1396330945
-2        9392  1396376655  214613912         0       1396330900
-3        9392  1396376665  214839377         0       1396330945
-4        9392  1396376677  214684372         0       1396335478
+0        4993  1396727816  214835285         0       1396332436
+1        4993  1396727863  214530703         0       1396339114
+2        4993  1396727898  214530705         0       1396330224
+3        4993  1396728063  214835713         0       1396327474
+4        4993  1396730097  214512611         0       1396328044
 </pre></div>
 </div>
 </div>
@@ -493,9 +442,9 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:148: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
   warnings.warn(
-/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:148: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
   warnings.warn(
 </pre></div>
 </div>
@@ -590,7 +539,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM, Tags.LIST, Tags.ITEM_ID, Tags.ID, ...</td>
+      <td>(Tags.ITEM, Tags.CATEGORICAL, Tags.ID, Tags.IT...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -610,7 +559,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>3</th>
       <td>et_dayofweek_sin-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
@@ -630,7 +579,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>4</th>
       <td>product_recency_days_log_norm-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
@@ -650,7 +599,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>5</th>
       <td>category-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -738,9 +687,9 @@ Count after removed in-session repeated interactions: 28971543
 6606149  [-0.781831, -0.781831, 0.0, 0.0, 0.0, 0.0, 0.0...   
 
                         product_recency_days_log_norm-list  \
-6606147  [1.5241553, 1.5238751, 1.5239341, 1.5241631, 1...   
-6606148  [-0.5330064, 1.521494, 0.0, 0.0, 0.0, 0.0, 0.0...   
-6606149  [1.5338266, 1.5355074, 0.0, 0.0, 0.0, 0.0, 0.0...   
+6606147  [1.5241543, 1.5238742, 1.5239332, 1.5241623, 1...   
+6606148  [-0.53300583, 1.5214932, 0.0, 0.0, 0.0, 0.0, 0...   
+6606149  [1.5338256, 1.5355065, 0.0, 0.0, 0.0, 0.0, 0.0...   
 
                                              category-list  day_index  
 6606147  [3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 0, 0, 0, ...        178  
@@ -762,17 +711,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ModuleNotFoundError</span><span class="g g-Whitespace">                       </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">18</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
-<span class="ne">----&gt; </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">transformers4rec.utils.data_utils</span> <span class="kn">import</span> <span class="n">save_time_based_splits</span>
-<span class="g g-Whitespace">      </span><span class="mi">2</span> <span class="n">save_time_based_splits</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">nvt</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">sessions_gdf</span><span class="p">),</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span>                        <span class="n">output_dir</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_FOLDER</span><span class="p">,</span> <span class="s2">&quot;preproc_sessions_by_day&quot;</span><span class="p">),</span>
-<span class="g g-Whitespace">      </span><span class="mi">4</span>                        <span class="n">partition_col</span><span class="o">=</span><span class="s1">&#39;day_index&#39;</span><span class="p">,</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span>                        <span class="n">timestamp_col</span><span class="o">=</span><span class="s1">&#39;session_id&#39;</span><span class="p">,</span> 
-<span class="g g-Whitespace">      </span><span class="mi">6</span>                       <span class="p">)</span>
-
-<span class="ne">ModuleNotFoundError</span>: No module named &#39;transformers4rec.utils.data_utils&#39;
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:01&lt;00:00,  4.88it/s]
 </pre></div>
 </div>
 </div>
@@ -782,6 +721,11 @@ Count after removed in-session repeated interactions: 28971543
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># free gpu memory</span>
 <span class="k">del</span>  <span class="n">sessions_gdf</span>
 <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>571
 </pre></div>
 </div>
 </div>

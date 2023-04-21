@@ -158,7 +158,7 @@
 <div class="cell_output docutils container">
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
   warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
-/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:22: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
 /usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
   warnings.warn(
@@ -225,7 +225,7 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM, Tags.ID, Tags.ITEM_ID, Tags.LIST, ...</td>
+      <td>(Tags.ID, Tags.LIST, Tags.ITEM, Tags.CATEGORIC...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>False</td>
@@ -265,7 +265,7 @@
     <tr>
       <th>2</th>
       <td>product_recency_days_log_norm-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
@@ -285,7 +285,7 @@
     <tr>
       <th>3</th>
       <td>et_dayofweek_sin-list</td>
-      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>False</td>
@@ -410,139 +410,170 @@
 <p>In this demo, we will use the <code class="docutils literal notranslate"><span class="pre">fit_and_evaluate</span></code> method that allows us to conduct a time-based finetuning by iteratively training and evaluating using a sliding time window: At each iteration, we use the training data of a specific time index <span class="math notranslate nohighlight">\(t\)</span> to train the model; then we evaluate on the validation data of the next index <span class="math notranslate nohighlight">\(t + 1\)</span>. Particularly, we set start time to 178 and end time to 180.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin</span> <span class="kn">import</span> <span class="n">models</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">models</span><span class="o">.</span><span class="n">__version__</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&#39;23.02.00&#39;
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">fit_and_evaluate</span>
 <span class="n">OT_results</span> <span class="o">=</span> <span class="n">fit_and_evaluate</span><span class="p">(</span><span class="n">recsys_trainer</span><span class="p">,</span> <span class="n">start_time_index</span><span class="o">=</span><span class="mi">178</span><span class="p">,</span> <span class="n">end_time_index</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">input_dir</span><span class="o">=</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 28800
+  Num Epochs = 10
+  Instantaneous batch size per device = 384
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Gradient Accumulation steps = 1
+  Total optimization steps = 750
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Launch training for day 178: *****
 </pre></div>
 </div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">ModuleNotFoundError</span><span class="g g-Whitespace">                       </span>Traceback (most recent call last)
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/merlin/models/utils/misc_utils.py:197,</span> in <span class="ni">validate_dataset</span><span class="nt">(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs)</span>
-<span class="g g-Whitespace">    </span><span class="mi">196</span> <span class="k">try</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">197</span>     <span class="kn">from</span> <span class="nn">nvtabular.io.dataset</span> <span class="kn">import</span> <span class="n">Dataset</span>
-<span class="g g-Whitespace">    </span><span class="mi">198</span> <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+<div class="output text_html">
+    <div>
 
-<span class="ne">ModuleNotFoundError</span>: No module named &#39;nvtabular.io.dataset&#39;; &#39;nvtabular.io&#39; is not a package
+      <progress value='750' max='750' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [750/750 00:21, Epoch 10/10]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>7.685500</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.646400</td>
+    </tr>
+    <tr>
+      <td>600</td>
+      <td>6.362100</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
+Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 
-<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
 
-<span class="ne">ValueError</span><span class="g g-Whitespace">                                </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">10</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">fit_and_evaluate</span>
-<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">OT_results</span> <span class="o">=</span> <span class="n">fit_and_evaluate</span><span class="p">(</span><span class="n">recsys_trainer</span><span class="p">,</span> <span class="n">start_time_index</span><span class="o">=</span><span class="mi">178</span><span class="p">,</span> <span class="n">end_time_index</span><span class="o">=</span><span class="mi">180</span><span class="p">,</span> <span class="n">input_dir</span><span class="o">=</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
+Training completed. Do not forget to share your model on huggingface.co/models =)
+</pre></div>
+</div>
+<div class="output text_html">
+<div>
 
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/transformers4rec/torch/utils/examples_utils.py:77,</span> in <span class="ni">fit_and_evaluate</span><span class="nt">(trainer, start_time_index, end_time_index, input_dir)</span>
-<span class="g g-Whitespace">     </span><span class="mi">75</span> <span class="n">trainer</span><span class="o">.</span><span class="n">train_dataset_or_path</span> <span class="o">=</span> <span class="n">train_paths</span>
-<span class="g g-Whitespace">     </span><span class="mi">76</span> <span class="n">trainer</span><span class="o">.</span><span class="n">reset_lr_scheduler</span><span class="p">()</span>
-<span class="ne">---&gt; </span><span class="mi">77</span> <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
-<span class="g g-Whitespace">     </span><span class="mi">79</span> <span class="c1"># 3. Evaluate on valid data of time_index+1</span>
-<span class="g g-Whitespace">     </span><span class="mi">80</span> <span class="n">trainer</span><span class="o">.</span><span class="n">eval_dataset_or_path</span> <span class="o">=</span> <span class="n">eval_paths</span>
+  <progress value='14' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
+  [6/6 00:28]
+</div>
+</div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 20736
+  Num Epochs = 10
+  Instantaneous batch size per device = 384
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Gradient Accumulation steps = 1
+  Total optimization steps = 540
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
 
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/transformers/trainer.py:1115,</span> in <span class="ni">Trainer.train</span><span class="nt">(self, resume_from_checkpoint, trial, ignore_keys_for_eval, **kwargs)</span>
-<span class="g g-Whitespace">   </span><span class="mi">1112</span> <span class="n">train_dataset_is_sized</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">Sized</span><span class="p">)</span>
-<span class="g g-Whitespace">   </span><span class="mi">1114</span> <span class="c1"># Data loader and number of training steps</span>
-<span class="ne">-&gt; </span><span class="mi">1115</span> <span class="n">train_dataloader</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_train_dataloader</span><span class="p">()</span>
-<span class="g g-Whitespace">   </span><span class="mi">1117</span> <span class="c1"># Setting up training control variables:</span>
-<span class="g g-Whitespace">   </span><span class="mi">1118</span> <span class="c1"># number of training epochs: num_train_epochs</span>
-<span class="g g-Whitespace">   </span><span class="mi">1119</span> <span class="c1"># number of training steps per epoch: num_update_steps_per_epoch</span>
-<span class="g g-Whitespace">   </span><span class="mi">1120</span> <span class="c1"># total number of training steps to execute: max_steps</span>
-<span class="g g-Whitespace">   </span><span class="mi">1121</span> <span class="n">total_train_batch_size</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">train_batch_size</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">gradient_accumulation_steps</span> <span class="o">*</span> <span class="n">args</span><span class="o">.</span><span class="n">world_size</span>
+ eval_/next-item/avg_precision@10 = 0.0835224986076355
+ eval_/next-item/avg_precision@20 = 0.08797412365674973
+ eval_/next-item/ndcg@10 = 0.11190854758024216
+ eval_/next-item/ndcg@20 = 0.1283719688653946
+ eval_/next-item/recall@10 = 0.2030828595161438
+ eval_/next-item/recall@20 = 0.2685934603214264
 
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/transformers4rec/torch/trainer.py:151,</span> in <span class="ni">Trainer.get_train_dataloader</span><span class="nt">(self)</span>
-<span class="g g-Whitespace">    </span><span class="mi">147</span>     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_dataloader</span>
-<span class="g g-Whitespace">    </span><span class="mi">149</span> <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;schema is required to generate Train Dataloader&quot;</span>
-<span class="ne">--&gt; </span><span class="mi">151</span> <span class="k">return</span> <span class="n">T4RecDataLoader</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">data_loader_engine</span><span class="p">)</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">152</span>     <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">153</span>     <span class="bp">self</span><span class="o">.</span><span class="n">train_dataset_or_path</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">154</span>     <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">per_device_train_batch_size</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">155</span>     <span class="n">max_sequence_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">max_sequence_length</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">156</span>     <span class="n">drop_last</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">dataloader_drop_last</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">157</span>     <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">158</span>     <span class="n">shuffle_buffer_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">shuffle_buffer_size</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">159</span>     <span class="n">global_rank</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">local_rank</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">160</span>     <span class="n">global_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">global_size</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">161</span>     <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">162</span> <span class="p">)</span>
+***** Launch training for day 179: *****
+</pre></div>
+</div>
+<div class="output text_html">
+    <div>
 
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/transformers4rec/torch/utils/data_utils.py:457,</span> in <span class="ni">MerlinDataLoader.from_schema</span><span class="nt">(cls, schema, paths_or_dataset, batch_size, max_sequence_length, continuous_features, categorical_features, targets, collate_fn, shuffle, buffer_size, parts_per_chunk, sparse_names, sparse_max, **kwargs)</span>
-<span class="g g-Whitespace">    </span><span class="mi">455</span> <span class="n">sparse_names</span> <span class="o">=</span> <span class="n">sparse_names</span> <span class="ow">or</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">LIST</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span>
-<span class="g g-Whitespace">    </span><span class="mi">456</span> <span class="n">sparse_max</span> <span class="o">=</span> <span class="n">sparse_max</span> <span class="ow">or</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">max_sequence_length</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">sparse_names</span><span class="p">}</span>
-<span class="ne">--&gt; </span><span class="mi">457</span> <span class="n">loader</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">458</span>     <span class="n">paths_or_dataset</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">459</span>     <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">460</span>     <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">max_sequence_length</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">461</span>     <span class="n">labels</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">462</span>     <span class="n">cats</span><span class="o">=</span><span class="n">categorical_features</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">463</span>     <span class="n">conts</span><span class="o">=</span><span class="n">continuous_features</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">464</span>     <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">465</span>     <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;parquet&quot;</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">466</span>     <span class="n">shuffle</span><span class="o">=</span><span class="n">shuffle</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">467</span>     <span class="n">buffer_size</span><span class="o">=</span><span class="n">buffer_size</span><span class="p">,</span>  <span class="c1"># how many batches to load at once</span>
-<span class="g g-Whitespace">    </span><span class="mi">468</span>     <span class="n">parts_per_chunk</span><span class="o">=</span><span class="n">parts_per_chunk</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">469</span>     <span class="n">sparse_names</span><span class="o">=</span><span class="n">sparse_names</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">470</span>     <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_max</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">471</span>     <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">472</span>     <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">473</span> <span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">475</span> <span class="k">return</span> <span class="n">loader</span>
+      <progress value='540' max='540' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [540/540 00:14, Epoch 10/10]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>6.901700</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.434700</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
+Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/transformers4rec/torch/utils/data_utils.py:324,</span> in <span class="ni">MerlinDataLoader.__init__</span><span class="nt">(self, paths_or_dataset, batch_size, max_sequence_length, conts, cats, labels, collate_fn, engine, buffer_size, reader_kwargs, shuffle, seed_fn, parts_per_chunk, device, global_size, global_rank, sparse_names, sparse_max, sparse_as_dense, drop_last, schema, row_groups_per_part, **kwargs)</span>
-<span class="g g-Whitespace">    </span><span class="mi">322</span> <span class="n">reader_kwargs</span> <span class="o">=</span> <span class="n">reader_kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
-<span class="g g-Whitespace">    </span><span class="mi">323</span> <span class="n">reader_kwargs</span><span class="p">[</span><span class="s2">&quot;row_groups_per_part&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row_groups_per_part</span>
-<span class="ne">--&gt; </span><span class="mi">324</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_dataset</span><span class="p">(</span><span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">326</span> <span class="k">if</span> <span class="p">(</span><span class="n">global_rank</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">npartitions</span> <span class="o">&lt;</span> <span class="n">global_size</span><span class="p">):</span>
-<span class="g g-Whitespace">    </span><span class="mi">327</span>     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">328</span>         <span class="s2">&quot;UserWarning: User is advised to repartition the parquet file before training &quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">329</span>         <span class="s2">&quot;so npartitions&gt;=global_size. Cudf or pandas can be used for repartitioning &quot;</span>
-   <span class="p">(</span><span class="o">...</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">333</span>         <span class="s2">&quot;by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).&quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">334</span>     <span class="p">)</span>
 
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/transformers4rec/torch/utils/data_utils.py:407,</span> in <span class="ni">MerlinDataLoader.set_dataset</span><span class="nt">(self, buffer_size, engine, reader_kwargs)</span>
-<span class="g g-Whitespace">    </span><span class="mi">406</span> <span class="k">def</span> <span class="nf">set_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">buffer_size</span><span class="p">,</span> <span class="n">engine</span><span class="p">,</span> <span class="n">reader_kwargs</span><span class="p">):</span>
-<span class="ne">--&gt; </span><span class="mi">407</span>     <span class="n">dataset</span> <span class="o">=</span> <span class="n">validate_dataset</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">408</span>         <span class="bp">self</span><span class="o">.</span><span class="n">paths_or_dataset</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">409</span>         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">410</span>         <span class="n">buffer_size</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">411</span>         <span class="n">engine</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">412</span>         <span class="n">reader_kwargs</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">413</span>     <span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">414</span>     <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+Training completed. Do not forget to share your model on huggingface.co/models =)
 
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/merlin/models/utils/misc_utils.py:199,</span> in <span class="ni">validate_dataset</span><span class="nt">(paths_or_dataset, batch_size, buffer_size, engine, reader_kwargs)</span>
-<span class="g g-Whitespace">    </span><span class="mi">197</span>     <span class="kn">from</span> <span class="nn">nvtabular.io.dataset</span> <span class="kn">import</span> <span class="n">Dataset</span>
-<span class="g g-Whitespace">    </span><span class="mi">198</span> <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">199</span>     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;NVTabular is necessary for this function, please install: &quot;</span> <span class="s2">&quot;nvtabular.&quot;</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">201</span> <span class="c1"># TODO: put this in parent class and allow</span>
-<span class="g g-Whitespace">    </span><span class="mi">202</span> <span class="c1"># torch dataset to leverage as well?</span>
-<span class="g g-Whitespace">    </span><span class="mi">203</span> 
-<span class="g g-Whitespace">    </span><span class="mi">204</span> <span class="c1"># if a dataset was passed, just return it</span>
-<span class="g g-Whitespace">    </span><span class="mi">205</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">paths_or_dataset</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">):</span>
 
-<span class="ne">ValueError</span>: NVTabular is necessary for this function, please install: nvtabular.
+***** Running training *****
+  Num examples = 16896
+  Num Epochs = 10
+  Instantaneous batch size per device = 384
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Gradient Accumulation steps = 1
+  Total optimization steps = 440
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 180:*****
+
+ eval_/next-item/avg_precision@10 = 0.06343545764684677
+ eval_/next-item/avg_precision@20 = 0.06767535954713821
+ eval_/next-item/ndcg@10 = 0.08735616505146027
+ eval_/next-item/ndcg@20 = 0.10319901257753372
+ eval_/next-item/recall@10 = 0.16596736013889313
+ eval_/next-item/recall@20 = 0.22890442609786987
+
+***** Launch training for day 180: *****
+</pre></div>
+</div>
+<div class="output text_html">
+    <div>
+
+      <progress value='440' max='440' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [440/440 00:12, Epoch 10/10]
+    </div>
+    <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: left;">
+      <th>Step</th>
+      <th>Training Loss</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>200</td>
+      <td>6.900000</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.486200</td>
+    </tr>
+  </tbody>
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 181:*****
+
+ eval_/next-item/avg_precision@10 = 0.13672438263893127
+ eval_/next-item/avg_precision@20 = 0.14291106164455414
+ eval_/next-item/ndcg@10 = 0.17610561847686768
+ eval_/next-item/ndcg@20 = 0.20006804168224335
+ eval_/next-item/recall@10 = 0.30333951115608215
+ eval_/next-item/recall@20 = 0.4007421135902405
 </pre></div>
 </div>
 </div>
@@ -557,6 +588,28 @@
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.0835224986076355,
+  0.06343545764684677,
+  0.13672438263893127],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.08797412365674973,
+  0.06767535954713821,
+  0.14291106164455414],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11190854758024216,
+  0.08735616505146027,
+  0.17610561847686768],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.1283719688653946,
+  0.10319901257753372,
+  0.20006804168224335],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.2030828595161438,
+  0.16596736013889313,
+  0.30333951115608215],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.2685934603214264,
+  0.22890442609786987,
+  0.4007421135902405]}
+</pre></div>
+</div>
+</div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -568,50 +621,296 @@
 </pre></div>
 </div>
 </div>
-</div>
-</div>
-<div class="section" id="save-the-model">
-<h4>Save the model<a class="headerlink" href="#save-the-model" title="Permalink to this headline"></a></h4>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">recsys_trainer</span><span class="o">.</span><span class="n">_save_model_and_checkpoint</span><span class="p">(</span><span class="n">save_model_class</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09456077963113785
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.09952018161614735
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.1251234437028567
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.14387967437505722
+ indexed_by_time_eval_/next-item/recall@10 = 0.22412991027037302
+ indexed_by_time_eval_/next-item/recall@20 = 0.29941333333651227
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-<div class="section" id="export-the-preprocessing-workflow-and-model-in-the-format-required-by-triton-server">
-<h4>Export the preprocessing workflow and model in the format required by Triton server:<a class="headerlink" href="#export-the-preprocessing-workflow-and-model-in-the-format-required-by-triton-server" title="Permalink to this headline"></a></h4>
-<p>NVTabular’s <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function enables us to create model files and config files to be served to Triton Inference Server.</p>
+<div class="section" id="trace-the-model">
+<h4>Trace the model<a class="headerlink" href="#trace-the-model" title="Permalink to this headline"></a></h4>
+<p>We serve the model with the PyTorch backend that is used to execute TorchScript models. All models created in PyTorch using the python API must be traced/scripted to produce a TorchScript model. For tracing the model, we use <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.trace.html">torch.jit.trace</a> api that takes the model as a Python function or torch.nn.Module, and an example input  that will be passed to the function while tracing.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_cat_names</span><span class="p">,</span> <span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">,</span> <span class="s1">&#39;category-list&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;product_recency_days_log_norm-list&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_sin-list&#39;</span><span class="p">]</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">torch</span> 
+<span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">nvtabular</span> <span class="kn">import</span> <span class="n">Workflow</span>
 
-<span class="n">sparse_features_max</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">fname</span><span class="p">:</span> <span class="mi">20</span>
-    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span>
-<span class="p">}</span>
-
-<span class="n">sparse_features_max</span>
+<span class="kn">from</span> <span class="nn">merlin.systems.dag</span> <span class="kn">import</span> <span class="n">Ensemble</span>
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.pytorch</span> <span class="kn">import</span> <span class="n">PredictPyTorch</span>
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.workflow</span> <span class="kn">import</span> <span class="n">TransformWorkflow</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nvtabular.inference.triton</span> <span class="kn">import</span> <span class="n">export_pytorch_ensemble</span>
-<span class="kn">from</span> <span class="nn">nvtabular.workflow</span> <span class="kn">import</span> <span class="n">Workflow</span>
-<span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;workflow_etl&quot;</span><span class="p">))</span>
-<span class="n">model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sparse_max</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;session_id&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+ <span class="s1">&#39;item_id-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+ <span class="s1">&#39;item_id-count&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+ <span class="s1">&#39;et_dayofweek_sin-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+ <span class="s1">&#39;product_recency_days_log_norm-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+ <span class="s1">&#39;category-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">}</span>
 
-<span class="n">export_pytorch_ensemble</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">workflow</span><span class="p">,</span>
-    <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_features_max</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">,</span>
-    <span class="n">model_path</span><span class="o">=</span> <span class="n">model_path</span><span class="p">,</span>
-    <span class="n">label_columns</span> <span class="o">=</span><span class="p">[],</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.data_utils</span> <span class="kn">import</span> <span class="n">MerlinDataLoader</span>
+
+<span class="k">def</span> <span class="nf">generate_dataloader</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">seq_length</span><span class="o">=</span><span class="mi">20</span><span class="p">):</span>
+    <span class="n">loader</span> <span class="o">=</span> <span class="n">MerlinDataLoader</span><span class="o">.</span><span class="n">from_schema</span><span class="p">(</span>
+            <span class="n">schema</span><span class="p">,</span>
+            <span class="n">dataset</span><span class="p">,</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">max_sequence_length</span><span class="o">=</span><span class="n">seq_length</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">sparse_as_dense</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_max</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">loader</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Create a dict of tensors to feed it as example inputs in the <code class="docutils literal notranslate"><span class="pre">torch.jit.trace()</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;./preproc_sessions_by_day/178/train.parquet&quot;</span><span class="p">))</span>
+
+<span class="n">loader</span> <span class="o">=</span> <span class="n">generate_dataloader</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+<span class="n">train_dict</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">loader</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s check out the <code class="docutils literal notranslate"><span class="pre">item_id-list</span></code> column in the <code class="docutils literal notranslate"><span class="pre">train_dict</span></code> dictionary.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">train_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([[  604,   878,   742,  ...,     0,     0,     0],
+        [  184, 12288,     0,  ...,     0,     0,     0],
+        [ 2065,   430,     0,  ...,     0,     0,     0],
+        ...,
+        [   88,   480,   166,  ...,     0,     0,     0],
+        [ 9987,  1636,     0,  ...,     0,     0,     0],
+        [ 3064,  1798,  1393,  ...,     0,     0,     0]], device=&#39;cuda:0&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">train_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Generate model input and output schemas to feed in the <code class="docutils literal notranslate"><span class="pre">PredictPyTorch</span></code> operator below.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span>
+<span class="n">output_schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
+
+<span class="k">for</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_schema</span> <span class="ow">in</span> <span class="n">input_schema</span><span class="o">.</span><span class="n">column_schemas</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+    <span class="n">input_schema</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_schema</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">with_shape</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">sparse_max</span><span class="p">[</span><span class="n">col_name</span><span class="p">]))</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_schema</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_html"><div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>name</th>
+      <th>tags</th>
+      <th>dtype</th>
+      <th>is_list</th>
+      <th>is_ragged</th>
+      <th>properties.value_count.min</th>
+      <th>properties.value_count.max</th>
+      <th>properties.num_buckets</th>
+      <th>properties.freq_threshold</th>
+      <th>properties.max_size</th>
+      <th>properties.start_index</th>
+      <th>properties.cat_path</th>
+      <th>properties.embedding_sizes.cardinality</th>
+      <th>properties.embedding_sizes.dimension</th>
+      <th>properties.domain.min</th>
+      <th>properties.domain.max</th>
+      <th>properties.domain.name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>product_recency_days_log_norm-list</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>False</td>
+      <td>20</td>
+      <td>20</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>et_dayofweek_sin-list</td>
+      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>True</td>
+      <td>False</td>
+      <td>20</td>
+      <td>20</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>item_id-list</td>
+      <td>(Tags.ID, Tags.LIST, Tags.ITEM, Tags.CATEGORIC...</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>False</td>
+      <td>20</td>
+      <td>20</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.item_id.parquet</td>
+      <td>52741.0</td>
+      <td>512.0</td>
+      <td>0.0</td>
+      <td>52740.0</td>
+      <td>item_id</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>category-list</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>DType(name='int64', element_type=&lt;ElementType....</td>
+      <td>True</td>
+      <td>False</td>
+      <td>20</td>
+      <td>20</td>
+      <td>NaN</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>.//categories/unique.category.parquet</td>
+      <td>336.0</td>
+      <td>42.0</td>
+      <td>0.0</td>
+      <td>335.0</td>
+      <td>category</td>
+    </tr>
+  </tbody>
+</table>
+</div></div></div>
+</div>
+<p>Let’s create a folder that we can store the exported models and the config files.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">shutil</span>
+<span class="n">ens_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ens_model_path&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/models&quot;</span><span class="p">)</span>
+<span class="c1"># Make sure we have a clean stats space for Dask</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">):</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;workflow_etl&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">TransformWorkflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>The last step is to create the ensemble artifacts that Triton Inference Server can consume. To make these artifacts, we import the Ensemble class. The class is responsible for interpreting the graph and exporting the correct files for the server.</p>
+<p>When we create an <code class="docutils literal notranslate"><span class="pre">Ensemble</span></code> object we supply the graph and a schema representing the starting input of the graph. The inputs to the ensemble graph are the inputs to the first operator of out graph. After we created the Ensemble we export the graph, supplying an export path for the <code class="docutils literal notranslate"><span class="pre">ensemble.export</span></code> function. This returns an ensemble config which represents the entire inference pipeline and a list of node-specific configs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ensemble</span> <span class="o">=</span> <span class="n">Ensemble</span><span class="p">(</span><span class="n">torch_op</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">)</span>
+<span class="n">ens_config</span><span class="p">,</span> <span class="n">node_configs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;item_id-count&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;item_id-list&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;et_dayofweek_sin-list&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;product_recency_days_log_norm-list&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;category-list&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;day_index&#39;, which is not being used by any downstream operator in the ensemble graph.
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -628,15 +927,11 @@
 <li><p>to deploy saved NVTabular and PyTorch models to Triton Inference Server</p></li>
 <li><p>send requests for predictions and get responses.</p></li>
 </ul>
-<div class="section" id="pull-and-start-inference-container">
-<h3>2.1. Pull and Start Inference Container<a class="headerlink" href="#pull-and-start-inference-container" title="Permalink to this headline"></a></h3>
-<p>At this point, we start the Triton Inference Server (TIS).</p>
-<p><strong>Start triton server</strong><br>
-You can start triton server with the command below. You need to provide correct path of the models folder.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tritonserver</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">repository</span><span class="o">=&lt;</span><span class="n">path_to_models</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">control</span><span class="o">-</span><span class="n">mode</span><span class="o">=</span><span class="n">explicit</span>
-</pre></div>
-</div>
-<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/data/models/</span></code>. The models have not been loaded yet. Below, we will request the Triton server to load the saved ensemble model.</p>
+<div class="section" id="starting-triton-server">
+<h3>2.1 Starting Triton Server<a class="headerlink" href="#starting-triton-server" title="Permalink to this headline"></a></h3>
+<p>It is time to deploy all the models as an ensemble model to Triton Inference Serve TIS. After we export the ensemble, we are ready to start the TIS. You can start triton server by using the following command on your terminal:</p>
+<p><code class="docutils literal notranslate"><span class="pre">tritonserver</span> <span class="pre">--model-repository=&lt;ensemble_export_path&gt;</span></code></p>
+<p>For the <code class="docutils literal notranslate"><span class="pre">--model-repository</span></code> argument, specify the same path as the export_path that you specified previously in the <code class="docutils literal notranslate"><span class="pre">ensemble.export</span></code> method. This command will launch the server and load all the models to the server. Once all the models are loaded successfully, you should see READY status printed out in the terminal for each loaded model.</p>
 </div>
 <div class="section" id="connect-to-the-triton-inference-server-and-check-if-the-server-is-alive">
 <h3>2.2. Connect to the Triton Inference Server and check if the server is alive<a class="headerlink" href="#connect-to-the-triton-inference-server-and-check-if-the-server-is-alive" title="Permalink to this headline"></a></h3>
@@ -649,6 +944,20 @@ You can start triton server with the command below. You need to provide correct 
 <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;channel creation failed: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 <span class="n">triton_client</span><span class="o">.</span><span class="n">is_server_live</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>client created.
+GET /v2/health/live, headers None
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
+</pre></div>
+</div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tritonhttpclient/__init__.py:31: DeprecationWarning: The package `tritonhttpclient` is deprecated and will be removed in a future version. Please use instead `tritonclient.http`
+  warnings.warn(
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
 </pre></div>
 </div>
 </div>
@@ -670,17 +979,6 @@ You can start triton server with the command below. You need to provide correct 
 </div>
 </div>
 </div>
-<div class="section" id="load-the-ensemble-model-to-triton">
-<h3>2.4. Load the ensemble model to triton<a class="headerlink" href="#load-the-ensemble-model-to-triton" title="Permalink to this headline"></a></h3>
-<p>The models should be loaded successfully before we send a request to TIS. If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">successfully</span> <span class="pre">loaded</span></code> status next to each model name on your terminal.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
 <div class="section" id="send-the-request-to-triton-server">
 <h3>2.5. Send the request to triton server<a class="headerlink" href="#send-the-request-to-triton-server" title="Permalink to this headline"></a></h3>
 <div class="cell docutils container">
@@ -689,26 +987,90 @@ You can start triton server with the command below. You need to provide correct 
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
+
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;188&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;1_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;executor_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_transformworkflowtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;1_predictpytorchtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;executor_model&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
+</pre></div>
+</div>
+</div>
 </div>
 <p>If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">READY</span></code> status next to each model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nvtabular.inference.triton</span> <span class="k">as</span> <span class="nn">nvt_triton</span>
-<span class="kn">import</span> <span class="nn">tritonclient.grpc</span> <span class="k">as</span> <span class="nn">grpcclient</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
+<span class="ne">InferenceServerException</span><span class="g g-Whitespace">                  </span>Traceback (most recent call last)
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">27</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
+<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 
-<span class="n">inputs</span> <span class="o">=</span> <span class="n">nvt_triton</span><span class="o">.</span><span class="n">convert_df_to_triton_input</span><span class="p">(</span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferInput</span><span class="p">)</span>
+<span class="nn">File /usr/local/lib/python3.8/dist-packages/merlin/systems/triton/utils.py:230,</span> in <span class="ni">send_triton_request</span><span class="nt">(schema, inputs, outputs_list, client, endpoint, request_id, triton_model)</span>
+<span class="g g-Whitespace">    </span><span class="mi">226</span>     <span class="n">triton_inputs</span> <span class="o">=</span> <span class="n">triton</span><span class="o">.</span><span class="n">convert_df_to_triton_input</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferInput</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">228</span> <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">grpcclient</span><span class="o">.</span><span class="n">InferRequestedOutput</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">outputs_list</span><span class="p">]</span>
+<span class="ne">--&gt; </span><span class="mi">230</span> <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">infer</span><span class="p">(</span><span class="n">triton_model</span><span class="p">,</span> <span class="n">triton_inputs</span><span class="p">,</span> <span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
+<span class="g g-Whitespace">    </span><span class="mi">232</span> <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="g g-Whitespace">    </span><span class="mi">233</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">outputs_list</span><span class="p">:</span>
 
-<span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span>
+<span class="nn">File /usr/local/lib/python3.8/dist-packages/tritonclient/grpc/__init__.py:1431,</span> in <span class="ni">InferenceServerClient.infer</span><span class="nt">(self, model_name, inputs, model_version, outputs, request_id, sequence_id, sequence_start, sequence_end, priority, timeout, client_timeout, headers, compression_algorithm)</span>
+<span class="g g-Whitespace">   </span><span class="mi">1429</span>     <span class="k">return</span> <span class="n">result</span>
+<span class="g g-Whitespace">   </span><span class="mi">1430</span> <span class="k">except</span> <span class="n">grpc</span><span class="o">.</span><span class="n">RpcError</span> <span class="k">as</span> <span class="n">rpc_error</span><span class="p">:</span>
+<span class="ne">-&gt; </span><span class="mi">1431</span>     <span class="n">raise_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">)</span>
 
-<span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">:</span>
-    <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grpcclient</span><span class="o">.</span><span class="n">InferRequestedOutput</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
-    
-<span class="n">MODEL_NAME_NVT</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
+<span class="nn">File /usr/local/lib/python3.8/dist-packages/tritonclient/grpc/__init__.py:62,</span> in <span class="ni">raise_error_grpc</span><span class="nt">(rpc_error)</span>
+<span class="g g-Whitespace">     </span><span class="mi">61</span> <span class="k">def</span> <span class="nf">raise_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">):</span>
+<span class="ne">---&gt; </span><span class="mi">62</span>     <span class="k">raise</span> <span class="n">get_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
 
-<span class="k">with</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferenceServerClient</span><span class="p">(</span><span class="s2">&quot;localhost:8001&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">infer</span><span class="p">(</span><span class="n">MODEL_NAME_NVT</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">as_numpy</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+<span class="ne">InferenceServerException</span>: [StatusCode.INTERNAL] Column next-item not found in &lt;class &#39;c_python_backend_utils.InferenceResponse&#39;&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">traced_model</span><span class="o">.</span><span class="n">o</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;next-item&#39;]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">dtypes</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>session_id         int64
+timestamp          int64
+item_id            int64
+category           int64
+itemid_ts_first    int64
+dtype: object
 </pre></div>
 </div>
 </div>
@@ -720,6 +1082,39 @@ You can start triton server with the command below. You need to provide correct 
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">visualize_response</span>
 <span class="n">visualize_response</span><span class="p">(</span><span class="n">filtered_batch</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">session_col</span><span class="o">=</span><span class="s1">&#39;session_id&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `11457123`: 1761 || 186 || 2651 || 2383 || 1987
+
+- Top-5 predictions for session `11467406`: 4136 || 224 || 2774 || 2693 || 2759
+
+- Top-5 predictions for session `11528554`: 135 || 183 || 1697 || 1359 || 1340
+
+- Top-5 predictions for session `11336059`: 2556 || 2651 || 186 || 6989 || 7284
+
+- Top-5 predictions for session `11445777`: 2789 || 5591 || 2891 || 2759 || 4541
+
+- Top-5 predictions for session `11493827`: 6510 || 4136 || 4204 || 4155 || 4541
+
+- Top-5 predictions for session `11425751`: 2788 || 2556 || 224 || 1987 || 2050
+
+- Top-5 predictions for session `11399751`: 3841 || 2214 || 2556 || 224 || 2651
+
+- Top-5 predictions for session `11311424`: 6461 || 4713 || 4136 || 9285 || 4155
+
+- Top-5 predictions for session `11257991`: 5932 || 620 || 1334 || 633 || 224
+
+- Top-5 predictions for session `11561822`: 2956 || 6488 || 8084 || 4713 || 4136
+
+- Top-5 predictions for session `11421333`: 224 || 9285 || 6488 || 11389 || 8084
+
+- Top-5 predictions for session `11270119`: 5932 || 6488 || 4136 || 4541 || 4204
+
+- Top-5 predictions for session `11401481`: 4204 || 11389 || 6488 || 4136 || 224
+
+- Top-5 predictions for session `11394056`: 2759 || 5591 || 4541 || 4204 || 4136
 </pre></div>
 </div>
 </div>
@@ -737,6 +1132,22 @@ You can start triton server with the command below. You need to provide correct 
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
 <span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_nvt&quot;</span><span class="p">)</span>
 <span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_pt&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/unload, headers None
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch&#39;
+POST /v2/repository/models/t4r_pytorch_nvt/unload, headers None
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch_nvt&#39;
+POST /v2/repository/models/t4r_pytorch_pt/unload, headers None
+{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
+Loaded model &#39;t4r_pytorch_pt&#39;
 </pre></div>
 </div>
 </div>
