@@ -1,1 +1,1 @@
-merlin-models>=23.3.0
+merlin-models>=23.4.0
