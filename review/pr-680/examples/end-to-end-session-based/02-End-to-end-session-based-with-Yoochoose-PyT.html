@@ -225,7 +225,7 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM_ID, Tags.LIST, Tags.ITEM, Tags.CATE...</td>
+      <td>(Tags.ID, Tags.LIST, Tags.CATEGORICAL, Tags.IT...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -245,7 +245,7 @@
     <tr>
       <th>1</th>
       <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -265,7 +265,7 @@
     <tr>
       <th>2</th>
       <td>product_recency_days_log_norm-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
@@ -285,7 +285,7 @@
     <tr>
       <th>3</th>
       <td>et_dayofweek_sin-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
@@ -432,7 +432,7 @@
     <div>
 
       <progress value='750' max='750' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [750/750 00:20, Epoch 10/10]
+      [750/750 00:19, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -444,15 +444,15 @@
   <tbody>
     <tr>
       <td>200</td>
-      <td>7.791300</td>
+      <td>7.770600</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.659000</td>
+      <td>6.644100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>6.382900</td>
+      <td>6.391800</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -479,12 +479,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
 
- eval_/next-item/avg_precision@10 = 0.07590238004922867
- eval_/next-item/avg_precision@20 = 0.07973645627498627
- eval_/next-item/ndcg@10 = 0.10590939968824387
- eval_/next-item/ndcg@20 = 0.12076518684625626
- eval_/next-item/recall@10 = 0.2023121416568756
- eval_/next-item/recall@20 = 0.2608863115310669
+ eval_/next-item/avg_precision@10 = 0.07973254472017288
+ eval_/next-item/avg_precision@20 = 0.08382388204336166
+ eval_/next-item/ndcg@10 = 0.11001300811767578
+ eval_/next-item/ndcg@20 = 0.12536953389644623
+ eval_/next-item/recall@10 = 0.20847783982753754
+ eval_/next-item/recall@20 = 0.2697495222091675
 
 ***** Launch training for day 179: *****
 </pre></div>
@@ -505,11 +505,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.951300</td>
+      <td>6.922700</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.590200</td>
+      <td>6.540600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -530,12 +530,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 180:*****
 
- eval_/next-item/avg_precision@10 = 0.061072077602148056
- eval_/next-item/avg_precision@20 = 0.06520018726587296
- eval_/next-item/ndcg@10 = 0.0841391459107399
- eval_/next-item/ndcg@20 = 0.09931638836860657
- eval_/next-item/recall@10 = 0.1599067598581314
- eval_/next-item/recall@20 = 0.21958041191101074
+ eval_/next-item/avg_precision@10 = 0.062011875212192535
+ eval_/next-item/avg_precision@20 = 0.06556826084852219
+ eval_/next-item/ndcg@10 = 0.08520779013633728
+ eval_/next-item/ndcg@20 = 0.09849531203508377
+ eval_/next-item/recall@10 = 0.16083915531635284
+ eval_/next-item/recall@20 = 0.21491841971874237
 
 ***** Launch training for day 180: *****
 </pre></div>
@@ -556,11 +556,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.977100</td>
+      <td>6.939200</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.575700</td>
+      <td>6.528000</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -568,12 +568,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 181:*****
 
- eval_/next-item/avg_precision@10 = 0.14471390843391418
- eval_/next-item/avg_precision@20 = 0.15112675726413727
- eval_/next-item/ndcg@10 = 0.18470771610736847
- eval_/next-item/ndcg@20 = 0.20968706905841827
- eval_/next-item/recall@10 = 0.3163265287876129
- eval_/next-item/recall@20 = 0.41651207208633423
+ eval_/next-item/avg_precision@10 = 0.13360610604286194
+ eval_/next-item/avg_precision@20 = 0.14083324372768402
+ eval_/next-item/ndcg@10 = 0.1744067221879959
+ eval_/next-item/ndcg@20 = 0.20117734372615814
+ eval_/next-item/recall@10 = 0.30333951115608215
+ eval_/next-item/recall@20 = 0.41094619035720825
 </pre></div>
 </div>
 </div>
@@ -589,24 +589,24 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.07590238004922867,
-  0.061072077602148056,
-  0.14471390843391418],
- &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.07973645627498627,
-  0.06520018726587296,
-  0.15112675726413727],
- &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.10590939968824387,
-  0.0841391459107399,
-  0.18470771610736847],
- &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.12076518684625626,
-  0.09931638836860657,
-  0.20968706905841827],
- &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.2023121416568756,
-  0.1599067598581314,
-  0.3163265287876129],
- &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.2608863115310669,
-  0.21958041191101074,
-  0.41651207208633423]}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.07973254472017288,
+  0.062011875212192535,
+  0.13360610604286194],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.08382388204336166,
+  0.06556826084852219,
+  0.14083324372768402],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11001300811767578,
+  0.08520779013633728,
+  0.1744067221879959],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.12536953389644623,
+  0.09849531203508377,
+  0.20117734372615814],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.20847783982753754,
+  0.16083915531635284,
+  0.30333951115608215],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.2697495222091675,
+  0.21491841971874237,
+  0.41094619035720825]}
 </pre></div>
 </div>
 </div>
@@ -622,12 +622,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.0938961220284303
- indexed_by_time_eval_/next-item/avg_precision@20 = 0.09868780026833217
- indexed_by_time_eval_/next-item/ndcg@10 = 0.12491875390211742
- indexed_by_time_eval_/next-item/ndcg@20 = 0.14325621475776038
- indexed_by_time_eval_/next-item/recall@10 = 0.22618181010087332
- indexed_by_time_eval_/next-item/recall@20 = 0.29899293184280396
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09178350865840912
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.09674179553985596
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.12320917348066966
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.14168072988589606
+ indexed_by_time_eval_/next-item/recall@10 = 0.2242188354333242
+ indexed_by_time_eval_/next-item/recall@20 = 0.29853804409503937
 </pre></div>
 </div>
 </div>
@@ -639,39 +639,16 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">torch</span> 
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">cudf</span>
 <span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
 <span class="kn">from</span> <span class="nn">nvtabular</span> <span class="kn">import</span> <span class="n">Workflow</span>
 
 <span class="kn">from</span> <span class="nn">merlin.systems.dag</span> <span class="kn">import</span> <span class="n">Ensemble</span>
 <span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.pytorch</span> <span class="kn">import</span> <span class="n">PredictPyTorch</span>
 <span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.workflow</span> <span class="kn">import</span> <span class="n">TransformWorkflow</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># sparse_max = {&#39;session_id&#39;: 20,</span>
-<span class="c1">#  &#39;item_id-list&#39;: 20,</span>
-<span class="c1">#  &#39;item_id-count&#39;: 20,</span>
-<span class="c1">#  &#39;et_dayofweek_sin-list&#39;: 20,</span>
-<span class="c1">#  &#39;product_recency_days_log_norm-list&#39;: 20,</span>
-<span class="c1">#  &#39;category-list&#39;: 20}</span>
-
-<span class="c1"># from transformers4rec.torch.utils.data_utils import MerlinDataLoader</span>
-
-<span class="c1"># def generate_dataloader(schema, dataset, batch_size=128, seq_length=20):</span>
-<span class="c1">#     loader = MerlinDataLoader.from_schema(</span>
-<span class="c1">#             schema,</span>
-<span class="c1">#             dataset,</span>
-<span class="c1">#             batch_size=batch_size,</span>
-<span class="c1">#             max_sequence_length=seq_length,</span>
-<span class="c1">#             shuffle=False,</span>
-<span class="c1">#             sparse_as_dense=True,</span>
-<span class="c1">#             sparse_max=sparse_max</span>
-<span class="c1">#         )</span>
-<span class="c1">#     return loader</span>
+<span class="kn">from</span> <span class="nn">merlin.table</span> <span class="kn">import</span> <span class="n">TensorTable</span><span class="p">,</span> <span class="n">TorchColumn</span>
+<span class="kn">from</span> <span class="nn">merlin.table.conversions</span> <span class="kn">import</span> <span class="n">convert_col</span>
 </pre></div>
 </div>
 </div>
@@ -679,255 +656,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <p>Create a dict of tensors to feed it as example inputs in the <code class="docutils literal notranslate"><span class="pre">torch.jit.trace()</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># dataset = Dataset(os.path.join(INPUT_DATA_DIR, &quot;./preproc_sessions_by_day/178/train.parquet&quot;))</span>
-
-<span class="c1"># loader = generate_dataloader(schema, dataset)</span>
-<span class="c1"># train_dict = next(iter(loader))</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">cudf</span>
-<span class="kn">from</span> <span class="nn">merlin.table</span> <span class="kn">import</span> <span class="n">TensorTable</span><span class="p">,</span> <span class="n">TorchColumn</span>
-<span class="kn">from</span> <span class="nn">merlin.table.conversions</span> <span class="kn">import</span> <span class="n">convert_col</span>
-
-<span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;./preproc_sessions_by_day/178/train.parquet&quot;</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;./preproc_sessions_by_day/178/train.parquet&quot;</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
 <span class="n">table</span> <span class="o">=</span> <span class="n">TensorTable</span><span class="o">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
     <span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_col</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">],</span> <span class="n">TorchColumn</span><span class="p">)</span>
 <span class="n">model_input_dict</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># train_dict</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># train_dict[0][&#39;item_id-list&#39;]</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># traced_model = torch.jit.trace(model, train_dict[0], strict=True)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_input_dict</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;product_recency_days_log_norm-list__values&#39;: tensor([ 1.5242,  1.5239,  1.5239,  1.5242,  1.5235,  1.5242,  1.5238,  0.6903,
-          1.5239, -1.1352,  1.5241,  1.5236, -0.5330,  1.5215,  1.5218,  1.5219,
-          0.3345,  0.2262,  0.3345,  1.5235, -1.0131,  0.2423,  1.5249,  1.5215,
-          1.5233,  1.5158,  1.5262, -0.2224, -0.2197,  1.5263,  1.5260,  1.5263,
-         -0.5430,  0.3308,  0.2933, -0.5232, -0.7435,  1.5260,  0.3171, -0.5291,
-         -0.5558, -0.5326,  1.5263,  1.5255,  1.5258, -0.5544, -0.5618, -0.6663,
-         -0.2021,  1.5240,  1.5239, -0.6442, -0.5252, -0.6992, -0.1888,  1.5247,
-          1.5245, -0.2574,  0.4864, -1.1958,  1.5083, -1.0846,  1.4608, -0.9885,
-          1.5253,  1.5255,  1.5148,  0.9383,  1.5168, -0.6664, -0.2025,  1.5070,
-         -0.7086, -0.5489,  0.7369,  1.5065,  1.5251,  1.5251,  1.5256,  0.5254,
-         -0.7118,  0.3337,  1.5234,  1.5232, -0.5559, -0.7056, -0.7834,  1.5245,
-          1.5223,  1.5245,  1.5237,  0.3385,  0.2820,  0.3385, -1.0416,  1.4019,
-          0.3374,  0.3375,  1.5231,  1.5230,  1.5255, -2.4392, -0.5625, -0.5718,
-         -0.9203,  1.5094, -0.9792,  0.4294, -0.9844,  1.5190,  0.4516, -0.6652,
-          1.5229,  1.5246,  1.5239,  1.5239,  0.1391,  0.0995,  0.0891,  1.5227,
-          1.5233,  0.1481, -1.0163,  0.5340,  1.0770, -0.0230,  1.5071, -0.2018,
-         -0.5686, -0.7676, -1.3229,  1.5212,  1.5238, -0.5493,  1.5262, -0.5263,
-         -0.1646, -0.2809, -0.1646,  0.8083, -0.1646,  1.5251,  1.5254, -0.5503,
-         -0.5502, -0.7073,  1.5226, -0.4028, -1.0252,  1.5233,  1.5224,  1.5224,
-          1.5222,  1.5234,  1.5228, -0.7063, -0.5493, -0.5493,  1.5227, -0.7061,
-         -1.0236, -0.7910, -0.5761, -0.5670, -0.0469,  0.3150, -0.1508,  1.5255,
-          1.5261,  1.5256,  1.5261,  1.5256, -1.0115,  1.5234, -2.5201,  1.5238,
-          0.1658,  1.5200,  1.5232,  1.5227,  1.5253,  1.5079,  1.5247,  1.5247,
-          1.5251,  1.5265,  1.5265,  1.5261,  1.5258,  1.5264,  1.5261,  1.5156,
-          0.5571,  0.7386, -0.2388,  0.7386,  0.7337, -0.2939, -0.7552, -1.1167,
-         -1.2227,  0.3394,  0.7442, -0.0220,  0.3983,  0.7442, -0.6925,  0.7443,
-         -0.5211, -1.0124,  1.5213, -1.0123, -1.0864, -1.2259,  0.6455, -0.5728,
-         -0.2470,  0.4521,  1.4954,  1.5197,  1.5262, -0.0218,  1.2117, -0.0038,
-          1.5257,  1.5258, -0.7488, -0.2892,  1.4465, -0.0340,  0.5616,  0.2627,
-         -0.0340,  1.4955,  0.1683,  0.1706,  1.4986,  1.5244,  1.5247,  0.5386,
-         -0.9914,  1.4107,  1.5082,  1.5233,  1.5164,  1.1806,  0.2956,  1.5232,
-          0.6254,  1.5227,  0.9992,  0.6359,  1.5229,  1.5167,  0.9431,  1.5218,
-          0.4454,  1.5230,  1.5232,  0.6373,  1.5241,  1.3191,  1.5236, -0.1312,
-          1.5233,  0.8085, -0.6838, -0.0442,  1.5238,  0.4522,  1.3329,  1.0833,
-          0.6209,  0.6467,  0.1276,  1.4013,  0.8165,  1.5229,  1.5229,  1.5229,
-          1.2401,  0.8224,  1.5256,  0.8225,  1.2441,  0.0283,  1.5257,  1.2438,
-          1.2442,  1.5214,  1.5239,  1.5228,  1.5213,  1.4487,  1.2657,  1.5237,
-          1.5237,  0.7002,  1.5202,  1.5223,  1.5236, -0.5665, -0.5574, -0.5574,
-         -0.5573, -0.5551, -0.5604, -0.6324,  0.3148,  1.5118,  1.5104, -0.2425,
-          1.5241,  0.4242,  1.2351, -0.9878,  1.5249, -0.6705, -0.5258, -0.6703,
-         -0.1108, -0.1361, -0.1103, -0.1356,  1.5254,  1.5233,  1.5254, -0.5597,
-         -0.5597,  1.5226, -0.7244,  1.5252,  1.5259,  1.5259,  0.2757, -0.7775,
-          1.4927,  0.2494,  1.2412, -1.1350,  1.5233,  1.5111,  1.5239,  0.4485,
-          1.5242,  1.5242,  1.5247,  1.5247, -0.6581, -1.3683,  0.5319, -0.5535,
-          1.2408, -0.5517,  1.5174,  1.5246,  0.3316, -1.0608, -0.9893, -1.2124,
-         -1.0382, -1.1251,  1.5260,  1.5260,  0.2198,  0.2522, -0.5623, -0.6823,
-          1.4009, -0.3130, -0.5297, -0.3957, -0.1954, -0.3875,  0.5417,  1.1342,
-         -0.5462, -0.5641, -0.5642, -0.5315, -0.5314, -0.5481, -0.6954,  1.4932,
-          1.5239,  1.4933, -0.5605, -0.5454, -0.4861,  0.0841, -1.2379, -0.9925,
-         -1.0767,  1.5230,  1.5228,  1.5230,  1.5256,  1.5264,  1.5257,  1.5264,
-          1.5257], device=&#39;cuda:0&#39;),
- &#39;product_recency_days_log_norm-list__offsets&#39;: tensor([  0,  12,  14,  16,  19,  21,  23,  26,  32,  35,  45,  47,  49,  51,
-          56,  59,  61,  66,  69,  72,  76,  78,  80,  83,  87,  91,  94,  96,
-          98, 100, 102, 104, 107, 111, 113, 122, 124, 128, 130, 133, 136, 141,
-         143, 161, 164, 167, 172, 176, 180, 182, 184, 191, 193, 196, 199, 201,
-         209, 214, 234, 237, 243, 245, 265, 267, 274, 276, 281, 289, 295, 298,
-         300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
-         345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
-         388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32),
- &#39;et_dayofweek_sin-list__values&#39;: tensor([-0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.9749, -0.9749, -0.9749,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.9749, -0.9749, -0.9749, -0.9749, -0.9749,
-         -0.9749, -0.9749, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339, -0.4339,
-         -0.4339], device=&#39;cuda:0&#39;),
- &#39;et_dayofweek_sin-list__offsets&#39;: tensor([  0,  12,  14,  16,  19,  21,  23,  26,  32,  35,  45,  47,  49,  51,
-          56,  59,  61,  66,  69,  72,  76,  78,  80,  83,  87,  91,  94,  96,
-          98, 100, 102, 104, 107, 111, 113, 122, 124, 128, 130, 133, 136, 141,
-         143, 161, 164, 167, 172, 176, 180, 182, 184, 191, 193, 196, 199, 201,
-         209, 214, 234, 237, 243, 245, 265, 267, 274, 276, 281, 289, 295, 298,
-         300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
-         345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
-         388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32),
- &#39;item_id-list__values&#39;: tensor([  604,   878,   742,    90,  4777,  1583,  3446,  8083,  3446,  4018,
-           742,  4777,   184, 12288,  2065,   430,     6,    30,     6,   157,
-          1987,  2590, 10855,  8217,  4210,  8711,  4242,    81,   112,  4242,
-          5732,  6810,    33,     6,    73,   664,  2312,  7124,  9113,   445,
-          1157,   774,   685,   430,  1945,   475,   597,   289,   166,    29,
-           342,   289,    33,   423,   166,   480,  2772,   288,   962,  4001,
-          2050,  3274,   499,  1219,   395,  1636, 11839, 10714, 11107,   289,
-           166,   650,  1085,   302,    88,   650,   214,   304,   177,   317,
-           423,     6,  3818,   931,  2186,  1085,   206,   687,  3831,   687,
-           202,    20,    43,    20,  2034, 10457,    20,    21,  1126,  2815,
-          4210, 34264,   830,   774,   620,  2050,  1987,  1079,  4713,  1336,
-           661,   289,   430,   863,  4829,  5786, 19156, 17270, 23365,  4209,
-          3651,  1037,  4770,   224,   277,  1020,   650,   166,  1354,   206,
-          1889,  2473,  1697,   997,   480,   774,  3841,  4316,  3841,  1230,
-          3841,  1697,  3809,   475,   981,   804,   313,   613,  1219,  1334,
-          1941,  2888,  2626,  1334,  2689,   804,   475,   981,   313,   804,
-          1219,   206,   651,   429,   605,   101,   413,  1965,   627,   814,
-           627,   814,  4713,  3675,  2789,  3769,  1283,  9540,  1251,   313,
-           685,  2497,   395,   845,  3462,  2713,  5077,   388,   340,   297,
-           388,  9641,    46,    61,   822,    61,   602,  2270,   719,  3274,
-          2556,     2,    61,    24,    96,    61,   423,    61,   475,  3460,
-          2693,  3460,  3044,  2556,  3988,   992,  1603,   122,  2704,  2787,
-          3135,   550,   516,    44,  1551,  2702,   206,  1762,    31,   474,
-           481,   198,   474,  2704,  2393,  1025, 20033,    72,  1334,   224,
-          3460,  4774,  2050,  6485, 15953,   422,  1488,  2346,  4470,  2548,
-           571,  1770,  1324,   453,   837,   123,   638,  4759,  3552,  6825,
-          2740,  5347,  5390,  1169,  4100,  1230,   804,  3588,  2449,   185,
-            16,   643,   274,   686, 18092, 10457,   609,  2969,  3480,  2969,
-            37,   609,  2969,   609,    22,  8312,   257,    37,    22,  5361,
-          7186,  7380,  6052,  7256, 13404,   557,   160,  1664,  4375,  3484,
-           685,   651,   445,   429,   445,   774,   651,  4284,  1738,  3855,
-           225,   210,  7245,  6731,   771,  1987,   157,   804,   442,   804,
-          2091,  1169,  2091,  1169,  3484,  4375,  3484,   445,   429,   430,
-           423,  1697,  1393,  1798,  2753,   206,  1153, 21588,  2189,  3704,
-          4463,  5816,  7557,   507,  1797,   814,   627,  2016,   855,  1889,
-           224,   597,    37,   597, 16533, 10255,     2,  2651,  4028,  2556,
-          2788,  6379,  1830,  1070,    30,   312,   445,  1085,  1569,  2222,
-          2664,  1950,  2098,  1672,   224,  4336,   651,   997,  1157,   830,
-           800,   597,  1085, 12430,   415, 12430,   651,   800,  1756,  1378,
-          1413,   633,  2034,  7932,  6034,  6360,  4662,   576,  4662,   576,
-          4662], device=&#39;cuda:0&#39;),
- &#39;item_id-list__offsets&#39;: tensor([  0,  12,  14,  16,  19,  21,  23,  26,  32,  35,  45,  47,  49,  51,
-          56,  59,  61,  66,  69,  72,  76,  78,  80,  83,  87,  91,  94,  96,
-          98, 100, 102, 104, 107, 111, 113, 122, 124, 128, 130, 133, 136, 141,
-         143, 161, 164, 167, 172, 176, 180, 182, 184, 191, 193, 196, 199, 201,
-         209, 214, 234, 237, 243, 245, 265, 267, 274, 276, 281, 289, 295, 298,
-         300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
-         345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
-         388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32),
- &#39;category-list__values&#39;: tensor([ 3,  3,  3,  3,  3,  3,  3,  3,  3,  2,  3,  3,  2,  2,  2,  2,  5,  5,
-          5,  2,  2,  3,  2,  7,  7,  7,  2,  5,  5,  2,  2,  2,  2,  5,  5,  2,
-          2,  3,  3,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  8,  8,  2,  2,  2,
-          2,  2,  5,  2,  5,  2,  2,  2,  2,  2,  2,  2,  3,  3,  3,  2,  2,  2,
-          2,  2,  2,  2,  5,  5,  5,  5,  2,  5,  2,  2,  2,  2,  2,  2,  2,  2,
-          2,  5,  5,  5,  2,  2,  5,  5,  2,  2,  7,  3,  2,  2,  2,  2,  2,  5,
-          2,  5,  5,  2,  2,  2,  3,  3,  3,  3,  3,  3,  3,  2,  2,  2,  2,  2,
-          2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  4,  2,
-          2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-          2,  2,  5,  5,  5,  2,  2,  2,  2,  2,  2,  5,  5,  5,  3,  3,  3,  2,
-          2,  2,  2,  2,  6,  6,  6,  6,  6,  6,  6,  5,  5,  2,  5,  2,  2,  2,
-          2,  2,  2,  5,  2,  5,  5,  2,  2,  2,  2,  2,  2,  2,  2,  2,  5,  2,
-          2,  2,  5,  5,  5,  5,  2,  2,  2,  5,  2,  2,  5,  5,  5,  5,  5,  5,
-          4,  4,  4,  2,  2,  2,  2,  2,  2, 13, 13,  2,  2,  2,  2,  2,  2,  2,
-          2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  5,
-          2,  2,  2,  2,  3,  2,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,
-          5,  4,  4,  4,  4,  4,  4,  3,  3,  3,  6,  6,  2,  2,  2,  2,  2,  2,
-          2,  2,  2,  2,  2,  2,  9,  9,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-          6,  6,  6,  2,  2,  2,  2,  2, 13, 13,  3,  2,  2,  3,  3,  2,  4,  4,
-          4,  3,  3,  2,  2,  2,  2,  2,  2,  2,  5,  2,  4,  4,  5,  2,  2,  2,
-          2,  2,  2,  4,  5,  5,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-          2,  2,  2,  2,  2,  7,  4,  7,  2,  2,  2,  2,  2,  2,  2, 10, 10, 10,
-          2,  2,  2,  2,  2], device=&#39;cuda:0&#39;),
- &#39;category-list__offsets&#39;: tensor([  0,  12,  14,  16,  19,  21,  23,  26,  32,  35,  45,  47,  49,  51,
-          56,  59,  61,  66,  69,  72,  76,  78,  80,  83,  87,  91,  94,  96,
-          98, 100, 102, 104, 107, 111, 113, 122, 124, 128, 130, 133, 136, 141,
-         143, 161, 164, 167, 172, 176, 180, 182, 184, 191, 193, 196, 199, 201,
-         209, 214, 234, 237, 243, 245, 265, 267, 274, 276, 281, 289, 295, 298,
-         300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
-         345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
-         388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32)}
 </pre></div>
 </div>
 </div>
@@ -939,7 +672,80 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 </div>
-<p>Let’s check out the <code class="docutils literal notranslate"><span class="pre">item_id-list</span></code> column in the <code class="docutils literal notranslate"><span class="pre">train_dict</span></code> dictionary.</p>
+<p>Let’s check out the <code class="docutils literal notranslate"><span class="pre">item_id-list</span></code> column in the <code class="docutils literal notranslate"><span class="pre">model_input_dict</span></code> dictionary.</p>
+<p>The column is represented as values and offsets dictating which values belong to which example.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_input_dict</span><span class="p">[</span><span class="s1">&#39;item_id-list__values&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([  604,   878,   742,    90,  4777,  1583,  3446,  8083,  3446,  4018,
+          742,  4777,   184, 12288,  2065,   430,     6,    30,     6,   157,
+         1987,  2590, 10855,  8217,  4210,  8711,  4242,    81,   112,  4242,
+         5732,  6810,    33,     6,    73,   664,  2312,  7124,  9113,   445,
+         1157,   774,   685,   430,  1945,   475,   597,   289,   166,    29,
+          342,   289,    33,   423,   166,   480,  2772,   288,   962,  4001,
+         2050,  3274,   499,  1219,   395,  1636, 11839, 10714, 11107,   289,
+          166,   650,  1085,   302,    88,   650,   214,   304,   177,   317,
+          423,     6,  3818,   931,  2186,  1085,   206,   687,  3831,   687,
+          202,    20,    43,    20,  2034, 10457,    20,    21,  1126,  2815,
+         4210, 34264,   830,   774,   620,  2050,  1987,  1079,  4713,  1336,
+          661,   289,   430,   863,  4829,  5786, 19156, 17270, 23365,  4209,
+         3651,  1037,  4770,   224,   277,  1020,   650,   166,  1354,   206,
+         1889,  2473,  1697,   997,   480,   774,  3841,  4316,  3841,  1230,
+         3841,  1697,  3809,   475,   981,   804,   313,   613,  1219,  1334,
+         1941,  2888,  2626,  1334,  2689,   804,   475,   981,   313,   804,
+         1219,   206,   651,   429,   605,   101,   413,  1965,   627,   814,
+          627,   814,  4713,  3675,  2789,  3769,  1283,  9540,  1251,   313,
+          685,  2497,   395,   845,  3462,  2713,  5077,   388,   340,   297,
+          388,  9641,    46,    61,   822,    61,   602,  2270,   719,  3274,
+         2556,     2,    61,    24,    96,    61,   423,    61,   475,  3460,
+         2693,  3460,  3044,  2556,  3988,   992,  1603,   122,  2704,  2787,
+         3135,   550,   516,    44,  1551,  2702,   206,  1762,    31,   474,
+          481,   198,   474,  2704,  2393,  1025, 20033,    72,  1334,   224,
+         3460,  4774,  2050,  6485, 15953,   422,  1488,  2346,  4470,  2548,
+          571,  1770,  1324,   453,   837,   123,   638,  4759,  3552,  6825,
+         2740,  5347,  5390,  1169,  4100,  1230,   804,  3588,  2449,   185,
+           16,   643,   274,   686, 18092, 10457,   609,  2969,  3480,  2969,
+           37,   609,  2969,   609,    22,  8312,   257,    37,    22,  5361,
+         7186,  7380,  6052,  7256, 13404,   557,   160,  1664,  4375,  3484,
+          685,   651,   445,   429,   445,   774,   651,  4284,  1738,  3855,
+          225,   210,  7245,  6731,   771,  1987,   157,   804,   442,   804,
+         2091,  1169,  2091,  1169,  3484,  4375,  3484,   445,   429,   430,
+          423,  1697,  1393,  1798,  2753,   206,  1153, 21588,  2189,  3704,
+         4463,  5816,  7557,   507,  1797,   814,   627,  2016,   855,  1889,
+          224,   597,    37,   597, 16533, 10255,     2,  2651,  4028,  2556,
+         2788,  6379,  1830,  1070,    30,   312,   445,  1085,  1569,  2222,
+         2664,  1950,  2098,  1672,   224,  4336,   651,   997,  1157,   830,
+          800,   597,  1085, 12430,   415, 12430,   651,   800,  1756,  1378,
+         1413,   633,  2034,  7932,  6034,  6360,  4662,   576,  4662,   576,
+         4662], device=&#39;cuda:0&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+<p>And here are the offsets</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_input_dict</span><span class="p">[</span><span class="s1">&#39;item_id-list__offsets&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([  0,  12,  14,  16,  19,  21,  23,  26,  32,  35,  45,  47,  49,  51,
+         56,  59,  61,  66,  69,  72,  76,  78,  80,  83,  87,  91,  94,  96,
+         98, 100, 102, 104, 107, 111, 113, 122, 124, 128, 130, 133, 136, 141,
+        143, 161, 164, 167, 172, 176, 180, 182, 184, 191, 193, 196, 199, 201,
+        209, 214, 234, 237, 243, 245, 265, 267, 274, 276, 281, 289, 295, 298,
+        300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
+        345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
+        388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32)
+</pre></div>
+</div>
+</div>
+</div>
 <p>Generate model input and output schemas to feed in the <code class="docutils literal notranslate"><span class="pre">PredictPyTorch</span></code> operator below.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
@@ -949,13 +755,8 @@ Training completed. Do not forget to share your model on huggingface.co/models =
  <span class="s1">&#39;et_dayofweek_sin-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
  <span class="s1">&#39;product_recency_days_log_norm-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
  <span class="s1">&#39;category-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">}</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span>
+
+<span class="n">input_schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span>
 <span class="n">output_schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
 
 <span class="k">for</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_schema</span> <span class="ow">in</span> <span class="n">input_schema</span><span class="o">.</span><span class="n">column_schemas</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -969,135 +770,6 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </pre></div>
 </div>
 </div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_schema</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>name</th>
-      <th>tags</th>
-      <th>dtype</th>
-      <th>is_list</th>
-      <th>is_ragged</th>
-      <th>properties.value_count.min</th>
-      <th>properties.value_count.max</th>
-      <th>properties.num_buckets</th>
-      <th>properties.freq_threshold</th>
-      <th>properties.max_size</th>
-      <th>properties.start_index</th>
-      <th>properties.cat_path</th>
-      <th>properties.embedding_sizes.cardinality</th>
-      <th>properties.embedding_sizes.dimension</th>
-      <th>properties.domain.min</th>
-      <th>properties.domain.max</th>
-      <th>properties.domain.name</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>product_recency_days_log_norm-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>et_dayofweek_sin-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-      <td>NaN</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>item_id-list</td>
-      <td>(Tags.ITEM_ID, Tags.LIST, Tags.ITEM, Tags.CATE...</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>.//categories/unique.item_id.parquet</td>
-      <td>52741.0</td>
-      <td>512.0</td>
-      <td>0.0</td>
-      <td>52740.0</td>
-      <td>item_id</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
-      <td>DType(name='int64', element_type=&lt;ElementType....</td>
-      <td>True</td>
-      <td>False</td>
-      <td>20</td>
-      <td>20</td>
-      <td>NaN</td>
-      <td>0.0</td>
-      <td>0.0</td>
-      <td>1.0</td>
-      <td>.//categories/unique.category.parquet</td>
-      <td>336.0</td>
-      <td>42.0</td>
-      <td>0.0</td>
-      <td>335.0</td>
-      <td>category</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
 </div>
 <p>Let’s create a folder that we can store the exported models and the config files.</p>
 <div class="cell docutils container">
@@ -1246,7 +918,7 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;v
 <div class="cell_output docutils container">
 <div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
 <span class="ne">InferenceServerException</span><span class="g g-Whitespace">                  </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">27</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">35</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
 <span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
 <span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
 <span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
@@ -1267,89 +939,7 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;v
 <span class="g g-Whitespace">     </span><span class="mi">61</span> <span class="k">def</span> <span class="nf">raise_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">):</span>
 <span class="ne">---&gt; </span><span class="mi">62</span>     <span class="k">raise</span> <span class="n">get_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
 
-<span class="ne">InferenceServerException</span>: [StatusCode.INTERNAL] Column next-item not found in &lt;class &#39;c_python_backend_utils.InferenceResponse&#39;&gt;
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_html"><div>
-<style scoped>
-    .dataframe tbody tr th:only-of-type {
-        vertical-align: middle;
-    }
-
-    .dataframe tbody tr th {
-        vertical-align: top;
-    }
-
-    .dataframe thead th {
-        text-align: right;
-    }
-</style>
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>name</th>
-      <th>tags</th>
-      <th>dtype</th>
-      <th>is_list</th>
-      <th>is_ragged</th>
-      <th>properties.int_domain.min</th>
-      <th>properties.int_domain.max</th>
-      <th>properties.value_count.min</th>
-      <th>properties.value_count.max</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>next-item</td>
-      <td>()</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
-      <td>True</td>
-      <td>False</td>
-      <td>52741</td>
-      <td>52741</td>
-      <td>52741</td>
-      <td>52741</td>
-    </tr>
-  </tbody>
-</table>
-</div></div></div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;next-item&#39;]
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">dtypes</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>session_id         int64
-timestamp          int64
-item_id            int64
-category           int64
-itemid_ts_first    int64
-dtype: object
+<span class="ne">InferenceServerException</span>: [StatusCode.INTERNAL] &#39;product_recency_days_log_norm-list&#39;
 </pre></div>
 </div>
 </div>
@@ -1405,32 +995,6 @@ dtype: object
 <li><p>trained transformer architecture based session-based recommendation models with Transformers4Rec</p></li>
 <li><p>deployed a trained model to Triton Inference Server, sent request and got responses from the server.</p></li>
 </ul>
-<p><strong>Unload models</strong></p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
-<span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_nvt&quot;</span><span class="p">)</span>
-<span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_pt&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/models/t4r_pytorch/unload, headers None
-{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch&#39;
-POST /v2/repository/models/t4r_pytorch_nvt/unload, headers None
-{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch_nvt&#39;
-POST /v2/repository/models/t4r_pytorch_pt/unload, headers None
-{&quot;parameters&quot;:{&quot;unload_dependents&quot;:false}}
-&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;0&#39;}&gt;
-Loaded model &#39;t4r_pytorch_pt&#39;
-</pre></div>
-</div>
-</div>
-</div>
 </div>
 </div>
 <div class="section" id="references">

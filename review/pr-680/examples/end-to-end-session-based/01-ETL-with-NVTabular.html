@@ -231,11 +231,11 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id   timestamp    item_id  category  itemid_ts_first
-0        5558  1396798402  214532072         0       1396321373
-1        5558  1396798421  214826816         0       1396321828
-2        5558  1396798474  214821275         0       1396322648
-3        5559  1396528716  214536322         0       1396330905
-4        5559  1396528839  214684372         0       1396335478
+0        9392  1396376642  214546772         0       1396331807
+1        9392  1396376646  214839377         0       1396330945
+2        9392  1396376655  214613912         0       1396330900
+3        9392  1396376665  214839377         0       1396330945
+4        9392  1396376677  214684372         0       1396335478
 </pre></div>
 </div>
 </div>
@@ -539,7 +539,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.LIST, Tags.ITEM, Tags.CATEGORICAL, Tags....</td>
+      <td>(Tags.ITEM_ID, Tags.LIST, Tags.ID, Tags.ITEM, ...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -559,7 +559,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>3</th>
       <td>et_dayofweek_sin-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
@@ -579,7 +579,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>4</th>
       <td>product_recency_days_log_norm-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
@@ -599,7 +599,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>5</th>
       <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -687,9 +687,9 @@ Count after removed in-session repeated interactions: 28971543
 6606149                             [-0.781831, -0.781831]   
 
                         product_recency_days_log_norm-list  \
-6606147  [1.5241553, 1.5238751, 1.5239341, 1.5241631, 1...   
-6606148                             [-0.5330064, 1.521494]   
-6606149                             [1.5338266, 1.5355074]   
+6606147  [1.5241561, 1.523876, 1.523935, 1.5241641, 1.5...   
+6606148                              [-0.533007, 1.521495]   
+6606149                             [1.5338274, 1.5355083]   
 
                                 category-list  day_index  
 6606147  [3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3]        178  
@@ -711,7 +711,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00&lt;00:00, 20.02it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00&lt;00:00, 19.89it/s]
 </pre></div>
 </div>
 </div>
