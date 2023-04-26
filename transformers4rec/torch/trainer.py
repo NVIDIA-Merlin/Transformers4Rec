@@ -529,7 +529,7 @@ class Trainer(BaseTrainer):
                     else nested_concat(labels_host, labels, padding_index=0)
                 )
             if preds is not None and self.args.predict_top_k > 0:
-                if self.model.top_k != -1:
+                if self.model.top_k:
                     raise ValueError(
                         "you cannot set top_k argument in the model class and the, "
                         "predict_top_k  in the trainer at the same time. Please ensure setting "

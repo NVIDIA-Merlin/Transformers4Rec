@@ -304,7 +304,13 @@ class NextItemPredictionTask(PredictionTask):
         )
 
     def forward(
-        self, inputs: torch.Tensor, targets=None, training=False, testing=False, top_k=None, **kwargs
+        self,
+        inputs: torch.Tensor,
+        targets=None,
+        training=False,
+        testing=False,
+        top_k=None,
+        **kwargs,
     ):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
@@ -344,7 +350,7 @@ class NextItemPredictionTask(PredictionTask):
             # Compute predictions probs
             x, _ = self.pre(x)  # type: ignore
 
-            if top_k == None:
+            if top_k is None:
                 return x
             else:
                 preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(x, k=top_k, dim=-1)
