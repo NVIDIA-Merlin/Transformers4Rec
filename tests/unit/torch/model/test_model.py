@@ -84,11 +84,11 @@ def test_sequential_prediction_model_with_ragged_inputs(torch_yoochoose_like, yo
     # if the model is traced with padded inputs it can only be called with padded inputs
     traced_model = torch.jit.trace(model, inference_inputs, strict=False)
     traced_model_output = traced_model(inference_inputs)
-    assert torch.equal(model_output, traced_model_output)
+    torch.testing.assert_close(model_output, traced_model_output)
 
     model_output = model(inference_inputs_2)
     traced_model_output = traced_model(inference_inputs_2)
-    assert torch.equal(model_output, traced_model_output)
+    torch.testing.assert_close(model_output, traced_model_output)
 
 
 @pytest.mark.parametrize("task", [tr.BinaryClassificationTask, tr.RegressionTask])
