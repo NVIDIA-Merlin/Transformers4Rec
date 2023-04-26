@@ -58,9 +58,18 @@ from merlin.dag import ColumnSelector
 from merlin.schema import Schema, Tags
 
 
-# #### Define Data Input and Output Paths
+# Avoid Numba low occupancy warnings:
 
 # In[3]:
+
+
+from numba import config
+config.CUDA_LOW_OCCUPANCY_WARNINGS = 0
+
+
+# #### Define Data Input and Output Paths
+
+# In[4]:
 
 
 DATA_FOLDER = "/workspace/data/"
@@ -73,7 +82,7 @@ OVERWRITE = False
 
 # ## Load and clean raw data
 
-# In[4]:
+# In[5]:
 
 
 interactions_df = cudf.read_csv(DATA_PATH, sep=',', 
@@ -83,7 +92,7 @@ interactions_df = cudf.read_csv(DATA_PATH, sep=',',
 
 # #### Remove repeated interactions within the same session
 
-# In[5]:
+# In[6]:
 
 
 print("Count with in-session repeated interactions: {}".format(len(interactions_df)))
@@ -99,23 +108,30 @@ print("Count after removed in-session repeated interactions: {}".format(len(inte
 
 # #### Create new feature with the timestamp when the item was first seen
 
-# In[6]:
+# In[7]:
 
 
 items_first_ts_df = interactions_df.groupby('item_id').agg({'timestamp': 'min'}).reset_index().rename(columns={'timestamp': 'itemid_ts_first'})
 interactions_merged_df = interactions_df.merge(items_first_ts_df, on=['item_id'], how='left')
-interactions_merged_df.head()
+print(interactions_merged_df.head())
 
 
 # Let's save the interactions_merged_df to disk to be able to use in the inference step.
 
-# In[7]:
+# In[8]:
 
 
 interactions_merged_df.to_parquet(os.path.join(DATA_FOLDER, 'interactions_merged_df.parquet'))
 
 
-# In[8]:
+# In[9]:
+
+
+# print the total number of unique items in the dataset
+print(interactions_merged_df.item_id.nunique())
+
+
+# In[10]:
 
 
 # free gpu memory
@@ -141,11 +157,11 @@ gc.collect()
 # 
 # For more ETL workflow examples, visit NVTabular [example notebooks](https://github.com/NVIDIA-Merlin/NVTabular/tree/main/examples).
 
-# In[9]:
+# In[11]:
 
 
 # Encodes categorical features as contiguous integers
-cat_feats = ColumnSelector(['session_id', 'category', 'item_id']) >> nvt.ops.Categorify(start_index=1)
+cat_feats = ColumnSelector(['category', 'item_id']) >> nvt.ops.Categorify(start_index=1)
 
 # create time features
 session_ts = ColumnSelector(['timestamp'])
@@ -213,14 +229,14 @@ time_features = (
     recency_features_norm
 )
 
-features = ColumnSelector(['timestamp', 'session_id']) + cat_feats + time_features 
+features = ColumnSelector(['session_id', 'timestamp']) + cat_feats + time_features 
 
 
 # ### Define the preprocessing of sequential features
 
 # Once the item features are generated, the objective of this cell is to group interactions at the session level, sorting the interactions by time. We additionally truncate all sessions to first 20 interactions and filter out sessions with less than 2 interactions.
 
-# In[10]:
+# In[12]:
 
 
 # Define Groupby Operator
@@ -235,67 +251,65 @@ groupby_features = features >> nvt.ops.Groupby(
         'et_dayofweek_sin': ["list"],
         'product_recency_days_log_norm': ["list"]
         },
-    name_sep="-") >> nvt.ops.AddMetadata(tags=[Tags.CATEGORICAL])
-
+    name_sep="-")
 
 # Truncate sequence features to first interacted 20 items 
 SESSIONS_MAX_LENGTH = 20 
 
-groupby_features_list = groupby_features['item_id-list', 'category-list', 'et_dayofweek_sin-list', 'product_recency_days_log_norm-list']
-groupby_features_truncated = groupby_features_list >> nvt.ops.ListSlice(0, SESSIONS_MAX_LENGTH, pad=True) >> nvt.ops.Rename(postfix = '_seq')
+
+item_feat = groupby_features['item_id-list'] >> nvt.ops.TagAsItemID()
+cont_feats = groupby_features['et_dayofweek_sin-list', 'product_recency_days_log_norm-list'] >> nvt.ops.AddMetadata(tags=[Tags.CONTINUOUS])
+
+
+groupby_features_list =  item_feat + cont_feats + groupby_features['category-list']
+groupby_features_truncated = groupby_features_list >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True)
 
 # Calculate session day index based on 'event_time_dt-first' column
 day_index = ((groupby_features['event_time_dt-first'])  >> 
-    nvt.ops.LambdaOp(lambda col: (col - col.min()).dt.days +1) >> 
-    nvt.ops.Rename(f = lambda col: "day_index")
-)
+             nvt.ops.LambdaOp(lambda col: (col - col.min()).dt.days +1) >> 
+             nvt.ops.Rename(f = lambda col: "day_index") >>
+             nvt.ops.AddMetadata(tags=[Tags.CATEGORICAL])
+            )
+
+# tag session_id column for serving with legacy api
+sess_id = groupby_features['session_id'] >> nvt.ops.AddMetadata(tags=[Tags.CATEGORICAL])
 
 # Select features for training 
-selected_features = groupby_features['session_id', 'item_id-count'] + groupby_features_truncated + day_index
+selected_features = sess_id + groupby_features['item_id-count'] + groupby_features_truncated + day_index
 
 # Filter out sessions with less than 2 interactions 
 MINIMUM_SESSION_LENGTH = 2
 filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df["item_id-count"] >= MINIMUM_SESSION_LENGTH) 
 
 
-# Avoid Numba low occupancy warnings:
-
-# In[11]:
-
-
-from numba import config
-config.CUDA_LOW_OCCUPANCY_WARNINGS = 0
-
-
 # ### Execute NVTabular workflow
 
 # Once we have defined the general workflow (`filtered_sessions`), we provide our cudf dataset to `nvt.Dataset` class which is optimized to split data into chunks that can fit in device memory and to handle the calculation of complex global statistics. Then, we execute the pipeline that fits and transforms data to get the desired output features.
 
-# In[12]:
+# In[13]:
 
 
 dataset = nvt.Dataset(interactions_merged_df)
 workflow = nvt.Workflow(filtered_sessions)
 # Learn features statistics necessary of the preprocessing workflow
-workflow.fit(dataset)
-# Apply the preprocessing workflow in the dataset and convert the resulting Dask cudf dataframe to a cudf dataframe
-sessions_gdf = workflow.transform(dataset).compute()
+# The following will generate schema.pbtxt file in the provided folder and export the parquet files.
+workflow.fit_transform(dataset).to_parquet(os.path.join(DATA_FOLDER, "processed_nvt"))
 
 
 # Let's print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.
 
-# In[13]:
+# In[14]:
 
 
-sessions_gdf.head()
+workflow.output_schema
 
 
 # #### Save the preprocessing workflow
 
-# In[14]:
+# In[15]:
 
 
-workflow.save('workflow_etl')
+workflow.save(os.path.join(DATA_FOLDER, "workflow_etl"))
 
 
 # ### Export pre-processed data by day
@@ -304,43 +318,29 @@ workflow.save('workflow_etl')
 #   
 # P.s. It is worthwhile to note that the dataset has a single categorical feature (category), which, however, is inconsistent over time in the dataset. All interactions before day 84 (2014-06-23) have the same value for that feature, whereas many other categories are introduced afterwards. Thus for this example, we save only the last five days.
 
-# In[15]:
-
-
-sessions_gdf = sessions_gdf[sessions_gdf.day_index>=178]
-
-
 # In[16]:
 
 
-from transformers4rec.data.preprocessing import save_time_based_splits
-save_time_based_splits(data=nvt.Dataset(sessions_gdf),
-                       output_dir= "./preproc_sessions_by_day",
-                       partition_col='day_index',
-                       timestamp_col='session_id', 
-                      )
+# read in the processed train dataset
+sessions_gdf = cudf.read_parquet(os.path.join(DATA_FOLDER, "processed_nvt/part_0.parquet"))
+sessions_gdf = sessions_gdf[sessions_gdf.day_index>=178]
 
 
 # In[17]:
 
 
-def list_files(startpath):
-    """
-    Util function to print the nested structure of a directory
-    """
-    for root, dirs, files in os.walk(startpath):
-        level = root.replace(startpath, "").count(os.sep)
-        indent = " " * 4 * (level)
-        print("{}{}/".format(indent, os.path.basename(root)))
-        subindent = " " * 4 * (level + 1)
-        for f in files:
-            print("{}{}".format(subindent, f))
+print(sessions_gdf.head(3))
 
 
 # In[18]:
 
 
-list_files('./preproc_sessions_by_day')
+from transformers4rec.utils.data_utils import save_time_based_splits
+save_time_based_splits(data=nvt.Dataset(sessions_gdf),
+                       output_dir=os.path.join(DATA_FOLDER, "preproc_sessions_by_day"),
+                       partition_col='day_index',
+                       timestamp_col='session_id', 
+                      )
 
 
 # In[19]:

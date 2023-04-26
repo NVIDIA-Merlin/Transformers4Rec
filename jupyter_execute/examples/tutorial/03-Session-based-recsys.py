@@ -91,16 +91,19 @@ from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
 from transformers4rec.torch.utils.examples_utils import wipe_memory
 
 
-# ##### Instantiates Schema object from a `schema` file.
+# ##### Instantiates Schema object by reading the save trained parquet file.
 
 # In[3]:
 
 
-from merlin_standard_lib import Schema
-# Define schema object to pass it to the TabularSequenceFeatures class
-SCHEMA_PATH = 'schema_tutorial.pb'
-schema = Schema().from_proto_text(SCHEMA_PATH)
-schema = schema.select_by_name(['product_id-list_seq'])
+from merlin.schema import Schema
+from merlin.io import Dataset
+
+INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data")
+
+train = Dataset(os.path.join(INPUT_DATA_DIR, "processed_nvt/part_0.parquet"))
+schema = train.schema
+schema = schema.select_by_name(['product_id-list'])
 
 
 # Transformers4Rec library relies on `Schema` object in `TabularSequenceFeatures` that takes the input features as input and create all the necessary layers to process and aggregate them. As you can see below, the `schema.pb` is a protobuf text file contains features metadata, including statistics about features such as cardinality, min and max values and also tags based on their characteristics and dtypes (e.g., `categorical`, `continuous`, `list`, `item_id`). We can tag our target column and even add the prediction task such as `binary`, `regression` or `multiclass` as tags for the target column in the `schema.pb` file. The `Schema` provides a standard representation for metadata that is useful when training machine learning or deep learning models.
@@ -108,14 +111,6 @@ schema = schema.select_by_name(['product_id-list_seq'])
 # The metadata information loaded from `Schema` and their tags are used to automatically set the parameters of Transformers4rec models. Certain Transformers4rec modules have a `from_schema()` method to instantiate their parameters and layers from protobuf text file respectively. 
 # 
 # Although in this tutorial we are defining the `Schema` manually, the next NVTabular release is going to generate the schema with appropriate types and tags automatically from the preprocessing workflow, allowing the user to set additional feaure tags if needed.
-
-# Let's inspect the first lines of `schema.pb`
-
-# In[4]:
-
-
-get_ipython().system('head -30 $SCHEMA_PATH')
-
 
 # ##### Defining the input block: `TabularSequenceFeatures`
 
@@ -125,7 +120,7 @@ get_ipython().system('head -30 $SCHEMA_PATH')
 # 
 # Another important argument is the `masking` method, which sets the training approach. See Section 3.2.2 for details on this.
 
-# In[5]:
+# In[4]:
 
 
 sequence_length = 20
@@ -140,7 +135,7 @@ inputs = tr.TabularSequenceFeatures.from_schema(
 # 
 # The `SequentialBlock` creates a pipeline by connecting the building blocks in a serial way, so that the input shape of one block is inferred from the output of the previous block. In this example, the `TabularSequenceFeatures` object is followed by an MLP projection layer, which feeds data to a GRU block.
 
-# In[6]:
+# In[5]:
 
 
 d_model = 128
@@ -157,7 +152,7 @@ body = tr.SequentialBlock(
 
 # Next, we link the transformer-body to the inputs and the prediction tasks to get the final PyTorch `Model` class.
 
-# In[7]:
+# In[6]:
 
 
 head = tr.Head(
@@ -179,12 +174,10 @@ model = tr.Model(head)
 # - supporting commonly used formats such as parquet
 # - having native support to sparse sequential features
 
-# In[8]:
+# In[7]:
 
 
-# import NVTabular dependencies
-from transformers4rec.torch.utils.data_utils import NVTabularDataLoader
-
+from transformers4rec.torch.utils.data_utils import MerlinDataLoader
 x_cat_names, x_cont_names = ['product_id-list_seq'], []
 
 # dictionary representing max sequence length for column
@@ -193,17 +186,15 @@ sparse_features_max = {
     for fname in x_cat_names + x_cont_names
 }
 
-# Define a `get_dataloader` function to call in the training loop
-def get_dataloader(path, batch_size=32):
-
-    return NVTabularDataLoader.from_schema(
-        schema,
-        path, 
-        batch_size,
-        max_sequence_length=sequence_length,
-        sparse_names=x_cat_names + x_cont_names,
-        sparse_max=sparse_features_max,
-)
+def get_dataloader(data_path, batch_size=128):
+        loader = MerlinDataLoader.from_schema(
+            schema,
+            data_path,
+            batch_size,
+            max_sequence_length=sequence_length,
+            shuffle=False,
+        )
+        return loader
 
 
 # ##### Daily Fine-Tuning: Training over a time window
@@ -213,7 +204,7 @@ def get_dataloader(path, batch_size=32):
 
 # ##### Set training arguments
 
-# In[9]:
+# In[8]:
 
 
 from transformers4rec.config.trainer import T4RecTrainingArguments
@@ -236,7 +227,7 @@ train_args = T4RecTrainingArguments(local_rank = -1,
 
 # ##### Instantiate the Trainer
 
-# In[10]:
+# In[9]:
 
 
 # Instantiate the T4Rec Trainer, which manages training and evaluation
@@ -250,7 +241,7 @@ trainer = Trainer(
 
 # Define the output folder of the processed parquet files
 
-# In[11]:
+# In[10]:
 
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/sessions_by_day")
@@ -261,7 +252,7 @@ OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/sessions_by_day")
 # 
 # Here, we use a loop that to conduct a time-based finetuning, by iteratively training and evaluating using a sliding time window as follows: At each iteration, we use training data of a specific time index <i>t</i> to train the model then we evaluate on the validation data of next index <i>t + 1</i>. We set the start time to 1 and end time to 4.
 
-# In[12]:
+# In[11]:
 
 
 get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_time_window_index = 4\nfor time_index in range(start_time_window_index, final_time_window_index):\n    # Set data \n    time_index_train = time_index\n    time_index_eval = time_index + 1\n    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))\n    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))\n    \n    # Initialize dataloaders\n    trainer.train_dataloader = get_dataloader(train_paths, train_args.per_device_train_batch_size)\n    trainer.eval_dataloader = get_dataloader(eval_paths, train_args.per_device_eval_batch_size)\n    \n    # Train on day related to time_index \n    print(\'*\'*20)\n    print("Launch training for day %s are:" %time_index)\n    print(\'*\'*20 + \'\\n\')\n    trainer.reset_lr_scheduler()\n    trainer.train()\n    trainer.state.global_step +=1\n    \n    # Evaluate on the following day\n    train_metrics = trainer.evaluate(metric_key_prefix=\'eval\')\n    print(\'*\'*20)\n    print("Eval results for day %s are:\\t" %time_index_eval)\n    print(\'\\n\' + \'*\'*20 + \'\\n\')\n    for key in sorted(train_metrics.keys()):\n        print(" %s = %s" % (key, str(train_metrics[key]))) \n    wipe_memory()\n')
@@ -269,7 +260,7 @@ get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_tim
 
 # Let's write out model evaluation accuracy results to a text file to compare model at the end
 
-# In[13]:
+# In[12]:
 
 
 with open("results.txt", 'w') as f: 
@@ -332,7 +323,7 @@ app.kernel.do_shutdown(True)
 
 # Now we are going to define an architecture for next-item prediction using the XLNET architecture.
 
-# In[15]:
+# In[1]:
 
 
 import os
@@ -340,29 +331,29 @@ import glob
 
 import torch 
 import transformers4rec.torch as tr
-
 from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
+from transformers4rec.torch.utils.examples_utils import wipe_memory
 
 
 # As we did above, we start with defining our schema object and selecting only the `product_id` feature for training.
 
-# In[16]:
+# In[2]:
 
 
-from merlin_standard_lib import Schema
+from merlin.schema import Schema
+from merlin.io import Dataset
 
-# Define schema object to pass it to the TabularSequenceFeatures class
-SCHEMA_PATH = 'schema_tutorial.pb'
-schema = Schema().from_proto_text(SCHEMA_PATH)
+INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data")
 
-# Create a sub-schema only with the selected features
-schema = schema.select_by_name(['product_id-list_seq'])
+train = Dataset(os.path.join(INPUT_DATA_DIR, "processed_nvt/part_0.parquet"))
+schema = train.schema
+schema = schema.select_by_name(['product_id-list'])
 
 
 # ##### Define Input block
 # Here we instantiate `TabularSequenceFeatures` from the feature schema and set `masking="mlm"` to use MLM as training method.
 
-# In[17]:
+# In[3]:
 
 
 #Input 
@@ -380,7 +371,7 @@ inputs= tr.TabularSequenceFeatures.from_schema(
 # 
 # The `TransformerBlock` class supports HF Transformers for session-based and sequential-based recommendation models. `NextItemPredictionTask` is the class to support next item prediction task, encapsulating the corresponding heads and loss.
 
-# In[18]:
+# In[4]:
 
 
 # Define XLNetConfig class and set default parameters for HF XLNet config  
@@ -408,7 +399,7 @@ model = tr.Model(head)
 
 # Among the training arguments you can set the `data_loader_engine` to automatically instantiate the dataloader based on the schema, rather than instantiating the data loader manually like we did for the RNN example. The default value is `"merlin"` for optimized GPU-based data-loading. Optionally the PyarrowDataLoader (`"pyarrow"`) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded into CPU memory.
 
-# In[19]:
+# In[5]:
 
 
 from transformers4rec.config.trainer import T4RecTrainingArguments
@@ -432,7 +423,7 @@ training_args = T4RecTrainingArguments(
 
 # **Instantiate the trainer**
 
-# In[20]:
+# In[6]:
 
 
 # Instantiate the T4Rec Trainer, which manages training and evaluation
@@ -446,7 +437,7 @@ trainer = Trainer(
 
 # Define the output folder of the processed parquet files
 
-# In[21]:
+# In[7]:
 
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/sessions_by_day")
@@ -454,7 +445,7 @@ OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/sessions_by_day")
 
 # Now, we do time-based fine-tuning the model by iteratively training and evaluating using a sliding time window, like we did for the RNN example.
 
-# In[22]:
+# In[8]:
 
 
 get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_time_window_index = 4\nfor time_index in range(start_time_window_index, final_time_window_index):\n    # Set data \n    time_index_train = time_index\n    time_index_eval = time_index + 1\n    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))\n    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))\n    # Train on day related to time_index \n    print(\'*\'*20)\n    print("Launch training for day %s are:" %time_index)\n    print(\'*\'*20 + \'\\n\')\n    trainer.train_dataset_or_path = train_paths\n    trainer.reset_lr_scheduler()\n    trainer.train()\n    trainer.state.global_step +=1\n    # Evaluate on the following day\n    trainer.eval_dataset_or_path = eval_paths\n    train_metrics = trainer.evaluate(metric_key_prefix=\'eval\')\n    print(\'*\'*20)\n    print("Eval results for day %s are:\\t" %time_index_eval)\n    print(\'\\n\' + \'*\'*20 + \'\\n\')\n    for key in sorted(train_metrics.keys()):\n        print(" %s = %s" % (key, str(train_metrics[key]))) \n    wipe_memory()\n')
@@ -462,7 +453,7 @@ get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_tim
 
 # Add eval accuracy metric results to the existing resuls.txt file.
 
-# In[23]:
+# In[9]:
 
 
 with open("results.txt", 'a') as f:
@@ -499,29 +490,31 @@ import nvtabular as nvt
 
 import torch 
 import transformers4rec.torch as tr
-
 from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
 
 
-# In[3]:
+# In[2]:
 
+
+from merlin.schema import Schema
+from merlin.io import Dataset
 
 # Define categorical and continuous columns to fed to training model
-x_cat_names = ['product_id-list_seq', 'category_id-list_seq', 'brand-list_seq']
-x_cont_names = ['product_recency_days_log_norm-list_seq', 'et_dayofweek_sin-list_seq', 'et_dayofweek_cos-list_seq', 
-                'price_log_norm-list_seq', 'relative_price_to_avg_categ_id-list_seq']
+x_cat_names = ['product_id-list', 'category_id-list', 'brand-list']
+x_cont_names = ['product_recency_days_log_norm-list', 'et_dayofweek_sin-list', 'et_dayofweek_cos-list', 
+                'price_log_norm-list', 'relative_price_to_avg_categ_id-list']
 
-from merlin_standard_lib import Schema
 
-# Define schema object to pass it to the TabularSequenceFeatures class
-SCHEMA_PATH ='schema_tutorial.pb'
-schema = Schema().from_proto_text(SCHEMA_PATH)
+INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data")
+
+train = Dataset(os.path.join(INPUT_DATA_DIR, "processed_nvt/part_0.parquet"))
+schema = train.schema
 schema = schema.select_by_name(x_cat_names + x_cont_names)
 
 
 # Here we set `aggregation="concat"`, so that all categorical and continuous features are concatenated to form an interaction representation.
 
-# In[4]:
+# In[3]:
 
 
 # Define input block
@@ -558,7 +551,7 @@ model = tr.Model(head)
 
 # ##### Training and Evaluation
 
-# In[5]:
+# In[4]:
 
 
 from transformers4rec.config.trainer import T4RecTrainingArguments
@@ -581,7 +574,7 @@ training_args = T4RecTrainingArguments(
 )
 
 
-# In[6]:
+# In[5]:
 
 
 # Instantiate the T4Rec Trainer, which manages training and evaluation
@@ -595,13 +588,13 @@ trainer = Trainer(
 
 # Define the output folder of the processed parquet files
 
-# In[7]:
+# In[6]:
 
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "/workspace/data/sessions_by_day")
 
 
-# In[8]:
+# In[7]:
 
 
 get_ipython().run_cell_magic('time', '', 'start_time_window_index = 1\nfinal_time_window_index = 4\nfor time_index in range(start_time_window_index, final_time_window_index):\n    # Set data \n    time_index_train = time_index\n    time_index_eval = time_index + 1\n    train_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_train}/train.parquet"))\n    eval_paths = glob.glob(os.path.join(OUTPUT_DIR, f"{time_index_eval}/valid.parquet"))\n    # Train on day related to time_index \n    print(\'*\'*20)\n    print("Launch training for day %s are:" %time_index)\n    print(\'*\'*20 + \'\\n\')\n    trainer.train_dataset_or_path = train_paths\n    trainer.reset_lr_scheduler()\n    trainer.train()\n    trainer.state.global_step +=1\n    # Evaluate on the following day\n    trainer.eval_dataset_or_path = eval_paths\n    train_metrics = trainer.evaluate(metric_key_prefix=\'eval\')\n    print(\'*\'*20)\n    print("Eval results for day %s are:\\t" %time_index_eval)\n    print(\'\\n\' + \'*\'*20 + \'\\n\')\n    for key in sorted(train_metrics.keys()):\n        print(" %s = %s" % (key, str(train_metrics[key]))) \n    wipe_memory()\n')
@@ -617,7 +610,7 @@ with open("results.txt", 'a') as f:
     f.write('XLNet-MLM with side information accuracy results:')
     f.write('\n')
     for key, value in  model.compute_metrics().items(): 
-        f.write('%s %s\n' % (key, value.item()))
+        f.write('%s:%s\n' % (key, value.item()))
 
 
 # After model training and evaluation is completed we can save our trained model in the next section. 
@@ -626,7 +619,7 @@ with open("results.txt", 'a') as f:
 
 # Load the preproc workflow that we saved in the ETL notebook.
 
-# In[14]:
+# In[8]:
 
 
 import nvtabular as nvt
@@ -637,13 +630,13 @@ workflow_path = os.path.join(INPUT_DATA_DIR, 'workflow_etl')
 workflow = nvt.Workflow.load(workflow_path)
 
 
-# In[15]:
+# In[9]:
 
 
 # dictionary representing max sequence length for the sequential (list) columns
 sparse_features_max = {
     fname: sequence_length
-    for fname in x_cat_names + x_cont_names + ['category_code-list_seq']
+    for fname in x_cat_names + x_cont_names + ['category_code-list']
 }
 
 sparse_features_max
@@ -651,7 +644,7 @@ sparse_features_max
 
 # It is time to export the proc workflow and model in the format required by Triton Inference Server, by using the NVTabular’s `export_pytorch_ensemble()` function.
 
-# In[16]:
+# In[ ]:
 
 
 from nvtabular.inference.triton import export_pytorch_ensemble
@@ -660,26 +653,17 @@ export_pytorch_ensemble(
     workflow,
     sparse_max=sparse_features_max,
     name= "t4r_pytorch",
-    model_path= "/workspace/models",
+    model_path= os.path.join(INPUT_DATA_DIR, 'models'),
     label_columns =[],
 )
 
 
 # Before we move on to the next notebook, `04-Inference-with-Triton`, let's print out our results.txt file. 
 
-# In[2]:
+# In[13]:
 
 
 get_ipython().system('cat results.txt')
-
-
-# Let's plot bar charts to visualize and compare the accuracy results using `visuals` util function.
-
-# In[1]:
-
-
-from visuals import create_bar_chart
-create_bar_chart('results.txt')
 
 
 # **In the end, using side information provided higher accuracy. Why is that? Have an idea?**
@@ -688,15 +672,7 @@ create_bar_chart('results.txt')
 
 # Congratulations on finishing this notebook. In this tutorial, we have presented Transformers4Rec, an open source library designed to enable RecSys researchers and practitioners to quickly and easily explore the latest developments of the NLP for sequential and session-based recommendation tasks.
 
-# Please execute the cell below to shut down the kernel before moving on to the next notebook, `04-Inference-with-Triton.ipynb`.
-
-# In[ ]:
-
-
-import IPython
-app = IPython.Application.instance()
-app.kernel.do_shutdown(True)
-
+# Please shut down the kernel before moving on to the next notebook, `04-Inference-with-Triton.ipynb`.
 
 # ## References
 

@@ -37,8 +37,10 @@
 
 
 import os
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 import glob
 
+import cudf
 import numpy as np
 import pandas as pd
 
@@ -101,10 +103,10 @@ df.head()
 SESSIONS_MAX_LENGTH =20
 
 # Categorify categorical features
-categ_feats = ['session_id', 'item_id', 'category'] >> nvt.ops.Categorify()
+categ_feats = ['item_id', 'category'] >> nvt.ops.Categorify()
 
 # Define Groupby Workflow
-groupby_feats = categ_feats + ['day', 'age_days', 'weekday_sin']
+groupby_feats = categ_feats + ['session_id', 'day', 'age_days', 'weekday_sin']
 
 # Group interaction features by session
 groupby_features = groupby_feats >> nvt.ops.Groupby(
@@ -148,41 +150,26 @@ filtered_sessions = selected_features >> nvt.ops.Filter(f=lambda df: df["item_id
 
 seq_feats_list = filtered_sessions['item_id-list', 'category-list', 'age_days-list', 'weekday_sin-list'] >>  nvt.ops.ValueCount()
 
+workflow = nvt.Workflow(filtered_sessions['session_id', 'day-first'] + seq_feats_list)
 
-workflow = nvt.Workflow(filtered_sessions['session_id', 'day-first', 'item_id-count'] + seq_feats_list)
+dataset = nvt.Dataset(df)
 
-dataset = nvt.Dataset(df, cpu=False)
-# Generate statistics for the features
-workflow.fit(dataset)
-# Apply the preprocessing and return an NVTabular dataset
-sessions_ds = workflow.transform(dataset)
-# Convert the NVTabular dataset to a Dask cuDF dataframe (`to_ddf()`) and then to cuDF dataframe (`.compute()`)
-sessions_gdf = sessions_ds.to_ddf().compute()
-
-
-# In[8]:
-
-
-sessions_gdf.head(3)
+# Generate statistics for the features and export parquet files
+# this step will generate the schema file
+workflow.fit_transform(dataset).to_parquet(os.path.join(INPUT_DATA_DIR, "processed_nvt"))
 
 
 # It is possible to save the preprocessing workflow. That is useful to apply the same preprocessing to other data (with the same schema) and also to deploy the session-based recommendation pipeline to Triton Inference Server.
 
-# In[9]:
+# In[8]:
 
 
 workflow.output_schema
 
 
-# The following will generate `schema.pbtxt` file in the provided folder.
+# Save NVTabular workflow.
 
-# In[10]:
-
-
-workflow.fit_transform(dataset).to_parquet(os.path.join(INPUT_DATA_DIR, "processed_nvt"))
-
-
-# In[11]:
+# In[9]:
 
 
 workflow.save(os.path.join(INPUT_DATA_DIR, "workflow_etl"))
@@ -192,16 +179,29 @@ workflow.save(os.path.join(INPUT_DATA_DIR, "workflow_etl"))
 
 # In this example we are going to split the preprocessed parquet files by days, to allow for temporal training and evaluation. There will be a folder for each day and three parquet files within each day folder: `train.parquet`, `validation.parquet` and `test.parquet`.
 
-# In[12]:
+# In[10]:
 
 
 OUTPUT_DIR = os.environ.get("OUTPUT_DIR",os.path.join(INPUT_DATA_DIR, "sessions_by_day"))
 
 
+# In[11]:
+
+
+# Read in the processed parquet file
+sessions_gdf = cudf.read_parquet(os.path.join(INPUT_DATA_DIR, "processed_nvt/part_0.parquet"))
+
+
+# In[12]:
+
+
+print(sessions_gdf.head(3))
+
+
 # In[13]:
 
 
-from transformers4rec.data.preprocessing import save_time_based_splits
+from transformers4rec.utils.data_utils import save_time_based_splits
 save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                        output_dir= OUTPUT_DIR,
                        partition_col='day-first',
@@ -209,7 +209,7 @@ save_time_based_splits(data=nvt.Dataset(sessions_gdf),
                       )
 
 
-# ## Checking the preprocessed outputs
+# ## Check out the preprocessed outputs
 
 # In[14]:
 
@@ -221,7 +221,7 @@ TRAIN_PATHS = os.path.join(OUTPUT_DIR, "1", "train.parquet")
 
 
 df = pd.read_parquet(TRAIN_PATHS)
-df
+df.head()
 
 
 # In[16]:

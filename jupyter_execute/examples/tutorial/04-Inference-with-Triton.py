@@ -151,11 +151,11 @@ triton_client.get_model_repository_index()
 
 # We load the ensemble model
 
-# In[5]:
+# In[6]:
 
 
 model_name = "t4r_pytorch"
-triton_client.load_model(model_name=model_name)
+#triton_client.load_model(model_name=model_name)
 
 
 # If all models are loaded successfully, you should be seeing successfully loaded status next to each model name on your terminal.
@@ -164,7 +164,7 @@ triton_client.load_model(model_name=model_name)
 
 # Load raw data for inference: We select the first 50 interactions and filter out sessions with less than 2 interactions. For this tutorial, just as an example we use the `Oct-2019` dataset that we used for model training.
 
-# In[6]:
+# In[7]:
 
 
 INPUT_DATA_DIR = os.environ.get("INPUT_DATA_DIR", "/workspace/data/")
@@ -173,20 +173,20 @@ df=df.sort_values('event_time_ts')
 batch = df.iloc[:50,:]
 
 
-# In[7]:
+# In[8]:
 
 
 sessions_to_use = batch.user_session.value_counts()
 filtered_batch = batch[batch.user_session.isin(sessions_to_use[sessions_to_use.values>1].index.values)]
 
 
-# In[8]:
+# In[9]:
 
 
 filtered_batch.head()
 
 
-# In[9]:
+# In[10]:
 
 
 import warnings
@@ -194,7 +194,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-# In[10]:
+# In[11]:
 
 
 import nvtabular.inference.triton as nvt_triton
@@ -217,7 +217,7 @@ with grpcclient.InferenceServerClient("localhost:8001") as client:
 
 # #### Visualise top-k predictions
 
-# In[11]:
+# In[12]:
 
 
 from transformers4rec.torch.utils.examples_utils import visualize_response
@@ -233,7 +233,7 @@ visualize_response(filtered_batch, response, top_k=5, session_col='user_session'
 
 # ### Unload models and shut down the kernel
 
-# In[12]:
+# In[ ]:
 
 
 triton_client.unload_model(model_name="t4r_pytorch")
@@ -241,7 +241,7 @@ triton_client.unload_model(model_name="t4r_pytorch_nvt")
 triton_client.unload_model(model_name="t4r_pytorch_pt")
 
 
-# In[13]:
+# In[ ]:
 
 
 import IPython
