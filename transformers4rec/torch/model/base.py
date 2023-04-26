@@ -371,7 +371,7 @@ class Head(torch.nn.Module, LossMixin, MetricsMixin):
         testing: bool = False,
         targets: Union[torch.Tensor, TabularData] = None,
         call_body: bool = False,
-        top_k: Optional[int] = -1,
+        top_k: Optional[int] = None,
         **kwargs,
     ) -> Union[torch.Tensor, TabularData]:
         outputs = {}
@@ -497,7 +497,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
         optimizer: Type[torch.optim.Optimizer] = torch.optim.Adam,
         name: str = None,
         max_sequence_length: Optional[int] = None,
-        top_k: Optional[int] = -1,
+        top_k: Optional[int] = None,
     ):
         """Model class that can aggregate one or multiple heads.
         Parameters
@@ -517,7 +517,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
             Used to truncate sequence inputs longer than this value.
         top_k: int, optional
             The number of items to return at the inference step once the model is deployed.
-            Default is -1, which will return all items.
+            Default is None, which will return all items.
         """
         if head_weights:
             if not isinstance(head_weights, list):
@@ -804,7 +804,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
                     "int_domain": int_domain,
                 }
                 # in case one sets top_k at the inference step we return two outputs
-                if self.top_k > 0:
+                if self.top_k:
                     # be sure categ item-id dtype in model.input schema and output schema matches
                     col_name = self.input_schema.select_by_tag(Tags.ITEM_ID).column_names[0]
                     col_dtype = (
