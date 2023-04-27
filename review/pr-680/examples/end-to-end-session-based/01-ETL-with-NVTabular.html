@@ -231,11 +231,11 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id   timestamp    item_id  category  itemid_ts_first
-0        9392  1396376642  214546772         0       1396331807
-1        9392  1396376646  214839377         0       1396330945
-2        9392  1396376655  214613912         0       1396330900
-3        9392  1396376665  214839377         0       1396330945
-4        9392  1396376677  214684372         0       1396335478
+0        5558  1396798402  214532072         0       1396321373
+1        5558  1396798421  214826816         0       1396321828
+2        5558  1396798474  214821275         0       1396322648
+3        5559  1396528716  214536322         0       1396330905
+4        5559  1396528839  214684372         0       1396335478
 </pre></div>
 </div>
 </div>
@@ -405,7 +405,7 @@ Count after removed in-session repeated interactions: 28971543
 
 
 <span class="n">groupby_features_list</span> <span class="o">=</span>  <span class="n">item_feat</span> <span class="o">+</span> <span class="n">cont_feats</span> <span class="o">+</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;category-list&#39;</span><span class="p">]</span>
-<span class="n">groupby_features_truncated</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">groupby_features_truncated</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span>
 
 <span class="c1"># Calculate session day index based on &#39;event_time_dt-first&#39; column</span>
 <span class="n">day_index</span> <span class="o">=</span> <span class="p">((</span><span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;event_time_dt-first&#39;</span><span class="p">])</span>  <span class="o">&gt;&gt;</span> 
@@ -539,7 +539,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM_ID, Tags.LIST, Tags.ID, Tags.ITEM, ...</td>
+      <td>(Tags.ITEM, Tags.ID, Tags.CATEGORICAL, Tags.LI...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -599,7 +599,7 @@ Count after removed in-session repeated interactions: 28971543
     <tr>
       <th>5</th>
       <td>category-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -711,7 +711,7 @@ Count after removed in-session repeated interactions: 28971543
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00&lt;00:00, 19.89it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00&lt;00:00, 20.00it/s]
 </pre></div>
 </div>
 </div>

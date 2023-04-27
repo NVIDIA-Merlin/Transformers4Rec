@@ -155,16 +155,6 @@
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
-  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
-/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-</pre></div>
-</div>
-</div>
 </div>
 <p>We can select the subset of features we want to use for training the model by their tags or their names.</p>
 <div class="cell docutils container">
@@ -225,7 +215,7 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ID, Tags.LIST, Tags.CATEGORICAL, Tags.IT...</td>
+      <td>(Tags.ITEM, Tags.LIST, Tags.ITEM_ID, Tags.ID, ...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -245,7 +235,7 @@
     <tr>
       <th>1</th>
       <td>category-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
+      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -384,6 +374,11 @@
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PyTorch: setting up devices
+</pre></div>
+</div>
+</div>
 </div>
 </div>
 <div class="section" id="instantiate-the-trainer">
@@ -432,7 +427,7 @@
     <div>
 
       <progress value='750' max='750' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [750/750 00:19, Epoch 10/10]
+      [750/750 00:20, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -444,15 +439,15 @@
   <tbody>
     <tr>
       <td>200</td>
-      <td>7.770600</td>
+      <td>7.737200</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.644100</td>
+      <td>6.633100</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>6.391800</td>
+      <td>6.370500</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -466,7 +461,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div>
 
   <progress value='14' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [6/6 00:28]
+  [6/6 00:27]
 </div>
 </div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 20736
@@ -479,12 +474,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
 
- eval_/next-item/avg_precision@10 = 0.07973254472017288
- eval_/next-item/avg_precision@20 = 0.08382388204336166
- eval_/next-item/ndcg@10 = 0.11001300811767578
- eval_/next-item/ndcg@20 = 0.12536953389644623
- eval_/next-item/recall@10 = 0.20847783982753754
- eval_/next-item/recall@20 = 0.2697495222091675
+ eval_/next-item/avg_precision@10 = 0.0832989290356636
+ eval_/next-item/avg_precision@20 = 0.08740802109241486
+ eval_/next-item/ndcg@10 = 0.11239233613014221
+ eval_/next-item/ndcg@20 = 0.1276322454214096
+ eval_/next-item/recall@10 = 0.2042389214038849
+ eval_/next-item/recall@20 = 0.26512524485588074
 
 ***** Launch training for day 179: *****
 </pre></div>
@@ -493,7 +488,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
     <div>
 
       <progress value='540' max='540' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [540/540 00:15, Epoch 10/10]
+      [540/540 00:14, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -505,11 +500,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.922700</td>
+      <td>6.901800</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.540600</td>
+      <td>6.507800</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -530,12 +525,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 180:*****
 
- eval_/next-item/avg_precision@10 = 0.062011875212192535
- eval_/next-item/avg_precision@20 = 0.06556826084852219
- eval_/next-item/ndcg@10 = 0.08520779013633728
- eval_/next-item/ndcg@20 = 0.09849531203508377
- eval_/next-item/recall@10 = 0.16083915531635284
- eval_/next-item/recall@20 = 0.21491841971874237
+ eval_/next-item/avg_precision@10 = 0.057640690356492996
+ eval_/next-item/avg_precision@20 = 0.06169268488883972
+ eval_/next-item/ndcg@10 = 0.0818246454000473
+ eval_/next-item/ndcg@20 = 0.09674238413572311
+ eval_/next-item/recall@10 = 0.15897436439990997
+ eval_/next-item/recall@20 = 0.2186480164527893
 
 ***** Launch training for day 180: *****
 </pre></div>
@@ -544,7 +539,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
     <div>
 
       <progress value='440' max='440' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [440/440 00:12, Epoch 10/10]
+      [440/440 00:11, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -556,11 +551,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.939200</td>
+      <td>6.961300</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.528000</td>
+      <td>6.540400</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -568,12 +563,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 181:*****
 
- eval_/next-item/avg_precision@10 = 0.13360610604286194
- eval_/next-item/avg_precision@20 = 0.14083324372768402
- eval_/next-item/ndcg@10 = 0.1744067221879959
- eval_/next-item/ndcg@20 = 0.20117734372615814
- eval_/next-item/recall@10 = 0.30333951115608215
- eval_/next-item/recall@20 = 0.41094619035720825
+ eval_/next-item/avg_precision@10 = 0.13169154524803162
+ eval_/next-item/avg_precision@20 = 0.13863395154476166
+ eval_/next-item/ndcg@10 = 0.17248544096946716
+ eval_/next-item/ndcg@20 = 0.1989077478647232
+ eval_/next-item/recall@10 = 0.30519479513168335
+ eval_/next-item/recall@20 = 0.40630799531936646
 </pre></div>
 </div>
 </div>
@@ -589,24 +584,24 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.07973254472017288,
-  0.062011875212192535,
-  0.13360610604286194],
- &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.08382388204336166,
-  0.06556826084852219,
-  0.14083324372768402],
- &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11001300811767578,
-  0.08520779013633728,
-  0.1744067221879959],
- &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.12536953389644623,
-  0.09849531203508377,
-  0.20117734372615814],
- &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.20847783982753754,
-  0.16083915531635284,
-  0.30333951115608215],
- &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.2697495222091675,
-  0.21491841971874237,
-  0.41094619035720825]}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.0832989290356636,
+  0.057640690356492996,
+  0.13169154524803162],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.08740802109241486,
+  0.06169268488883972,
+  0.13863395154476166],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11239233613014221,
+  0.0818246454000473,
+  0.17248544096946716],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.1276322454214096,
+  0.09674238413572311,
+  0.1989077478647232],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.2042389214038849,
+  0.15897436439990997,
+  0.30519479513168335],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.26512524485588074,
+  0.2186480164527893,
+  0.40630799531936646]}
 </pre></div>
 </div>
 </div>
@@ -622,12 +617,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09178350865840912
- indexed_by_time_eval_/next-item/avg_precision@20 = 0.09674179553985596
- indexed_by_time_eval_/next-item/ndcg@10 = 0.12320917348066966
- indexed_by_time_eval_/next-item/ndcg@20 = 0.14168072988589606
- indexed_by_time_eval_/next-item/recall@10 = 0.2242188354333242
- indexed_by_time_eval_/next-item/recall@20 = 0.29853804409503937
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09087705488006274
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.09591155250867207
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.12223414083321889
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.1410941258072853
+ indexed_by_time_eval_/next-item/recall@10 = 0.2228026936451594
+ indexed_by_time_eval_/next-item/recall@20 = 0.2966937522093455
 </pre></div>
 </div>
 </div>
@@ -749,24 +744,18 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <p>Generate model input and output schemas to feed in the <code class="docutils literal notranslate"><span class="pre">PredictPyTorch</span></code> operator below.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">sparse_max</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;session_id&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
- <span class="s1">&#39;item_id-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
- <span class="s1">&#39;item_id-count&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
- <span class="s1">&#39;et_dayofweek_sin-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
- <span class="s1">&#39;product_recency_days_log_norm-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
- <span class="s1">&#39;category-list&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">}</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># sparse_max = {&#39;session_id&#39;: 20,</span>
+<span class="c1">#  &#39;item_id-list&#39;: 20,</span>
+<span class="c1">#  &#39;item_id-count&#39;: 20,</span>
+<span class="c1">#  &#39;et_dayofweek_sin-list&#39;: 20,</span>
+<span class="c1">#  &#39;product_recency_days_log_norm-list&#39;: 20,</span>
+<span class="c1">#  &#39;category-list&#39;: 20}</span>
 
-<span class="n">input_schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span>
-<span class="n">output_schema</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
+<span class="c1"># input_schema = model.input_schema</span>
+<span class="c1"># output_schema = model.output_schema</span>
 
-<span class="k">for</span> <span class="n">col_name</span><span class="p">,</span> <span class="n">col_schema</span> <span class="ow">in</span> <span class="n">input_schema</span><span class="o">.</span><span class="n">column_schemas</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="n">input_schema</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_schema</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span><span class="o">.</span><span class="n">with_shape</span><span class="p">((</span><span class="kc">None</span><span class="p">,</span> <span class="n">sparse_max</span><span class="p">[</span><span class="n">col_name</span><span class="p">]))</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
+<span class="c1"># for col_name, col_schema in input_schema.column_schemas.items():</span>
+<span class="c1">#     input_schema[col_name] = input_schema[col_name].with_shape((None, sparse_max[col_name]))</span>
 </pre></div>
 </div>
 </div>
@@ -794,8 +783,14 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">TransformWorkflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
-    <span class="n">traced_model</span><span class="p">,</span> <span class="n">input_schema</span><span class="p">,</span> <span class="n">output_schema</span>
+    <span class="n">traced_model</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
 <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -858,10 +853,6 @@ GET /v2/health/live, headers None
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
 </pre></div>
 </div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tritonhttpclient/__init__.py:31: DeprecationWarning: The package `tritonhttpclient` is deprecated and will be removed in a future version. Please use instead `tritonclient.http`
-  warnings.warn(
-</pre></div>
-</div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
 </pre></div>
 </div>
@@ -910,85 +901,29 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;v
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">InferenceServerException</span><span class="g g-Whitespace">                  </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">35</span><span class="p">],</span> <span class="n">line</span> <span class="mi">2</span>
-<span class="g g-Whitespace">      </span><span class="mi">1</span> <span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
-<span class="ne">----&gt; </span><span class="mi">2</span> <span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
-<span class="g g-Whitespace">      </span><span class="mi">3</span> <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/merlin/systems/triton/utils.py:230,</span> in <span class="ni">send_triton_request</span><span class="nt">(schema, inputs, outputs_list, client, endpoint, request_id, triton_model)</span>
-<span class="g g-Whitespace">    </span><span class="mi">226</span>     <span class="n">triton_inputs</span> <span class="o">=</span> <span class="n">triton</span><span class="o">.</span><span class="n">convert_df_to_triton_input</span><span class="p">(</span><span class="n">schema</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferInput</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">228</span> <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">grpcclient</span><span class="o">.</span><span class="n">InferRequestedOutput</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">outputs_list</span><span class="p">]</span>
-<span class="ne">--&gt; </span><span class="mi">230</span> <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">infer</span><span class="p">(</span><span class="n">triton_model</span><span class="p">,</span> <span class="n">triton_inputs</span><span class="p">,</span> <span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">232</span> <span class="n">results</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="g g-Whitespace">    </span><span class="mi">233</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">outputs_list</span><span class="p">:</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/tritonclient/grpc/__init__.py:1431,</span> in <span class="ni">InferenceServerClient.infer</span><span class="nt">(self, model_name, inputs, model_version, outputs, request_id, sequence_id, sequence_start, sequence_end, priority, timeout, client_timeout, headers, compression_algorithm)</span>
-<span class="g g-Whitespace">   </span><span class="mi">1429</span>     <span class="k">return</span> <span class="n">result</span>
-<span class="g g-Whitespace">   </span><span class="mi">1430</span> <span class="k">except</span> <span class="n">grpc</span><span class="o">.</span><span class="n">RpcError</span> <span class="k">as</span> <span class="n">rpc_error</span><span class="p">:</span>
-<span class="ne">-&gt; </span><span class="mi">1431</span>     <span class="n">raise_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">)</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/tritonclient/grpc/__init__.py:62,</span> in <span class="ni">raise_error_grpc</span><span class="nt">(rpc_error)</span>
-<span class="g g-Whitespace">     </span><span class="mi">61</span> <span class="k">def</span> <span class="nf">raise_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">):</span>
-<span class="ne">---&gt; </span><span class="mi">62</span>     <span class="k">raise</span> <span class="n">get_error_grpc</span><span class="p">(</span><span class="n">rpc_error</span><span class="p">)</span> <span class="kn">from</span> <span class="kc">None</span>
-
-<span class="ne">InferenceServerException</span>: [StatusCode.INTERNAL] &#39;product_recency_days_log_norm-list&#39;
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[ -7.7283163 ,  -6.51853   ,  -0.79224396, ...,  -7.1337156 ,
+         -6.3829656 ,  -6.742247  ],
+       [-15.061283  , -12.490893  ,  -1.0016149 , ..., -13.466441  ,
+        -13.452177  , -13.148832  ],
+       [ -8.044365  ,  -7.0721083 ,  -0.6173209 , ...,  -7.781984  ,
+         -7.2457075 ,  -7.1458006 ],
+       ...,
+       [ -9.840879  ,  -7.0842276 ,   0.24516767, ...,  -8.161179  ,
+         -7.4084706 ,  -7.970327  ],
+       [-10.254222  ,  -8.104137  ,  -0.9986735 , ...,  -9.213493  ,
+         -8.2747755 ,  -8.547127  ],
+       [-16.270742  , -12.871853  ,   0.30174807, ..., -13.3543415 ,
+        -14.546889  , -13.66494   ]], dtype=float32)}
 </pre></div>
 </div>
 </div>
 </div>
-<ul class="simple">
-<li><p>Visualise top-k predictions</p></li>
-</ul>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">visualize_response</span>
-<span class="n">visualize_response</span><span class="p">(</span><span class="n">filtered_batch</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">session_col</span><span class="o">=</span><span class="s1">&#39;session_id&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>- Top-5 predictions for session `11457123`: 1761 || 186 || 2651 || 2383 || 1987
-
-- Top-5 predictions for session `11467406`: 4136 || 224 || 2774 || 2693 || 2759
-
-- Top-5 predictions for session `11528554`: 135 || 183 || 1697 || 1359 || 1340
-
-- Top-5 predictions for session `11336059`: 2556 || 2651 || 186 || 6989 || 7284
-
-- Top-5 predictions for session `11445777`: 2789 || 5591 || 2891 || 2759 || 4541
-
-- Top-5 predictions for session `11493827`: 6510 || 4136 || 4204 || 4155 || 4541
-
-- Top-5 predictions for session `11425751`: 2788 || 2556 || 224 || 1987 || 2050
-
-- Top-5 predictions for session `11399751`: 3841 || 2214 || 2556 || 224 || 2651
-
-- Top-5 predictions for session `11311424`: 6461 || 4713 || 4136 || 9285 || 4155
-
-- Top-5 predictions for session `11257991`: 5932 || 620 || 1334 || 633 || 224
-
-- Top-5 predictions for session `11561822`: 2956 || 6488 || 8084 || 4713 || 4136
-
-- Top-5 predictions for session `11421333`: 224 || 9285 || 6488 || 11389 || 8084
-
-- Top-5 predictions for session `11270119`: 5932 || 6488 || 4136 || 4541 || 4204
-
-- Top-5 predictions for session `11401481`: 4204 || 11389 || 6488 || 4136 || 224
-
-- Top-5 predictions for session `11394056`: 2759 || 5591 || 4541 || 4204 || 4136
-</pre></div>
-</div>
-</div>
-</div>
-<p>As you noticed, we first got prediction results (logits) from the trained model head, and then by using a handy util function <code class="docutils literal notranslate"><span class="pre">visualize_response</span></code> we extracted top-k encoded item-ids from logits. Basically, we generated recommended items for a given session.</p>
 <p>This is the end of the tutorial. You successfully</p>
 <ul class="simple">
 <li><p>performed feature engineering with NVTabular</p></li>
