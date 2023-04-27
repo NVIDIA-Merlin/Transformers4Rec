@@ -281,7 +281,7 @@ class NextItemPredictionTask(PredictionTask):
                     f"to be equal to the item-id embedding dimension '{item_dim}'"
                 )
                 # project input tensors to same dimension as item-id embeddings
-                task_block = MLPBlock([item_dim])
+                task_block = MLPBlock([item_dim], activation=None)
 
         # Retrieve the masking from the input block
         self.masking = inputs.masking
