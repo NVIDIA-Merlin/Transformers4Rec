@@ -369,7 +369,7 @@
                     <span class="sa">f</span><span class="s2">&quot;to be equal to the item-id embedding dimension &#39;</span><span class="si">{</span><span class="n">item_dim</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
                 <span class="p">)</span>
                 <span class="c1"># project input tensors to same dimension as item-id embeddings</span>
-                <span class="n">task_block</span> <span class="o">=</span> <span class="n">MLPBlock</span><span class="p">([</span><span class="n">item_dim</span><span class="p">])</span>
+                <span class="n">task_block</span> <span class="o">=</span> <span class="n">MLPBlock</span><span class="p">([</span><span class="n">item_dim</span><span class="p">],</span> <span class="n">activation</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="c1"># Retrieve the masking from the input block</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">masking</span>
