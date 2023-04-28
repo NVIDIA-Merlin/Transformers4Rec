@@ -61,7 +61,7 @@ jobs:
           conda install -c conda-forge mamba
           mamba install -c conda-forge conda-build conda-verify boa
           conda mambabuild . -c defaults -c conda-forge -c numba -c rapidsai -c nvidia --output-folder ./conda_packages
-          conda_package=$(find ./conda_packages/ -name "transformers4rec*.tar.bz2")
+          conda_package=$(find ./conda_packages/ -name "*.tar.bz2")
           export CONDA_PACKAGE=$conda_package
           echo "conda_package : $conda_package"
           echo "conda_package=$conda_package" >> "$GITHUB_OUTPUT"
