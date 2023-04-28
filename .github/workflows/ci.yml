@@ -34,7 +34,7 @@ jobs:
           python -m pip install --upgrade pip tox
       - name: Get Branch name
         id: get-branch-name
-        uses: NVIDIA-Merlin/.github/actions/branch-name@main          
+        uses: NVIDIA-Merlin/.github/actions/branch-name@main
       - name: Running unit tests through Tox
         run: |
           branch="${{ steps.get-branch-name.outputs.branch }}"
@@ -63,9 +63,9 @@ jobs:
         uses: NVIDIA-Merlin/.github/actions/branch-name@main
       - name: Running notebook tests through Tox
         run: |
-          branch="${{ steps.get-branch-name.outputs.branch }}"        
-          tox -e test-cpu-integration -- $branch          
-  
+          branch="${{ steps.get-branch-name.outputs.branch }}"
+          tox -e test-cpu-integration -- $branch
+
   build-docs:
     runs-on: ubuntu-latest
     steps:
