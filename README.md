@@ -160,10 +160,14 @@ pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.nvidia.com
 
 ### Installing Transformers4Rec Using Conda
 
-To install Transformers4Rec using Conda, run the following command:
+To install Transformers4Rec using Conda, run the following command with `conda` or `mamba` to create a new environment.
 
 ```shell
-conda install -c nvidia transformers4rec
+mamba create -n transformers4rec-23.04 -c nvidia -c rapidsai -c pytorch -c conda-forge \
+    transformers4rec=23.04 nvtabular=23.04 `# NVIDIA Merlin` \
+    python=3.8 `# Compatible Python environment` \
+    cudf=23.02 `# RAPIDS cuDF - GPU accelerated DataFrame` \
+    cudatoolkit=11.8 pytorch-cuda=11.8 `# NVIDIA CUDA version`
 ```
 
 ### Installing Transformers4Rec Using Docker
