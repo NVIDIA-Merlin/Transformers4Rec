@@ -459,9 +459,12 @@
         <span class="n">testing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">call_body</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">top_k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">TabularData</span><span class="p">]:</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="kn">from</span> <span class="nn">transformers4rec.torch.model.prediction_task</span> <span class="kn">import</span> <span class="n">NextItemPredictionTask</span>
 
         <span class="k">if</span> <span class="n">call_body</span><span class="p">:</span>
             <span class="n">body_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">(</span><span class="n">body_outputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -488,9 +491,20 @@
             <span class="n">outputs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="n">loss</span><span class="p">,</span> <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span> <span class="s2">&quot;predictions&quot;</span><span class="p">:</span> <span class="n">predictions</span><span class="p">}</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">task</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">prediction_task_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span>
-                    <span class="n">body_outputs</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
-                <span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">NextItemPredictionTask</span><span class="p">):</span>
+                    <span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span>
+                        <span class="n">body_outputs</span><span class="p">,</span>
+                        <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
+                        <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span>
+                        <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">,</span>
+                        <span class="n">top_k</span><span class="o">=</span><span class="n">top_k</span><span class="p">,</span>
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">outputs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">task</span><span class="p">(</span>
+                        <span class="n">body_outputs</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+                    <span class="p">)</span>
 
         <span class="k">return</span> <span class="n">outputs</span></div>
 
@@ -571,6 +585,7 @@
         <span class="n">optimizer</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Optimizer</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
         <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">max_sequence_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">top_k</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Model class that can aggregate one or multiple heads.</span>
 <span class="sd">        Parameters</span>
@@ -585,9 +600,12 @@
 <span class="sd">            Optimizer-class to use during fitting</span>
 <span class="sd">        name: str, optional</span>
 <span class="sd">            Name of the model.</span>
-<span class="sd">        max_sequence_length : int, optional</span>
+<span class="sd">        max_sequence_length: int, optional</span>
 <span class="sd">            The maximum sequence length supported by the model.</span>
 <span class="sd">            Used to truncate sequence inputs longer than this value.</span>
+<span class="sd">        top_k: int, optional</span>
+<span class="sd">            The number of items to return at the inference step once the model is deployed.</span>
+<span class="sd">            Default is None, which will return all items.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">head_weights</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">head_weights</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
@@ -605,6 +623,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">head_reduction</span> <span class="o">=</span> <span class="n">head_reduction</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">max_sequence_length</span> <span class="o">=</span> <span class="n">max_sequence_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">top_k</span> <span class="o">=</span> <span class="n">top_k</span>
 
 <div class="viewcode-block" id="Model.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.html#transformers4rec.torch.Model.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">TabularData</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># Convert inputs to float32 which is the default type, expected by PyTorch</span>
@@ -653,6 +672,7 @@
                         <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
                         <span class="n">training</span><span class="o">=</span><span class="n">training</span><span class="p">,</span>
                         <span class="n">testing</span><span class="o">=</span><span class="n">testing</span><span class="p">,</span>
+                        <span class="n">top_k</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">top_k</span><span class="p">,</span>
                         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -844,6 +864,8 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">output_schema</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Tags</span>
+
         <span class="kn">from</span> <span class="nn">.prediction_task</span> <span class="kn">import</span> <span class="n">BinaryClassificationTask</span><span class="p">,</span> <span class="n">RegressionTask</span>
 
         <span class="c1"># if the model has one head with one task, the output is a tensor</span>
@@ -869,8 +891,28 @@
                 <span class="n">properties</span> <span class="o">=</span> <span class="p">{</span>
                     <span class="s2">&quot;int_domain&quot;</span><span class="p">:</span> <span class="n">int_domain</span><span class="p">,</span>
                 <span class="p">}</span>
-                <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span><span class="p">)</span>
-                <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema</span><span class="p">)</span>
+                <span class="c1"># in case one sets top_k at the inference step we return two outputs</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">top_k</span><span class="p">:</span>
+                    <span class="c1"># be sure categ item-id dtype in model.input schema and output schema matches</span>
+                    <span class="n">col_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">ITEM_ID</span><span class="p">)</span><span class="o">.</span><span class="n">column_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">col_dtype</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">Tags</span><span class="o">.</span><span class="n">ITEM_ID</span><span class="p">)</span>
+                        <span class="o">.</span><span class="n">column_schemas</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span>
+                        <span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">name</span>
+                    <span class="p">)</span>
+                    <span class="n">col_schema_scores</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                        <span class="s2">&quot;item_id_scores&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
+                    <span class="p">)</span>
+                    <span class="n">col_schema_ids</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                        <span class="s2">&quot;item_ids&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">col_dtype</span><span class="p">),</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
+                    <span class="p">)</span>
+                    <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema_scores</span><span class="p">)</span>
+                    <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema_ids</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">col_schema</span> <span class="o">=</span> <span class="n">ColumnSchema</span><span class="p">(</span>
+                        <span class="n">name</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="n">properties</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">dims</span>
+                    <span class="p">)</span>
+                    <span class="n">output_cols</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">col_schema</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">Core_Schema</span><span class="p">(</span><span class="n">output_cols</span><span class="p">)</span>
 
