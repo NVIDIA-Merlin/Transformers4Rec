@@ -84,6 +84,7 @@ The following code sample shows how to define and train an XLNet model with PyTo
 
 ```python
 from transformers4rec import torch as tr
+from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
 
 # Create a schema or read one from disk: tr.Schema().from_json(SCHEMA_PATH).
 schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
