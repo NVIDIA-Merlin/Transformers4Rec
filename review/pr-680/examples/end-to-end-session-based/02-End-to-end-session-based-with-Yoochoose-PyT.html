@@ -155,6 +155,16 @@
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+  warnings.warn(
+</pre></div>
+</div>
+</div>
 </div>
 <p>We can select the subset of features we want to use for training the model by their tags or their names.</p>
 <div class="cell docutils container">
@@ -215,7 +225,7 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM, Tags.LIST, Tags.ITEM_ID, Tags.ID, ...</td>
+      <td>(Tags.ITEM_ID, Tags.CATEGORICAL, Tags.ID, Tags...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -374,11 +384,6 @@
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PyTorch: setting up devices
-</pre></div>
-</div>
-</div>
 </div>
 </div>
 <div class="section" id="instantiate-the-trainer">
@@ -439,15 +444,15 @@
   <tbody>
     <tr>
       <td>200</td>
-      <td>7.737200</td>
+      <td>7.681100</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.633100</td>
+      <td>6.656800</td>
     </tr>
     <tr>
       <td>600</td>
-      <td>6.370500</td>
+      <td>6.372000</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -474,12 +479,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
 
- eval_/next-item/avg_precision@10 = 0.0832989290356636
- eval_/next-item/avg_precision@20 = 0.08740802109241486
- eval_/next-item/ndcg@10 = 0.11239233613014221
- eval_/next-item/ndcg@20 = 0.1276322454214096
- eval_/next-item/recall@10 = 0.2042389214038849
- eval_/next-item/recall@20 = 0.26512524485588074
+ eval_/next-item/avg_precision@10 = 0.08119537681341171
+ eval_/next-item/avg_precision@20 = 0.0857219472527504
+ eval_/next-item/ndcg@10 = 0.11199340969324112
+ eval_/next-item/ndcg@20 = 0.12857995927333832
+ eval_/next-item/recall@10 = 0.20809248089790344
+ eval_/next-item/recall@20 = 0.27398842573165894
 
 ***** Launch training for day 179: *****
 </pre></div>
@@ -500,11 +505,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.901800</td>
+      <td>6.805900</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.507800</td>
+      <td>6.250300</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -525,12 +530,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 180:*****
 
- eval_/next-item/avg_precision@10 = 0.057640690356492996
- eval_/next-item/avg_precision@20 = 0.06169268488883972
- eval_/next-item/ndcg@10 = 0.0818246454000473
- eval_/next-item/ndcg@20 = 0.09674238413572311
- eval_/next-item/recall@10 = 0.15897436439990997
- eval_/next-item/recall@20 = 0.2186480164527893
+ eval_/next-item/avg_precision@10 = 0.06664632260799408
+ eval_/next-item/avg_precision@20 = 0.07125943899154663
+ eval_/next-item/ndcg@10 = 0.09318044036626816
+ eval_/next-item/ndcg@20 = 0.110211081802845
+ eval_/next-item/recall@10 = 0.17855477333068848
+ eval_/next-item/recall@20 = 0.24568764865398407
 
 ***** Launch training for day 180: *****
 </pre></div>
@@ -539,7 +544,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
     <div>
 
       <progress value='440' max='440' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [440/440 00:11, Epoch 10/10]
+      [440/440 00:12, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -551,11 +556,11 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.961300</td>
+      <td>6.608300</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.540400</td>
+      <td>6.030500</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -563,12 +568,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 181:*****
 
- eval_/next-item/avg_precision@10 = 0.13169154524803162
- eval_/next-item/avg_precision@20 = 0.13863395154476166
- eval_/next-item/ndcg@10 = 0.17248544096946716
- eval_/next-item/ndcg@20 = 0.1989077478647232
- eval_/next-item/recall@10 = 0.30519479513168335
- eval_/next-item/recall@20 = 0.40630799531936646
+ eval_/next-item/avg_precision@10 = 0.13680869340896606
+ eval_/next-item/avg_precision@20 = 0.14374792575836182
+ eval_/next-item/ndcg@10 = 0.18158714473247528
+ eval_/next-item/ndcg@20 = 0.2070869356393814
+ eval_/next-item/recall@10 = 0.3181818127632141
+ eval_/next-item/recall@20 = 0.4202226400375366
 </pre></div>
 </div>
 </div>
@@ -584,24 +589,24 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.0832989290356636,
-  0.057640690356492996,
-  0.13169154524803162],
- &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.08740802109241486,
-  0.06169268488883972,
-  0.13863395154476166],
- &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11239233613014221,
-  0.0818246454000473,
-  0.17248544096946716],
- &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.1276322454214096,
-  0.09674238413572311,
-  0.1989077478647232],
- &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.2042389214038849,
-  0.15897436439990997,
-  0.30519479513168335],
- &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.26512524485588074,
-  0.2186480164527893,
-  0.40630799531936646]}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.08119537681341171,
+  0.06664632260799408,
+  0.13680869340896606],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.0857219472527504,
+  0.07125943899154663,
+  0.14374792575836182],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11199340969324112,
+  0.09318044036626816,
+  0.18158714473247528],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.12857995927333832,
+  0.110211081802845,
+  0.2070869356393814],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.20809248089790344,
+  0.17855477333068848,
+  0.3181818127632141],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.27398842573165894,
+  0.24568764865398407,
+  0.4202226400375366]}
 </pre></div>
 </div>
 </div>
@@ -617,12 +622,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09087705488006274
- indexed_by_time_eval_/next-item/avg_precision@20 = 0.09591155250867207
- indexed_by_time_eval_/next-item/ndcg@10 = 0.12223414083321889
- indexed_by_time_eval_/next-item/ndcg@20 = 0.1410941258072853
- indexed_by_time_eval_/next-item/recall@10 = 0.2228026936451594
- indexed_by_time_eval_/next-item/recall@20 = 0.2966937522093455
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09488346427679062
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.10024310400088628
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.12892033159732819
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.14862599223852158
+ indexed_by_time_eval_/next-item/recall@10 = 0.23494302233060202
+ indexed_by_time_eval_/next-item/recall@20 = 0.3132995714743932
 </pre></div>
 </div>
 </div>
@@ -660,9 +665,19 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 </div>
+<p>Let’s now add a top_k parameter to model so that we can return the top k item ids with the highest scores when we serve the model on Triton Inference Server.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">model_input_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">top_k</span> <span class="o">=</span> <span class="mi">20</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let us now trace the model.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">model_input_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -737,25 +752,6 @@ Training completed. Do not forget to share your model on huggingface.co/models =
         300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
         345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
         388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32)
-</pre></div>
-</div>
-</div>
-</div>
-<p>Generate model input and output schemas to feed in the <code class="docutils literal notranslate"><span class="pre">PredictPyTorch</span></code> operator below.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># sparse_max = {&#39;session_id&#39;: 20,</span>
-<span class="c1">#  &#39;item_id-list&#39;: 20,</span>
-<span class="c1">#  &#39;item_id-count&#39;: 20,</span>
-<span class="c1">#  &#39;et_dayofweek_sin-list&#39;: 20,</span>
-<span class="c1">#  &#39;product_recency_days_log_norm-list&#39;: 20,</span>
-<span class="c1">#  &#39;category-list&#39;: 20}</span>
-
-<span class="c1"># input_schema = model.input_schema</span>
-<span class="c1"># output_schema = model.output_schema</span>
-
-<span class="c1"># for col_name, col_schema in input_schema.column_schemas.items():</span>
-<span class="c1">#     input_schema[col_name] = input_schema[col_name].with_shape((None, sparse_max[col_name]))</span>
 </pre></div>
 </div>
 </div>
@@ -853,6 +849,10 @@ GET /v2/health/live, headers None
 &lt;HTTPSocketPoolResponse status=200 headers={&#39;content-length&#39;: &#39;0&#39;, &#39;content-type&#39;: &#39;text/plain&#39;}&gt;
 </pre></div>
 </div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tritonhttpclient/__init__.py:31: DeprecationWarning: The package `tritonhttpclient` is deprecated and will be removed in a future version. Please use instead `tritonclient.http`
+  warnings.warn(
+</pre></div>
+</div>
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
 </pre></div>
 </div>
@@ -907,19 +907,137 @@ bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;v
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;next-item&#39;: array([[ -7.7283163 ,  -6.51853   ,  -0.79224396, ...,  -7.1337156 ,
-         -6.3829656 ,  -6.742247  ],
-       [-15.061283  , -12.490893  ,  -1.0016149 , ..., -13.466441  ,
-        -13.452177  , -13.148832  ],
-       [ -8.044365  ,  -7.0721083 ,  -0.6173209 , ...,  -7.781984  ,
-         -7.2457075 ,  -7.1458006 ],
-       ...,
-       [ -9.840879  ,  -7.0842276 ,   0.24516767, ...,  -8.161179  ,
-         -7.4084706 ,  -7.970327  ],
-       [-10.254222  ,  -8.104137  ,  -0.9986735 , ...,  -9.213493  ,
-         -8.2747755 ,  -8.547127  ],
-       [-16.270742  , -12.871853  ,   0.30174807, ..., -13.3543415 ,
-        -14.546889  , -13.66494   ]], dtype=float32)}
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;item_id_scores&#39;: array([[ 7.7149506,  7.3862066,  7.3664827,  7.2885814,  6.8977885,
+         6.853054 ,  6.6473446,  6.5615396,  6.5239835,  6.504697 ,
+         6.4961066,  6.482874 ,  6.478437 ,  6.4518657,  6.403399 ,
+         6.3845167,  6.372211 ,  6.3541226,  6.2738447,  6.2641015],
+       [ 7.8986144,  7.575227 ,  6.9020343,  6.8903823,  6.839163 ,
+         6.833202 ,  6.761392 ,  6.7598944,  6.6728435,  6.6523266,
+         6.640926 ,  6.6118965,  6.470592 ,  6.419156 ,  6.4112453,
+         6.4044685,  6.386283 ,  6.3791957,  6.362708 ,  6.32642  ],
+       [ 3.2538116,  3.1455884,  3.1179721,  3.0379417,  2.9422204,
+         2.9090347,  2.8573742,  2.8552375,  2.8385096,  2.8210163,
+         2.8062954,  2.7926047,  2.7883859,  2.7677355,  2.7579772,
+         2.7548594,  2.7234986,  2.7234783,  2.7092912,  2.7081766],
+       [ 7.1264834,  6.9747195,  6.686076 ,  6.55559  ,  6.554246 ,
+         6.4562297,  6.409179 ,  6.303057 ,  6.1918006,  6.18303  ,
+         6.1193542,  6.107653 ,  6.0896993,  6.0872216,  6.0593266,
+         6.0522294,  5.960239 ,  5.953763 ,  5.9512544,  5.93457  ],
+       [ 8.472156 ,  8.323568 ,  8.279997 ,  8.109349 ,  8.0277195,
+         7.8910418,  7.743165 ,  7.7279477,  7.692122 ,  7.6912303,
+         7.6711187,  7.5660324,  7.5545163,  7.524415 ,  7.4610972,
+         7.424488 ,  7.4123936,  7.411586 ,  7.3956637,  7.334862 ],
+       [10.485718 , 10.375805 , 10.131399 ,  9.950816 ,  9.917899 ,
+         9.840376 ,  9.77128  ,  9.676795 ,  9.599488 ,  9.544931 ,
+         9.512772 ,  9.488843 ,  9.455492 ,  9.438552 ,  9.430434 ,
+         9.37854  ,  9.362637 ,  9.329395 ,  9.303702 ,  9.279214 ],
+       [ 5.836771 ,  5.828289 ,  5.7385616,  5.6870475,  5.5709176,
+         5.5614986,  5.5448956,  5.3459535,  5.344148 ,  5.310749 ,
+         5.2611475,  5.2548814,  5.1640043,  5.1203575,  5.0081887,
+         4.987002 ,  4.976223 ,  4.90389  ,  4.8933997,  4.86463  ],
+       [ 8.174524 ,  7.422059 ,  7.3884916,  7.272735 ,  7.1977425,
+         7.0858173,  6.645329 ,  6.5097084,  6.470001 ,  6.453685 ,
+         6.2901287,  6.1282573,  6.1203957,  6.0265145,  6.0052614,
+         5.9081306,  5.880647 ,  5.78306  ,  5.7507606,  5.7427897],
+       [ 6.7380514,  6.735104 ,  6.6285214,  6.5611916,  6.527247 ,
+         6.4949493,  6.4821672,  6.474738 ,  6.4419727,  6.4345016,
+         6.3947067,  6.352811 ,  6.314824 ,  6.293556 ,  6.288764 ,
+         6.2727513,  6.2707367,  6.2422667,  6.2342215,  6.196748 ],
+       [ 5.6076183,  5.472957 ,  5.412912 ,  5.3116655,  5.177665 ,
+         5.112378 ,  5.085245 ,  4.9710717,  4.940496 ,  4.93859  ,
+         4.8099985,  4.760807 ,  4.7229834,  4.7145324,  4.707185 ,
+         4.667753 ,  4.6421194,  4.630641 ,  4.6156597,  4.5743294],
+       [ 8.147796 ,  7.6630974,  7.5877905,  7.4908724,  7.4732018,
+         7.404136 ,  7.352083 ,  7.3242574,  7.3009863,  7.242015 ,
+         7.1836567,  7.1416435,  7.138858 ,  7.134639 ,  7.111288 ,
+         7.0651016,  7.0538983,  7.0510435,  7.044665 ,  7.035279 ],
+       [ 3.2990756,  3.1885252,  3.1802373,  3.0592136,  3.045468 ,
+         3.0039759,  2.9578297,  2.9415162,  2.93026  ,  2.9297981,
+         2.8965662,  2.8944998,  2.877764 ,  2.8689   ,  2.8668582,
+         2.8634927,  2.78628  ,  2.767284 ,  2.7598662,  2.7465074],
+       [ 8.852634 ,  8.734692 ,  8.606397 ,  8.578839 ,  8.453225 ,
+         8.416724 ,  8.407235 ,  8.343583 ,  8.280216 ,  8.269384 ,
+         8.20807  ,  8.177954 ,  8.15201  ,  8.136789 ,  8.103194 ,
+         7.873078 ,  7.852006 ,  7.849255 ,  7.8436575,  7.7874575],
+       [ 8.121338 ,  7.9475265,  7.9030285,  7.8839293,  7.850343 ,
+         7.8212285,  7.7303505,  7.655741 ,  7.5204306,  7.4822707,
+         7.4198914,  7.3865814,  7.3747654,  7.3459187,  7.3127384,
+         7.2247725,  7.1183944,  7.111621 ,  7.0977235,  7.089139 ],
+       [ 8.760972 ,  8.427143 ,  8.166194 ,  8.004948 ,  7.831641 ,
+         7.8019366,  7.784935 ,  7.6579127,  7.5422807,  7.531015 ,
+         7.48702  ,  7.448603 ,  7.3950186,  7.355933 ,  7.3510966,
+         7.2111845,  7.183003 ,  7.166962 ,  7.1576095,  7.1405106]],
+      dtype=float32), &#39;item_ids&#39;: array([[  127,  1245,  1271,  4074,   161,   532,  3928, 19290, 11874,
+         1446,   346,  9285,  3452,  3334, 10987,   479,  7555,  3206,
+        14633, 13677],
+       [ 2693,  3460, 10401,  2393,  9415,  9285, 14213,  2404, 13750,
+        10987,  8084,   183,  2889,  5110, 16662, 10962,  7865, 14401,
+         4158,  3211],
+       [ 4278,  3225,  5889,   953,  7577,  1420,  4185,  4591,   573,
+        10287,  3514,  7923,  5623,  3269,   873,  2433, 15077,  5110,
+         6357,  3593],
+       [10401,   573,  3211,  2404,  3452,  2763,  4014,   786,  3296,
+         6030,  4380,  7481,  2067, 10962,   183,   809,  4651,  2806,
+         2575,  8084],
+       [10987,  9415,  9285,   479,  7998,  7555,  2475,  2404,  8084,
+         2693,  2661,  1102,   786, 14343,  3460,   161, 13677,  2889,
+         2393,  1600],
+       [ 8084, 13677, 14633, 12754, 14213,  3452, 13821,  2984, 11816,
+         2475,  1600,  4074, 13749,  9285, 17882, 10401, 10673,  1964,
+        11874,  9801],
+       [  224,  1453,  1889,   620,  2556,   520,   741,  1219,   633,
+         2050,  6344,  2651,  2852,  1039,  3841,   375,  2473,  3225,
+         4204,  2980],
+       [  620,   633,  1889,  1625,  1453,  1219,  4962,  6344,   224,
+         2034,  1413,  2980,   741,  1908,   597,  1085,  4770,  2305,
+         1647,  1334],
+       [  573, 14505,  3365,  9020,  5932,  7470,  7055,  6344, 10962,
+        11937,  6488, 13821, 19263, 14213,   633,  8553, 10123, 10401,
+         1453, 15439],
+       [15148, 13277,  1381, 24893, 11689, 37268,  7454,  1547,  2305,
+        30765, 46450, 18630,  8747,  1085,  1889, 25487,  7506,   620,
+        14220,  8291],
+       [19263, 13821, 15289, 11874,  8058, 17882,  7159, 12754,  6473,
+        14213, 16233,   573,  3452, 12059,  1600,  8084, 10401, 13749,
+        15439,  9801],
+       [ 8813,  1889,   464,  1855,   520,   127,   185,  4204,   637,
+           31,   784,  2789,  4713,  6461, 11874,   840,   177,  5224,
+         5818,  6473],
+       [ 7865,  5932,  7055, 14213,  9020,  4541,  8084,  6488,  8553,
+        14505,  6473, 10962,  4204,  4136, 16233, 13821, 10401,  9459,
+         9801, 15439],
+       [10401,  6488,  5932,  7865, 10962, 14213,  8553,  8084,  9020,
+          573,  4204, 13821,  3175, 15439,  4136, 10123, 11874,  3452,
+        17882,  9236],
+       [ 2693,  3460, 14213,  7865,  5932,  6488,  4204,  8084, 10962,
+         8553,  1219,  9020,  4541, 13750,  9236,  1453,  4136,  2980,
+        10401,  2651]])}
+</pre></div>
+</div>
+</div>
+</div>
+<p>The response contains scores (logits) for each of the returned items and the returned it ids.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;item_id_scores&#39;, &#39;item_ids&#39;])
+</pre></div>
+</div>
+</div>
+</div>
+<p>Just as we requested by setting the <code class="docutils literal notranslate"><span class="pre">top_k</span></code> parameter, only 20 predictions are returned.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;item_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(15, 20)
 </pre></div>
 </div>
 </div>
