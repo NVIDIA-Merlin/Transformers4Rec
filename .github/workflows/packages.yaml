@@ -59,7 +59,7 @@ jobs:
           echo "conda pkgs dir $CONDA_PKGS_DIRS"
           conda update conda
           conda install -c conda-forge mamba
-          mamba install -c conda-forge conda-build boa
+          mamba install -c conda-forge conda-build conda-verify boa
           conda mambabuild . -c defaults -c conda-forge -c numba -c rapidsai -c nvidia --output-folder ./conda_packages
           conda_package=$(find ./conda_packages/ -name "transformers4rec*.tar.bz2")
           export CONDA_PACKAGE=$conda_package
