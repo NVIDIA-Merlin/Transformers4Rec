@@ -16,7 +16,7 @@ source:
   path: ../../
 
 build:
-  number: {{ git_revision_count }}
+  number: 0
   noarch: python
   script: python -m pip install . -vvv
 
