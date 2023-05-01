@@ -303,7 +303,15 @@ class NextItemPredictionTask(PredictionTask):
             body, input_size, device=device, inputs=inputs, task_block=task_block, pre=pre
         )
 
-    def forward(self, inputs: torch.Tensor, targets=None, training=False, testing=False, **kwargs):
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        targets=None,
+        training=False,
+        testing=False,
+        top_k=None,
+        **kwargs,
+    ):
         if isinstance(inputs, (tuple, list)):
             inputs = inputs[0]
         x = inputs.float()
@@ -342,7 +350,11 @@ class NextItemPredictionTask(PredictionTask):
             # Compute predictions probs
             x, _ = self.pre(x)  # type: ignore
 
-            return x
+            if top_k is None:
+                return x
+            else:
+                preds_sorted_item_scores, preds_sorted_item_ids = torch.topk(x, k=top_k, dim=-1)
+                return preds_sorted_item_scores, preds_sorted_item_ids
 
     def remove_pad_3d(self, inp_tensor, non_pad_mask):
         # inp_tensor: (n_batch x seqlen x emb_dim)

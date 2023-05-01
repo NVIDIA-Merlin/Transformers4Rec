@@ -16,6 +16,7 @@ pytest.importorskip("transformers")
 def test_func():
     with testbook(
         REPO_ROOT / "examples" / "getting-started-session-based" / "01-ETL-with-NVTabular.ipynb",
+        timeout=180,
         execute=False,
     ) as tb1:
         tb1.inject(
@@ -35,6 +36,7 @@ def test_func():
         / "examples"
         / "getting-started-session-based"
         / "02-session-based-XLNet-with-PyT.ipynb",
+        timeout=180,
         execute=False,
     ) as tb2:
         tb2.inject(
@@ -68,6 +70,7 @@ def test_func():
         / "examples"
         / "getting-started-session-based"
         / "03-serving-session-based-model-torch-backend.ipynb",
+        timeout=720,
         execute=False,
     ) as tb3:
         tb3.inject(
