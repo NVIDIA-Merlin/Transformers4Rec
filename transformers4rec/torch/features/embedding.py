@@ -561,7 +561,6 @@ class PretrainedEmbeddingFeatures(InputBlock):
         It can be an integer or a dictionary mapping feature names to output dimensions.
     sequence_combiner: str
         The aggregation mode for 3-D features.
-
     schema (Optional[Schema]): the schema of the input data.
     {tabular_module_parameters}
     """
@@ -570,7 +569,7 @@ class PretrainedEmbeddingFeatures(InputBlock):
         self,
         features: List[str],
         pretrained_dim: Optional[Union[int, Dict[str, int]]] = None,
-        sequence_combiner: str = "mean",
+        sequence_combiner: str = None,
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
@@ -580,7 +579,7 @@ class PretrainedEmbeddingFeatures(InputBlock):
         self.features = features
         self.filter_features = FilterFeatures(features)
         self.pretrained_dim = pretrained_dim
-        self.sequence_combiner = sequence_combiner
+        self.sequence_combiner = self.parse_combiner(sequence_combiner)
 
     def build(self, input_size, **kwargs):
         if input_size is not None:
@@ -609,11 +608,30 @@ class PretrainedEmbeddingFeatures(InputBlock):
         return cls(features=features, **kwargs)
 
     def forward(self, inputs):
-        features = self.filter_features(inputs)
+        output = self.filter_features(inputs)
         if self.pretrained_dim:
-            return {key: self.projection[key](val) for key, val in features.items()}
-        # TODO Add sequence aggregation step, if self.sequence_combiner != None
-        return features
+            output = {key: self.projection[key](val) for key, val in output.items()}
+        if self.sequence_combiner:
+            if not list(output.values())[0].ndim == 3:
+                raise ValueError(
+                    "sequence combiner can only be used for 3-D pre-trained embeddings"
+                )
+            output = {key: self.sequence_combiner(val, axis=1) for key, val in output.items()}
+
+        return output
 
     def forward_output_size(self, input_sizes):
         return self.filter_features.forward_output_size(input_sizes)
+
+    def parse_combiner(self, combiner):
+        if isinstance(combiner, str):
+            if combiner == "sum":
+                combiner = torch.sum
+            elif combiner == "max":
+                combiner = torch.max
+            elif combiner == "min":
+                combiner = torch.min
+            elif combiner == "mean":
+                combiner = torch.mean
+            # TODO: Add masked_mean, like in MM
+        return combiner

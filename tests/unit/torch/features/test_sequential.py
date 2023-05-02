@@ -222,7 +222,7 @@ def test_sequential_and_non_sequential_tabular_features(schema, torch_yoochoose_
 
 @pytest.mark.parametrize("cpu", [None, "cpu"] if torch.cuda.is_available() else ["cpu"])
 @pytest.mark.parametrize("pretrained_dim", [None, 128, {"pretrained_item_id_embeddings": 128}])
-def test_tabular_sequence_features_with_pretrained_embeddings(cpu, pretrained_dim):
+def test_input_block_with_pretrained_embeddings(cpu, pretrained_dim):
     import numpy as np
     from merlin.dataloader.ops.embeddings import EmbeddingOperator
     from merlin.dataloader.torch import Loader
@@ -254,7 +254,7 @@ def test_tabular_sequence_features_with_pretrained_embeddings(cpu, pretrained_di
     }
     dense_batch = pad_batch(batch, padding_lengths=padding_lengths)
 
-    # Input block with a 3-D pre-trained feature
+    # Sequential input block with a 3-D pre-trained feature
     inputs = tr.TabularSequenceFeatures.from_schema(
         data_loader.output_schema,
         max_sequence_length=20,
@@ -279,5 +279,32 @@ def test_tabular_sequence_features_with_pretrained_embeddings(cpu, pretrained_di
         assert list(output["pretrained_item_id_embeddings"].shape) == [
             batch_size,
             max_length,
+            16,
+        ]
+
+    # Non-Sequential input block with a 3-D pre-trained feature
+    inputs = tr.TabularFeatures.from_schema(
+        data_loader.output_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        pretrained_dim=pretrained_dim,
+        aggregation=None,
+        sequence_combiner="mean",
+    )
+
+    if not cpu:
+        output = inputs.to("cuda").double()(dense_batch)
+    else:
+        output = inputs.double()(dense_batch)
+
+    assert "pretrained_item_id_embeddings" in output
+    if pretrained_dim is not None:
+        assert list(output["pretrained_item_id_embeddings"].shape) == [
+            batch_size,
+            128,
+        ]
+    else:
+        assert list(output["pretrained_item_id_embeddings"].shape) == [
+            batch_size,
             16,
         ]
