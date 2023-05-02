@@ -108,7 +108,7 @@
 <span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">BuildableBlock</span><span class="p">,</span> <span class="n">SequentialBlock</span>
 
 
-<div class="viewcode-block" id="MLPBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.MLPBlock">[docs]</a><span class="k">class</span> <span class="nc">MLPBlock</span><span class="p">(</span><span class="n">BuildableBlock</span><span class="p">):</span>
+<div class="viewcode-block" id="MLPBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.mlp.MLPBlock">[docs]</a><span class="k">class</span> <span class="nc">MLPBlock</span><span class="p">(</span><span class="n">BuildableBlock</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">dimensions</span><span class="p">,</span>
@@ -130,7 +130,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">activation</span> <span class="o">=</span> <span class="n">activation</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span> <span class="o">=</span> <span class="n">dimensions</span>
 
-<div class="viewcode-block" id="MLPBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.MLPBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SequentialBlock</span><span class="p">:</span>
+<div class="viewcode-block" id="MLPBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.mlp.MLPBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SequentialBlock</span><span class="p">:</span>
         <span class="n">layer_input_sizes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">:])</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">layer_output_sizes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dimensions</span>
         <span class="n">sequential</span> <span class="o">=</span> <span class="p">[</span>
@@ -152,7 +152,7 @@
         <span class="k">return</span> <span class="n">output</span></div></div>
 
 
-<div class="viewcode-block" id="DenseBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.DenseBlock">[docs]</a><span class="k">class</span> <span class="nc">DenseBlock</span><span class="p">(</span><span class="n">SequentialBlock</span><span class="p">):</span>
+<div class="viewcode-block" id="DenseBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.mlp.DenseBlock">[docs]</a><span class="k">class</span> <span class="nc">DenseBlock</span><span class="p">(</span><span class="n">SequentialBlock</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_shape</span><span class="p">,</span>
@@ -179,7 +179,7 @@
     <span class="k">def</span> <span class="nf">_get_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;DenseBlock&quot;</span>
 
-<div class="viewcode-block" id="DenseBlock.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.DenseBlock.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="DenseBlock.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.block.html#transformers4rec.torch.block.mlp.DenseBlock.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">input_size</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_size</span><span class="p">])</span></div></div>
 </pre></div>
 

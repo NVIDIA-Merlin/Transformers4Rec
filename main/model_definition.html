@@ -137,9 +137,9 @@ Numerical features can be represented as a scalar and projected by a fully-conne
 For more information, refer to the online <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md">appendix</a> to the preceding paper.
 Categorical input features are optionally normalized (with layer normalization) before aggregation.
 Continuous features should be normalized during feature engineering of the dataset.</p>
-<p><a class="reference internal" href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures" title="transformers4rec.torch.features.sequence.TabularSequenceFeatures"><code class="xref py py-class docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code></a> is the core class of this module.
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> is the core class of this module.
 This class processes and aggregates all features and outputs a sequence of <em>interaction embeddings</em> to be fed into transformer blocks.
-You can create an instance of <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> automatically from a dataset schema that is generated from NVTabular by using the <a class="reference internal" href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.from_schema" title="transformers4rec.torch.features.sequence.TabularSequenceFeatures.from_schema"><code class="xref py py-func docutils literal notranslate"><span class="pre">from_schema()</span></code></a> method.
+You can create an instance of <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> automatically from a dataset schema that is generated from NVTabular by using the <code class="xref py py-func docutils literal notranslate"><span class="pre">from_schema()</span></code> method.
 This method creates the layers that are required to represent the categorical and continuous features in the dataset.
 In addition, you can specify the <code class="docutils literal notranslate"><span class="pre">aggregation</span></code> option of this method to aggregate the sequential features and to prepare masked labels according to the specified sequence masking approach.</p>
 <p>The following code block shows one way the <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures.from_schema()</span></code> method can create the interaction embeddings that are ready for use with Transformer blocks:</p>
@@ -156,7 +156,7 @@ In addition, you can specify the <code class="docutils literal notranslate"><spa
 </div>
 <blockquote>
 <div><p>The <code class="docutils literal notranslate"><span class="pre">embedding_dim_default</span></code> argument sets a fixed dimension for all categorical input features.
-For more information, see the <a class="reference internal" href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures" title="transformers4rec.torch.features.sequence.TabularSequenceFeatures"><code class="xref py py-class docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code></a> class documentation.</p>
+For more information, see the <code class="xref py py-class docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> class documentation.</p>
 </div></blockquote>
 </div>
 <div class="section" id="sequence-masking">
@@ -180,7 +180,7 @@ Transformers4Rec raises an exception if you attempt to use an invalid combinatio
 <h2>Sequence Processing (Transformer/RNN Block)<a class="headerlink" href="#sequence-processing-transformer-rnn-block" title="Permalink to this headline"></a></h2>
 <p>The Transformer block processes the input sequences of <em>interaction embeddings</em> created by the input block using Transformer architectures like XLNet, GPT-2, and so on–or RNN architectures like LSTM or GRU.
 The created block is a standard Torch block and is compatible with and substitutable by other Torch blocks that support the input of a sequence.</p>
-<p>In the following example, a <a class="reference internal" href="api/transformers4rec.torch.block.html#transformers4rec.torch.block.base.SequentialBlock" title="transformers4rec.torch.block.base.SequentialBlock"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequentialBlock</span></code></a> module is used to build the model body.
+<p>In the following example, a <code class="xref py py-class docutils literal notranslate"><span class="pre">SequentialBlock</span></code> module is used to build the model body.
 The model contains a <code class="docutils literal notranslate"><span class="pre">TabularSequenceFeatures</span></code> object (<code class="docutils literal notranslate"><span class="pre">tabular_inputs</span></code> defined in the previous code snippet), followed by an MLP projection layer to 64 dim (to match the Transformer <code class="docutils literal notranslate"><span class="pre">d_model</span></code>), and then is followed by an XLNet transformer block with two layers (four heads each).</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.config</span> <span class="kn">import</span> <span class="n">transformer</span>
 <span class="kn">from</span> <span class="nn">transformers4rec.torch</span> <span class="kn">import</span> <span class="n">MLPBlock</span><span class="p">,</span> <span class="n">SequentialBlock</span><span class="p">,</span> <span class="n">TransformerBlock</span>
@@ -212,10 +212,10 @@ Cross-entropy and pairwise losses are supported.</p></li>
 In the context of recommendation, you can use classification to predict the user’s next action such as whether the user will abandon a product in their cart or proceed with the purchase.</p></li>
 <li><p><strong>Regression</strong>: Predicts a continuous feature using the whole sequence, such as the elapsed time until the user returns to a service.</p></li>
 </ul>
-<p>In the following example, a head is instantiated with the predefined <code class="docutils literal notranslate"><span class="pre">model_body</span></code> for the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask" title="transformers4rec.torch.NextItemPredictionTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code></a>.
+<p>In the following example, a head is instantiated with the predefined <code class="docutils literal notranslate"><span class="pre">model_body</span></code> for the <code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code>.
 This head enables the <code class="docutils literal notranslate"><span class="pre">weight_tying</span></code> option.
 Decoupling the model bodies and heads provides a flexible architecture that enables you to define a model with features like multiple towers and multiple heads.
-Lastly, the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.Model" title="transformers4rec.torch.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> class combines the heads and wraps the whole model.</p>
+Lastly, the <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> class combines the heads and wraps the whole model.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch</span> <span class="kn">import</span> <span class="n">Head</span><span class="p">,</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">transformers4rec.torch.model.head</span> <span class="kn">import</span> <span class="n">NextItemPredictionTask</span>
 
@@ -232,7 +232,7 @@ Lastly, the <a class="reference internal" href="api/transformers4rec.torch.html#
 </div>
 <div class="section" id="tying-embeddings">
 <h3>Tying Embeddings<a class="headerlink" href="#tying-embeddings" title="Permalink to this headline"></a></h3>
-<p>For the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask" title="transformers4rec.torch.NextItemPredictionTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code></a> class, we recommend <em>tying embeddings</em>.
+<p>For the <code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code> class, we recommend <em>tying embeddings</em>.
 The tying embeddings concept was initially proposed by the NLP community to tie the weights of the input (item ID) embedding matrix with the output projection layer.
 Not only do tied embeddings reduce the memory requirements significantly, but our own experimentation during <a class="reference external" href="https://resources.nvidia.com/en-us-merlin/recommendation-syste?lx=97GH0Q">recent competitions</a> and empirical analysis detailed in our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation</a> paper and online <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md">appendix</a> demonstrate that this method is very effective.
 Tying embeddings is enabled by default, but can be disabled by setting <code class="docutils literal notranslate"><span class="pre">weight_tying</span></code> to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
