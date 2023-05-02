@@ -15,6 +15,7 @@
 #
 
 import pytest
+import torch
 from merlin.schema import Schema as CoreSchema
 from merlin.schema import Tags
 
@@ -217,3 +218,66 @@ def test_sequential_and_non_sequential_tabular_features(schema, torch_yoochoose_
     outputs = tab_module(torch_yoochoose_like)
 
     assert list(outputs.shape) == [100, 20, 203]
+
+
+@pytest.mark.parametrize("cpu", [None, "cpu"] if torch.cuda.is_available() else ["cpu"])
+@pytest.mark.parametrize("pretrained_dim", [None, 128, {"pretrained_item_id_embeddings": 128}])
+def test_tabular_sequence_features_with_pretrained_embeddings(cpu, pretrained_dim):
+    import numpy as np
+    from merlin.dataloader.ops.embeddings import EmbeddingOperator
+    from merlin.dataloader.torch import Loader
+    from merlin.io import Dataset
+
+    from transformers4rec.torch.utils.padding import pad_batch
+
+    data = tr.data.music_streaming_testing_data
+    batch_size, max_length = 128, 20
+    np_emb_item_id = np.random.rand(10000, 16)
+
+    data_loader = Loader(
+        Dataset(data.path, schema=data.merlin_schema, cpu=bool(cpu)),
+        batch_size=batch_size,
+        transforms=[
+            EmbeddingOperator(
+                np_emb_item_id, lookup_key="item_id", embedding_name="pretrained_item_id_embeddings"
+            ),
+        ],
+        shuffle=False,
+        device=cpu,
+    )
+
+    batch, _ = next(iter(data_loader))
+
+    # Convert batch of ragged inputs to padded dense tensors
+    padding_lengths = {
+        key.replace("__offsets", ""): max_length for key in batch.keys() if "__offsets" in key
+    }
+    dense_batch = pad_batch(batch, padding_lengths=padding_lengths)
+
+    # Input block with a 3-D pre-trained feature
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        data_loader.output_schema,
+        max_sequence_length=20,
+        continuous_projection=64,
+        pretrained_dim=pretrained_dim,
+        aggregation=None,
+    )
+
+    if not cpu:
+        output = inputs.to("cuda").double()(dense_batch)
+    else:
+        output = inputs.double()(dense_batch)
+
+    assert "pretrained_item_id_embeddings" in output
+    if pretrained_dim is not None:
+        assert list(output["pretrained_item_id_embeddings"].shape) == [
+            batch_size,
+            max_length,
+            128,
+        ]
+    else:
+        assert list(output["pretrained_item_id_embeddings"].shape) == [
+            batch_size,
+            max_length,
+            16,
+        ]

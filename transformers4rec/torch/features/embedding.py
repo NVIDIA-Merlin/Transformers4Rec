@@ -541,3 +541,79 @@ class PretrainedEmbeddingsInitializer(torch.nn.Module):
         with torch.no_grad():
             x.copy_(self.weight_matrix)
         x.requires_grad = self.trainable
+
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+)
+class PretrainedEmbeddingFeatures(InputBlock):
+    """Input block for pre-trained embeddings features.
+
+    For 3-D features, if sequence_combiner is set, the features are aggregated
+    using the second dimension (sequence length)
+
+    Parameters
+    ----------
+    features: List[str]
+        A list of pre-trained feature names.
+    pretrained_dim: Optional[Union[int, Dict[str, int]]]
+        The output dimension of the pre-trained embeddings.
+        It can be an integer or a dictionary mapping feature names to output dimensions.
+    sequence_combiner: str
+        The aggregation mode for 3-D features.
+
+    schema (Optional[Schema]): the schema of the input data.
+    {tabular_module_parameters}
+    """
+
+    def __init__(
+        self,
+        features: List[str],
+        pretrained_dim: Optional[Union[int, Dict[str, int]]] = None,
+        sequence_combiner: str = "mean",
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        schema: Optional[Schema] = None,
+    ):
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
+        self.features = features
+        self.filter_features = FilterFeatures(features)
+        self.pretrained_dim = pretrained_dim
+        self.sequence_combiner = sequence_combiner
+
+    def build(self, input_size, **kwargs):
+        if input_size is not None:
+            if self.pretrained_dim:
+                self.projection = torch.nn.ModuleDict()
+                if isinstance(self.pretrained_dim, int):
+                    for key in self.features:
+                        self.projection[key] = torch.nn.Linear(
+                            input_size[key][-1], self.pretrained_dim
+                        )
+
+                elif isinstance(self.pretrained_dim, dict):
+                    for key in self.features:
+                        self.projection[key] = torch.nn.Linear(
+                            input_size[key][-1], self.pretrained_dim[key]
+                        )
+
+        return super().build(input_size, **kwargs)
+
+    @classmethod
+    def from_schema(cls, schema: Schema, tags: Optional[TagsType] = None, **kwargs):  # type: ignore
+        if tags:
+            schema = schema.select_by_tag(tags)
+
+        features = schema.column_names
+        return cls(features=features, **kwargs)
+
+    def forward(self, inputs):
+        features = self.filter_features(inputs)
+        if self.pretrained_dim:
+            return {key: self.projection[key](val) for key, val in features.items()}
+        # TODO Add sequence aggregation step, if self.sequence_combiner != None
+        return features
+
+    def forward_output_size(self, input_sizes):
+        return self.filter_features.forward_output_size(input_sizes)

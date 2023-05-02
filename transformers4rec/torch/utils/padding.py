@@ -48,9 +48,19 @@ def _pad_ragged_tensor(values: torch.Tensor, offsets: torch.Tensor, padding_leng
     diff_offsets = offsets[1:] - offsets[:-1]
     max_length = int(diff_offsets.max())
     indices = _get_indices(offsets, diff_offsets)
-    sparse_tensor = torch.sparse_coo_tensor(
-        indices.T, values, torch.Size([num_rows, max_length]), device=values.device
-    )
+
+    if values.ndim == 2:
+        # 3D ragged inputs
+        sparse_tensor = torch.sparse_coo_tensor(
+            indices.T,
+            values,
+            torch.Size([num_rows, max_length, values.shape[-1]]),
+            device=values.device,
+        )
+    else:
+        sparse_tensor = torch.sparse_coo_tensor(
+            indices.T, values, torch.Size([num_rows, max_length]), device=values.device
+        )
     return _pad_dense_tensor(sparse_tensor.to_dense(), padding_length)
 
 
