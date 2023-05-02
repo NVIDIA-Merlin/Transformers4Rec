@@ -23,7 +23,11 @@ def _pad_dense_tensor(t: torch.Tensor, length: int) -> torch.Tensor:
     if len(t.shape) == 2:
         pad_diff = length - t.shape[1]
         return F.pad(input=t, pad=(0, pad_diff, 0, 0))
-    return t
+    elif len(t.shape) == 3:
+        pad_diff = length - t.shape[1]
+        return F.pad(input=t, pad=(0, pad_diff, 0, 0, 0, 0))
+    else:
+        return t
 
 
 def _squeeze(tensor: torch.Tensor):

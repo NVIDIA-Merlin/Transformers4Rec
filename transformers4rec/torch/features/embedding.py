@@ -600,12 +600,29 @@ class PretrainedEmbeddingFeatures(InputBlock):
         return super().build(input_size, **kwargs)
 
     @classmethod
-    def from_schema(cls, schema: Schema, tags: Optional[TagsType] = None, **kwargs):  # type: ignore
+    def from_schema(
+        cls,
+        schema: Schema,
+        tags: Optional[TagsType] = None,
+        pretrained_dim=None,
+        sequence_combiner=None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        **kwargs,
+    ):  # type: ignore
         if tags:
             schema = schema.select_by_tag(tags)
 
         features = schema.column_names
-        return cls(features=features, **kwargs)
+        return cls(
+            features=features,
+            pretrained_dim=pretrained_dim,
+            sequence_combiner=sequence_combiner,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+        )
 
     def forward(self, inputs):
         output = self.filter_features(inputs)
