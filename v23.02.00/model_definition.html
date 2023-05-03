@@ -212,10 +212,10 @@ Cross-entropy and pairwise losses are supported.</p></li>
 In the context of recommendation, you can use classification to predict the user’s next action such as whether the user will abandon a product in their cart or proceed with the purchase.</p></li>
 <li><p><strong>Regression</strong>: Predicts a continuous feature using the whole sequence, such as the elapsed time until the user returns to a service.</p></li>
 </ul>
-<p>In the following example, a head is instantiated with the predefined <code class="docutils literal notranslate"><span class="pre">model_body</span></code> for the <code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code>.
+<p>In the following example, a head is instantiated with the predefined <code class="docutils literal notranslate"><span class="pre">model_body</span></code> for the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask" title="transformers4rec.torch.NextItemPredictionTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code></a>.
 This head enables the <code class="docutils literal notranslate"><span class="pre">weight_tying</span></code> option.
 Decoupling the model bodies and heads provides a flexible architecture that enables you to define a model with features like multiple towers and multiple heads.
-Lastly, the <code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code> class combines the heads and wraps the whole model.</p>
+Lastly, the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.Model" title="transformers4rec.torch.Model"><code class="xref py py-class docutils literal notranslate"><span class="pre">Model</span></code></a> class combines the heads and wraps the whole model.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch</span> <span class="kn">import</span> <span class="n">Head</span><span class="p">,</span> <span class="n">Model</span>
 <span class="kn">from</span> <span class="nn">transformers4rec.torch.model.head</span> <span class="kn">import</span> <span class="n">NextItemPredictionTask</span>
 
@@ -232,7 +232,7 @@ Lastly, the <code class="xref py py-class docutils literal notranslate"><span cl
 </div>
 <div class="section" id="tying-embeddings">
 <h3>Tying Embeddings<a class="headerlink" href="#tying-embeddings" title="Permalink to this headline"></a></h3>
-<p>For the <code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code> class, we recommend <em>tying embeddings</em>.
+<p>For the <a class="reference internal" href="api/transformers4rec.torch.html#transformers4rec.torch.NextItemPredictionTask" title="transformers4rec.torch.NextItemPredictionTask"><code class="xref py py-class docutils literal notranslate"><span class="pre">NextItemPredictionTask</span></code></a> class, we recommend <em>tying embeddings</em>.
 The tying embeddings concept was initially proposed by the NLP community to tie the weights of the input (item ID) embedding matrix with the output projection layer.
 Not only do tied embeddings reduce the memory requirements significantly, but our own experimentation during <a class="reference external" href="https://resources.nvidia.com/en-us-merlin/recommendation-syste?lx=97GH0Q">recent competitions</a> and empirical analysis detailed in our <a class="reference external" href="https://dl.acm.org/doi/10.1145/3460231.3474255">Transformers4Rec: Bridging the Gap between NLP and Sequential / Session-Based Recommendation</a> paper and online <a class="reference external" href="https://github.com/NVIDIA-Merlin/publications/blob/main/2021_acm_recsys_transformers4rec/Appendices/Appendix_A-Techniques_used_in_Transformers4Rec_Meta-Architecture.md">appendix</a> demonstrate that this method is very effective.
 Tying embeddings is enabled by default, but can be disabled by setting <code class="docutils literal notranslate"><span class="pre">weight_tying</span></code> to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>

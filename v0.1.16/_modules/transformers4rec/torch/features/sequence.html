@@ -124,7 +124,7 @@
 <span class="kn">from</span> <span class="nn">.tabular</span> <span class="kn">import</span> <span class="n">TABULAR_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span> <span class="n">TabularFeatures</span>
 
 
-<div class="viewcode-block" id="SequenceEmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+<div class="viewcode-block" id="SequenceEmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SequenceEmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
     <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
     <span class="n">embedding_features_parameters</span><span class="o">=</span><span class="n">embedding</span><span class="o">.</span><span class="n">EMBEDDING_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
@@ -160,7 +160,7 @@
             <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="SequenceEmbeddingFeatures.table_to_embedding_module"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.table_to_embedding_module">[docs]</a>    <span class="k">def</span> <span class="nf">table_to_embedding_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="n">embedding</span><span class="o">.</span><span class="n">TableConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">:</span>
+<div class="viewcode-block" id="SequenceEmbeddingFeatures.table_to_embedding_module"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SequenceEmbeddingFeatures.table_to_embedding_module">[docs]</a>    <span class="k">def</span> <span class="nf">table_to_embedding_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="n">embedding</span><span class="o">.</span><span class="n">TableConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">:</span>
         <span class="n">embedding_table</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span>
             <span class="n">table</span><span class="o">.</span><span class="n">vocabulary_size</span><span class="p">,</span> <span class="n">table</span><span class="o">.</span><span class="n">dim</span><span class="p">,</span> <span class="n">padding_idx</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">padding_idx</span>
         <span class="p">)</span>
@@ -168,7 +168,7 @@
             <span class="n">table</span><span class="o">.</span><span class="n">initializer</span><span class="p">(</span><span class="n">embedding_table</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">embedding_table</span></div>
 
-<div class="viewcode-block" id="SequenceEmbeddingFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.SequenceEmbeddingFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_sizes</span><span class="p">):</span>
+<div class="viewcode-block" id="SequenceEmbeddingFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.SequenceEmbeddingFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_sizes</span><span class="p">):</span>
         <span class="n">sizes</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">fname</span><span class="p">,</span> <span class="n">fconfig</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -178,7 +178,7 @@
         <span class="k">return</span> <span class="n">sizes</span></div></div>
 
 
-<div class="viewcode-block" id="TabularSequenceFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+<div class="viewcode-block" id="TabularSequenceFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularSequenceFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
     <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
     <span class="n">tabular_features_parameters</span><span class="o">=</span><span class="n">TABULAR_FEATURES_PARAMS_DOCSTRING</span><span class="p">,</span>
 <span class="p">)</span>
@@ -225,7 +225,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">projection_module</span> <span class="o">=</span> <span class="n">projection_module</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">set_masking</span><span class="p">(</span><span class="n">masking</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TabularSequenceFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TabularSequenceFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularSequenceFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
         <span class="bp">cls</span><span class="p">,</span>
         <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
@@ -318,7 +318,7 @@
     <span class="k">def</span> <span class="nf">masking</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_masking</span>
 
-<div class="viewcode-block" id="TabularSequenceFeatures.set_masking"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.set_masking">[docs]</a>    <span class="k">def</span> <span class="nf">set_masking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+<div class="viewcode-block" id="TabularSequenceFeatures.set_masking"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularSequenceFeatures.set_masking">[docs]</a>    <span class="k">def</span> <span class="nf">set_masking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_masking</span> <span class="o">=</span> <span class="n">value</span></div>
 
     <span class="nd">@property</span>
@@ -335,7 +335,7 @@
 
         <span class="k">return</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="TabularSequenceFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="TabularSequenceFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularSequenceFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">training</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">testing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="n">outputs</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">TabularSequenceFeatures</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">masking</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection_module</span><span class="p">:</span>
@@ -354,7 +354,7 @@
 
         <span class="k">return</span> <span class="n">outputs</span></div>
 
-<div class="viewcode-block" id="TabularSequenceFeatures.project_continuous_features"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.project_continuous_features">[docs]</a>    <span class="k">def</span> <span class="nf">project_continuous_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
+<div class="viewcode-block" id="TabularSequenceFeatures.project_continuous_features"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularSequenceFeatures.project_continuous_features">[docs]</a>    <span class="k">def</span> <span class="nf">project_continuous_features</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensions</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dimensions</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
             <span class="n">dimensions</span> <span class="o">=</span> <span class="p">[</span><span class="n">dimensions</span><span class="p">]</span>
 
@@ -369,7 +369,7 @@
 
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="TabularSequenceFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
+<div class="viewcode-block" id="TabularSequenceFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TabularSequenceFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">):</span>
         <span class="n">output_sizes</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">in_layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">merge_values</span><span class="p">:</span>
             <span class="n">output_sizes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">in_layer</span><span class="o">.</span><span class="n">forward_output_size</span><span class="p">(</span><span class="n">input_size</span><span class="p">))</span>
