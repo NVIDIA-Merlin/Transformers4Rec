@@ -1,0 +1,10 @@
+name: Set Stable Branch
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published, deleted]
+
+jobs:
+  set-stable-branch:
+    uses: NVIDIA-Merlin/.github/.github/workflows/set-stable-branch.yaml@main
