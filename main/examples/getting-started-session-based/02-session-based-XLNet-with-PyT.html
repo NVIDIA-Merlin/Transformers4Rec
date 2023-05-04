@@ -164,14 +164,6 @@
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
-  warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
-</pre></div>
-</div>
-</div>
 </div>
 <p>Transformers4Rec library relies on a schema object to automatically build all necessary layers to represent, normalize and aggregate input features. As you can see below, <code class="docutils literal notranslate"><span class="pre">schema.pb</span></code> is a protobuf file that contains metadata including statistics about features such as cardinality, min and max values and also tags features based on their characteristics and dtypes (e.g., categorical, continuous, list, integer).</p>
 </div>
@@ -197,7 +189,7 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/workspace/merlin/core/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
   warnings.warn(
 </pre></div>
 </div>
@@ -245,13 +237,13 @@
       <th>dtype</th>
       <th>is_list</th>
       <th>is_ragged</th>
-      <th>properties.num_buckets</th>
-      <th>properties.freq_threshold</th>
-      <th>properties.max_size</th>
-      <th>properties.start_index</th>
-      <th>properties.cat_path</th>
-      <th>properties.embedding_sizes.cardinality</th>
       <th>properties.embedding_sizes.dimension</th>
+      <th>properties.embedding_sizes.cardinality</th>
+      <th>properties.num_buckets</th>
+      <th>properties.start_index</th>
+      <th>properties.max_size</th>
+      <th>properties.cat_path</th>
+      <th>properties.freq_threshold</th>
       <th>properties.domain.min</th>
       <th>properties.domain.max</th>
       <th>properties.domain.name</th>
@@ -263,50 +255,50 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM_ID, Tags.ID, Tags.LIST, Tags.CATEGO...</td>
+      <td>(Tags.CATEGORICAL, Tags.ITEM_ID, Tags.ITEM, Ta...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
+      <td>52.0</td>
+      <td>493.0</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.0</td>
       <td>.//categories/unique.item_id.parquet</td>
-      <td>497.0</td>
-      <td>52.0</td>
       <td>0.0</td>
-      <td>496.0</td>
+      <td>0.0</td>
+      <td>492.0</td>
       <td>item_id</td>
-      <td>20</td>
-      <td>20</td>
+      <td>2</td>
+      <td>16</td>
     </tr>
     <tr>
       <th>1</th>
       <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
+      <td>29.0</td>
+      <td>173.0</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
-      <td>0.0</td>
       <td>.//categories/unique.category.parquet</td>
-      <td>143.0</td>
-      <td>26.0</td>
       <td>0.0</td>
-      <td>142.0</td>
+      <td>0.0</td>
+      <td>172.0</td>
       <td>category</td>
-      <td>20</td>
-      <td>20</td>
+      <td>2</td>
+      <td>16</td>
     </tr>
     <tr>
       <th>2</th>
       <td>weekday_sin-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -317,16 +309,16 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>20</td>
-      <td>20</td>
+      <td>2</td>
+      <td>16</td>
     </tr>
     <tr>
       <th>3</th>
       <td>age_days-list</td>
-      <td>(Tags.CONTINUOUS, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -337,8 +329,8 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>20</td>
-      <td>20</td>
+      <td>2</td>
+      <td>16</td>
     </tr>
   </tbody>
 </table>
@@ -469,6 +461,11 @@ Here is a brief explanation of the main classes:</p>
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>PyTorch: setting up devices
+</pre></div>
+</div>
+</div>
 </div>
 <p>Note that we add an argument <code class="docutils literal notranslate"><span class="pre">data_loader_engine='merlin'</span></code> to automatically load the features needed for training using the schema. The default value is <code class="docutils literal notranslate"><span class="pre">merlin</span></code> for optimized GPU-based data-loading. Optionally a <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> (pyarrow) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
 </div>
@@ -542,13 +539,9 @@ Here is a brief explanation of the main classes:</p>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/1/train.parquet&#39;]
-********************
-Launch training for day 1 are:
-********************
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/venv/lib/python3.8/site-packages/transformers/optimization.py:306: FutureWarning: This implementation of AdamW is deprecated and will be removed in a future version. Use the PyTorch implementation torch.optim.AdamW instead, or set `no_deprecation_warning=True` to disable this warning
+  warnings.warn(
+***** Running training *****
   Num examples = 1664
   Num Epochs = 5
   Instantaneous batch size per device = 128
@@ -557,15 +550,21 @@ Launch training for day 1 are:
   Total optimization steps = 65
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/1/train.parquet&#39;]
+********************
+Launch training for day 1 are:
+********************
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:02, Epoch 5/5]
+      [65/65 00:01, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: left;">
+ <tr style="text-align: left;">
       <th>Step</th>
       <th>Training Loss</th>
     </tr>
@@ -573,7 +572,7 @@ Launch training for day 1 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>5.772000</td>
+      <td>5.878700</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -586,21 +585,21 @@ Launch training for day 1 are:
 <div>
 
   <progress value='48' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [6/6 00:20]
+  [6/6 00:14]
 </div>
 </div><div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
 Eval results for day 2 are:	
 
 ********************
 
- eval_/loss = 5.125837326049805
- eval_/next-item/ndcg_at_20 = 0.15405046939849854
- eval_/next-item/ndcg_at_40 = 0.19994235038757324
- eval_/next-item/recall_at_20 = 0.421875
- eval_/next-item/recall_at_40 = 0.6458333730697632
- eval_runtime = 0.1725
- eval_samples_per_second = 1113.287
- eval_steps_per_second = 34.79
+ eval_/loss = 5.100889682769775
+ eval_/next-item/ndcg_at_20 = 0.18669554591178894
+ eval_/next-item/ndcg_at_40 = 0.2293076366186142
+ eval_/next-item/recall_at_20 = 0.5052083730697632
+ eval_/next-item/recall_at_40 = 0.7135416865348816
+ eval_runtime = 0.1324
+ eval_samples_per_second = 1449.793
+ eval_steps_per_second = 45.306
 [&#39;/workspace/data/sessions_by_day/2/train.parquet&#39;]
 ********************
 Launch training for day 2 are:
@@ -608,23 +607,23 @@ Launch training for day 2 are:
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 1664
+  Num examples = 1536
   Num Epochs = 5
   Instantaneous batch size per device = 128
   Total train batch size (w. parallel, distributed &amp; accumulation) = 128
   Gradient Accumulation steps = 1
-  Total optimization steps = 65
+  Total optimization steps = 60
 </pre></div>
 </div>
 <div class="output text_html">
     <div>
 
-      <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:02, Epoch 5/5]
+      <progress value='60' max='60' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [60/60 00:01, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: left;">
+ <tr style="text-align: left;">
       <th>Step</th>
       <th>Training Loss</th>
     </tr>
@@ -632,52 +631,50 @@ Launch training for day 2 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.879700</td>
+      <td>4.931100</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 1664
-  Num Epochs = 5
-  Instantaneous batch size per device = 128
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
-  Gradient Accumulation steps = 1
-  Total optimization steps = 65
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
+********************
 Eval results for day 3 are:	
 
 ********************
 
- eval_/loss = 4.680967807769775
- eval_/next-item/ndcg_at_20 = 0.17892448604106903
- eval_/next-item/ndcg_at_40 = 0.22572219371795654
- eval_/next-item/recall_at_20 = 0.484375
- eval_/next-item/recall_at_40 = 0.7135416865348816
- eval_runtime = 0.1745
- eval_samples_per_second = 1100.148
- eval_steps_per_second = 34.38
+ eval_/loss = 4.713772296905518
+ eval_/next-item/ndcg_at_20 = 0.1680772304534912
+ eval_/next-item/ndcg_at_40 = 0.21330341696739197
+ eval_/next-item/recall_at_20 = 0.46875
+ eval_/next-item/recall_at_40 = 0.6875
+ eval_runtime = 0.1286
+ eval_samples_per_second = 1492.732
+ eval_steps_per_second = 46.648
 [&#39;/workspace/data/sessions_by_day/3/train.parquet&#39;]
 ********************
 Launch training for day 3 are:
 ********************
 </pre></div>
 </div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 1536
+  Num Epochs = 5
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 60
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
-      <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:03, Epoch 5/5]
+      <progress value='60' max='60' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [60/60 00:01, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: left;">
+ <tr style="text-align: left;">
       <th>Step</th>
       <th>Training Loss</th>
     </tr>
@@ -685,7 +682,7 @@ Launch training for day 3 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.581400</td>
+      <td>4.586300</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -697,18 +694,14 @@ Eval results for day 4 are:
 
 ********************
 
- eval_/loss = 4.464942455291748
- eval_/next-item/ndcg_at_20 = 0.2020609825849533
- eval_/next-item/ndcg_at_40 = 0.24695619940757751
- eval_/next-item/recall_at_20 = 0.5260416865348816
- eval_/next-item/recall_at_40 = 0.7447916865348816
- eval_runtime = 0.165
- eval_samples_per_second = 1163.669
- eval_steps_per_second = 36.365
-[&#39;/workspace/data/sessions_by_day/4/train.parquet&#39;]
-********************
-Launch training for day 4 are:
-********************
+ eval_/loss = 4.556211948394775
+ eval_/next-item/ndcg_at_20 = 0.18394140899181366
+ eval_/next-item/ndcg_at_40 = 0.2390844076871872
+ eval_/next-item/recall_at_20 = 0.484375
+ eval_/next-item/recall_at_40 = 0.7552083730697632
+ eval_runtime = 0.1311
+ eval_samples_per_second = 1464.947
+ eval_steps_per_second = 45.78
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -720,15 +713,21 @@ Launch training for day 4 are:
   Total optimization steps = 65
 </pre></div>
 </div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/4/train.parquet&#39;]
+********************
+Launch training for day 4 are:
+********************
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:02, Epoch 5/5]
+      [65/65 00:01, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: left;">
+ <tr style="text-align: left;">
       <th>Step</th>
       <th>Training Loss</th>
     </tr>
@@ -736,13 +735,26 @@ Launch training for day 4 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.519200</td>
+      <td>4.518600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
+********************
+Eval results for day 5 are:	
+
+********************
+
+ eval_/loss = 4.407809734344482
+ eval_/next-item/ndcg_at_20 = 0.20426493883132935
+ eval_/next-item/ndcg_at_40 = 0.24358350038528442
+ eval_/next-item/recall_at_20 = 0.5885416865348816
+ eval_/next-item/recall_at_40 = 0.78125
+ eval_runtime = 0.1327
+ eval_samples_per_second = 1447.378
+ eval_steps_per_second = 45.231
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -754,20 +766,7 @@ Launch training for day 4 are:
   Total optimization steps = 65
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 5 are:	
-
-********************
-
- eval_/loss = 4.440032958984375
- eval_/next-item/ndcg_at_20 = 0.20033857226371765
- eval_/next-item/ndcg_at_40 = 0.24777457118034363
- eval_/next-item/recall_at_20 = 0.5416666865348816
- eval_/next-item/recall_at_40 = 0.7760416865348816
- eval_runtime = 0.1673
- eval_samples_per_second = 1147.626
- eval_steps_per_second = 35.863
-[&#39;/workspace/data/sessions_by_day/5/train.parquet&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/5/train.parquet&#39;]
 ********************
 Launch training for day 5 are:
 ********************
@@ -777,11 +776,11 @@ Launch training for day 5 are:
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:02, Epoch 5/5]
+      [65/65 00:01, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: left;">
+ <tr style="text-align: left;">
       <th>Step</th>
       <th>Training Loss</th>
     </tr>
@@ -789,13 +788,26 @@ Launch training for day 5 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.479100</td>
+      <td>4.488800</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>finished
+********************
+Eval results for day 6 are:	
+
+********************
+
+ eval_/loss = 4.5086541175842285
+ eval_/next-item/ndcg_at_20 = 0.19850534200668335
+ eval_/next-item/ndcg_at_40 = 0.2486129105091095
+ eval_/next-item/recall_at_20 = 0.5052083730697632
+ eval_/next-item/recall_at_40 = 0.75
+ eval_runtime = 0.1258
+ eval_samples_per_second = 1526.789
+ eval_steps_per_second = 47.712
 </pre></div>
 </div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
@@ -807,20 +819,7 @@ Launch training for day 5 are:
   Total optimization steps = 65
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>********************
-Eval results for day 6 are:	
-
-********************
-
- eval_/loss = 4.369968891143799
- eval_/next-item/ndcg_at_20 = 0.18754208087921143
- eval_/next-item/ndcg_at_40 = 0.23825709521770477
- eval_/next-item/recall_at_20 = 0.5416666865348816
- eval_/next-item/recall_at_40 = 0.7864583730697632
- eval_runtime = 0.1616
- eval_samples_per_second = 1188.118
- eval_steps_per_second = 37.129
-[&#39;/workspace/data/sessions_by_day/6/train.parquet&#39;]
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/6/train.parquet&#39;]
 ********************
 Launch training for day 6 are:
 ********************
@@ -830,11 +829,11 @@ Launch training for day 6 are:
     <div>
 
       <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:02, Epoch 5/5]
+      [65/65 00:01, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: left;">
+ <tr style="text-align: left;">
       <th>Step</th>
       <th>Training Loss</th>
     </tr>
@@ -842,7 +841,7 @@ Launch training for day 6 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.459600</td>
+      <td>4.496300</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -854,40 +853,38 @@ Eval results for day 7 are:
 
 ********************
 
- eval_/loss = 4.5033793449401855
- eval_/next-item/ndcg_at_20 = 0.1925697922706604
- eval_/next-item/ndcg_at_40 = 0.23315435647964478
- eval_/next-item/recall_at_20 = 0.53125
- eval_/next-item/recall_at_40 = 0.7291666865348816
- eval_runtime = 0.1677
- eval_samples_per_second = 1144.864
- eval_steps_per_second = 35.777
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 1664
-  Num Epochs = 5
-  Instantaneous batch size per device = 128
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
-  Gradient Accumulation steps = 1
-  Total optimization steps = 65
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[&#39;/workspace/data/sessions_by_day/7/train.parquet&#39;]
+ eval_/loss = 4.442317962646484
+ eval_/next-item/ndcg_at_20 = 0.1833297461271286
+ eval_/next-item/ndcg_at_40 = 0.23786288499832153
+ eval_/next-item/recall_at_20 = 0.5052083730697632
+ eval_/next-item/recall_at_40 = 0.7760416865348816
+ eval_runtime = 0.143
+ eval_samples_per_second = 1342.609
+ eval_steps_per_second = 41.957
+[&#39;/workspace/data/sessions_by_day/7/train.parquet&#39;]
 ********************
 Launch training for day 7 are:
 ********************
 </pre></div>
 </div>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 1792
+  Num Epochs = 5
+  Instantaneous batch size per device = 128
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 128
+  Gradient Accumulation steps = 1
+  Total optimization steps = 70
+</pre></div>
+</div>
 <div class="output text_html">
     <div>
 
-      <progress value='65' max='65' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [65/65 00:02, Epoch 5/5]
+      <progress value='70' max='70' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [70/70 00:02, Epoch 5/5]
     </div>
     <table border="1" class="dataframe">
   <thead>
-    <tr style="text-align: left;">
+ <tr style="text-align: left;">
       <th>Step</th>
       <th>Training Loss</th>
     </tr>
@@ -895,7 +892,7 @@ Launch training for day 7 are:
   <tbody>
     <tr>
       <td>50</td>
-      <td>4.455300</td>
+      <td>4.489300</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
@@ -907,14 +904,14 @@ Eval results for day 8 are:
 
 ********************
 
- eval_/loss = 4.4695820808410645
- eval_/next-item/ndcg_at_20 = 0.1891615390777588
- eval_/next-item/ndcg_at_40 = 0.24406516551971436
- eval_/next-item/recall_at_20 = 0.5104166865348816
- eval_/next-item/recall_at_40 = 0.7760416865348816
- eval_runtime = 0.1806
- eval_samples_per_second = 1063.043
- eval_steps_per_second = 33.22
+ eval_/loss = 4.538415431976318
+ eval_/next-item/ndcg_at_20 = 0.17900079488754272
+ eval_/next-item/ndcg_at_40 = 0.22817844152450562
+ eval_/next-item/recall_at_20 = 0.5052083730697632
+ eval_/next-item/recall_at_40 = 0.7447916865348816
+ eval_runtime = 0.1381
+ eval_samples_per_second = 1390.084
+ eval_steps_per_second = 43.44
 </pre></div>
 </div>
 </div>
@@ -938,14 +935,14 @@ Eval results for day 8 are:
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.4695820808410645
-  eval_/next-item/ndcg_at_20 = 0.1891615390777588
-  eval_/next-item/ndcg_at_40 = 0.24406516551971436
-  eval_/next-item/recall_at_20 = 0.5104166865348816
-  eval_/next-item/recall_at_40 = 0.7760416865348816
-  eval_runtime = 0.1776
-  eval_samples_per_second = 1081.009
-  eval_steps_per_second = 33.782
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  eval_/loss = 4.538415431976318
+  eval_/next-item/ndcg_at_20 = 0.17900079488754272
+  eval_/next-item/ndcg_at_40 = 0.22817844152450562
+  eval_/next-item/recall_at_20 = 0.5052083730697632
+  eval_/next-item/recall_at_40 = 0.7447916865348816
+  eval_runtime = 0.1281
+  eval_samples_per_second = 1498.788
+  eval_steps_per_second = 46.837
 </pre></div>
 </div>
 </div>
@@ -1002,12 +999,12 @@ Eval results for day 8 are:
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
-      <dd><a href="../../../v0.1.13/index.html">v0.1.13</a></dd>
       <dd><a href="../../../v0.1.14/index.html">v0.1.14</a></dd>
       <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../v23.04.00/index.html">v23.04.00</a></dd>
+      <dd><a href="../../../v23.05.dev0/index.html">v23.05.dev0</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
