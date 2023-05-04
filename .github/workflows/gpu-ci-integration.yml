@@ -11,7 +11,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  gpu-ci:
+  gpu-ci-integration:
     runs-on: 1GPU
 
     steps:
