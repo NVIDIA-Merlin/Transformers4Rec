@@ -5,13 +5,13 @@ on:
   push:
     branches: [main]
     tags:
-      - v*
+      - "v[0-9]+.[0-9]+.[0-9]+"
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, closed]
+    types: [opened, synchronize, reopened]
 
 jobs:
-  gpu-ci:
+  gpu-ci-integration:
     runs-on: 1GPU
 
     steps:
