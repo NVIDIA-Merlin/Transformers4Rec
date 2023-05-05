@@ -29,6 +29,8 @@ requirements:
     {% for req in setup_py_data.get('install_requires', []) %}
     - {{ req }}
     {% endfor %}
+    - pytorch
+    - torchmetrics>=0.10.0
 
 about:
   home: https://github.com/NVIDIA-Merlin/Transformers4Rec

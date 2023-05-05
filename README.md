@@ -84,6 +84,7 @@ The following code sample shows how to define and train an XLNet model with PyTo
 
 ```python
 from transformers4rec import torch as tr
+from transformers4rec.torch.ranking_metric import NDCGAt, RecallAt
 
 # Create a schema or read one from disk: tr.Schema().from_json(SCHEMA_PATH).
 schema: tr.Schema = tr.data.tabular_sequence_testing_data.schema
@@ -145,19 +146,29 @@ Those components can be installed as optional arguments for the `pip install` co
 To install Transformers4Rec using Pip, run the following command:
 
 ```shell
-pip install transformers4rec[pytorch,nvtabular,dataloader]
+pip install transformers4rec[pytorch,nvtabular]
 ```
 
-> Be aware that installing Transformers4Rec with `pip` only supports the CPU version of Merlin Dataloader because `pip` does not install cuDF.
-> The GPU capabilities of the dataloader are available by using the Docker container or by installing
-> the dataloader with Conda first and then performing the `pip` installation within the Conda environment.
+-> Be aware that installing Transformers4Rec with `pip` does not automatically install RAPIDS cuDF.
+-> cuDF is required for GPU-accelerated versions of NVTabular transforms and the Merlin Dataloader.
+
+Instructions for installing cuDF with pip are available here: https://docs.rapids.ai/install#pip-install
+
+```shell
+pip install cudf-cu11 dask-cudf-cu11 --extra-index-url=https://pypi.nvidia.com
+```
 
 ### Installing Transformers4Rec Using Conda
 
-To install Transformers4Rec using Conda, run the following command:
+To install Transformers4Rec using Conda, run the following command with `conda` or `mamba` to create a new environment.
 
 ```shell
-conda install -c nvidia transformers4rec
+mamba create -n transformers4rec-23.04 -c nvidia -c rapidsai -c pytorch -c conda-forge \
+    transformers4rec=23.04 `# NVIDIA Merlin` \
+    nvtabular=23.04 `# NVIDIA Merlin - Used in example notebooks` \
+    python=3.10 `# Compatible Python environment` \
+    cudf=23.02 `# RAPIDS cuDF - GPU accelerated DataFrame` \
+    cudatoolkit=11.8 pytorch-cuda=11.8 `# NVIDIA CUDA version`
 ```
 
 ### Installing Transformers4Rec Using Docker
