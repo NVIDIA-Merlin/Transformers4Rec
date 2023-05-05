@@ -165,6 +165,7 @@ To install Transformers4Rec using Conda, run the following command with `conda` 
 ```shell
 mamba create -n transformers4rec-23.04 -c nvidia -c rapidsai -c pytorch -c conda-forge \
     transformers4rec=23.04 `# NVIDIA Merlin` \
+    nvtabular=23.04 `# NVIDIA Merlin - Used in example notebooks` \
     python=3.10 `# Compatible Python environment` \
     cudf=23.02 `# RAPIDS cuDF - GPU accelerated DataFrame` \
     cudatoolkit=11.8 pytorch-cuda=11.8 `# NVIDIA CUDA version`
