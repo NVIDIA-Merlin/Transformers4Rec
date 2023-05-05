@@ -2,7 +2,7 @@ name: docs-preview-pr
 
 on:
   workflow_run:
-    workflows: ["CPU CI"]
+    workflows: [Test]
     types: [completed]
 
 concurrency:

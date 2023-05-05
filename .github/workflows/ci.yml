@@ -1,4 +1,4 @@
-name: CPU CI
+name: Test
 
 on:
   workflow_dispatch:
@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  unit-tests:
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
