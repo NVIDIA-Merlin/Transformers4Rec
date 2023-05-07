@@ -283,6 +283,9 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     collate_fn: Callable, optional
         A processing function to collect and prepare the list samples
         (tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.
+    transforms: List[merlin.dag.BaseOperator]
+        A list of operators that the Merlin dataloader applies on top of the loaded
+        batch, which is a tuple of input and target tensors.
     """
 
     def __init__(
@@ -309,6 +312,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         drop_last=False,
         schema=None,
         row_groups_per_part=True,
+        transforms=None,
         **kwargs,
     ):
         T4RecDataLoader.__init__(self)
@@ -356,7 +360,20 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             global_size=global_size,
             global_rank=global_rank,
             drop_last=drop_last,
-        ).map(self._get_pad_fn(sparse_max))
+            transforms=transforms,
+        )
+
+        # update sparse-max features based on the output of transforms
+        output_schema = loader.output_schema
+        sparse_transform = [
+            col.name
+            for col in output_schema
+            if (col.shape.is_list) and (col.name not in sparse_max)
+        ]
+        for feat in sparse_transform:
+            sparse_max.update({feat: self.max_sequence_length})
+
+        loader = loader.map(self._get_pad_fn(sparse_max))
 
         DLDataLoader.__init__(
             self,
@@ -429,6 +446,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         parts_per_chunk=1,
         sparse_names=None,
         sparse_max=None,
+        transforms=None,
         **kwargs,
     ):
         """
@@ -469,10 +487,15 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             sparse_names=sparse_names,
             sparse_max=sparse_max,
             schema=schema,
+            transforms=transforms,
             **kwargs,
         )
 
         return loader
+
+    @property
+    def output_schema(self):
+        return self.dataset.output_schema
 
 
 class ParquetDataset(Dataset):
