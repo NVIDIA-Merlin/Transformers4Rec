@@ -156,10 +156,10 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
-  from .autonotebook import tqdm as notebook_tqdm
-/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/dtypes/mappings/tf.py:52: UserWarning: Tensorflow dtype mappings did not load successfully due to an error: No module named &#39;tensorflow&#39;
   warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
+/usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
 /usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
   warnings.warn(
 </pre></div>
@@ -225,10 +225,10 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ID, Tags.CATEGORICAL, Tags.LIST, Tags.IT...</td>
+      <td>(Tags.ITEM_ID, Tags.CATEGORICAL, Tags.ID, Tags...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
@@ -239,7 +239,7 @@
       <td>0.0</td>
       <td>221.0</td>
       <td>item_id</td>
-      <td>20</td>
+      <td>0</td>
       <td>20</td>
     </tr>
     <tr>
@@ -248,7 +248,7 @@
       <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
@@ -259,7 +259,7 @@
       <td>0.0</td>
       <td>123.0</td>
       <td>category</td>
-      <td>20</td>
+      <td>0</td>
       <td>20</td>
     </tr>
     <tr>
@@ -268,7 +268,7 @@
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -279,7 +279,7 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>20</td>
+      <td>0</td>
       <td>20</td>
     </tr>
     <tr>
@@ -288,7 +288,7 @@
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -299,7 +299,7 @@
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>20</td>
+      <td>0</td>
       <td>20</td>
     </tr>
   </tbody>
@@ -419,25 +419,23 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Launch training for day 1: *****
-</pre></div>
-</div>
 <div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 384
   Num Epochs = 10
   Instantaneous batch size per device = 384
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 768
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
   Gradient Accumulation steps = 1
-  Total optimization steps = 10
-/usr/local/lib/python3.8/dist-packages/torch/nn/parallel/_functions.py:68: UserWarning: Was asked to gather along dimension 0, but all input tensors were scalars; will instead unsqueeze and return a vector.
-  warnings.warn(&#39;Was asked to gather along dimension 0, but all &#39;
+  Total optimization steps = 750
+</pre></div>
+</div>
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Launch training for day 178: *****
 </pre></div>
 </div>
 <div class="output text_html">
     <div>
 
-      <progress value='10' max='10' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [10/10 00:01, Epoch 10/10]
+      <progress value='750' max='750' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [750/750 00:20, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -447,33 +445,49 @@
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td>200</td>
+      <td>7.681100</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.656800</td>
+    </tr>
+    <tr>
+      <td>600</td>
+      <td>6.372000</td>
+    </tr>
   </tbody>
-</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
+Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output text_html">
 <div>
 
-  <progress value='3' max='1' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [1/1 00:04]
+  <progress value='14' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
+  [6/6 00:27]
 </div>
 </div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
   Num examples = 384
   Num Epochs = 10
   Instantaneous batch size per device = 384
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 768
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
   Gradient Accumulation steps = 1
   Total optimization steps = 10
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 2:*****
 
- eval_/next-item/avg_precision@10 = 0.01818181946873665
- eval_/next-item/avg_precision@20 = 0.025757577270269394
- eval_/next-item/ndcg@10 = 0.03516843914985657
- eval_/next-item/ndcg@20 = 0.05973554402589798
- eval_/next-item/recall@10 = 0.09090909361839294
- eval_/next-item/recall@20 = 0.1818181872367859
+ eval_/next-item/avg_precision@10 = 0.08119537681341171
+ eval_/next-item/avg_precision@20 = 0.0857219472527504
+ eval_/next-item/ndcg@10 = 0.11199340969324112
+ eval_/next-item/ndcg@20 = 0.12857995927333832
+ eval_/next-item/recall@10 = 0.20809248089790344
+ eval_/next-item/recall@20 = 0.27398842573165894
 
 ***** Launch training for day 2: *****
 </pre></div>
@@ -481,8 +495,8 @@
 <div class="output text_html">
     <div>
 
-      <progress value='10' max='10' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [10/10 00:01, Epoch 10/10]
+      <progress value='540' max='540' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [540/540 00:14, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -492,27 +506,39 @@
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td>200</td>
+      <td>6.805900</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.250300</td>
+    </tr>
   </tbody>
-</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
+Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+
+
+Training completed. Do not forget to share your model on huggingface.co/models =)
 
 
 ***** Running training *****
   Num examples = 384
   Num Epochs = 10
   Instantaneous batch size per device = 384
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 768
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
   Gradient Accumulation steps = 1
   Total optimization steps = 10
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 3:*****
 
- eval_/next-item/avg_precision@10 = 0.13250000774860382
- eval_/next-item/avg_precision@20 = 0.13805556297302246
- eval_/next-item/ndcg@10 = 0.17023175954818726
- eval_/next-item/ndcg@20 = 0.19377265870571136
- eval_/next-item/recall@10 = 0.30000001192092896
- eval_/next-item/recall@20 = 0.4000000059604645
+ eval_/next-item/avg_precision@10 = 0.06664632260799408
+ eval_/next-item/avg_precision@20 = 0.07125943899154663
+ eval_/next-item/ndcg@10 = 0.09318044036626816
+ eval_/next-item/ndcg@20 = 0.110211081802845
+ eval_/next-item/recall@10 = 0.17855477333068848
+ eval_/next-item/recall@20 = 0.24568764865398407
 
 ***** Launch training for day 3: *****
 </pre></div>
@@ -520,8 +546,8 @@
 <div class="output text_html">
     <div>
 
-      <progress value='10' max='10' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [10/10 00:01, Epoch 10/10]
+      <progress value='440' max='440' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [440/440 00:12, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -531,18 +557,26 @@
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td>200</td>
+      <td>6.608300</td>
+    </tr>
+    <tr>
+      <td>400</td>
+      <td>6.030500</td>
+    </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 4:*****
 
- eval_/next-item/avg_precision@10 = 0.010000000707805157
- eval_/next-item/avg_precision@20 = 0.01666666753590107
- eval_/next-item/ndcg@10 = 0.028906483203172684
- eval_/next-item/ndcg@20 = 0.053906481713056564
- eval_/next-item/recall@10 = 0.10000000149011612
- eval_/next-item/recall@20 = 0.20000000298023224
+ eval_/next-item/avg_precision@10 = 0.13680869340896606
+ eval_/next-item/avg_precision@20 = 0.14374792575836182
+ eval_/next-item/ndcg@10 = 0.18158714473247528
+ eval_/next-item/ndcg@20 = 0.2070869356393814
+ eval_/next-item/recall@10 = 0.3181818127632141
+ eval_/next-item/recall@20 = 0.4202226400375366
 </pre></div>
 </div>
 </div>
@@ -558,24 +592,24 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.01818181946873665,
-  0.13250000774860382,
-  0.010000000707805157],
- &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.025757577270269394,
-  0.13805556297302246,
-  0.01666666753590107],
- &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.03516843914985657,
-  0.17023175954818726,
-  0.028906483203172684],
- &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.05973554402589798,
-  0.19377265870571136,
-  0.053906481713056564],
- &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.09090909361839294,
-  0.30000001192092896,
-  0.10000000149011612],
- &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.1818181872367859,
-  0.4000000059604645,
-  0.20000000298023224]}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.08119537681341171,
+  0.06664632260799408,
+  0.13680869340896606],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.0857219472527504,
+  0.07125943899154663,
+  0.14374792575836182],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11199340969324112,
+  0.09318044036626816,
+  0.18158714473247528],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.12857995927333832,
+  0.110211081802845,
+  0.2070869356393814],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.20809248089790344,
+  0.17855477333068848,
+  0.3181818127632141],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.27398842573165894,
+  0.24568764865398407,
+  0.4202226400375366]}
 </pre></div>
 </div>
 </div>
@@ -591,90 +625,190 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.05356060930838188
- indexed_by_time_eval_/next-item/avg_precision@20 = 0.060159935926397644
- indexed_by_time_eval_/next-item/ndcg@10 = 0.0781022273004055
- indexed_by_time_eval_/next-item/ndcg@20 = 0.1024715614815553
- indexed_by_time_eval_/next-item/recall@10 = 0.16363636900981268
- indexed_by_time_eval_/next-item/recall@20 = 0.2606060653924942
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09488346427679062
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.10024310400088628
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.12892033159732819
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.14862599223852158
+ indexed_by_time_eval_/next-item/recall@10 = 0.23494302233060202
+ indexed_by_time_eval_/next-item/recall@20 = 0.3132995714743932
 </pre></div>
 </div>
 </div>
 </div>
 </div>
-<div class="section" id="save-the-model">
-<h4>Save the model<a class="headerlink" href="#save-the-model" title="Permalink to this headline"></a></h4>
+<div class="section" id="trace-the-model">
+<h4>Trace the model<a class="headerlink" href="#trace-the-model" title="Permalink to this headline"></a></h4>
+<p>We serve the model with the PyTorch backend that is used to execute TorchScript models. All models created in PyTorch using the python API must be traced/scripted to produce a TorchScript model. For tracing the model, we use <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.trace.html">torch.jit.trace</a> api that takes the model as a Python function or torch.nn.Module, and an example input  that will be passed to the function while tracing.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">recsys_trainer</span><span class="o">.</span><span class="n">_save_model_and_checkpoint</span><span class="p">(</span><span class="n">save_model_class</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">cudf</span>
+<span class="kn">from</span> <span class="nn">merlin.io</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">nvtabular</span> <span class="kn">import</span> <span class="n">Workflow</span>
+
+<span class="kn">from</span> <span class="nn">merlin.systems.dag</span> <span class="kn">import</span> <span class="n">Ensemble</span>
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.pytorch</span> <span class="kn">import</span> <span class="n">PredictPyTorch</span>
+<span class="kn">from</span> <span class="nn">merlin.systems.dag.ops.workflow</span> <span class="kn">import</span> <span class="n">TransformWorkflow</span>
+<span class="kn">from</span> <span class="nn">merlin.table</span> <span class="kn">import</span> <span class="n">TensorTable</span><span class="p">,</span> <span class="n">TorchColumn</span>
+<span class="kn">from</span> <span class="nn">merlin.table.conversions</span> <span class="kn">import</span> <span class="n">convert_col</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Create a dict of tensors to feed it as example inputs in the <code class="docutils literal notranslate"><span class="pre">torch.jit.trace()</span></code>.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;./preproc_sessions_by_day/178/train.parquet&quot;</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="n">table</span> <span class="o">=</span> <span class="n">TensorTable</span><span class="o">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_col</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">],</span> <span class="n">TorchColumn</span><span class="p">)</span>
+<span class="n">model_input_dict</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s now add a top_k parameter to model so that we can return the top k item ids with the highest scores when we serve the model on Triton Inference Server.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">top_k</span> <span class="o">=</span> <span class="mi">20</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let us now trace the model.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">model_input_dict</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s check out the <code class="docutils literal notranslate"><span class="pre">item_id-list</span></code> column in the <code class="docutils literal notranslate"><span class="pre">model_input_dict</span></code> dictionary.</p>
+<p>The column is represented as values and offsets dictating which values belong to which example.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_input_dict</span><span class="p">[</span><span class="s1">&#39;item_id-list__values&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-10
-Trainer.model is not a `PreTrainedModel`, only saving its state dict.
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([  604,   878,   742,    90,  4777,  1583,  3446,  8083,  3446,  4018,
+          742,  4777,   184, 12288,  2065,   430,     6,    30,     6,   157,
+         1987,  2590, 10855,  8217,  4210,  8711,  4242,    81,   112,  4242,
+         5732,  6810,    33,     6,    73,   664,  2312,  7124,  9113,   445,
+         1157,   774,   685,   430,  1945,   475,   597,   289,   166,    29,
+          342,   289,    33,   423,   166,   480,  2772,   288,   962,  4001,
+         2050,  3274,   499,  1219,   395,  1636, 11839, 10714, 11107,   289,
+          166,   650,  1085,   302,    88,   650,   214,   304,   177,   317,
+          423,     6,  3818,   931,  2186,  1085,   206,   687,  3831,   687,
+          202,    20,    43,    20,  2034, 10457,    20,    21,  1126,  2815,
+         4210, 34264,   830,   774,   620,  2050,  1987,  1079,  4713,  1336,
+          661,   289,   430,   863,  4829,  5786, 19156, 17270, 23365,  4209,
+         3651,  1037,  4770,   224,   277,  1020,   650,   166,  1354,   206,
+         1889,  2473,  1697,   997,   480,   774,  3841,  4316,  3841,  1230,
+         3841,  1697,  3809,   475,   981,   804,   313,   613,  1219,  1334,
+         1941,  2888,  2626,  1334,  2689,   804,   475,   981,   313,   804,
+         1219,   206,   651,   429,   605,   101,   413,  1965,   627,   814,
+          627,   814,  4713,  3675,  2789,  3769,  1283,  9540,  1251,   313,
+          685,  2497,   395,   845,  3462,  2713,  5077,   388,   340,   297,
+          388,  9641,    46,    61,   822,    61,   602,  2270,   719,  3274,
+         2556,     2,    61,    24,    96,    61,   423,    61,   475,  3460,
+         2693,  3460,  3044,  2556,  3988,   992,  1603,   122,  2704,  2787,
+         3135,   550,   516,    44,  1551,  2702,   206,  1762,    31,   474,
+          481,   198,   474,  2704,  2393,  1025, 20033,    72,  1334,   224,
+         3460,  4774,  2050,  6485, 15953,   422,  1488,  2346,  4470,  2548,
+          571,  1770,  1324,   453,   837,   123,   638,  4759,  3552,  6825,
+         2740,  5347,  5390,  1169,  4100,  1230,   804,  3588,  2449,   185,
+           16,   643,   274,   686, 18092, 10457,   609,  2969,  3480,  2969,
+           37,   609,  2969,   609,    22,  8312,   257,    37,    22,  5361,
+         7186,  7380,  6052,  7256, 13404,   557,   160,  1664,  4375,  3484,
+          685,   651,   445,   429,   445,   774,   651,  4284,  1738,  3855,
+          225,   210,  7245,  6731,   771,  1987,   157,   804,   442,   804,
+         2091,  1169,  2091,  1169,  3484,  4375,  3484,   445,   429,   430,
+          423,  1697,  1393,  1798,  2753,   206,  1153, 21588,  2189,  3704,
+         4463,  5816,  7557,   507,  1797,   814,   627,  2016,   855,  1889,
+          224,   597,    37,   597, 16533, 10255,     2,  2651,  4028,  2556,
+         2788,  6379,  1830,  1070,    30,   312,   445,  1085,  1569,  2222,
+         2664,  1950,  2098,  1672,   224,  4336,   651,   997,  1157,   830,
+          800,   597,  1085, 12430,   415, 12430,   651,   800,  1756,  1378,
+         1413,   633,  2034,  7932,  6034,  6360,  4662,   576,  4662,   576,
+         4662], device=&#39;cuda:0&#39;)
 </pre></div>
 </div>
 </div>
 </div>
-</div>
-<div class="section" id="export-the-preprocessing-workflow-and-model-in-the-format-required-by-triton-server">
-<h4>Export the preprocessing workflow and model in the format required by Triton server:<a class="headerlink" href="#export-the-preprocessing-workflow-and-model-in-the-format-required-by-triton-server" title="Permalink to this headline"></a></h4>
-<p>NVTabular’s <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function enables us to create model files and config files to be served to Triton Inference Server.</p>
+<p>And here are the offsets</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">x_cat_names</span><span class="p">,</span> <span class="n">x_cont_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;item_id-list&#39;</span><span class="p">,</span> <span class="s1">&#39;category-list&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;product_recency_days_log_norm-list&#39;</span><span class="p">,</span> <span class="s1">&#39;et_dayofweek_sin-list&#39;</span><span class="p">]</span>
-
-<span class="n">sparse_features_max</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">fname</span><span class="p">:</span> <span class="mi">20</span>
-    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span>
-<span class="p">}</span>
-
-<span class="n">sparse_features_max</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model_input_dict</span><span class="p">[</span><span class="s1">&#39;item_id-list__offsets&#39;</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;item_id-list&#39;: 20,
- &#39;category-list&#39;: 20,
- &#39;product_recency_days_log_norm-list&#39;: 20,
- &#39;et_dayofweek_sin-list&#39;: 20}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>tensor([  0,  12,  14,  16,  19,  21,  23,  26,  32,  35,  45,  47,  49,  51,
+         56,  59,  61,  66,  69,  72,  76,  78,  80,  83,  87,  91,  94,  96,
+         98, 100, 102, 104, 107, 111, 113, 122, 124, 128, 130, 133, 136, 141,
+        143, 161, 164, 167, 172, 176, 180, 182, 184, 191, 193, 196, 199, 201,
+        209, 214, 234, 237, 243, 245, 265, 267, 274, 276, 281, 289, 295, 298,
+        300, 305, 307, 312, 314, 317, 320, 324, 327, 331, 335, 337, 339, 343,
+        345, 348, 351, 354, 356, 360, 362, 364, 367, 374, 376, 381, 383, 386,
+        388, 396, 401], device=&#39;cuda:0&#39;, dtype=torch.int32)
+</pre></div>
+</div>
+</div>
+</div>
+<p>Let’s create a folder that we can store the exported models and the config files.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">shutil</span>
+<span class="n">ens_model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ens_model_path&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/models&quot;</span><span class="p">)</span>
+<span class="c1"># Make sure we have a clean stats space for Dask</span>
+<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">):</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nvtabular.inference.triton</span> <span class="kn">import</span> <span class="n">export_pytorch_ensemble</span>
-<span class="kn">from</span> <span class="nn">nvtabular.workflow</span> <span class="kn">import</span> <span class="n">Workflow</span>
-<span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;workflow_etl&quot;</span><span class="p">))</span>
-<span class="n">model_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;models&quot;</span><span class="p">)</span>
-
-<span class="n">export_pytorch_ensemble</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">workflow</span><span class="p">,</span>
-    <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_features_max</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">,</span>
-    <span class="n">model_path</span><span class="o">=</span> <span class="n">model_path</span><span class="p">,</span>
-    <span class="n">label_columns</span> <span class="o">=</span><span class="p">[],</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">workflow</span> <span class="o">=</span> <span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;workflow_etl&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">TransformWorkflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
 <span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column session_id, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None),))). Overriding dtype in NVTabular workflow.
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
   warnings.warn(
-/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int32 for column item_id-count, but workflow  is producing type DType(name=&#39;int32&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None),))). Overriding dtype in NVTabular workflow.
+</pre></div>
+</div>
+</div>
+</div>
+<p>The last step is to create the ensemble artifacts that Triton Inference Server can consume. To make these artifacts, we import the Ensemble class. The class is responsible for interpreting the graph and exporting the correct files for the server.</p>
+<p>When we create an <code class="docutils literal notranslate"><span class="pre">Ensemble</span></code> object we supply the graph and a schema representing the starting input of the graph. The inputs to the ensemble graph are the inputs to the first operator of out graph. After we created the Ensemble we export the graph, supplying an export path for the <code class="docutils literal notranslate"><span class="pre">ensemble.export</span></code> function. This returns an ensemble config which represents the entire inference pipeline and a list of node-specific configs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">ensemble</span> <span class="o">=</span> <span class="n">Ensemble</span><span class="p">(</span><span class="n">torch_op</span><span class="p">,</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">)</span>
+<span class="n">ens_config</span><span class="p">,</span> <span class="n">node_configs</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">ens_model_path</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;session_id&#39;, which is not being used by any downstream operator in the ensemble graph.
   warnings.warn(
-/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column item_id-list, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;item_id-count&#39;, which is not being used by any downstream operator in the ensemble graph.
   warnings.warn(
-/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects float32 for column et_dayofweek_sin-list, but workflow  is producing type DType(name=&#39;float32&#39;, element_type=&lt;ElementType.Float: &#39;float&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects float32 for column product_recency_days_log_norm-list, but workflow  is producing type DType(name=&#39;float32&#39;, element_type=&lt;ElementType.Float: &#39;float&#39;&gt;, element_size=32, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column category-list, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=(Dimension(min=0, max=None), Dimension(min=20, max=20)))). Overriding dtype in NVTabular workflow.
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/nvtabular/inference/triton/ensemble.py:171: UserWarning: PyTorch model expects int64 for column day_index, but workflow  is producing type DType(name=&#39;int64&#39;, element_type=&lt;ElementType.Int: &#39;int&#39;&gt;, element_size=64, element_unit=None, signed=True, shape=Shape(dims=None)). Overriding dtype in NVTabular workflow.
+/usr/local/lib/python3.8/dist-packages/merlin/systems/dag/node.py:100: UserWarning: Operator &#39;TransformWorkflow&#39; is producing the output column &#39;day_index&#39;, which is not being used by any downstream operator in the ensemble graph.
   warnings.warn(
 </pre></div>
 </div>
@@ -692,15 +826,11 @@ Trainer.model is not a `PreTrainedModel`, only saving its state dict.
 <li><p>to deploy saved NVTabular and PyTorch models to Triton Inference Server</p></li>
 <li><p>send requests for predictions and get responses.</p></li>
 </ul>
-<div class="section" id="pull-and-start-inference-container">
-<h3>2.1. Pull and Start Inference Container<a class="headerlink" href="#pull-and-start-inference-container" title="Permalink to this headline"></a></h3>
-<p>At this point, we start the Triton Inference Server (TIS).</p>
-<p><strong>Start triton server</strong><br>
-You can start triton server with the command below. You need to provide correct path of the models folder.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">tritonserver</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">repository</span><span class="o">=&lt;</span><span class="n">path_to_models</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">model</span><span class="o">-</span><span class="n">control</span><span class="o">-</span><span class="n">mode</span><span class="o">=</span><span class="n">explicit</span>
-</pre></div>
-</div>
-<p>Note: The model-repository path for our example is <code class="docutils literal notranslate"><span class="pre">/workspace/data/models/</span></code>. The models have not been loaded yet. Below, we will request the Triton server to load the saved ensemble model.</p>
+<div class="section" id="starting-triton-server">
+<h3>2.1 Starting Triton Server<a class="headerlink" href="#starting-triton-server" title="Permalink to this headline"></a></h3>
+<p>It is time to deploy all the models as an ensemble model to Triton Inference Serve TIS. After we export the ensemble, we are ready to start the TIS. You can start triton server by using the following command on your terminal:</p>
+<p><code class="docutils literal notranslate"><span class="pre">tritonserver</span> <span class="pre">--model-repository=&lt;ensemble_export_path&gt;</span></code></p>
+<p>For the <code class="docutils literal notranslate"><span class="pre">--model-repository</span></code> argument, specify the same path as the export_path that you specified previously in the <code class="docutils literal notranslate"><span class="pre">ensemble.export</span></code> method. This command will launch the server and load all the models to the server. Once all the models are loaded successfully, you should see READY status printed out in the terminal for each loaded model.</p>
 </div>
 <div class="section" id="connect-to-the-triton-inference-server-and-check-if-the-server-is-alive">
 <h3>2.2. Connect to the Triton Inference Server and check if the server is alive<a class="headerlink" href="#connect-to-the-triton-inference-server-and-check-if-the-server-is-alive" title="Permalink to this headline"></a></h3>
@@ -725,96 +855,11 @@ You can start triton server with the command below. You need to provide correct 
 GET /v2/health/live, headers None
 </pre></div>
 </div>
-<div class="output traceback highlight-ipythontb notranslate"><div class="highlight"><pre><span></span><span class="gt">---------------------------------------------------------------------------</span>
-<span class="ne">Empty</span><span class="g g-Whitespace">                                     </span>Traceback (most recent call last)
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/geventhttpclient/connectionpool.py:163,</span> in <span class="ni">ConnectionPool.get_socket</span><span class="nt">(self)</span>
-<span class="g g-Whitespace">    </span><span class="mi">162</span> <span class="k">try</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">163</span>     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_socket_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">block</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">164</span> <span class="k">except</span> <span class="n">gevent</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
-
-<span class="nn">File src/gevent/queue.py:335,</span> in <span class="ni">gevent._gevent_cqueue.Queue.get</span><span class="nt">()</span>
-
-<span class="nn">File src/gevent/queue.py:350,</span> in <span class="ni">gevent._gevent_cqueue.Queue.get</span><span class="nt">()</span>
-
-<span class="nn">File src/gevent/queue.py:319,</span> in <span class="ni">gevent._gevent_cqueue.Queue._Queue__get_or_peek</span><span class="nt">()</span>
-
-<span class="ne">Empty</span>: 
-
-<span class="n">During</span> <span class="n">handling</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">exception</span><span class="p">,</span> <span class="n">another</span> <span class="n">exception</span> <span class="n">occurred</span><span class="p">:</span>
-
-<span class="ne">ConnectionRefusedError</span><span class="g g-Whitespace">                    </span>Traceback (most recent call last)
-<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">16</span><span class="p">],</span> <span class="n">line</span> <span class="mi">7</span>
-<span class="g g-Whitespace">      </span><span class="mi">5</span> <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<span class="g g-Whitespace">      </span><span class="mi">6</span>     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;channel creation failed: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-<span class="ne">----&gt; </span><span class="mi">7</span> <span class="n">triton_client</span><span class="o">.</span><span class="n">is_server_live</span><span class="p">()</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/tritonclient/http/__init__.py:375,</span> in <span class="ni">InferenceServerClient.is_server_live</span><span class="nt">(self, headers, query_params)</span>
-<span class="g g-Whitespace">    </span><span class="mi">351</span><span class="w"> </span><span class="sd">&quot;&quot;&quot;Contact the inference server and get liveness.</span>
-<span class="g g-Whitespace">    </span><span class="mi">352</span><span class="sd"> </span>
-<span class="g g-Whitespace">    </span><span class="mi">353</span><span class="sd"> Parameters</span>
-<span class="sd">   (...)</span>
-<span class="g g-Whitespace">    </span><span class="mi">371</span><span class="sd"> </span>
-<span class="g g-Whitespace">    </span><span class="mi">372</span><span class="sd"> &quot;&quot;&quot;</span>
-<span class="g g-Whitespace">    </span><span class="mi">374</span> <span class="n">request_uri</span> <span class="o">=</span> <span class="s2">&quot;v2/health/live&quot;</span>
-<span class="ne">--&gt; </span><span class="mi">375</span> <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get</span><span class="p">(</span><span class="n">request_uri</span><span class="o">=</span><span class="n">request_uri</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">376</span>                      <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
-<span class="g g-Whitespace">    </span><span class="mi">377</span>                      <span class="n">query_params</span><span class="o">=</span><span class="n">query_params</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">379</span> <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/tritonclient/http/__init__.py:269,</span> in <span class="ni">InferenceServerClient._get</span><span class="nt">(self, request_uri, headers, query_params)</span>
-<span class="g g-Whitespace">    </span><span class="mi">267</span>     <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client_stub</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">request_uri</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">268</span> <span class="k">else</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">269</span>     <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_client_stub</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">request_uri</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">271</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_verbose</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">272</span>     <span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/geventhttpclient/client.py:266,</span> in <span class="ni">HTTPClient.get</span><span class="nt">(self, request_uri, headers)</span>
-<span class="g g-Whitespace">    </span><span class="mi">265</span> <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request_uri</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="p">{}):</span>
-<span class="ne">--&gt; </span><span class="mi">266</span>     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="n">METHOD_GET</span><span class="p">,</span> <span class="n">request_uri</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/geventhttpclient/client.py:226,</span> in <span class="ni">HTTPClient.request</span><span class="nt">(self, method, request_uri, body, headers)</span>
-<span class="g g-Whitespace">    </span><span class="mi">223</span> <span class="n">attempts_left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_pool</span><span class="o">.</span><span class="n">size</span> <span class="o">+</span> <span class="mi">1</span>
-<span class="g g-Whitespace">    </span><span class="mi">225</span> <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">226</span>     <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection_pool</span><span class="o">.</span><span class="n">get_socket</span><span class="p">()</span>
-<span class="g g-Whitespace">    </span><span class="mi">227</span>     <span class="k">try</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">228</span>         <span class="n">_request</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">encode</span><span class="p">()</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/geventhttpclient/connectionpool.py:166,</span> in <span class="ni">ConnectionPool.get_socket</span><span class="nt">(self)</span>
-<span class="g g-Whitespace">    </span><span class="mi">164</span> <span class="k">except</span> <span class="n">gevent</span><span class="o">.</span><span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">165</span>     <span class="k">try</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">166</span>         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_socket</span><span class="p">()</span>
-<span class="g g-Whitespace">    </span><span class="mi">167</span>     <span class="k">except</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">168</span>         <span class="bp">self</span><span class="o">.</span><span class="n">_semaphore</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/geventhttpclient/connectionpool.py:127,</span> in <span class="ni">ConnectionPool._create_socket</span><span class="nt">(self)</span>
-<span class="g g-Whitespace">    </span><span class="mi">124</span>         <span class="k">raise</span>
-<span class="g g-Whitespace">    </span><span class="mi">126</span> <span class="k">if</span> <span class="n">first_error</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">127</span>     <span class="k">raise</span> <span class="n">first_error</span>
-<span class="g g-Whitespace">    </span><span class="mi">128</span> <span class="k">else</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">129</span>     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
-<span class="g g-Whitespace">    </span><span class="mi">130</span>         <span class="s2">&quot;Cannot resolve </span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_port</span><span class="p">))</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/geventhttpclient/connectionpool.py:114,</span> in <span class="ni">ConnectionPool._create_socket</span><span class="nt">(self)</span>
-<span class="g g-Whitespace">    </span><span class="mi">112</span> <span class="k">try</span><span class="p">:</span>
-<span class="g g-Whitespace">    </span><span class="mi">113</span>     <span class="n">sock</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connection_timeout</span><span class="p">)</span>
-<span class="ne">--&gt; </span><span class="mi">114</span>     <span class="n">sock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connect_socket</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">sock_info</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-<span class="g g-Whitespace">    </span><span class="mi">115</span>     <span class="bp">self</span><span class="o">.</span><span class="n">after_connect</span><span class="p">(</span><span class="n">sock</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">116</span>     <span class="n">sock</span><span class="o">.</span><span class="n">settimeout</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network_timeout</span><span class="p">)</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/geventhttpclient/connectionpool.py:136,</span> in <span class="ni">ConnectionPool._connect_socket</span><span class="nt">(self, sock, address)</span>
-<span class="g g-Whitespace">    </span><span class="mi">135</span> <span class="k">def</span> <span class="nf">_connect_socket</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sock</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
-<span class="ne">--&gt; </span><span class="mi">136</span>     <span class="n">sock</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">137</span>     <span class="bp">self</span><span class="o">.</span><span class="n">_setup_proxy</span><span class="p">(</span><span class="n">sock</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">138</span>     <span class="k">return</span> <span class="n">sock</span>
-
-<span class="nn">File /usr/local/lib/python3.8/dist-packages/gevent/_socketcommon.py:607,</span> in <span class="ni">SocketMixin.connect</span><span class="nt">(self, address)</span>
-<span class="g g-Whitespace">    </span><span class="mi">605</span> <span class="n">err</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getsockopt</span><span class="p">(</span><span class="n">__socket__</span><span class="o">.</span><span class="n">SOL_SOCKET</span><span class="p">,</span> <span class="n">__socket__</span><span class="o">.</span><span class="n">SO_ERROR</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">606</span> <span class="k">if</span> <span class="n">err</span><span class="p">:</span>
-<span class="ne">--&gt; </span><span class="mi">607</span>     <span class="k">raise</span> <span class="n">_SocketError</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="n">strerror</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
-<span class="g g-Whitespace">    </span><span class="mi">608</span> <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sock</span><span class="o">.</span><span class="n">connect_ex</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
-<span class="g g-Whitespace">    </span><span class="mi">610</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span> <span class="ow">or</span> <span class="n">result</span> <span class="o">==</span> <span class="n">EISCONN</span><span class="p">:</span>
-
-<span class="ne">ConnectionRefusedError</span>: [Errno 111] Connection refused
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/tritonhttpclient/__init__.py:31: DeprecationWarning: The package `tritonhttpclient` is deprecated and will be removed in a future version. Please use instead `tritonclient.http`
+  warnings.warn(
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>True
 </pre></div>
 </div>
 </div>
@@ -836,17 +881,6 @@ GET /v2/health/live, headers None
 </div>
 </div>
 </div>
-<div class="section" id="load-the-ensemble-model-to-triton">
-<h3>2.4. Load the ensemble model to triton<a class="headerlink" href="#load-the-ensemble-model-to-triton" title="Permalink to this headline"></a></h3>
-<p>The models should be loaded successfully before we send a request to TIS. If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">successfully</span> <span class="pre">loaded</span></code> status next to each model name on your terminal.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-</div>
 <div class="section" id="send-the-request-to-triton-server">
 <h3>2.5. Send the request to triton server<a class="headerlink" href="#send-the-request-to-triton-server" title="Permalink to this headline"></a></h3>
 <div class="cell docutils container">
@@ -855,58 +889,171 @@ GET /v2/health/live, headers None
 </pre></div>
 </div>
 </div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>POST /v2/repository/index, headers None
+
+&lt;HTTPSocketPoolResponse status=200 headers={&#39;content-type&#39;: &#39;application/json&#39;, &#39;content-length&#39;: &#39;188&#39;}&gt;
+bytearray(b&#39;[{&quot;name&quot;:&quot;0_transformworkflowtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;1_predictpytorchtriton&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;},{&quot;name&quot;:&quot;executor_model&quot;,&quot;version&quot;:&quot;1&quot;,&quot;state&quot;:&quot;READY&quot;}]&#39;)
+</pre></div>
+</div>
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[{&#39;name&#39;: &#39;0_transformworkflowtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;1_predictpytorchtriton&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;},
+ {&#39;name&#39;: &#39;executor_model&#39;, &#39;version&#39;: &#39;1&#39;, &#39;state&#39;: &#39;READY&#39;}]
+</pre></div>
+</div>
+</div>
 </div>
 <p>If all models are loaded successfully, you should be seeing <code class="docutils literal notranslate"><span class="pre">READY</span></code> status next to each model.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nvtabular.inference.triton</span> <span class="k">as</span> <span class="nn">nvt_triton</span>
-<span class="kn">import</span> <span class="nn">tritonclient.grpc</span> <span class="k">as</span> <span class="nn">grpcclient</span>
-
-<span class="n">inputs</span> <span class="o">=</span> <span class="n">nvt_triton</span><span class="o">.</span><span class="n">convert_df_to_triton_input</span><span class="p">(</span><span class="n">filtered_batch</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferInput</span><span class="p">)</span>
-
-<span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]</span>
-
-<span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">:</span>
-    <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grpcclient</span><span class="o">.</span><span class="n">InferRequestedOutput</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
-    
-<span class="n">MODEL_NAME_NVT</span> <span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span>
-
-<span class="k">with</span> <span class="n">grpcclient</span><span class="o">.</span><span class="n">InferenceServerClient</span><span class="p">(</span><span class="s2">&quot;localhost:8001&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">client</span><span class="p">:</span>
-    <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">infer</span><span class="p">(</span><span class="n">MODEL_NAME_NVT</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="s1">&#39;:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">as_numpy</span><span class="p">(</span><span class="n">col</span><span class="p">))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">merlin.systems.triton.utils</span> <span class="kn">import</span> <span class="n">send_triton_request</span>
+<span class="n">response</span> <span class="o">=</span> <span class="n">send_triton_request</span><span class="p">(</span><span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">filtered_batch</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">response</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;item_id_scores&#39;: array([[ 7.7149506,  7.3862066,  7.3664827,  7.2885814,  6.8977885,
+         6.853054 ,  6.6473446,  6.5615396,  6.5239835,  6.504697 ,
+         6.4961066,  6.482874 ,  6.478437 ,  6.4518657,  6.403399 ,
+         6.3845167,  6.372211 ,  6.3541226,  6.2738447,  6.2641015],
+       [ 7.8986144,  7.575227 ,  6.9020343,  6.8903823,  6.839163 ,
+         6.833202 ,  6.761392 ,  6.7598944,  6.6728435,  6.6523266,
+         6.640926 ,  6.6118965,  6.470592 ,  6.419156 ,  6.4112453,
+         6.4044685,  6.386283 ,  6.3791957,  6.362708 ,  6.32642  ],
+       [ 3.2538116,  3.1455884,  3.1179721,  3.0379417,  2.9422204,
+         2.9090347,  2.8573742,  2.8552375,  2.8385096,  2.8210163,
+         2.8062954,  2.7926047,  2.7883859,  2.7677355,  2.7579772,
+         2.7548594,  2.7234986,  2.7234783,  2.7092912,  2.7081766],
+       [ 7.1264834,  6.9747195,  6.686076 ,  6.55559  ,  6.554246 ,
+         6.4562297,  6.409179 ,  6.303057 ,  6.1918006,  6.18303  ,
+         6.1193542,  6.107653 ,  6.0896993,  6.0872216,  6.0593266,
+         6.0522294,  5.960239 ,  5.953763 ,  5.9512544,  5.93457  ],
+       [ 8.472156 ,  8.323568 ,  8.279997 ,  8.109349 ,  8.0277195,
+         7.8910418,  7.743165 ,  7.7279477,  7.692122 ,  7.6912303,
+         7.6711187,  7.5660324,  7.5545163,  7.524415 ,  7.4610972,
+         7.424488 ,  7.4123936,  7.411586 ,  7.3956637,  7.334862 ],
+       [10.485718 , 10.375805 , 10.131399 ,  9.950816 ,  9.917899 ,
+         9.840376 ,  9.77128  ,  9.676795 ,  9.599488 ,  9.544931 ,
+         9.512772 ,  9.488843 ,  9.455492 ,  9.438552 ,  9.430434 ,
+         9.37854  ,  9.362637 ,  9.329395 ,  9.303702 ,  9.279214 ],
+       [ 5.836771 ,  5.828289 ,  5.7385616,  5.6870475,  5.5709176,
+         5.5614986,  5.5448956,  5.3459535,  5.344148 ,  5.310749 ,
+         5.2611475,  5.2548814,  5.1640043,  5.1203575,  5.0081887,
+         4.987002 ,  4.976223 ,  4.90389  ,  4.8933997,  4.86463  ],
+       [ 8.174524 ,  7.422059 ,  7.3884916,  7.272735 ,  7.1977425,
+         7.0858173,  6.645329 ,  6.5097084,  6.470001 ,  6.453685 ,
+         6.2901287,  6.1282573,  6.1203957,  6.0265145,  6.0052614,
+         5.9081306,  5.880647 ,  5.78306  ,  5.7507606,  5.7427897],
+       [ 6.7380514,  6.735104 ,  6.6285214,  6.5611916,  6.527247 ,
+         6.4949493,  6.4821672,  6.474738 ,  6.4419727,  6.4345016,
+         6.3947067,  6.352811 ,  6.314824 ,  6.293556 ,  6.288764 ,
+         6.2727513,  6.2707367,  6.2422667,  6.2342215,  6.196748 ],
+       [ 5.6076183,  5.472957 ,  5.412912 ,  5.3116655,  5.177665 ,
+         5.112378 ,  5.085245 ,  4.9710717,  4.940496 ,  4.93859  ,
+         4.8099985,  4.760807 ,  4.7229834,  4.7145324,  4.707185 ,
+         4.667753 ,  4.6421194,  4.630641 ,  4.6156597,  4.5743294],
+       [ 8.147796 ,  7.6630974,  7.5877905,  7.4908724,  7.4732018,
+         7.404136 ,  7.352083 ,  7.3242574,  7.3009863,  7.242015 ,
+         7.1836567,  7.1416435,  7.138858 ,  7.134639 ,  7.111288 ,
+         7.0651016,  7.0538983,  7.0510435,  7.044665 ,  7.035279 ],
+       [ 3.2990756,  3.1885252,  3.1802373,  3.0592136,  3.045468 ,
+         3.0039759,  2.9578297,  2.9415162,  2.93026  ,  2.9297981,
+         2.8965662,  2.8944998,  2.877764 ,  2.8689   ,  2.8668582,
+         2.8634927,  2.78628  ,  2.767284 ,  2.7598662,  2.7465074],
+       [ 8.852634 ,  8.734692 ,  8.606397 ,  8.578839 ,  8.453225 ,
+         8.416724 ,  8.407235 ,  8.343583 ,  8.280216 ,  8.269384 ,
+         8.20807  ,  8.177954 ,  8.15201  ,  8.136789 ,  8.103194 ,
+         7.873078 ,  7.852006 ,  7.849255 ,  7.8436575,  7.7874575],
+       [ 8.121338 ,  7.9475265,  7.9030285,  7.8839293,  7.850343 ,
+         7.8212285,  7.7303505,  7.655741 ,  7.5204306,  7.4822707,
+         7.4198914,  7.3865814,  7.3747654,  7.3459187,  7.3127384,
+         7.2247725,  7.1183944,  7.111621 ,  7.0977235,  7.089139 ],
+       [ 8.760972 ,  8.427143 ,  8.166194 ,  8.004948 ,  7.831641 ,
+         7.8019366,  7.784935 ,  7.6579127,  7.5422807,  7.531015 ,
+         7.48702  ,  7.448603 ,  7.3950186,  7.355933 ,  7.3510966,
+         7.2111845,  7.183003 ,  7.166962 ,  7.1576095,  7.1405106]],
+      dtype=float32), &#39;item_ids&#39;: array([[  127,  1245,  1271,  4074,   161,   532,  3928, 19290, 11874,
+         1446,   346,  9285,  3452,  3334, 10987,   479,  7555,  3206,
+        14633, 13677],
+       [ 2693,  3460, 10401,  2393,  9415,  9285, 14213,  2404, 13750,
+        10987,  8084,   183,  2889,  5110, 16662, 10962,  7865, 14401,
+         4158,  3211],
+       [ 4278,  3225,  5889,   953,  7577,  1420,  4185,  4591,   573,
+        10287,  3514,  7923,  5623,  3269,   873,  2433, 15077,  5110,
+         6357,  3593],
+       [10401,   573,  3211,  2404,  3452,  2763,  4014,   786,  3296,
+         6030,  4380,  7481,  2067, 10962,   183,   809,  4651,  2806,
+         2575,  8084],
+       [10987,  9415,  9285,   479,  7998,  7555,  2475,  2404,  8084,
+         2693,  2661,  1102,   786, 14343,  3460,   161, 13677,  2889,
+         2393,  1600],
+       [ 8084, 13677, 14633, 12754, 14213,  3452, 13821,  2984, 11816,
+         2475,  1600,  4074, 13749,  9285, 17882, 10401, 10673,  1964,
+        11874,  9801],
+       [  224,  1453,  1889,   620,  2556,   520,   741,  1219,   633,
+         2050,  6344,  2651,  2852,  1039,  3841,   375,  2473,  3225,
+         4204,  2980],
+       [  620,   633,  1889,  1625,  1453,  1219,  4962,  6344,   224,
+         2034,  1413,  2980,   741,  1908,   597,  1085,  4770,  2305,
+         1647,  1334],
+       [  573, 14505,  3365,  9020,  5932,  7470,  7055,  6344, 10962,
+        11937,  6488, 13821, 19263, 14213,   633,  8553, 10123, 10401,
+         1453, 15439],
+       [15148, 13277,  1381, 24893, 11689, 37268,  7454,  1547,  2305,
+        30765, 46450, 18630,  8747,  1085,  1889, 25487,  7506,   620,
+        14220,  8291],
+       [19263, 13821, 15289, 11874,  8058, 17882,  7159, 12754,  6473,
+        14213, 16233,   573,  3452, 12059,  1600,  8084, 10401, 13749,
+        15439,  9801],
+       [ 8813,  1889,   464,  1855,   520,   127,   185,  4204,   637,
+           31,   784,  2789,  4713,  6461, 11874,   840,   177,  5224,
+         5818,  6473],
+       [ 7865,  5932,  7055, 14213,  9020,  4541,  8084,  6488,  8553,
+        14505,  6473, 10962,  4204,  4136, 16233, 13821, 10401,  9459,
+         9801, 15439],
+       [10401,  6488,  5932,  7865, 10962, 14213,  8553,  8084,  9020,
+          573,  4204, 13821,  3175, 15439,  4136, 10123, 11874,  3452,
+        17882,  9236],
+       [ 2693,  3460, 14213,  7865,  5932,  6488,  4204,  8084, 10962,
+         8553,  1219,  9020,  4541, 13750,  9236,  1453,  4136,  2980,
+        10401,  2651]])}
 </pre></div>
 </div>
 </div>
 </div>
-<ul class="simple">
-<li><p>Visualise top-k predictions</p></li>
-</ul>
+<p>The response contains scores (logits) for each of the returned items and the returned it ids.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">visualize_response</span>
-<span class="n">visualize_response</span><span class="p">(</span><span class="n">filtered_batch</span><span class="p">,</span> <span class="n">response</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">session_col</span><span class="o">=</span><span class="s1">&#39;session_id&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>dict_keys([&#39;item_id_scores&#39;, &#39;item_ids&#39;])
 </pre></div>
 </div>
 </div>
 </div>
-<p>As you noticed, we first got prediction results (logits) from the trained model head, and then by using a handy util function <code class="docutils literal notranslate"><span class="pre">visualize_response</span></code> we extracted top-k encoded item-ids from logits. Basically, we generated recommended items for a given session.</p>
+<p>Just as we requested by setting the <code class="docutils literal notranslate"><span class="pre">top_k</span></code> parameter, only 20 predictions are returned.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;item_ids&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>(15, 20)
+</pre></div>
+</div>
+</div>
+</div>
 <p>This is the end of the tutorial. You successfully</p>
 <ul class="simple">
 <li><p>performed feature engineering with NVTabular</p></li>
 <li><p>trained transformer architecture based session-based recommendation models with Transformers4Rec</p></li>
 <li><p>deployed a trained model to Triton Inference Server, sent request and got responses from the server.</p></li>
 </ul>
-<p><strong>Unload models</strong></p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">)</span>
-<span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_nvt&quot;</span><span class="p">)</span>
-<span class="n">triton_client</span><span class="o">.</span><span class="n">unload_model</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;t4r_pytorch_pt&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
 </div>
 </div>
 <div class="section" id="references">

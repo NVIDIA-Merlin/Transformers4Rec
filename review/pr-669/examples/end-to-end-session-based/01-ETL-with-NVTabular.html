@@ -302,12 +302,12 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   index  session_id  item_id  category   timestamp  itemid_ts_first
-0   9242       71141       52        13  1396528901       1396312106
-1   1480       71141       53        13  1396528906       1396311111
-2  17292       71141       40        10  1396528907       1396310969
-3  13607       71141      115        27  1396529076       1396330058
-4  38231       71142       11         3  1396354133       1396311214
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id   timestamp    item_id  category  itemid_ts_first
+0        4993  1396727816  214835285         0       1396332436
+1        4993  1396727863  214530703         0       1396339114
+2        4993  1396727898  214530705         0       1396330224
+3        4993  1396728063  214835713         0       1396327474
+4        4993  1396730097  214512611         0       1396328044
 </pre></div>
 </div>
 </div>
@@ -476,7 +476,7 @@ Count after removed in-session repeated interactions: 39451
 
 
 <span class="n">groupby_features_list</span> <span class="o">=</span>  <span class="n">item_feat</span> <span class="o">+</span> <span class="n">cont_feats</span> <span class="o">+</span> <span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;category-list&#39;</span><span class="p">]</span>
-<span class="n">groupby_features_truncated</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">groupby_features_truncated</span> <span class="o">=</span> <span class="n">groupby_features_list</span> <span class="o">&gt;&gt;</span> <span class="n">nvt</span><span class="o">.</span><span class="n">ops</span><span class="o">.</span><span class="n">ListSlice</span><span class="p">(</span><span class="o">-</span><span class="n">SESSIONS_MAX_LENGTH</span><span class="p">)</span>
 
 <span class="c1"># Calculate session day index based on &#39;event_time_dt-first&#39; column</span>
 <span class="n">day_index</span> <span class="o">=</span> <span class="p">((</span><span class="n">groupby_features</span><span class="p">[</span><span class="s1">&#39;event_time_dt-first&#39;</span><span class="p">])</span>  <span class="o">&gt;&gt;</span> 
@@ -610,10 +610,10 @@ Count after removed in-session repeated interactions: 39451
     <tr>
       <th>2</th>
       <td>item_id-list</td>
-      <td>(Tags.LIST, Tags.CATEGORICAL, Tags.ITEM_ID, Ta...</td>
+      <td>(Tags.CATEGORICAL, Tags.ITEM_ID, Tags.ITEM, Ta...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
@@ -622,9 +622,9 @@ Count after removed in-session repeated interactions: 39451
       <td>0.0</td>
       <td>388.0</td>
       <td>item_id</td>
-      <td>389.0</td>
-      <td>45.0</td>
-      <td>20.0</td>
+      <td>52741.0</td>
+      <td>512.0</td>
+      <td>0.0</td>
       <td>20.0</td>
     </tr>
     <tr>
@@ -633,7 +633,7 @@ Count after removed in-session repeated interactions: 39451
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -644,7 +644,7 @@ Count after removed in-session repeated interactions: 39451
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>20.0</td>
+      <td>0.0</td>
       <td>20.0</td>
     </tr>
     <tr>
@@ -653,7 +653,7 @@ Count after removed in-session repeated interactions: 39451
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
       <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
@@ -664,7 +664,7 @@ Count after removed in-session repeated interactions: 39451
       <td>NaN</td>
       <td>NaN</td>
       <td>NaN</td>
-      <td>20.0</td>
+      <td>0.0</td>
       <td>20.0</td>
     </tr>
     <tr>
@@ -673,7 +673,7 @@ Count after removed in-session repeated interactions: 39451
       <td>(Tags.CATEGORICAL, Tags.LIST)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
-      <td>False</td>
+      <td>True</td>
       <td>NaN</td>
       <td>0.0</td>
       <td>0.0</td>
@@ -682,9 +682,9 @@ Count after removed in-session repeated interactions: 39451
       <td>0.0</td>
       <td>123.0</td>
       <td>category</td>
-      <td>124.0</td>
-      <td>24.0</td>
-      <td>20.0</td>
+      <td>336.0</td>
+      <td>42.0</td>
+      <td>0.0</td>
       <td>20.0</td>
     </tr>
     <tr>
@@ -751,25 +751,25 @@ Count after removed in-session repeated interactions: 39451
 1       70003              4   
 2       70005              5   
 
-                                        item_id-list  \
-0  [4, 14, 19, 40, 59, 0, 0, 0, 0, 0, 0, 0, 0, 0,...   
-1  [31, 64, 17, 30, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...   
-2  [15, 21, 10, 12, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0...   
+                                              item_id-list  \
+6606147  [604, 878, 742, 90, 4777, 1583, 3446, 8083, 34...   
+6606148                                       [184, 12288]   
+6606149                                       [7299, 1953]   
 
-                               et_dayofweek_sin-list  \
-0  [-0.9749281, -0.9749281, -0.9749281, -0.974928...   
-1  [0.43388295, 0.43388295, 0.43388295, 0.4338829...   
-2  [-0.43388462, -0.43388462, -0.43388462, -0.433...   
+                                     et_dayofweek_sin-list  \
+6606147  [-0.43388462, -0.43388462, -0.43388462, -0.433...   
+6606148                         [-0.43388462, -0.43388462]   
+6606149                             [-0.781831, -0.781831]   
 
-                  product_recency_days_log_norm-list  \
-0  [1.1948358, 1.191799, 1.1963754, 1.1943619, 1....   
-1  [0.20296364, 0.22679561, 0.22158106, 0.2230251...   
-2  [0.8622109, 0.86075187, 0.8641331, 0.86551183,...   
+                        product_recency_days_log_norm-list  \
+6606147  [1.5241553, 1.5238751, 1.5239341, 1.5241631, 1...   
+6606148                             [-0.5330064, 1.521494]   
+6606149                             [1.5338266, 1.5355074]   
 
-                                       category-list  day_index  
-0  [2, 4, 5, 9, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...          4  
-1  [8, 16, 5, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...          2  
-2  [6, 7, 3, 6, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ...          3  
+                                category-list  day_index  
+6606147  [3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3]        178  
+6606148                                [2, 2]        178  
+6606149                                [7, 7]        180  
 </pre></div>
 </div>
 </div>
@@ -786,7 +786,7 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████| 4/4 [00:00&lt;00:00,  7.46it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00&lt;00:00,  5.76it/s]
 </pre></div>
 </div>
 </div>
@@ -800,7 +800,7 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>552
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>570
 </pre></div>
 </div>
 </div>
