@@ -284,8 +284,8 @@
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Count with in-session repeated interactions: 40000
-Count after removed in-session repeated interactions: 39451
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Count with in-session repeated interactions: 33003944
+Count after removed in-session repeated interactions: 28971543
 </pre></div>
 </div>
 </div>
@@ -303,11 +303,11 @@ Count after removed in-session repeated interactions: 39451
 </div>
 <div class="cell_output docutils container">
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id   timestamp    item_id  category  itemid_ts_first
-0        4993  1396727816  214835285         0       1396332436
-1        4993  1396727863  214530703         0       1396339114
-2        4993  1396727898  214530705         0       1396330224
-3        4993  1396728063  214835713         0       1396327474
-4        4993  1396730097  214512611         0       1396328044
+0        7401  1396439960  214826816         0       1396321828
+1        7402  1396780751  214613743         0       1396329089
+2        7402  1396780780  214827011         0       1396735848
+3        7402  1396780912  214821388         0       1396330458
+4        7402  1396780991  214827011         0       1396735848
 </pre></div>
 </div>
 </div>
@@ -315,7 +315,9 @@ Count after removed in-session repeated interactions: 39451
 <p>Let’s save the interactions_merged_df to disk to be able to use in the inference step.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">interactions_merged_df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_FOLDER</span><span class="p">,</span> <span class="s1">&#39;interactions_merged_df.parquet&#39;</span><span class="p">))</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">DATA_FOLDER</span><span class="p">)</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">DATA_FOLDER</span><span class="p">)</span>
+<span class="n">interactions_merged_df</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DATA_FOLDER</span><span class="p">,</span> <span class="s1">&#39;interactions_merged_df.parquet&#39;</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -328,7 +330,7 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>387
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>52739
 </pre></div>
 </div>
 </div>
@@ -342,7 +344,7 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>518
 </pre></div>
 </div>
 </div>
@@ -512,14 +514,6 @@ Count after removed in-session repeated interactions: 39451
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
-</pre></div>
-</div>
-</div>
 </div>
 <p>Let’s print the head of our preprocessed dataset. You can notice that now each example (row) is a session and the sequential features with respect to user interactions were converted to lists with matching length.</p>
 <div class="cell docutils container">
@@ -600,10 +594,10 @@ Count after removed in-session repeated interactions: 39451
       <td>1.0</td>
       <td>.//categories/unique.item_id.parquet</td>
       <td>0.0</td>
-      <td>388.0</td>
+      <td>52740.0</td>
       <td>item_id</td>
-      <td>389.0</td>
-      <td>45.0</td>
+      <td>52741.0</td>
+      <td>512.0</td>
       <td>NaN</td>
       <td>NaN</td>
     </tr>
@@ -620,7 +614,7 @@ Count after removed in-session repeated interactions: 39451
       <td>1.0</td>
       <td>.//categories/unique.item_id.parquet</td>
       <td>0.0</td>
-      <td>388.0</td>
+      <td>52740.0</td>
       <td>item_id</td>
       <td>52741.0</td>
       <td>512.0</td>
@@ -631,7 +625,7 @@ Count after removed in-session repeated interactions: 39451
       <th>3</th>
       <td>et_dayofweek_sin-list</td>
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>DType(name='float64', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
       <td>NaN</td>
@@ -680,7 +674,7 @@ Count after removed in-session repeated interactions: 39451
       <td>1.0</td>
       <td>.//categories/unique.category.parquet</td>
       <td>0.0</td>
-      <td>123.0</td>
+      <td>335.0</td>
       <td>category</td>
       <td>336.0</td>
       <td>42.0</td>
@@ -746,10 +740,10 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>   session_id  item_id-count  \
-0       70001              5   
-1       70003              4   
-2       70005              5   
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>         session_id  item_id-count  \
+6606147    11255549             12   
+6606148    11255552              2   
+6606149    11255553              2   
 
                                               item_id-list  \
 6606147  [604, 878, 742, 90, 4777, 1583, 3446, 8083, 34...   
@@ -757,9 +751,9 @@ Count after removed in-session repeated interactions: 39451
 6606149                                       [7299, 1953]   
 
                                      et_dayofweek_sin-list  \
-6606147  [-0.43388462, -0.43388462, -0.43388462, -0.433...   
-6606148                         [-0.43388462, -0.43388462]   
-6606149                             [-0.781831, -0.781831]   
+6606147  [-0.43388454782514785, -0.43388454782514785, -...   
+6606148       [-0.43388454782514785, -0.43388454782514785]   
+6606149         [-0.7818309228245777, -0.7818309228245777]   
 
                         product_recency_days_log_norm-list  \
 6606147  [1.5241553, 1.5238751, 1.5239341, 1.5241631, 1...   
@@ -786,7 +780,7 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|███████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 5/5 [00:00&lt;00:00,  5.76it/s]
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Creating time-based splits: 100%|██████████| 5/5 [00:02&lt;00:00,  2.06it/s]
 </pre></div>
 </div>
 </div>
@@ -800,7 +794,7 @@ Count after removed in-session repeated interactions: 39451
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>570
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>583
 </pre></div>
 </div>
 </div>

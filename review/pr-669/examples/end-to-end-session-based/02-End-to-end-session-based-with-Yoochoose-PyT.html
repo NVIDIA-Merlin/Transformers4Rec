@@ -139,6 +139,7 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">]</span><span class="o">=</span><span class="s2">&quot;0&quot;</span>
 <span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data&quot;</span><span class="p">)</span>
 <span class="n">OUTPUT_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OUTPUT_DIR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">INPUT_DATA_DIR</span><span class="si">}</span><span class="s2">/preproc_sessions_by_day&quot;</span><span class="p">)</span>
 </pre></div>
@@ -160,8 +161,6 @@
   warn(f&quot;Tensorflow dtype mappings did not load successfully due to an error: {exc.msg}&quot;)
 /usr/local/lib/python3.8/dist-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
   from .autonotebook import tqdm as notebook_tqdm
-/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
 </pre></div>
 </div>
 </div>
@@ -225,7 +224,7 @@
     <tr>
       <th>0</th>
       <td>item_id-list</td>
-      <td>(Tags.ITEM_ID, Tags.CATEGORICAL, Tags.ID, Tags...</td>
+      <td>(Tags.CATEGORICAL, Tags.ID, Tags.ITEM_ID, Tags...</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -234,10 +233,10 @@
       <td>0.0</td>
       <td>1.0</td>
       <td>.//categories/unique.item_id.parquet</td>
-      <td>222.0</td>
-      <td>33.0</td>
+      <td>52741.0</td>
+      <td>512.0</td>
       <td>0.0</td>
-      <td>221.0</td>
+      <td>52740.0</td>
       <td>item_id</td>
       <td>0</td>
       <td>20</td>
@@ -245,7 +244,7 @@
     <tr>
       <th>1</th>
       <td>category-list</td>
-      <td>(Tags.CATEGORICAL, Tags.LIST)</td>
+      <td>(Tags.LIST, Tags.CATEGORICAL)</td>
       <td>DType(name='int64', element_type=&lt;ElementType....</td>
       <td>True</td>
       <td>True</td>
@@ -254,10 +253,10 @@
       <td>0.0</td>
       <td>1.0</td>
       <td>.//categories/unique.category.parquet</td>
-      <td>124.0</td>
-      <td>24.0</td>
+      <td>336.0</td>
+      <td>42.0</td>
       <td>0.0</td>
-      <td>123.0</td>
+      <td>335.0</td>
       <td>category</td>
       <td>0</td>
       <td>20</td>
@@ -286,7 +285,7 @@
       <th>3</th>
       <td>et_dayofweek_sin-list</td>
       <td>(Tags.LIST, Tags.CONTINUOUS)</td>
-      <td>DType(name='float32', element_type=&lt;ElementTyp...</td>
+      <td>DType(name='float64', element_type=&lt;ElementTyp...</td>
       <td>True</td>
       <td>True</td>
       <td>NaN</td>
@@ -368,14 +367,16 @@
 <p>An additional argument <code class="docutils literal notranslate"><span class="pre">data_loader_engine</span></code> is defined to automatically load the features needed for training using the schema. The default value is <code class="docutils literal notranslate"><span class="pre">merlin</span></code> for optimized GPU-based data-loading.  Optionally a <code class="docutils literal notranslate"><span class="pre">PyarrowDataLoader</span></code> (<code class="docutils literal notranslate"><span class="pre">pyarrow</span></code>) can also be used as a basic option, but it is slower and works only for small datasets, as the full data is loaded to CPU memory.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">training_args</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">T4RecTrainingArguments</span><span class="p">(</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">BATCH_SIZE_TRAIN</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;BATCH_SIZE_TRAIN&quot;</span><span class="p">,</span> <span class="s2">&quot;512&quot;</span><span class="p">))</span>
+<span class="n">BATCH_SIZE_VALID</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;BATCH_SIZE_VALID&quot;</span><span class="p">,</span> <span class="s2">&quot;256&quot;</span><span class="p">))</span>
+<span class="n">training_args</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">T4RecTrainingArguments</span><span class="p">(</span>
             <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./tmp&quot;</span><span class="p">,</span>
             <span class="n">max_sequence_length</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
             <span class="n">data_loader_engine</span><span class="o">=</span><span class="s1">&#39;merlin&#39;</span><span class="p">,</span>
             <span class="n">num_train_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
             <span class="n">dataloader_drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-            <span class="n">per_device_train_batch_size</span> <span class="o">=</span> <span class="mi">384</span><span class="p">,</span>
-            <span class="n">per_device_eval_batch_size</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
+            <span class="n">per_device_train_batch_size</span> <span class="o">=</span> <span class="n">BATCH_SIZE_TRAIN</span><span class="p">,</span>
+            <span class="n">per_device_eval_batch_size</span> <span class="o">=</span> <span class="n">BATCH_SIZE_VALID</span><span class="p">,</span>
             <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.0005</span><span class="p">,</span>
             <span class="n">fp16</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="n">report_to</span> <span class="o">=</span> <span class="p">[],</span>
@@ -412,30 +413,30 @@
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec.torch.utils.examples_utils</span> <span class="kn">import</span> <span class="n">fit_and_evaluate</span>
-<span class="n">start_time_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;START_TIME_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">))</span>
-<span class="n">end_time_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;END_TIME_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">))</span>
-<span class="n">OT_results</span> <span class="o">=</span> <span class="n">fit_and_evaluate</span><span class="p">(</span><span class="n">recsys_trainer</span><span class="p">,</span> <span class="n">start_time_index</span><span class="p">,</span> <span class="n">end_time_index</span><span class="p">,</span> <span class="n">input_dir</span><span class="o">=</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
+<span class="n">start_time_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;START_TIME_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;178&quot;</span><span class="p">))</span>
+<span class="n">end_time_idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;END_TIME_INDEX&quot;</span><span class="p">,</span> <span class="s2">&quot;180&quot;</span><span class="p">))</span>
+<span class="n">OT_results</span> <span class="o">=</span> <span class="n">fit_and_evaluate</span><span class="p">(</span><span class="n">recsys_trainer</span><span class="p">,</span> <span class="n">start_time_index</span><span class="o">=</span><span class="n">start_time_idx</span><span class="p">,</span> <span class="n">end_time_index</span><span class="o">=</span><span class="n">end_time_idx</span><span class="p">,</span> <span class="n">input_dir</span><span class="o">=</span><span class="n">OUTPUT_DIR</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 384
-  Num Epochs = 10
-  Instantaneous batch size per device = 384
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
-  Gradient Accumulation steps = 1
-  Total optimization steps = 750
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Launch training for day 178: *****
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Launch training for day 178: *****
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
+  Num examples = 28672
+  Num Epochs = 10
+  Instantaneous batch size per device = 512
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 512
+  Gradient Accumulation steps = 1
+  Total optimization steps = 560
 </pre></div>
 </div>
 <div class="output text_html">
     <div>
 
-      <progress value='750' max='750' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [750/750 00:20, Epoch 10/10]
+      <progress value='560' max='560' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [560/560 00:27, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -447,15 +448,11 @@
   <tbody>
     <tr>
       <td>200</td>
-      <td>7.681100</td>
+      <td>7.605200</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.656800</td>
-    </tr>
-    <tr>
-      <td>600</td>
-      <td>6.372000</td>
+      <td>6.602500</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
@@ -468,35 +465,35 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div class="output text_html">
 <div>
 
-  <progress value='14' max='6' style='width:300px; height:20px; vertical-align: middle;'></progress>
-  [6/6 00:27]
+  <progress value='25' max='11' style='width:300px; height:20px; vertical-align: middle;'></progress>
+  [11/11 00:39]
 </div>
 </div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Running training *****
-  Num examples = 384
+  Num examples = 20480
   Num Epochs = 10
-  Instantaneous batch size per device = 384
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Instantaneous batch size per device = 512
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 512
   Gradient Accumulation steps = 1
-  Total optimization steps = 10
+  Total optimization steps = 400
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 2:*****
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 179:*****
 
- eval_/next-item/avg_precision@10 = 0.08119537681341171
- eval_/next-item/avg_precision@20 = 0.0857219472527504
- eval_/next-item/ndcg@10 = 0.11199340969324112
- eval_/next-item/ndcg@20 = 0.12857995927333832
- eval_/next-item/recall@10 = 0.20809248089790344
- eval_/next-item/recall@20 = 0.27398842573165894
+ eval_/next-item/avg_precision@10 = 0.0757594034075737
+ eval_/next-item/avg_precision@20 = 0.0797770544886589
+ eval_/next-item/ndcg@10 = 0.10137920826673508
+ eval_/next-item/ndcg@20 = 0.11657412350177765
+ eval_/next-item/recall@10 = 0.18188825249671936
+ eval_/next-item/recall@20 = 0.24238921701908112
 
-***** Launch training for day 2: *****
+***** Launch training for day 179: *****
 </pre></div>
 </div>
 <div class="output text_html">
     <div>
 
-      <progress value='540' max='540' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [540/540 00:14, Epoch 10/10]
+      <progress value='400' max='400' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [400/400 00:21, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -508,46 +505,42 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.805900</td>
+      <td>6.859300</td>
     </tr>
     <tr>
       <td>400</td>
-      <td>6.250300</td>
+      <td>6.292800</td>
     </tr>
   </tbody>
-</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Saving model checkpoint to ./tmp/checkpoint-500
-Trainer.model is not a `PreTrainedModel`, only saving its state dict.
-
-
-Training completed. Do not forget to share your model on huggingface.co/models =)
+</table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 
 
 ***** Running training *****
-  Num examples = 384
+  Num examples = 16896
   Num Epochs = 10
-  Instantaneous batch size per device = 384
-  Total train batch size (w. parallel, distributed &amp; accumulation) = 384
+  Instantaneous batch size per device = 512
+  Total train batch size (w. parallel, distributed &amp; accumulation) = 512
   Gradient Accumulation steps = 1
-  Total optimization steps = 10
+  Total optimization steps = 330
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 3:*****
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 180:*****
 
- eval_/next-item/avg_precision@10 = 0.06664632260799408
- eval_/next-item/avg_precision@20 = 0.07125943899154663
- eval_/next-item/ndcg@10 = 0.09318044036626816
- eval_/next-item/ndcg@20 = 0.110211081802845
- eval_/next-item/recall@10 = 0.17855477333068848
- eval_/next-item/recall@20 = 0.24568764865398407
+ eval_/next-item/avg_precision@10 = 0.060966815799474716
+ eval_/next-item/avg_precision@20 = 0.06490156799554825
+ eval_/next-item/ndcg@10 = 0.08667513728141785
+ eval_/next-item/ndcg@20 = 0.10156706720590591
+ eval_/next-item/recall@10 = 0.16969697177410126
+ eval_/next-item/recall@20 = 0.22890442609786987
 
-***** Launch training for day 3: *****
+***** Launch training for day 180: *****
 </pre></div>
 </div>
 <div class="output text_html">
     <div>
 
-      <progress value='440' max='440' style='width:300px; height:20px; vertical-align: middle;'></progress>
-      [440/440 00:12, Epoch 10/10]
+      <progress value='330' max='330' style='width:300px; height:20px; vertical-align: middle;'></progress>
+      [330/330 00:15, Epoch 10/10]
     </div>
     <table border="1" class="dataframe">
   <thead>
@@ -559,24 +552,20 @@ Training completed. Do not forget to share your model on huggingface.co/models =
   <tbody>
     <tr>
       <td>200</td>
-      <td>6.608300</td>
-    </tr>
-    <tr>
-      <td>400</td>
-      <td>6.030500</td>
+      <td>6.683600</td>
     </tr>
   </tbody>
 </table><p></div><div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Training completed. Do not forget to share your model on huggingface.co/models =)
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 4:*****
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>***** Evaluation results for day 181:*****
 
- eval_/next-item/avg_precision@10 = 0.13680869340896606
- eval_/next-item/avg_precision@20 = 0.14374792575836182
- eval_/next-item/ndcg@10 = 0.18158714473247528
- eval_/next-item/ndcg@20 = 0.2070869356393814
- eval_/next-item/recall@10 = 0.3181818127632141
- eval_/next-item/recall@20 = 0.4202226400375366
+ eval_/next-item/avg_precision@10 = 0.13838382065296173
+ eval_/next-item/avg_precision@20 = 0.14591096341609955
+ eval_/next-item/ndcg@10 = 0.1802971363067627
+ eval_/next-item/ndcg@20 = 0.20971354842185974
+ eval_/next-item/recall@10 = 0.3163265287876129
+ eval_/next-item/recall@20 = 0.4313543736934662
 </pre></div>
 </div>
 </div>
@@ -592,24 +581,24 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.08119537681341171,
-  0.06664632260799408,
-  0.13680869340896606],
- &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.0857219472527504,
-  0.07125943899154663,
-  0.14374792575836182],
- &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.11199340969324112,
-  0.09318044036626816,
-  0.18158714473247528],
- &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.12857995927333832,
-  0.110211081802845,
-  0.2070869356393814],
- &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.20809248089790344,
-  0.17855477333068848,
-  0.3181818127632141],
- &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.27398842573165894,
-  0.24568764865398407,
-  0.4202226400375366]}
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;indexed_by_time_eval_/next-item/avg_precision@10&#39;: [0.0757594034075737,
+  0.060966815799474716,
+  0.13838382065296173],
+ &#39;indexed_by_time_eval_/next-item/avg_precision@20&#39;: [0.0797770544886589,
+  0.06490156799554825,
+  0.14591096341609955],
+ &#39;indexed_by_time_eval_/next-item/ndcg@10&#39;: [0.10137920826673508,
+  0.08667513728141785,
+  0.1802971363067627],
+ &#39;indexed_by_time_eval_/next-item/ndcg@20&#39;: [0.11657412350177765,
+  0.10156706720590591,
+  0.20971354842185974],
+ &#39;indexed_by_time_eval_/next-item/recall@10&#39;: [0.18188825249671936,
+  0.16969697177410126,
+  0.3163265287876129],
+ &#39;indexed_by_time_eval_/next-item/recall@20&#39;: [0.24238921701908112,
+  0.22890442609786987,
+  0.4313543736934662]}
 </pre></div>
 </div>
 </div>
@@ -625,12 +614,12 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09488346427679062
- indexed_by_time_eval_/next-item/avg_precision@20 = 0.10024310400088628
- indexed_by_time_eval_/next-item/ndcg@10 = 0.12892033159732819
- indexed_by_time_eval_/next-item/ndcg@20 = 0.14862599223852158
- indexed_by_time_eval_/next-item/recall@10 = 0.23494302233060202
- indexed_by_time_eval_/next-item/recall@20 = 0.3132995714743932
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span> indexed_by_time_eval_/next-item/avg_precision@10 = 0.09170334662000339
+ indexed_by_time_eval_/next-item/avg_precision@20 = 0.09686319530010223
+ indexed_by_time_eval_/next-item/ndcg@10 = 0.12278382728497188
+ indexed_by_time_eval_/next-item/ndcg@20 = 0.14261824637651443
+ indexed_by_time_eval_/next-item/recall@10 = 0.22263725101947784
+ indexed_by_time_eval_/next-item/recall@20 = 0.30088267227013904
 </pre></div>
 </div>
 </div>
@@ -659,7 +648,7 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <p>Create a dict of tensors to feed it as example inputs in the <code class="docutils literal notranslate"><span class="pre">torch.jit.trace()</span></code>.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s2">&quot;./preproc_sessions_by_day/178/train.parquet&quot;</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">cudf</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;preproc_sessions_by_day/</span><span class="si">{</span><span class="n">start_time_idx</span><span class="si">}</span><span class="s2">/train.parquet&quot;</span><span class="p">),</span> <span class="n">columns</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span><span class="p">)</span>
 <span class="n">table</span> <span class="o">=</span> <span class="n">TensorTable</span><span class="o">.</span><span class="n">from_df</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[:</span><span class="mi">100</span><span class="p">])</span>
 <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
     <span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert_col</span><span class="p">(</span><span class="n">table</span><span class="p">[</span><span class="n">column</span><span class="p">],</span> <span class="n">TorchColumn</span><span class="p">)</span>
@@ -671,7 +660,8 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <p>Let’s now add a top_k parameter to model so that we can return the top k item ids with the highest scores when we serve the model on Triton Inference Server.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">top_k</span> <span class="o">=</span> <span class="mi">20</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">topk</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">model</span><span class="o">.</span><span class="n">top_k</span> <span class="o">=</span> <span class="n">topk</span>
 </pre></div>
 </div>
 </div>
@@ -784,12 +774,6 @@ Training completed. Do not forget to share your model on huggingface.co/models =
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">TransformWorkflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
     <span class="n">traced_model</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">input_schema</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_schema</span>
 <span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/usr/local/lib/python3.8/dist-packages/merlin/schema/tags.py:149: UserWarning: Compound tags like Tags.ITEM_ID have been deprecated and will be removed in a future version. Please use the atomic versions of these tags, like [&lt;Tags.ITEM: &#39;item&#39;&gt;, &lt;Tags.ID: &#39;id&#39;&gt;].
-  warnings.warn(
 </pre></div>
 </div>
 </div>
