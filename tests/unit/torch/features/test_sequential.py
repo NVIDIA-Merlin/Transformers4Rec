@@ -225,34 +225,29 @@ def test_sequential_and_non_sequential_tabular_features(schema, torch_yoochoose_
 def test_input_block_with_pretrained_embeddings(cpu, pretrained_dim):
     import numpy as np
     from merlin.dataloader.ops.embeddings import EmbeddingOperator
+    from merlin.dataloader.ops.padding import Padding
     from merlin.dataloader.torch import Loader
     from merlin.io import Dataset
 
-    from transformers4rec.torch.utils.padding import pad_batch
-
     data = tr.data.music_streaming_testing_data
+    seq_schema = data.merlin_schema.select_by_name(
+        ["item_id", "item_category", "item_recency", "item_genres"]
+    )
     batch_size, max_length = 128, 20
     np_emb_item_id = np.random.rand(10000, 16)
+    embeddings_op = EmbeddingOperator(
+        np_emb_item_id, lookup_key="item_id", embedding_name="pretrained_item_id_embeddings"
+    )
 
     data_loader = Loader(
         Dataset(data.path, schema=data.merlin_schema, cpu=bool(cpu)),
         batch_size=batch_size,
-        transforms=[
-            EmbeddingOperator(
-                np_emb_item_id, lookup_key="item_id", embedding_name="pretrained_item_id_embeddings"
-            ),
-        ],
+        transforms=seq_schema.column_schemas >> Padding(20, 0) >> embeddings_op,
         shuffle=False,
         device=cpu,
     )
 
     batch, _ = next(iter(data_loader))
-
-    # Convert batch of ragged inputs to padded dense tensors
-    padding_lengths = {
-        key.replace("__offsets", ""): max_length for key in batch.keys() if "__offsets" in key
-    }
-    dense_batch = pad_batch(batch, padding_lengths=padding_lengths)
 
     # Sequential input block with a 3-D pre-trained feature
     inputs = tr.TabularSequenceFeatures.from_schema(
@@ -264,9 +259,9 @@ def test_input_block_with_pretrained_embeddings(cpu, pretrained_dim):
     )
 
     if not cpu:
-        output = inputs.to("cuda").double()(dense_batch)
+        output = inputs.to("cuda").double()(batch)
     else:
-        output = inputs.double()(dense_batch)
+        output = inputs.double()(batch)
 
     assert "pretrained_item_id_embeddings" in output
     if pretrained_dim is not None:
@@ -293,9 +288,9 @@ def test_input_block_with_pretrained_embeddings(cpu, pretrained_dim):
     )
 
     if not cpu:
-        output = inputs.to("cuda").double()(dense_batch)
+        output = inputs.to("cuda").double()(batch)
     else:
-        output = inputs.double()(dense_batch)
+        output = inputs.double()(batch)
 
     assert "pretrained_item_id_embeddings" in output
     if pretrained_dim is not None:

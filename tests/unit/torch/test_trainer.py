@@ -604,6 +604,7 @@ def test_trainer_with_pretrained_embeddings():
     import numpy as np
     from merlin.dataloader.ops.embeddings import EmbeddingOperator
     from merlin.io import Dataset
+
     from transformers4rec.torch.utils.data_utils import MerlinDataLoader
 
     data = tr.data.music_streaming_testing_data
@@ -621,7 +622,6 @@ def test_trainer_with_pretrained_embeddings():
         schema,
         Dataset(data.path, schema=schema),
         batch_size=batch_size,
-        max_sequence_length=max_length,
         transforms=[embeddings_op],
         shuffle=False,
     )
@@ -630,13 +630,13 @@ def test_trainer_with_pretrained_embeddings():
     model_schema = data_loader.output_schema
     inputs = tr.TabularSequenceFeatures.from_schema(
         model_schema,
-        max_sequence_length=20,
+        max_sequence_length=max_length,
         d_output=64,
         masking="mlm",
     )
     transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
     task = tr.NextItemPredictionTask(weight_tying=True)
-    model = transformer_config.to_torch_model(inputs, task)
+    model = transformer_config.to_torch_model(inputs, task, max_sequence_length=max_length)
 
     assert isinstance(model.input_schema, Schema)
 
@@ -646,7 +646,7 @@ def test_trainer_with_pretrained_embeddings():
         num_train_epochs=1,
         per_device_train_batch_size=batch_size,
         per_device_eval_batch_size=batch_size // 2,
-        max_sequence_length=20,
+        max_sequence_length=max_length,
         fp16=False,
         report_to=[],
         debug=["r"],
