@@ -598,3 +598,58 @@ def test_trainer_trop_k_with_wrong_task():
         recsys_trainer.predict(data.path)
 
     assert "Top-k prediction is specific to NextItemPredictionTask" in str(excinfo.value)
+
+
+def test_trainer_trop_k_with_padding_in_dataloader():
+    from merlin.dataloader.ops.padding import Padding
+    from merlin.io import Dataset
+    from merlin.schema.tags import Tags
+
+    from transformers4rec.torch.utils.data_utils import MerlinDataLoader
+
+    batch_size, max_length, dmodel = 32, 20, 16
+    data = tr.data.music_streaming_testing_data
+    schema = data.merlin_schema
+    seq_schema = data.merlin_schema.select_by_tag(Tags.LIST)
+
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        seq_schema, d_output=dmodel, masking="mlm", max_sequence_length=max_length
+    )
+    task = tr.NextItemPredictionTask()
+    transformer_config = tconf.XLNetConfig.build(dmodel, 4, 1, max_length)
+    model = transformer_config.to_torch_model(inputs, task, max_sequence_length=max_length)
+
+    # set dataloader with padding operator
+    data_loader = MerlinDataLoader.from_schema(
+        schema,
+        Dataset(data.path, schema=schema),
+        batch_size=batch_size,
+        transforms=seq_schema.column_schemas >> Padding(max_length),
+        shuffle=False,
+    )
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        fp16=False,
+        report_to=[],
+        debug=["r"],
+    )
+    # Explicitly pass the merlin dataloader with padding op
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataloader=data_loader,
+        eval_dataloader=data_loader,
+        compute_metrics=True,
+    )
+
+    recsys_trainer.train()
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+
+    assert isinstance(eval_metrics, dict)
+    assert eval_metrics["eval_/loss"] is not None
