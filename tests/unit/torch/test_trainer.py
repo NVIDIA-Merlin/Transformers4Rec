@@ -600,7 +600,7 @@ def test_trainer_trop_k_with_wrong_task():
     assert "Top-k prediction is specific to NextItemPredictionTask" in str(excinfo.value)
 
 
-def test_trainer_trop_k_with_padding_in_dataloader():
+def test_trainer_with_padding_in_dataloader():
     from merlin.dataloader.ops.padding import Padding
     from merlin.io import Dataset
     from merlin.schema.tags import Tags
