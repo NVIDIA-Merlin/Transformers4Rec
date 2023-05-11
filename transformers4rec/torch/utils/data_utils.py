@@ -28,6 +28,7 @@ from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
 from merlin_standard_lib import Schema
+from transformers4rec.torch.utils.padding import pad_batch
 
 from ...utils import dependencies
 
@@ -43,7 +44,9 @@ class T4RecDataLoader(ABC):
     """
 
     @classmethod
-    def from_schema(self, schema: Schema, paths_or_dataset, batch_size, **kwargs):
+    def from_schema(
+        self, schema: Schema, paths_or_dataset, batch_size, max_sequence_length, **kwargs
+    ):
         # Build the data-loader from the schema
         raise NotImplementedError
 
@@ -289,6 +292,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         self,
         paths_or_dataset,
         batch_size,
+        max_sequence_length=None,
         conts=None,
         cats=None,
         labels=None,
@@ -313,6 +317,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         self.paths_or_dataset = paths_or_dataset
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.max_sequence_length = max_sequence_length
         self.drop_last = drop_last
 
         reader_kwargs = reader_kwargs or {}
@@ -354,6 +359,16 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             drop_last=drop_last,
             transforms=transforms,
         )
+        if max_sequence_length:
+            # Apply padding
+            output_schema = loader.output_schema
+            sparse_feats = [
+                col.name
+                for col in output_schema
+                if col.shape.is_list
+            ]
+            sparse_max = {name: max_sequence_length for name in sparse_feats}
+            loader = loader.map(self._get_pad_fn(sparse_max))
 
         DLDataLoader.__init__(
             self,
@@ -363,6 +378,19 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             drop_last=self.drop_last,
         )
         self.schema = schema
+        self.max_sequence_length = max_sequence_length
+
+    @staticmethod
+    def _get_pad_fn(padding_lengths):
+        def pad_fn(x, y):
+            new_x = pad_batch(x, padding_lengths)
+            if y is not None and isinstance(y, dict):
+                new_y = pad_batch(y, padding_lengths)
+            else:
+                new_y = y
+            return new_x, new_y
+
+        return pad_fn
 
     @staticmethod
     def _augment_schema(
@@ -403,6 +431,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         schema: Schema,
         paths_or_dataset,
         batch_size,
+        max_sequence_length=None,
         continuous_features=None,
         categorical_features=None,
         targets=None,
@@ -436,6 +465,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             paths_or_dataset,
             batch_size=batch_size,
             labels=targets,
+            max_sequence_length=max_sequence_length,
             cats=categorical_features,
             conts=continuous_features,
             collate_fn=collate_fn,
