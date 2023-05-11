@@ -24,10 +24,12 @@ from merlin.schema import Tags, TagsType
 from merlin_standard_lib import Schema, categorical_cardinalities
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
+from ..block.base import SequentialBlock
 from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,
     FilterFeatures,
     TabularAggregationType,
+    TabularTransformation,
     TabularTransformationType,
 )
 from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
@@ -561,6 +563,9 @@ class PretrainedEmbeddingFeatures(InputBlock):
         It can be an integer or a dictionary mapping feature names to output dimensions.
     sequence_combiner: str
         The aggregation mode for 3-D features.
+    normalizer: Optional[Union[str, TabularTransformationType]]
+       A tabular layer (e.g. tr.TabularLayerNorm()) or string ("layer-norm") to be applied
+       to pre-trained embeddings after projected and sequence combined.
     schema (Optional[Schema]): the schema of the input data.
     {tabular_module_parameters}
     """
@@ -573,8 +578,16 @@ class PretrainedEmbeddingFeatures(InputBlock):
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
+        normalizer: Optional[TabularTransformationType] = None,
         schema: Optional[Schema] = None,
     ):
+        if isinstance(normalizer, str):
+            normalizer = TabularTransformation.parse(normalizer)
+        if not post:
+            post = normalizer
+        elif normalizer:
+            post = SequentialBlock(normalizer, post)  # type: ignore
+
         super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
         self.features = features
         self.filter_features = FilterFeatures(features)
@@ -606,6 +619,7 @@ class PretrainedEmbeddingFeatures(InputBlock):
         tags: Optional[TagsType] = None,
         pretrained_dim=None,
         sequence_combiner=None,
+        normalizer: Optional[Union[str, TabularTransformationType]] = None,
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
@@ -622,6 +636,7 @@ class PretrainedEmbeddingFeatures(InputBlock):
             pre=pre,
             post=post,
             aggregation=aggregation,
+            normalizer=normalizer,
         )
 
     def forward(self, inputs):
@@ -638,7 +653,23 @@ class PretrainedEmbeddingFeatures(InputBlock):
         return output
 
     def forward_output_size(self, input_sizes):
-        return self.filter_features.forward_output_size(input_sizes)
+        sizes = self.filter_features.forward_output_size(input_sizes)
+        if self.pretrained_dim:
+            if isinstance(self.pretrained_dim, dict):
+                sizes.update(
+                    {
+                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_dim[key]])
+                        for key in self.features
+                    }
+                )
+            else:
+                sizes.update(
+                    {
+                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_dim])
+                        for key in self.features
+                    }
+                )
+        return sizes
 
     def parse_combiner(self, combiner):
         if isinstance(combiner, str):
