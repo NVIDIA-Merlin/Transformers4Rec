@@ -170,11 +170,11 @@ def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_len
         name = feature.name
         # Pretrained embeddings (2-D or 3-D)
         if Tags.EMBEDDING in feature.tags:
-            if _has_field(feature, "value_count"):
+            if feature.shape.is_list:
                 sizes[name] = torch.Size(
                     [
                         batch_size,
-                        max_sequence_length if max_sequence_length else feature.value_count.max,
+                        max_sequence_length if max_sequence_length else feature.shape[1].max,
                         feature.shape[-1].min,
                     ]
                 )
@@ -182,11 +182,11 @@ def get_output_sizes_from_schema(schema: Schema, batch_size=-1, max_sequence_len
                 sizes[name] = torch.Size([batch_size, feature.shape[-1].min])
 
         # Sequential or multi-hot feature
-        elif _has_field(feature, "value_count"):
+        elif feature.shape.is_list:
             sizes[name] = torch.Size(
                 [
                     batch_size,
-                    max_sequence_length if max_sequence_length else feature.value_count.max,
+                    max_sequence_length if max_sequence_length else feature.shape[1].max,
                 ]
             )
 
