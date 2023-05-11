@@ -362,11 +362,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         if max_sequence_length:
             # Apply padding
             output_schema = loader.output_schema
-            sparse_feats = [
-                col.name
-                for col in output_schema
-                if col.shape.is_list
-            ]
+            sparse_feats = [col.name for col in output_schema if col.shape.is_list]
             sparse_max = {name: max_sequence_length for name in sparse_feats}
             loader = loader.map(self._get_pad_fn(sparse_max))
 
