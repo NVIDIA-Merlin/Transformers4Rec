@@ -310,22 +310,29 @@ class Schema(_Schema):
         else:
             # Schema.tags always returns a List[str] with the tag values, so if the user wants to
             # filter using the Tags Enum, we need to convert those to their string value
-            to_select = [tag.value if isinstance(tag, Tags) else tag for tag in to_select]
+            if not isinstance(to_select, (list, tuple)):
+                to_select = [to_select]
+
+            to_select = TagSet(to_select)
 
             def collection_filter_fn(column_names: List[str]):
                 return all(x in column_names for x in to_select)
 
-            return self._filter_column_schemas(to_select, collection_filter_fn, lambda x: x.tags)
+            return self._filter_column_schemas(
+                list(to_select), collection_filter_fn, lambda x: TagSet(x.tags)
+            )
 
     def remove_by_tag(self, to_remove) -> "Schema":
         if not isinstance(to_remove, (list, tuple)) and not callable(to_remove):
             to_remove = [to_remove]
 
+        to_remove = TagSet(to_remove)
+
         def collection_filter_fn(column_tags):
             return all(x in column_tags for x in to_remove)
 
         return self._filter_column_schemas(
-            to_remove, collection_filter_fn, lambda x: x.tags, negate=True
+            list(to_remove), collection_filter_fn, lambda x: TagSet(x.tags), negate=True
         )
 
     def select_by_name(self, to_select) -> "Schema":
