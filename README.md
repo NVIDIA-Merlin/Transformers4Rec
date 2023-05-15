@@ -146,7 +146,7 @@ Those components can be installed as optional arguments for the `pip install` co
 To install Transformers4Rec using Pip, run the following command:
 
 ```shell
-pip install transformers4rec[pytorch,nvtabular]
+pip install transformers4rec[nvtabular]
 ```
 
 -> Be aware that installing Transformers4Rec with `pip` does not automatically install RAPIDS cuDF.
