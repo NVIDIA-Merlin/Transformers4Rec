@@ -322,7 +322,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
 
         reader_kwargs = reader_kwargs or {}
         reader_kwargs["row_groups_per_part"] = row_groups_per_part
-        self.set_dataset(buffer_size, engine, reader_kwargs)
+        self.set_dataset(buffer_size, engine, reader_kwargs, schema=schema)
 
         if (global_rank is not None) and (self.dataset.npartitions < global_size):
             logger.warning(
@@ -362,7 +362,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         if max_sequence_length:
             # Apply padding
             output_schema = loader.output_schema
-            sparse_feats = [col.name for col in output_schema if col.shape.is_list]
+            sparse_feats = [col.name for col in output_schema if Tags.LIST in col.tags]
             sparse_max = {name: max_sequence_length for name in sparse_feats}
             loader = loader.map(self._get_pad_fn(sparse_max))
 
@@ -411,7 +411,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
 
         return schema
 
-    def set_dataset(self, buffer_size, engine, reader_kwargs):
+    def set_dataset(self, buffer_size, engine, reader_kwargs, schema=None):
         dataset = validate_dataset(
             self.paths_or_dataset,
             self.batch_size,
@@ -419,6 +419,8 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             engine,
             reader_kwargs,
         )
+        if schema:
+            dataset.schema = schema
         self.dataset = dataset
 
     @classmethod

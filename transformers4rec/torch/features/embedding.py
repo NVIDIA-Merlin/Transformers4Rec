@@ -644,11 +644,9 @@ class PretrainedEmbeddingFeatures(InputBlock):
         if self.pretrained_dim:
             output = {key: self.projection[key](val) for key, val in output.items()}
         if self.sequence_combiner:
-            if not list(output.values())[0].ndim == 3:
-                raise ValueError(
-                    "sequence combiner can only be used for 3-D pre-trained embeddings"
-                )
-            output = {key: self.sequence_combiner(val, axis=1) for key, val in output.items()}
+            for key, val in output.items():
+                if val.dim() > 2:
+                    output[key] = self.sequence_combiner(val, axis=1)
 
         return output
 
