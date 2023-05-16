@@ -157,6 +157,7 @@ class because it merges context features with sequential features.</p>
 </ol>
 <p>The following code sample shows how to define and train an XLNet model with PyTorch for next-item prediction task:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers4rec</span> <span class="kn">import</span> <span class="n">torch</span> <span class="k">as</span> <span class="n">tr</span>
+<span class="kn">from</span> <span class="nn">transformers4rec.torch.ranking_metric</span> <span class="kn">import</span> <span class="n">NDCGAt</span><span class="p">,</span> <span class="n">RecallAt</span>
 
 <span class="c1"># Create a schema or read one from disk: tr.Schema().from_json(SCHEMA_PATH).</span>
 <span class="n">schema</span><span class="p">:</span> <span class="n">tr</span><span class="o">.</span><span class="n">Schema</span> <span class="o">=</span> <span class="n">tr</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">tabular_sequence_testing_data</span><span class="o">.</span><span class="n">schema</span>
@@ -216,19 +217,25 @@ See the sample code in the <a class="reference external" href="https://nvidia-me
 Installation with the dataloader is highly recommended for better performance.
 Those components can be installed as optional arguments for the <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> command.</p>
 <p>To install Transformers4Rec using Pip, run the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>transformers4rec<span class="o">[</span>pytorch,nvtabular,dataloader<span class="o">]</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>transformers4rec<span class="o">[</span>nvtabular<span class="o">]</span>
 </pre></div>
 </div>
-<blockquote>
-<div><p>Be aware that installing Transformers4Rec with <code class="docutils literal notranslate"><span class="pre">pip</span></code> only supports the CPU version of Merlin Dataloader because <code class="docutils literal notranslate"><span class="pre">pip</span></code> does not install cuDF.
-The GPU capabilities of the dataloader are available by using the Docker container or by installing
-the dataloader with Conda first and then performing the <code class="docutils literal notranslate"><span class="pre">pip</span></code> installation within the Conda environment.</p>
-</div></blockquote>
+<p>-&gt; Be aware that installing Transformers4Rec with <code class="docutils literal notranslate"><span class="pre">pip</span></code> does not automatically install RAPIDS cuDF.
+-&gt; cuDF is required for GPU-accelerated versions of NVTabular transforms and the Merlin Dataloader.</p>
+<p>Instructions for installing cuDF with pip are available here: <a class="reference external" href="https://docs.rapids.ai/install#pip-install">https://docs.rapids.ai/install#pip-install</a></p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>cudf-cu11<span class="w"> </span>dask-cudf-cu11<span class="w"> </span>--extra-index-url<span class="o">=</span>https://pypi.nvidia.com
+</pre></div>
+</div>
 </div>
 <div class="section" id="installing-transformers4rec-using-conda">
 <h3>Installing Transformers4Rec Using Conda<a class="headerlink" href="#installing-transformers4rec-using-conda" title="Permalink to this headline"></a></h3>
-<p>To install Transformers4Rec using Conda, run the following command:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>transformers4rec
+<p>To install Transformers4Rec using Conda, run the following command with <code class="docutils literal notranslate"><span class="pre">conda</span></code> or <code class="docutils literal notranslate"><span class="pre">mamba</span></code> to create a new environment.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>transformers4rec-23.04<span class="w"> </span>-c<span class="w"> </span>nvidia<span class="w"> </span>-c<span class="w"> </span>rapidsai<span class="w"> </span>-c<span class="w"> </span>pytorch<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span><span class="nv">transformers4rec</span><span class="o">=</span><span class="m">23</span>.04<span class="w"> </span><span class="sb">`</span><span class="c1"># NVIDIA Merlin` \</span>
+<span class="w">    </span><span class="nv">nvtabular</span><span class="o">=</span><span class="m">23</span>.04<span class="w"> </span><span class="sb">`</span><span class="c1"># NVIDIA Merlin - Used in example notebooks` \</span>
+<span class="w">    </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.10<span class="w"> </span><span class="sb">`</span><span class="c1"># Compatible Python environment` \</span>
+<span class="w">    </span><span class="nv">cudf</span><span class="o">=</span><span class="m">23</span>.02<span class="w"> </span><span class="sb">`</span><span class="c1"># RAPIDS cuDF - GPU accelerated DataFrame` \</span>
+<span class="w">    </span><span class="nv">cudatoolkit</span><span class="o">=</span><span class="m">11</span>.8<span class="w"> </span>pytorch-cuda<span class="o">=</span><span class="m">11</span>.8<span class="w"> </span><span class="sb">`</span><span class="c1"># NVIDIA CUDA version`</span>
 </pre></div>
 </div>
 </div>

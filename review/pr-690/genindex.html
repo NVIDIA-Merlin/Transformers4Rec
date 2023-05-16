@@ -304,6 +304,8 @@
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.build">(transformers4rec.torch.PredictionTask method)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingFeatures.build">(transformers4rec.torch.PretrainedEmbeddingFeatures method)</a>
+</li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.ReformerConfig.build">(transformers4rec.torch.ReformerConfig class method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.SequentialBlock.build">(transformers4rec.torch.SequentialBlock method)</a>
@@ -848,6 +850,8 @@
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.forward">(transformers4rec.torch.PredictionTask method)</a>
 </li>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingFeatures.forward">(transformers4rec.torch.PretrainedEmbeddingFeatures method)</a>
+</li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingsInitializer.forward">(transformers4rec.torch.PretrainedEmbeddingsInitializer method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.SequentialBlock.forward">(transformers4rec.torch.SequentialBlock method)</a>
@@ -931,6 +935,8 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.masking.MaskSequence.forward_output_size">(transformers4rec.torch.masking.MaskSequence method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.MergeTabular.forward_output_size">(transformers4rec.torch.MergeTabular method)</a>
+</li>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingFeatures.forward_output_size">(transformers4rec.torch.PretrainedEmbeddingFeatures method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.SequenceEmbeddingFeatures.forward_output_size">(transformers4rec.torch.SequenceEmbeddingFeatures method)</a>
 </li>
@@ -1017,6 +1023,8 @@
         <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.tabular.TabularFeatures.from_schema">(transformers4rec.torch.features.tabular.TabularFeatures class method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Head.from_schema">(transformers4rec.torch.Head class method)</a>
+</li>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingFeatures.from_schema">(transformers4rec.torch.PretrainedEmbeddingFeatures class method)</a>
 </li>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.SoftEmbeddingFeatures.from_schema">(transformers4rec.torch.SoftEmbeddingFeatures class method)</a>
 </li>
@@ -1668,16 +1676,20 @@
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints.oov_string_tokens">oov_string_tokens (merlin_standard_lib.proto.schema_bp.FeatureCoverageConstraints attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/transformers4rec.config.html#transformers4rec.config.trainer.T4RecTrainingArgumentsTF.output_dir">output_dir (transformers4rec.config.trainer.T4RecTrainingArgumentsTF attribute)</a>
 
       <ul>
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.T4RecTrainingArguments.output_dir">(transformers4rec.torch.T4RecTrainingArguments attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.Model.output_schema">output_schema() (transformers4rec.torch.Model property)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.MerlinDataLoader.output_schema">(transformers4rec.torch.utils.data_utils.MerlinDataLoader property)</a>
 </li>
+      </ul></li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TabularBlock.output_size">output_size() (transformers4rec.torch.TabularBlock method)</a>
 
       <ul>
@@ -1709,7 +1721,11 @@
 </li>
       </ul></li>
       <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingFeatures.parse_combiner">parse_combiner() (transformers4rec.torch.features.embedding.PretrainedEmbeddingFeatures method)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingFeatures.parse_combiner">(transformers4rec.torch.PretrainedEmbeddingFeatures method)</a>
 </li>
+      </ul></li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor.partition">partition (merlin_standard_lib.proto.schema_bp.TensorRepresentationRaggedTensor attribute)</a>
 </li>
       <li><a href="api/merlin_standard_lib.proto.html#merlin_standard_lib.proto.schema_bp.Path">Path (class in merlin_standard_lib.proto.schema_bp)</a>
@@ -1800,8 +1816,12 @@
         <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.TabularFeatures.pretrained_module">(transformers4rec.torch.TabularFeatures property)</a>
 </li>
       </ul></li>
-      <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingFeatures">PretrainedEmbeddingFeatures (class in transformers4rec.torch.features.embedding)</a>
+      <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingFeatures">PretrainedEmbeddingFeatures (class in transformers4rec.torch)</a>
+
+      <ul>
+        <li><a href="api/transformers4rec.torch.features.html#transformers4rec.torch.features.embedding.PretrainedEmbeddingFeatures">(class in transformers4rec.torch.features.embedding)</a>
 </li>
+      </ul></li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PretrainedEmbeddingsInitializer">PretrainedEmbeddingsInitializer (class in transformers4rec.torch)</a>
 
       <ul>
@@ -2264,6 +2284,8 @@
         <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.PyarrowDataLoader.timeout">(transformers4rec.torch.utils.data_utils.PyarrowDataLoader attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/transformers4rec.torch.utils.html#transformers4rec.torch.utils.data_utils.to_core_schema">to_core_schema() (in module transformers4rec.torch.utils.data_utils)</a>
+</li>
       <li><a href="api/transformers4rec.torch.html#transformers4rec.torch.PredictionTask.to_head">to_head() (transformers4rec.torch.PredictionTask method)</a>
 </li>
       <li><a href="api/transformers4rec.config.html#transformers4rec.config.transformer.T4RecConfig.to_huggingface_torch_model">to_huggingface_torch_model() (transformers4rec.config.transformer.T4RecConfig method)</a>
