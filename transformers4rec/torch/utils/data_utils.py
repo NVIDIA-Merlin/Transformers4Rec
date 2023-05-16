@@ -24,6 +24,7 @@ from merlin.dataloader.torch import Loader
 from merlin.models.utils.misc_utils import validate_dataset
 from merlin.models.utils.registry import Registry
 from merlin.schema import Tags
+from merlin.schema.io.tensorflow_metadata import TensorflowMetadata
 from torch.utils.data import DataLoader as PyTorchDataLoader
 from torch.utils.data import Dataset, IterableDataset
 
@@ -239,6 +240,9 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     labels : List[str], optional
         The list of label columns in the dataset.
         By default None.
+    lists : List[str], optional
+        The list of sequential columns in the dataset.
+        By default None.
     shuffle : bool, optional
         Enable/disable shuffling of dataset.
         By default False.
@@ -247,16 +251,6 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         to concatenate into a "chunk". By default 1.
     device : int, optional
         The device id of the selected GPU
-        By default None.
-    sparse_names : [str], optional
-        List with column names of columns that should be represented as sparse tensors.
-        By default None.
-    sparse_max : Dict[str, int], optional
-        A dictionary of key: column_name + value: integer representing the max sequence
-        length for a list column.
-        By default None.
-    sparse_as_dense : bool, optional
-        Boolean value to activate transforming sparse tensors to dense ones.
         By default None.
     drop_last: bool, optional
         Whether or not to drop the last batch in an epoch. This is useful when you need to
@@ -296,6 +290,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         conts=None,
         cats=None,
         labels=None,
+        lists=None,
         collate_fn=lambda x: x[0],
         engine=None,
         buffer_size=0.1,
@@ -344,7 +339,11 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             )
 
         self.dataset.schema = self._augment_schema(
-            self.dataset.schema, cats=cats, conts=conts, labels=labels
+            self.dataset.schema,
+            cats=cats,
+            conts=conts,
+            labels=labels,
+            lists=lists,
         )
 
         loader = Loader(
@@ -394,12 +393,13 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         cats=None,
         conts=None,
         labels=None,
+        lists=None,
     ):
         cats = cats or []
         conts = conts or []
         labels = labels or []
 
-        schema = schema.select_by_name(conts + cats + labels)
+        schema = schema.select_by_name(conts + cats + labels + lists)
 
         labels = [labels] if isinstance(labels, str) else labels
         for label in labels:
@@ -408,6 +408,8 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             schema[label] = schema[label].with_tags(Tags.CATEGORICAL)
         for label in conts:
             schema[label] = schema[label].with_tags(Tags.CONTINUOUS)
+        for col in lists:
+            schema[col] = schema[col].with_tags(Tags.LIST)
 
         return schema
 
@@ -420,6 +422,10 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             reader_kwargs,
         )
         if schema:
+            # set the dataset schema based on the provided one to keep all original information
+            if isinstance(schema, Schema):
+                # convert merlin-standardlib schema to merlin-core schema
+                schema = to_core_schema(schema)
             dataset.schema = schema
         self.dataset = dataset
 
@@ -432,6 +438,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
         max_sequence_length=None,
         continuous_features=None,
         categorical_features=None,
+        list_features=None,
         targets=None,
         collate_fn=lambda x: x[0],
         shuffle=True,
@@ -458,7 +465,10 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             continuous_features or schema.select_by_tag(Tags.CONTINUOUS).column_names
         )
         targets = targets or schema.select_by_tag(Tags.TARGET).column_names
-        schema = schema.select_by_name(categorical_features + continuous_features + targets)
+        list_features = list_features or schema.select_by_tag(Tags.LIST).column_names
+        schema = schema.select_by_name(
+            categorical_features + continuous_features + targets + list_features
+        )
         loader = cls(
             paths_or_dataset,
             batch_size=batch_size,
@@ -466,6 +476,7 @@ class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
             max_sequence_length=max_sequence_length,
             cats=categorical_features,
             conts=continuous_features,
+            lists=list_features,
             collate_fn=collate_fn,
             engine="parquet",
             shuffle=shuffle,
@@ -528,3 +539,7 @@ class ShuffleDataset(IterableDataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+def to_core_schema(t4rec_schema):
+    return TensorflowMetadata.from_json(t4rec_schema.to_json()).to_merlin_schema()
