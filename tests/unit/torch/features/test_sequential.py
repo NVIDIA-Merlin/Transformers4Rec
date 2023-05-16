@@ -276,7 +276,7 @@ def test_sequential_input_block_with_pretrained_embeddings(pretrained_dim):
     inputs = tr.TabularSequenceFeatures.from_schema(
         data_loader.output_schema,
         max_sequence_length=20,
-        pretrained_dim=pretrained_dim,
+        pretrained_output_dims=pretrained_dim,
         aggregation=None,
     )
 
@@ -316,7 +316,10 @@ def test_sequential_input_block_with_pretrained_embeddings(pretrained_dim):
         ]
 
 
-@pytest.mark.parametrize("pretrained_dim", [None, 128, {"pretrained_item_id_embeddings": 128}])
+@pytest.mark.parametrize(
+    "pretrained_dim",
+    [None, 128, {"pretrained_item_id_embeddings": 128, "pretrained_user_id_embeddings": 128}],
+)
 def test_non_sequential_input_block_with_pretrained_embeddings(pretrained_dim):
     data = tr.data.music_streaming_testing_data
     seq_schema = data.merlin_schema.select_by_name(["item_id"])
@@ -364,7 +367,7 @@ def test_non_sequential_input_block_with_pretrained_embeddings(pretrained_dim):
     # Non-Sequential input block with a 3-D pre-trained feature
     inputs = tr.TabularFeatures.from_schema(
         data_loader.output_schema,
-        pretrained_dim=pretrained_dim,
+        pretrained_output_dims=pretrained_dim,
         sequence_combiner="mean",
         aggregation=None,
     )

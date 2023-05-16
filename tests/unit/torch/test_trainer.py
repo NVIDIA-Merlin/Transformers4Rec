@@ -631,7 +631,7 @@ def test_trainer_with_pretrained_embeddings():
     inputs = tr.TabularSequenceFeatures.from_schema(
         model_schema,
         max_sequence_length=max_length,
-        pretrained_dim=8,
+        pretrained_output_dims=8,
         normalizer="layer-norm",
         d_output=64,
         masking="mlm",

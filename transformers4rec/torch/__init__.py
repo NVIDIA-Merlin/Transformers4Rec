@@ -40,6 +40,7 @@ from .features.continuous import ContinuousFeatures
 from .features.embedding import (
     EmbeddingFeatures,
     FeatureConfig,
+    PretrainedEmbeddingFeatures,
     PretrainedEmbeddingsInitializer,
     SoftEmbedding,
     SoftEmbeddingFeatures,
@@ -104,6 +105,7 @@ __all__ = [
     "EmbeddingFeatures",
     "SoftEmbeddingFeatures",
     "PretrainedEmbeddingsInitializer",
+    "PretrainedEmbeddingFeatures",
     "TabularSequenceFeatures",
     "SequenceEmbeddingFeatures",
     "FeatureConfig",

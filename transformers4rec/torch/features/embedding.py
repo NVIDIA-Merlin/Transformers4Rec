@@ -557,15 +557,22 @@ class PretrainedEmbeddingFeatures(InputBlock):
     Parameters
     ----------
     features: List[str]
-        A list of pre-trained feature names.
-    pretrained_dim: Optional[Union[int, Dict[str, int]]]
-        The output dimension of the pre-trained embeddings.
-        It can be an integer or a dictionary mapping feature names to output dimensions.
-    sequence_combiner: str
-        The aggregation mode for 3-D features.
+        A list of the pre-trained embeddings feature names.
+        You typically will pass schema.select_by_tag(Tags.EMBEDDING).column_names,
+        as that is the tag added to pre-trained embedding features when using the
+        merlin.dataloader.ops.embeddings.EmbeddingOperator
+    pretrained_output_dims: Optional[Union[int, Dict[str, int]]]
+        If provided, it projects features to specified dim(s).
+        If an int, all features are projected to that dim.
+        If a dict, only features provided in the dict will be mapped to the specified dim,
+    sequence_combiner: Optional[Union[str, torch.nn.Module]], optional
+       A string ("mean", "sum", "max", "min") or torch.nn.Module specifying
+       how to combine the second dimension of the pre-trained embeddings if it is 3D.
+       Default is None (no sequence combiner used)
     normalizer: Optional[Union[str, TabularTransformationType]]
-       A tabular layer (e.g. tr.TabularLayerNorm()) or string ("layer-norm") to be applied
-       to pre-trained embeddings after projected and sequence combined.
+       A tabular layer (e.g.tr.TabularLayerNorm()) or string ("layer-norm") to be applied
+       to pre-trained embeddings after projected and sequence combined
+       Default is None (no normalization)
     schema (Optional[Schema]): the schema of the input data.
     {tabular_module_parameters}
     """
@@ -573,8 +580,8 @@ class PretrainedEmbeddingFeatures(InputBlock):
     def __init__(
         self,
         features: List[str],
-        pretrained_dim: Optional[Union[int, Dict[str, int]]] = None,
-        sequence_combiner: str = None,
+        pretrained_output_dims: Optional[Union[int, Dict[str, int]]] = None,
+        sequence_combiner: Optional[Union[str, torch.nn.Module]] = None,
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
@@ -591,23 +598,23 @@ class PretrainedEmbeddingFeatures(InputBlock):
         super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
         self.features = features
         self.filter_features = FilterFeatures(features)
-        self.pretrained_dim = pretrained_dim
+        self.pretrained_output_dims = pretrained_output_dims
         self.sequence_combiner = self.parse_combiner(sequence_combiner)
 
     def build(self, input_size, **kwargs):
         if input_size is not None:
-            if self.pretrained_dim:
+            if self.pretrained_output_dims:
                 self.projection = torch.nn.ModuleDict()
-                if isinstance(self.pretrained_dim, int):
+                if isinstance(self.pretrained_output_dims, int):
                     for key in self.features:
                         self.projection[key] = torch.nn.Linear(
-                            input_size[key][-1], self.pretrained_dim
+                            input_size[key][-1], self.pretrained_output_dims
                         )
 
-                elif isinstance(self.pretrained_dim, dict):
+                elif isinstance(self.pretrained_output_dims, dict):
                     for key in self.features:
                         self.projection[key] = torch.nn.Linear(
-                            input_size[key][-1], self.pretrained_dim[key]
+                            input_size[key][-1], self.pretrained_output_dims[key]
                         )
 
         return super().build(input_size, **kwargs)
@@ -617,7 +624,7 @@ class PretrainedEmbeddingFeatures(InputBlock):
         cls,
         schema: Schema,
         tags: Optional[TagsType] = None,
-        pretrained_dim=None,
+        pretrained_output_dims=None,
         sequence_combiner=None,
         normalizer: Optional[Union[str, TabularTransformationType]] = None,
         pre: Optional[TabularTransformationType] = None,
@@ -631,7 +638,7 @@ class PretrainedEmbeddingFeatures(InputBlock):
         features = schema.column_names
         return cls(
             features=features,
-            pretrained_dim=pretrained_dim,
+            pretrained_output_dims=pretrained_output_dims,
             sequence_combiner=sequence_combiner,
             pre=pre,
             post=post,
@@ -641,7 +648,7 @@ class PretrainedEmbeddingFeatures(InputBlock):
 
     def forward(self, inputs):
         output = self.filter_features(inputs)
-        if self.pretrained_dim:
+        if self.pretrained_output_dims:
             output = {key: self.projection[key](val) for key, val in output.items()}
         if self.sequence_combiner:
             for key, val in output.items():
@@ -652,18 +659,18 @@ class PretrainedEmbeddingFeatures(InputBlock):
 
     def forward_output_size(self, input_sizes):
         sizes = self.filter_features.forward_output_size(input_sizes)
-        if self.pretrained_dim:
-            if isinstance(self.pretrained_dim, dict):
+        if self.pretrained_output_dims:
+            if isinstance(self.pretrained_output_dims, dict):
                 sizes.update(
                     {
-                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_dim[key]])
+                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_output_dims[key]])
                         for key in self.features
                     }
                 )
             else:
                 sizes.update(
                     {
-                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_dim])
+                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_output_dims])
                         for key in self.features
                     }
                 )
@@ -679,5 +686,4 @@ class PretrainedEmbeddingFeatures(InputBlock):
                 combiner = torch.min
             elif combiner == "mean":
                 combiner = torch.mean
-            # TODO: Add masked_mean, like in MM
         return combiner
