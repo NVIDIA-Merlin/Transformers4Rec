@@ -612,7 +612,8 @@ def test_trainer_with_pretrained_embeddings():
         ["item_id", "item_category", "item_recency", "item_genres", "user_id"]
     )
     batch_size, max_length, pretrained_dim = 128, 20, 16
-    np_emb_item_id = np.random.rand(10000, pretrained_dim)
+    item_cardinality = schema["item_id"].int_domain.max + 1
+    np_emb_item_id = np.random.rand(item_cardinality, pretrained_dim)
 
     embeddings_op = EmbeddingOperator(
         np_emb_item_id, lookup_key="item_id", embedding_name="pretrained_item_id_embeddings"
