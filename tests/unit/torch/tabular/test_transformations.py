@@ -14,12 +14,16 @@
 # limitations under the License.
 #
 
+import numpy as np
 import pytest
 import torch
 from merlin.schema import Tags
 
 import transformers4rec.torch as tr
 from merlin_standard_lib import schema
+
+np.random.seed(0)
+torch.manual_seed(0)
 
 
 @pytest.mark.parametrize("replacement_prob", [0.1, 0.3, 0.5, 0.7])
