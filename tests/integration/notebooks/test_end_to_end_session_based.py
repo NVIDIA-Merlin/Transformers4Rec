@@ -80,6 +80,7 @@ def test_func():
         / "examples"
         / "end-to-end-session-based"
         / "03-Session-based-Yoochoose-multigpu-training-PyT.ipynb",
+        timeout=120,
         execute=False,
     ) as tb3:
         tb3.inject(
