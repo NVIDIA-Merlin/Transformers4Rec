@@ -33,6 +33,38 @@ def random_data_from_schema(
     device=None,
     ragged=False,
 ) -> TabularData:
+    """Generates random tabular data based on a given schema.
+    The generated data can be used for testing
+    data preprocessing or model training pipelines.
+
+    Parameters
+    ----------
+    schema : Schema
+        The schema to be used for generating the random tabular data.
+    num_rows : int
+        The number of rows.
+    max_session_length : Optional[int]
+        The maximum session length.
+        If None, the session length will not be limited.
+        By default None
+    min_session_length : int
+        The minimum session length.
+        By default 5
+    device : torch.device
+        The device on which the synthetic data should be created.
+        If None, the synthetic data will be created on the CPU.
+        By default None
+    ragged : bool
+        If True, the sequence features will be represented with __values and __offsets.
+        By default False
+
+    Returns
+    -------
+    TabularData
+        A dictionary where each key is a feature name and each value is the generated
+        tensor.
+
+    """
     data: Dict[str, Any] = {}
 
     for i in range(num_rows):

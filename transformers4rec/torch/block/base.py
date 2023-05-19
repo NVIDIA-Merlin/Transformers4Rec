@@ -30,7 +30,28 @@ LOG = logging.getLogger("transformers4rec")
 
 
 class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCMeta):
+    """A subclass of PyTorch's torch.nn.Module, providing additional functionality
+    for dealing with automatic setting of input/output dimensions of neural networks layers.
+    Specifically, It implements the 'OutputSizeMixin' for managing output sizes.
+    """
+
     def to_model(self, prediction_task_or_head, inputs=None, **kwargs):
+        """Converts the BlockBase instance into a T4Rec model by attaching it to
+        attaching a 'Head' or 'PredictionTask'.
+
+        Parameters
+        ----------
+        prediction_task_or_head : Union[PredictionTask, Head]
+            A PredictionTask or Head instance to attach to this block.
+        inputs :InputBlock, optional
+            The input block representing input features.
+            By default None
+
+        Raises
+        ------
+        ValueError
+            If prediction_task_or_head is neither a Head nor a PredictionTask.
+        """
         from ..model.base import Head, Model, PredictionTask
 
         if isinstance(prediction_task_or_head, PredictionTask):
@@ -46,6 +67,15 @@ class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCM
         return Model(head, **kwargs)
 
     def as_tabular(self, name=None):
+        """Converts the output of the block into a dictionary, keyed by the
+        provided name
+
+        Parameters
+        ----------
+        name : str, optional
+            The output name, if not provided, uses the name of the block class.
+            by default None
+        """
         from ..tabular.base import AsTabular
 
         if not name:
@@ -55,6 +85,18 @@ class BlockBase(torch_utils.OutputSizeMixin, torch.nn.Module, metaclass=abc.ABCM
 
 
 class Block(BlockBase):
+    """Wraps a PyTorch module, allowing it to be used as a block in a T4Rec model.
+    It carries the module and its expected output size.
+
+    Parameters
+    ----------
+    module: torch.nn.Module
+        The PyTorch module to be wrapped in this block.
+    output_size: Union[List[int], torch.Size]
+        The expected output size of the module.
+
+    """
+
     def __init__(self, module: torch.nn.Module, output_size: Union[List[int], torch.Size]):
         super().__init__()
         self.module = module
@@ -63,7 +105,21 @@ class Block(BlockBase):
     def forward(self, inputs, **kwargs):
         return self.module(inputs, **kwargs)
 
-    def forward_output_size(self, input_size):
+    def forward_output_size(self, input_size: Union[List[int], torch.Size]):
+        """
+        Calculates the output size of the tensor(s) returned by the forward pass,
+        given the input size.
+
+        Parameters
+        ----------
+        input_size:  Union[List[int], torch.Size]
+            The size of the input tensor(s) to the module.
+
+        Returns
+        -------
+        Union[List[int], torch.Size]
+            The size of the output from the module.
+        """
         if self._output_size[0] is None:
             batch_size = torch_utils.calculate_batch_size_from_input_size(input_size)
 
@@ -73,7 +129,21 @@ class Block(BlockBase):
 
 
 class SequentialBlock(BlockBase, torch.nn.Sequential):
-    def __init__(self, *args, output_size=None):
+    """Extends the module torch.nn.Sequential. It's used for creating
+    a sequence of layers or blocks in a T4Rec model. The modules
+    will be applied to inputs in the order they are passed in the constructor.
+
+    Parameters
+    ----------
+    *args: torch.nn.Module
+        The list of PyTorch modules.
+    output_size : Union[List[int], torch.Size], optional
+        The expected output size from the last layer in the sequential block
+        By default None
+
+    """
+
+    def __init__(self, *args, output_size: Union[List[int], torch.Size] = None):
         from transformers4rec.torch import TabularSequenceFeatures, TransformerBlock
 
         if isinstance(args[0], TabularSequenceFeatures) and any(
@@ -113,6 +183,18 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
             return first
 
     def add_module(self, name: str, module: Optional[Module]) -> None:
+        """
+        Adds a PyTorch module to the sequential block. If a list of strings is provided,
+        a `FilterFeatures` block gets added to the sequential block.
+
+        Parameters
+        ----------
+        name : str
+            The name of the child module. The child module can be accessed
+            from this module using the given name.
+        module : Optional[Union[List[str], Module]]
+            The child module to be added to the module.
+        """
         from ..tabular.base import FilterFeatures
 
         if isinstance(module, list):
@@ -120,6 +202,19 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         super().add_module(name, module)
 
     def add_module_and_maybe_build(self, name: str, module, parent, idx) -> torch.nn.Module:
+        """Checks if a module needs to be built and adds it to the sequential block.
+
+        Parameters
+        ----------
+        name : str
+            The name of the child module.
+        module : torch.nn.Module
+            The child module to be added to the sequential block.
+        parent : torch.nn.Module
+            The parent module.
+        idx : int
+            The index of the current module in the sequential block.
+        """
         # Check if module needs to be built
         if getattr(parent, "output_size", None) and getattr(module, "build", None):
             module = module.build(parent.output_size())
@@ -139,8 +234,18 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return right_shift_block(other, self)
 
     def forward(self, input, training=False, testing=False, **kwargs):
-        # from transformers4rec.torch import TabularSequenceFeatures
+        """Applies the module's layers sequentially to the input block.
 
+        Parameters
+        ----------
+        input : tensor
+            The input to the block.
+        training : bool, optional
+            Whether the block is in training mode. The default is False.
+        testing : bool, optional
+            Whether the block is in testing mode. The default is False.
+
+        """
         for i, module in enumerate(self):
             if i == len(self) - 1:
                 filtered_kwargs = filter_kwargs(kwargs, module, cascade_kwargs_if_possible=True)
@@ -157,6 +262,20 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return input
 
     def build(self, input_size, schema=None, **kwargs):
+        """Builds the layers of the sequential block given the input size.
+
+        Parameters
+        ----------
+        input_size : Union[List[int], torch.Size]
+            The size of the input tensor(s).
+        schema : Schema, optional
+            The schema of the inputs features, by default None
+
+        Returns
+        -------
+        SequentialBlock
+            The built sequential block.
+        """
         output_size = input_size
         for module in self:
             if not hasattr(module, "build"):
@@ -167,6 +286,15 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return super(SequentialBlock, self).build(input_size, schema=None, **kwargs)
 
     def as_tabular(self, name=None):
+        """Converts the output of the block into a dictionary, keyed by the
+        provided name
+
+        Parameters
+        ----------
+        name : str, optional
+            The output name, if not provided, uses the name of the block class.
+            by default None
+        """
         from transformers4rec.torch import AsTabular
 
         if not name:
@@ -180,6 +308,20 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
         return merge_tabular(self, other)
 
     def forward_output_size(self, input_size):
+        """
+        Calculates the output size of the tensor(s) returned by the forward pass,
+        given the input size.
+
+        Parameters
+        ----------
+        input_size:  Union[List[int], torch.Size]
+            The size of the input tensor(s) to the module.
+
+        Returns
+        -------
+        Union[List[int], torch.Size]
+            The size of the output from the module.
+        """
         if self._static_output_size:
             return self._static_output_size
 
@@ -212,10 +354,26 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
 
 
 def build_blocks(*modules):
+    """Builds a SequentialBlock from a list of PyTorch modules.
+
+    Parameters
+    ----------
+    *modules : List[torch.nn.Module]
+        List containing PyTorch modules.
+
+    Returns
+    -------
+        A SequentialBlock instance created from the provided modules.
+    """
     return list(SequentialBlock(*modules))
 
 
 class BuildableBlock(abc.ABC):
+    """
+    Abstract base class for buildable blocks.
+    Subclasses of BuildableBlock must implement the `build` method
+    """
+
     @abc.abstractmethod
     def build(self, input_size) -> BlockBase:
         raise NotImplementedError
