@@ -1246,7 +1246,7 @@ will be applied to inputs in the order they are passed in the constructor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*args</strong> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module" title="(in PyTorch v2.0)"><em>torch.nn.Module</em></a>) – The list of PyTorch modules.</p></li>
+<li><p><strong>*args</strong> – The list of PyTorch modules.</p></li>
 <li><p><strong>output_size</strong> (<em>Union</em><em>[</em><em>List</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a><em>]</em><em>, </em><em>torch.Size</em><em>]</em><em>, </em><em>optional</em>) – The expected output size from the last layer in the sequential block
 By default None</p></li>
 </ul>
@@ -1477,7 +1477,7 @@ It carries the module and its expected output size.</p>
 
 <dl class="py method">
 <dt id="transformers4rec.torch.Block.forward_output_size">
-<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><span class="pre">int</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span> </span><span class="pre">torch.Size</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#Block.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.Block.forward_output_size" title="Permalink to this definition"></a></dt>
+<code class="sig-name descname"><span class="pre">forward_output_size</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/block/base.html#Block.forward_output_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.Block.forward_output_size" title="Permalink to this definition"></a></dt>
 <dd><p>Calculates the output size of the tensor(s) returned by the forward pass,
 given the input size.</p>
 <dl class="field-list simple">

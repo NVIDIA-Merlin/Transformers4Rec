@@ -744,7 +744,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span> <span class="ow">and</span> <span class="n">training</span><span class="p">:</span>
             <span class="n">logits</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">output_weights</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logits</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">@</span> <span class="n">output_weights</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>
+            <span class="n">logits</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">@</span> <span class="n">output_weights</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span><span class="p">:</span>
             <span class="c1"># Softmax temperature to reduce model overconfidence</span>
@@ -864,7 +864,9 @@
         <span class="n">log_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_id</span> <span class="o">-</span> <span class="n">min_id</span> <span class="o">+</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">log_</span><span class="p">()</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="p">(</span><span class="n">log_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">log_indices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">log_indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">min_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">min_id</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">probs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">min_id</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">probs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span>  <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">probs</span></div>
 
 <div class="viewcode-block" id="LogUniformSampler.get_unique_sampling_distr"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.get_unique_sampling_distr">[docs]</a>    <span class="k">def</span> <span class="nf">get_unique_sampling_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">n_sample</span><span class="p">):</span>
@@ -921,9 +923,9 @@
         <span class="n">n_tries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span>
 
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="n">n_tries</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span>
-                <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span>
-            <span class="p">]</span>
+            <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="n">n_tries</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># type: ignore</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span><span class="p">]</span>
 
             <span class="n">device</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">device</span>
             <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">neg_samples</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
@@ -933,8 +935,8 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span>
 
-            <span class="n">true_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">labels</span><span class="p">]</span>
-            <span class="n">samples_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span>
+            <span class="n">true_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">labels</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+            <span class="n">samples_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
 
             <span class="k">return</span> <span class="n">neg_samples</span><span class="p">,</span> <span class="n">true_probs</span><span class="p">,</span> <span class="n">samples_probs</span></div>
 
