@@ -105,7 +105,7 @@ class Block(BlockBase):
     def forward(self, inputs, **kwargs):
         return self.module(inputs, **kwargs)
 
-    def forward_output_size(self, input_size: Union[List[int], torch.Size]):
+    def forward_output_size(self, input_size):
         """
         Calculates the output size of the tensor(s) returned by the forward pass,
         given the input size.
@@ -135,7 +135,7 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
 
     Parameters
     ----------
-    *args: torch.nn.Module
+    *args:
         The list of PyTorch modules.
     output_size : Union[List[int], torch.Size], optional
         The expected output size from the last layer in the sequential block
@@ -164,12 +164,12 @@ class SequentialBlock(BlockBase, torch.nn.Sequential):
 
         if len(args) == 1 and isinstance(args[0], OrderedDict):
             last = None
-            for idx, key, module in enumerate(args[0].items()):
-                self.add_module_and_maybe_build(key, module, last, idx)
-                last = module
+            for idx, key, module in enumerate(args[0].items()):  # type: ignore
+                self.add_module_and_maybe_build(key, module, last, idx)  # type: ignore
+                last = module  # type: ignore
         else:
             if len(args) == 1 and isinstance(args[0], list):
-                args = args[0]
+                args = args[0]  # type: ignore
             last = None
             for idx, module in enumerate(args):
                 last = self.add_module_and_maybe_build(str(idx), module, last, idx)

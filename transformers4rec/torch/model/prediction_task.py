@@ -656,7 +656,7 @@ class _NextItemPredictionTask(torch.nn.Module):
         if self.sampled_softmax and training:
             logits, targets = self.sampled(inputs, targets, output_weights)
         else:
-            logits = inputs @ output_weights.t()
+            logits = inputs @ output_weights.t()  # type: ignore
 
         if self.softmax_temperature:
             # Softmax temperature to reduce model overconfidence
@@ -776,7 +776,9 @@ class LogUniformSampler(torch.nn.Module):
         log_indices = torch.arange(1.0, max_id - min_id + 2.0, 1.0).log_()
         probs = (log_indices[1:] - log_indices[:-1]) / log_indices[-1]
         if min_id > 0:
-            probs = torch.cat([torch.zeros([min_id], dtype=probs.dtype), probs], axis=0)
+            probs = torch.cat(
+                [torch.zeros([min_id], dtype=probs.dtype), probs], axis=0
+            )  # type: ignore
         return probs
 
     def get_unique_sampling_distr(self, dist, n_sample):
@@ -833,9 +835,9 @@ class LogUniformSampler(torch.nn.Module):
         n_tries = self.n_sample
 
         with torch.no_grad():
-            neg_samples = torch.multinomial(self.dist, n_tries, replacement=True).unique()[
-                : self.max_n_samples
-            ]
+            neg_samples = torch.multinomial(
+                self.dist, n_tries, replacement=True  # type: ignore
+            ).unique()[: self.max_n_samples]
 
             device = labels.device
             neg_samples = neg_samples.to(device)
@@ -845,8 +847,8 @@ class LogUniformSampler(torch.nn.Module):
             else:
                 dist = self.dist
 
-            true_probs = dist[labels]
-            samples_probs = dist[neg_samples]
+            true_probs = dist[labels]  # type: ignore
+            samples_probs = dist[neg_samples]  # type: ignore
 
             return neg_samples, true_probs, samples_probs
 
