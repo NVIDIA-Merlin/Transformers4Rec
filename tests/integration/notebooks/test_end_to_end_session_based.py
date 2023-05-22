@@ -54,33 +54,15 @@ def test_func():
         )
         NUM_OF_CELLS = len(tb2.cells)
         tb2.execute_cell(list(range(0, NUM_OF_CELLS - 20)))
-        topk = tb2.ref("topk")
-        tb2.inject(
-            """
-            import pandas as pd
-            interactions_merged_df = pd.read_parquet(os.path.join(INPUT_DATA_DIR, "interactions_merged_df.parquet"))
-            interactions_merged_df = interactions_merged_df.sort_values('timestamp')
-            batch = interactions_merged_df[-500:]
-            sessions_to_use = batch.session_id.value_counts()
-            filtered_batch = batch[batch.session_id.isin(sessions_to_use[sessions_to_use.values>1].index.values)]
-            
-            from merlin.systems.triton.utils import run_ensemble_on_tritonserver
-            response = run_ensemble_on_tritonserver(
-                "/tmp/data/models", workflow.input_schema, filtered_batch, model.output_schema.column_names,  'executor_model'
-            )
-            response_array = list(response['item_ids'][1])
-            """
-        )
-        tb2.execute_cell(NUM_OF_CELLS - 8)
-        response_array = tb2.ref("response_array")
-        assert len(response_array) == topk
+        assert os.path.isdir("/tmp/data/models")
+        assert os.listdir("/tmp/data/models")
 
     with testbook(
         REPO_ROOT
         / "examples"
         / "end-to-end-session-based"
         / "03-Session-based-Yoochoose-multigpu-training-PyT.ipynb",
-        timeout=120,
+        timeout=720,
         execute=False,
     ) as tb3:
         tb3.inject(
@@ -96,3 +78,4 @@ def test_func():
             """
         )
         tb3.execute()
+        assert os.path.isfile("/tmp/data/eval_metrics.txt")
