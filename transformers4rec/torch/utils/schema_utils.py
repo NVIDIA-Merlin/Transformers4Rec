@@ -17,6 +17,7 @@
 import random
 from typing import Any, Dict, Optional
 
+import numpy as np
 import torch
 from merlin.schema.io.proto_utils import has_field
 
@@ -32,6 +33,7 @@ def random_data_from_schema(
     min_session_length: int = 5,
     device=None,
     ragged=False,
+    seed=0,
 ) -> TabularData:
     """Generates random tabular data based on a given schema.
     The generated data can be used for testing
@@ -66,6 +68,11 @@ def random_data_from_schema(
 
     """
     data: Dict[str, Any] = {}
+
+    random.seed(seed)
+    np.random.seed(seed)
+    if seed:
+        torch.manual_seed(seed)
 
     for i in range(num_rows):
         session_length = None
