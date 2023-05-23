@@ -622,6 +622,7 @@ def test_trainer_with_pretrained_embeddings():
     data_loader = MerlinDataLoader.from_schema(
         schema,
         Dataset(data.path, schema=schema),
+        max_sequence_length=max_length,
         batch_size=batch_size,
         transforms=[embeddings_op],
         shuffle=False,
