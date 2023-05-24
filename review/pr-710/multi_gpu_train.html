@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multi-GPU data-parallel training using the Trainer class &mdash; Transformers4Rec  documentation</title><link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
+      <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/multi_gpu_train.html" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script >let toggleHintShow = 'Click to show';</script>
+        <script >let toggleHintHide = 'Click to hide';</script>
+        <script >let toggleOpenOnPrint = 'true';</script>
+        <script src="_static/togglebutton.js"></script>
+        <script >var togglebuttonSelector = '.toggle, .admonition.dropdown, .tag_hide_input div.cell_input, .tag_hide-input div.cell_input, .tag_hide_output div.cell_output, .tag_hide-output div.cell_output, .tag_hide_cell.cell, .tag_hide-cell.cell';</script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Transformers4Rec Example Notebooks" href="examples/index.html" />
+    <link rel="prev" title="End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin" href="pipeline.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+  <div class="banner">
+    <p class="banner">
+      Beginning in January 2023, versions for all NVIDIA Merlin projects
+      will change from semantic versioning like <code>4.0</code>
+      to calendar versioning like <code>23.01</code>.</p>
+  </div>
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Transformers4Rec
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="README.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="why_transformers4rec.html">Why Transformers4Rec?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model_definition.html">Model Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training_eval.html">Training and Evaluation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="pipeline.html">End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples/index.html">Example Notebooks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="resources.html">Additional Resources</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Transformers4Rec</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="multi-gpu-data-parallel-training-using-the-trainer-class">
+<h1>Multi-GPU data-parallel training using the <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class<a class="headerlink" href="#multi-gpu-data-parallel-training-using-the-trainer-class" title="Permalink to this headline"></a></h1>
+<p>To train models faster, users can use Data-Parallel training when using <code class="docutils literal notranslate"><span class="pre">transformers4rec.Trainer</span></code> for training. Data-parallel multi-GPU training distributes train data between GPUs to speedup training and support larger batch sizes at each step.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Trainer</span></code> class supports both <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> and <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> built-in features of PyTorch. Here we explain how each of these training modes can be used in Transformers4Rec.</p>
+<div class="section" id="dataparallel">
+<h2>DataParallel<a class="headerlink" href="#dataparallel" title="Permalink to this headline"></a></h2>
+<p>When the <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode is used, the following happens for each training step:</p>
+<ul class="simple">
+<li><p>GPU-0 reads a batch then evenly distributes it among available GPUs</p></li>
+<li><p>The latest model will be copied to all GPUs</p></li>
+<li><p>A Python thread is created for each GPU to run <code class="docutils literal notranslate"><span class="pre">forward()</span></code> step and the partial loss will be sent to GPU-0 to compute the global loss</p></li>
+<li><p>Computed global loss is broadcasted to all GPU threads to run <code class="docutils literal notranslate"><span class="pre">backward()</span></code></p></li>
+<li><p>Gradients from each GPU are sent to GPU-0 and their average is computed</p></li>
+</ul>
+<p>As we see, parallelism in <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode is implemented through Python threads which will be blocked by GIL (Global Interepreter Lock) so <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> is not the preferred method. Users are advised to use <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> instead as it uses multi-processing and is better maintained. Also, some model types such as <code class="docutils literal notranslate"><span class="pre">transfoxl</span></code> can not be used with <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code>. To learn more about <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> refer to <a class="reference external" href="https://pytorch.org/docs/master/generated/torch.nn.DataParallel.html">PyTorch documentation</a>.</p>
+<p>To use the <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> mode training, user just needs to make sure <code class="docutils literal notranslate"><span class="pre">CUDA_VISIBLE_DEVICES</span></code> is set. For example when 2 GPUs are available:</p>
+<ul class="simple">
+<li><p>Add <code class="docutils literal notranslate"><span class="pre">os.environ[&quot;CUDA_VISIBLE_DEVICES&quot;]=&quot;0,1&quot;</span></code> to the script</p></li>
+</ul>
+<p>or</p>
+<ul class="simple">
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">CUDA_VISIBLE_DEVICES=0,1</span></code> in the terminal</p></li>
+</ul>
+<p>Do not try wrapping the model with <code class="docutils literal notranslate"><span class="pre">torch.nn.DataParallel</span></code> yourself because that will break automatic wrapping done by <code class="docutils literal notranslate"><span class="pre">Trainer</span></code>.
+<b>Note:</b> When using <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> the dataloader generates one batch on each train step then the batch will be divided between GPUs so the <code class="docutils literal notranslate"><span class="pre">per_device_train_batch_size</span></code> argument represents the total batch size in this mode, not size of the batch each GPU receives.</p>
+</div>
+<div class="section" id="distributeddataparallel">
+<h2>DistributedDataParallel<a class="headerlink" href="#distributeddataparallel" title="Permalink to this headline"></a></h2>
+<p>This is the suggested and more efficient method. When a model is trained using the <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> mode:</p>
+<ul class="simple">
+<li><p>A separate process will be assigned to each GPU in the beginning and GPU-0 will replicate the model on each GPU</p></li>
+<li><p>On each step each GPU receives a different mini-batch produced by the dataloader</p></li>
+<li><p>On the backward pass the gradient from GPUs will be averaged for accumulation</p></li>
+</ul>
+<p>To learn more about <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> see the <a class="reference external" href="https://pytorch.org/docs/master/generated/torch.nn.parallel.DistributedDataParallel.html#torch.nn.parallel.DistributedDataParallel">PyTorch Documentation</a>.</p>
+<p>To train using the <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> mode user should use PyTorch distributed launcher to run the script:</p>
+<p><code class="docutils literal notranslate"> <span class="pre">python</span> <span class="pre">-m</span> <span class="pre">torch.distributed.launch</span> <span class="pre">--nproc_per_node</span> <span class="pre">N_GPU</span> <span class="pre">your_script.py</span> <span class="pre">--your_arguments</span></code></p>
+<p>To have one process per GPU, replace <code class="docutils literal notranslate"><span class="pre">N_GPU</span></code> with the number of GPUs you want to use. Optionally, you can also set CUDA_VISIBLE_DEVICES accordingly.</p>
+<p><b>Note:</b> When using <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code>, our data loader splits data between the GPUs based on dataset partitions. For that reason, the number of partitions of the dataset must be equal to or an integer multiple of the number of processes. If the parquet file has a small number of row groups (partitions), try repartitioning and saving it again using cudf or pandas before training. The dataloader checks <code class="docutils literal notranslate"><span class="pre">dataloader.dataset.npartitions</span></code> and will repartition if needed but we advise users to repartition the dataset and save it for better efficiency. Use pandas or cudf for repartitioning. Example of repartitioning a parquet file with cudf:</p>
+<p><code class="docutils literal notranslate"><span class="pre">gdf.to_parquet(&quot;filename.parquet&quot;,</span> <span class="pre">row_group_size_rows=10000)</span></code></p>
+<p>Choose <code class="docutils literal notranslate"><span class="pre">row_group_size_rows</span></code> such that <code class="docutils literal notranslate"><span class="pre">nr_rows/row_group_size_rows&gt;=n_proc</span></code> because <code class="docutils literal notranslate"><span class="pre">n_rows=npartition*row_group_size_rows</span></code>.</p>
+<p>With pandas, use the argument as <code class="docutils literal notranslate"><span class="pre">row_group_size=10000</span></code> instead.</p>
+<p>Please make sure that the resulting number of partitions is divisible by number of GPUs to be used (eg. 2 or 4 partitions, if 2 GPUs will be used).</p>
+</div>
+<div class="section" id="performance-comparison">
+<h2>Performance Comparison<a class="headerlink" href="#performance-comparison" title="Permalink to this headline"></a></h2>
+<p>We trained and evaluated a number of models using single GPU, <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> and <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> training modes and the results are shown in the table below. To reproduce, use the models included in <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/ci/test_integration.sh">ci/test_integration.sh</a>.</p>
+<p><img alt="Performance comparison of diffrerent training modes" src="_images/DP_DDP_perf.png" /><br></p>
+<p>These experiments used a machine with 2 <i>Tesla V100-SXM2-32GB-LS</i> GPUs.</p>
+<p><b>Note:</b> Using Data-Parallel training can impact metrics such at NDCG and recall. Therefore, Users are advised to tune the learning rate for better accuracy.</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="pipeline.html" class="btn btn-neutral float-left" title="End-to-End Pipeline with Hugging Face Transformers and NVIDIA Merlin" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="examples/index.html" class="btn btn-neutral float-right" title="Transformers4Rec Example Notebooks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, NVIDIA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NVJ1Y1YJHK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-NVJ1Y1YJHK', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
