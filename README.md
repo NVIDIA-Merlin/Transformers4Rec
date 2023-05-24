@@ -1,8 +1,8 @@
 # [Transformers4Rec](https://github.com/NVIDIA-Merlin/Transformers4Rec/)
 
 [![PyPI](https://img.shields.io/pypi/v/Transformers4Rec?color=orange&label=version)](https://pypi.python.org/pypi/Transformers4Rec)
-[![LICENSE](https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4Rec)](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/LICENSE)
-[![Documentation](https://img.shields.io/badge/documentation-blue.svg)](https://nvidia-merlin.github.io/Transformers4Rec/main/README.html)
+[![LICENSE](https://img.shields.io/github/license/NVIDIA-Merlin/Transformers4Rec)](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/LICENSE)
+[![Documentation](https://img.shields.io/badge/documentation-blue.svg)](https://nvidia-merlin.github.io/Transformers4Rec/stable/README.html)
 
 Transformers4Rec is a flexible and efficient library for sequential and session-based recommendation and can work with PyTorch.
 
@@ -51,7 +51,7 @@ These components enable you to build a fully GPU-accelerated pipeline for sequen
 NVTabular has common preprocessing operations for session-based recommendation and exports a dataset schema.
 The schema is compatible with Transformers4Rec so that input features can be configured automatically.
 You can export your trained models to serve with Triton Inference Server in a single pipeline that includes online feature preprocessing and model inference.
-For more information, refer to [End-to-end pipeline with NVIDIA Merlin](https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html).
+For more information, refer to [End-to-end pipeline with NVIDIA Merlin](https://nvidia-merlin.github.io/Transformers4Rec/stable/pipeline.html).
 
 <img src="_images/pipeline.png" alt="GPU-accelerated Sequential and Session-based recommendation" style="width:600px;display:block;margin-left:auto;margin-right:auto;"/><br>
 <div style="text-align: center; margin: 20pt">
@@ -68,15 +68,15 @@ These observations are published in our [ACM RecSys'21 paper](https://dl.acm.org
 
 Training a model with Transformers4Rec typically requires performing the following high-level steps:
 
-1. Provide the [schema](https://nvidia-merlin.github.io/Transformers4Rec/main/api/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema) and construct an input-module.
+1. Provide the [schema](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/merlin_standard_lib.schema.html#merlin_standard_lib.schema.schema.Schema) and construct an input-module.
 
    If you encounter session-based recommendation issues, you typically want to use the
-   [TabularSequenceFeatures](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures)
+   [TabularSequenceFeatures](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.features.html#transformers4rec.torch.features.sequence.TabularSequenceFeatures)
    class because it merges context features with sequential features.
 
 2. Provide the prediction-tasks.
 
-   The tasks that are provided right out of the box are available from our [API documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.model.html#module-transformers4rec.torch.model.prediction_task).
+   The tasks that are provided right out of the box are available from our [API documentation](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.model.html#module-transformers4rec.torch.model.prediction_task).
 
 3. Construct a transformer-body and convert this into a model.
 
@@ -131,7 +131,7 @@ model = tr.Model(head)
 > The masking in the input module can be set to `None` instead of `causal`.
 > When you define the head, you can replace the `NextItemPredictionTask`
 > with an instance of `BinaryClassificationTask`.
-> See the sample code in the [API documentation for the class](https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.html#transformers4rec.torch.BinaryClassificationTask).
+> See the sample code in the [API documentation for the class](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.html#transformers4rec.torch.BinaryClassificationTask).
 
 ## Installation
 
@@ -175,11 +175,11 @@ mamba create -n transformers4rec-23.04 -c nvidia -c rapidsai -c pytorch -c conda
 
 Transformers4Rec is pre-installed in the `merlin-pytorch` container that is available from the NVIDIA GPU Cloud (NGC) catalog.
 
-Refer to the [Merlin Containers](https://nvidia-merlin.github.io/Merlin/main/containers.html) documentation page for information about the Merlin container names, URLs to container images in the catalog, and key Merlin components.
+Refer to the [Merlin Containers](https://nvidia-merlin.github.io/Merlin/stable/containers.html) documentation page for information about the Merlin container names, URLs to container images in the catalog, and key Merlin components.
 
 ## Notebook Examples and Tutorials
 
-The [End-to-end pipeline with NVIDIA Merlin](https://nvidia-merlin.github.io/Transformers4Rec/main/pipeline.html) page
+The [End-to-end pipeline with NVIDIA Merlin](https://nvidia-merlin.github.io/Transformers4Rec/stable/pipeline.html) page
 shows how to use Transformers4Rec and other Merlin libraries like NVTabular to build a complete recommender system.
 
 We have several [example](./examples) notebooks to help you build a recommender system or integrate Transformers4Rec into your system:
@@ -194,4 +194,4 @@ We have several [example](./examples) notebooks to help you build a recommender 
 If you'd like to make direct contributions to Transformers4Rec, refer to [Contributing to Transformers4Rec](CONTRIBUTING.md). We're particularly interested in contributions or feature requests for our feature engineering and preprocessing operations. To further advance our Merlin roadmap, we encourage you to share all the details regarding your recommender system pipeline by going to https://developer.nvidia.com/merlin-devzone-survey.
 
 If you're interested in learning more about how Transformers4Rec works, refer to our
-[Transformers4Rec documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/getting_started.html). We also have [API documentation](https://nvidia-merlin.github.io/Transformers4Rec/main/api/modules.html) that outlines the specifics of the available modules and classes within Transformers4Rec.
+[Transformers4Rec documentation](https://nvidia-merlin.github.io/Transformers4Rec/stable/getting_started.html). We also have [API documentation](https://nvidia-merlin.github.io/Transformers4Rec/stable/api/modules.html) that outlines the specifics of the available modules and classes within Transformers4Rec.
