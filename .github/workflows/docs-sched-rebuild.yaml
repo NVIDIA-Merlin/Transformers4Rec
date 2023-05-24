@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip tox
+      - name: Setup local branches for docs build
+        run: |
+          git branch --track main origin/main || true
+          git branch --track stable origin/stable || true
       - name: Build
         run: |
           tox -vv -e docs-multi
