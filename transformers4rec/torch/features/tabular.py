@@ -157,6 +157,7 @@ class TabularFeatures(MergeTabular):
             Returns ``TabularFeatures`` from a dataset schema
         """
         maybe_continuous_module, maybe_categorical_module = None, None
+        processed_features = []
         if continuous_tags:
             if continuous_soft_embeddings:
                 maybe_continuous_module = cls.SOFT_EMBEDDING_MODULE_CLASS.from_schema(
@@ -168,9 +169,21 @@ class TabularFeatures(MergeTabular):
                 maybe_continuous_module = cls.CONTINUOUS_MODULE_CLASS.from_schema(
                     schema, tags=continuous_tags, **kwargs
                 )
+            processed_features.extend(schema.select_by_tag(continuous_tags).column_names)
         if categorical_tags:
             maybe_categorical_module = cls.EMBEDDING_MODULE_CLASS.from_schema(
                 schema, tags=categorical_tags, **kwargs
+            )
+            processed_features.extend(schema.select_by_tag(categorical_tags).column_names)
+
+        unprocessed_features = set(schema.column_names).difference(set(processed_features))
+        if unprocessed_features:
+            raise ValueError(
+                "Schema provided to `TabularFeatures` includes features "
+                "without CONTINUOUS or CATEGORICAL tags. "
+                "Please ensure all columns have either one of these tags "
+                "or are excluded from the schema. "
+                f"\nUnproceesed features: {unprocessed_features} "
             )
 
         output = cls(
