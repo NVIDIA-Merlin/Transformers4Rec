@@ -10,7 +10,7 @@ def test_tabular_sequence_testing_data():
     assert tabular_sequence_testing_data.schema_path.endswith(
         "transformers4rec/data/testing/schema.json"
     )
-    assert len(tabular_sequence_testing_data.schema) == 22
+    assert len(tabular_sequence_testing_data.schema) == 14
 
     torch_yoochoose_like = tabular_sequence_testing_data.torch_synthetic_data(
         num_rows=100, min_session_length=5, max_session_length=20
