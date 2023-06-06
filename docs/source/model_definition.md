@@ -72,6 +72,7 @@ tabular_inputs = TabularSequenceFeatures.from_schema(
 > The `embedding_dim_default` argument sets a fixed dimension for all categorical input features.
 > For more information, see the {class}`TabularSequenceFeatures <transformers4rec.torch.features.sequence.TabularSequenceFeatures>` class documentation.
 
+(sequence-masking)=
 ## Sequence Masking
 
 You can train Transformer architectures in different ways.

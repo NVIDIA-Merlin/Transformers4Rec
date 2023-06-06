@@ -216,7 +216,7 @@ class DLDataLoader(PyTorchDataLoader):
 class MerlinDataLoader(T4RecDataLoader, DLDataLoader):
     """
     This class extends the [Merlin data loader]
-    (https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py).
+    (https://github.com/NVIDIA-Merlin/dataloader/blob/stable/merlin/dataloader/torch.py).
     The data input requires a merlin.io.Dataset or a path to the data files.
     It also sets the dataset's schema with the necessary properties to prepare the input
     list features as dense tensors (i.e. padded to the specified `max_sequence_length`).
