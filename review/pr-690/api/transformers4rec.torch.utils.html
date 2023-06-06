@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/api/transformers4rec.torch.utils.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/api/transformers4rec.torch.utils.html" />
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -282,7 +282,7 @@ T4Rec Trainer during evaluation
 <em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">transformers4rec.torch.utils.data_utils.</span></code><code class="sig-name descname"><span class="pre">MerlinDataLoader</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="pre">paths_or_dataset</span></em>, <em class="sig-param"><span class="pre">batch_size</span></em>, <em class="sig-param"><span class="pre">max_sequence_length=None</span></em>, <em class="sig-param"><span class="pre">conts=None</span></em>, <em class="sig-param"><span class="pre">cats=None</span></em>, <em class="sig-param"><span class="pre">labels=None</span></em>, <em class="sig-param"><span class="pre">lists=None</span></em>, <em class="sig-param"><span class="pre">collate_fn=&lt;function</span> <span class="pre">MerlinDataLoader.&lt;lambda&gt;&gt;</span></em>, <em class="sig-param"><span class="pre">engine=None</span></em>, <em class="sig-param"><span class="pre">buffer_size=0.1</span></em>, <em class="sig-param"><span class="pre">reader_kwargs=None</span></em>, <em class="sig-param"><span class="pre">shuffle=False</span></em>, <em class="sig-param"><span class="pre">seed_fn=None</span></em>, <em class="sig-param"><span class="pre">parts_per_chunk=1</span></em>, <em class="sig-param"><span class="pre">device=None</span></em>, <em class="sig-param"><span class="pre">global_size=None</span></em>, <em class="sig-param"><span class="pre">global_rank=None</span></em>, <em class="sig-param"><span class="pre">drop_last=False</span></em>, <em class="sig-param"><span class="pre">schema=None</span></em>, <em class="sig-param"><span class="pre">row_groups_per_part=True</span></em>, <em class="sig-param"><span class="pre">transforms=None</span></em>, <em class="sig-param"><span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/transformers4rec/torch/utils/data_utils.html#MerlinDataLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#transformers4rec.torch.utils.data_utils.MerlinDataLoader" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code>[<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.utils.data.dataloader.T_co</span></code>]</p>
 <p>This class extends the [Merlin data loader]
-(<a class="reference external" href="https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py">https://github.com/NVIDIA-Merlin/dataloader/blob/main/merlin/dataloader/torch.py</a>).
+(<a class="reference external" href="https://github.com/NVIDIA-Merlin/dataloader/blob/stable/merlin/dataloader/torch.py">https://github.com/NVIDIA-Merlin/dataloader/blob/stable/merlin/dataloader/torch.py</a>).
 The data input requires a merlin.io.Dataset or a path to the data files.
 It also sets the dataset’s schema with the necessary properties to prepare the input
 list features as dense tensors (i.e. padded to the specified <cite>max_sequence_length</cite>).
@@ -290,7 +290,7 @@ The dense representation is required by the Transformers4Rec input modules.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>paths_or_dataset</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://nvidia-merlin.github.io/core/main/api/merlin.io.html#merlin.io.Dataset" title="(in Merlin Core)"><em>merlin.io.Dataset</em></a><em>]</em>) – The dataset to load.</p></li>
+<li><p><strong>paths_or_dataset</strong> (<em>Union</em><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.11)"><em>str</em></a><em>, </em><a class="reference external" href="https://nvidia-merlin.github.io/core/stable/api/merlin.io.html#merlin.io.Dataset" title="(in Merlin Core)"><em>merlin.io.Dataset</em></a><em>]</em>) – The dataset to load.</p></li>
 <li><p><strong>batch_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The size of each batch to supply to the model.</p></li>
 <li><p><strong>max_sequence_length</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.11)"><em>int</em></a>) – The maximum sequence length to use for padding list columns.
 By default, <cite>0</cite> is used as the padding index.</p></li>
@@ -324,7 +324,7 @@ is provided in <cite>paths_or_dataset</cite> argument.</p></li>
 <li><p><strong>row_groups_per_part</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.11)"><em>bool</em></a><em>, </em><em>optional</em>) – If true, preserve the group partitions when loading the dataset from parquet files.</p></li>
 <li><p><strong>collate_fn</strong> (<em>Callable</em><em>, </em><em>optional</em>) – A processing function to collect and prepare the list samples
 (tuple of (input, target) Tensor(s)) returned by the Merlin DataLoader.</p></li>
-<li><p><strong>transforms</strong> (<em>List</em><em>[</em><a class="reference external" href="https://nvidia-merlin.github.io/core/main/api/merlin.dag.html#merlin.dag.BaseOperator" title="(in Merlin Core)"><em>merlin.dag.BaseOperator</em></a><em>]</em>) – A list of operators that the Merlin dataloader applies on top of the loaded
+<li><p><strong>transforms</strong> (<em>List</em><em>[</em><a class="reference external" href="https://nvidia-merlin.github.io/core/stable/api/merlin.dag.html#merlin.dag.BaseOperator" title="(in Merlin Core)"><em>merlin.dag.BaseOperator</em></a><em>]</em>) – A list of operators that the Merlin dataloader applies on top of the loaded
 batch, which is a tuple of input and target tensors.</p></li>
 </ul>
 </dd>
