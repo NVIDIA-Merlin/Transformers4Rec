@@ -51,7 +51,7 @@ Please make sure that the resulting number of partitions is divisible by number 
 
 ### Performance Comparison
 
-We trained and evaluated a number of models using single GPU, `DataParallel` and `DistributedDataParallel` training modes and the results are shown in the table below. To reproduce, use the models included in [ci/test_integration.sh](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/ci/test_integration.sh).
+We trained and evaluated a number of models using single GPU, `DataParallel` and `DistributedDataParallel` training modes and the results are shown in the table below. To reproduce, use the models included in [ci/test_integration.sh](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/ci/test_integration.sh).
 
 <img src="_images/DP_DDP_perf.png" alt="Performance comparison of diffrerent training modes" style="width:800px;display:block;margin-left:auto;margin-right:auto;"/><br>
 
