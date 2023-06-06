@@ -24,7 +24,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Triton for Recommender Systems" href="04-Inference-with-Triton.html" />
+    <link rel="next" title="Transformers4Rec paper - Experiments reproducibility" href="../t4rec_paper_experiments/index.html" />
     <link rel="prev" title="ETL with NVTabular" href="02-ETL-with-NVTabular.html" /> 
 </head>
 
@@ -65,7 +65,6 @@
 <li class="toctree-l3"><a class="reference internal" href="01-preprocess.html">Preliminary Preprocessing</a></li>
 <li class="toctree-l3"><a class="reference internal" href="02-ETL-with-NVTabular.html">ETL with NVTabular</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Session-based recommendation with Transformers4Rec</a></li>
-<li class="toctree-l3"><a class="reference internal" href="04-Inference-with-Triton.html">Triton for Recommender Systems</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../t4rec_paper_experiments/index.html">Transformers4Rec paper - Experiments reproducibility</a></li>
@@ -1560,66 +1559,6 @@ Wall time: 8min 42s
 </div>
 </div>
 </div>
-<p>After model training and evaluation is completed we can save our trained model in the next section.</p>
-</div>
-<div class="section" id="exporting-the-preprocessing-workflow-and-model-for-deployment-to-triton-server">
-<h5>Exporting the preprocessing workflow and model for deployment to Triton server<a class="headerlink" href="#exporting-the-preprocessing-workflow-and-model-for-deployment-to-triton-server" title="Permalink to this headline"></a></h5>
-<p>Load the preproc workflow that we saved in the ETL notebook.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">nvtabular</span> <span class="k">as</span> <span class="nn">nvt</span>
-
-<span class="c1"># define data path about where to get our data</span>
-<span class="n">INPUT_DATA_DIR</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;INPUT_DATA_DIR&quot;</span><span class="p">,</span> <span class="s2">&quot;/workspace/data/&quot;</span><span class="p">)</span>
-<span class="n">workflow_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;workflow_etl&#39;</span><span class="p">)</span>
-<span class="n">workflow</span> <span class="o">=</span> <span class="n">nvt</span><span class="o">.</span><span class="n">Workflow</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">workflow_path</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># dictionary representing max sequence length for the sequential (list) columns</span>
-<span class="n">sparse_features_max</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="n">fname</span><span class="p">:</span> <span class="n">sequence_length</span>
-    <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">x_cat_names</span> <span class="o">+</span> <span class="n">x_cont_names</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;category_code-list&#39;</span><span class="p">]</span>
-<span class="p">}</span>
-
-<span class="n">sparse_features_max</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>{&#39;product_id-list&#39;: 20,
- &#39;category_id-list&#39;: 20,
- &#39;brand-list&#39;: 20,
- &#39;product_recency_days_log_norm-list&#39;: 20,
- &#39;et_dayofweek_sin-list&#39;: 20,
- &#39;et_dayofweek_cos-list&#39;: 20,
- &#39;price_log_norm-list&#39;: 20,
- &#39;relative_price_to_avg_categ_id-list&#39;: 20,
- &#39;category_code-list&#39;: 20}
-</pre></div>
-</div>
-</div>
-</div>
-<p>It is time to export the proc workflow and model in the format required by Triton Inference Server, by using the NVTabular’s <code class="docutils literal notranslate"><span class="pre">export_pytorch_ensemble()</span></code> function.</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">nvtabular.inference.triton</span> <span class="kn">import</span> <span class="n">export_pytorch_ensemble</span>
-<span class="n">export_pytorch_ensemble</span><span class="p">(</span>
-    <span class="n">model</span><span class="p">,</span>
-    <span class="n">workflow</span><span class="p">,</span>
-    <span class="n">sparse_max</span><span class="o">=</span><span class="n">sparse_features_max</span><span class="p">,</span>
-    <span class="n">name</span><span class="o">=</span> <span class="s2">&quot;t4r_pytorch&quot;</span><span class="p">,</span>
-    <span class="n">model_path</span><span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">INPUT_DATA_DIR</span><span class="p">,</span> <span class="s1">&#39;models&#39;</span><span class="p">),</span>
-    <span class="n">label_columns</span> <span class="o">=</span><span class="p">[],</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>Before we move on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton</span></code>, let’s print out our results.txt file.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">!</span>cat<span class="w"> </span>results.txt
@@ -1656,7 +1595,6 @@ next-item/recall_at_20:0.22519969940185547
 <div class="section" id="wrap-up">
 <h2>Wrap Up<a class="headerlink" href="#wrap-up" title="Permalink to this headline"></a></h2>
 <p>Congratulations on finishing this notebook. In this tutorial, we have presented Transformers4Rec, an open source library designed to enable RecSys researchers and practitioners to quickly and easily explore the latest developments of the NLP for sequential and session-based recommendation tasks.</p>
-<p>Please shut down the kernel before moving on to the next notebook, <code class="docutils literal notranslate"><span class="pre">04-Inference-with-Triton.ipynb</span></code>.</p>
 </div>
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
@@ -1678,7 +1616,7 @@ next-item/recall_at_20:0.22519969940185547
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="02-ETL-with-NVTabular.html" class="btn btn-neutral float-left" title="ETL with NVTabular" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="04-Inference-with-Triton.html" class="btn btn-neutral float-right" title="Triton for Recommender Systems" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../t4rec_paper_experiments/index.html" class="btn btn-neutral float-right" title="Transformers4Rec paper - Experiments reproducibility" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
