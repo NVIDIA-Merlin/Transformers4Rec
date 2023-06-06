@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/tutorial/02-ETL-with-NVTabular.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/examples/tutorial/02-ETL-with-NVTabular.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -208,7 +208,7 @@
 <li><p>we categorified the <code class="docutils literal notranslate"><span class="pre">user_session</span></code> column, so that it now has only integer values.</p></li>
 <li><p>we removed consequetively repeated (user, item) interactions. For example, an original session with <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3]</span></code> product interactions has become <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code> after removing the repeated interactions on the same item within the same session.</p></li>
 </ul>
-<p>Below, we start by reading in <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code>with cuDF. In order to create and save <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code> file, please run <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/tutorial">01-preprocess.ipynb</a> notebook first.</p>
+<p>Below, we start by reading in <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code>with cuDF. In order to create and save <code class="docutils literal notranslate"><span class="pre">Oct-2019.parquet</span></code> file, please run <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/examples/tutorial/01-preprocess.ipynb">01-preprocess.ipynb</a> notebook first.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="o">%%time</span>
