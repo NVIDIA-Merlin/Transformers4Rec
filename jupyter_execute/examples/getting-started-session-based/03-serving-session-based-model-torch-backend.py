@@ -113,69 +113,44 @@ train_paths = os.path.join(OUTPUT_DIR, f"{1}/train.parquet")
 dataset = Dataset(train_paths)
 
 
+# Create a dict of tensors to feed it as example inputs in the `torch.jit.trace()`.
+
 # In[8]:
 
 
-sparse_max = {'age_days-list': 20,
- 'weekday_sin-list': 20,
- 'item_id-list': 20,
- 'category-list': 20}
+import pandas as pd
+from merlin.table import TensorTable, TorchColumn
+from merlin.table.conversions import convert_col
 
-from transformers4rec.torch.utils.data_utils import MerlinDataLoader
+df = cudf.read_parquet(train_paths, columns=model.input_schema.column_names)
+table = TensorTable.from_df(df.loc[:100])
+for column in table.columns:
+    table[column] = convert_col(table[column], TorchColumn)
+model_input_dict = table.to_dict()
 
-def generate_dataloader(schema, dataset, batch_size=128, seq_length=20):
-    loader = MerlinDataLoader.from_schema(
-            schema,
-            dataset,
-            batch_size=batch_size,
-            max_sequence_length=seq_length,
-            shuffle=False,
-            sparse_as_dense=True,
-            sparse_max=sparse_max
-        )
-    return loader
-
-
-# Create a dict of tensors to feed it as example inputs in the `torch.jit.trace()`.
 
 # In[9]:
 
 
-loader = generate_dataloader(schema, dataset)
-train_dict = next(iter(loader))
+model_input_dict
 
-
-# Let's check out the `item_id-list` column in the `train_dict` dictionary.
 
 # In[10]:
 
 
-train_dict[0]['item_id-list']
-
-
-# In[11]:
-
-
-traced_model = torch.jit.trace(model, train_dict[0], strict=True)
+traced_model = torch.jit.trace(model, model_input_dict, strict=True)
 
 
 # Generate model input and output schemas to feed in the `PredictPyTorch` operator below.
 
-# In[12]:
+# In[11]:
 
 
 input_schema = model.input_schema
 output_schema = model.output_schema
 
 
-# In[13]:
-
-
-for col_name, col_schema in input_schema.column_schemas.items():
-    input_schema[col_name] = input_schema[col_name].with_shape((None, sparse_max[col_name]))
-
-
-# In[14]:
+# In[12]:
 
 
 input_schema
@@ -183,7 +158,7 @@ input_schema
 
 # Let's create a folder that we can store the exported models and the config files.
 
-# In[15]:
+# In[13]:
 
 
 import shutil
@@ -196,7 +171,7 @@ os.mkdir(ens_model_path)
 
 # We want to serve NVT model and our trained session-based model together as an ensemble to the Triton Inference Server. That way we can send raw requests to Triton and return back item scores per session. For that we need to load our save workflow first.
 
-# In[16]:
+# In[14]:
 
 
 from nvtabular.workflow import Workflow
@@ -206,7 +181,7 @@ print(workflow.input_schema.column_names)
 
 # For transforming the raw input features during inference, we use [TransformWorkflow](https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/workflow.py) operator that ensures the workflow is correctly saved and packaged with the required config so the server will know how to load it. We use [PredictPyTorch](https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/pytorch.py) operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.
 
-# In[17]:
+# In[15]:
 
 
 torch_op = workflow.input_schema.column_names >> TransformWorkflow(workflow) >> PredictPyTorch(
@@ -220,13 +195,13 @@ ensemble = Ensemble(torch_op, workflow.input_schema)
 # 
 # When we create an `Ensemble` object we supply the graph and a schema representing the starting input of the graph. The inputs to the ensemble graph are the inputs to the first operator of out graph. After we created the Ensemble we export the graph, supplying an export path for the `ensemble.export` function. This returns an ensemble config which represents the entire inference pipeline and a list of node-specific configs.
 
-# In[18]:
+# In[16]:
 
 
 ens_config, node_configs = ensemble.export(ens_model_path)
 
 
-# In[19]:
+# In[17]:
 
 
 ensemble.input_schema
@@ -240,7 +215,7 @@ ensemble.input_schema
 # 
 # For the `--model-repository` argument, specify the same path as the export_path that you specified previously in the `ensemble.export` method. This command will launch the server and load all the models to the server. Once all the models are loaded successfully, you should see READY status printed out in the terminal for each loaded model.
 
-# In[20]:
+# In[18]:
 
 
 import tritonclient.http as client
@@ -255,7 +230,7 @@ except Exception as e:
 
 # After we create the client and verified it is connected to the server instance, we can communicate with the server and ensure all the models are loaded correctly.
 
-# In[21]:
+# In[19]:
 
 
 # ensure triton is in a good state
@@ -270,7 +245,7 @@ triton_client.get_model_repository_index()
 
 # Let's generate a dataframe with raw input values. We can send this dataframe to Triton as a request.
 
-# In[22]:
+# In[20]:
 
 
 NUM_ROWS =1000
@@ -293,15 +268,15 @@ print(df.head(2))
 
 # Once our models are successfully loaded to the TIS, we can now easily send a request to TIS and get a response for our query with send_triton_request utility function.
 
-# In[23]:
+# In[21]:
 
 
 from merlin.systems.triton.utils import send_triton_request
-response = send_triton_request(workflow.input_schema, df, output_schema.column_names)
-print(response)
+response = send_triton_request(workflow.input_schema, df, output_schema.column_names, endpoint="localhost:8001")
+response
 
 
-# In[24]:
+# In[22]:
 
 
 response['next-item'].shape

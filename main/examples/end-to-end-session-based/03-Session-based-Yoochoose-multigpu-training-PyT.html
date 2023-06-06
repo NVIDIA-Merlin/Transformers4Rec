@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/end-to-end-session-based/03-Session-based-Yoochoose-multigpu-training-PyT.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/examples/end-to-end-session-based/03-Session-based-Yoochoose-multigpu-training-PyT.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -145,7 +145,7 @@
 <p>Please note these <b>important points</b> that are relevant to multi-gpu training:</p>
 <ul class="simple">
 <li><p><b>specifying multiple GPUs</b>: PyTorch distributed launch environment will recognize that we have two GPUs, since the <code class="docutils literal notranslate"><span class="pre">--nproc_per_node</span></code> arg of <code class="docutils literal notranslate"><span class="pre">torch.distributed.launch</span></code> takes care of assigning one GPU per process and performs the training loop on multiple GPUs (2 in this case) using different batches of the data in a data-parallel fashion.</p></li>
-<li><p><b>data repartitioning</b>: when training on multiple GPUs, data must be re-partitioned into &gt;1 partitions where the number of partitions must be at least equal to the number of GPUs. The torch utility library in Transformers4Rec does this automatically and outputs a UserWarning message. If you would like to avoid this warning message, you may choose to manually re-partition your data files before you launch the training loop or function. See <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html#distributeddataparallel">this document</a> for further information on how to do manual re-partitioning.</p></li>
+<li><p><b>data repartitioning</b>: when training on multiple GPUs, data must be re-partitioned into &gt;1 partitions where the number of partitions must be at least equal to the number of GPUs. The torch utility library in Transformers4Rec does this automatically and outputs a UserWarning message. If you would like to avoid this warning message, you may choose to manually re-partition your data files before you launch the training loop or function. See <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/multi_gpu_train.html#distributeddataparallel">this document</a> for further information on how to do manual re-partitioning.</p></li>
 <li><p><b>training and evaluation batch sizes</b>: in the default DistributedDataParallel mode we will be running, keeping the batch size unchanged means each worker will receive the same-size batch despite the fact that you are now using multiple GPUs. If you would like to keep the total batch size constant, you may want to divide the training and evaluation batch sizes by the number of GPUs you are running on, which is expected to reduce time it takes train and evaluate on each batch.</p></li>
 </ul>
 <div class="cell docutils container">
@@ -297,9 +297,9 @@
 <div class="section" id="references">
 <h2>References<a class="headerlink" href="#references" title="Permalink to this headline"></a></h2>
 <ul class="simple">
-<li><p>Multi-GPU data-parallel training using the Trainer class <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html">https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html</a></p></li>
+<li><p>Multi-GPU data-parallel training using the Trainer class <a class="reference external" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/multi_gpu_train.html">https://nvidia-merlin.github.io/Transformers4Rec/stable/multi_gpu_train.html</a></p></li>
 <li><p>Merlin Transformers4rec: <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec">https://github.com/NVIDIA-Merlin/Transformers4Rec</a></p></li>
-<li><p>Merlin NVTabular: <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular">https://github.com/NVIDIA-Merlin/NVTabular/tree/main/nvtabular</a></p></li>
+<li><p>Merlin NVTabular: <a class="reference external" href="https://github.com/NVIDIA-Merlin/NVTabular/tree/stable/nvtabular">https://github.com/NVIDIA-Merlin/NVTabular/tree/stable/nvtabular</a></p></li>
 <li><p>Merlin Dataloader: <a class="reference external" href="https://github.com/NVIDIA-Merlin/dataloader">https://github.com/NVIDIA-Merlin/dataloader</a></p></li>
 </ul>
 </div>
@@ -336,16 +336,17 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
+      <dd><a href="../../../v0.1.14/index.html">v0.1.14</a></dd>
       <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../v23.05.00/index.html">v23.05.00</a></dd>
-      <dd><a href="../../../v23.05.dev0/index.html">v23.05.dev0</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
       <dd><a href="03-Session-based-Yoochoose-multigpu-training-PyT.html">main</a></dd>
+      <dd><a href="../../../stable/index.html">stable</a></dd>
     </dl>
   </div>
 </div><script>

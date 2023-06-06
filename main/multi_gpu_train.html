@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/multi_gpu_train.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/multi_gpu_train.html" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -132,7 +132,7 @@
 </div>
 <div class="section" id="performance-comparison">
 <h2>Performance Comparison<a class="headerlink" href="#performance-comparison" title="Permalink to this headline"></a></h2>
-<p>We trained and evaluated a number of models using single GPU, <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> and <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> training modes and the results are shown in the table below. To reproduce, use the models included in <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/ci/test_integration.sh">ci/test_integration.sh</a>.</p>
+<p>We trained and evaluated a number of models using single GPU, <code class="docutils literal notranslate"><span class="pre">DataParallel</span></code> and <code class="docutils literal notranslate"><span class="pre">DistributedDataParallel</span></code> training modes and the results are shown in the table below. To reproduce, use the models included in <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/ci/test_integration.sh">ci/test_integration.sh</a>.</p>
 <p><img alt="Performance comparison of diffrerent training modes" src="_images/DP_DDP_perf.png" /><br></p>
 <p>These experiments used a machine with 2 <i>Tesla V100-SXM2-32GB-LS</i> GPUs.</p>
 <p><b>Note:</b> Using Data-Parallel training can impact metrics such at NDCG and recall. Therefore, Users are advised to tune the learning rate for better accuracy.</p>
@@ -173,16 +173,17 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
+      <dd><a href="../v0.1.14/multi_gpu_train.html">v0.1.14</a></dd>
       <dd><a href="../v0.1.15/multi_gpu_train.html">v0.1.15</a></dd>
       <dd><a href="../v0.1.16/multi_gpu_train.html">v0.1.16</a></dd>
       <dd><a href="../v23.02.00/multi_gpu_train.html">v23.02.00</a></dd>
       <dd><a href="../v23.04.00/multi_gpu_train.html">v23.04.00</a></dd>
       <dd><a href="../v23.05.00/multi_gpu_train.html">v23.05.00</a></dd>
-      <dd><a href="../v23.05.dev0/multi_gpu_train.html">v23.05.dev0</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
       <dd><a href="multi_gpu_train.html">main</a></dd>
+      <dd><a href="../stable/multi_gpu_train.html">stable</a></dd>
     </dl>
   </div>
 </div><script>

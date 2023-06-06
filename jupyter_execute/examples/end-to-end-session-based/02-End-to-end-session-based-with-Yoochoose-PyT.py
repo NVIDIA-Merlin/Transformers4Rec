@@ -198,47 +198,109 @@ for key in sorted(avg_results.keys()):
     print(" %s = %s" % (key, str(avg_results[key]))) 
 
 
-# #### Save the model
+# #### Trace the model
+# 
+# We serve the model with the PyTorch backend that is used to execute TorchScript models. All models created in PyTorch using the python API must be traced/scripted to produce a TorchScript model. For tracing the model, we use [torch.jit.trace](https://pytorch.org/docs/stable/generated/torch.jit.trace.html) api that takes the model as a Python function or torch.nn.Module, and an example input  that will be passed to the function while tracing.
 
 # In[13]:
 
 
-recsys_trainer._save_model_and_checkpoint(save_model_class=True)
+import os
+import torch
+import cudf
+from merlin.io import Dataset
+from nvtabular import Workflow
+
+from merlin.systems.dag import Ensemble
+from merlin.systems.dag.ops.pytorch import PredictPyTorch
+from merlin.systems.dag.ops.workflow import TransformWorkflow
+from merlin.table import TensorTable, TorchColumn
+from merlin.table.conversions import convert_col
 
 
-# #### Export the preprocessing workflow and model in the format required by Triton server:
+# Create a dict of tensors to feed it as example inputs in the `torch.jit.trace()`.
+
+# In[14]:
+
+
+df = cudf.read_parquet(os.path.join(INPUT_DATA_DIR, "./preproc_sessions_by_day/178/train.parquet"), columns=model.input_schema.column_names)
+table = TensorTable.from_df(df.iloc[:100])
+for column in table.columns:
+    table[column] = convert_col(table[column], TorchColumn)
+model_input_dict = table.to_dict()
+
+
+# Let's now add a top_k parameter to model so that we can return the top k item ids with the highest scores when we serve the model on Triton Inference Server.
+
+# In[15]:
+
+
+model.top_k = 20
+
+
+# Let us now trace the model.
+
+# In[16]:
+
+
+model.eval()
+traced_model = torch.jit.trace(model, model_input_dict, strict=True)
+
+
+# Let's check out the `item_id-list` column in the `model_input_dict` dictionary.
 # 
-# NVTabular’s `export_pytorch_ensemble()` function enables us to create model files and config files to be served to Triton Inference Server. 
+# The column is represented as values and offsets dictating which values belong to which example.
 
 # In[17]:
 
 
-x_cat_names, x_cont_names = ['item_id-list', 'category-list'], ['product_recency_days_log_norm-list', 'et_dayofweek_sin-list']
+model_input_dict['item_id-list__values']
 
-sparse_features_max = {
-    fname: 20
-    for fname in x_cat_names + x_cont_names
-}
 
-sparse_features_max
+# And here are the offsets
 
+# In[18]:
+
+
+model_input_dict['item_id-list__offsets']
+
+
+# Let's create a folder that we can store the exported models and the config files.
 
 # In[19]:
 
 
-from nvtabular.inference.triton import export_pytorch_ensemble
-from nvtabular.workflow import Workflow
-workflow = Workflow.load(os.path.join(INPUT_DATA_DIR, "workflow_etl"))
-model_path = os.path.join(INPUT_DATA_DIR, "models")
+import shutil
+ens_model_path = os.environ.get("ens_model_path", f"{INPUT_DATA_DIR}/models")
+# Make sure we have a clean stats space for Dask
+if os.path.isdir(ens_model_path):
+    shutil.rmtree(ens_model_path)
+os.mkdir(ens_model_path)
 
-export_pytorch_ensemble(
-    model,
-    workflow,
-    sparse_max=sparse_features_max,
-    name="t4r_pytorch",
-    model_path= model_path,
-    label_columns =[],
+
+# In[20]:
+
+
+workflow = Workflow.load(os.path.join(INPUT_DATA_DIR, "workflow_etl"))
+
+
+# In[21]:
+
+
+torch_op = workflow.input_schema.column_names >> TransformWorkflow(workflow) >> PredictPyTorch(
+    traced_model, model.input_schema, model.output_schema
 )
+
+
+# The last step is to create the ensemble artifacts that Triton Inference Server can consume. To make these artifacts, we import the Ensemble class. The class is responsible for interpreting the graph and exporting the correct files for the server.
+# 
+# When we create an `Ensemble` object we supply the graph and a schema representing the starting input of the graph. The inputs to the ensemble graph are the inputs to the first operator of out graph. After we created the Ensemble we export the graph, supplying an export path for the `ensemble.export` function. This returns an ensemble config which represents the entire inference pipeline and a list of node-specific configs.
+
+# In[22]:
+
+
+ensemble = Ensemble(torch_op, workflow.input_schema)
+ens_config, node_configs = ensemble.export(ens_model_path)
 
 
 # ## 2. Serving Ensemble Model to the Triton Inference Server
@@ -252,21 +314,17 @@ export_pytorch_ensemble(
 # - to deploy saved NVTabular and PyTorch models to Triton Inference Server 
 # - send requests for predictions and get responses.
 
-# ### 2.1. Pull and Start Inference Container
+# ### 2.1 Starting Triton Server
+
+# It is time to deploy all the models as an ensemble model to Triton Inference Serve TIS. After we export the ensemble, we are ready to start the TIS. You can start triton server by using the following command on your terminal:
 # 
-# At this point, we start the Triton Inference Server (TIS). 
+# `tritonserver --model-repository=<ensemble_export_path>`
 # 
-# **Start triton server**<br>
-# You can start triton server with the command below. You need to provide correct path of the models folder.
-# 
-# ```
-# tritonserver --model-repository=<path_to_models> --model-control-mode=explicit
-# ```
-# Note: The model-repository path for our example is `/workspace/data/models/`. The models have not been loaded yet. Below, we will request the Triton server to load the saved ensemble model.
+# For the `--model-repository` argument, specify the same path as the export_path that you specified previously in the `ensemble.export` method. This command will launch the server and load all the models to the server. Once all the models are loaded successfully, you should see READY status printed out in the terminal for each loaded model.
 
 # ### 2.2. Connect to the Triton Inference Server and check if the server is alive
 
-# In[26]:
+# In[23]:
 
 
 import tritonhttpclient
@@ -281,7 +339,7 @@ triton_client.is_server_live()
 # ### 2.3. Load raw data for inference
 # We select the last 50 interactions and filter out sessions with less than 2 interactions. 
 
-# In[27]:
+# In[24]:
 
 
 import pandas as pd
@@ -292,19 +350,9 @@ sessions_to_use = batch.session_id.value_counts()
 filtered_batch = batch[batch.session_id.isin(sessions_to_use[sessions_to_use.values>1].index.values)]
 
 
-# ### 2.4. Load the ensemble model to triton
-
-# The models should be loaded successfully before we send a request to TIS. If all models are loaded successfully, you should be seeing `successfully loaded` status next to each model name on your terminal.
-
-# In[28]:
-
-
-triton_client.load_model(model_name="t4r_pytorch")
-
-
 # ### 2.5. Send the request to triton server
 
-# In[29]:
+# In[25]:
 
 
 triton_client.get_model_repository_index()
@@ -312,53 +360,36 @@ triton_client.get_model_repository_index()
 
 # If all models are loaded successfully, you should be seeing `READY` status next to each model.
 
-# In[30]:
+# In[26]:
 
 
-import nvtabular.inference.triton as nvt_triton
-import tritonclient.grpc as grpcclient
-
-inputs = nvt_triton.convert_df_to_triton_input(filtered_batch.columns, filtered_batch, grpcclient.InferInput)
-
-output_names = ["output"]
-
-outputs = []
-for col in output_names:
-    outputs.append(grpcclient.InferRequestedOutput(col))
-    
-MODEL_NAME_NVT = "t4r_pytorch"
-
-with grpcclient.InferenceServerClient("localhost:8001") as client:
-    response = client.infer(MODEL_NAME_NVT, inputs)
-    print(col, ':\n', response.as_numpy(col))
+from merlin.systems.triton.utils import send_triton_request
+response = send_triton_request(workflow.input_schema, filtered_batch, model.output_schema.column_names)
+print(response)
 
 
-# - Visualise top-k predictions
+# The response contains scores (logits) for each of the returned items and the returned it ids.
 
-# In[31]:
-
-
-from transformers4rec.torch.utils.examples_utils import visualize_response
-visualize_response(filtered_batch, response, top_k=5, session_col='session_id')
+# In[27]:
 
 
-# As you noticed, we first got prediction results (logits) from the trained model head, and then by using a handy util function `visualize_response` we extracted top-k encoded item-ids from logits. Basically, we generated recommended items for a given session.
+response.keys()
+
+
+# Just as we requested by setting the `top_k` parameter, only 20 predictions are returned.
+
+# In[28]:
+
+
+response['item_ids'].shape
+
+
 # 
 # This is the end of the tutorial. You successfully
 # 
 # - performed feature engineering with NVTabular
 # - trained transformer architecture based session-based recommendation models with Transformers4Rec
 # - deployed a trained model to Triton Inference Server, sent request and got responses from the server.
-
-# **Unload models**
-
-# In[32]:
-
-
-triton_client.unload_model(model_name="t4r_pytorch")
-triton_client.unload_model(model_name="t4r_pytorch_nvt")
-triton_client.unload_model(model_name="t4r_pytorch_pt")
-
 
 # ## References
 

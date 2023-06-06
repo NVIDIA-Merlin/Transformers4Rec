@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/getting-started-session-based/03-serving-session-based-model-torch-backend.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/examples/getting-started-session-based/03-serving-session-based-model-torch-backend.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -719,7 +719,7 @@
 </div>
 </div>
 </div>
-<p>For transforming the raw input features during inference, we use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/workflow.py">TransformWorkflow</a> operator that ensures the workflow is correctly saved and packaged with the required config so the server will know how to load it. We use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/main/merlin/systems/dag/ops/pytorch.py">PredictPyTorch</a> operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.</p>
+<p>For transforming the raw input features during inference, we use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/stable/merlin/systems/dag/ops/workflow.py">TransformWorkflow</a> operator that ensures the workflow is correctly saved and packaged with the required config so the server will know how to load it. We use <a class="reference external" href="https://github.com/NVIDIA-Merlin/systems/blob/stable/merlin/systems/dag/ops/pytorch.py">PredictPyTorch</a> operator that takes a pytorch model and packages it correctly for tritonserver to run on the PyTorch backend.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">torch_op</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">input_schema</span><span class="o">.</span><span class="n">column_names</span> <span class="o">&gt;&gt;</span> <span class="n">TransformWorkflow</span><span class="p">(</span><span class="n">workflow</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="n">PredictPyTorch</span><span class="p">(</span>
@@ -959,7 +959,7 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
 </div>
 </div>
 <p>We return a response for each request in the df. Each row in the <code class="docutils literal notranslate"><span class="pre">response['next-item']</span></code> array corresponds to the logit values per item in the catalog, and one logit score corresponding to the null, OOV and padded items. The first score of each array in each row corresponds to the score for the padded item, OOV or null item. Note that we dont have OOV or null items in our syntheticall generated datasets.</p>
-<p>This is the end of this suit of examples. You successfully performed feature engineering with NVTabular trained transformer architecture based session-based recommendation models with Transformers4Rec deployed the saved workflow and the trained model to Triton Inference Server with Torch backend, sent request and got responses from the server. If you would like to learn how to serve a TF4Rec model with Python backend please visit this <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb">example</a>.</p>
+<p>This is the end of this suit of examples. You successfully performed feature engineering with NVTabular trained transformer architecture based session-based recommendation models with Transformers4Rec deployed the saved workflow and the trained model to Triton Inference Server with Torch backend, sent request and got responses from the server. If you would like to learn how to serve a TF4Rec model with Python backend please visit this <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/examples/end-to-end-session-based/02-End-to-end-session-based-with-Yoochoose-PyT.ipynb">example</a>.</p>
 </div>
 </div>
 </div>
@@ -995,16 +995,17 @@ In this section, we generate a dataframe that we can serve as a request to TIS. 
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
+      <dd><a href="../../../v0.1.14/index.html">v0.1.14</a></dd>
       <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../v23.05.00/index.html">v23.05.00</a></dd>
-      <dd><a href="../../../v23.05.dev0/index.html">v23.05.dev0</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
       <dd><a href="03-serving-session-based-model-torch-backend.html">main</a></dd>
+      <dd><a href="../../../stable/index.html">stable</a></dd>
     </dl>
   </div>
 </div><script>

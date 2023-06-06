@@ -123,17 +123,17 @@ groupby_features = groupby_feats >> nvt.ops.Groupby(
 # Select and truncate the sequential features
 sequence_features_truncated = (
     groupby_features['category-list']
-    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True) 
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
 )
 
 sequence_features_truncated_item = (
     groupby_features['item_id-list']
-    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True) 
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
     >> TagAsItemID()
 )  
 sequence_features_truncated_cont = (
     groupby_features['age_days-list', 'weekday_sin-list'] 
-    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True) 
+    >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH) 
     >> nvt.ops.AddMetadata(tags=[Tags.CONTINUOUS])
 )
 

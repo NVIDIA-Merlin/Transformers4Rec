@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/examples/getting-started-session-based/01-ETL-with-NVTabular.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/examples/getting-started-session-based/01-ETL-with-NVTabular.html" />
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -272,7 +272,7 @@
 <div class="section" id="feature-engineering-with-nvtabular">
 <h2>Feature Engineering with NVTabular<a class="headerlink" href="#feature-engineering-with-nvtabular" title="Permalink to this headline"></a></h2>
 <p>Deep Learning models require dense input features. Categorical features are sparse, and need to be represented by dense embeddings in the model. To allow for that, categorical features first need to be encoded as contiguous integers <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">...,</span> <span class="pre">|C|)</span></code>, where <code class="docutils literal notranslate"><span class="pre">|C|</span></code> is the feature cardinality (number of unique values), so that their embeddings can be efficiently stored in embedding layers.  We will use NVTabular to preprocess the categorical features, so that all categorical columns are encoded as contiguous integers. Note that the <code class="docutils literal notranslate"><span class="pre">Categorify</span></code> op encodes OOVs or nulls to <code class="docutils literal notranslate"><span class="pre">0</span></code> automatically. In our synthetic dataset we do not have any nulls. On the other hand <code class="docutils literal notranslate"><span class="pre">0</span></code> is also used for padding the sequences in input block, therefore, you can set <code class="docutils literal notranslate"><span class="pre">start_index=1</span></code> arg in the Categorify op if you want the encoded null or OOV values to start from <code class="docutils literal notranslate"><span class="pre">1</span></code> instead of <code class="docutils literal notranslate"><span class="pre">0</span></code> because we reserve <code class="docutils literal notranslate"><span class="pre">0</span></code> for padding the sequence features.</p>
-<p>Here our goal is to create sequential features. To do so, we are grouping the features together at the session level in the following cell. In this synthetically generated example dataset, we do not have a timestamp column, but if we had one (that’s the case for most real-world datasets), we would be sorting the interactions by the timestamp column as in this <a class="reference external" href="https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/examples/end-to-end-session-based/01-ETL-with-NVTabular.ipynb">example notebook</a>. Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.</p>
+<p>Here our goal is to create sequential features. To do so, we are grouping the features together at the session level in the following cell. In this synthetically generated example dataset, we do not have a timestamp column, but if we had one (that’s the case for most real-world datasets), we would be sorting the interactions by the timestamp column as in this <a class="reference internal" href="../end-to-end-session-based/01-ETL-with-NVTabular.html"><span class="doc std std-doc">example notebook</span></a>. Note that we also trim each feature sequence in a  session to a certain length. Here, we use the NVTabular library so that we can easily preprocess and create features on GPU with a few lines.</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">SESSIONS_MAX_LENGTH</span> <span class="o">=</span><span class="mi">20</span>
@@ -807,16 +807,17 @@
   <div class="rst-other-versions">
     <dl>
       <dt>Tags</dt>
+      <dd><a href="../../../v0.1.14/index.html">v0.1.14</a></dd>
       <dd><a href="../../../v0.1.15/index.html">v0.1.15</a></dd>
       <dd><a href="../../../v0.1.16/index.html">v0.1.16</a></dd>
       <dd><a href="../../../v23.02.00/index.html">v23.02.00</a></dd>
       <dd><a href="../../../v23.04.00/index.html">v23.04.00</a></dd>
       <dd><a href="../../../v23.05.00/index.html">v23.05.00</a></dd>
-      <dd><a href="../../../v23.05.dev0/index.html">v23.05.dev0</a></dd>
     </dl>
     <dl>
       <dt>Branches</dt>
       <dd><a href="01-ETL-with-NVTabular.html">main</a></dd>
+      <dd><a href="../../../stable/index.html">stable</a></dd>
     </dl>
   </div>
 </div><script>

@@ -262,7 +262,7 @@ cont_feats = groupby_features['et_dayofweek_sin-list', 'product_recency_days_log
 
 
 groupby_features_list =  item_feat + cont_feats + groupby_features['category-list']
-groupby_features_truncated = groupby_features_list >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH, pad=True)
+groupby_features_truncated = groupby_features_list >> nvt.ops.ListSlice(-SESSIONS_MAX_LENGTH)
 
 # Calculate session day index based on 'event_time_dt-first' column
 day_index = ((groupby_features['event_time_dt-first'])  >> 
