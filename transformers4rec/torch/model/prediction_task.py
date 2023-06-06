@@ -307,7 +307,7 @@ class NextItemPredictionTask(PredictionTask):
     """This block performs item prediction task for session and sequential-based models.
     It requires a body containing a masking schema to use for training and target generation.
     For the supported masking schemes, please refers to:
-    https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking
+    https://nvidia-merlin.github.io/Transformers4Rec/stable/model_definition.html#sequence-masking
 
     Parameters
     ----------

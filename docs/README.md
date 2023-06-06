@@ -100,7 +100,7 @@ the link is to the repository:
 
 ```markdown
 Refer to the sample Python programs in the
-[examples/blah](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/main/examples/blah)
+[examples/blah](https://github.com/NVIDIA-Merlin/Transformers4Rec/tree/stable/examples/blah)
 directory of the repository.
 ```
 
@@ -137,7 +137,7 @@ a relative path works both in the HTML docs page and in the repository browsing 
 Use a link to the HTML page like the following:
 
 ```markdown
-<https://nvidia-merlin.github.io/Transformers4Rec/main/README.html>
+<https://nvidia-merlin.github.io/Transformers4Rec/stable/README.html>
 ```
 
 > I'd like to change this in the future. My preference would be to use a relative
