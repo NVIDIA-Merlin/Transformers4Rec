@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/model_definition.html" />
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -90,16 +90,16 @@
 <h1>Model Architectures<a class="headerlink" href="#model-architectures" title="Permalink to this headline"></a></h1>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><p><a class="reference internal" href="#modular-building-block-design" id="id1">Modular Building-Block Design</a></p></li>
-<li><p><a class="reference internal" href="#feature-aggregation-input-block" id="id2">Feature Aggregation (Input Block)</a></p></li>
-<li><p><a class="reference internal" href="#sequence-masking" id="id3">Sequence Masking</a></p></li>
-<li><p><a class="reference internal" href="#sequence-processing-transformer-rnn-block" id="id4">Sequence Processing (Transformer/RNN Block)</a></p></li>
-<li><p><a class="reference internal" href="#prediction-head-output-block" id="id5">Prediction Head (Output Block)</a></p>
+<li><p><a class="reference internal" href="#modular-building-block-design" id="id2">Modular Building-Block Design</a></p></li>
+<li><p><a class="reference internal" href="#feature-aggregation-input-block" id="id3">Feature Aggregation (Input Block)</a></p></li>
+<li><p><a class="reference internal" href="#sequence-masking" id="id4">Sequence Masking</a></p></li>
+<li><p><a class="reference internal" href="#sequence-processing-transformer-rnn-block" id="id5">Sequence Processing (Transformer/RNN Block)</a></p></li>
+<li><p><a class="reference internal" href="#prediction-head-output-block" id="id6">Prediction Head (Output Block)</a></p>
 <ul>
-<li><p><a class="reference internal" href="#tying-embeddings" id="id6">Tying Embeddings</a></p></li>
+<li><p><a class="reference internal" href="#tying-embeddings" id="id7">Tying Embeddings</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#regularization" id="id7">Regularization</a></p></li>
+<li><p><a class="reference internal" href="#regularization" id="id8">Regularization</a></p></li>
 </ul>
 </div>
 <div class="section" id="modular-building-block-design">
@@ -160,7 +160,7 @@ For more information, see the <a class="reference internal" href="api/transforme
 </div></blockquote>
 </div>
 <div class="section" id="sequence-masking">
-<h2>Sequence Masking<a class="headerlink" href="#sequence-masking" title="Permalink to this headline"></a></h2>
+<span id="id1"></span><h2>Sequence Masking<a class="headerlink" href="#sequence-masking" title="Permalink to this headline"></a></h2>
 <p>You can train Transformer architectures in different ways.
 Depending on the training method, there is a specific masking schema.
 The masking schema sets the items to be predicted–labels–and masks some positions of the sequence that cannot be used by the Transformer layers for prediction.</p>
