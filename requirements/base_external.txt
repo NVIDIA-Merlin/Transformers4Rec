@@ -1,4 +1,2 @@
-transformers[torch]>=4.12,<5
 tqdm>=4.27
 pyarrow>=1.0
-torchmetrics>=0.10.0
