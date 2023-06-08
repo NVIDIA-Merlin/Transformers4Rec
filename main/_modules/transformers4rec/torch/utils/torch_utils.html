@@ -111,6 +111,7 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">merlin.schema</span> <span class="kn">import</span> <span class="n">Schema</span> <span class="k">as</span> <span class="n">CoreSchema</span>
 <span class="kn">from</span> <span class="nn">merlin.schema.io.proto_utils</span> <span class="kn">import</span> <span class="n">has_field</span>
+<span class="kn">from</span> <span class="nn">merlin.schema.tags</span> <span class="kn">import</span> <span class="n">Tags</span>
 
 <span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span>
 <span class="kn">from</span> <span class="nn">merlin_standard_lib.schema.schema</span> <span class="kn">import</span> <span class="n">ColumnSchema</span>
@@ -255,14 +256,28 @@
 
     <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">features</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">name</span>
+        <span class="c1"># Pretrained embeddings (2-D or 3-D)</span>
+        <span class="k">if</span> <span class="n">Tags</span><span class="o">.</span><span class="n">EMBEDDING</span> <span class="ow">in</span> <span class="n">feature</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">batch_size</span><span class="p">,</span>
+                        <span class="n">max_sequence_length</span> <span class="k">if</span> <span class="n">max_sequence_length</span> <span class="k">else</span> <span class="n">feature</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
+                        <span class="n">feature</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">,</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">([</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">feature</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">])</span>
+
         <span class="c1"># Sequential or multi-hot feature</span>
-        <span class="k">if</span> <span class="n">_has_field</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="s2">&quot;value_count&quot;</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="n">_has_field</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="s2">&quot;value_count&quot;</span><span class="p">):</span>
             <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span>
                 <span class="p">[</span>
                     <span class="n">batch_size</span><span class="p">,</span>
                     <span class="n">max_sequence_length</span> <span class="k">if</span> <span class="n">max_sequence_length</span> <span class="k">else</span> <span class="n">feature</span><span class="o">.</span><span class="n">value_count</span><span class="o">.</span><span class="n">max</span><span class="p">,</span>
                 <span class="p">]</span>
             <span class="p">)</span>
+
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sizes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_get_size_from_shape</span><span class="p">(</span><span class="n">feature</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">)</span>
 
