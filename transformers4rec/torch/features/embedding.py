@@ -24,10 +24,12 @@ from merlin.schema import Tags, TagsType
 from merlin_standard_lib import Schema, categorical_cardinalities
 from merlin_standard_lib.utils.embedding_utils import get_embedding_sizes_from_schema
 
+from ..block.base import SequentialBlock
 from ..tabular.base import (
     TABULAR_MODULE_PARAMS_DOCSTRING,
     FilterFeatures,
     TabularAggregationType,
+    TabularTransformation,
     TabularTransformationType,
 )
 from ..utils.torch_utils import calculate_batch_size_from_input_size, get_output_sizes_from_schema
@@ -589,3 +591,147 @@ class PretrainedEmbeddingsInitializer(torch.nn.Module):
         with torch.no_grad():
             x.copy_(self.weight_matrix)
         x.requires_grad = self.trainable
+
+
+@docstring_parameter(
+    tabular_module_parameters=TABULAR_MODULE_PARAMS_DOCSTRING,
+)
+class PretrainedEmbeddingFeatures(InputBlock):
+    """Input block for pre-trained embeddings features.
+
+    For 3-D features, if sequence_combiner is set, the features are aggregated
+    using the second dimension (sequence length)
+
+    Parameters
+    ----------
+    features: List[str]
+        A list of the pre-trained embeddings feature names.
+        You typically will pass schema.select_by_tag(Tags.EMBEDDING).column_names,
+        as that is the tag added to pre-trained embedding features when using the
+        merlin.dataloader.ops.embeddings.EmbeddingOperator
+    pretrained_output_dims: Optional[Union[int, Dict[str, int]]]
+        If provided, it projects features to specified dim(s).
+        If an int, all features are projected to that dim.
+        If a dict, only features provided in the dict will be mapped to the specified dim,
+    sequence_combiner: Optional[Union[str, torch.nn.Module]], optional
+       A string ("mean", "sum", "max", "min") or torch.nn.Module specifying
+       how to combine the second dimension of the pre-trained embeddings if it is 3D.
+       Default is None (no sequence combiner used)
+    normalizer: Optional[Union[str, TabularTransformationType]]
+       A tabular layer (e.g.tr.TabularLayerNorm()) or string ("layer-norm") to be applied
+       to pre-trained embeddings after projected and sequence combined
+       Default is None (no normalization)
+    schema (Optional[Schema]): the schema of the input data.
+    {tabular_module_parameters}
+    """
+
+    def __init__(
+        self,
+        features: List[str],
+        pretrained_output_dims: Optional[Union[int, Dict[str, int]]] = None,
+        sequence_combiner: Optional[Union[str, torch.nn.Module]] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        normalizer: Optional[TabularTransformationType] = None,
+        schema: Optional[Schema] = None,
+    ):
+        if isinstance(normalizer, str):
+            normalizer = TabularTransformation.parse(normalizer)
+        if not post:
+            post = normalizer
+        elif normalizer:
+            post = SequentialBlock(normalizer, post)  # type: ignore
+
+        super().__init__(pre=pre, post=post, aggregation=aggregation, schema=schema)
+        self.features = features
+        self.filter_features = FilterFeatures(features)
+        self.pretrained_output_dims = pretrained_output_dims
+        self.sequence_combiner = self.parse_combiner(sequence_combiner)
+
+    def build(self, input_size, **kwargs):
+        if input_size is not None:
+            if self.pretrained_output_dims:
+                self.projection = torch.nn.ModuleDict()
+                if isinstance(self.pretrained_output_dims, int):
+                    for key in self.features:
+                        self.projection[key] = torch.nn.Linear(
+                            input_size[key][-1], self.pretrained_output_dims
+                        )
+
+                elif isinstance(self.pretrained_output_dims, dict):
+                    for key in self.features:
+                        self.projection[key] = torch.nn.Linear(
+                            input_size[key][-1], self.pretrained_output_dims[key]
+                        )
+
+        return super().build(input_size, **kwargs)
+
+    @classmethod
+    def from_schema(
+        cls,
+        schema: Schema,
+        tags: Optional[TagsType] = None,
+        pretrained_output_dims=None,
+        sequence_combiner=None,
+        normalizer: Optional[Union[str, TabularTransformationType]] = None,
+        pre: Optional[TabularTransformationType] = None,
+        post: Optional[TabularTransformationType] = None,
+        aggregation: Optional[TabularAggregationType] = None,
+        **kwargs,
+    ):  # type: ignore
+        if tags:
+            schema = schema.select_by_tag(tags)
+
+        features = schema.column_names
+        return cls(
+            features=features,
+            pretrained_output_dims=pretrained_output_dims,
+            sequence_combiner=sequence_combiner,
+            pre=pre,
+            post=post,
+            aggregation=aggregation,
+            normalizer=normalizer,
+        )
+
+    def forward(self, inputs):
+        output = self.filter_features(inputs)
+        if self.pretrained_output_dims:
+            output = {key: self.projection[key](val) for key, val in output.items()}
+        if self.sequence_combiner:
+            for key, val in output.items():
+                if val.dim() > 2:
+                    output[key] = self.sequence_combiner(val, axis=1)
+
+        return output
+
+    def forward_output_size(self, input_sizes):
+        sizes = self.filter_features.forward_output_size(input_sizes)
+        if self.pretrained_output_dims:
+            if isinstance(self.pretrained_output_dims, dict):
+                sizes.update(
+                    {
+                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_output_dims[key]])
+                        for key in self.features
+                    }
+                )
+            else:
+                sizes.update(
+                    {
+                        key: torch.Size(list(sizes[key][:-1]) + [self.pretrained_output_dims])
+                        for key in self.features
+                    }
+                )
+        return sizes
+
+    def parse_combiner(self, combiner):
+        if isinstance(combiner, str):
+            if combiner == "sum":
+                combiner = torch.sum
+            elif combiner == "max":
+                combiner = torch.max
+            elif combiner == "min":
+                combiner = torch.min
+            elif combiner == "mean":
+                combiner = torch.mean
+        return combiner
