@@ -182,7 +182,7 @@ class TabularFeatures(MergeTabular):
                 schema, tags=categorical_tags, **kwargs
             )
             processed_features.extend(schema.select_by_tag(categorical_tags).column_names)
-       if pretrained_embeddings_tags:
+        if pretrained_embeddings_tags:
             maybe_pretrained_module = cls.PRETRAINED_EMBEDDING_MODULE_CLASS.from_schema(
                 schema, tags=pretrained_embeddings_tags, **kwargs
             )
