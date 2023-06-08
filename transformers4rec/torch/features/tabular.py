@@ -33,7 +33,7 @@ from ..tabular.base import (
 )
 from ..utils.torch_utils import get_output_sizes_from_schema
 from .continuous import ContinuousFeatures
-from .embedding import EmbeddingFeatures, SoftEmbeddingFeatures
+from .embedding import EmbeddingFeatures, PretrainedEmbeddingFeatures, SoftEmbeddingFeatures
 
 TABULAR_FEATURES_PARAMS_DOCSTRING = """
     continuous_module: TabularModule, optional
@@ -61,12 +61,13 @@ class TabularFeatures(MergeTabular):
     CONTINUOUS_MODULE_CLASS: Type[TabularModule] = ContinuousFeatures
     EMBEDDING_MODULE_CLASS: Type[TabularModule] = EmbeddingFeatures
     SOFT_EMBEDDING_MODULE_CLASS: Type[TabularModule] = SoftEmbeddingFeatures
+    PRETRAINED_EMBEDDING_MODULE_CLASS: Type[TabularModule] = PretrainedEmbeddingFeatures
 
     def __init__(
         self,
         continuous_module: Optional[TabularModule] = None,
         categorical_module: Optional[TabularModule] = None,
-        text_embedding_module: Optional[TabularModule] = None,
+        pretrained_embedding_module: Optional[TabularModule] = None,
         pre: Optional[TabularTransformationType] = None,
         post: Optional[TabularTransformationType] = None,
         aggregation: Optional[TabularAggregationType] = None,
@@ -78,8 +79,8 @@ class TabularFeatures(MergeTabular):
             to_merge["continuous_module"] = continuous_module
         if categorical_module:
             to_merge["categorical_module"] = categorical_module
-        if text_embedding_module:
-            to_merge["text_embedding_module"] = text_embedding_module
+        if pretrained_embedding_module:
+            to_merge["pretrained_embedding_module"] = pretrained_embedding_module
 
         assert to_merge != {}, "Please provide at least one input layer"
         super(TabularFeatures, self).__init__(
@@ -121,6 +122,7 @@ class TabularFeatures(MergeTabular):
         schema: Schema,
         continuous_tags: Optional[Union[TagsType, Tuple[Tags]]] = (Tags.CONTINUOUS,),
         categorical_tags: Optional[Union[TagsType, Tuple[Tags]]] = (Tags.CATEGORICAL,),
+        pretrained_embeddings_tags: Optional[Union[TagsType, Tuple[Tags]]] = (Tags.EMBEDDING,),
         aggregation: Optional[str] = None,
         automatic_build: bool = True,
         max_sequence_length: Optional[int] = None,
@@ -156,8 +158,13 @@ class TabularFeatures(MergeTabular):
         TabularFeatures
             Returns ``TabularFeatures`` from a dataset schema
         """
-        maybe_continuous_module, maybe_categorical_module = None, None
+        maybe_continuous_module, maybe_categorical_module, maybe_pretrained_module = (
+            None,
+            None,
+            None,
+        )
         processed_features = []
+  
         if continuous_tags:
             if continuous_soft_embeddings:
                 maybe_continuous_module = cls.SOFT_EMBEDDING_MODULE_CLASS.from_schema(
@@ -175,21 +182,28 @@ class TabularFeatures(MergeTabular):
                 schema, tags=categorical_tags, **kwargs
             )
             processed_features.extend(schema.select_by_tag(categorical_tags).column_names)
+       if pretrained_embeddings_tags:
+            maybe_pretrained_module = cls.PRETRAINED_EMBEDDING_MODULE_CLASS.from_schema(
+                schema, tags=pretrained_embeddings_tags, **kwargs
+            )
+            processed_features.extend(schema.select_by_tag(pretrained_embeddings_tags).column_names)
 
         unprocessed_features = set(schema.column_names).difference(set(processed_features))
         if unprocessed_features:
             raise ValueError(
                 "Schema provided to `TabularFeatures` includes features "
-                "without CONTINUOUS or CATEGORICAL tags. "
-                "Please ensure all columns have either one of these tags "
+                "without any of the following tags: "
+                f"continuous ({continuous_tags}), categorical ({categorical_tags}), "
+                f"or pretrained embeddings ({pretrained_embeddings_tags}). "
+                "Please ensure all columns have one of these tags "
                 "or are excluded from the schema. "
                 f"\nUnproceesed features: {unprocessed_features} "
-            )
+       
 
         output = cls(
             continuous_module=maybe_continuous_module,
             categorical_module=maybe_categorical_module,
-            text_embedding_module=None,
+            pretrained_embedding_module=maybe_pretrained_module,
             aggregation=aggregation,
         )
 
@@ -230,5 +244,12 @@ class TabularFeatures(MergeTabular):
     def categorical_module(self) -> Optional[TabularModule]:
         if "categorical_module" in self.to_merge:
             return self.to_merge["categorical_module"]
+
+        return None
+
+    @property
+    def pretrained_module(self) -> Optional[TabularModule]:
+        if "pretrained_embedding_module" in self.to_merge:
+            return self.to_merge["pretrained_embedding_module"]
 
         return None

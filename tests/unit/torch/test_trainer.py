@@ -598,3 +598,75 @@ def test_trainer_trop_k_with_wrong_task():
         recsys_trainer.predict(data.path)
 
     assert "Top-k prediction is specific to NextItemPredictionTask" in str(excinfo.value)
+
+
+def test_trainer_with_pretrained_embeddings():
+    import numpy as np
+    from merlin.dataloader.ops.embeddings import EmbeddingOperator
+    from merlin.io import Dataset
+
+    from transformers4rec.torch.utils.data_utils import MerlinDataLoader
+
+    data = tr.data.music_streaming_testing_data
+    schema = data.merlin_schema.select_by_name(
+        ["item_id", "item_category", "item_recency", "item_genres", "user_id"]
+    )
+    batch_size, max_length, pretrained_dim = 128, 20, 16
+    item_cardinality = schema["item_id"].int_domain.max + 1
+    np_emb_item_id = np.random.rand(item_cardinality, pretrained_dim)
+
+    embeddings_op = EmbeddingOperator(
+        np_emb_item_id, lookup_key="item_id", embedding_name="pretrained_item_id_embeddings"
+    )
+    # set dataloader with pre-trained embeddings
+    data_loader = MerlinDataLoader.from_schema(
+        schema,
+        Dataset(data.path, schema=schema),
+        max_sequence_length=max_length,
+        batch_size=batch_size,
+        transforms=[embeddings_op],
+        shuffle=False,
+    )
+
+    # set the model schema from data-loader
+    model_schema = data_loader.output_schema
+    inputs = tr.TabularSequenceFeatures.from_schema(
+        model_schema,
+        max_sequence_length=max_length,
+        pretrained_output_dims=8,
+        normalizer="layer-norm",
+        d_output=64,
+        masking="mlm",
+    )
+    transformer_config = tconf.XLNetConfig.build(64, 4, 2, 20)
+    task = tr.NextItemPredictionTask(weight_tying=True)
+    model = transformer_config.to_torch_model(inputs, task, max_sequence_length=max_length)
+
+    assert isinstance(model.input_schema, Schema)
+
+    args = trainer.T4RecTrainingArguments(
+        output_dir=".",
+        max_steps=5,
+        num_train_epochs=1,
+        per_device_train_batch_size=batch_size,
+        per_device_eval_batch_size=batch_size // 2,
+        max_sequence_length=max_length,
+        fp16=False,
+        report_to=[],
+        debug=["r"],
+    )
+    # Explicitly pass the merlin dataloader with pre-trained embeddings
+    recsys_trainer = tr.Trainer(
+        model=model,
+        args=args,
+        schema=schema,
+        train_dataloader=data_loader,
+        eval_dataloader=data_loader,
+        compute_metrics=True,
+    )
+
+    recsys_trainer.train()
+    eval_metrics = recsys_trainer.evaluate(eval_dataset=data.path, metric_key_prefix="eval")
+
+    assert isinstance(eval_metrics, dict)
+    assert eval_metrics["eval_/loss"] is not None
