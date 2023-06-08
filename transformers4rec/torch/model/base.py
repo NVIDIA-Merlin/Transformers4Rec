@@ -540,7 +540,7 @@ class Model(torch.nn.Module, LossMixin, MetricsMixin):
     def forward(self, inputs: TabularData, targets=None, training=False, testing=False, **kwargs):
         model_expected_features = set(self.input_schema.column_names)
         call_input_features = set(inputs.keys())
-        if model_expected_features != call_input_features:
+        if not (training or testing) and model_expected_features != call_input_features:
             raise ValueError(
                 "Model forward called with different set of features "
                 "compared with the input schema it was configured with "
