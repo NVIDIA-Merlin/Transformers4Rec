@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/model/prediction_task.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/_modules/transformers4rec/torch/model/prediction_task.html" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -121,7 +121,26 @@
 
 
 <div class="viewcode-block" id="BinaryClassificationPrepareBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.BinaryClassificationPrepareBlock">[docs]</a><span class="k">class</span> <span class="nc">BinaryClassificationPrepareBlock</span><span class="p">(</span><span class="n">BuildableBlock</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepares the output layer of the binary classification prediction task.</span>
+<span class="sd">    The output layer is a SequentialBlock of a torch linear</span>
+<span class="sd">    layer followed by a sigmoid activation and a squeeze operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="BinaryClassificationPrepareBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.BinaryClassificationPrepareBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SequentialBlock</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Builds the output layer of binary classification based on the input_size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_size: Tuple[int]</span>
+<span class="sd">            The size of the input tensor, specifically the last dimension is</span>
+<span class="sd">            used for setting the input dimension of the linear layer.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SequentialBlock</span>
+<span class="sd">            A SequentialBlock consisting of a linear layer (with input dimension equal to the last</span>
+<span class="sd">            dimension of input_size), a sigmoid activation, and a squeeze operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">SequentialBlock</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">(),</span>
@@ -243,7 +262,26 @@
 
 
 <div class="viewcode-block" id="RegressionPrepareBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.RegressionPrepareBlock">[docs]</a><span class="k">class</span> <span class="nc">RegressionPrepareBlock</span><span class="p">(</span><span class="n">BuildableBlock</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepares the output layer of the regression prediction task.</span>
+<span class="sd">    The output layer is a SequentialBlock of a torch linear</span>
+<span class="sd">    layer followed by a squeeze operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="RegressionPrepareBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.RegressionPrepareBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SequentialBlock</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Builds the output layer of regression based on the input_size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_size: Tuple[int]</span>
+<span class="sd">            The size of the input tensor, specifically the last dimension is</span>
+<span class="sd">            used for setting the input dimension of the linear layer.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        SequentialBlock</span>
+<span class="sd">            A SequentialBlock consisting of a linear layer (with input dimension equal to</span>
+<span class="sd">            the last dimension of input_size), and a squeeze operation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">SequentialBlock</span><span class="p">(</span>
             <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">input_size</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">),</span>
             <span class="n">LambdaModule</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span>
@@ -254,6 +292,81 @@
 
 
 <div class="viewcode-block" id="RegressionTask"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.RegressionTask">[docs]</a><span class="k">class</span> <span class="nc">RegressionTask</span><span class="p">(</span><span class="n">PredictionTask</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a ``PredictionTask`` for regression.</span>
+
+<span class="sd">    Example usage::</span>
+
+<span class="sd">        # Define the input module to process the tabular input features.</span>
+<span class="sd">        input_module = tr.TabularSequenceFeatures.from_schema(</span>
+<span class="sd">            schema,</span>
+<span class="sd">            max_sequence_length=max_sequence_length,</span>
+<span class="sd">            continuous_projection=d_model,</span>
+<span class="sd">            aggregation=&quot;concat&quot;,</span>
+<span class="sd">            masking=None,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define XLNetConfig class and set default parameters for HF XLNet config.</span>
+<span class="sd">        transformer_config = tr.XLNetConfig.build(</span>
+<span class="sd">            d_model=d_model, n_head=4, n_layer=2, total_seq_length=max_sequence_length</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define the model block including: inputs, projection and transformer block.</span>
+<span class="sd">        body = tr.SequentialBlock(</span>
+<span class="sd">            input_module,</span>
+<span class="sd">            tr.MLPBlock([64]),</span>
+<span class="sd">            tr.TransformerBlock(</span>
+<span class="sd">                transformer_config,</span>
+<span class="sd">            )</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Define a head with BinaryClassificationTask.</span>
+<span class="sd">        head = tr.Head(</span>
+<span class="sd">            body,</span>
+<span class="sd">            tr.RegressionTask(</span>
+<span class="sd">                &quot;watch_time&quot;,</span>
+<span class="sd">                summary_type=&quot;mean&quot;,</span>
+<span class="sd">                metrics=[tm.regression.MeanSquaredError()]</span>
+<span class="sd">            ),</span>
+<span class="sd">            inputs=input_module,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # Get the end-to-end Model class.</span>
+<span class="sd">        model = tr.Model(head)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    target_name: Optional[str]</span>
+<span class="sd">        Specifies the variable name that represents the continuous value to predict.</span>
+<span class="sd">        By default None</span>
+
+<span class="sd">    task_name: Optional[str]</span>
+<span class="sd">        Specifies the name of the prediction task. If this parameter is not specified,</span>
+<span class="sd">        a name is automatically constructed based on ``target_name`` and the Python</span>
+<span class="sd">        class name of the model.</span>
+<span class="sd">        By default None</span>
+
+<span class="sd">    task_block: Optional[BlockType] = None</span>
+<span class="sd">        Specifies a module to transform the input tensor before computing predictions.</span>
+
+<span class="sd">    loss: torch.nn.Module</span>
+<span class="sd">        Specifies the loss function for the task.</span>
+<span class="sd">        The default class is ``torch.nn.MSELoss``.</span>
+
+<span class="sd">    metrics: Tuple[torch.nn.Module, ...]</span>
+<span class="sd">        Specifies the metrics to calculate during training and evaluation.</span>
+<span class="sd">        The default metric is MeanSquaredError.</span>
+
+<span class="sd">    summary_type: str</span>
+<span class="sd">        Summarizes a sequence into a single tensor. Accepted values are:</span>
+
+<span class="sd">            - ``last`` -- Take the last token hidden state (like XLNet)</span>
+<span class="sd">            - ``first`` -- Take the first token hidden state (like Bert)</span>
+<span class="sd">            - ``mean`` -- Take the mean of all tokens hidden states</span>
+<span class="sd">            - ``cls_index`` -- Supply a Tensor of classification token position (GPT/GPT-2)</span>
+<span class="sd">            - ``attn`` -- Not implemented now, use multi-head attention</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">DEFAULT_LOSS</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">()</span>
     <span class="n">DEFAULT_METRICS</span> <span class="o">=</span> <span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">regression</span><span class="o">.</span><span class="n">MeanSquaredError</span><span class="p">(),)</span>
 
@@ -282,7 +395,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This block performs item prediction task for session and sequential-based models.</span>
 <span class="sd">    It requires a body containing a masking schema to use for training and target generation.</span>
 <span class="sd">    For the supported masking schemes, please refers to:</span>
-<span class="sd">    https://nvidia-merlin.github.io/Transformers4Rec/main/model_definition.html#sequence-masking</span>
+<span class="sd">    https://nvidia-merlin.github.io/Transformers4Rec/stable/model_definition.html#sequence-masking</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -483,6 +596,32 @@
 
 
 <div class="viewcode-block" id="NextItemPredictionPrepareBlock"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionPrepareBlock">[docs]</a><span class="k">class</span> <span class="nc">NextItemPredictionPrepareBlock</span><span class="p">(</span><span class="n">BuildableBlock</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepares the output layer of the next item prediction task.</span>
+<span class="sd">    The output layer is a an instance of `_NextItemPredictionTask` class.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    target_dim: int</span>
+<span class="sd">        The output dimension for next-item predictions.</span>
+<span class="sd">    weight_tying: bool, optional</span>
+<span class="sd">        If true, ties the weights of the prediction layer and the item embedding layer.</span>
+<span class="sd">        By default False.</span>
+<span class="sd">    item_embedding_table: torch.nn.Module, optional</span>
+<span class="sd">        The module containing the item embedding table.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    softmax_temperature: float, optional</span>
+<span class="sd">        The temperature to be applied to the softmax function. Defaults to 0.</span>
+<span class="sd">    sampled_softmax: bool, optional</span>
+<span class="sd">        If true, sampled softmax is used for approximating the full softmax function.</span>
+<span class="sd">        By default False.</span>
+<span class="sd">    max_n_samples: int, optional</span>
+<span class="sd">        The maximum number of samples when using sampled softmax.</span>
+<span class="sd">        By default 100.</span>
+<span class="sd">    min_id: int, optional</span>
+<span class="sd">        The minimum value of the range for the log-uniform sampling.</span>
+<span class="sd">        By default 0.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">target_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -503,6 +642,18 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">min_id</span> <span class="o">=</span> <span class="n">min_id</span>
 
 <div class="viewcode-block" id="NextItemPredictionPrepareBlock.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.NextItemPredictionPrepareBlock.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Block</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Builds the output layer of next-item prediction based on the input_size.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_size : Tuple[int]</span>
+<span class="sd">            The size of the input tensor, specifically the last dimension is</span>
+<span class="sd">            used for setting the input dimension of the output layer.</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Block[_NextItemPredictionTask]</span>
+<span class="sd">            an instance of _NextItemPredictionTask</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Block</span><span class="p">(</span>
             <span class="n">_NextItemPredictionTask</span><span class="p">(</span>
                 <span class="n">input_size</span><span class="p">,</span>
@@ -593,7 +744,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled_softmax</span> <span class="ow">and</span> <span class="n">training</span><span class="p">:</span>
             <span class="n">logits</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampled</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">output_weights</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logits</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">@</span> <span class="n">output_weights</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>
+            <span class="n">logits</span> <span class="o">=</span> <span class="n">inputs</span> <span class="o">@</span> <span class="n">output_weights</span><span class="o">.</span><span class="n">t</span><span class="p">()</span>  <span class="c1"># type: ignore</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">softmax_temperature</span><span class="p">:</span>
             <span class="c1"># Softmax temperature to reduce model overconfidence</span>
@@ -713,7 +864,9 @@
         <span class="n">log_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_id</span> <span class="o">-</span> <span class="n">min_id</span> <span class="o">+</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">log_</span><span class="p">()</span>
         <span class="n">probs</span> <span class="o">=</span> <span class="p">(</span><span class="n">log_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">-</span> <span class="n">log_indices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="n">log_indices</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">min_id</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">min_id</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">probs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="n">min_id</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">probs</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span> <span class="n">probs</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span>  <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">probs</span></div>
 
 <div class="viewcode-block" id="LogUniformSampler.get_unique_sampling_distr"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.model.html#transformers4rec.torch.LogUniformSampler.get_unique_sampling_distr">[docs]</a>    <span class="k">def</span> <span class="nf">get_unique_sampling_distr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dist</span><span class="p">,</span> <span class="n">n_sample</span><span class="p">):</span>
@@ -770,9 +923,9 @@
         <span class="n">n_tries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_sample</span>
 
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-            <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="n">n_tries</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[</span>
-                <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span>
-            <span class="p">]</span>
+            <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dist</span><span class="p">,</span> <span class="n">n_tries</span><span class="p">,</span> <span class="n">replacement</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># type: ignore</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_n_samples</span><span class="p">]</span>
 
             <span class="n">device</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">device</span>
             <span class="n">neg_samples</span> <span class="o">=</span> <span class="n">neg_samples</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
@@ -782,8 +935,8 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">dist</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dist</span>
 
-            <span class="n">true_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">labels</span><span class="p">]</span>
-            <span class="n">samples_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span>
+            <span class="n">true_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">labels</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+            <span class="n">samples_probs</span> <span class="o">=</span> <span class="n">dist</span><span class="p">[</span><span class="n">neg_samples</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
 
             <span class="k">return</span> <span class="n">neg_samples</span><span class="p">,</span> <span class="n">true_probs</span><span class="p">,</span> <span class="n">samples_probs</span></div>
 

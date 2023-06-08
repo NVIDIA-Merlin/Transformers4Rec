@@ -8,7 +8,7 @@
       <link rel="stylesheet" href="../../../../_static/togglebutton.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/mystnb.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/custom.css" type="text/css" />
-    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/main/_modules/transformers4rec/torch/features/embedding.html" />
+    <link rel="canonical" href="https://nvidia-merlin.github.io/Transformers4Rec/stable/_modules/transformers4rec/torch/features/embedding.html" />
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -112,10 +112,12 @@
 <span class="kn">from</span> <span class="nn">merlin_standard_lib</span> <span class="kn">import</span> <span class="n">Schema</span><span class="p">,</span> <span class="n">categorical_cardinalities</span>
 <span class="kn">from</span> <span class="nn">merlin_standard_lib.utils.embedding_utils</span> <span class="kn">import</span> <span class="n">get_embedding_sizes_from_schema</span>
 
+<span class="kn">from</span> <span class="nn">..block.base</span> <span class="kn">import</span> <span class="n">SequentialBlock</span>
 <span class="kn">from</span> <span class="nn">..tabular.base</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
     <span class="n">FilterFeatures</span><span class="p">,</span>
     <span class="n">TabularAggregationType</span><span class="p">,</span>
+    <span class="n">TabularTransformation</span><span class="p">,</span>
     <span class="n">TabularTransformationType</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..utils.torch_utils</span> <span class="kn">import</span> <span class="n">calculate_batch_size_from_input_size</span><span class="p">,</span> <span class="n">get_output_sizes_from_schema</span>
@@ -344,6 +346,14 @@
 
 
 <div class="viewcode-block" id="EmbeddingBagWrapper"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingBagWrapper">[docs]</a><span class="k">class</span> <span class="nc">EmbeddingBagWrapper</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">EmbeddingBag</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrapper class for the PyTorch EmbeddingBag module.</span>
+
+<span class="sd">    This class extends the torch.nn.EmbeddingBag class and overrides</span>
+<span class="sd">    the forward method to handle 1D tensor inputs</span>
+<span class="sd">    by reshaping them to 2D as required by the EmbeddingBag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
 <div class="viewcode-block" id="EmbeddingBagWrapper.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.EmbeddingBagWrapper.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="c1"># EmbeddingBag requires 2D tensors (or offsets)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -492,6 +502,29 @@
 
 
 <div class="viewcode-block" id="TableConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.TableConfig">[docs]</a><span class="k">class</span> <span class="nc">TableConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to configure the embeddings lookup table for a categorical feature.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vocabulary_size : int</span>
+<span class="sd">        The size of the vocabulary,</span>
+<span class="sd">        i.e., the cardinality of the categorical feature.</span>
+<span class="sd">    dim : int</span>
+<span class="sd">        The dimensionality of the embedding vectors.</span>
+<span class="sd">    initializer : Optional[Callable[[torch.Tensor], None]]</span>
+<span class="sd">        The initializer function for the embedding weights.</span>
+<span class="sd">        If None, the weights are initialized using a normal</span>
+<span class="sd">        distribution with mean 0.0 and standard deviation 0.05.</span>
+<span class="sd">    combiner : Optional[str]</span>
+<span class="sd">        The combiner operation used to aggregate bag of embeddings.</span>
+<span class="sd">        Possible options are &quot;mean&quot;, &quot;sum&quot;, and &quot;sqrtn&quot;.</span>
+<span class="sd">        By default &quot;mean&quot;.</span>
+<span class="sd">    name : Optional[str]</span>
+<span class="sd">        The name of the lookup table.</span>
+<span class="sd">        By default None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">vocabulary_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -536,6 +569,23 @@
 
 
 <div class="viewcode-block" id="FeatureConfig"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.FeatureConfig">[docs]</a><span class="k">class</span> <span class="nc">FeatureConfig</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to set the embeddings table of a categorical feature</span>
+<span class="sd">    with a maximum sequence length.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    table : TableConfig</span>
+<span class="sd">        Configuration for the lookup table,</span>
+<span class="sd">        which is used for embedding lookup and aggregation.</span>
+<span class="sd">    max_sequence_length : int, optional</span>
+<span class="sd">        Maximum sequence length for sequence features.</span>
+<span class="sd">        By default 0.</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        The feature name.</span>
+<span class="sd">        By default None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">table</span><span class="p">:</span> <span class="n">TableConfig</span><span class="p">,</span> <span class="n">max_sequence_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Text</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="p">):</span>
@@ -629,6 +679,150 @@
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
             <span class="n">x</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_matrix</span><span class="p">)</span>
         <span class="n">x</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainable</span></div></div>
+
+
+<div class="viewcode-block" id="PretrainedEmbeddingFeatures"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingFeatures">[docs]</a><span class="nd">@docstring_parameter</span><span class="p">(</span>
+    <span class="n">tabular_module_parameters</span><span class="o">=</span><span class="n">TABULAR_MODULE_PARAMS_DOCSTRING</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">class</span> <span class="nc">PretrainedEmbeddingFeatures</span><span class="p">(</span><span class="n">InputBlock</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Input block for pre-trained embeddings features.</span>
+
+<span class="sd">    For 3-D features, if sequence_combiner is set, the features are aggregated</span>
+<span class="sd">    using the second dimension (sequence length)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    features: List[str]</span>
+<span class="sd">        A list of the pre-trained embeddings feature names.</span>
+<span class="sd">        You typically will pass schema.select_by_tag(Tags.EMBEDDING).column_names,</span>
+<span class="sd">        as that is the tag added to pre-trained embedding features when using the</span>
+<span class="sd">        merlin.dataloader.ops.embeddings.EmbeddingOperator</span>
+<span class="sd">    pretrained_output_dims: Optional[Union[int, Dict[str, int]]]</span>
+<span class="sd">        If provided, it projects features to specified dim(s).</span>
+<span class="sd">        If an int, all features are projected to that dim.</span>
+<span class="sd">        If a dict, only features provided in the dict will be mapped to the specified dim,</span>
+<span class="sd">    sequence_combiner: Optional[Union[str, torch.nn.Module]], optional</span>
+<span class="sd">       A string (&quot;mean&quot;, &quot;sum&quot;, &quot;max&quot;, &quot;min&quot;) or torch.nn.Module specifying</span>
+<span class="sd">       how to combine the second dimension of the pre-trained embeddings if it is 3D.</span>
+<span class="sd">       Default is None (no sequence combiner used)</span>
+<span class="sd">    normalizer: Optional[Union[str, TabularTransformationType]]</span>
+<span class="sd">       A tabular layer (e.g.tr.TabularLayerNorm()) or string (&quot;layer-norm&quot;) to be applied</span>
+<span class="sd">       to pre-trained embeddings after projected and sequence combined</span>
+<span class="sd">       Default is None (no normalization)</span>
+<span class="sd">    schema (Optional[Schema]): the schema of the input data.</span>
+<span class="sd">    {tabular_module_parameters}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+        <span class="n">pretrained_output_dims</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">sequence_combiner</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">normalizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Schema</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">normalizer</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">normalizer</span> <span class="o">=</span> <span class="n">TabularTransformation</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">normalizer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">post</span><span class="p">:</span>
+            <span class="n">post</span> <span class="o">=</span> <span class="n">normalizer</span>
+        <span class="k">elif</span> <span class="n">normalizer</span><span class="p">:</span>
+            <span class="n">post</span> <span class="o">=</span> <span class="n">SequentialBlock</span><span class="p">(</span><span class="n">normalizer</span><span class="p">,</span> <span class="n">post</span><span class="p">)</span>  <span class="c1"># type: ignore</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span> <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span> <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span> <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">features</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filter_features</span> <span class="o">=</span> <span class="n">FilterFeatures</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span> <span class="o">=</span> <span class="n">pretrained_output_dims</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sequence_combiner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">parse_combiner</span><span class="p">(</span><span class="n">sequence_combiner</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PretrainedEmbeddingFeatures.build"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingFeatures.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">input_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">projection</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
+                            <span class="n">input_size</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span>
+                        <span class="p">)</span>
+
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span>
+                            <span class="n">input_size</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">input_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PretrainedEmbeddingFeatures.from_schema"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingFeatures.from_schema">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_schema</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">schema</span><span class="p">:</span> <span class="n">Schema</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TagsType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pretrained_output_dims</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sequence_combiner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">normalizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">TabularTransformationType</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">pre</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">post</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularTransformationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">aggregation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">TabularAggregationType</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>  <span class="c1"># type: ignore</span>
+        <span class="k">if</span> <span class="n">tags</span><span class="p">:</span>
+            <span class="n">schema</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">select_by_tag</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+
+        <span class="n">features</span> <span class="o">=</span> <span class="n">schema</span><span class="o">.</span><span class="n">column_names</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span>
+            <span class="n">features</span><span class="o">=</span><span class="n">features</span><span class="p">,</span>
+            <span class="n">pretrained_output_dims</span><span class="o">=</span><span class="n">pretrained_output_dims</span><span class="p">,</span>
+            <span class="n">sequence_combiner</span><span class="o">=</span><span class="n">sequence_combiner</span><span class="p">,</span>
+            <span class="n">pre</span><span class="o">=</span><span class="n">pre</span><span class="p">,</span>
+            <span class="n">post</span><span class="o">=</span><span class="n">post</span><span class="p">,</span>
+            <span class="n">aggregation</span><span class="o">=</span><span class="n">aggregation</span><span class="p">,</span>
+            <span class="n">normalizer</span><span class="o">=</span><span class="n">normalizer</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="PretrainedEmbeddingFeatures.forward"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingFeatures.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_features</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequence_combiner</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">output</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequence_combiner</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="PretrainedEmbeddingFeatures.forward_output_size"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingFeatures.forward_output_size">[docs]</a>    <span class="k">def</span> <span class="nf">forward_output_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_sizes</span><span class="p">):</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">filter_features</span><span class="o">.</span><span class="n">forward_output_size</span><span class="p">(</span><span class="n">input_sizes</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">sizes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="n">key</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="n">key</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">[</span><span class="n">key</span><span class="p">]])</span>
+                        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sizes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="n">key</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Size</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">sizes</span><span class="p">[</span><span class="n">key</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">pretrained_output_dims</span><span class="p">])</span>
+                        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">sizes</span></div>
+
+<div class="viewcode-block" id="PretrainedEmbeddingFeatures.parse_combiner"><a class="viewcode-back" href="../../../../api/transformers4rec.torch.features.html#transformers4rec.torch.PretrainedEmbeddingFeatures.parse_combiner">[docs]</a>    <span class="k">def</span> <span class="nf">parse_combiner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">combiner</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">combiner</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">combiner</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+                <span class="n">combiner</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span>
+            <span class="k">elif</span> <span class="n">combiner</span> <span class="o">==</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
+                <span class="n">combiner</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">max</span>
+            <span class="k">elif</span> <span class="n">combiner</span> <span class="o">==</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span>
+                <span class="n">combiner</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">min</span>
+            <span class="k">elif</span> <span class="n">combiner</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+                <span class="n">combiner</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span>
+        <span class="k">return</span> <span class="n">combiner</span></div></div>
 </pre></div>
 
            </div>
