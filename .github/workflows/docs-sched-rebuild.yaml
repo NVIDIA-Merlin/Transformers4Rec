@@ -30,6 +30,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip tox
+      - name: Setup local branches for docs build
+        run: |
+          git branch --track main origin/main || true
+          git branch --track stable origin/stable || true
       - name: Build
         run: |
           tox -vv -e docs-multi
@@ -87,27 +91,28 @@ jobs:
             exit 0
           fi
           # If any of these commands fail, fail the build.
-          def_branch=$(gh api "repos/${GITHUB_REPOSITORY}" --jq ".default_branch")
+          def_branch="stable"
           html_url=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq ".html_url")
-          # Beware ugly quotation mark avoidance in the foll lines.
-          echo '<!DOCTYPE html>'                                                                         > index.html
-          echo '<html>'                                                                                 >> index.html
-          echo '  <head>'                                                                               >> index.html
-          echo '    <title>Redirect to documentation</title>'                                           >> index.html
-          echo '    <meta charset="utf-8">'                                                             >> index.html
-          echo '    <meta http=equiv="refresh" content="3; URL='${html_url}${def_branch}'/index.html">' >> index.html
-          echo '    <link rel="canonical" href="'${html_url}${def_branch}'/index.html">'                >> index.html
-          echo '    <script language="javascript">'                                                     >> index.html
-          echo '      function redirect() {'                                                            >> index.html
-          echo '        window.location.assign("'${html_url}${def_branch}'/index.html")'                >> index.html
-          echo '      }'                                                                                >> index.html
-          echo '    </script>'                                                                          >> index.html
-          echo '  </head>'                                                                              >> index.html
-          echo '  <body onload="redirect()">'                                                           >> index.html
-          echo '    <p>Please follow the link to the <a href="'${html_url}${def_branch}'/index.html">'  >> index.html
-          echo      ${def_branch}'</a> branch documentation.</p>'                                       >> index.html
-          echo '  </body>'                                                                              >> index.html
-          echo '</html>'                                                                                >> index.html
+          cat > index.html << EOF
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <title>Redirect to documentation</title>
+              <meta charset="utf-8">
+              <meta http=equiv="refresh" content="3; URL="${html_url}${def_branch}/index.html"
+              <link rel="canonical" href="'${html_url}${def_branch}/index.html">
+              <script language="javascript">
+                function redirect() {
+                  window.location.assign("${html_url}${def_branch}/index.html")
+                }
+              </script>
+            </head>
+            <body onload="redirect()">
+              <p>Please follow the link to the <a href="${html_url}${def_branch}/index.html">
+              ${def_branch}'</a> branch documentation.</p>
+            </body>
+          </html>
+          EOF
           git add index.html
       - name: Commit changes to the GitHub Pages branch
         run: |

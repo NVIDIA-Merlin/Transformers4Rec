@@ -44,7 +44,7 @@ These building blocks' `Trainer` class are extended to enable evaluation with Re
 
 [NVTabular](https://github.com/NVIDIA-Merlin/NVTabular/) is a feature engineering and preprocessing library for tabular data that is designed to easily manipulate datasets at terabyte scale and train deep learning (DL) based recommender systems.
 
-Some popular [techniques](https://nvidia-merlin.github.io/NVTabular/main/api/index.html) have been implemented within NVTabular to deal with categorical and numerical features, such as `Categorify`, `Normalize`, `Bucketize`, `TargetEncoding`, and `DifferenceLag`, and allow for custom transformations (`LambdaOp`) to be defined using cuDF data frame operations.
+Some popular [techniques](https://nvidia-merlin.github.io/NVTabular/stable/api/index.html) have been implemented within NVTabular to deal with categorical and numerical features, such as `Categorify`, `Normalize`, `Bucketize`, `TargetEncoding`, and `DifferenceLag`, and allow for custom transformations (`LambdaOp`) to be defined using cuDF data frame operations.
 
 Typically, the input RecSys datasets contain one example per user interaction.
 For sequential recommendation, the training example is a sequence of user interactions.
@@ -60,7 +60,7 @@ The following figure provides a visualization of the preprocessed tabular data:
 </div>
 <br/>
 
-NVTabular can easily prepare such data with the [Groupby](https://nvidia-merlin.github.io/NVTabular/main/api/ops/groupby.html) operation.
+NVTabular can easily prepare such data with the [Groupby](https://nvidia-merlin.github.io/NVTabular/stable/api/ops/groupby.html) operation.
 This operation supports grouping by a categorical column such as user ID and session ID, sorting by another column such as timestamp and aggregating other columns as sequences (`list`), or by taking the `first` or `last` element of the sequence as shown in the following code block.
 
 ```python
@@ -92,9 +92,9 @@ NVTabular also creates a schema file, `schema.pbtxt`, in the protobuf text forma
 The schema file contains statistics that are obtained during the preprocessing such as the cardinality of categorical features and the maximum sequence length for sequential features.
 NVTabular also supports the association of tags for features.
 You can use the tags to indicate the item ID, item and user features, and categorical or continuous features.
-This example of a [`schema.pbtxt`](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/tests/assets/data_schema/data_seq_schema.pbtxt) file properly formats the schema in protobuf text.
+This example of a [`schema.pbtxt`](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/tests/assets/data_schema/data_seq_schema.pbtxt) file properly formats the schema in protobuf text.
 
-**NOTE**: If you don't use NVTabular to preprocess your data, you can also instantiate a `Schema` in code manually as shown in this [schema example](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/main/tests/merlin_standard_lib/schema/test_schema.py) Python program.
+**NOTE**: If you don't use NVTabular to preprocess your data, you can also instantiate a `Schema` in code manually as shown in this [schema example](https://github.com/NVIDIA-Merlin/Transformers4Rec/blob/stable/tests/merlin_standard_lib/schema/test_schema.py) Python program.
 
 After you call `workflow.fit()`, you can save the workflow so that you can apply the same preprocessing workflow to new input data as a batch or online by using the Triton Inference Server integration.
 

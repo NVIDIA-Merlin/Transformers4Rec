@@ -23,7 +23,11 @@ def _pad_dense_tensor(t: torch.Tensor, length: int) -> torch.Tensor:
     if len(t.shape) == 2:
         pad_diff = length - t.shape[1]
         return F.pad(input=t, pad=(0, pad_diff, 0, 0))
-    return t
+    elif len(t.shape) == 3:
+        pad_diff = length - t.shape[1]
+        return F.pad(input=t, pad=(0, pad_diff, 0, 0, 0, 0))
+    else:
+        return t
 
 
 def _squeeze(tensor: torch.Tensor):
@@ -48,9 +52,19 @@ def _pad_ragged_tensor(values: torch.Tensor, offsets: torch.Tensor, padding_leng
     diff_offsets = offsets[1:] - offsets[:-1]
     max_length = int(diff_offsets.max())
     indices = _get_indices(offsets, diff_offsets)
-    sparse_tensor = torch.sparse_coo_tensor(
-        indices.T, values, torch.Size([num_rows, max_length]), device=values.device
-    )
+
+    if values.ndim == 2:
+        # 3D ragged inputs
+        sparse_tensor = torch.sparse_coo_tensor(
+            indices.T,
+            values,
+            torch.Size([num_rows, max_length, values.shape[-1]]),
+            device=values.device,
+        )
+    else:
+        sparse_tensor = torch.sparse_coo_tensor(
+            indices.T, values, torch.Size([num_rows, max_length]), device=values.device
+        )
     return _pad_dense_tensor(sparse_tensor.to_dense(), padding_length)
 
 

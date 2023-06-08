@@ -1,45 +1,6 @@
 {
   "feature": [
     {
-      "name": "session_id",
-      "type": "INT",
-      "intDomain": {
-        "name": "session_id",
-        "min": "1",
-        "max": "11562158"
-      },
-      "annotation": {
-        "tag": [
-          "groupby_col"
-        ]
-      }
-    },
-    {
-      "name": "session_start",
-      "annotation": {
-        "tag": [
-          "first"
-        ]
-      }
-    },
-    {
-      "name": "timestamp/age_days/list",
-      "valueCount": {
-        "min": "2",
-        "max": "185"
-      },
-      "type": "INT",
-      "intDomain": {
-        "name": "timestamp/age_days/list",
-        "max": "181"
-      },
-      "annotation": {
-        "tag": [
-          "list"
-        ]
-      }
-    },
-    {
       "name": "timestamp/age_days/LogOp/Normalize/list",
       "valueCount": {
         "min": "2",
@@ -239,55 +200,6 @@
       }
     },
     {
-      "name": "ts/list",
-      "valueCount": {
-        "min": "2",
-        "max": "185"
-      },
-      "type": "INT",
-      "intDomain": {
-        "name": "ts/list",
-        "min": "1396321200",
-        "max": "1412045999"
-      },
-      "annotation": {
-        "tag": [
-          "time",
-          "list"
-        ]
-      }
-    },
-    {
-      "name": "ts/last",
-      "type": "INT",
-      "intDomain": {
-        "name": "ts/last",
-        "min": "1396321232",
-        "max": "1412045999"
-      },
-      "annotation": {
-        "tag": [
-          "time",
-          "last"
-        ]
-      }
-    },
-    {
-      "name": "ts/first",
-      "type": "INT",
-      "intDomain": {
-        "name": "ts/first",
-        "min": "1396321200",
-        "max": "1412045793"
-      },
-      "annotation": {
-        "tag": [
-          "time",
-          "first"
-        ]
-      }
-    },
-    {
       "name": "item_id/list",
       "valueCount": {
         "min": "2",
@@ -306,20 +218,6 @@
           "list",
           "categorical",
           "item"
-        ]
-      }
-    },
-    {
-      "name": "session_size",
-      "type": "INT",
-      "intDomain": {
-        "name": "session_size",
-        "min": "2",
-        "max": "185"
-      },
-      "annotation": {
-        "tag": [
-          "count"
         ]
       }
     },
@@ -343,10 +241,6 @@
           "item"
         ]
       }
-    },
-    {
-      "name": "day_idx",
-      "annotation": {}
     },
     {
       "name": "user_country",
